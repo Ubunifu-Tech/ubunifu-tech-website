@@ -124,10 +124,10 @@ export default function RootLayout({
   };
 
   return (
-    <html lang=\"en\">
+    <html lang="en">
       <head>
         <script
-          type=\"application/ld+json\"
+          type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>

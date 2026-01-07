@@ -1,44 +1,26 @@
 import Link from 'next/link';
-import { getAllPosts } from '@/lib/blog';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import styles from './Blog.module.css';
 
-export default function BlogIndex() {
-  const posts = getAllPosts();
-
+export default function BlogPage() {
   return (
-    <main>
-      <Navbar />
-      <div className={`container ${styles.container}`}>
+    <main className={styles.blog}>
+      <div className="container">
         <div className={styles.header}>
-          <h1 className={styles.heading}>
-            Insights & <span className="text-gradient">Ideas</span>
-          </h1>
-          <p className={styles.subheading}>
-            Thoughts on digital strategy, technology, and the future of Tanzania.
+          <h1 className={styles.title}>Blog <span className="text-gradient">Coming Soon</span></h1>
+          <p className={styles.description}>
+            We're preparing insightful content on digital transformation, AI, and technology solutions for Tanzania businesses. Check back soon for expert perspectives and industry insights.
           </p>
-        </div>
-
-        <div className={styles.grid}>
-          {posts.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`} className={styles.card}>
-              <div className={styles.meta}>
-                <span className={styles.date}>{post.date}</span>
-                <span>•</span>
-                <span>{post.tags[0]}</span>
-              </div>
-              <h2 className={styles.title}>{post.title}</h2>
-              <p className={styles.excerpt}>{post.excerpt}</p>
-              <div className={styles.footer}>
-                <span className={styles.author}>{post.author}</span>
-                <span className={styles.readMore}>Read Article &rarr;</span>
-              </div>
-            </Link>
-          ))}
+          <div className={styles.comingSoon}>
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <p>Stay tuned for updates</p>
+          </div>
         </div>
       </div>
-      <Footer />
     </main>
   );
 }
+<Footer />

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from './ui/Button';
 import styles from './Navbar.module.css';
 
@@ -8,7 +9,7 @@ export const Navbar: React.FC = () => {
     <nav className={styles.navbar}>
       <div className={`container ${styles.container}`}>
         <Link href="/" className={styles.logo}>
-          <span className="text-gradient">UBUNIFU</span>
+          <Image src="/logo.png" alt="Ubunifu Tech" width={180} height={40} priority />
         </Link>
         
         <div className={styles.links}>

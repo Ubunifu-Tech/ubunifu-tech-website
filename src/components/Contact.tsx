@@ -12,7 +12,7 @@ export const Contact: React.FC = () => {
           <div className={styles.info}>
             <h2 className={styles.heading}>Ready to Get <br/> Started?</h2>
             <p className={styles.text}>
-              Whether you need help analyzing your Excel data, building an AI system, designing a brand identity, or creating a website—we&apos;re here to help. Free consultation to discuss your needs and explore what&apos;s possible for your business.
+              Whether you need help analyzing your Excel data, building an AI system, designing a brand identity, or creating a website—we're here to help. Free consultation to discuss your needs and explore digital solutions for your business.
             </p>
             <div className={styles.details}>
               <div className={styles.detailItem}>

@@ -20,17 +20,17 @@ export const About: React.FC = () => {
             <span className="text-gradient">Globally Trained.</span>
           </h2>
           <p className={styles.intro}>
-            A brother partnership combining Silicon Valley-caliber technical expertise with award-winning creative talent—all based right here in Tanzania.
+            Silicon Valley-caliber technical expertise combined with award-winning creative talent—delivering world-class digital solutions from Tanzania.
           </p>
         </div>
 
         <div className={styles.teamGrid}>
           {/* Richard's Bio */}
           <div className={`${styles.teamCard} glass-panel`}>
-            <div className={styles.role}>Co-Founder | Data & AI Strategy</div>
+            <div className={styles.role}>Founder & Lead Data Scientist</div>
             <h3 className={styles.name}>Richard Pallangyo</h3>
             <p className={styles.bio}>
-              Silicon Valley-trained Data Scientist bringing advanced AI and Machine Learning expertise to Tanzania. Richard's experience includes building predictive analytics systems, deploying production ML models, and architecting cloud-scale data infrastructure using the same tools and methodologies as top US tech companies. Whether it's extracting insights from Excel sheets or building sophisticated AI systems—Richard bridges the gap between global innovation and local business needs.
+              Silicon Valley-trained Data Scientist bringing advanced AI and Machine Learning expertise to Tanzania. Experience includes building predictive analytics systems, deploying production ML models, and architecting cloud-scale data infrastructure using the same methodologies as top US tech companies. Specializes in extracting actionable insights from data—from Excel spreadsheets to sophisticated AI systems.
             </p>
             <div className={styles.expertise}>
               <span className={styles.expertiseTag}>AI & Machine Learning</span>
@@ -42,10 +42,10 @@ export const About: React.FC = () => {
 
           {/* HappyGod's Bio */}
           <div className={`${styles.teamCard} glass-panel`}>
-            <div className={styles.role}>Co-Founder | Design & Creative</div>
+            <div className={styles.role}>Creative Director</div>
             <h3 className={styles.name}>HappyGod Pallangyo</h3>
             <p className={styles.bio}>
-              Award-winning Creative Director delivering world-class design work from Dar es Salaam. HappyGod specializes in brand identity, video production, and visual storytelling that captures attention and drives results. His unique ability to blend international design standards with authentic African aesthetics creates work that stands out locally while competing globally. From logo design to full brand systems and video campaigns—HappyGod ensures your business looks as professional as it operates.
+              Award-winning Creative Director delivering world-class design work from Tanzania. Specializes in brand identity, video production, and visual storytelling that captures attention and drives results. Blends international design standards with authentic African aesthetics to create work that stands out locally while competing globally. From logo design to full brand systems and video campaigns—ensuring businesses present professionally across all touchpoints.
             </p>
             <div className={styles.expertise}>
               <span className={styles.expertiseTag}>Brand Identity</span>

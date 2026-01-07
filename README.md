@@ -1,36 +1,198 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ubunifu Technologies Website
+
+Official website for **Ubunifu Technologies** - A Dar es Salaam-based digital transformation and strategic consulting firm.
+
+**Technology. Strategy. Results.**
+
+---
+
+## About Ubunifu Technologies
+
+Ubunifu Technologies empowers Tanzanian businesses and organizations through strategic implementation of digital solutions. We combine Silicon Valley-caliber technical expertise with deep understanding of the local market to deliver world-class digital transformation services.
+
+### Services
+- Web Development & Digital Presence
+- Data Analytics & Business Intelligence
+- Brand Design & Visual Identity
+- AI & Automation Solutions
+- Digital Strategy & Training
+
+### Target Sectors
+SMEs, Tourism & Hospitality, NGOs, Healthcare, Financial Services, Agriculture, Education, Government, Retail & Manufacturing
+
+---
+
+## Tech Stack
+
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: CSS Modules
+- **Fonts**: Inter (body), Outfit (headings)
+- **UI**: Glassmorphism design with dark mode
+
+### Planned Backend (Phase 2)
+- **API**: Python FastAPI
+- **Database**: PostgreSQL
+- **Deployment**: TBD
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+ 
+- npm, yarn, pnpm, or bun
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/rapaugustino/ubunifu-tech-website.git
+cd ubunifu-tech-website
+
+# Install dependencies
+npm install
+# or
+yarn install
+```
+
+### Development
+
+```bash
+# Run development server
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the site.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Create optimized production build
+npm run build
+# or
+yarn build
 
-## Learn More
+# Start production server
+npm start
+# or
+yarn start
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+ubunifu-tech-website/
+├── public/
+│   ├── logo.png              # Company logo
+│   └── images/               # Portfolio and asset images
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx        # Root layout with metadata
+│   │   ├── page.tsx          # Homepage
+│   │   ├── globals.css       # Global styles and CSS variables
+│   │   └── blog/             # Blog section (coming soon)
+│   ├── components/
+│   │   ├── Navbar.tsx        # Navigation with logo
+│   │   ├── Hero.tsx          # Hero section
+│   │   ├── Services.tsx      # 5 service categories
+│   │   ├── Industries.tsx    # Target sectors showcase
+│   │   ├── Portfolio.tsx     # Real project portfolio
+│   │   ├── SocialProof.tsx   # Why work with us section
+│   │   ├── About.tsx         # Team and mission
+│   │   ├── LeadMagnet.tsx    # Free assessment CTA
+│   │   ├── Contact.tsx       # Contact form and details
+│   │   ├── Footer.tsx        # Site footer
+│   │   └── ui/               # Reusable UI components
+│   └── lib/
+│       └── blog.ts           # Blog utilities (for future use)
+├── BRANDING.md               # Complete brand guidelines
+├── PROJECT_ROADMAP.md        # Development roadmap
+└── README.md                 # This file
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Branding
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Color Palette
+- **Primary Blue**: `#00d4ff` - Main brand color
+- **Secondary Purple**: `#7928ca` - Accent color
+- **Background**: `#0a0f1c` - Deep blue/black
+- **Gold Accent**: `#ffd700` - Highlights
+
+See `BRANDING.md` for complete brand guidelines including typography, logo usage, and design system.
+
+### Logo
+Located at `/public/logo.png` - Features hexagonal network pattern with gradient blue-to-purple scheme.
+
+---
+
+## Key Features
+
+- **Responsive Design**: Mobile-first, works on all devices
+- **Glassmorphism UI**: Modern dark mode with blur effects
+- **Professional Icons**: SVG icons throughout (no emojis)
+- **SEO Optimized**: Proper metadata and semantic HTML
+- **Type-Safe**: Full TypeScript implementation
+- **Performance**: Next.js 15 with image optimization
+- **Honest Positioning**: Transparent about being a new consultancy
+
+---
+
+## Contact & Links
+
+- **Website**: [ubunifutech.com](https://ubunifutech.com)
+- **Email**: richardpallangyo@ubunifutech.com
+- **Location**: Dar es Salaam, Tanzania
+- **GitHub**: [github.com/rapaugustino/ubunifu-tech-website](https://github.com/rapaugustino/ubunifu-tech-website)
+
+---
+
+## Development Roadmap
+
+### Phase 1: Frontend & Brand Identity (Current - 95% Complete)
+- ✅ Core Next.js architecture
+- ✅ All main sections and components
+- ✅ Professional branding with logo
+- ✅ SVG icons throughout
+- ✅ Comprehensive service offerings
+- ✅ Industries section
+- ✅ Blog structure (coming soon message)
+- 🔄 Final SEO optimization
+- 🔄 Performance tuning
+
+### Phase 2: Backend Infrastructure (Planned)
+- FastAPI backend setup
+- PostgreSQL database
+- Contact form submission handling
+- Lead magnet delivery system
+- Admin dashboard
+
+### Phase 3: Content & Launch (Planned)
+- Blog content creation
+- Case studies and detailed portfolio
+- Client testimonials (when available)
+- Analytics integration
+- Production deployment
+
+---
+
+## Contributing
+
+This is a private project for Ubunifu Technologies. For inquiries, contact richardpallangyo@ubunifutech.com
+
+---
+
+## License
+
+© 2026 Ubunifu Technologies. All rights reserved.
+
+---
+
+**Built with ❤️ in Dar es Salaam, Tanzania**

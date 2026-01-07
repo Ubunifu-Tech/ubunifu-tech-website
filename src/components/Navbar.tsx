@@ -16,6 +16,7 @@ export const Navbar: React.FC = () => {
           <Link href="/#services" className={styles.link}>Services</Link>
           <Link href="/#portfolio" className={styles.link}>Portfolio</Link>
           <Link href="/blog" className={styles.link}>Blog</Link>
+          <Link href="/careers" className={styles.link}>Careers</Link>
           <Link href="/#about" className={styles.link}>About</Link>
           <Link href="/#contact" className={styles.link}>Contact</Link>
         </div>

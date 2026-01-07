@@ -7,15 +7,15 @@ const projects = [
   {
     title: 'Usambara Destination',
     category: 'Travel & Eco-Tourism Platform',
-    description: 'Premium eco-tourism platform connecting travelers with the Usambara Mountains. Built with Next.js for lightning-fast performance and SEO optimization.',
+    description: 'Premium eco-tourism website connecting travelers with the Usambara Mountains. Built for lightning-fast performance and SEO optimization.',
     image: '/images/usambara.jpg',
     link: 'https://www.usambaradestination.com/',
     tech: ['Next.js', 'TypeScript', 'Responsive Design', 'SEO']
   },
   {
     title: 'Safari King Africa',
-    category: 'Luxury Safari Booking System',
-    description: 'High-performance booking platform showcasing Tanzania\'s premier destinations. Features dynamic content management, modern UI/UX, and mobile-first design.',
+    category: 'Luxury Safari Website',
+    description: 'High-performance website showcasing Tanzania\'s premier destinations. Features dynamic content management, modern UI/UX, and mobile-first design.',
     image: '/images/safariking.png',
     link: 'https://www.safarikingafrica.com/',
     tech: ['React', 'Modern UI/UX', 'Mobile-First', 'Lead Forms']

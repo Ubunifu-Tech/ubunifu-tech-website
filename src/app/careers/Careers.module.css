@@ -1,0 +1,136 @@
+.careers {
+  min-height: 100vh;
+  padding: 8rem 0 4rem;
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  font-size: 3.5rem;
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+
+.description {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.comingSoon {
+  margin: 4rem 0;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.comingSoon svg {
+  color: var(--primary);
+  animation: pulse 2s ease-in-out infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.subtitle {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.subtext {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.contactCTA {
+  margin-top: 2rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+}
+
+.futureRoles {
+  margin-top: 4rem;
+  text-align: left;
+}
+
+.futureTitle {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.rolesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.roleCard {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.roleCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 212, 255, 0.3);
+  transform: translateY(-4px);
+}
+
+.roleCard h4 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+}
+
+.roleCard p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
+  }
+
+  .comingSoon {
+    padding: 2rem;
+  }
+
+  .rolesGrid {
+    grid-template-columns: 1fr;
+  }
+}

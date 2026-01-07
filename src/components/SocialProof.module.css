@@ -47,6 +47,9 @@
   font-size: 3rem;
   margin-bottom: 1.5rem;
   line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .capabilityTitle {

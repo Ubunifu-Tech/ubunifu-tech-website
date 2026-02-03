@@ -1,6 +1,6 @@
 # Ubunifu Technologies Website
 
-Official website for **Ubunifu Technologies** - A Dar es Salaam-based digital transformation and strategic consulting firm.
+Official website for **Ubunifu Technologies** - A Tanzania-based digital transformation and strategic consulting firm.
 
 **Technology. Strategy. Results.**
 

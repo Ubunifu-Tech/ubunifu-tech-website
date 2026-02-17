@@ -1,24 +1,25 @@
 :root {
   /* Brand Colors */
-  --background: #0a0f1c; /* Deep Blue/Black */
-  --foreground: #ffffff;
-  --primary: #00d4ff; /* Electric Blue */
-  --secondary: #7928ca; /* Neon Purple */
-  --accent: #ffd700; /* Gold */
-  
-  /* Surface Colors */
-  --surface-1: rgba(255, 255, 255, 0.05);
-  --surface-2: rgba(255, 255, 255, 0.1);
-  --glass: rgba(10, 15, 28, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --background: #ffffff;
+  --foreground: #111827;
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-light: #ecfdf5;
+  --primary-border: #a7f3d0;
+
+  /* Neutral Surfaces */
+  --surface: #F9FAFB;
+  --muted: #6B7280;
+  --border: #E5E7EB;
+  --border-dark: #D1D5DB;
 
   /* Typography */
   --font-heading: var(--font-outfit), sans-serif;
   --font-body: var(--font-inter), sans-serif;
 
-  /* Spacing */
-  --container-width: 1200px;
-  --nav-height: 80px;
+  /* Layout */
+  --container-width: 1160px;
+  --nav-height: 68px;
 }
 
 * {
@@ -36,22 +37,21 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 1rem;
+  color: var(--foreground);
 }
 
 a {
   color: inherit;
   text-decoration: none;
-  transition: color 0.2s ease;
 }
 
-/* Utilities */
+/* Layout utility */
 .container {
   width: 100%;
   max-width: var(--container-width);
@@ -59,18 +59,22 @@ a {
   padding: 0 1.5rem;
 }
 
-.glass-panel {
-  background: var(--surface-1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
+/* Section spacing */
+.section {
+  padding: 96px 0;
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+.section-muted {
+  background-color: var(--surface);
+}
+
+/* Label / eyebrow text */
+.eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 1rem;
 }

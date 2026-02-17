@@ -1,6 +1,5 @@
 import React from 'react';
 import Image from 'next/image';
-import { Button } from './ui/Button';
 import styles from './Portfolio.module.css';
 
 const projects = [
@@ -43,8 +42,8 @@ export const Portfolio: React.FC = () => {
                   style={{ objectFit: 'contain' }}
                 />
                 <div className={styles.overlay}>
-                  <a href={project.link} target="_blank" rel="noopener noreferrer">
-                    <Button variant="glow" size="sm">Visit Website</Button>
+                  <a href={project.link} target="_blank" rel="noopener noreferrer" className={styles.visitBtn}>
+                    Visit Website
                   </a>
                 </div>
               </div>

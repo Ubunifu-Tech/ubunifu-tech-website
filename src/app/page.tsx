@@ -1,11 +1,8 @@
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { Services } from '@/components/Services';
-import { Industries } from '@/components/Industries';
+import { Products } from '@/components/Products';
 import { Portfolio } from '@/components/Portfolio';
-import { SocialProof } from '@/components/SocialProof';
 import { About } from '@/components/About';
-import { LeadMagnet } from '@/components/LeadMagnet';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
 
@@ -14,12 +11,9 @@ export default function Home() {
     <main>
       <Navbar />
       <Hero />
-      <Services />
-      <Industries />
+      <Products />
       <Portfolio />
-      <SocialProof />
       <About />
-      <LeadMagnet />
       <Contact />
       <Footer />
     </main>

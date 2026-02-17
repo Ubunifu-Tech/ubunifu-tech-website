@@ -16,10 +16,10 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ubunifu Technologies | Digital Transformation & Strategic Consulting',
+    default: 'Ubunifu Technologies | Software for Africa',
     template: '%s | Ubunifu Technologies',
   },
-  description: 'Tanzania-based digital transformation and strategic consulting firm. Technology. Strategy. Results. We deliver web development, data analytics, AI solutions, brand design, and digital training across all sectors.',
+  description: 'Ubunifu Technologies builds SaaS products for African businesses. Our first product, Ubunifu Insight, is an AI-powered document intelligence platform built for teams in Tanzania and across Africa.',
   keywords: [
     'digital transformation Tanzania',
     'web development Tanzania',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies | Digital Transformation & Strategic Consulting',
+    title: 'Ubunifu Technologies | Software for Africa',
     description: 'Tanzania-based digital transformation and strategic consulting firm. Technology. Strategy. Results.',
     images: [
       {
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ubunifu Technologies | Digital Transformation & Strategic Consulting',
+    title: 'Ubunifu Technologies | Software for Africa',
     description: 'Tanzania-based digital transformation firm. Web development, AI, data analytics, brand design.',
     images: ['/logo.png'],
   },
@@ -88,7 +88,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ubunifu Technologies',
-    description: 'Digital Transformation & Strategic Consulting firm based in Tanzania',
+    description: 'SaaS product company building software for Africa',
     url: 'https://ubunifutech.com',
     logo: 'https://ubunifutech.com/logo.png',
     contactPoint: {

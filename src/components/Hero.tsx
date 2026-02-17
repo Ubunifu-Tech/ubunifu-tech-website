@@ -1,32 +1,26 @@
-'use client';
-
 import React from 'react';
-import { Button } from './ui/Button';
+import Link from 'next/link';
 import styles from './Hero.module.css';
 
 export const Hero: React.FC = () => {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    element?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <section className={styles.hero}>
-      <div className={styles.bgGlow}></div>
       <div className={`container ${styles.container}`}>
-        <div className={styles.content}>
-          <div className={styles.badge}>Tanzania-Based Digital Experts</div>
-          <h1 className={styles.title}>
-            Digital Transformation <br />
-            <span className="text-gradient">Delivered.</span>
-          </h1>
-          <p className={styles.subtitle}>
-            <strong>Technology. Strategy. Results.</strong> Silicon Valley-trained expertise, right here in Tanzania. From Excel analysis to AI systems, web development to brand design—we deliver complete digital solutions that drive real business growth.
-          </p>
-          <div className={styles.actions}>
-            <Button size="lg" variant="primary" onClick={() => scrollToSection('contact')}>Get Free Consultation</Button>
-            <Button size="lg" variant="outline" onClick={() => scrollToSection('portfolio')}>View Our Work</Button>
-          </div>
+        <span className="eyebrow">Dar es Salaam, Tanzania</span>
+
+        <h1 className={styles.title}>
+          We build software<br />for Africa.
+        </h1>
+
+        <p className={styles.subtitle}>
+          Ubunifu Technologies creates SaaS products designed around how businesses
+          in Tanzania actually work — pay as you go, WhatsApp support, and built to
+          run on the infrastructure available here.
+        </p>
+
+        <div className={styles.actions}>
+          <a href="#products" className={styles.btnPrimary}>See our products</a>
+          <a href="#contact" className={styles.btnSecondary}>Get in touch</a>
         </div>
       </div>
     </section>

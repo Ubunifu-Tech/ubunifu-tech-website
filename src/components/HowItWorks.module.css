@@ -4,11 +4,11 @@
 }
 
 .heading {
-  font-size: 2.25rem;
+  font-size: 2.75rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   margin-bottom: 3rem;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .steps {
@@ -99,6 +99,6 @@
   }
 
   .heading {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 }

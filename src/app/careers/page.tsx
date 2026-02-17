@@ -5,64 +5,67 @@ import styles from './Careers.module.css';
 
 export const metadata = {
   title: 'Careers | Ubunifu Technologies',
-  description: 'Join our team at Ubunifu Technologies. Career opportunities coming soon as we grow our digital transformation practice in Tanzania.',
+  description: 'Join Ubunifu Technologies. We build SaaS products for African businesses. Open roles will be posted here as we grow.',
 };
+
+const futureRoles = [
+  {
+    title: 'Software Engineer',
+    description: 'Python, FastAPI, TypeScript, Next.js. Experience with AI/ML systems a bonus.',
+  },
+  {
+    title: 'Product Designer',
+    description: 'UI/UX for web applications. Strong craft, no-nonsense approach to complexity.',
+  },
+  {
+    title: 'Data Engineer',
+    description: 'Pipelines, vector databases, document processing. Experience with RAG systems preferred.',
+  },
+  {
+    title: 'Sales & Partnerships',
+    description: 'Tanzania and East Africa market. Swahili required. B2B SaaS experience a plus.',
+  },
+];
 
 export default function CareersPage() {
   return (
     <>
       <Navbar />
-      <main className={styles.careers}>
+      <main className={styles.main}>
         <div className="container">
-          <div className={styles.content}>
-            <h1 className={styles.title}>
-              Careers <span className="text-gradient">Coming Soon</span>
-            </h1>
-            <p className={styles.description}>
-              We're a growing digital transformation consultancy based in Tanzania, combining Silicon Valley-caliber expertise with deep local market understanding.
+          <div className={styles.header}>
+            <span className="eyebrow">Careers</span>
+            <h1 className={styles.title}>Work at Ubunifu</h1>
+            <p className={styles.lead}>
+              We are a small team building SaaS products for African businesses, starting in Tanzania.
+              We move deliberately, ship real things, and focus on work that matters.
             </p>
-            <p className={styles.description}>
-              As we expand our services in web development, data analytics, AI solutions, brand design, and digital strategy—we'll be looking for talented individuals to join our team.
-            </p>
-            
-            <div className={styles.comingSoon}>
-              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <h2 className={styles.subtitle}>No Open Positions Yet</h2>
-              <p className={styles.subtext}>
-                We'll post opportunities here as our business grows. Check back soon or reach out if you'd like to connect for future opportunities.
-              </p>
-              <div className={styles.contactCTA}>
-                <Link href="/#contact" className={styles.button}>
-                  Get In Touch
-                </Link>
-              </div>
-            </div>
+          </div>
 
-            <div className={styles.futureRoles}>
-              <h3 className={styles.futureTitle}>Future Opportunities May Include:</h3>
-              <div className={styles.rolesGrid}>
-                <div className={styles.roleCard}>
-                  <h4>Data Scientist / Analyst</h4>
-                  <p>AI/ML expertise, Python, data visualization</p>
+          <div className={styles.openSection}>
+            <div className={styles.noRoles}>
+              <h2 className={styles.noRolesTitle}>No open roles right now</h2>
+              <p className={styles.noRolesText}>
+                We are heads-down building. When we are ready to hire, we will post roles here.
+                If you want to be notified, send a brief note to{' '}
+                <a href="mailto:info@ubunifutech.com" className={styles.emailLink}>info@ubunifutech.com</a>{' '}
+                with the kind of work you do.
+              </p>
+              <Link href="/#contact" className={styles.contactBtn}>
+                Get in touch
+              </Link>
+            </div>
+          </div>
+
+          <div className={styles.futureSection}>
+            <h2 className={styles.futureHeading}>Roles we will hire for as we grow</h2>
+            <div className={styles.rolesGrid}>
+              {futureRoles.map((role) => (
+                <div key={role.title} className={styles.roleCard}>
+                  <h3 className={styles.roleTitle}>{role.title}</h3>
+                  <p className={styles.roleDesc}>{role.description}</p>
                 </div>
-                <div className={styles.roleCard}>
-                  <h4>Full-Stack Developer</h4>
-                  <p>React, Next.js, Node.js, Python/FastAPI</p>
-                </div>
-                <div className={styles.roleCard}>
-                  <h4>UI/UX Designer</h4>
-                  <p>Product design, prototyping, user research</p>
-                </div>
-                <div className={styles.roleCard}>
-                  <h4>Brand Designer</h4>
-                  <p>Visual identity, marketing materials, video</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

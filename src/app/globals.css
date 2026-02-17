@@ -18,7 +18,7 @@
   --font-body: var(--font-inter), sans-serif;
 
   /* Layout */
-  --container-width: 1160px;
+  --container-width: 1380px;
   --nav-height: 68px;
 }
 
@@ -56,7 +56,7 @@ a {
   width: 100%;
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 2.5rem;
 }
 
 /* Section spacing */

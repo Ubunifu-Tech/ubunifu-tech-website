@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: 'What languages does Insight support?',
-    a: 'Questions and answers work well in English and Swahili. Support for more Tanzanian and East African languages is planned for future releases.',
+    a: 'Questions and answers work well in English and Swahili.',
   },
   {
     q: 'How does pay-as-you-go work?',

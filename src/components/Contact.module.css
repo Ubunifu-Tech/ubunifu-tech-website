@@ -4,7 +4,7 @@
 }
 
 .heading {
-  font-size: 2.25rem;
+  font-size: 2.75rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   margin-bottom: 0.75rem;
@@ -57,7 +57,7 @@
 
 @media (max-width: 768px) {
   .heading {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 
   .methods {

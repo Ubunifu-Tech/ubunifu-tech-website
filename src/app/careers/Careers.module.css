@@ -1,136 +1,140 @@
-.careers {
+.main {
+  padding-top: calc(var(--nav-height) + 80px);
+  padding-bottom: 96px;
   min-height: 100vh;
-  padding: 8rem 0 4rem;
+  background-color: var(--background);
 }
 
-.content {
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
+.header {
+  max-width: 760px;
+  margin-bottom: 4rem;
 }
 
 .title {
   font-size: 3.5rem;
-  margin-bottom: 2rem;
-  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-bottom: 1.25rem;
 }
 
-.description {
-  font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.8;
-  margin-bottom: 1.5rem;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
+.lead {
+  font-size: 1.25rem;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 620px;
 }
 
-.comingSoon {
-  margin: 4rem 0;
+.openSection {
+  margin-bottom: 5rem;
+}
+
+.noRoles {
   padding: 3rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--surface);
+  max-width: 640px;
 }
 
-.comingSoon svg {
-  color: var(--primary);
-  animation: pulse 2s ease-in-out infinite;
-  margin-bottom: 1.5rem;
+.noRolesTitle {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.subtitle {
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.subtext {
-  color: rgba(255, 255, 255, 0.6);
+.noRolesText {
   font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 1.75rem;
 }
 
-.contactCTA {
-  margin-top: 2rem;
-}
-
-.button {
-  display: inline-block;
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
+.emailLink {
+  color: var(--primary);
   text-decoration: none;
-  border-radius: 8px;
+  font-weight: 500;
+}
+
+.emailLink:hover {
+  color: var(--primary-hover);
+}
+
+.contactBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary);
+  color: #fff;
+  font-size: 0.9375rem;
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
 }
 
-.button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+.contactBtn:hover {
+  background-color: var(--primary-hover);
+  color: #fff;
 }
 
-.futureRoles {
-  margin-top: 4rem;
-  text-align: left;
+.futureSection {
+  border-top: 1px solid var(--border);
+  padding-top: 3rem;
 }
 
-.futureTitle {
+.futureHeading {
   font-size: 1.5rem;
+  font-weight: 700;
   margin-bottom: 2rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .rolesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
 }
 
 .roleCard {
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.75rem;
+  border: 1px solid var(--border);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  background-color: var(--background);
+  transition: border-color 0.15s ease;
 }
 
 .roleCard:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(0, 212, 255, 0.3);
-  transform: translateY(-4px);
+  border-color: var(--border-dark);
 }
 
-.roleCard h4 {
-  font-size: 1.125rem;
+.roleTitle {
+  font-size: 1rem;
+  font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--primary);
+  color: var(--foreground);
 }
 
-.roleCard p {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+.roleDesc {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  line-height: 1.6;
   margin: 0;
 }
 
 @media (max-width: 768px) {
   .title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
 
-  .comingSoon {
-    padding: 2rem;
+  .lead {
+    font-size: 1.0625rem;
   }
 
   .rolesGrid {
     grid-template-columns: 1fr;
+  }
+
+  .noRoles {
+    padding: 2rem;
   }
 }

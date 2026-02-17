@@ -28,6 +28,7 @@ export const Footer: React.FC = () => {
             <Link href="/#about" className={styles.colLink}>About</Link>
             <Link href="/#portfolio" className={styles.colLink}>Portfolio</Link>
             <Link href="/blog" className={styles.colLink}>Blog</Link>
+            <Link href="/careers" className={styles.colLink}>Careers</Link>
           </div>
 
           <div className={styles.col}>

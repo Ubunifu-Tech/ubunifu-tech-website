@@ -3,12 +3,12 @@ import styles from './ProblemStrip.module.css';
 
 const items = [
   {
-    label: 'The problem',
-    body: 'Most business software is built for US or European companies and adapted for everyone else. It shows.',
+    label: 'The opportunity',
+    body: 'African businesses run on documents — contracts, forms, reports, policies. Managing them takes time that could go elsewhere.',
   },
   {
     label: 'Our approach',
-    body: 'We build from scratch for Africa — starting in Tanzania, with pricing models, languages, and workflows that match.',
+    body: 'We build from scratch for Africa — starting in Tanzania, with pricing, languages, and workflows designed for this market.',
   },
   {
     label: 'Starting with AI',

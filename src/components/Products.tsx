@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import styles from './Products.module.css';
 
 const products = [
@@ -25,6 +27,19 @@ const products = [
 ];
 
 export const Products: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      console.log('Rafiki interest:', email);
+      // TODO: Connect to actual email service
+      setSubmitted(true);
+      setEmail('');
+    }
+  };
+
   return (
     <section id="products" className={`${styles.section} section-muted`}>
       <div className="container">
@@ -72,7 +87,25 @@ export const Products: React.FC = () => {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
                   </a>
                 ) : (
-                  <span className={styles.btnDisabled}>Notify me when it launches</span>
+                  <div className={styles.emailCapture}>
+                    {submitted ? (
+                      <p className={styles.successMessage}>Thanks! We'll keep you posted.</p>
+                    ) : (
+                      <form onSubmit={handleSubmit} className={styles.form}>
+                        <input
+                          type="email"
+                          placeholder="Enter your email"
+                          className={styles.input}
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                        <button type="submit" className={styles.btnNotify}>
+                          Notify me
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

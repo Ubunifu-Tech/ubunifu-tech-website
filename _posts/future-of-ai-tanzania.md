@@ -2,7 +2,7 @@
 title: "AI for African Businesses: Where the Real Opportunity Is"
 date: "2026-01-06"
 author: "Ubunifu Technologies"
-excerpt: "AI tools are everywhere. But most of them are built for companies in San Francisco, not Tanzania. Here is what that gap means — and what we are doing about it."
+excerpt: "AI tools have transformed how companies work in wealthy markets. Tanzania has a different set of needs — and that is an opportunity worth building for."
 tags: ["AI", "Product", "Tanzania"]
 ---
 
@@ -10,13 +10,13 @@ Artificial intelligence has become ordinary in wealthy markets. In the US and Eu
 
 In Tanzania, most of that work still happens manually — in Excel, in WhatsApp groups, and across stacks of scanned PDFs.
 
-This is not because Tanzanian businesses are behind. It is because the tools were not built for them.
+The tools that exist today were built for a different context. The Tanzanian market has its own infrastructure, its own payment patterns, and its own languages. That is not a gap to complain about — it is an opening.
 
-## The real problem
+## What this market actually needs
 
-Most AI products assume you have reliable internet, a credit card connected to a US bank, and colleagues who speak English as their primary language. They assume you will pay a monthly seat fee regardless of whether you use the product. They assume you want a feature list built for a Silicon Valley enterprise.
+Businesses here operate differently. Connectivity is variable. Devices are shared. Payments are not tied to international credit cards. Usage is seasonal, not uniform across the year.
 
-That is not the Tanzanian market.
+A good AI document tool for this market needs to work within those realities: lightweight enough to run on the infrastructure that exists, priced to match actual usage, and built around the document problems teams here face every day.
 
 ## What actually works here
 
@@ -37,4 +37,4 @@ Run a batch extraction across hundreds of PDFs. Export structured data to CSV. G
 
 Pay only when you use it. No seat fees. No annual contracts.
 
-We are not adapting a tool built elsewhere. We are building from here.
+We built this from here — for the market we know.

@@ -4,7 +4,7 @@ import { Footer } from '@/components/Footer';
 import styles from './Careers.module.css';
 
 export const metadata = {
-  title: 'Careers | Ubunifu Technologies',
+  title: 'Careers',
   description: 'Join Ubunifu Technologies. We build SaaS products for African businesses. Open roles will be posted here as we grow.',
 };
 

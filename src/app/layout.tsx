@@ -16,8 +16,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ubunifu Technologies | Software for Africa',
-    template: '%s | Ubunifu Technologies',
+    default: 'U — Ubunifu Technologies · Software for Africa',
+    template: '%s · Ubunifu Technologies',
   },
   description: 'Ubunifu Technologies builds SaaS products for African businesses. Our first product, Ubunifu Insight, is an AI-powered document intelligence platform built for teams in Tanzania and across Africa.',
   keywords: [
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies | Software for Africa',
+    title: 'U — Ubunifu Technologies · Software for Africa',
     description: 'Ubunifu Technologies builds SaaS products for African businesses. Ubunifu Insight — AI-powered document intelligence for teams in Tanzania.',
     images: [
       {
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ubunifu Technologies | Software for Africa',
+    title: 'U — Ubunifu Technologies · Software for Africa',
     description: 'Ubunifu Technologies builds SaaS products for African businesses. Ubunifu Insight — AI-powered document intelligence for teams in Tanzania.',
     images: ['/logo.png'],
   },

@@ -3,6 +3,7 @@ import { Portfolio } from '@/components/Portfolio';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
+import { BuildCards } from '@/components/BuildCards';
 import styles from './Build.module.css';
 
 export const metadata = {
@@ -139,7 +140,7 @@ export default function BuildPage() {
             <section className={styles.servicesSection}>
               <span className="eyebrow">What we do</span>
               <h2 className={styles.sectionHeading}>Services</h2>
-              <div className={styles.servicesGrid}>
+              <BuildCards className={styles.servicesGrid}>
                 {services.map((service) => (
                   <div key={service.title} className={styles.serviceCard}>
                     <div className={styles.serviceTop}>
@@ -155,7 +156,7 @@ export default function BuildPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </BuildCards>
             </section>
           </ScrollReveal>
         </div>
@@ -166,7 +167,7 @@ export default function BuildPage() {
             <ScrollReveal>
               <span className="eyebrow">How it works</span>
               <h2 className={styles.sectionHeading}>Our process</h2>
-              <div className={styles.processGrid}>
+              <BuildCards className={styles.processGrid}>
                 {process.map((item) => (
                   <div key={item.step} className={styles.processCard}>
                     <div className={styles.processStep}>{item.step}</div>
@@ -174,7 +175,7 @@ export default function BuildPage() {
                     <p className={styles.processDescription}>{item.description}</p>
                   </div>
                 ))}
-              </div>
+              </BuildCards>
             </ScrollReveal>
           </div>
         </section>

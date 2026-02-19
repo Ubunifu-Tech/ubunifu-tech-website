@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
+import { WhatsAppButton } from '@/components/WhatsAppButton';
 import './globals.css';
 
 const inter = Inter({
@@ -130,7 +131,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.variable} ${outfit.variable}`}>{children}</body>
+      <body className={`${inter.variable} ${outfit.variable}`}>
+        {children}
+        <WhatsAppButton />
+      </body>
     </html>
   );
 }

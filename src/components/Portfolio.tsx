@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
+import { MotionCard } from './MotionCard';
 import styles from './Portfolio.module.css';
 
 const projects = [
@@ -34,7 +37,7 @@ export const Portfolio: React.FC = () => {
 
         <div className={styles.grid}>
           {projects.map((project, index) => (
-            <div key={index} className={styles.card}>
+            <MotionCard key={index} index={index} className={styles.card}>
               <div className={styles.imageWrapper}>
                 <Image
                   src={project.image}
@@ -61,7 +64,7 @@ export const Portfolio: React.FC = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </MotionCard>
           ))}
         </div>
       </div>

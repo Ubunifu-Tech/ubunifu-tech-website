@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Globe, Zap, CreditCard, MapPin } from 'lucide-react';
+import { MotionCard } from './MotionCard';
 import styles from './About.module.css';
 
 const values = [
@@ -38,12 +41,12 @@ export const About: React.FC = () => {
         </p>
 
         <div className={styles.teamGrid}>
-          {values.map((value) => (
-            <div key={value.title} className={styles.card}>
+          {values.map((value, index) => (
+            <MotionCard key={value.title} index={index} className={styles.card}>
               <div className={styles.iconWrapper}>{value.icon}</div>
               <h3 className={styles.valueTitle}>{value.title}</h3>
               <p className={styles.bio}>{value.body}</p>
-            </div>
+            </MotionCard>
           ))}
         </div>
       </div>

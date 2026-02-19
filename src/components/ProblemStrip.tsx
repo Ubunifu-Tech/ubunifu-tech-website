@@ -1,18 +1,22 @@
 import React from 'react';
+import { Box, Wrench, ArrowRight } from 'lucide-react';
 import styles from './ProblemStrip.module.css';
 
 const items = [
   {
-    label: 'The opportunity',
-    body: 'African businesses run on documents — contracts, forms, reports, policies. Managing them takes time that could go elsewhere.',
+    icon: <Box size={20} />,
+    label: 'Products',
+    body: 'We build SaaS tools that solve real problems for African businesses — document AI, website widgets, and more on the way.',
   },
   {
+    icon: <Wrench size={20} />,
+    label: 'Consulting',
+    body: 'We design and build custom websites, data solutions, and digital strategy for businesses that need hands-on expertise.',
+  },
+  {
+    icon: <ArrowRight size={20} />,
     label: 'Our approach',
-    body: 'We build from scratch for Africa — starting in Tanzania, with pricing, languages, and workflows designed for this market.',
-  },
-  {
-    label: 'Starting with AI',
-    body: 'Ubunifu Insight puts AI document tools in the hands of teams who currently do this work manually in Excel and WhatsApp.',
+    body: 'Everything starts from the workflows, pricing, and infrastructure that exist here — not adapted from tools built elsewhere.',
   },
 ];
 
@@ -22,7 +26,10 @@ export const ProblemStrip: React.FC = () => {
       <div className={`container ${styles.inner}`}>
         {items.map((item) => (
           <div key={item.label} className={styles.item}>
-            <p className={styles.label}>{item.label}</p>
+            <div className={styles.iconLabel}>
+              <span className={styles.icon}>{item.icon}</span>
+              <p className={styles.label}>{item.label}</p>
+            </div>
             <p className={styles.body}>{item.body}</p>
           </div>
         ))}

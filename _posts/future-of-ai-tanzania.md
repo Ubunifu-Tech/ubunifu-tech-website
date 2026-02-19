@@ -1,40 +1,37 @@
 ---
-title: "AI for African Businesses: Where the Real Opportunity Is"
+title: "Building Software for Africa: Where the Real Opportunity Is"
 date: "2026-01-06"
 author: "Ubunifu Technologies"
-excerpt: "AI tools have transformed how companies work in wealthy markets. Tanzania has a different set of needs — and that is an opportunity worth building for."
-tags: ["AI", "Product", "Tanzania"]
+excerpt: "Most software tools were built for wealthy markets. Tanzania has a different set of needs — and that is an opportunity worth building for."
+tags: ["Product", "Africa", "Tanzania"]
 ---
 
-Artificial intelligence has become ordinary in wealthy markets. In the US and Europe, companies use AI to summarize meetings, draft emails, and search internal documents without thinking twice.
+Most software tools — from document AI to website builders to booking platforms — were designed for markets with fast internet, credit card payments, and English-speaking users.
 
-In Tanzania, most of that work still happens manually — in Excel, in WhatsApp groups, and across stacks of scanned PDFs.
+In Tanzania, businesses operate differently. Payments go through M-Pesa. Connectivity is variable. Devices are shared. The tools that exist today were not built for this context.
 
-The tools that exist today were built for a different context. The Tanzanian market has its own infrastructure, its own payment patterns, and its own languages. That is not a gap to complain about — it is an opening.
+That is not a complaint — it is an opening.
 
 ## What this market actually needs
 
-Businesses here operate differently. Connectivity is variable. Devices are shared. Payments are not tied to international credit cards. Usage is seasonal, not uniform across the year.
+Businesses here need software that works within their realities: lightweight enough to run on the infrastructure that exists, priced to match actual usage patterns, and built around the problems teams face every day.
 
-A good AI document tool for this market needs to work within those realities: lightweight enough to run on the infrastructure that exists, priced to match actual usage, and built around the document problems teams here face every day.
-
-## What actually works here
-
-Businesses here need tools that:
-
-- Work on the infrastructure that exists — variable connectivity, shared devices, mobile-first workflows
-- Price on a pay-as-you-go model, not an annual contract
-- Support Swahili, not just English
-- Solve the specific document problems that eat up time: reading contracts, extracting data from forms, answering questions about policies
+A law firm in Arusha should not have to pay a monthly seat fee for document AI it uses once a quarter. A hotel in Zanzibar should not need a developer to add a booking form to its website. An SME should not have to cobble together five different international tools to run its online presence.
 
 ## What we are building
 
-Ubunifu Insight is our attempt to close this gap. It is an AI document platform built specifically for teams in Tanzania and across Africa.
+At Ubunifu Technologies, we are building three products to address this:
 
-Upload a document. Ask a question in plain language. Get a cited answer in seconds.
+**Ubunifu Insight** — AI document intelligence for teams. Upload documents, ask questions in plain language, extract structured data, generate reports. Pay only when you use it.
 
-Run a batch extraction across hundreds of PDFs. Export structured data to CSV. Generate reports using your own knowledge base.
+**Ubunifu Rafiki** — Embeddable widgets for Tanzanian businesses. Contact forms, booking tools, and blog widgets that drop into any website. Built for local payment methods and local needs.
 
-Pay only when you use it. No seat fees. No annual contracts.
+**Ubunifu Build** — Custom software, websites, and consulting for businesses that need hands-on expertise. From brand-new web platforms to data pipelines and AI integrations.
 
-We built this from here — for the market we know.
+## Why we build from here
+
+Every product starts from the workflows, pricing, and infrastructure that exist in Tanzania — not adapted from tools built elsewhere.
+
+M-Pesa and mobile money are first-class payment methods. Swahili is supported alongside English. Pricing follows pay-as-you-go models that match how businesses here actually spend.
+
+We think the next generation of African software companies will be built this way: starting from local needs, not copying foreign solutions and hoping they translate.

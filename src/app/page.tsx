@@ -2,29 +2,32 @@ import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { ProblemStrip } from '@/components/ProblemStrip';
 import { Products } from '@/components/Products';
-import { InsightFeatures } from '@/components/InsightFeatures';
-import { HowItWorks } from '@/components/HowItWorks';
-import { Stats } from '@/components/Stats';
 import { About } from '@/components/About';
-import { PricingTeaser } from '@/components/PricingTeaser';
-import { FAQ } from '@/components/FAQ';
+import { Portfolio } from '@/components/Portfolio';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
+import { ScrollReveal } from '@/components/ScrollReveal';
 
 export default function Home() {
   return (
     <main>
       <Navbar />
       <Hero />
-      <ProblemStrip />
-      <Products />
-      <InsightFeatures />
-      <HowItWorks />
-      <Stats />
-      <About />
-      <PricingTeaser />
-      <FAQ />
-      <Contact />
+      <ScrollReveal>
+        <ProblemStrip />
+      </ScrollReveal>
+      <ScrollReveal>
+        <Products />
+      </ScrollReveal>
+      <ScrollReveal>
+        <About />
+      </ScrollReveal>
+      <ScrollReveal>
+        <Portfolio />
+      </ScrollReveal>
+      <ScrollReveal>
+        <Contact />
+      </ScrollReveal>
       <Footer />
     </main>
   );

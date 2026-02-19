@@ -8,14 +8,14 @@
 }
 
 .heading {
-  font-size: 2.75rem;
+  font-size: 3rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   margin-bottom: 0.75rem;
 }
 
 .subheading {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--muted);
   line-height: 1.7;
   max-width: 480px;
@@ -32,11 +32,13 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card:hover {
   border-color: var(--border-dark);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .imageWrapper {
@@ -112,7 +114,7 @@
 }
 
 .description {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--muted);
   line-height: 1.7;
   margin-bottom: 1.25rem;
@@ -137,11 +139,41 @@
 }
 
 @media (max-width: 768px) {
+  .portfolio {
+    padding: 64px 0;
+  }
+
   .grid {
     grid-template-columns: 1fr;
   }
 
   .heading {
     font-size: 2rem;
+  }
+
+  .content {
+    padding: 1.5rem;
+  }
+
+  .imageWrapper {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolio {
+    padding: 48px 0;
+  }
+
+  .heading {
+    font-size: 1.75rem;
+  }
+
+  .imageWrapper {
+    height: 180px;
+  }
+
+  .content {
+    padding: 1.25rem;
   }
 }

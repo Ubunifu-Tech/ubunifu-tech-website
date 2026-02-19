@@ -3,7 +3,7 @@
 }
 
 .heading {
-  font-size: 2.75rem;
+  font-size: 3rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--foreground);
@@ -11,7 +11,7 @@
 }
 
 .subheading {
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   color: var(--muted);
   max-width: 560px;
   margin-bottom: 3rem;
@@ -20,7 +20,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
 
@@ -32,12 +32,13 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 2rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card:hover {
   border-color: var(--border-dark);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .cardSoon {
@@ -114,7 +115,7 @@
 }
 
 .description {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--muted);
   line-height: 1.7;
   margin-bottom: 1.5rem;
@@ -132,7 +133,7 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--foreground);
 }
 
@@ -159,13 +160,14 @@
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 8px;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.15s ease;
   text-decoration: none;
 }
 
 .btnLive:hover {
   background-color: var(--primary-hover);
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .btnDisabled {
@@ -226,11 +228,56 @@
   padding: 0.5rem 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .grid {
     grid-template-columns: 1fr;
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 64px 0;
+  }
+
+  .heading {
+    font-size: 2rem;
+  }
+
+  .subheading {
+    font-size: 1.0625rem;
+    margin-bottom: 2rem;
+  }
+
+  .grid {
+    max-width: 100%;
+  }
+
+  .card {
+    padding: 1.5rem;
+  }
+
+  .form {
+    flex-direction: column;
+  }
+
+  .btnNotify {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 48px 0;
+  }
+
+  .heading {
+    font-size: 1.75rem;
+  }
+
+  .subheading {
+    font-size: 1rem;
   }
 }

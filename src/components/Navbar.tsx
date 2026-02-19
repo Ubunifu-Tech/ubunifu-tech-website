@@ -33,8 +33,12 @@ export const Navbar: React.FC = () => {
         {/* Desktop Links */}
         <div className={styles.links}>
           <Link href="/#products" className={styles.link}>Products</Link>
+          <Link href="/build" className={styles.link}>Build</Link>
           <Link href="/#about" className={styles.link}>About</Link>
-          <Link href="/blog" className={styles.link}>Blog</Link>
+          <Link href="/blog" className={styles.link}>
+            Blog
+            <span className={styles.badge}>Soon</span>
+          </Link>
           <Link href="/careers" className={styles.link}>Careers</Link>
         </div>
 
@@ -45,8 +49,8 @@ export const Navbar: React.FC = () => {
           </a>
 
           {/* Hamburger Icon */}
-          <button 
-            className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`} 
+          <button
+            className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`}
             onClick={toggleMobileMenu}
             aria-label="Toggle menu"
           >
@@ -60,8 +64,12 @@ export const Navbar: React.FC = () => {
         <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
           <div className={styles.mobileLinks}>
             <Link href="/#products" className={styles.mobileLink} onClick={closeMobileMenu}>Products</Link>
+            <Link href="/build" className={styles.mobileLink} onClick={closeMobileMenu}>Build</Link>
             <Link href="/#about" className={styles.mobileLink} onClick={closeMobileMenu}>About</Link>
-            <Link href="/blog" className={styles.mobileLink} onClick={closeMobileMenu}>Blog</Link>
+            <Link href="/blog" className={styles.mobileLink} onClick={closeMobileMenu}>
+              Blog
+              <span className={styles.mobileBadge}>Soon</span>
+            </Link>
             <Link href="/careers" className={styles.mobileLink} onClick={closeMobileMenu}>Careers</Link>
           </div>
         </div>

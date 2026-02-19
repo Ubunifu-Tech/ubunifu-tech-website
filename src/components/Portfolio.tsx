@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { ExternalLink } from 'lucide-react';
 import styles from './Portfolio.module.css';
 
 const projects = [
@@ -26,24 +27,26 @@ export const Portfolio: React.FC = () => {
     <section id="portfolio" className={styles.portfolio}>
       <div className="container">
         <div className={styles.header}>
-          <h2 className={styles.heading}>Recent work.</h2>
-          <p className={styles.subheading}>Live websites we've built for Tanzania-based tourism businesses.</p>
+          <span className="eyebrow">Portfolio</span>
+          <h2 className={styles.heading}>Built by Ubunifu.</h2>
+          <p className={styles.subheading}>Websites and platforms we have designed and built for Tanzanian businesses.</p>
         </div>
 
         <div className={styles.grid}>
           {projects.map((project, index) => (
             <div key={index} className={styles.card}>
               <div className={styles.imageWrapper}>
-                <Image 
-                  src={project.image} 
-                  alt={project.title} 
-                  fill 
+                <Image
+                  src={project.image}
+                  alt={project.title}
+                  fill
                   className={styles.image}
                   style={{ objectFit: 'contain' }}
                 />
                 <div className={styles.overlay}>
                   <a href={project.link} target="_blank" rel="noopener noreferrer" className={styles.visitBtn}>
                     Visit Website
+                    <ExternalLink size={14} />
                   </a>
                 </div>
               </div>
@@ -51,7 +54,7 @@ export const Portfolio: React.FC = () => {
                 <span className={styles.category}>{project.category}</span>
                 <h3 className={styles.title}>{project.title}</h3>
                 <p className={styles.description}>{project.description}</p>
-                
+
                 <div className={styles.techStack}>
                   {project.tech.map((tech, idx) => (
                     <span key={idx} className={styles.techTag}>{tech}</span>

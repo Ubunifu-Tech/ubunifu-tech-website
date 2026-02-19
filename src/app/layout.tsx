@@ -19,16 +19,18 @@ export const metadata: Metadata = {
     default: 'U — Ubunifu Technologies · Software for Africa',
     template: '%s · Ubunifu Technologies',
   },
-  description: 'Ubunifu Technologies builds SaaS products for African businesses. Our first product, Ubunifu Insight, is an AI-powered document intelligence platform built for teams in Tanzania and across Africa.',
+  description: 'Ubunifu Technologies builds software products and provides consulting for African businesses. Ubunifu Insight (document AI), Ubunifu Rafiki (business widgets), and Ubunifu Build (custom software and consulting).',
   keywords: [
     'SaaS Tanzania',
     'software Africa',
     'AI platform Tanzania',
-    'document intelligence Tanzania',
     'Ubunifu Insight',
+    'Ubunifu Rafiki',
+    'Ubunifu Build',
+    'web development Tanzania',
     'business software Tanzania',
     'software Arusha',
-    'African SaaS',
+    'consulting Tanzania',
     'data analytics Tanzania',
     'AI Tanzania',
   ],
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
     title: 'U — Ubunifu Technologies · Software for Africa',
-    description: 'Ubunifu Technologies builds SaaS products for African businesses. Ubunifu Insight — AI-powered document intelligence for teams in Tanzania.',
+    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses — Insight, Rafiki, and Build.',
     images: [
       {
         url: '/logo.png',
@@ -58,7 +60,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'U — Ubunifu Technologies · Software for Africa',
-    description: 'Ubunifu Technologies builds SaaS products for African businesses. Ubunifu Insight — AI-powered document intelligence for teams in Tanzania.',
+    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses — Insight, Rafiki, and Build.',
     images: ['/logo.png'],
   },
   robots: {
@@ -87,7 +89,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ubunifu Technologies',
-    description: 'SaaS product company building software for Africa',
+    description: 'Software products and consulting for African businesses',
     url: 'https://ubunifutech.com',
     logo: 'https://ubunifutech.com/logo.png',
     contactPoint: {
@@ -116,6 +118,7 @@ export default function RootLayout({
     products: [
       'Ubunifu Insight',
       'Ubunifu Rafiki',
+      'Ubunifu Build',
     ],
   };
 

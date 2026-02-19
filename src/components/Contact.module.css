@@ -4,14 +4,14 @@
 }
 
 .heading {
-  font-size: 2.75rem;
+  font-size: 3rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   margin-bottom: 0.75rem;
 }
 
 .text {
-  font-size: 1rem;
+  font-size: 1.125rem;
   color: var(--muted);
   max-width: 520px;
   line-height: 1.7;
@@ -26,8 +26,20 @@
 
 .method {
   display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+
+.methodIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .methodLabel {
@@ -36,10 +48,11 @@
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--muted);
+  margin-bottom: 0.25rem;
 }
 
 .methodLink {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--primary);
   text-decoration: none;
   font-weight: 500;
@@ -51,17 +64,36 @@
 }
 
 .methodText {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--foreground);
 }
 
 @media (max-width: 768px) {
+  .contact {
+    padding: 64px 0;
+  }
+
   .heading {
     font-size: 2rem;
+  }
+
+  .text {
+    font-size: 1rem;
+    margin-bottom: 2rem;
   }
 
   .methods {
     gap: 2rem;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact {
+    padding: 48px 0;
+  }
+
+  .heading {
+    font-size: 1.75rem;
   }
 }

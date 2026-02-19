@@ -2,7 +2,7 @@
   background-color: var(--surface);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 3rem 0;
+  padding: 3.5rem 0;
 }
 
 .inner {
@@ -14,11 +14,24 @@
 .item {
   display: flex;
   flex-direction: column;
+  gap: 0.625rem;
+}
+
+.iconLabel {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
 .label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -26,14 +39,28 @@
 }
 
 .body {
-  font-size: 0.9375rem;
+  font-size: 1rem;
   color: var(--muted);
   line-height: 1.7;
 }
 
 @media (max-width: 768px) {
+  .strip {
+    padding: 2.5rem 0;
+  }
+
   .inner {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+
+  .body {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .strip {
+    padding: 2rem 0;
   }
 }

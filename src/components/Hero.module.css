@@ -1,80 +1,372 @@
+/* ── Hero Section ─────────────────────────────── */
+
 .hero {
-  padding-top: calc(var(--nav-height) + 80px);
+  position: relative;
+  padding-top: calc(var(--nav-height) + 72px);
   padding-bottom: 100px;
-  background-color: var(--background);
+  overflow: hidden;
+  background-color: #fafffe;
 }
 
 .container {
-  max-width: 860px;
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
 }
 
-.title {
-  font-size: 5rem;
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.025em;
-  color: var(--foreground);
+/* ── Gradient Mesh Background ──────────────────── */
+
+.gradientMesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 50% 60% at 75% 20%, rgba(5, 150, 105, 0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 20% 80%, rgba(5, 150, 105, 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(167, 243, 208, 0.08) 0%, transparent 60%);
+}
+
+/* ── Dot Grid Overlay ──────────────────────────── */
+
+.dotGrid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(5, 150, 105, 0.12) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 55% 65% at 78% 35%, black 10%, transparent 65%);
+  -webkit-mask-image: radial-gradient(ellipse 55% 65% at 78% 35%, black 10%, transparent 65%);
+}
+
+/* ── Floating Shapes ───────────────────────────── */
+
+.shapes {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  opacity: 0;
+  animation: shapeAppear 0.8s ease-out forwards;
+}
+
+/* Dashed ring */
+.shapeRing {
+  width: 200px;
+  height: 200px;
+  right: 6%;
+  top: 15%;
+  color: var(--primary-border);
+  animation-delay: 0.6s;
+  animation: shapeAppear 0.8s ease-out 0.6s forwards, shapeSpin 40s linear infinite;
+}
+
+/* Rounded square */
+.shapeSquare {
+  width: 56px;
+  height: 56px;
+  right: 28%;
+  top: 22%;
+  border-radius: 14px;
+  background-color: var(--primary-light);
+  border: 1.5px solid var(--primary-border);
+  animation-delay: 0.9s;
+  animation: shapeAppear 0.8s ease-out 0.9s forwards, shapeFloat 16s ease-in-out infinite;
+}
+
+/* Green filled dot */
+.shapeDot {
+  width: 12px;
+  height: 12px;
+  right: 18%;
+  top: 60%;
+  border-radius: 50%;
+  background-color: var(--primary);
+  animation-delay: 1.2s;
+  animation: shapeAppear 0.8s ease-out 1.2s forwards, shapePulse 3s ease-in-out infinite;
+}
+
+/* Gradient circle */
+.shapeCircleFill {
+  width: 280px;
+  height: 280px;
+  right: -2%;
+  top: 40%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(5, 150, 105, 0.08), transparent 70%);
+  animation-delay: 0.4s;
+  animation: shapeAppear 0.8s ease-out 0.4s forwards, shapeFloat 22s ease-in-out infinite;
+}
+
+/* Cross */
+.shapeCross {
+  width: 28px;
+  height: 28px;
+  right: 36%;
+  top: 55%;
+  color: var(--border-dark);
+  animation-delay: 1.5s;
+  animation: shapeAppear 0.8s ease-out 1.5s forwards, shapeFloat 18s ease-in-out 2s infinite;
+}
+
+@keyframes shapeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes shapeSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shapePulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+@keyframes shapeAppear {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Location Badge ────────────────────────────── */
+
+.locationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.375rem 0.875rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 100px;
+  border: 1px solid var(--primary-border);
   margin-bottom: 1.5rem;
 }
 
+/* ── Entrance Animations ───────────────────────── */
+
+.fadeUp {
+  opacity: 0;
+  transform: translateY(28px);
+  animation: fadeUpIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay1 { animation-delay: 0.15s; }
+.delay2 { animation-delay: 0.3s; }
+.delay3 { animation-delay: 0.5s; }
+.delay4 { animation-delay: 0.65s; }
+.delay5 { animation-delay: 0.85s; }
+
+@keyframes fadeUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Typography ────────────────────────────────── */
+
+.title {
+  font-size: 5.5rem;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+  margin-bottom: 1.75rem;
+}
+
+.titleGradient {
+  background: linear-gradient(135deg, var(--primary) 0%, #10b981 40%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .subtitle {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   line-height: 1.75;
   color: var(--muted);
-  max-width: 620px;
+  max-width: 600px;
   margin-bottom: 2.5rem;
 }
+
+/* ── Buttons ───────────────────────────────────── */
 
 .actions {
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 3.5rem;
 }
 
 .btnPrimary {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
+  gap: 8px;
+  padding: 0.875rem 1.75rem;
   background-color: var(--primary);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
+  border-radius: 10px;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   text-decoration: none;
 }
 
 .btnPrimary:hover {
   background-color: var(--primary-hover);
   color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
 .btnSecondary {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.75rem;
   background-color: transparent;
   color: var(--foreground);
   font-size: 0.9375rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border-dark);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
   text-decoration: none;
 }
 
 .btnSecondary:hover {
   border-color: var(--foreground);
   background-color: var(--surface);
+  transform: translateY(-2px);
+}
+
+/* ── Trust Indicators ──────────────────────────── */
+
+.trust {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.trustItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.trustDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  animation: shapePulse 2s ease-in-out infinite;
+}
+
+.trustDivider {
+  width: 1px;
+  height: 14px;
+  background-color: var(--border);
+}
+
+/* ── Responsive ────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .title {
+    font-size: 4.25rem;
+  }
+
+  .shapeRing {
+    width: 140px;
+    height: 140px;
+    right: 2%;
+  }
 }
 
 @media (max-width: 768px) {
+  .hero {
+    padding-top: calc(var(--nav-height) + 48px);
+    padding-bottom: 64px;
+  }
+
   .title {
     font-size: 3rem;
   }
 
   .subtitle {
     font-size: 1.0625rem;
+  }
+
+  .shapes {
+    display: none;
+  }
+
+  .dotGrid {
+    mask-image: radial-gradient(ellipse 80% 50% at 50% 20%, black 10%, transparent 60%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 20%, black 10%, transparent 60%);
+  }
+
+  .trust {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .trustDivider {
+    display: none;
+  }
+
+  .actions {
+    margin-bottom: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-top: calc(var(--nav-height) + 32px);
+    padding-bottom: 48px;
+  }
+
+  .title {
+    font-size: 2.25rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .locationBadge {
+    font-size: 0.6875rem;
+    padding: 0.3rem 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .btnPrimary,
+  .btnSecondary {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    margin-bottom: 2rem;
+  }
+
+  .trustItem {
+    font-size: 0.75rem;
   }
 }

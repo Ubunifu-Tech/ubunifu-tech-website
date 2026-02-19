@@ -28,6 +28,10 @@
   margin: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   max-width: 100vw;
@@ -77,4 +81,26 @@ a {
   text-transform: uppercase;
   color: var(--primary);
   margin-bottom: 1rem;
+}
+
+/* ── Mobile Responsive ─────────────────────────── */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+
+  .section {
+    padding: 64px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .section {
+    padding: 48px 0;
+  }
 }

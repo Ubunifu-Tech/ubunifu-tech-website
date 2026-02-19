@@ -21,6 +21,7 @@ export const Footer: React.FC = () => {
               Ubunifu Insight
             </a>
             <span className={styles.colLinkDisabled}>Ubunifu Rafiki <span className={styles.soon}>Soon</span></span>
+            <Link href="/build" className={styles.colLink}>Ubunifu Build</Link>
           </div>
 
           <div className={styles.col}>

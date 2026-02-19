@@ -70,6 +70,34 @@
   color: var(--foreground);
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 1px 5px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.mobileBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  border-radius: 4px;
+}
+
 .actions {
   display: flex;
   align-items: center;

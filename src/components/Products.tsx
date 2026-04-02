@@ -15,6 +15,18 @@ const products = [
     status: 'live' as const,
     url: 'https://insight.ubunifutech.com',
     domain: 'insight.ubunifutech.com',
+    cta: 'Try Insight',
+  },
+  {
+    name: 'Ubunifu Sifa',
+    tagline: 'Business management for Tanzanian SMBs',
+    description:
+      'Sales recording, inventory tracking, employee accountability, and real-time reports — all in one platform. Built for pharmacies, shops, laundries, garages, and any business with a team. Works offline on any phone.',
+    features: ['Sales & POS', 'Inventory with expiry tracking', 'Employee clock-in & scheduling', 'Credit & customer management', 'Jobs & order tracking', 'Free plan available'],
+    status: 'live' as const,
+    url: 'https://sifa.ubunifutech.com',
+    domain: 'sifa.ubunifutech.com',
+    cta: 'Start Free',
   },
   {
     name: 'Ubunifu Rafiki',
@@ -25,6 +37,7 @@ const products = [
     status: 'soon' as const,
     url: null,
     domain: 'rafiki.ubunifutech.com',
+    cta: 'Coming soon',
   },
   {
     name: 'Ubunifu Build',
@@ -35,6 +48,7 @@ const products = [
     status: 'available' as const,
     url: '/build',
     domain: 'ubunifutech.com/build',
+    cta: 'Learn more',
   },
 ];
 
@@ -84,16 +98,16 @@ export const Products: React.FC = () => {
               <div className={styles.cardFooter}>
                 {product.status === 'live' && product.url ? (
                   <a href={product.url} target="_blank" rel="noopener noreferrer" className={styles.btnLive}>
-                    Try Insight
+                    {product.cta}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
                   </a>
                 ) : product.status === 'available' && product.url ? (
                   <Link href={product.url} className={styles.btnLive}>
-                    Learn more
+                    {product.cta}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                   </Link>
                 ) : (
-                  <span className={styles.btnDisabled}>Coming soon</span>
+                  <span className={styles.btnDisabled}>{product.cta}</span>
                 )}
               </div>
             </MotionCard>

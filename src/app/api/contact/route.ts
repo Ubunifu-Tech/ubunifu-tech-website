@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     // Send notification to Ubunifu team
     await resend.emails.send({
-      from: 'Ubunifu Website <onboarding@resend.dev>',
+      from: 'Ubunifu Website <notifications@ubunifutech.com>',
       to: 'info@ubunifutech.com',
       replyTo: email,
       subject: `[Website] ${subject} — ${name}`,
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // Send acknowledgement to the sender
     await resend.emails.send({
-      from: 'Ubunifu Technologies <onboarding@resend.dev>',
+      from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
       to: email,
       replyTo: 'info@ubunifutech.com',
       subject: `We received your message — Ubunifu Technologies`,

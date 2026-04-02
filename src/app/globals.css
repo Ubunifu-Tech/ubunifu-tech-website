@@ -1,31 +1,53 @@
 :root {
+  /* ── Dark Theme Foundation ─────────────────────── */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --surface: #111111;
+  --surface-2: #161616;
+  --surface-3: #1a1a1a;
+
   /* Brand Colors */
-  --background: #ffffff;
-  --foreground: #111827;
-  --primary: #059669;
-  --primary-hover: #047857;
-  --primary-light: #ecfdf5;
-  --primary-border: #a7f3d0;
+  --primary: #10b981;
+  --primary-hover: #34d399;
+  --primary-dim: rgba(16, 185, 129, 0.15);
+  --primary-border: rgba(16, 185, 129, 0.25);
+  --primary-glow: rgba(16, 185, 129, 0.08);
 
-  /* Accent Blue (complementary) */
-  --accent: #1e40af;
-  --accent-light: #eff6ff;
-  --accent-border: #bfdbfe;
-  --accent-muted: #3b82f6;
+  /* Accent */
+  --accent: #6366f1;
+  --accent-dim: rgba(99, 102, 241, 0.15);
+  --accent-border: rgba(99, 102, 241, 0.25);
 
-  /* Neutral Surfaces */
-  --surface: #F9FAFB;
-  --muted: #6B7280;
-  --border: #E5E7EB;
-  --border-dark: #D1D5DB;
+  /* Text */
+  --text-primary: #fafafa;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  --border-active: rgba(255, 255, 255, 0.2);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
 
   /* Typography */
-  --font-heading: var(--font-outfit), sans-serif;
-  --font-body: var(--font-inter), sans-serif;
+  --font-heading: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+  --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
 
   /* Layout */
-  --container-width: 1380px;
-  --nav-height: 68px;
+  --container-width: 1280px;
+  --nav-height: 72px;
+
+  /* Transitions */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s var(--ease-out-expo);
+  --transition-slow: 0.6s var(--ease-out-expo);
 }
 
 * {
@@ -47,13 +69,15 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  line-height: 1.2;
-  color: var(--foreground);
+  line-height: 1.1;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
 }
 
 a {
@@ -61,35 +85,100 @@ a {
   text-decoration: none;
 }
 
-/* Layout utility */
+/* ── Layout Utilities ─────────────────────────── */
+
 .container {
   width: 100%;
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 0 2.5rem;
+  padding: 0 2rem;
 }
 
-/* Section spacing */
 .section {
-  padding: 96px 0;
+  padding: 120px 0;
+  position: relative;
 }
 
-.section-muted {
+.section-alt {
   background-color: var(--surface);
 }
 
-/* Label / eyebrow text */
+/* ── Eyebrow Label ────────────────────────────── */
+
 .eyebrow {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--primary);
+  padding: 0.4rem 1rem;
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
+  border-radius: 100px;
+  margin-bottom: 1.5rem;
+  width: fit-content;
+}
+
+/* ── Section Heading ──────────────────────────── */
+
+.sectionHeading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
   margin-bottom: 1rem;
 }
 
-/* ── Mobile Responsive ─────────────────────────── */
+.sectionSubtext {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  color: var(--text-secondary);
+  max-width: 600px;
+  line-height: 1.7;
+}
+
+/* ── Glass Card Base ──────────────────────────── */
+
+.glassCard {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
+}
+
+.glassCard:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.04);
+}
+
+/* ── Selection ────────────────────────────────── */
+
+::selection {
+  background: var(--primary-dim);
+  color: var(--primary);
+}
+
+/* ── Scrollbar ────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Responsive ───────────────────────────────── */
 
 @media (max-width: 768px) {
   .container {
@@ -97,7 +186,7 @@ a {
   }
 
   .section {
-    padding: 64px 0;
+    padding: 80px 0;
   }
 }
 
@@ -107,6 +196,6 @@ a {
   }
 
   .section {
-    padding: 48px 0;
+    padding: 64px 0;
   }
 }

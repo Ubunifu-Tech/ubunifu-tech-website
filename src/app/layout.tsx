@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
+import { SmoothScroll } from '@/components/SmoothScroll';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import './globals.css';
 
@@ -17,16 +18,16 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: 'U — Ubunifu Technologies · Software for Africa',
-    template: '%s · Ubunifu Technologies',
+    default: 'Ubunifu Technologies — Software for Africa',
+    template: '%s — Ubunifu Technologies',
   },
-  description: 'Ubunifu Technologies builds software products and provides consulting for African businesses. Ubunifu Insight (document AI), Ubunifu Rafiki (business widgets), and Ubunifu Build (custom software and consulting).',
+  description: 'Ubunifu Technologies builds software products and provides consulting for African businesses. Ubunifu Insight (document AI), Ubunifu Sifa (business management), and Ubunifu Build (custom software and consulting).',
   keywords: [
     'SaaS Tanzania',
     'software Africa',
     'AI platform Tanzania',
     'Ubunifu Insight',
-    'Ubunifu Rafiki',
+    'Ubunifu Sifa',
     'Ubunifu Build',
     'web development Tanzania',
     'business software Tanzania',
@@ -47,8 +48,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'U — Ubunifu Technologies · Software for Africa',
-    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses — Insight, Rafiki, and Build.',
+    title: 'Ubunifu Technologies — Software for Africa',
+    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses — Insight, Sifa, and Build.',
     images: [
       {
         url: '/logo.png',
@@ -60,8 +61,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'U — Ubunifu Technologies · Software for Africa',
-    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses — Insight, Rafiki, and Build.',
+    title: 'Ubunifu Technologies — Software for Africa',
+    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses — Insight, Sifa, and Build.',
     images: ['/logo.png'],
   },
   robots: {
@@ -74,10 +75,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  verification: {
-    // Add Google Search Console verification when ready
-    // google: 'your-verification-code',
   },
 };
 
@@ -106,11 +103,6 @@ export default function RootLayout({
       addressCountry: 'TZ',
       addressRegion: 'Arusha',
     },
-    sameAs: [
-      // Add social media profiles when available
-      // 'https://linkedin.com/company/ubunifu-technologies',
-      // 'https://twitter.com/ubunifutech',
-    ],
     founder: {
       '@type': 'Person',
       name: 'Richard Pallangyo',
@@ -118,7 +110,7 @@ export default function RootLayout({
     },
     products: [
       'Ubunifu Insight',
-      'Ubunifu Rafiki',
+      'Ubunifu Sifa',
       'Ubunifu Build',
     ],
   };
@@ -132,8 +124,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${outfit.variable}`}>
-        {children}
-        <WhatsAppButton />
+        <SmoothScroll>
+          {children}
+          <WhatsAppButton />
+        </SmoothScroll>
       </body>
     </html>
   );

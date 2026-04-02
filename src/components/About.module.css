@@ -1,40 +1,40 @@
 .about {
-  padding: 96px 0;
-  background-color: var(--background);
+  background: var(--background);
 }
 
 .heading {
-  font-size: 3rem;
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   margin-bottom: 0.75rem;
 }
 
 .intro {
-  font-size: 1.1875rem;
-  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  color: var(--text-secondary);
   max-width: 640px;
   line-height: 1.7;
   margin-bottom: 3rem;
 }
 
-.teamGrid {
+.grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .card {
   padding: 2rem;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background-color: var(--background);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .card:hover {
-  border-color: var(--border-dark);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.04);
   transform: translateY(-2px);
 }
 
@@ -44,15 +44,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--primary-light);
+  background: var(--primary-dim);
   color: var(--primary);
   border-radius: 12px;
-  margin-bottom: 1rem;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  margin-bottom: 1.25rem;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .card:hover .iconWrapper {
-  background-color: var(--primary);
+  background: var(--primary);
   color: #fff;
 }
 
@@ -60,49 +60,22 @@
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 0.625rem;
-  color: var(--foreground);
+  color: var(--text-primary);
 }
 
 .bio {
   font-size: 1rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
 }
 
 @media (max-width: 768px) {
-  .about {
-    padding: 64px 0;
-  }
-
-  .teamGrid {
+  .grid {
     grid-template-columns: 1fr;
-  }
-
-  .heading {
-    font-size: 2rem;
-  }
-
-  .intro {
-    font-size: 1.0625rem;
   }
 
   .card {
     padding: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .about {
-    padding: 48px 0;
-  }
-
-  .heading {
-    font-size: 1.75rem;
-  }
-
-  .intro {
-    font-size: 1rem;
-    margin-bottom: 2rem;
   }
 }

@@ -1,8 +1,8 @@
 .main {
   padding-top: calc(var(--nav-height) + 80px);
-  padding-bottom: 96px;
+  padding-bottom: 100px;
   min-height: 100vh;
-  background-color: var(--background);
+  background: var(--background);
 }
 
 .header {
@@ -11,16 +11,17 @@
 }
 
 .title {
-  font-size: 3.5rem;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
   font-weight: 800;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
   line-height: 1.1;
   margin-bottom: 1.25rem;
+  color: var(--text-primary);
 }
 
 .lead {
-  font-size: 1.25rem;
-  color: var(--muted);
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  color: var(--text-secondary);
   line-height: 1.7;
   max-width: 620px;
 }
@@ -31,9 +32,9 @@
 
 .noRoles {
   padding: 3rem;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background-color: var(--surface);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
   max-width: 640px;
 }
 
@@ -41,11 +42,12 @@
   font-size: 1.375rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
+  color: var(--text-primary);
 }
 
 .noRolesText {
   font-size: 1rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   line-height: 1.7;
   margin-bottom: 1.75rem;
 }
@@ -64,18 +66,20 @@
   display: inline-flex;
   align-items: center;
   padding: 0.75rem 1.5rem;
-  background-color: var(--primary);
+  background: var(--primary);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   text-decoration: none;
-  transition: background-color 0.15s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .contactBtn:hover {
-  background-color: var(--primary-hover);
+  background: var(--primary-hover);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
 }
 
 .futureSection {
@@ -87,49 +91,43 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 2rem;
+  color: var(--text-primary);
 }
 
 .rolesGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .roleCard {
   padding: 1.75rem;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background-color: var(--background);
-  transition: border-color 0.15s ease;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: border-color 0.3s ease, background 0.3s ease;
 }
 
 .roleCard:hover {
-  border-color: var(--border-dark);
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-hover);
 }
 
 .roleTitle {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: var(--foreground);
+  color: var(--text-primary);
 }
 
 .roleDesc {
   font-size: 0.9375rem;
-  color: var(--muted);
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
 }
 
 @media (max-width: 768px) {
-  .title {
-    font-size: 2.25rem;
-  }
-
-  .lead {
-    font-size: 1.0625rem;
-  }
-
   .rolesGrid {
     grid-template-columns: 1fr;
   }

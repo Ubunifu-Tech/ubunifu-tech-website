@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
           <div className={styles.ctaContent}>
             <h2 className={styles.ctaHeading}>Ready to build something?</h2>
             <p className={styles.ctaText}>
-              Whether you need a SaaS product, a custom website, or consulting - we&apos;re here to help.
+              Whether you need a SaaS product, a custom website, or consulting, we are here to help.
             </p>
             <div className={styles.ctaActions}>
               <a href={site.urls.contact} className={styles.ctaBtn}>

@@ -18,8 +18,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ubunifu Technologies - Software for Africa',
-    template: '%s - Ubunifu Technologies',
+    default: 'Ubunifu Technologies: Software for Africa',
+    template: '%s | Ubunifu Technologies',
   },
   description: 'Ubunifu Technologies builds software products and provides consulting for African businesses. Ubunifu Insight (document AI), Ubunifu Sifa (business management), and Ubunifu Build (custom software and consulting).',
   keywords: [
@@ -48,21 +48,21 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies - Software for Africa',
-    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses - Insight, Sifa, and Build.',
+    title: 'Ubunifu Technologies: Software for Africa',
+    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses: Insight, Sifa, and Build.',
     images: [
       {
         url: '/logo.png',
         width: 1200,
         height: 630,
-        alt: 'Ubunifu Technologies - Software for Africa',
+        alt: 'Ubunifu Technologies: Software for Africa',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ubunifu Technologies - Software for Africa',
-    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses - Insight, Sifa, and Build.',
+    title: 'Ubunifu Technologies: Software for Africa',
+    description: 'Ubunifu Technologies builds software products and provides consulting for African businesses: Insight, Sifa, and Build.',
     images: ['/logo.png'],
   },
   robots: {

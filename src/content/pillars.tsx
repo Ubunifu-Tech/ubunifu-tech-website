@@ -12,7 +12,7 @@ export const pillars: ReadonlyArray<Pillar> = [
   {
     icon: Box,
     label: 'Products',
-    body: 'SaaS tools that solve real problems for African businesses - document AI, business management, and more on the way.',
+    body: 'SaaS tools that solve real problems for African businesses: document AI, business management, and more on the way.',
   },
   {
     icon: Wrench,
@@ -22,6 +22,6 @@ export const pillars: ReadonlyArray<Pillar> = [
   {
     icon: ArrowRight,
     label: 'Our approach',
-    body: 'Everything starts from the workflows, pricing, and infrastructure that exist here - not adapted from elsewhere.',
+    body: 'Everything starts from the workflows, pricing, and infrastructure that exist here, not adapted from elsewhere.',
   },
 ];

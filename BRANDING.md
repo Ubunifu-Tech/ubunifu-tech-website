@@ -1,6 +1,6 @@
-# Ubunifu Technologies - Brand & Design System
+# Ubunifu Technologies — Brand & Design System
 
-The visual system for the Ubunifu Technologies website. This is the source of truth - if you're changing colors, fonts, or component patterns, update this document and the relevant CSS variables together.
+The visual system for the Ubunifu Technologies website. This is the source of truth — if you're changing colors, fonts, or component patterns, update this document and the relevant CSS variables together.
 
 ---
 
@@ -16,9 +16,9 @@ The visual system for the Ubunifu Technologies website. This is the source of tr
 
 ## 2. Color Palette
 
-All colors are CSS custom properties defined in [`src/app/globals.css`](src/app/globals.css). Reference them by variable - never hard-code hex values in component CSS.
+All colors are CSS custom properties defined in [`src/app/globals.css`](src/app/globals.css). Reference them by variable — never hard-code hex values in component CSS.
 
-The palette has **one primary brand color (warm orange)** plus two supporting accents (deep purple and blue). Text and headings are a very dark navy with a faint purple undertone - close to Intercept Intelligence's heading treatment.
+The palette has **one primary brand color (warm orange)** plus two supporting accents (deep purple and blue). Text and headings are a very dark navy with a faint purple undertone — close to Intercept Intelligence's heading treatment.
 
 ### 2.1 Foundation
 
@@ -29,7 +29,7 @@ The palette has **one primary brand color (warm orange)** plus two supporting ac
 | `--surface-2` | `#FAF8FE` | Alternate section background (Products, Contact) |
 | `--surface-3` | `#F0EDF9` | Subtle panel / tag background |
 
-### 2.2 Brand - Warm Orange (Primary)
+### 2.2 Brand — Warm Orange (Primary)
 
 The dominant brand color. Used for the logo mark gradient, eyebrows, primary CTAs, and active states. If you only see one accent color on a section, it should be this one.
 
@@ -42,9 +42,9 @@ The dominant brand color. Used for the logo mark gradient, eyebrows, primary CTA
 | `--brand-border` | `rgba(255, 107, 44, 0.22)` | Subtle orange border on eyebrows / pills |
 | `--brand-shadow` | `rgba(255, 107, 44, 0.30)` | Drop shadow under CTA buttons & logo |
 
-The legacy `--cta`, `--cta-hover`, `--cta-dim`, `--cta-border`, and `--cta-shadow` tokens are aliased to the brand orange - both names refer to the same color.
+The legacy `--cta`, `--cta-hover`, `--cta-dim`, `--cta-border`, and `--cta-shadow` tokens are aliased to the brand orange — both names refer to the same color.
 
-### 2.3 Accent - Deep Purple
+### 2.3 Accent — Deep Purple
 
 A secondary accent. Used sparingly: paired with orange in the logo gradient and hero-title gradient, and for purple-tinted hover states on product/portfolio cards.
 
@@ -56,9 +56,9 @@ A secondary accent. Used sparingly: paired with orange in the logo gradient and 
 | `--primary-border` | `rgba(109, 63, 232, 0.22)` | Subtle purple border on cards / pills |
 | `--primary-shadow` | `rgba(109, 63, 232, 0.28)` | Drop shadow for purple-themed lifts |
 
-### 2.4 Accent - Blue
+### 2.4 Accent — Blue
 
-Used very sparingly - only in soft decorative background gradients (the `/build` hero glow and the footer CTA band). Not used in typography or interactive states.
+Used very sparingly — only in soft decorative background gradients (the `/build` hero glow and the footer CTA band). Not used in typography or interactive states.
 
 | Token | Hex | Use |
 | ----- | --- | --- |
@@ -70,7 +70,7 @@ Used very sparingly - only in soft decorative background gradients (the `/build`
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| `--text-primary` | `#1F1A36` | Headings & body - deep navy with a faint purple undertone |
+| `--text-primary` | `#1F1A36` | Headings & body — deep navy with a faint purple undertone |
 | `--text-secondary` | `#5A5170` | Subheadings, paragraph copy |
 | `--text-tertiary` | `#8B82A0` | Labels, captions, helper text |
 
@@ -125,7 +125,7 @@ Two typefaces, loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`
 
 ### Logo mark
 
-The "U" mark is rendered as a CSS gradient block: `linear-gradient(135deg, var(--brand), var(--primary))` - orange to deep purple. It appears in the Navbar, Footer, and email templates. Favicon and Apple touch icon use the same gradient - see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
+The "U" mark is rendered as a CSS gradient block: `linear-gradient(135deg, var(--brand), var(--primary))` — orange to deep purple. It appears in the Navbar, Footer, and email templates. Favicon and Apple touch icon use the same gradient — see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
 
 ### Icons
 
@@ -177,7 +177,7 @@ CSS animations use the easing token `--ease-out-expo`. All animations are gated 
 
 ## 7. Content Architecture
 
-Page content lives in [`src/content/`](src/content/) - separated from presentation so non-technical edits don't require touching component code.
+Page content lives in [`src/content/`](src/content/) — separated from presentation so non-technical edits don't require touching component code.
 
 | File | Owns |
 | ---- | ---- |
@@ -192,7 +192,7 @@ Page content lives in [`src/content/`](src/content/) - separated from presentati
 
 1. Open the file under `src/content/` that matches the section.
 2. Edit the strings or add/remove items in the exported array.
-3. No component code needs to change - the section iterates over the data.
+3. No component code needs to change — the section iterates over the data.
 
 ### How to add a new portfolio project
 
@@ -212,9 +212,9 @@ src/
 │   ├── layout.tsx         # Root layout + fonts + JSON-LD
 │   ├── page.tsx           # Homepage (highlight-reel previews)
 │   ├── products/          # /products page
-│   ├── build/             # /build - Services page
-│   ├── work/              # /work - client projects
-│   ├── about/             # /about - values + team
+│   ├── build/             # /build — Services page
+│   ├── work/              # /work — client projects
+│   ├── about/             # /about — values + team
 │   ├── blog/              # /blog and /blog/[slug]
 │   ├── careers/           # /careers
 │   ├── api/contact/       # POST /api/contact (Resend + bot protection)
@@ -243,7 +243,7 @@ src/
 │   ├── MotionCard.tsx                 # animated card wrapper
 │   └── BuildCards.tsx                 # MotionCard list wrapper
 │
-├── content/               # Editable page data - no JSX logic
+├── content/               # Editable page data — no JSX logic
 │   ├── site.ts
 │   ├── pillars.tsx
 │   ├── values.tsx
@@ -257,7 +257,7 @@ src/
 
 ### Why this structure?
 
-- **Sections own their styles.** Each component has a co-located CSS module - touch one section without affecting others.
+- **Sections own their styles.** Each component has a co-located CSS module — touch one section without affecting others.
 - **Content is data.** Copy, lists, and URLs live in `src/content/`, so marketing edits don't risk breaking layout.
 - **Design tokens are the single source of truth.** Every color, font, and spacing value lives in `globals.css`. Components reference tokens, never hex values.
 
@@ -269,7 +269,7 @@ src/
 2. If the section has list content, create `src/content/mysection.tsx` with the data.
 3. Import and place in [`src/app/page.tsx`](src/app/page.tsx) (or the relevant page).
 4. Use the shared utility classes from `globals.css`: `.container`, `.section`, `.eyebrow`, `.sectionHeading`, `.sectionSubtext`.
-5. Reference design tokens (`var(--primary)`, `var(--cta)`, etc.) - no hardcoded colors.
+5. Reference design tokens (`var(--primary)`, `var(--cta)`, etc.) — no hardcoded colors.
 
 ---
 
@@ -277,7 +277,7 @@ src/
 
 - All animations respect `prefers-reduced-motion: reduce` (see `Portfolio.module.css` and `ScrollReveal.module.css`).
 - Decorative elements (auroras, dots, cursors) have `aria-hidden="true"`.
-- Color contrast: text-primary (`#1F1A36`) on background (`#F4F2FB`) - passes WCAG AA at all body sizes.
+- Color contrast: text-primary (`#1F1A36`) on background (`#F4F2FB`) — passes WCAG AA at all body sizes.
 - Focus states use a 3px purple-dim outline on form fields.
 
 ---

@@ -34,7 +34,7 @@ export const products: ReadonlyArray<Product> = [
     name: 'Ubunifu Sifa',
     tagline: 'Business management for Tanzanian SMBs',
     description:
-      'Sales, inventory, employee management, and real-time reports - all in one platform. Works offline on any phone.',
+      'Sales, inventory, employee management, and real-time reports, all in one platform. Works offline on any phone.',
     features: ['Sales & POS', 'Inventory tracking', 'Employee scheduling', 'Credit management', 'Free plan available'],
     status: 'live',
     url: 'https://sifa.ubunifutech.com',
@@ -46,7 +46,7 @@ export const products: ReadonlyArray<Product> = [
     name: 'Ubunifu Rafiki',
     tagline: 'Business tools for your website',
     description:
-      'Embeddable widgets - contact forms, booking systems, and blog tools for any business.',
+      'Embeddable widgets: contact forms, booking systems, and blog tools for any business.',
     features: ['Contact forms', 'Booking widgets', 'Blog tools'],
     status: 'soon',
     url: null,
@@ -58,7 +58,7 @@ export const products: ReadonlyArray<Product> = [
     name: 'Ubunifu Build',
     tagline: 'Custom software & consulting',
     description:
-      'Websites, data solutions, and digital strategy - from a single page to a full platform.',
+      'Websites, data solutions, and digital strategy, from a single page to a full platform.',
     features: ['Web development', 'Data analytics', 'Brand design', 'AI & automation'],
     status: 'available',
     url: '/build',

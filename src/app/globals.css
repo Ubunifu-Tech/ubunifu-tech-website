@@ -73,6 +73,7 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  min-width: 0;
 }
 
 html {
@@ -92,16 +93,44 @@ body {
   line-height: 1.6;
 }
 
+/* Media never overflows its container */
+img, video, svg, iframe, embed, object, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+iframe, embed, object {
+  display: block;
+}
+
+/* Long words / URLs in body copy wrap instead of forcing horizontal scroll */
+p, li, blockquote, dd, dt, figcaption {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   line-height: 1.1;
   color: var(--text-primary);
   letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Code blocks scroll internally on narrow screens */
+pre, code {
+  max-width: 100%;
+}
+
+pre {
+  overflow-x: auto;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
 /* ── Layout Utilities ─────────────────────────── */

@@ -19,7 +19,7 @@ export default function ProductsPage() {
         <PageHeader
           eyebrow="Our products"
           title="Software products for African businesses."
-          lead="Each product solves a real problem for businesses in Tanzania - priced pay-as-you-go and supported the way this market actually works."
+          lead="Each product solves a real problem for businesses in Tanzania, priced pay-as-you-go and supported the way this market actually works."
         />
 
         <Products hideHeader />

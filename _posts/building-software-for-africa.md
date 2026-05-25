@@ -2,15 +2,15 @@
 title: "Building Software for Africa: Where the Real Opportunity Is"
 date: "2026-01-06"
 author: "Ubunifu Technologies"
-excerpt: "Most software tools were built for wealthy markets. Tanzania has a different set of needs - and that is an opportunity worth building for."
+excerpt: "Most software tools were built for wealthy markets. Tanzania has a different set of needs, and that is an opportunity worth building for."
 tags: ["Product", "Africa", "Tanzania"]
 ---
 
-Most software tools - from document AI to website builders to booking platforms - were designed for markets with fast internet, credit card payments, and English-speaking users.
+Most software tools, from document AI to website builders to booking platforms, were designed for markets with fast internet, credit card payments, and English-speaking users.
 
 In Tanzania, businesses operate differently. Connectivity is variable. Devices are shared. Workflows are their own. The tools that exist today were not built for this context.
 
-That is not a complaint - it is an opening.
+That is not a complaint. It is an opening.
 
 ## What this market actually needs
 
@@ -22,15 +22,15 @@ A law firm in Arusha should not have to pay a monthly seat fee for document AI i
 
 At Ubunifu Technologies, we are building three products to address this:
 
-**Ubunifu Insight** - AI document intelligence for teams. Upload documents, ask questions in plain language, extract structured data, generate reports. Pay only when you use it.
+**Ubunifu Insight.** AI document intelligence for teams. Upload documents, ask questions in plain language, extract structured data, generate reports. Pay only when you use it.
 
-**Ubunifu Rafiki** - Embeddable widgets for Tanzanian businesses. Contact forms, booking tools, and blog widgets that drop into any website. Built for the way local businesses already work.
+**Ubunifu Rafiki.** Embeddable widgets for Tanzanian businesses. Contact forms, booking tools, and blog widgets that drop into any website. Built for the way local businesses already work.
 
-**Ubunifu Build** - Custom software, websites, and consulting for businesses that need hands-on expertise. From brand-new web platforms to data pipelines and AI integrations.
+**Ubunifu Build.** Custom software, websites, and consulting for businesses that need hands-on expertise. From brand-new web platforms to data pipelines and AI integrations.
 
 ## Why we build from here
 
-Every product starts from the workflows, pricing, and infrastructure that exist in Tanzania - not adapted from tools built elsewhere.
+Every product starts from the workflows, pricing, and infrastructure that exist in Tanzania, not adapted from tools built elsewhere.
 
 Pricing follows pay-as-you-go models that match how businesses here actually spend.
 

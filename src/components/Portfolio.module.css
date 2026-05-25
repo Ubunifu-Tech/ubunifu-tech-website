@@ -424,8 +424,7 @@
   }
 
   .confirm {
-    font-size: 0.62rem;
-    left: calc(50% + 60px);
+    display: none;
   }
 
   .content {

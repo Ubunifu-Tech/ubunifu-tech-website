@@ -33,7 +33,7 @@ export const ProductsPreview: React.FC = () => {
           <span className="eyebrow">What we offer</span>
           <h2 className={styles.heading}>Products &amp; services</h2>
           <p className={styles.sub}>
-            SaaS products and consulting - each built for how businesses in
+            SaaS products and consulting, each built for how businesses in
             Tanzania actually work.
           </p>
         </motion.div>

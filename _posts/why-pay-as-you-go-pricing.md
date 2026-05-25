@@ -2,7 +2,7 @@
 title: "Why We Chose Pay-as-You-Go Pricing"
 date: "2026-01-05"
 author: "Ubunifu Technologies"
-excerpt: "Annual subscriptions are the default in SaaS. We decided to do something different - and the reason comes from how businesses actually work in Tanzania."
+excerpt: "Annual subscriptions are the default in SaaS. We decided to do something different, and the reason comes from how businesses actually work in Tanzania."
 tags: ["Product", "Pricing", "Tanzania"]
 ---
 
@@ -18,7 +18,7 @@ That is not how most businesses here work.
 
 A law firm in Arusha might process a hundred contracts in one month and almost none the next. A hotel in Zanzibar might need its booking widget heavily during peak season and barely at all during the quiet months. An SME might use document AI intensively during tax season and not touch it otherwise.
 
-Forcing those users onto a monthly seat fee means they pay for months they barely use the product. That is bad for them - and it is the kind of friction that kills adoption.
+Forcing those users onto a monthly seat fee means they pay for months they barely use the product. That is bad for them, and it is the kind of friction that kills adoption.
 
 ## Pay as you go
 
@@ -34,4 +34,4 @@ Pay-as-you-go is also an honesty signal. It says: we are confident you will find
 
 If our products stop being useful to you, you stop paying. That is the right relationship between a company and its users.
 
-We think more software companies building for African markets should work this way - where cash flow is unpredictable and trust is earned, not assumed.
+We think more software companies building for African markets should work this way, where cash flow is unpredictable and trust is earned, not assumed.

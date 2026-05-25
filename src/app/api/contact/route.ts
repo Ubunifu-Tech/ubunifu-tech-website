@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       from: 'Ubunifu Website <notifications@ubunifutech.com>',
       to: 'info@ubunifutech.com',
       replyTo: email,
-      subject: `[Website] ${subject} - ${name}`,
+      subject: `[Website] ${subject} from ${name}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #fafafa; border-radius: 12px; overflow: hidden;">
           <div style="background: #0a0a0a; padding: 32px; text-align: center;">
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
       to: email,
       replyTo: 'info@ubunifutech.com',
-      subject: `We received your message - Ubunifu Technologies`,
+      subject: `We received your message | Ubunifu Technologies`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #fafafa; border-radius: 12px; overflow: hidden;">
           <div style="background: #0a0a0a; padding: 32px; text-align: center;">

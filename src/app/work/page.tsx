@@ -18,7 +18,7 @@ export default function WorkPage() {
         <PageHeader
           eyebrow="Our work"
           title="Platforms we have designed and built."
-          lead="A selection of the websites and platforms we have shipped for businesses across Tanzania - built for performance, search visibility, and the way customers here actually browse."
+          lead="A selection of the websites and platforms we have shipped for businesses across Tanzania, built for performance, search visibility, and the way customers here actually browse."
         />
 
         <Portfolio hideHeader />

@@ -9,7 +9,7 @@ This document serves as the master checklist to take **Ubunifu Tech** from its c
 - [x] **Core Architecture**: Next.js 16, TypeScript, CSS Modules.
 - [x] **Design System**: Light theme (warm orange + deep purple on soft lavender), responsive layouts, Framer Motion entrances.
 - [x] **Multi-page structure**: Home, Products, Services (`/build`), Work, About, Blog, Careers.
-- [x] **Homepage**: Highlight-reel layout - hero, three-pillar strip, product/work/about previews, technology marquee.
+- [x] **Homepage**: Highlight-reel layout — hero, three-pillar strip, product/work/about previews, technology marquee.
 - [x] **Portfolio**: Real client projects (Usambara, Safari King) with browser-mockup cards and a client logo strip.
 - [x] **Team Bios**: Profiles for Richard (Data & AI Builder) and HappyGod (Creative Director).
 - [x] **Blog**: Markdown-based blog with a working listing page and individual post pages.

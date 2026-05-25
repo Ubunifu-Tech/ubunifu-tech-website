@@ -92,7 +92,7 @@ export default function RootLayout({
     logo: 'https://ubunifutech.com/logo.png',
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+255-765-948-816',
+      telephone: '+255-748-548-816',
       contactType: 'customer service',
       email: 'info@ubunifutech.com',
       areaServed: 'TZ',

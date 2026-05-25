@@ -328,7 +328,7 @@ building next? Reach us directly — we respond to every message.
 
 **Methods:**
 - **Email:** info@ubunifutech.com
-- **Phone:** +255 765 948 816
+- **Phone:** +255 748 548 816
 - **Location:** Arusha, Tanzania
 
 **Status:** ✅ Done (consider adding a simple contact form later)
@@ -345,7 +345,7 @@ building next? Reach us directly — we respond to every message.
 | Products | Company | Contact |
 |---|---|---|
 | Ubunifu Insight (live) | About | info@ubunifutech.com |
-| Ubunifu Rafiki (coming soon) | Portfolio | +255 765 948 816 |
+| Ubunifu Rafiki (coming soon) | Portfolio | +255 748 548 816 |
 | | Blog | Arusha, Tanzania |
 
 **Copyright:** © 2025 Ubunifu Technologies Ltd. All rights reserved.

@@ -75,8 +75,8 @@ export const Contact: React.FC = () => {
                 <div className={styles.methodIcon}><Phone size={18} /></div>
                 <div>
                   <p className={styles.methodLabel}>Phone / WhatsApp</p>
-                  <a href="tel:+255765948816" className={styles.methodLink}>
-                    +255 765 948 816
+                  <a href="tel:+255748548816" className={styles.methodLink}>
+                    +255 748 548 816
                   </a>
                 </div>
               </div>

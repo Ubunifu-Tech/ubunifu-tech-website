@@ -62,7 +62,7 @@ export const Footer: React.FC = () => {
           <div className={styles.col}>
             <p className={styles.colLabel}>Contact</p>
             <a href="mailto:info@ubunifutech.com" className={styles.colLink}>info@ubunifutech.com</a>
-            <a href="tel:+255765948816" className={styles.colLink}>+255 765 948 816</a>
+            <a href="tel:+255748548816" className={styles.colLink}>+255 748 548 816</a>
             <span className={styles.location}>Arusha, Tanzania</span>
           </div>
         </div>

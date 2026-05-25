@@ -1,5 +1,5 @@
 // Team members shown on the About page. Bios are from the website content plan.
-// `photo` is optional — when omitted, the Team component renders a branded
+// `photo` is optional - when omitted, the Team component renders a branded
 // initials avatar. Drop a file into public/images/ and set `photo` to swap in
 // a real headshot, e.g. photo: '/images/richard.jpg'.
 
@@ -24,7 +24,7 @@ export const team: ReadonlyArray<TeamMember> = [
     name: 'HappyGod Pallangyo',
     role: 'Creative Director',
     initials: 'HP',
-    bio: 'Keeps the team close to the ground — making sure what Ubunifu builds matches real market needs and stays well customized for local businesses.',
+    bio: 'Keeps the team close to the ground - making sure what Ubunifu builds matches real market needs and stays well customized for local businesses.',
     skills: ['Brand Identity', 'UI/UX Design', 'Visual Direction', 'Video'],
   },
 ];

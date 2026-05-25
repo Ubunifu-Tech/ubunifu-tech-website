@@ -33,7 +33,7 @@ export const ProductsPreview: React.FC = () => {
           <span className="eyebrow">What we offer</span>
           <h2 className={styles.heading}>Products &amp; services</h2>
           <p className={styles.sub}>
-            SaaS products and consulting — each built for how businesses in
+            SaaS products and consulting - each built for how businesses in
             Tanzania actually work.
           </p>
         </motion.div>
@@ -156,7 +156,7 @@ export const AboutPreview: React.FC = () => {
           <span className="eyebrow">About</span>
           <h2 className={styles.heading}>A small team building for Africa</h2>
           <p className={styles.aboutText}>
-            Ubunifu Technologies is a small, focused team in Arusha, Tanzania —
+            Ubunifu Technologies is a small, focused team in Arusha, Tanzania -
             building software products and consulting for African businesses,
             starting from how this market actually works rather than adapting
             tools made elsewhere.

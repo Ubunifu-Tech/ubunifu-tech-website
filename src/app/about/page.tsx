@@ -10,7 +10,7 @@ import styles from './About.module.css';
 export const metadata = {
   title: 'About',
   description:
-    'Ubunifu Technologies is a small software team in Arusha, Tanzania, building products and consulting for African businesses — built from local workflows, not adapted from elsewhere.',
+    'Ubunifu Technologies is a small software team in Arusha, Tanzania, building products and consulting for African businesses - built from local workflows, not adapted from elsewhere.',
 };
 
 export default function AboutPage() {
@@ -21,7 +21,7 @@ export default function AboutPage() {
         <PageHeader
           eyebrow="About us"
           title="Software built for Africa, from Africa."
-          lead="We are a small team in Arusha, Tanzania, building products and consulting for the businesses around us — starting from how this market actually works, not adapting tools made for somewhere else."
+          lead="We are a small team in Arusha, Tanzania, building products and consulting for the businesses around us - starting from how this market actually works, not adapting tools made for somewhere else."
         />
 
         <About hideHeader />
@@ -34,7 +34,7 @@ export default function AboutPage() {
               <h2 className={styles.ctaHeading}>Want to work with us?</h2>
               <p className={styles.ctaText}>
                 Whether you need a product, a custom build, or a conversation
-                about what is possible — we respond to every message.
+                about what is possible - we respond to every message.
               </p>
               <Link href="/#contact" className={styles.ctaBtn}>
                 Get in touch

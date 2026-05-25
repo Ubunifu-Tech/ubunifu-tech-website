@@ -22,7 +22,7 @@ export const Contact: React.FC = () => {
     email: '',
     subject: '',
     message: '',
-    company_url: '', // honeypot — must stay empty
+    company_url: '', // honeypot - must stay empty
   });
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -83,7 +83,7 @@ export const Contact: React.FC = () => {
             <h2 className={styles.heading}>Let&apos;s work together</h2>
             <p className={styles.text}>
               Have a question about our products, or interested in working with us?
-              Send us a message — we respond to every inquiry.
+              Send us a message - we respond to every inquiry.
             </p>
 
             <div className={styles.methods}>

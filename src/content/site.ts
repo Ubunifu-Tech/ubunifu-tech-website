@@ -1,4 +1,4 @@
-// Site-wide configuration — single source of truth for company info,
+// Site-wide configuration - single source of truth for company info,
 // contact details, and navigation. Edit here, not in components.
 
 export const site = {
@@ -28,7 +28,7 @@ export const site = {
   },
 } as const;
 
-// Navigation links — order = display order.
+// Navigation links - order = display order.
 export const navLinks: ReadonlyArray<{
   label: string;
   href: string;
@@ -42,7 +42,7 @@ export const navLinks: ReadonlyArray<{
   { label: 'Careers', href: '/careers' },
 ];
 
-// Footer columns — edit titles, links, or order without touching Footer.tsx.
+// Footer columns - edit titles, links, or order without touching Footer.tsx.
 export const footerColumns: ReadonlyArray<{
   title: string;
   links: ReadonlyArray<{

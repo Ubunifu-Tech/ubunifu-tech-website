@@ -20,7 +20,7 @@ export const Team: React.FC = () => {
           <h2 className={styles.heading}>Who you work with</h2>
           <p className={styles.intro}>
             Ubunifu is a small, focused team based in Arusha. You work directly
-            with the people who build and design the product — no layers, no handoffs.
+            with the people who build and design the product - no layers, no handoffs.
           </p>
         </motion.div>
 

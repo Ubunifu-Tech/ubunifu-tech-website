@@ -1,4 +1,4 @@
-// "About" / values cards. Icons are lucide-react names — see
+// "About" / values cards. Icons are lucide-react names - see
 // https://lucide.dev/icons for available icons.
 
 import { Globe, Zap, CreditCard, MapPin, type LucideIcon } from 'lucide-react';
@@ -13,7 +13,7 @@ export const values: ReadonlyArray<Value> = [
   {
     icon: Globe,
     title: 'Built for Africa from the start',
-    body: 'We do not adapt software built elsewhere. We start from the workflows, connectivity, and business models that exist here — and build around them.',
+    body: 'We do not adapt software built elsewhere. We start from the workflows, connectivity, and business models that exist here - and build around them.',
   },
   {
     icon: Zap,

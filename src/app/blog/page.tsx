@@ -7,7 +7,7 @@ import styles from './Blog.module.css';
 export const metadata = {
   title: 'Blog',
   description:
-    'Notes from Ubunifu Technologies on building software for African businesses — product decisions, pricing, and what we are learning in Tanzania.',
+    'Notes from Ubunifu Technologies on building software for African businesses - product decisions, pricing, and what we are learning in Tanzania.',
 };
 
 function formatDate(date: string): string {
@@ -32,13 +32,13 @@ export default function BlogPage() {
             <span className="eyebrow">Blog</span>
             <h1 className={styles.heading}>Notes from the team</h1>
             <p className={styles.subheading}>
-              Thoughts on building software for African businesses — product
+              Thoughts on building software for African businesses - product
               decisions, pricing, and what we are learning in Tanzania.
             </p>
           </div>
 
           {posts.length === 0 ? (
-            <p className={styles.empty}>No posts published yet — check back soon.</p>
+            <p className={styles.empty}>No posts published yet - check back soon.</p>
           ) : (
             <div className={styles.grid}>
               {posts.map((post) => (

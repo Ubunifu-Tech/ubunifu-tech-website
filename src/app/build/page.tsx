@@ -16,7 +16,7 @@ const services = [
     number: '01',
     title: 'Web Development',
     description:
-      'Professional websites and web applications — from informational sites to e-commerce platforms. Modern, mobile-responsive, with CMS so you can manage your own content.',
+      'Professional websites and web applications - from informational sites to e-commerce platforms. Modern, mobile-responsive, with CMS so you can manage your own content.',
     tags: ['Websites', 'E-commerce', 'CMS', 'Hosting'],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -29,7 +29,7 @@ const services = [
     number: '02',
     title: 'Data Analytics',
     description:
-      'Turn your data into decisions. Whether it\'s Excel spreadsheets or complex databases — we clean, analyse, and visualise your data with dashboards and reports.',
+      'Turn your data into decisions. Whether it\'s Excel spreadsheets or complex databases - we clean, analyse, and visualise your data with dashboards and reports.',
     tags: ['Analysis', 'Dashboards', 'Visualisation', 'KPIs'],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,7 +43,7 @@ const services = [
     number: '03',
     title: 'Brand Design',
     description:
-      'Complete visual identity — logos, style guides, marketing materials, and UI/UX design. Cohesive branding across digital and print that works for your audience.',
+      'Complete visual identity - logos, style guides, marketing materials, and UI/UX design. Cohesive branding across digital and print that works for your audience.',
     tags: ['Logo', 'Brand Identity', 'Marketing', 'UI/UX'],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -57,7 +57,7 @@ const services = [
     number: '04',
     title: 'AI & Automation',
     description:
-      'Practical AI solutions for specific business problems — predictive analytics, process automation, and custom integrations that deliver measurable results.',
+      'Practical AI solutions for specific business problems - predictive analytics, process automation, and custom integrations that deliver measurable results.',
     tags: ['Machine Learning', 'Automation', 'Integrations', 'AI'],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -123,7 +123,7 @@ export default function BuildPage() {
                 <span className={styles.titleGradient}>for you.</span>
               </h1>
               <p className={styles.lead}>
-                Not every business needs a SaaS product — sometimes you need a team that understands
+                Not every business needs a SaaS product - sometimes you need a team that understands
                 your market and can build exactly what you need. Websites, data solutions, branding,
                 and digital strategy for Tanzanian businesses.
               </p>
@@ -192,7 +192,7 @@ export default function BuildPage() {
             <section className={styles.ctaSection}>
               <h2 className={styles.ctaHeading}>Have a project in mind?</h2>
               <p className={styles.ctaText}>
-                Tell us what you need — we will give you an honest assessment of what is realistic
+                Tell us what you need - we will give you an honest assessment of what is realistic
                 for your budget and timeline.
               </p>
               <a href="#contact" className={styles.ctaBtn}>

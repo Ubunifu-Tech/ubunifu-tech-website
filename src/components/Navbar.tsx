@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { navLinks, site } from '@/content/site';
+import { navLinks } from '@/content/site';
 import styles from './Navbar.module.css';
 
 export const Navbar: React.FC = () => {
@@ -23,7 +23,9 @@ export const Navbar: React.FC = () => {
       <div className={`container ${styles.container}`}>
         <Link href="/" className={styles.logo} onClick={closeMobileMenu}>
           <span className={styles.logoMark}>U</span>
-          <span className={styles.logoText}>{site.name}</span>
+          <span className={styles.logoText}>
+            Ubunifu <span className={styles.logoAccent}>Technologies</span>
+          </span>
         </Link>
 
         <div className={styles.links}>

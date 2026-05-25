@@ -1,9 +1,8 @@
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { ProblemStrip } from '@/components/ProblemStrip';
-import { Products } from '@/components/Products';
-import { About } from '@/components/About';
-import { Portfolio } from '@/components/Portfolio';
+import { ProductsPreview, WorkPreview, AboutPreview } from '@/components/HomePreviews';
+import { TechMarquee } from '@/components/TechMarquee';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
 
@@ -13,9 +12,10 @@ export default function Home() {
       <Navbar />
       <Hero />
       <ProblemStrip />
-      <Products />
-      <About />
-      <Portfolio />
+      <ProductsPreview />
+      <WorkPreview />
+      <TechMarquee />
+      <AboutPreview />
       <Contact />
       <Footer />
     </main>

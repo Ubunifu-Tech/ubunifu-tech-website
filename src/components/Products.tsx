@@ -6,22 +6,26 @@ import { motion } from 'framer-motion';
 import { products } from '@/content/products';
 import styles from './Products.module.css';
 
-export const Products: React.FC = () => {
+export const Products: React.FC<{ hideHeader?: boolean }> = ({
+  hideHeader = false,
+}) => {
   return (
     <section id="products" className={`section ${styles.section}`}>
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <span className="eyebrow">What we offer</span>
-          <h2 className={styles.heading}>Products &amp; services</h2>
-          <p className={styles.subheading}>
-            SaaS products and consulting — each built for how businesses in Tanzania actually work.
-          </p>
-        </motion.div>
+        {!hideHeader && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span className="eyebrow">What we offer</span>
+            <h2 className={styles.heading}>Products &amp; services</h2>
+            <p className={styles.subheading}>
+              SaaS products and consulting — each built for how businesses in Tanzania actually work.
+            </p>
+          </motion.div>
+        )}
 
         <div className={styles.bento}>
           {products.map((product, index) => (

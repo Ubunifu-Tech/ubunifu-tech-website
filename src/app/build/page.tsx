@@ -109,24 +109,6 @@ export default function BuildPage() {
           <div className={styles.heroBg} aria-hidden="true" />
           <div className={styles.heroDots} aria-hidden="true" />
 
-          {/* Floating geometric shapes */}
-          <div className={styles.heroShapes} aria-hidden="true">
-            <div className={`${styles.heroShape} ${styles.shapeBrackets}`}>
-              <svg viewBox="0 0 56 56" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <polyline points="18,12 6,28 18,44" />
-                <polyline points="38,12 50,28 38,44" />
-              </svg>
-            </div>
-            <div className={`${styles.heroShape} ${styles.shapeDiamond}`} />
-            <div className={`${styles.heroShape} ${styles.shapePulseDot}`} />
-            <div className={`${styles.heroShape} ${styles.shapeDashedCircle}`}>
-              <svg viewBox="0 0 120 120" fill="none">
-                <circle cx="60" cy="60" r="54" stroke="currentColor" strokeWidth="1" strokeDasharray="6 5" />
-              </svg>
-            </div>
-            <div className={`${styles.heroShape} ${styles.shapeSmallSquare}`} />
-            <div className={`${styles.heroShape} ${styles.shapeBlueDot}`} />
-          </div>
           <div className="container">
             <div className={styles.header}>
               <span className={styles.heroBadge}>

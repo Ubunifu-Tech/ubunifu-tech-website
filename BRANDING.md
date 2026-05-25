@@ -18,6 +18,8 @@ The visual system for the Ubunifu Technologies website. This is the source of tr
 
 All colors are CSS custom properties defined in [`src/app/globals.css`](src/app/globals.css). Reference them by variable — never hard-code hex values in component CSS.
 
+The palette has **one primary brand color (warm orange)** plus two supporting accents (deep purple and blue). Text and headings are a very dark navy with a faint purple undertone — close to Intercept Intelligence's heading treatment.
+
 ### 2.1 Foundation
 
 | Token | Hex | Use |
@@ -27,56 +29,59 @@ All colors are CSS custom properties defined in [`src/app/globals.css`](src/app/
 | `--surface-2` | `#FAF8FE` | Alternate section background (Products, Contact) |
 | `--surface-3` | `#F0EDF9` | Subtle panel / tag background |
 
-### 2.2 Primary — Deep Purple
+### 2.2 Brand — Warm Orange (Primary)
 
-The standout color in text. Used for headings (`#1B0E47`), eyebrow labels, badges, in-line accents, link hovers.
+The dominant brand color. Used for the logo mark gradient, eyebrows, primary CTAs, and active states. If you only see one accent color on a section, it should be this one.
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| `--primary` | `#6D3FE8` | Eyebrows, badges, accent text, link hover |
-| `--primary-hover` | `#5A2DD0` | Hover state on purple links |
-| `--primary-deep` | `#3D1FA0` | Deepest purple, used in `::selection` |
-| `--primary-dim` | `rgba(109, 63, 232, 0.10)` | Soft purple background for pills / icon wrappers |
-| `--primary-border` | `rgba(109, 63, 232, 0.22)` | Subtle purple border on hover or pills |
+| `--brand` | `#FF6B2C` | Logo gradient, eyebrows, CTAs, active states |
+| `--brand-hover` | `#E8581E` | Hover state on primary buttons & eyebrows |
+| `--brand-deep` | `#C44615` | Deepest orange, for pressed states / strong shadows |
+| `--brand-dim` | `rgba(255, 107, 44, 0.10)` | Eyebrow background, soft-orange highlights |
+| `--brand-border` | `rgba(255, 107, 44, 0.22)` | Subtle orange border on eyebrows / pills |
+| `--brand-shadow` | `rgba(255, 107, 44, 0.30)` | Drop shadow under CTA buttons & logo |
+
+The legacy `--cta`, `--cta-hover`, `--cta-dim`, `--cta-border`, and `--cta-shadow` tokens are aliased to the brand orange — both names refer to the same color.
+
+### 2.3 Accent — Deep Purple
+
+A secondary accent. Used sparingly: paired with orange in the logo gradient and hero-title gradient, and for purple-tinted hover states on product/portfolio cards.
+
+| Token | Hex | Use |
+| ----- | --- | --- |
+| `--primary` | `#6D3FE8` | Logo gradient end, card hover borders, link hover |
+| `--primary-hover` | `#5A2DD0` | Deeper purple on hover |
+| `--primary-dim` | `rgba(109, 63, 232, 0.10)` | Soft purple background for product/portfolio badges & tags |
+| `--primary-border` | `rgba(109, 63, 232, 0.22)` | Subtle purple border on cards / pills |
 | `--primary-shadow` | `rgba(109, 63, 232, 0.28)` | Drop shadow for purple-themed lifts |
 
-### 2.3 Accent — Blue
+### 2.4 Accent — Blue
 
-Secondary brand color. Paired with purple in gradients (logo mark, hero title) and used sparingly on its own.
-
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--accent` | `#2E5BFF` | Logo gradient end, secondary highlights |
-| `--accent-hover` | `#1F47E0` | Hover state when used as link |
-| `--accent-dim` | `rgba(46, 91, 255, 0.10)` | Backgrounds for blue-tinted decorations |
-| `--accent-border` | `rgba(46, 91, 255, 0.22)` | Subtle blue borders |
-
-### 2.4 CTA — Warm Orange
-
-Reserved for primary calls-to-action: "Explore products", "Get in touch", form submit, hero/footer CTAs. Never use it for body text or links.
+Used very sparingly, mostly for decorative aurora blobs and small dots in the hero. Not used in typography.
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| `--cta` | `#FF6B2C` | Primary buttons |
-| `--cta-hover` | `#E8581E` | Hover state on primary buttons |
-| `--cta-shadow` | `rgba(255, 107, 44, 0.30)` | Drop shadow under CTA buttons |
+| `--accent` | `#2E5BFF` | Decorative dots/blobs only |
+| `--accent-dim` | `rgba(46, 91, 255, 0.10)` | Soft-blue decorative tints |
+| `--accent-border` | `rgba(46, 91, 255, 0.22)` | Subtle blue borders on shapes |
 
 ### 2.5 Text
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| `--text-primary` | `#1B0E47` | Headings & body — the deep purple-navy "standout" color |
-| `--text-secondary` | `#5B4E8C` | Subheadings, paragraph copy |
-| `--text-tertiary` | `#8B82B0` | Labels, captions, helper text |
+| `--text-primary` | `#1F1A36` | Headings & body — deep navy with a faint purple undertone |
+| `--text-secondary` | `#5A5170` | Subheadings, paragraph copy |
+| `--text-tertiary` | `#8B82A0` | Labels, captions, helper text |
 
 ### 2.6 Borders & Glass
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| `--border` | `rgba(27, 14, 71, 0.08)` | Default borders on cards, inputs, dividers |
-| `--border-hover` | `rgba(27, 14, 71, 0.16)` | Hover state borders |
+| `--border` | `rgba(31, 26, 54, 0.08)` | Default borders on cards, inputs, dividers |
+| `--border-hover` | `rgba(31, 26, 54, 0.16)` | Hover state borders |
 | `--glass-bg` | `rgba(255, 255, 255, 0.65)` | Frosted-glass card backgrounds |
-| `--glass-border-hover` | `rgba(109, 63, 232, 0.30)` | Purple-tinted border on hover |
+| `--glass-border-hover` | `rgba(255, 107, 44, 0.30)` | Orange-tinted border on hover |
 
 ---
 
@@ -120,7 +125,7 @@ Two typefaces, loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`
 
 ### Logo mark
 
-The "U" mark is rendered as a CSS gradient block: `linear-gradient(135deg, var(--primary), var(--accent))`. It appears in the Navbar, Footer, and email templates. Favicon and Apple touch icon use the same gradient — see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
+The "U" mark is rendered as a CSS gradient block: `linear-gradient(135deg, var(--brand), var(--primary))` — orange to deep purple. It appears in the Navbar, Footer, and email templates. Favicon and Apple touch icon use the same gradient — see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
 
 ### Icons
 
@@ -151,9 +156,9 @@ White background, 1px border (`--border`), `16–18px` radius, subtle shadow (`0
 
 ### 6.3 Badges & Pills
 
-- **Eyebrow** (`.eyebrow` in `globals.css`): purple pill, uppercase, 0.8rem.
-- **Status badges** ("Live", "Coming soon"): same purple-dim styling, with an animated dot for live products.
-- **Tech tags** (Portfolio): purple pill with primary-dim background and primary text.
+- **Eyebrow** (`.eyebrow` in `globals.css`): orange pill, uppercase, 0.8rem. Uses `--brand`/`--brand-dim`/`--brand-border`.
+- **Status badges** ("Live", "Coming soon"): purple-dim styling, with an animated dot for live products. Purple here adds a second flavor to the card grid.
+- **Tech tags** (Portfolio): purple pill with `--primary-dim` background and `--primary` text.
 
 ### 6.4 Animation
 
@@ -272,20 +277,24 @@ src/
 /* Page background */
 background: var(--background);
 
-/* Headings */
+/* Headings (dark navy with purple undertone) */
 color: var(--text-primary);
 font-family: var(--font-heading);
 
-/* CTA button */
-background: var(--cta);
-box-shadow: 0 6px 20px var(--cta-shadow);
+/* CTA button (orange) */
+background: var(--brand);
+box-shadow: 0 6px 20px var(--brand-shadow);
 
 /* Card */
 background: #FFFFFF;
 border: 1px solid var(--border);
 border-radius: 16px;
-box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
+box-shadow: 0 1px 2px rgba(31, 26, 54, 0.04);
 
-/* Eyebrow / accent text */
-color: var(--primary);
+/* Eyebrow (orange pill) */
+color: var(--brand);
+background: var(--brand-dim);
+
+/* Logo gradient (orange to purple) */
+background: linear-gradient(135deg, var(--brand), var(--primary));
 ```

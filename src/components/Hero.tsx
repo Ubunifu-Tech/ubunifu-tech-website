@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import styles from './Hero.module.css';
 
 const fadeUp = {
@@ -14,24 +14,12 @@ const fadeUp = {
 };
 
 export const Hero: React.FC = () => {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className={styles.hero}>
-      {/* Aurora gradient background */}
-      <div className={styles.aurora} aria-hidden="true">
-        <div className={styles.auroraBlob1} />
-        <div className={styles.auroraBlob2} />
-        <div className={styles.auroraBlob3} />
-      </div>
-
-      {/* Grid overlay */}
+      {/* Subtle grid backdrop */}
       <div className={styles.gridOverlay} aria-hidden="true" />
-
-      {/* Floating orbs */}
-      <div className={styles.orbs} aria-hidden="true">
-        <div className={styles.orb1} />
-        <div className={styles.orb2} />
-        <div className={styles.orb3} />
-      </div>
 
       <div className={`container ${styles.container}`}>
         <motion.div
@@ -54,7 +42,31 @@ export const Hero: React.FC = () => {
         >
           We build software
           <br />
-          <span className={styles.titleGradient}>for Africa.</span>
+          <span className={styles.gradientWrap}>
+            <span className={styles.titleGradient}>for Africa.</span>
+            <svg
+              className={styles.underline}
+              viewBox="0 0 300 18"
+              fill="none"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <motion.path
+                d="M4 12 Q 150 2 296 11"
+                stroke="var(--brand)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                initial={{ pathLength: reduceMotion ? 1 : 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{
+                  duration: reduceMotion ? 0 : 0.85,
+                  delay: reduceMotion ? 0 : 1,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              />
+            </svg>
+          </span>
         </motion.h1>
 
         <motion.p
@@ -76,7 +88,7 @@ export const Hero: React.FC = () => {
           custom={0.5}
           variants={fadeUp}
         >
-          <a href="#products" className={styles.btnPrimary}>
+          <a href="/products" className={styles.btnPrimary}>
             Explore products
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />

@@ -1,0 +1,38 @@
+.header {
+  position: relative;
+  padding-top: calc(var(--nav-height) + 88px);
+  padding-bottom: 56px;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  margin-bottom: 1.25rem;
+  color: var(--text-primary);
+  max-width: 16ch;
+}
+
+.lead {
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 60ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding-top: calc(var(--nav-height) + 56px);
+    padding-bottom: 40px;
+  }
+}

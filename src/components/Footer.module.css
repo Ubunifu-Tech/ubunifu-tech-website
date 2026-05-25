@@ -127,19 +127,23 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--brand), var(--primary));
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
   border-radius: 7px;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(109, 63, 232, 0.22);
+  box-shadow: 0 4px 10px rgba(255, 107, 44, 0.26);
 }
 
 .brandName {
   font-size: 0.9375rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.brandAccent {
+  color: var(--brand);
 }
 
 .tagline {

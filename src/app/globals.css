@@ -1,12 +1,27 @@
 :root {
   /* ── Light Theme Foundation ────────────────────── */
   --background: #F4F2FB;
-  --foreground: #1B0E47;
+  --foreground: #1F1A36;
   --surface: #FFFFFF;
   --surface-2: #FAF8FE;
   --surface-3: #F0EDF9;
 
-  /* Brand — Deep Purple (the standout in text) */
+  /* Brand — Warm Orange (primary identity, like Intercept) */
+  --brand: #FF6B2C;
+  --brand-hover: #E8581E;
+  --brand-deep: #C44615;
+  --brand-dim: rgba(255, 107, 44, 0.10);
+  --brand-border: rgba(255, 107, 44, 0.22);
+  --brand-shadow: rgba(255, 107, 44, 0.30);
+
+  /* CTA tokens — alias the brand so existing styles keep working */
+  --cta: var(--brand);
+  --cta-hover: var(--brand-hover);
+  --cta-dim: var(--brand-dim);
+  --cta-border: var(--brand-border);
+  --cta-shadow: var(--brand-shadow);
+
+  /* Accent — Deep Purple (used sparingly for eyebrows, gradients, hover) */
   --primary: #6D3FE8;
   --primary-hover: #5A2DD0;
   --primary-deep: #3D1FA0;
@@ -15,35 +30,28 @@
   --primary-glow: rgba(109, 63, 232, 0.12);
   --primary-shadow: rgba(109, 63, 232, 0.28);
 
-  /* Accent — Blue */
+  /* Accent 2 — Blue */
   --accent: #2E5BFF;
   --accent-hover: #1F47E0;
   --accent-dim: rgba(46, 91, 255, 0.10);
   --accent-border: rgba(46, 91, 255, 0.22);
   --accent-shadow: rgba(46, 91, 255, 0.25);
 
-  /* CTA — Warm Orange (for hero buttons / strong CTAs) */
-  --cta: #FF6B2C;
-  --cta-hover: #E8581E;
-  --cta-dim: rgba(255, 107, 44, 0.10);
-  --cta-border: rgba(255, 107, 44, 0.22);
-  --cta-shadow: rgba(255, 107, 44, 0.30);
-
-  /* Text */
-  --text-primary: #1B0E47;
-  --text-secondary: #5B4E8C;
-  --text-tertiary: #8B82B0;
+  /* Text — Deep navy with a faint purple undertone */
+  --text-primary: #1F1A36;
+  --text-secondary: #5A5170;
+  --text-tertiary: #8B82A0;
 
   /* Borders */
-  --border: rgba(27, 14, 71, 0.08);
-  --border-hover: rgba(27, 14, 71, 0.16);
-  --border-active: rgba(27, 14, 71, 0.24);
+  --border: rgba(31, 26, 54, 0.08);
+  --border-hover: rgba(31, 26, 54, 0.16);
+  --border-active: rgba(31, 26, 54, 0.24);
 
   /* Glass / Cards */
   --glass-bg: rgba(255, 255, 255, 0.65);
   --glass-bg-hover: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(27, 14, 71, 0.08);
-  --glass-border-hover: rgba(109, 63, 232, 0.30);
+  --glass-border: rgba(31, 26, 54, 0.08);
+  --glass-border-hover: rgba(255, 107, 44, 0.30);
 
   /* Typography */
   --font-heading: var(--font-outfit), 'Outfit', system-ui, sans-serif;
@@ -124,10 +132,10 @@ a {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--brand);
   padding: 0.4rem 1rem;
-  background: var(--primary-dim);
-  border: 1px solid var(--primary-border);
+  background: var(--brand-dim);
+  border: 1px solid var(--brand-border);
   border-radius: 100px;
   margin-bottom: 1.5rem;
   width: fit-content;

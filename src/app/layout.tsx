@@ -96,7 +96,7 @@ export default function RootLayout({
       contactType: 'customer service',
       email: 'info@ubunifutech.com',
       areaServed: 'TZ',
-      availableLanguage: ['English', 'Swahili'],
+      availableLanguage: ['English'],
     },
     address: {
       '@type': 'PostalAddress',
@@ -106,7 +106,7 @@ export default function RootLayout({
     founder: {
       '@type': 'Person',
       name: 'Richard Pallangyo',
-      jobTitle: 'Founder & CEO',
+      jobTitle: 'Data & AI Builder',
     },
     products: [
       'Ubunifu Insight',

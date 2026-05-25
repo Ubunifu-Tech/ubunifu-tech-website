@@ -42,14 +42,14 @@
   align-items: center;
   gap: 6px;
   padding: 0.4rem 1rem;
-  background: var(--primary-dim);
-  color: var(--primary);
+  background: var(--brand-dim);
+  color: var(--brand);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 100px;
-  border: 1px solid var(--primary-border);
+  border: 1px solid var(--brand-border);
   margin-bottom: 1.5rem;
 }
 
@@ -63,7 +63,7 @@
 }
 
 .titleGradient {
-  background: linear-gradient(135deg, var(--primary) 0%, #8B5BFF 45%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, #FF8F5A 50%, var(--primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -97,111 +97,6 @@
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 10px 28px var(--cta-shadow);
-}
-
-/* ── Floating Shapes ─────────────────────────── */
-
-.heroShapes {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.heroShape {
-  position: absolute;
-  opacity: 0;
-  animation: shapeAppear 0.8s ease-out forwards;
-}
-
-.shapeBrackets {
-  width: 56px;
-  height: 56px;
-  right: 8%;
-  top: 20%;
-  color: var(--primary-border);
-  animation-delay: 0.6s;
-  animation: shapeAppear 0.8s ease-out 0.6s forwards, shapeFloat 18s ease-in-out infinite;
-}
-
-.shapeDiamond {
-  width: 36px;
-  height: 36px;
-  right: 25%;
-  top: 18%;
-  border-radius: 4px;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-  transform: rotate(45deg);
-  animation-delay: 0.9s;
-  animation: shapeAppear 0.8s ease-out 0.9s forwards, shapeFloat 14s ease-in-out 1s infinite;
-}
-
-.shapePulseDot {
-  width: 10px;
-  height: 10px;
-  right: 16%;
-  top: 60%;
-  border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 20px rgba(109, 63, 232, 0.45);
-  animation-delay: 1.2s;
-  animation: shapeAppear 0.8s ease-out 1.2s forwards, shapePulse 3s ease-in-out infinite;
-}
-
-.shapeDashedCircle {
-  width: 120px;
-  height: 120px;
-  right: 4%;
-  top: 45%;
-  color: var(--accent-border);
-  animation-delay: 0.4s;
-  animation: shapeAppear 0.8s ease-out 0.4s forwards, shapeSpin 45s linear infinite;
-}
-
-.shapeSmallSquare {
-  width: 20px;
-  height: 20px;
-  right: 35%;
-  top: 50%;
-  border-radius: 4px;
-  background: var(--primary-dim);
-  border: 1px solid var(--primary-border);
-  animation-delay: 1.5s;
-  animation: shapeAppear 0.8s ease-out 1.5s forwards, shapeFloat 16s ease-in-out 2s infinite;
-}
-
-.shapeBlueDot {
-  width: 8px;
-  height: 8px;
-  right: 30%;
-  top: 70%;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0.6;
-  box-shadow: 0 0 12px rgba(46, 91, 255, 0.4);
-  animation-delay: 1.8s;
-  animation: shapeAppear 0.8s ease-out 1.8s forwards, shapePulse 4s ease-in-out 1s infinite;
-}
-
-@keyframes shapeFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
-
-@keyframes shapeSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes shapePulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.5); opacity: 0.4; }
-}
-
-@keyframes shapeAppear {
-  from { opacity: 0; transform: scale(0.6); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 /* ── Services ────────────────────────────────── */
@@ -331,13 +226,13 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--brand), var(--primary));
   color: #fff;
   font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 700;
   margin-bottom: 1.25rem;
-  box-shadow: 0 4px 12px rgba(109, 63, 232, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 107, 44, 0.28);
 }
 
 .processTitle {
@@ -412,10 +307,6 @@
   .heroSection {
     padding-top: calc(var(--nav-height) + 48px);
     padding-bottom: 64px;
-  }
-
-  .heroShapes {
-    display: none;
   }
 
   .servicesGrid {

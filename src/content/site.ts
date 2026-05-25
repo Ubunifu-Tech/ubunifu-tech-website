@@ -18,10 +18,10 @@ export const site = {
     home: 'https://ubunifutech.com',
     insight: 'https://insight.ubunifutech.com',
     sifa: 'https://sifa.ubunifutech.com',
-    build: '/build',
-    about: '/#about',
-    products: '/#products',
-    portfolio: '/#portfolio',
+    products: '/products',
+    services: '/build',
+    work: '/work',
+    about: '/about',
     contact: '/#contact',
     blog: '/blog',
     careers: '/careers',
@@ -34,10 +34,11 @@ export const navLinks: ReadonlyArray<{
   href: string;
   badge?: string;
 }> = [
-  { label: 'Products', href: '/#products' },
-  { label: 'Build', href: '/build' },
-  { label: 'About', href: '/#about' },
-  { label: 'Blog', href: '/blog', badge: 'Soon' },
+  { label: 'Services', href: '/build' },
+  { label: 'Products', href: '/products' },
+  { label: 'Work', href: '/work' },
+  { label: 'About', href: '/about' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Careers', href: '/careers' },
 ];
 
@@ -57,13 +58,15 @@ export const footerColumns: ReadonlyArray<{
       { label: 'Ubunifu Insight', href: 'https://insight.ubunifutech.com', external: true },
       { label: 'Ubunifu Sifa', href: 'https://sifa.ubunifutech.com', external: true },
       { label: 'Ubunifu Rafiki', href: '#', soon: true },
-      { label: 'Ubunifu Build', href: '/build' },
+      { label: 'All products', href: '/products' },
     ],
   },
   {
     title: 'Company',
     links: [
-      { label: 'About', href: '/#about' },
+      { label: 'Services', href: '/build' },
+      { label: 'Our Work', href: '/work' },
+      { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
       { label: 'Careers', href: '/careers' },
     ],

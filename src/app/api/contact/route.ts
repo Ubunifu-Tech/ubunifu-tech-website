@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #fafafa; border-radius: 12px; overflow: hidden;">
           <div style="background: #0a0a0a; padding: 32px; text-align: center;">
-            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #6D3FE8, #2E5BFF); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
+            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #FF6B2C, #6D3FE8); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
             <h2 style="color: #fafafa; margin: 16px 0 4px; font-size: 20px;">New Contact Form Submission</h2>
             <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 14px;">ubunifutech.com</p>
           </div>
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #fafafa; border-radius: 12px; overflow: hidden;">
           <div style="background: #0a0a0a; padding: 32px; text-align: center;">
-            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #6D3FE8, #2E5BFF); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
+            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #FF6B2C, #6D3FE8); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
             <h2 style="color: #fafafa; margin: 16px 0 4px; font-size: 20px;">Thanks for reaching out!</h2>
           </div>
           <div style="padding: 32px;">

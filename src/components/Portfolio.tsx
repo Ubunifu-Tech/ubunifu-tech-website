@@ -7,23 +7,27 @@ import { ExternalLink, MousePointer2 } from 'lucide-react';
 import { projects } from '@/content/portfolio';
 import styles from './Portfolio.module.css';
 
-export const Portfolio: React.FC = () => {
+export const Portfolio: React.FC<{ hideHeader?: boolean }> = ({
+  hideHeader = false,
+}) => {
   return (
     <section id="portfolio" className={`section ${styles.portfolio}`}>
       <div className="container">
-        <motion.div
-          className={styles.header}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <span className="eyebrow">Our work</span>
-          <h2 className={styles.heading}>Built by Ubunifu</h2>
-          <p className={styles.subheading}>
-            Websites and platforms designed and built for businesses across Tanzania.
-          </p>
-        </motion.div>
+        {!hideHeader && (
+          <motion.div
+            className={styles.header}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span className="eyebrow">Our work</span>
+            <h2 className={styles.heading}>Built by Ubunifu</h2>
+            <p className={styles.subheading}>
+              Websites and platforms designed and built for businesses across Tanzania.
+            </p>
+          </motion.div>
+        )}
 
         <div className={styles.grid}>
           {projects.map((project, index) => (

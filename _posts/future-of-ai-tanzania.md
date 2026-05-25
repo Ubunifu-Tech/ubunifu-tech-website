@@ -8,7 +8,7 @@ tags: ["Product", "Africa", "Tanzania"]
 
 Most software tools — from document AI to website builders to booking platforms — were designed for markets with fast internet, credit card payments, and English-speaking users.
 
-In Tanzania, businesses operate differently. Payments go through M-Pesa. Connectivity is variable. Devices are shared. The tools that exist today were not built for this context.
+In Tanzania, businesses operate differently. Connectivity is variable. Devices are shared. Workflows are their own. The tools that exist today were not built for this context.
 
 That is not a complaint — it is an opening.
 
@@ -24,7 +24,7 @@ At Ubunifu Technologies, we are building three products to address this:
 
 **Ubunifu Insight** — AI document intelligence for teams. Upload documents, ask questions in plain language, extract structured data, generate reports. Pay only when you use it.
 
-**Ubunifu Rafiki** — Embeddable widgets for Tanzanian businesses. Contact forms, booking tools, and blog widgets that drop into any website. Built for local payment methods and local needs.
+**Ubunifu Rafiki** — Embeddable widgets for Tanzanian businesses. Contact forms, booking tools, and blog widgets that drop into any website. Built for the way local businesses already work.
 
 **Ubunifu Build** — Custom software, websites, and consulting for businesses that need hands-on expertise. From brand-new web platforms to data pipelines and AI integrations.
 
@@ -32,6 +32,6 @@ At Ubunifu Technologies, we are building three products to address this:
 
 Every product starts from the workflows, pricing, and infrastructure that exist in Tanzania — not adapted from tools built elsewhere.
 
-M-Pesa and mobile money are first-class payment methods. Swahili is supported alongside English. Pricing follows pay-as-you-go models that match how businesses here actually spend.
+Pricing follows pay-as-you-go models that match how businesses here actually spend.
 
 We think the next generation of African software companies will be built this way: starting from local needs, not copying foreign solutions and hoping they translate.

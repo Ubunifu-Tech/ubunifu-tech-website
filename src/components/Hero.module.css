@@ -15,126 +15,20 @@
   padding-bottom: 80px;
 }
 
-/* ── Aurora Background ────────────────────────── */
-
-.aurora {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.auroraBlob1 {
-  position: absolute;
-  top: -20%;
-  left: -10%;
-  width: 60%;
-  height: 70%;
-  background: radial-gradient(ellipse at center, rgba(109, 63, 232, 0.18) 0%, transparent 60%);
-  animation: auroraDrift1 18s ease-in-out infinite alternate;
-  filter: blur(80px);
-}
-
-.auroraBlob2 {
-  position: absolute;
-  top: 20%;
-  right: -15%;
-  width: 50%;
-  height: 60%;
-  background: radial-gradient(ellipse at center, rgba(46, 91, 255, 0.14) 0%, transparent 60%);
-  animation: auroraDrift2 22s ease-in-out infinite alternate;
-  filter: blur(80px);
-}
-
-.auroraBlob3 {
-  position: absolute;
-  bottom: -10%;
-  left: 30%;
-  width: 40%;
-  height: 50%;
-  background: radial-gradient(ellipse at center, rgba(255, 107, 44, 0.10) 0%, transparent 60%);
-  animation: auroraDrift3 15s ease-in-out infinite alternate;
-  filter: blur(60px);
-}
-
-@keyframes auroraDrift1 {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  100% { transform: translate(5%, 8%) rotate(3deg); }
-}
-
-@keyframes auroraDrift2 {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  100% { transform: translate(-8%, 5%) rotate(-2deg); }
-}
-
-@keyframes auroraDrift3 {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(10%, -5%); }
-}
-
 /* ── Grid Overlay ─────────────────────────────── */
 
 .gridOverlay {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(27, 14, 71, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(27, 14, 71, 0.045) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
+    linear-gradient(rgba(27, 14, 71, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 14, 71, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 10%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 10%, transparent 72%);
 }
 
-/* ── Floating Orbs ────────────────────────────── */
-
-.orbs {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.orb1 {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary);
-  top: 25%;
-  right: 20%;
-  animation: orbFloat 6s ease-in-out infinite, orbPulse 3s ease-in-out infinite;
-  box-shadow: 0 0 20px rgba(109, 63, 232, 0.5);
-}
-
-.orb2 {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  top: 60%;
-  right: 30%;
-  animation: orbFloat 8s ease-in-out 1s infinite, orbPulse 4s ease-in-out 0.5s infinite;
-  box-shadow: 0 0 15px rgba(46, 91, 255, 0.5);
-}
-
-.orb3 {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--cta);
-  bottom: 30%;
-  left: 15%;
-  animation: orbFloat 7s ease-in-out 2s infinite, orbPulse 3.5s ease-in-out 1s infinite;
-  box-shadow: 0 0 18px rgba(255, 107, 44, 0.4);
-}
-
-@keyframes orbFloat {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  25% { transform: translateY(-15px) translateX(5px); }
-  50% { transform: translateY(-8px) translateX(-5px); }
-  75% { transform: translateY(-20px) translateX(3px); }
-}
+/* ── Badge Dot Pulse ──────────────────────────── */
 
 @keyframes orbPulse {
   0%, 100% { opacity: 0.6; }
@@ -148,14 +42,14 @@
   align-items: center;
   gap: 8px;
   padding: 0.4rem 1rem;
-  background: var(--primary-dim);
-  color: var(--primary);
+  background: var(--brand-dim);
+  color: var(--brand);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 100px;
-  border: 1px solid var(--primary-border);
+  border: 1px solid var(--brand-border);
   margin-bottom: 2rem;
 }
 
@@ -163,26 +57,41 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--brand);
   animation: orbPulse 2s ease-in-out infinite;
 }
 
 /* ── Typography ───────────────────────────────── */
 
 .title {
-  font-size: clamp(2.75rem, 7vw, 5.5rem);
+  font-size: clamp(2.2rem, 8vw, 5.5rem);
   font-weight: 800;
-  line-height: 1.02;
+  line-height: 1.04;
   letter-spacing: -0.04em;
   color: var(--text-primary);
   margin-bottom: 1.75rem;
 }
 
 .titleGradient {
-  background: linear-gradient(135deg, var(--primary) 0%, #8B5BFF 45%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, #FF8F5A 50%, var(--primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.gradientWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.underline {
+  position: absolute;
+  left: 0;
+  bottom: -0.08em;
+  width: 100%;
+  height: 0.26em;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .subtitle {
@@ -317,10 +226,6 @@
   .metricDivider {
     width: 100%;
     height: 1px;
-  }
-
-  .orb1, .orb2, .orb3 {
-    display: none;
   }
 }
 

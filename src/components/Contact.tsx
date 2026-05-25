@@ -3,9 +3,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { SelectField } from './SelectField';
 import styles from './Contact.module.css';
 
 type FormStatus = 'idle' | 'sending' | 'success' | 'error';
+
+const SUBJECT_OPTIONS = [
+  'Product inquiry',
+  'Custom build / Consulting',
+  'Partnership',
+  'Careers',
+  'Other',
+] as const;
 
 export const Contact: React.FC = () => {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
@@ -18,6 +27,13 @@ export const Contact: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!form.subject) {
+      setStatus('error');
+      setErrorMsg('Please choose a subject for your message.');
+      return;
+    }
+
     setStatus('sending');
     setErrorMsg('');
 
@@ -129,24 +145,13 @@ export const Contact: React.FC = () => {
               </div>
             </div>
 
-            <div className={styles.field}>
-              <label htmlFor="subject" className={styles.label}>Subject</label>
-              <select
-                id="subject"
-                name="subject"
-                value={form.subject}
-                onChange={handleChange}
-                required
-                className={styles.input}
-              >
-                <option value="" disabled>Select a topic</option>
-                <option value="Product inquiry">Product inquiry</option>
-                <option value="Custom build / Consulting">Custom build / Consulting</option>
-                <option value="Partnership">Partnership</option>
-                <option value="Careers">Careers</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+            <SelectField
+              label="Subject"
+              placeholder="Select a topic"
+              value={form.subject}
+              onChange={(subject) => setForm((prev) => ({ ...prev, subject }))}
+              options={SUBJECT_OPTIONS}
+            />
 
             <div className={styles.field}>
               <label htmlFor="message" className={styles.label}>Message</label>

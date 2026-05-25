@@ -58,7 +58,7 @@ A secondary accent. Used sparingly: paired with orange in the logo gradient and 
 
 ### 2.4 Accent — Blue
 
-Used very sparingly, mostly for decorative aurora blobs and small dots in the hero. Not used in typography.
+Used very sparingly — only in soft decorative background gradients (the `/build` hero glow and the footer CTA band). Not used in typography or interactive states.
 
 | Token | Hex | Use |
 | ----- | --- | --- |
@@ -98,7 +98,7 @@ Two typefaces, loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`
 
 | Element | Size | Weight | Line-height | Letter-spacing |
 | ------- | ---- | ------ | ----------- | -------------- |
-| Hero title (`h1`) | `clamp(2.75rem, 7vw, 5.5rem)` | 800 | 1.02 | −0.04em |
+| Hero title (`h1`) | `clamp(2.2rem, 8vw, 5.5rem)` | 800 | 1.04 | −0.04em |
 | Section heading (`h2`) | `clamp(2rem, 4vw, 3rem)` | 700 | 1.1 | −0.02em |
 | Card title (`h3`) | 1.125 – 1.3rem | 700 – 800 | 1.2 | −0.01em |
 | Body | 1rem | 400 | 1.7 | normal |
@@ -141,7 +141,7 @@ We use [lucide-react](https://lucide.dev) throughout. Default size is **20–22p
 | ------- | ---------- | ---- | --- |
 | **Primary CTA** | `--cta` (orange) | White | "Explore products", "Submit", footer CTA |
 | **Secondary** | White / transparent | `--text-primary` with `--border-hover` | "Get in touch" alongside primary CTA |
-| **Live (purple)** | Currently the orange `--cta` | White | Product card "Try X" buttons |
+| **Product CTA** | `--cta` (orange) | White | Product card "Try X" / "Learn more" buttons |
 
 All primary buttons have:
 - `border-radius: 12px`
@@ -186,6 +186,7 @@ Page content lives in [`src/content/`](src/content/) — separated from presenta
 | `values.tsx` | "Why we exist" cards in the About section |
 | `products.tsx` | Product bento grid (Insight, Sifa, Rafiki, Build) |
 | `portfolio.tsx` | Client projects (logo URLs, brand colors, descriptions) |
+| `team.tsx` | Team member profiles (name, role, bio, skills) |
 
 ### How to update copy
 
@@ -209,11 +210,14 @@ src/
 ├── app/                   # Next.js App Router pages
 │   ├── globals.css        # CSS custom properties (design tokens)
 │   ├── layout.tsx         # Root layout + fonts + JSON-LD
-│   ├── page.tsx           # Homepage (composes sections)
-│   ├── build/             # /build page
+│   ├── page.tsx           # Homepage (highlight-reel previews)
+│   ├── products/          # /products page
+│   ├── build/             # /build — Services page
+│   ├── work/              # /work — client projects
+│   ├── about/             # /about — values + team
 │   ├── blog/              # /blog and /blog/[slug]
 │   ├── careers/           # /careers
-│   ├── api/contact/       # POST /api/contact (Resend email)
+│   ├── api/contact/       # POST /api/contact (Resend + bot protection)
 │   ├── icon.tsx           # Favicon (generated)
 │   ├── apple-icon.tsx     # Apple touch icon (generated)
 │   └── sitemap.ts         # sitemap.xml
@@ -221,24 +225,31 @@ src/
 ├── components/            # One folder per section / UI element
 │   ├── Navbar.tsx + .module.css
 │   ├── Hero.tsx + .module.css
+│   ├── PageHeader.tsx + .module.css   # shared sub-page header
 │   ├── ProblemStrip.tsx + .module.css
+│   ├── HomePreviews.tsx + .module.css # homepage product/work/about previews
 │   ├── Products.tsx + .module.css
 │   ├── About.tsx + .module.css
-│   ├── Portfolio.tsx + .module.css   # animated browser mockups
+│   ├── Team.tsx + .module.css
+│   ├── Portfolio.tsx + .module.css    # animated browser mockups
+│   ├── Clients.tsx + .module.css      # client logo strip
+│   ├── TechMarquee.tsx + .module.css  # scrolling technology strip
 │   ├── Contact.tsx + .module.css
+│   ├── SelectField.tsx + .module.css  # custom branded dropdown
 │   ├── Footer.tsx + .module.css
 │   ├── WhatsAppButton.tsx + .module.css
-│   ├── ScrollReveal.tsx              # scroll-triggered reveals
-│   ├── SmoothScroll.tsx              # Lenis smooth scroll
-│   ├── MotionCard.tsx                # animated card wrapper
-│   └── BuildCards.tsx                # MotionCard list wrapper
+│   ├── ScrollReveal.tsx               # scroll-triggered reveals
+│   ├── SmoothScroll.tsx               # Lenis smooth scroll
+│   ├── MotionCard.tsx                 # animated card wrapper
+│   └── BuildCards.tsx                 # MotionCard list wrapper
 │
 ├── content/               # Editable page data — no JSX logic
 │   ├── site.ts
 │   ├── pillars.tsx
 │   ├── values.tsx
 │   ├── products.tsx
-│   └── portfolio.tsx
+│   ├── portfolio.tsx
+│   └── team.tsx
 │
 └── lib/
     └── blog.ts            # Blog post data + helpers
@@ -266,7 +277,7 @@ src/
 
 - All animations respect `prefers-reduced-motion: reduce` (see `Portfolio.module.css` and `ScrollReveal.module.css`).
 - Decorative elements (auroras, dots, cursors) have `aria-hidden="true"`.
-- Color contrast: text-primary (`#1B0E47`) on background (`#F4F2FB`) — passes WCAG AA at all body sizes.
+- Color contrast: text-primary (`#1F1A36`) on background (`#F4F2FB`) — passes WCAG AA at all body sizes.
 - Focus states use a 3px purple-dim outline on form fields.
 
 ---

@@ -163,46 +163,6 @@
   transform: translateY(0) scale(0.98);
 }
 
-/* ── Metrics / Social Proof ───────────────────── */
-
-.metrics {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(27, 14, 71, 0.05);
-}
-
-.metric {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.metricValue {
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.metricLabel {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-.metricDivider {
-  width: 1px;
-  height: 32px;
-  background: var(--border);
-}
-
 /* ── Responsive ───────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -214,18 +174,6 @@
   .container {
     padding-top: 40px;
     padding-bottom: 60px;
-  }
-
-  .metrics {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
-  }
-
-  .metricDivider {
-    width: 100%;
-    height: 1px;
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { SelectField } from './SelectField';
@@ -17,9 +17,16 @@ const SUBJECT_OPTIONS = [
 ] as const;
 
 export const Contact: React.FC = () => {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+    company_url: '', // honeypot — must stay empty
+  });
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const mountedAt = useRef(Date.now());
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -41,7 +48,10 @@ export const Contact: React.FC = () => {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          elapsedMs: Date.now() - mountedAt.current,
+        }),
       });
 
       if (!res.ok) {
@@ -50,7 +60,7 @@ export const Contact: React.FC = () => {
       }
 
       setStatus('success');
-      setForm({ name: '', email: '', subject: '', message: '' });
+      setForm({ name: '', email: '', subject: '', message: '', company_url: '' });
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Failed to send message');
@@ -116,6 +126,19 @@ export const Contact: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
+            <div className={styles.honeypot} aria-hidden="true">
+              <label htmlFor="company_url">Company website (leave this empty)</label>
+              <input
+                type="text"
+                id="company_url"
+                name="company_url"
+                value={form.company_url}
+                onChange={handleChange}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
             <div className={styles.formRow}>
               <div className={styles.field}>
                 <label htmlFor="name" className={styles.label}>Name</label>

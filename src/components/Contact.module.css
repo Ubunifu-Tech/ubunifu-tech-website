@@ -137,6 +137,15 @@
   min-height: 120px;
 }
 
+/* Honeypot — visually hidden, off-screen; only bots fill this */
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 /* ── Submit Button ────────────────────────────── */
 
 .submitBtn {

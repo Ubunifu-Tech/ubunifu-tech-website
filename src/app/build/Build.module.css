@@ -16,16 +16,16 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 50% 60% at 70% 25%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 50% at 20% 70%, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
+    radial-gradient(ellipse 50% 60% at 70% 25%, rgba(109, 63, 232, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 20% 70%, rgba(46, 91, 255, 0.10) 0%, transparent 60%);
 }
 
 .heroDots {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(rgba(27, 14, 71, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 14, 71, 0.05) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 60% 60% at 75% 40%, black 10%, transparent 60%);
   -webkit-mask-image: radial-gradient(ellipse 60% 60% at 75% 40%, black 10%, transparent 60%);
@@ -45,7 +45,7 @@
   background: var(--primary-dim);
   color: var(--primary);
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 100px;
@@ -63,7 +63,7 @@
 }
 
 .titleGradient {
-  background: linear-gradient(135deg, var(--primary) 0%, #34d399 40%, var(--accent) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #8B5BFF 45%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -82,20 +82,21 @@
   align-items: center;
   gap: 8px;
   padding: 0.875rem 1.75rem;
-  background: var(--primary);
+  background: var(--cta);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
   border-radius: 12px;
   text-decoration: none;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 20px var(--cta-shadow);
 }
 
 .heroBtn:hover {
-  background: var(--primary-hover);
+  background: var(--cta-hover);
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 10px 28px var(--cta-shadow);
 }
 
 /* ── Floating Shapes ─────────────────────────── */
@@ -143,7 +144,7 @@
   top: 60%;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 20px rgba(109, 63, 232, 0.45);
   animation-delay: 1.2s;
   animation: shapeAppear 0.8s ease-out 1.2s forwards, shapePulse 3s ease-in-out infinite;
 }
@@ -177,8 +178,8 @@
   top: 70%;
   border-radius: 50%;
   background: var(--accent);
-  opacity: 0.5;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+  opacity: 0.6;
+  box-shadow: 0 0 12px rgba(46, 91, 255, 0.4);
   animation-delay: 1.8s;
   animation: shapeAppear 0.8s ease-out 1.8s forwards, shapePulse 4s ease-in-out 1s infinite;
 }
@@ -225,17 +226,17 @@
 
 .serviceCard {
   padding: 2rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
   border-radius: 16px;
   transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
 }
 
 .serviceCard:hover {
-  border-color: var(--glass-border-hover);
-  background: var(--glass-bg-hover);
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.04);
-  transform: translateY(-2px);
+  border-color: var(--primary-border);
+  box-shadow: 0 16px 36px rgba(109, 63, 232, 0.10);
+  transform: translateY(-3px);
 }
 
 .serviceCard:hover .serviceIcon {
@@ -265,14 +266,14 @@
 .serviceNumber {
   font-family: var(--font-heading);
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-tertiary);
   letter-spacing: -0.02em;
 }
 
 .serviceTitle {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.625rem;
   color: var(--text-primary);
 }
@@ -293,18 +294,20 @@
 .tag {
   font-size: 0.75rem;
   padding: 0.2rem 0.6rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-border);
   border-radius: 100px;
-  color: var(--text-secondary);
-  font-weight: 500;
+  color: var(--primary);
+  font-weight: 600;
 }
 
 /* ── Process ─────────────────────────────────── */
 
 .processSection {
   padding: 100px 0;
-  background: var(--surface);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .processGrid {
@@ -315,9 +318,10 @@
 
 .processCard {
   padding: 2rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
   border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
 }
 
 .processStep {
@@ -327,17 +331,18 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: #fff;
   font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 700;
   margin-bottom: 1.25rem;
+  box-shadow: 0 4px 12px rgba(109, 63, 232, 0.25);
 }
 
 .processTitle {
   font-size: 1.0625rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
 }
@@ -354,13 +359,13 @@
 .ctaSection {
   padding: 100px 0;
   text-align: center;
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
 .ctaHeading {
   font-size: clamp(1.75rem, 3vw, 2.5rem);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
   color: var(--text-primary);
@@ -378,20 +383,21 @@
   align-items: center;
   gap: 8px;
   padding: 0.875rem 2rem;
-  background: var(--primary);
+  background: var(--cta);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
   border-radius: 12px;
   text-decoration: none;
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 20px var(--cta-shadow);
 }
 
 .ctaBtn:hover {
-  background: var(--primary-hover);
+  background: var(--cta-hover);
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 10px 28px var(--cta-shadow);
 }
 
 /* ── Responsive ──────────────────────────────── */

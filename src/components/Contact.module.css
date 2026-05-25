@@ -1,5 +1,6 @@
 .contact {
-  background: var(--background);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
 }
 
 .layout {
@@ -14,6 +15,7 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: 0.75rem;
+  color: var(--text-primary);
 }
 
 .text {
@@ -52,7 +54,7 @@
 
 .methodLabel {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: var(--text-tertiary);
@@ -63,7 +65,7 @@
   font-size: 1rem;
   color: var(--primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: color 0.2s ease;
 }
 
@@ -79,13 +81,14 @@
 /* ── Form ─────────────────────────────────────── */
 
 .form {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 2.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  box-shadow: 0 12px 32px rgba(27, 14, 71, 0.06);
 }
 
 .formRow {
@@ -102,19 +105,19 @@
 
 .label {
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
 .input {
   padding: 0.75rem 1rem;
-  background: var(--surface);
+  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 0.9375rem;
   color: var(--text-primary);
   font-family: var(--font-body);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   outline: none;
   -webkit-appearance: none;
 }
@@ -125,6 +128,7 @@
 
 .input:focus {
   border-color: var(--primary);
+  background: #FFFFFF;
   box-shadow: 0 0 0 3px var(--primary-dim);
 }
 
@@ -141,7 +145,7 @@
   justify-content: center;
   gap: 8px;
   padding: 0.875rem 2rem;
-  background: var(--primary);
+  background: var(--cta);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -152,12 +156,13 @@
   transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
   margin-top: 0.5rem;
+  box-shadow: 0 6px 18px var(--cta-shadow);
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: var(--cta-hover);
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 10px 24px var(--cta-shadow);
 }
 
 .submitBtn:active:not(:disabled) {
@@ -196,7 +201,7 @@
   border: 1px solid var(--primary-border);
   border-radius: 10px;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .statusError {
@@ -204,12 +209,12 @@
   align-items: center;
   gap: 8px;
   padding: 0.75rem 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.25);
   border-radius: 10px;
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* ── Responsive ───────────────────────────────── */

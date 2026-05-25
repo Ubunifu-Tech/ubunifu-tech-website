@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #fafafa; border-radius: 12px; overflow: hidden;">
           <div style="background: #0a0a0a; padding: 32px; text-align: center;">
-            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
+            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #6D3FE8, #2E5BFF); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
             <h2 style="color: #fafafa; margin: 16px 0 4px; font-size: 20px;">New Contact Form Submission</h2>
             <p style="color: rgba(255,255,255,0.5); margin: 0; font-size: 14px;">ubunifutech.com</p>
           </div>
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
               </tr>
               <tr>
                 <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Email</td>
-                <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-size: 14px;"><a href="mailto:${escapeHtml(email)}" style="color: #059669;">${escapeHtml(email)}</a></td>
+                <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-size: 14px;"><a href="mailto:${escapeHtml(email)}" style="color: #6D3FE8;">${escapeHtml(email)}</a></td>
               </tr>
               <tr>
                 <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">Subject</td>
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #fafafa; border-radius: 12px; overflow: hidden;">
           <div style="background: #0a0a0a; padding: 32px; text-align: center;">
-            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
+            <div style="display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #6D3FE8, #2E5BFF); border-radius: 10px; line-height: 40px; color: white; font-weight: 700; font-size: 18px;">U</div>
             <h2 style="color: #fafafa; margin: 16px 0 4px; font-size: 20px;">Thanks for reaching out!</h2>
           </div>
           <div style="padding: 32px;">
@@ -72,14 +72,14 @@ export async function POST(req: NextRequest) {
               In the meantime, feel free to explore our products:
             </p>
             <div style="margin-bottom: 24px;">
-              <a href="https://insight.ubunifutech.com" style="display: inline-block; padding: 10px 20px; background: #059669; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-right: 8px;">Try Ubunifu Insight</a>
-              <a href="https://sifa.ubunifutech.com" style="display: inline-block; padding: 10px 20px; background: transparent; color: #059669; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #059669;">Try Ubunifu Sifa</a>
+              <a href="https://insight.ubunifutech.com" style="display: inline-block; padding: 10px 20px; background: #6D3FE8; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin-right: 8px;">Try Ubunifu Insight</a>
+              <a href="https://sifa.ubunifutech.com" style="display: inline-block; padding: 10px 20px; background: transparent; color: #6D3FE8; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; border: 1px solid #6D3FE8;">Try Ubunifu Sifa</a>
             </div>
             <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
               Best regards,<br />
               <strong style="color: #111827;">Ubunifu Technologies</strong><br />
               Arusha, Tanzania<br />
-              <a href="mailto:info@ubunifutech.com" style="color: #059669;">info@ubunifutech.com</a> · <a href="https://ubunifutech.com" style="color: #059669;">ubunifutech.com</a>
+              <a href="mailto:info@ubunifutech.com" style="color: #6D3FE8;">info@ubunifutech.com</a> · <a href="https://ubunifutech.com" style="color: #6D3FE8;">ubunifutech.com</a>
             </p>
           </div>
         </div>

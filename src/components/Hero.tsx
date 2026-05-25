@@ -86,30 +86,6 @@ export const Hero: React.FC = () => {
             Get in touch
           </a>
         </motion.div>
-
-        {/* Social proof / trust */}
-        <motion.div
-          className={styles.metrics}
-          initial="hidden"
-          animate="visible"
-          custom={0.65}
-          variants={fadeUp}
-        >
-          <div className={styles.metric}>
-            <span className={styles.metricValue}>2</span>
-            <span className={styles.metricLabel}>Live Products</span>
-          </div>
-          <div className={styles.metricDivider} />
-          <div className={styles.metric}>
-            <span className={styles.metricValue}>M-Pesa</span>
-            <span className={styles.metricLabel}>Payments Supported</span>
-          </div>
-          <div className={styles.metricDivider} />
-          <div className={styles.metric}>
-            <span className={styles.metricValue}>EN / SW</span>
-            <span className={styles.metricLabel}>Languages</span>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

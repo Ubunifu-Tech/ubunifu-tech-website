@@ -1,38 +1,49 @@
 :root {
-  /* ── Dark Theme Foundation ─────────────────────── */
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --surface: #111111;
-  --surface-2: #161616;
-  --surface-3: #1a1a1a;
+  /* ── Light Theme Foundation ────────────────────── */
+  --background: #F4F2FB;
+  --foreground: #1B0E47;
+  --surface: #FFFFFF;
+  --surface-2: #FAF8FE;
+  --surface-3: #F0EDF9;
 
-  /* Brand Colors */
-  --primary: #10b981;
-  --primary-hover: #34d399;
-  --primary-dim: rgba(16, 185, 129, 0.15);
-  --primary-border: rgba(16, 185, 129, 0.25);
-  --primary-glow: rgba(16, 185, 129, 0.08);
+  /* Brand — Deep Purple (the standout in text) */
+  --primary: #6D3FE8;
+  --primary-hover: #5A2DD0;
+  --primary-deep: #3D1FA0;
+  --primary-dim: rgba(109, 63, 232, 0.10);
+  --primary-border: rgba(109, 63, 232, 0.22);
+  --primary-glow: rgba(109, 63, 232, 0.12);
+  --primary-shadow: rgba(109, 63, 232, 0.28);
 
-  /* Accent */
-  --accent: #6366f1;
-  --accent-dim: rgba(99, 102, 241, 0.15);
-  --accent-border: rgba(99, 102, 241, 0.25);
+  /* Accent — Blue */
+  --accent: #2E5BFF;
+  --accent-hover: #1F47E0;
+  --accent-dim: rgba(46, 91, 255, 0.10);
+  --accent-border: rgba(46, 91, 255, 0.22);
+  --accent-shadow: rgba(46, 91, 255, 0.25);
+
+  /* CTA — Warm Orange (for hero buttons / strong CTAs) */
+  --cta: #FF6B2C;
+  --cta-hover: #E8581E;
+  --cta-dim: rgba(255, 107, 44, 0.10);
+  --cta-border: rgba(255, 107, 44, 0.22);
+  --cta-shadow: rgba(255, 107, 44, 0.30);
 
   /* Text */
-  --text-primary: #fafafa;
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --text-primary: #1B0E47;
+  --text-secondary: #5B4E8C;
+  --text-tertiary: #8B82B0;
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.15);
-  --border-active: rgba(255, 255, 255, 0.2);
+  --border: rgba(27, 14, 71, 0.08);
+  --border-hover: rgba(27, 14, 71, 0.16);
+  --border-active: rgba(27, 14, 71, 0.24);
 
-  /* Glass */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.14);
+  /* Glass / Cards */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-bg-hover: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(27, 14, 71, 0.08);
+  --glass-border-hover: rgba(109, 63, 232, 0.30);
 
   /* Typography */
   --font-heading: var(--font-outfit), 'Outfit', system-ui, sans-serif;
@@ -110,7 +121,7 @@ a {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--primary);
@@ -128,6 +139,7 @@ a {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
   margin-bottom: 1rem;
+  color: var(--text-primary);
 }
 
 .sectionSubtext {
@@ -149,20 +161,20 @@ a {
 .glassCard:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-hover);
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.04);
+  box-shadow: 0 12px 32px rgba(109, 63, 232, 0.08);
 }
 
 /* ── Selection ────────────────────────────────── */
 
 ::selection {
   background: var(--primary-dim);
-  color: var(--primary);
+  color: var(--primary-deep);
 }
 
 /* ── Scrollbar ────────────────────────────────── */
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -170,12 +182,12 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: rgba(109, 63, 232, 0.18);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(109, 63, 232, 0.35);
 }
 
 /* ── Responsive ───────────────────────────────── */

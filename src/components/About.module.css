@@ -7,6 +7,7 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: 0.75rem;
+  color: var(--text-primary);
 }
 
 .intro {
@@ -25,17 +26,17 @@
 
 .card {
   padding: 2rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
   border-radius: 16px;
   transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
 }
 
 .card:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.04);
-  transform: translateY(-2px);
+  border-color: var(--primary-border);
+  box-shadow: 0 14px 32px rgba(109, 63, 232, 0.10);
+  transform: translateY(-3px);
 }
 
 .iconWrapper {
@@ -58,7 +59,7 @@
 
 .valueTitle {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.625rem;
   color: var(--text-primary);
 }

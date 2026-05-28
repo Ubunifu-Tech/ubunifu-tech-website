@@ -14,8 +14,9 @@ export type Testimonial = {
   authorRole: string;
   organization: string;
   organizationUrl?: string;
-  // Slug used to associate the testimonial with a Portfolio entry.
-  project?: 'safari-king' | 'usambara';
+  // Matches a Project `slug` in portfolio.tsx, used to associate the
+  // testimonial with its case study.
+  project?: string;
 };
 
 export const testimonials: ReadonlyArray<Testimonial> = [
@@ -28,6 +29,6 @@ export const testimonials: ReadonlyArray<Testimonial> = [
     authorRole: 'Managing Director',
     organization: 'Usambara Destination Eco Tours',
     organizationUrl: 'https://www.usambaradestination.com/',
-    project: 'usambara',
+    project: 'usambara-destination',
   },
 ];

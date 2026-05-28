@@ -47,6 +47,7 @@
 /* ── Browser-framed screenshot ─────────────────── */
 
 .browser {
+  display: block;
   position: relative;
   margin: 1rem 1rem 0;
   border-radius: 12px;
@@ -54,6 +55,7 @@
   border: 1px solid var(--border);
   background: #FFFFFF;
   box-shadow: 0 10px 24px rgba(27, 14, 71, 0.06);
+  text-decoration: none;
 }
 
 .browserBar {
@@ -166,6 +168,16 @@
   letter-spacing: -0.01em;
 }
 
+.titleLink {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.titleLink:hover {
+  color: var(--primary);
+}
+
 .description {
   font-size: 0.95rem;
   color: var(--text-secondary);
@@ -212,6 +224,32 @@
   border-radius: 100px;
   color: var(--primary);
   font-weight: 600;
+}
+
+.techMore {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 100px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  align-self: center;
+}
+
+.caseStudyLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+  color: var(--brand);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.caseStudyLink:hover {
+  gap: 0.65rem;
+  color: var(--brand-hover);
 }
 
 /* ── Responsive ───────────────────────────────── */

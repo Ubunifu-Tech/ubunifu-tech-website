@@ -8,6 +8,21 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 9. Case study pages (`/work/[slug]`)
+Built dynamic per-project case study pages, grounded entirely in the **actual project codebases** (Safari King and Usambara repos), which the team provided as ground truth. No invented metrics or briefs — everything is verified against the real code.
+
+- **New route** `src/app/work/[slug]/page.tsx` + `CaseStudy.module.css`, with `generateStaticParams`, per-project `generateMetadata` (OpenGraph + Twitter using the project screenshot), and `CreativeWork` JSON-LD. Both pages statically prerender at build time.
+- **Page structure**: hero (category, title, factual overview, "Visit live site"), browser-framed primary screenshot, "Inside the build" highlights grid, screenshot gallery with captions, full tech stack, testimonial (where one exists), and a contact CTA.
+- **Portfolio data extended** (`src/content/portfolio.tsx`): added `slug`, `overview` paragraphs, detailed `highlights`, screenshot captions, and a `getProjectBySlug` helper.
+- **Portfolio cards now link to case studies** — the screenshot and title link through to `/work/[slug]`, with a "View case study" CTA. The external "Visit" link is preserved. Tech chips on the card are capped at 6 with a "+N more" indicator; the full stack shows on the case study page.
+- **Homepage Work preview** cards now deep-link to each case study instead of the generic `/work` index.
+- **Sitemap** extended to include both `/work/[slug]` routes.
+
+#### Accuracy corrections made from the real repos
+- **Usambara was described as a static "HTML, CSS" site — it isn't.** It's a Node.js + Express application (Resend email with a two-email workflow, Helmet security, compression, per-IP rate limiting, WCAG AA accessibility, TravelAgency/FAQ/ContactPage/Blog/ImageGallery schema). Corrected the stack and capabilities.
+- **Safari King was undersold as an "AI marketing copilot."** The Claude Sonnet 4.6 integration generates itineraries, blog posts, SEO metadata, booking replies, inquiry replies and newsletters, plus a streaming multi-turn admin assistant with prompt caching. It also has 2FA admin auth, full audit logging, a customer CRM, ~95 pages, 48 API routes and 13 data models. Expanded the description, capabilities, highlights and stack to match reality.
+- Nice corroboration: Isaac (our testimonial author) is a named 5.0★ reviewer in Usambara's own published structured data.
+
 ### 6. Testimonial integration
 - New `src/content/testimonials.tsx` data file. Currently holds one real testimonial — Isaac, Managing Director of Usambara Destination Eco Tours. Quote is rewritten for length and rhythm while preserving the original meaning (the source language and sentiment).
 - New `Testimonial` component (`src/components/Testimonial.tsx` + `.module.css`). Reusable, takes an optional `project` slug to fetch a specific testimonial.
@@ -84,7 +99,7 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 |---|---|
 | **Homepage hero redesign with screenshot** | Current hero is text-only. The Education Tutor Swahili screenshot (or a rotating gallery) would dramatically increase impact. Deferred because we want the screenshot recaptured first (see above). |
 | **Product demo videos** | A 20–40s loop of Insight chat or Sifa POS would outperform any screenshot. Needs screen recording + editing pass. |
-| **Case study detail pages** | Each portfolio project should have a deep `/work/[slug]` page with the full story (problem, approach, screenshots, tech, outcome). Currently it's just card-level summaries. |
+| ~~**Case study detail pages**~~ | ✅ **Shipped.** `/work/[slug]` pages built for both projects, grounded in the real repos. Still deferrable later: add the *outcome/metrics* row once we have verified numbers, and a "next project" footer link between case studies. |
 | **Pricing page** | Pay-as-you-go is a differentiator. Deserves a dedicated page showing the model + sample math. |
 | **Dark mode** | Most developer-adjacent buyers default to dark. Skipped for now to focus on content first. |
 | **Newsletter signup** | Blog has substance but no capture. Add when we have 2–3 more posts to justify the ask. |

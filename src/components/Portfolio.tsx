@@ -2,10 +2,14 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ArrowRight } from 'lucide-react';
 import { projects } from '@/content/portfolio';
 import styles from './Portfolio.module.css';
+
+// Tech chips shown on the card; the full stack lives on the case study page.
+const CARD_TECH_LIMIT = 6;
 
 export const Portfolio: React.FC<{ hideHeader?: boolean }> = ({
   hideHeader = false,
@@ -31,88 +35,110 @@ export const Portfolio: React.FC<{ hideHeader?: boolean }> = ({
         )}
 
         <div className={styles.grid}>
-          {projects.map((project, index) => (
-            <motion.article
-              key={project.title}
-              className={styles.card}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {/* Browser-framed screenshot */}
-              <div className={styles.browser}>
-                <div className={styles.browserBar}>
-                  <span className={styles.dot} style={{ background: '#ff5f57' }} />
-                  <span className={styles.dot} style={{ background: '#febc2e' }} />
-                  <span className={styles.dot} style={{ background: '#28c840' }} />
-                  <div className={styles.urlBar}>
-                    <span className={styles.urlLock} aria-hidden="true">🔒</span>
-                    <span className={styles.urlText}>{project.domain}</span>
+          {projects.map((project, index) => {
+            const caseStudyHref = `/work/${project.slug}`;
+            const extraTech = Math.max(0, project.tech.length - CARD_TECH_LIMIT);
+
+            return (
+              <motion.article
+                key={project.title}
+                className={styles.card}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Browser-framed screenshot links to the case study */}
+                <Link
+                  href={caseStudyHref}
+                  className={styles.browser}
+                  aria-label={`${project.title} case study`}
+                >
+                  <div className={styles.browserBar}>
+                    <span className={styles.dot} style={{ background: '#ff5f57' }} />
+                    <span className={styles.dot} style={{ background: '#febc2e' }} />
+                    <span className={styles.dot} style={{ background: '#28c840' }} />
+                    <div className={styles.urlBar}>
+                      <span className={styles.urlLock} aria-hidden="true">🔒</span>
+                      <span className={styles.urlText}>{project.domain}</span>
+                    </div>
                   </div>
-                </div>
 
-                <div className={styles.viewport}>
-                  <Image
-                    src={project.primary.src}
-                    alt={project.primary.alt}
-                    fill
-                    sizes="(max-width: 900px) 100vw, 50vw"
-                    className={styles.screenshot}
-                    priority={index === 0}
-                  />
-                </div>
-              </div>
+                  <div className={styles.viewport}>
+                    <Image
+                      src={project.primary.src}
+                      alt={project.primary.alt}
+                      fill
+                      sizes="(max-width: 900px) 100vw, 50vw"
+                      className={styles.screenshot}
+                      priority={index === 0}
+                    />
+                  </div>
+                </Link>
 
-              {/* Content */}
-              <div className={styles.content}>
-                <div className={styles.contentTop}>
-                  <span className={styles.category}>{project.category}</span>
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.visitBtn}
-                    aria-label={`Visit ${project.title}`}
-                  >
-                    Visit
-                    <ExternalLink size={14} />
-                  </a>
-                </div>
-                <h3 className={styles.title}>{project.title}</h3>
-                <p className={styles.description}>{project.description}</p>
+                {/* Content */}
+                <div className={styles.content}>
+                  <div className={styles.contentTop}>
+                    <span className={styles.category}>{project.category}</span>
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.visitBtn}
+                      aria-label={`Visit ${project.title} live site`}
+                    >
+                      Visit
+                      <ExternalLink size={14} />
+                    </a>
+                  </div>
 
-                <ul className={styles.capabilities}>
-                  {project.capabilities.map((capability) => (
-                    <li key={capability} className={styles.capability}>
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      {capability}
-                    </li>
-                  ))}
-                </ul>
+                  <h3 className={styles.title}>
+                    <Link href={caseStudyHref} className={styles.titleLink}>
+                      {project.title}
+                    </Link>
+                  </h3>
+                  <p className={styles.description}>{project.description}</p>
 
-                <div className={styles.techStack}>
-                  {project.tech.map((tech) => (
-                    <span key={tech} className={styles.techTag}>
-                      {tech}
-                    </span>
-                  ))}
+                  <ul className={styles.capabilities}>
+                    {project.capabilities.map((capability) => (
+                      <li key={capability} className={styles.capability}>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        {capability}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className={styles.techStack}>
+                    {project.tech.slice(0, CARD_TECH_LIMIT).map((tech) => (
+                      <span key={tech} className={styles.techTag}>
+                        {tech}
+                      </span>
+                    ))}
+                    {extraTech > 0 && (
+                      <span className={styles.techMore}>+{extraTech} more</span>
+                    )}
+                  </div>
+
+                  <Link href={caseStudyHref} className={styles.caseStudyLink}>
+                    View case study
+                    <ArrowRight size={15} />
+                  </Link>
                 </div>
-              </div>
-            </motion.article>
-          ))}
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { testimonials, type Testimonial as TestimonialType } from '@/content/testimonials';
+import { testimonials } from '@/content/testimonials';
 import styles from './Testimonial.module.css';
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -12,7 +12,7 @@ type Props = {
    * Pick a specific testimonial by associated project slug. If omitted,
    * the first testimonial is used.
    */
-  project?: TestimonialType['project'];
+  project?: string;
   /** Hide the eyebrow + section heading (for use inside other cards). */
   hideHeader?: boolean;
 };

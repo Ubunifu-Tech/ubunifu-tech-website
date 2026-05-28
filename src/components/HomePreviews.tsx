@@ -107,7 +107,7 @@ export const WorkPreview: React.FC = () => {
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.45, delay: index * 0.08, ease }}
             >
-              <Link href="/work" className={styles.workCard}>
+              <Link href={`/work/${project.slug}`} className={styles.workCard}>
                 <div className={styles.workThumb}>
                   <Image
                     src={project.primary.src}

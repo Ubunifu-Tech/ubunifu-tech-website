@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
+import { projects } from '@/content/portfolio';
 
 const BASE_URL = 'https://ubunifutech.com';
 
@@ -55,6 +56,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  const caseStudyRoutes: MetadataRoute.Sitemap = projects.map((project) => ({
+    url: `${BASE_URL}/work/${project.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }));
+
   const blogRoutes: MetadataRoute.Sitemap = getAllPosts().map((post) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
     lastModified: new Date(post.date),
@@ -62,5 +70,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...blogRoutes];
+  return [...staticRoutes, ...caseStudyRoutes, ...blogRoutes];
 }

@@ -6,7 +6,27 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ---
 
-## Shipped (this pass)
+## Shipped (latest pass)
+
+### 6. Testimonial integration
+- New `src/content/testimonials.tsx` data file. Currently holds one real testimonial — Isaac, Managing Director of Usambara Destination Eco Tours. Quote is rewritten for length and rhythm while preserving the original meaning (the source language and sentiment).
+- New `Testimonial` component (`src/components/Testimonial.tsx` + `.module.css`). Reusable, takes an optional `project` slug to fetch a specific testimonial.
+- Wired into the **homepage** between `WorkPreview` and `TechMarquee` — work-related social proof at the right moment.
+- Wired into the **`/work` page** between `Portfolio` and `Contact` — reinforcement before the conversion ask.
+
+### 7. New blog post — `what-professional-means-tourism-website.md`
+- Principles-based post on building tourism websites that convert. Themes drawn from Isaac's feedback: trust signals, listening, communication, "make sure everything works."
+- Quotes Isaac's testimonial directly as the proof point in the post body.
+- Avoids inventing specific technical claims about Usambara that we cannot verify; sticks to general principles.
+
+### 8. SEO and social-sharing polish
+- **Blog posts now have per-post metadata** (`generateMetadata` in `src/app/blog/[slug]/page.tsx`): title, description, keywords, canonical URL, OpenGraph article type with `publishedTime`, `authors`, `tags`, and a matching Twitter card. Previously, every blog post inherited the site default — same title and description in every share.
+- **Blog posts now ship JSON-LD `BlogPosting` structured data** so search engines and AI crawlers can parse them as articles instead of generic pages.
+- **Sitemap** (`src/app/sitemap.ts`) extended to dynamically include every published blog post slug, with `lastModified` pulled from each post's front-matter date. Previously the sitemap only listed top-level pages.
+
+---
+
+## Shipped (earlier passes)
 
 ### 1. Bug fixes
 - **Blog post mobile edge-cutoff** — `BlogSlug.module.css` used `padding: 8rem 0 5rem` which overrode the global `.container` horizontal padding, so blog posts went edge-to-edge on every screen. Split into `padding-top` / `padding-bottom` only.
@@ -49,7 +69,8 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 | Item | What's missing | How to unblock |
 |---|---|---|
 | **Quantified case study outcomes** | No real metrics for Safari King or Usambara (bookings/month, conversion lift, performance scores). | Pull real numbers from the products. Even rough ranges ("dozens of monthly bookings") are better than nothing — once verified. |
-| **Client testimonials** | No quotes from Safari King or Usambara owners on record. | Ask both clients for a 1–2 sentence quote we can attribute by name. Until then, no testimonials on the site. |
+| **Client testimonials** | One landed (Isaac / Usambara). Still need Safari King's. | Ask the Safari King team for a quote we can attribute. With two testimonials we can rotate or carousel on the homepage. |
+| **Testimonial author photo** | We render initials in the avatar. A real photo would land harder. | Ask Isaac for a small headshot we can use. Drop into `public/work/` and add `authorImage` to the testimonial record. |
 | **Insight screenshots show empty state** | Dashboard counters read 0 documents / 0 extractions / 0 generated. Undersells the product in marketing context. | Re-screenshot Insight from a workspace with realistic populated data (12+ docs, recent activity, etc.). Replace `public/work/insight-dashboard.png`. |
 | **Sifa needs more screenshots** | Only one screen captured (Intelligence Dashboard). Need POS/Sales view, Inventory, Credit Ledger detail, Offline mode indicator. | Capture 3–4 additional Sifa screens from a populated demo workspace. |
 | **Usambara proof is visual-only** | Current screenshots show a generic-looking marketing site. The real value was SEO + performance + schema.org — none of which is visible. | Capture Lighthouse 100/100 score, schema.org rich-result, Google Search Console ranking, or 3G load time. Replace primary Usambara visual. |

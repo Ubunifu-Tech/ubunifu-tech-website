@@ -130,18 +130,25 @@
   transform: translateY(-3px);
 }
 
-.workLogo {
+.workThumb {
   position: relative;
-  width: 140px;
-  height: 84px;
+  width: 200px;
+  height: 120px;
   flex-shrink: 0;
   border-radius: 10px;
   border: 1px solid var(--border);
   overflow: hidden;
+  background: var(--surface-2);
 }
 
-.workLogoImg {
-  padding: 0.75rem;
+.workThumbImg {
+  object-fit: cover;
+  object-position: top left;
+  transition: transform 0.6s var(--ease-out-expo);
+}
+
+.workCard:hover .workThumbImg {
+  transform: scale(1.04);
 }
 
 .workMeta {
@@ -229,8 +236,8 @@
     gap: 1rem;
   }
 
-  .workLogo {
+  .workThumb {
     width: 100%;
-    height: 120px;
+    height: 160px;
   }
 }

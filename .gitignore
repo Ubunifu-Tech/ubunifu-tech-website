@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# screenshot source library (originals live here for reference, optimised
+# copies committed under public/work/)
+/work-screenshots/

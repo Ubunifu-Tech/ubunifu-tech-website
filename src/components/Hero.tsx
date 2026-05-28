@@ -76,9 +76,9 @@ export const Hero: React.FC = () => {
           custom={0.35}
           variants={fadeUp}
         >
-          Products and consulting for businesses in Tanzania, from AI-powered
-          document intelligence to business management, designed for how this
-          market actually works.
+          Two live SaaS products and custom builds for businesses across
+          Tanzania. Document AI that answers in Swahili. Business software
+          with credit selling built in. Shipped from Arusha.
         </motion.p>
 
         <motion.div

@@ -20,31 +20,34 @@
   line-height: 1.7;
 }
 
-/* ── Bento Grid ───────────────────────────────── */
+/* ── Bento Grid ───────────────────────────────────
+ *
+ * Live products with screenshots get a full row (12-col span) with
+ * screenshot left / content right at desktop. Smaller / soon products
+ * sit beneath as a 2-up of regular cards.
+ */
 
 .bento {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.25rem;
 }
 
-.featured {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-
+.featured,
 .wide {
-  grid-column: span 2;
+  grid-column: span 12;
 }
 
 .default {
-  grid-column: span 1;
+  grid-column: span 6;
 }
 
-/* ── Card ─────────────────────────────────────── */
+/* ── Card base ────────────────────────────────── */
 
 .card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: 16px;
   overflow: hidden;
   background: #FFFFFF;
@@ -60,7 +63,7 @@
 }
 
 .cardSoon {
-  opacity: 0.75;
+  opacity: 0.78;
 }
 
 .cardGlow {
@@ -73,17 +76,51 @@
   background: linear-gradient(90deg, transparent, var(--primary), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
+  z-index: 2;
 }
 
 .card:hover .cardGlow {
   opacity: 1;
 }
 
+/* ── Cards WITH screenshot: split layout ──────── */
+
+.cardWithImage {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.screenshotFrame {
+  position: relative;
+  flex: 1 1 55%;
+  min-height: 380px;
+  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.screenshot {
+  object-fit: cover;
+  object-position: top left;
+  transition: transform 0.6s var(--ease-out-expo);
+}
+
+.card:hover .screenshot {
+  transform: scale(1.02);
+}
+
+.cardWithImage .cardInner {
+  flex: 1 1 45%;
+  padding: 2rem;
+}
+
+/* ── Card inner content ───────────────────────── */
+
 .cardInner {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100%;
+  flex: 1;
   padding: 1.75rem;
 }
 
@@ -95,6 +132,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
 
@@ -174,6 +212,7 @@
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
+  padding: 0;
 }
 
 .feature {
@@ -232,12 +271,16 @@
 
 @media (max-width: 1024px) {
   .bento {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
 
-  .featured {
-    grid-column: span 2;
-    grid-row: span 1;
+  .featured,
+  .wide {
+    grid-column: span 6;
+  }
+
+  .default {
+    grid-column: span 3;
   }
 }
 
@@ -250,7 +293,24 @@
   .wide,
   .default {
     grid-column: span 1;
-    grid-row: span 1;
+  }
+
+  /* Stack image above content when the card narrows. */
+  .cardWithImage {
+    flex-direction: column;
+  }
+
+  .screenshotFrame {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    min-height: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cardWithImage .cardInner {
+    padding: 1.5rem;
   }
 
   .cardInner {

@@ -2,7 +2,6 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Products } from '@/components/Products';
-import { Clients } from '@/components/Clients';
 import { Contact } from '@/components/Contact';
 
 export const metadata = {
@@ -19,11 +18,10 @@ export default function ProductsPage() {
         <PageHeader
           eyebrow="Our products"
           title="Software products for African businesses."
-          lead="Each product solves a real problem for businesses in Tanzania, priced pay-as-you-go and supported the way this market actually works."
+          lead="Each product solves a real problem for businesses in Tanzania. Pay-as-you-go pricing, no annual lock-in, and a free tier where it makes sense."
         />
 
         <Products hideHeader />
-        <Clients />
         <Contact />
       </main>
       <Footer />

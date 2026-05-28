@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { products } from '@/content/products';
 import styles from './Products.module.css';
@@ -22,7 +23,8 @@ export const Products: React.FC<{ hideHeader?: boolean }> = ({
             <span className="eyebrow">What we offer</span>
             <h2 className={styles.heading}>Products &amp; services</h2>
             <p className={styles.subheading}>
-              SaaS products and consulting, each built for how businesses in Tanzania actually work.
+              Two live SaaS products you can use today, plus consulting when you need a
+              custom build.
             </p>
           </motion.div>
         )}
@@ -31,13 +33,26 @@ export const Products: React.FC<{ hideHeader?: boolean }> = ({
           {products.map((product, index) => (
             <motion.div
               key={product.name}
-              className={`${styles.card} ${styles[product.size]} ${product.status === 'soon' ? styles.cardSoon : ''}`}
+              className={`${styles.card} ${styles[product.size]} ${product.status === 'soon' ? styles.cardSoon : ''} ${product.primary ? styles.cardWithImage : ''}`}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.5, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className={styles.cardGlow} aria-hidden="true" />
+
+              {product.primary && (
+                <div className={styles.screenshotFrame}>
+                  <Image
+                    src={product.primary.src}
+                    alt={product.primary.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 50vw"
+                    className={styles.screenshot}
+                  />
+                </div>
+              )}
+
               <div className={styles.cardInner}>
                 <div className={styles.cardTop}>
                   <div className={styles.cardHeader}>

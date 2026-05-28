@@ -33,8 +33,7 @@ export const ProductsPreview: React.FC = () => {
           <span className="eyebrow">What we offer</span>
           <h2 className={styles.heading}>Products &amp; services</h2>
           <p className={styles.sub}>
-            SaaS products and consulting, each built for how businesses in
-            Tanzania actually work.
+            Two live SaaS products, one on the way, and consulting for custom builds.
           </p>
         </motion.div>
 
@@ -92,11 +91,10 @@ export const WorkPreview: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease }}
         >
-          <span className="eyebrow">Our work</span>
-          <h2 className={styles.heading}>Recent client work</h2>
+          <span className="eyebrow">Selected work</span>
+          <h2 className={styles.heading}>Built for clients in production</h2>
           <p className={styles.sub}>
-            Websites and platforms we have designed and built for businesses
-            across Tanzania.
+            Platforms and sites we have shipped for businesses across Tanzania.
           </p>
         </motion.div>
 
@@ -110,17 +108,13 @@ export const WorkPreview: React.FC = () => {
               transition={{ duration: 0.45, delay: index * 0.08, ease }}
             >
               <Link href="/work" className={styles.workCard}>
-                <div
-                  className={styles.workLogo}
-                  style={{ background: project.logoBg }}
-                >
+                <div className={styles.workThumb}>
                   <Image
-                    src={project.logo}
-                    alt={`${project.title} logo`}
+                    src={project.primary.src}
+                    alt={project.primary.alt}
                     fill
-                    sizes="140px"
-                    className={styles.workLogoImg}
-                    style={{ objectFit: 'contain' }}
+                    sizes="(max-width: 560px) 100vw, 200px"
+                    className={styles.workThumbImg}
                   />
                 </div>
                 <div className={styles.workMeta}>
@@ -154,12 +148,11 @@ export const AboutPreview: React.FC = () => {
           transition={{ duration: 0.5, ease }}
         >
           <span className="eyebrow">About</span>
-          <h2 className={styles.heading}>A small team building for Africa</h2>
+          <h2 className={styles.heading}>A small team building from Arusha</h2>
           <p className={styles.aboutText}>
-            Ubunifu Technologies is a small, focused team in Arusha, Tanzania -
-            building software products and consulting for African businesses,
-            starting from how this market actually works rather than adapting
-            tools made elsewhere.
+            Ubunifu Technologies is a small, focused team in Arusha, Tanzania —
+            shipping our own SaaS products and taking on custom builds for African
+            businesses. We start from the workflows that exist here.
           </p>
           <Link href="/about" className={styles.link}>
             More about the team <Arrow />

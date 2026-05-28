@@ -4,7 +4,6 @@ import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { About } from '@/components/About';
 import { Team } from '@/components/Team';
-import { Clients } from '@/components/Clients';
 import styles from './About.module.css';
 
 export const metadata = {
@@ -26,7 +25,6 @@ export default function AboutPage() {
 
         <About hideHeader />
         <Team />
-        <Clients label="Businesses we have built for" />
 
         <section className={styles.cta}>
           <div className="container">

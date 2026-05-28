@@ -1,5 +1,5 @@
 import { Navbar } from '@/components/Navbar';
-import { Portfolio } from '@/components/Portfolio';
+import { WorkPreview } from '@/components/HomePreviews';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
@@ -181,9 +181,9 @@ export default function BuildPage() {
           </div>
         </section>
 
-        {/* Portfolio */}
+        {/* Selected work — link to full /work page */}
         <ScrollReveal>
-          <Portfolio />
+          <WorkPreview />
         </ScrollReveal>
 
         {/* CTA */}

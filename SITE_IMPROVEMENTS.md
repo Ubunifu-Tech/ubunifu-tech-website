@@ -17,17 +17,28 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ### 3. Real screenshots integrated
 Replaced fake browser-mockup animations with real product/work screenshots:
-- **Portfolio (Work)** — Safari King and Usambara cards now display actual site/admin screenshots in a Chrome-style browser frame.
-- **Products** — Insight and Sifa cards now show actual product UI (Document Generator gallery, Intelligence Dashboard).
+- **Portfolio (Work)** — Safari King and Usambara cards now display actual site/admin screenshots in a Chrome-style browser frame, with a list of what we actually built (capabilities) under the description.
+- **Products** — Insight and Sifa cards now show actual product UI (Document Generator template gallery showing "Tanzania Tax Invoice", and the Intelligence Dashboard for Mama Amina Duka with credit aging buckets visible). Rafiki and Build cards remain text-only since they have no screenshots yet.
+- **Homepage Work preview** — small thumbnails on the homepage now show real screenshot crops instead of logos on coloured backgrounds.
 
-See `public/work/` for the asset library and `src/content/portfolio.tsx` / `products.tsx` for the wiring.
+Screenshot library: `public/work/` (committed). Originals: `work-screenshots/` (gitignored).
 
-### 4. Copy tightening
+### 4. Layout / IA changes
+
+- **`Clients` component removed** — was showing the same 2 projects as logo cards on `/products` and `/about`, duplicating Portfolio and overstating volume ("Trusted by businesses across Tanzania" with 2 logos). Deleted both the component and its CSS. When we have real client logos beyond the two case studies, bring it back from git history.
+- **`/build` page** now uses the lighter `WorkPreview` (links to `/work` for full detail) instead of rendering the full `Portfolio` — was a 1:1 duplicate of `/work`.
+- **Products bento** restructured: live products with screenshots get a full-width row with screenshot-left / content-right at desktop; smaller "Soon"/"Available" cards sit as a 2-up beneath. Stacks vertically on mobile.
+
+### 5. Copy tightening
 Truthful, specific rewrites — kept only claims backed by shipping product or visible screenshots:
-- **Hero subtitle** — removed the repeated "designed for how this market actually works" phrasing.
-- **Insight tagline** — now references the proven differentiators (Swahili AI agents, Tanzania-specific templates like the Tax Invoice).
-- **Sifa tagline** — now references credit-based selling and offline-first (both visible in product UI).
-- **Safari King case study description** — now reflects what we actually built: booking platform + custom CRM admin + AI marketing assistant powered by Claude Sonnet 4.6.
+- **Hero subtitle** — `"Two live SaaS products and custom builds for businesses across Tanzania. Document AI that answers in Swahili. Business software with credit selling built in. Shipped from Arusha."` Every claim is proven by a screenshot.
+- **Insight tagline** — `"Document AI, built for here"` with description that names the Swahili AI agents and Tanzania-localised templates.
+- **Sifa tagline** — `"Run your shop, restaurant, or distributor"` with description that names credit selling and offline support.
+- **Safari King case study** — rewritten to reflect what we actually built: booking platform + custom CRM admin + AI marketing assistant powered by Claude Sonnet 4.6.
+- **`/products` lead** — removed the "supported the way this market actually works" tail.
+- **`/work` lead** — now mentions custom CRMs and AI-augmented platforms (what we actually ship), not just "websites".
+- **Homepage previews** — tightened ProductsPreview and WorkPreview copy. AboutPreview now says "shipping our own SaaS products and taking on custom builds" (specific) instead of the older vague version.
+- **"How this market actually works" phrase** — now appears in exactly one place: the `/about` page lead. Treated as a thesis statement, not a slogan.
 
 ---
 

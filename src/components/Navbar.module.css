@@ -48,14 +48,23 @@
 }
 
 .logoText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
   font-family: var(--font-heading);
-  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
+.logoName {
+  font-size: 0.95rem;
+}
+
 .logoAccent {
   color: var(--brand);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .links {

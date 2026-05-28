@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
         <Link href="/" className={styles.logo} onClick={closeMobileMenu}>
           <span className={styles.logoMark}>U</span>
           <span className={styles.logoText}>
-            Ubunifu <span className={styles.logoAccent}>Technologies</span>
+            <span className={styles.logoName}>Ubunifu</span><span className={styles.logoAccent}>Technologies</span>
           </span>
         </Link>
 

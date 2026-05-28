@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
           <div className={styles.brand}>
             <div className={styles.logoMark}>U</div>
             <span className={styles.brandName}>
-              Ubunifu <span className={styles.brandAccent}>Technologies</span>
+              <span className={styles.brandPrimary}>Ubunifu</span><span className={styles.brandAccent}>Technologies</span>
             </span>
           </div>
           <p className={styles.tagline}>{site.tagline}</p>

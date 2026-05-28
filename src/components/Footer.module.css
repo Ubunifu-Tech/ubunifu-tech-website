@@ -137,13 +137,22 @@
 }
 
 .brandName {
-  font-size: 0.9375rem;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
   font-weight: 700;
   color: var(--text-primary);
 }
 
+.brandPrimary {
+  font-size: 0.9375rem;
+}
+
 .brandAccent {
   color: var(--brand);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .tagline {

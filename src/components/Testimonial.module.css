@@ -1,0 +1,175 @@
+.section {
+  background: var(--background);
+}
+
+.layout {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.head {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.heading {
+  font-size: clamp(1.85rem, 3.5vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-top: 0.5rem;
+}
+
+/* ── Card ─────────────────────────────────────── */
+
+.card {
+  position: relative;
+  margin: 0;
+  padding: 3rem 3.25rem 2.5rem;
+  background: linear-gradient(
+    135deg,
+    var(--surface) 0%,
+    var(--surface-2) 100%
+  );
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgba(27, 14, 71, 0.04),
+    0 24px 60px -28px rgba(109, 63, 232, 0.18);
+  overflow: hidden;
+}
+
+/* Subtle brand glow on the corner */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(
+      ellipse 60% 80% at 0% 0%,
+      var(--primary-glow) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 80% at 100% 100%,
+      var(--brand-dim) 0%,
+      transparent 60%
+    );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.quoteMark {
+  position: absolute;
+  top: 0.5rem;
+  left: 1.5rem;
+  font-family: var(--font-heading);
+  font-size: 6rem;
+  line-height: 1;
+  color: var(--brand);
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.quote {
+  margin: 0 0 2rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* ── Attribution ──────────────────────────────── */
+
+.attribution {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand), var(--primary));
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 107, 44, 0.25);
+}
+
+.attributionText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.authorName {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.authorMeta {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.orgLink {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.orgLink:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Responsive ───────────────────────────────── */
+
+@media (max-width: 768px) {
+  .card {
+    padding: 2.25rem 1.75rem 1.75rem;
+    border-radius: 16px;
+  }
+
+  .quoteMark {
+    font-size: 4.5rem;
+    top: 0.25rem;
+    left: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .attribution {
+    gap: 0.75rem;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.875rem;
+  }
+}

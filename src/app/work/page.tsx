@@ -2,6 +2,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Portfolio } from '@/components/Portfolio';
+import { Testimonial } from '@/components/Testimonial';
 import { Contact } from '@/components/Contact';
 
 export const metadata = {
@@ -22,6 +23,7 @@ export default function WorkPage() {
         />
 
         <Portfolio hideHeader />
+        <Testimonial />
         <Contact />
       </main>
       <Footer />

@@ -34,6 +34,7 @@ export const navLinks: ReadonlyArray<{
   href: string;
   badge?: string;
 }> = [
+  { label: 'Home', href: '/' },
   { label: 'Services', href: '/build' },
   { label: 'Products', href: '/products' },
   { label: 'Work', href: '/work' },

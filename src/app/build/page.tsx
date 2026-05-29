@@ -1,6 +1,5 @@
 import { Navbar } from '@/components/Navbar';
 import { WorkPreview } from '@/components/HomePreviews';
-import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
@@ -127,7 +126,7 @@ export default function BuildPage() {
                 your market and can build exactly what you need: websites, data solutions, branding,
                 and digital strategy for Tanzanian businesses.
               </p>
-              <a href="#contact" className={styles.heroBtn}>
+              <a href="/contact" className={styles.heroBtn}>
                 Start a project
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
               </a>
@@ -195,15 +194,13 @@ export default function BuildPage() {
                 Tell us what you need, and we will give you an honest assessment of what is realistic
                 for your budget and timeline.
               </p>
-              <a href="#contact" className={styles.ctaBtn}>
+              <a href="/contact" className={styles.ctaBtn}>
                 Get in touch
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
               </a>
             </section>
           </ScrollReveal>
         </div>
-
-        <Contact />
       </main>
       <Footer />
     </>

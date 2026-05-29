@@ -2,7 +2,6 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Products } from '@/components/Products';
-import { Contact } from '@/components/Contact';
 
 export const metadata = {
   title: 'Products',
@@ -22,7 +21,6 @@ export default function ProductsPage() {
         />
 
         <Products hideHeader />
-        <Contact />
       </main>
       <Footer />
     </>

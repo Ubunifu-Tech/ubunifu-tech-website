@@ -51,7 +51,7 @@ export default function CareersPage() {
                 <a href="mailto:info@ubunifutech.com" className={styles.emailLink}>info@ubunifutech.com</a>{' '}
                 with the kind of work you do.
               </p>
-              <Link href="/#contact" className={styles.contactBtn}>
+              <Link href="/contact" className={styles.contactBtn}>
                 Get in touch
               </Link>
             </div>

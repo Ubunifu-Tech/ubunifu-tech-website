@@ -175,11 +175,23 @@ a {
   width: fit-content;
 }
 
-/* ── Section Heading ──────────────────────────── */
+/* ── Type hierarchy ───────────────────────────────
+ *
+ * Three heading tiers, used consistently across the site:
+ *   1. Hero title        — clamp(2.6rem, 6.5vw, 5.25rem)  (home hero only)
+ *   2. Page title        — clamp(2.25rem, 5vw, 3.5rem)    (PageHeader, blog, contact)
+ *   3. Section heading    — clamp(1.9rem, 3.6vw, 2.6rem)  (h2 inside a page)
+ *   4. Card title         — ~1.3rem–1.4rem                 (h3 inside a card)
+ *
+ * Eyebrows: `.specLabel` (mono) marks an editorial / page-level identity
+ * (hero studio line, blog "journal"); `.eyebrow` (pill) marks an in-page
+ * section or a standard page header. Don't mix the two within one tier.
+ */
 
 .sectionHeading {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 700;
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
   margin-bottom: 1rem;
   color: var(--text-primary);
 }

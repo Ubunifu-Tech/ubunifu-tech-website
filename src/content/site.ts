@@ -22,7 +22,7 @@ export const site = {
     services: '/build',
     work: '/work',
     about: '/about',
-    contact: '/#contact',
+    contact: '/contact',
     blog: '/blog',
     careers: '/careers',
   },
@@ -41,6 +41,7 @@ export const navLinks: ReadonlyArray<{
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
   { label: 'Careers', href: '/careers' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 // Footer columns - edit titles, links, or order without touching Footer.tsx.
@@ -70,6 +71,7 @@ export const footerColumns: ReadonlyArray<{
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },
       { label: 'Careers', href: '/careers' },
+      { label: 'Contact', href: '/contact' },
     ],
   },
 ];

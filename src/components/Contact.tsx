@@ -16,7 +16,7 @@ const SUBJECT_OPTIONS = [
   'Other',
 ] as const;
 
-export const Contact: React.FC = () => {
+export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }) => {
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -79,12 +79,16 @@ export const Contact: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="eyebrow">Contact</span>
-            <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
-            <p className={styles.text}>
-              Trying one of our products, or starting a custom build? Write to us.
-              A real person reads every message — no bots, no ticket queue.
-            </p>
+            {!hideIntro && (
+              <>
+                <span className="eyebrow">Contact</span>
+                <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
+                <p className={styles.text}>
+                  Trying one of our products, or starting a custom build? Write to
+                  us. A real person reads every message — no bots, no ticket queue.
+                </p>
+              </>
+            )}
 
             <ol className={styles.nextSteps}>
               <li className={styles.step}>

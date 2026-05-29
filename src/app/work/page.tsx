@@ -3,7 +3,6 @@ import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Portfolio } from '@/components/Portfolio';
 import { Testimonial } from '@/components/Testimonial';
-import { Contact } from '@/components/Contact';
 
 export const metadata = {
   title: 'Our Work',
@@ -24,7 +23,6 @@ export default function WorkPage() {
 
         <Portfolio hideHeader />
         <Testimonial />
-        <Contact />
       </main>
       <Footer />
     </>

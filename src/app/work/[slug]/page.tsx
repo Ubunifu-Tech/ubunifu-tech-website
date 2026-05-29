@@ -8,7 +8,6 @@ import { testimonials } from '@/content/testimonials';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Testimonial } from '@/components/Testimonial';
-import { Contact } from '@/components/Contact';
 import styles from './CaseStudy.module.css';
 
 export function generateStaticParams() {
@@ -242,8 +241,6 @@ export default async function CaseStudyPage({
         </section>
       )}
 
-      {/* Contact */}
-      <Contact />
       <Footer />
     </main>
   );

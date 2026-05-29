@@ -106,7 +106,7 @@
 }
 
 .sectionHeading {
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: 2.5rem;
@@ -259,7 +259,7 @@
 }
 
 .ctaHeading {
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;

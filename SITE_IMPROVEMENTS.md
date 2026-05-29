@@ -8,6 +8,11 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 20. Active nav state + branded 404
+
+- **Active navigation indicator.** The current page now lights up in the navbar with a gradient underline (and the mobile menu marks it in brand colour). Nested routes resolve to their top-level link, e.g. `/work/safari-king` highlights "Work" and `/blog/[slug]` highlights "Blog". Uses `aria-current="page"` for accessibility.
+- **Branded 404 page** (`not-found.tsx`). Replaces the default Next.js 404 with an on-brand page: a gradient "404" over the topography radar, a friendly message, and three escape routes (Home, Work, Contact), wrapped in the standard Navbar + Footer.
+
 ### 19. Cleanup pass — em dashes, dead code, role/skill accuracy
 
 - **Roles shortened + HappyGod's full scope.** Richard is now `Data · Software · AI`; HappyGod is `IT · Design · Support`, with his bio and skills updated to include the creative / brand / design work he actually does (not just systems).

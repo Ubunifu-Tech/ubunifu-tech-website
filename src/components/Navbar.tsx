@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { navLinks } from '@/content/site';
 import styles from './Navbar.module.css';
 
 export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -17,6 +19,11 @@ export const Navbar: React.FC = () => {
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  // Mark the current page active. Nested routes (e.g. /work/[slug]) light up
+  // their top-level link (/work).
+  const isActive = (href: string) =>
+    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
@@ -30,7 +37,12 @@ export const Navbar: React.FC = () => {
 
         <div className={styles.links}>
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className={styles.link}>
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`${styles.link} ${isActive(link.href) ? styles.linkActive : ''}`}
+              aria-current={isActive(link.href) ? 'page' : undefined}
+            >
               {link.label}
               {link.badge && <span className={styles.badge}>{link.badge}</span>}
             </Link>
@@ -55,7 +67,8 @@ export const Navbar: React.FC = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                className={styles.mobileLink}
+                className={`${styles.mobileLink} ${isActive(link.href) ? styles.mobileLinkActive : ''}`}
+                aria-current={isActive(link.href) ? 'page' : undefined}
                 onClick={closeMobileMenu}
               >
                 {link.label}

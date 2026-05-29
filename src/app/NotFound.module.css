@@ -1,0 +1,130 @@
+.main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 76vh;
+  padding: calc(var(--nav-height) + 80px) 0 100px;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.aurora {
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  width: 70vw;
+  max-width: 900px;
+  height: 120%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 44, 0.16),
+    rgba(109, 63, 232, 0.1) 40%,
+    transparent 68%
+  );
+}
+
+.topo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 720px;
+  height: 300%;
+  transform: translate(-50%, -50%);
+  color: var(--primary);
+  opacity: 0.08;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: clamp(4rem, 14vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--brand), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.lead {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 48ch;
+  margin-bottom: 2.25rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.875rem;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.8rem 1.6rem;
+  background: var(--cta);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 11px;
+  text-decoration: none;
+  box-shadow: 0 6px 18px var(--cta-shadow);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btnPrimary:hover {
+  background: var(--cta-hover);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px var(--cta-shadow);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.8rem 1.6rem;
+  background: #fff;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 11px;
+  border: 1px solid var(--border-hover);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.btnSecondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+}

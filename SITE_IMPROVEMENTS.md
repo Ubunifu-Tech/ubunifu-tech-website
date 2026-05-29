@@ -8,6 +8,22 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 12. Dynamic branded OG images
+Every page now generates an on-brand Open Graph card for social shares (WhatsApp / LinkedIn / X), instead of all links previewing the same logo.
+- **Shared renderer** `src/lib/og.tsx` (`renderOgImage`) — one source of truth, used by every route. Renders the U logo mark, stacked wordmark, an eyebrow, the page title, an optional subtitle, and a gradient accent bar, all in brand colours.
+- **Routes**: `src/app/opengraph-image.tsx` (site-wide default, inherited everywhere), `src/app/blog/[slug]/opengraph-image.tsx` (per-post title card), `src/app/work/[slug]/opengraph-image.tsx` (per-case-study card). All prerender statically at build via `generateStaticParams`.
+- **Fonts** bundled at `src/lib/og-fonts/` (Outfit 400/700, OFL-licensed WOFF), read with `fs` at build — no fragile runtime font fetches.
+- Removed the `logo.png` OG image overrides from `layout.tsx` and the screenshot OG override from the case study metadata so the generated card is the single `og:image` source (no duplicate tags).
+
+### 13. Three more blog posts
+Grew the blog from 4 to 7 posts. New posts (each a distinct angle, not a rehash of the case studies):
+- **"When a Website Becomes an Operating System"** — the Safari King build, told as an insight about systems vs. brochures. Repo-backed.
+- **"Why Our AI Answers in Swahili"** — principles post anchored to Insight's real Education Tutor (the chapati / fractions example). No invented implementation detail.
+- **"Software That Understands Selling on Credit"** — principles post anchored to Sifa's real credit-aging UI. No invented implementation detail.
+
+### 14. "Next project" navigation
+Each case study now ends with a card linking to the other project's case study (before the contact section), so visitors flow between them instead of dead-ending.
+
 ### 9. Case study pages (`/work/[slug]`)
 Built dynamic per-project case study pages, grounded entirely in the **actual project codebases** (Safari King and Usambara repos), which the team provided as ground truth. No invented metrics or briefs — everything is verified against the real code.
 
@@ -99,11 +115,12 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 |---|---|
 | **Homepage hero redesign with screenshot** | Current hero is text-only. The Education Tutor Swahili screenshot (or a rotating gallery) would dramatically increase impact. Deferred because we want the screenshot recaptured first (see above). |
 | **Product demo videos** | A 20–40s loop of Insight chat or Sifa POS would outperform any screenshot. Needs screen recording + editing pass. |
-| ~~**Case study detail pages**~~ | ✅ **Shipped.** `/work/[slug]` pages built for both projects, grounded in the real repos. Still deferrable later: add the *outcome/metrics* row once we have verified numbers, and a "next project" footer link between case studies. |
-| **Pricing page** | Pay-as-you-go is a differentiator. Deserves a dedicated page showing the model + sample math. |
+| ~~**Case study detail pages**~~ | ✅ **Shipped**, including the "next project" footer link. Still deferrable later: add an *outcome/metrics* row once we have verified numbers. |
+| **Pricing page** | Pay-as-you-go is a differentiator. Deserves a dedicated page showing the model + sample math. **On hold** at the team's request for now. |
 | **Dark mode** | Most developer-adjacent buyers default to dark. Skipped for now to focus on content first. |
-| **Newsletter signup** | Blog has substance but no capture. Add when we have 2–3 more posts to justify the ask. |
-| **More blog posts** | Currently 3 posts. Aim for 6–8 over the next quarter. Suggested topics: Sifa offline-first architecture, Safari King AI assistant case study, Swahili RAG technical post. |
+| **Newsletter signup** | Blog now has 7 posts — enough to justify a capture. Good candidate for the next pass. |
+| ~~**More blog posts**~~ | ✅ Grew 3 → 7 (tourism, Safari King "operating system", Swahili AI, selling on credit). Keep adding over time; a Sifa offline-first piece and an Insight data-extraction piece are still good future topics. |
+| ~~**Branded OG images**~~ | ✅ **Shipped.** Dynamic per-route OG cards via `src/lib/og.tsx`. |
 | **Insight & Sifa multi-screenshot galleries** | Single hero screenshot per product is the v1. A click-to-expand lightbox or in-card carousel would let us show 3–5 angles per product. Deferred to v2. |
 | **Visual signature** | Site is clean but conventional. A distinctive design element (interactive Tanzania map, terminal motif, animated data viz tied to a real product) would lift it from "polished SaaS" to "memorable." Needs design exploration. |
 

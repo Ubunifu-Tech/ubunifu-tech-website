@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { ArrowLeft, ArrowUpRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ArrowRight, Check } from 'lucide-react';
 import { projects, getProjectBySlug } from '@/content/portfolio';
 import { testimonials } from '@/content/testimonials';
 import { Navbar } from '@/components/Navbar';
@@ -39,13 +39,12 @@ export async function generateMetadata({
       title: `${project.title} — Case study`,
       description: project.description,
       siteName: 'Ubunifu Technologies',
-      images: [{ url: project.primary.src, alt: project.primary.alt }],
+      // OG image provided by the colocated opengraph-image.tsx.
     },
     twitter: {
       card: 'summary_large_image',
       title: `${project.title} — Case study`,
       description: project.description,
-      images: [project.primary.src],
     },
   };
 }
@@ -63,6 +62,12 @@ export default async function CaseStudyPage({
   }
 
   const hasTestimonial = testimonials.some((t) => t.project === project.slug);
+
+  // With a small portfolio, "next" is simply the next project in the list,
+  // wrapping around to the first.
+  const currentIndex = projects.findIndex((p) => p.slug === project.slug);
+  const nextProject = projects[(currentIndex + 1) % projects.length];
+  const showNextProject = projects.length > 1 && nextProject.slug !== project.slug;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -210,7 +215,34 @@ export default async function CaseStudyPage({
       {/* Testimonial (if one exists for this project) */}
       {hasTestimonial && <Testimonial project={project.slug} />}
 
-      {/* Next project / contact */}
+      {/* Next project */}
+      {showNextProject && (
+        <section className={`section ${styles.nextSection}`}>
+          <div className="container">
+            <Link href={`/work/${nextProject.slug}`} className={styles.nextCard}>
+              <div className={styles.nextText}>
+                <span className={styles.nextLabel}>Next project</span>
+                <span className={styles.nextTitle}>{nextProject.title}</span>
+                <span className={styles.nextCategory}>{nextProject.category}</span>
+              </div>
+              <div className={styles.nextThumb}>
+                <Image
+                  src={nextProject.primary.src}
+                  alt={nextProject.primary.alt}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 320px"
+                  className={styles.nextThumbImg}
+                />
+              </div>
+              <span className={styles.nextArrow} aria-hidden="true">
+                <ArrowRight size={20} />
+              </span>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Contact */}
       <Contact />
       <Footer />
     </main>

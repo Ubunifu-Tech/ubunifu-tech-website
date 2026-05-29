@@ -257,6 +257,102 @@
   color: var(--primary);
 }
 
+/* ── Next project ─────────────────────────────── */
+
+.nextSection {
+  background: var(--background);
+}
+
+.nextCard {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.nextCard:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 18px 40px rgba(109, 63, 232, 0.12);
+  transform: translateY(-3px);
+}
+
+.nextText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.nextLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.nextTitle {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.nextCategory {
+  font-size: 0.875rem;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nextThumb {
+  position: relative;
+  width: 220px;
+  height: 124px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.nextThumbImg {
+  object-fit: cover;
+  object-position: top left;
+  transition: transform 0.6s var(--ease-out-expo);
+}
+
+.nextCard:hover .nextThumbImg {
+  transform: scale(1.04);
+}
+
+.nextArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--brand-dim);
+  color: var(--brand);
+  border: 1px solid var(--brand-border);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.nextCard:hover .nextArrow {
+  background: var(--brand);
+  color: #fff;
+  transform: translateX(3px);
+}
+
 /* ── Responsive ───────────────────────────────── */
 
 @media (max-width: 768px) {
@@ -270,5 +366,15 @@
 
   .gallery {
     grid-template-columns: 1fr;
+  }
+
+  .nextCard {
+    flex-wrap: wrap;
+  }
+
+  .nextThumb {
+    order: -1;
+    width: 100%;
+    height: 160px;
   }
 }

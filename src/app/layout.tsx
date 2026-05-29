@@ -50,20 +50,13 @@ export const metadata: Metadata = {
     siteName: 'Ubunifu Technologies',
     title: 'Ubunifu Technologies: Software for Africa',
     description: 'Ubunifu Technologies builds software products and provides consulting for African businesses: Insight, Sifa, and Build.',
-    images: [
-      {
-        url: '/logo.png',
-        width: 1200,
-        height: 630,
-        alt: 'Ubunifu Technologies: Software for Africa',
-      },
-    ],
+    // OG image is provided by the file-based opengraph-image.tsx convention
+    // (src/app/opengraph-image.tsx and per-route overrides).
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Ubunifu Technologies: Software for Africa',
     description: 'Ubunifu Technologies builds software products and provides consulting for African businesses: Insight, Sifa, and Build.',
-    images: ['/logo.png'],
   },
   robots: {
     index: true,

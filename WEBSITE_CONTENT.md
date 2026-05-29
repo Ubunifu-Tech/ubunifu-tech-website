@@ -27,19 +27,20 @@ Single source of truth: `src/content/site.ts`.
 | Route | Page | File |
 |---|---|---|
 | `/` | Home — agency overview | `src/app/page.tsx` |
-| `/build` | Services — the five pillars | `src/app/build/page.tsx` |
+| `/build` | Services — five capability spotlights | `src/app/build/page.tsx` |
+| `/industries` | Industries — who we serve | `src/app/industries/page.tsx` |
 | `/work` | Our Work — client projects | `src/app/work/page.tsx` |
 | `/work/[slug]` | Case study | `src/app/work/[slug]/page.tsx` |
-| `/about` | About — vision, values, team | `src/app/about/page.tsx` |
+| `/about` | About — vision, mission, story, team | `src/app/about/page.tsx` |
 | `/blog` | Blog index (category filter) | `src/app/blog/page.tsx` |
 | `/blog/[slug]` | Blog post | `src/app/blog/[slug]/page.tsx` |
-| `/careers` | Careers | `src/app/careers/page.tsx` |
+| `/careers` | Careers (footer link only) | `src/app/careers/page.tsx` |
 | `/contact` | Contact — the only form | `src/app/contact/page.tsx` |
 | `/products` | Products (proof page; not in nav) | `src/app/products/page.tsx` |
 
-**Nav order:** Home · Services · Work · About · Blog · Careers · Contact.
-"Products" is intentionally not a headline nav item — products appear as
-proof on the home page and in the footer.
+**Nav order:** Home · Services · Industries · Work · About · Blog · Contact.
+"Products" and "Careers" are intentionally not headline nav items (products
+appear as proof; Careers lives in the footer).
 
 Branded `not-found.tsx`, dynamic OG cards (`opengraph-image.tsx` at root +
 per blog post + per case study), and `sitemap.ts` round out the app routes.
@@ -49,17 +50,19 @@ per blog post + per case study), and `sitemap.ts` round out the app routes.
 ## Home page (`/`) — section order
 
 ```
-Navbar
+Navbar          — floating, contained glass bar (sits above the page)
 Hero            — "Digital solutions, built for Tanzania." + client-build proof
 ProblemStrip    — "Why Ubunifu": 4 differentiators (icons)
-ServicesPreview — 5 service icon cards + gradient CTA tile
-SectorsStrip    — sectors we serve (icon tiles)
+ServicesPreview — 5 service icon cards + gradient CTA tile → /build
+SectorsStrip    — sectors we serve (icon tiles) → /industries
 WorkPreview     — client case-study cards
 ProductsProof   — Insight + Sifa as "products we've built"
 Testimonial     — Isaac, Usambara
+Insights        — three most recent blog posts → /blog
 TechMarquee     — scrolling tech logos
 AboutPreview    — short about + link
-Footer          — CTA band + link columns
+CtaBand         — "Got something to build?" (its own section, not the footer)
+Footer          — dark, self-contained columns block
 ```
 
 ---
@@ -69,15 +72,18 @@ Footer          — CTA band + link columns
 Five pillars, defined in `src/content/services.tsx` (icon, title, summary,
 description, items): **Digital Presence & Web · Branding & Visual
 Communication · Data Analytics & BI · Intelligent Automation & AI · Digital
-Strategy & Consulting.** Rendered as icon cards with checklists, then a
-three-step process and the Work preview. Hero carries the animated
-`CodeWindow`.
+Strategy & Consulting.** Rendered as alternating **`Spotlight`** rows (real
+proof screenshot or a branded panel, with an overlapping card), a jump-chip
+sub-nav, then a three-step process and the Work preview. Hero carries the
+animated `CodeWindow`. Copy is outcome-framed ("We help you harness AI…").
 
-## Sectors
+## Industries (`/industries`)
 
-`src/content/sectors.tsx` — Tourism (proven) plus SMEs/Retail, Finance, NGOs,
-Healthcare, Agriculture, Education, Government (targeted). Presented as focus
-areas, not as claimed clients.
+`src/content/sectors.tsx` — per-sector `summary` + `offerings`. Tourism leads
+as a proven `Spotlight` (real Safari King site + overlapping "Proven" card);
+the other seven sectors (SMEs/Retail, Finance, NGOs, Healthcare, Agriculture,
+Education, Government) are substantive cards. Framed as capability, not claimed
+clients. The homepage `SectorsStrip` links here.
 
 ## Work (`/work`)
 
@@ -95,8 +101,10 @@ grid for anyone who wants the detail.
 
 ## About (`/about`)
 
-PageHeader → values (4, `src/content/values.tsx`: Built for Tanzania · We
-build it then run it · Pragmatic not flashy · One team no handoffs) → team.
+An editorial story (`src/content/about.tsx` holds the narrative): PageHeader →
+**Vision & Mission** statement cards → **Why we exist** (narrative + a
+brand-tinted photo with an overlapping card) → **Objectives** → values (4,
+`src/content/values.tsx`) → **How we work** (numbered four-step approach) → team.
 
 Team (`src/content/team.tsx`):
 - **Richard Pallangyo — Data, Software & AI Engineer.** GitHub + LinkedIn.
@@ -111,7 +119,7 @@ reading-progress bar and per-post metadata + OG cards. Seven posts published.
 ## Contact (`/contact`)
 
 The single contact form (`Contact` with `hideIntro`) under a PageHeader, with a
-"what happens next" micro-timeline. Every page's footer CTA links here.
+"what happens next" micro-timeline. The `CtaBand` on every other page links here.
 
 ---
 
@@ -121,9 +129,10 @@ The single contact form (`Contact` with `hideIntro`) under a PageHeader, with a
 |---|---|
 | `src/content/site.ts` | Company info, nav links, footer columns |
 | `src/content/services.tsx` | The five service pillars |
-| `src/content/sectors.tsx` | Sectors we serve |
+| `src/content/sectors.tsx` | Sectors / Industries (summary + offerings) |
 | `src/content/pillars.tsx` | Home "Why Ubunifu" strip |
 | `src/content/values.tsx` | About values |
+| `src/content/about.tsx` | About vision / mission / objectives / approach |
 | `src/content/products.tsx` | Products (proof) |
 | `src/content/portfolio.tsx` | Client projects + case studies |
 | `src/content/team.tsx` | Team members |
@@ -140,10 +149,16 @@ brand `#FF6B2C`, purple accent `#6D3FE8`, lavender background `#F4F2FB`; Outfit
 (UI) and `react-icons` (tech logos). Animations via `framer-motion`, smooth
 scroll via Lenis (`SmoothScroll`), all reduced-motion-gated.
 
+**Chrome:** the `Navbar` is a floating, contained glass bar (sits above the
+page); the `Footer` is a dark, self-contained columns block; the closing CTA is
+its own `CtaBand` section (a contained dark card), never inside the footer.
+
 Notable components: `Hero`, `ProblemStrip`, `HomePreviews` (Services / Sectors
-/ Work / ProductsProof / About previews), `Products`, `Portfolio`, `Testimonial`,
-`CodeWindow`, `Topography`, `PageHeader`, `Contact`, `BlogIndex`,
-`ReadingProgress`, `TechMarquee`, `Footer`, `WhatsAppButton`.
+/ Work / ProductsProof / About previews), `Spotlight` (alternating feature
+rows, reused on Services + Industries), `CtaBand`, `Insights`, `Products`,
+`Portfolio`, `Testimonial`, `CodeWindow`, `Topography`, `PageHeader`, `Contact`,
+`BlogIndex`, `ReadingProgress`, `TechMarquee`, `Navbar`, `Footer`,
+`WhatsAppButton`.
 
 ---
 

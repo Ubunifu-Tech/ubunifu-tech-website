@@ -8,6 +8,13 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 27. CTA out of the footer, mobile pass, cleanup
+
+- **CTA extracted from the footer.** A CTA doesn't belong in a footer. Moved "Got something to build?" into its own `CtaBand` section (a contained dark card on a light band), rendered before the footer on content pages (not on `/contact` or the 404). The footer is now just the dark columns + legal.
+- **Mobile audit.** Checked the redesigned pages at 375px — no horizontal overflow anywhere (home, services, industries, work, case study, about, contact, footer). Fixed the one real issue: the hero CTAs sat side-by-side and wrapped; they now stack full-width on phones. Verified the floating nav, spotlights, CtaBand, and dark footer all stack cleanly.
+- **Cleanup.** Removed the unused `public/work/insight-dashboard.png`; confirmed no orphan components, no stale `styles.container` refs, all content files used. Lint + build clean (34 pages).
+- **Docs refreshed** (`WEBSITE_CONTENT.md`) for the new chrome, the Industries page, the CtaBand, and the elevated Services/About.
+
 ### 26. Distinct chrome — floating navbar + dark footer
 
 Made the nav and footer read as separate from the page (per the reference sites), and removed the proof band.

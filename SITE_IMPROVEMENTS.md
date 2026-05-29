@@ -8,6 +8,22 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 21. Repositioned as a digital-solutions agency
+
+Reframed the site from "product company + consulting" to a **Tanzania-based digital-solutions agency** (per `POSITIONING.md`), adopting the structure of strong agency sites while keeping our purple/orange + topography identity. Products are now **proof, not the headline**.
+
+- **Five service pillars** (`src/content/services.tsx`): Digital Presence & Web, Branding & Visual Communication, Data Analytics & BI, Intelligent Automation & AI, Digital Strategy & Consulting. Each an icon-driven card.
+- **Services page** (`/build`) rebuilt around the pillars: icon cards with brand-coloured summaries, checklists, "01–05" spec numbers, the code-window hero retitled "Everything your digital side needs."
+- **Homepage rebuilt, agency-led:**
+  - Hero → "Digital solutions, built for Tanzania." with Safari King client-build proof and trust chips.
+  - "Why Ubunifu" strip (4 differentiators with icons): Local and technical · Proven in production · AI when it fits · We build and run it.
+  - **Services preview** — five icon cards + a gradient "Explore all services" CTA tile.
+  - **Sectors strip** (`src/content/sectors.tsx`) — icon tiles for the sectors we serve (tourism proven, the rest targeted; no fabricated clients).
+  - **Products-as-proof** — Insight & Sifa shown as "we build our own products too," not a headline Products page.
+- **Nav:** dropped "Products" as a headline destination (the `/products` page still exists as proof). Order: Home · Services · Work · About · Blog · Careers · Contact.
+- **Copy refreshed** for the agency framing: tagline ("Digital solutions for Tanzania."), About vision/values, root + OG metadata, default OG card.
+- New authoritative `POSITIONING.md`; `WEBSITE_CONTENT.md` refreshed to match.
+
 ### 20. Active nav state + branded 404
 
 - **Active navigation indicator.** The current page now lights up in the navbar with a gradient underline (and the mobile menu marks it in brand colour). Nested routes resolve to their top-level link, e.g. `/work/safari-king` highlights "Work" and `/blog/[slug]` highlights "Blog". Uses `aria-current="page"` for accessibility.

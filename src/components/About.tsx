@@ -21,9 +21,10 @@ export const About: React.FC<{ hideHeader?: boolean }> = ({
             <span className="eyebrow">About</span>
             <h2 className={styles.heading}>Why we exist</h2>
             <p className={styles.intro}>
-              Ubunifu Technologies builds software products and provides consulting for African businesses -
-              not adapting tools built elsewhere. A small, focused team based in Arusha, shipping
-              products like Insight and Sifa while helping businesses with custom builds.
+              Ubunifu Technologies is a digital-solutions agency in Arusha. We help
+              businesses and organisations across Tanzania with web, data, AI,
+              branding, and strategy, building from how this market actually works.
+              We ship our own products too, which is how we know we can build yours.
             </p>
           </motion.div>
         )}

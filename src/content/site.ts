@@ -3,8 +3,9 @@
 
 export const site = {
   name: 'Ubunifu Technologies',
-  tagline: 'Building software for Africa.',
-  shortDescription: 'Software products and consulting for African businesses.',
+  tagline: 'Digital solutions for Tanzania.',
+  shortDescription:
+    'A Tanzania-based digital-solutions agency: web, data, AI, branding, and strategy.',
   location: 'Arusha, Tanzania',
 
   contact: {
@@ -36,7 +37,6 @@ export const navLinks: ReadonlyArray<{
 }> = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/build' },
-  { label: 'Products', href: '/products' },
   { label: 'Work', href: '/work' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },

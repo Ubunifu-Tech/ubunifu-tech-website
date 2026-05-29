@@ -1,7 +1,13 @@
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { ProblemStrip } from '@/components/ProblemStrip';
-import { ProductsPreview, WorkPreview, AboutPreview } from '@/components/HomePreviews';
+import {
+  ServicesPreview,
+  SectorsStrip,
+  WorkPreview,
+  ProductsProof,
+  AboutPreview,
+} from '@/components/HomePreviews';
 import { Testimonial } from '@/components/Testimonial';
 import { TechMarquee } from '@/components/TechMarquee';
 import { Footer } from '@/components/Footer';
@@ -12,8 +18,10 @@ export default function Home() {
       <Navbar />
       <Hero />
       <ProblemStrip />
-      <ProductsPreview />
+      <ServicesPreview />
+      <SectorsStrip />
       <WorkPreview />
+      <ProductsProof />
       <Testimonial />
       <TechMarquee />
       <AboutPreview />

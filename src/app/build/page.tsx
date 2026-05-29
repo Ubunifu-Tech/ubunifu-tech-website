@@ -5,82 +5,13 @@ import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { Topography } from '@/components/Topography';
 import { CodeWindow } from '@/components/CodeWindow';
+import { services } from '@/content/services';
 import styles from './Build.module.css';
 
 export const metadata = {
-  title: 'Ubunifu Build',
-  description: 'Custom software, websites, and consulting for Tanzanian businesses. Web development, data analytics, brand design, AI solutions, and digital strategy.',
+  title: 'Services',
+  description: 'Web development, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
 };
-
-const services = [
-  {
-    number: '01',
-    title: 'Web Development',
-    description:
-      'Professional websites and web applications, from informational sites to e-commerce platforms. Modern, mobile-responsive, with CMS so you can manage your own content.',
-    tags: ['Websites', 'E-commerce', 'CMS', 'Hosting'],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="16 18 22 12 16 6" />
-        <polyline points="8 6 2 12 8 18" />
-      </svg>
-    ),
-  },
-  {
-    number: '02',
-    title: 'Data Analytics',
-    description:
-      'Turn your data into decisions. Whether it\'s Excel spreadsheets or complex databases, we clean, analyse, and visualise your data with dashboards and reports.',
-    tags: ['Analysis', 'Dashboards', 'Visualisation', 'KPIs'],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 20V10" />
-        <path d="M12 20V4" />
-        <path d="M6 20v-6" />
-      </svg>
-    ),
-  },
-  {
-    number: '03',
-    title: 'Brand Design',
-    description:
-      'Complete visual identity, including logos, style guides, marketing materials, and UI/UX design. Cohesive branding across digital and print that works for your audience.',
-    tags: ['Logo', 'Brand Identity', 'Marketing', 'UI/UX'],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z" />
-        <path d="m5 2 5 5" />
-        <path d="M2 5l5-5" />
-      </svg>
-    ),
-  },
-  {
-    number: '04',
-    title: 'AI & Automation',
-    description:
-      'Practical AI solutions for specific business problems, including predictive analytics, process automation, and custom integrations that deliver measurable results.',
-    tags: ['Machine Learning', 'Automation', 'Integrations', 'AI'],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 6v6l4 2" />
-      </svg>
-    ),
-  },
-  {
-    number: '05',
-    title: 'Digital Strategy',
-    description:
-      'Assessment of your current digital maturity, implementation roadmaps, and training workshops to build your team\'s digital capabilities.',
-    tags: ['Strategy', 'Training', 'Consulting', 'Roadmaps'],
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-      </svg>
-    ),
-  },
-];
 
 const process = [
   {
@@ -120,16 +51,16 @@ export default function BuildPage() {
                     <polyline points="16 18 22 12 16 6" />
                     <polyline points="8 6 2 12 8 18" />
                   </svg>
-                  Ubunifu Build
+                  Our services
                 </span>
                 <h1 className={styles.title}>
-                  We build it<br />
-                  <span className={styles.titleGradient}>for you.</span>
+                  Everything your<br />
+                  <span className={styles.titleGradient}>digital side needs.</span>
                 </h1>
                 <p className={styles.lead}>
-                  Not every business needs a SaaS product. Sometimes you need a team
-                  that knows your market and can build exactly what you need:
-                  websites, data tools, AI, and the systems to run them.
+                  Five things we do well: web, data, AI, branding, and strategy.
+                  Pick one, or let us handle the whole digital side of your business
+                  and run it for you.
                 </p>
                 <a href="/contact" className={styles.heroBtn}>
                   Start a project
@@ -149,23 +80,36 @@ export default function BuildPage() {
           <ScrollReveal>
             <section className={styles.servicesSection}>
               <span className="eyebrow">What we do</span>
-              <h2 className={styles.sectionHeading}>Services</h2>
+              <h2 className={styles.sectionHeading}>Five ways we help</h2>
               <BuildCards className={styles.servicesGrid}>
-                {services.map((service) => (
-                  <div key={service.title} className={styles.serviceCard}>
-                    <div className={styles.serviceTop}>
-                      <div className={styles.serviceIcon}>{service.icon}</div>
-                      <span className={styles.serviceNumber}>{service.number}</span>
+                {services.map((service, index) => {
+                  const Icon = service.icon;
+                  return (
+                    <div key={service.key} className={styles.serviceCard}>
+                      <div className={styles.serviceTop}>
+                        <div className={styles.serviceIcon}>
+                          <Icon size={22} />
+                        </div>
+                        <span className={styles.serviceNumber}>
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <h3 className={styles.serviceTitle}>{service.title}</h3>
+                      <p className={styles.serviceSummary}>{service.summary}</p>
+                      <p className={styles.serviceDescription}>{service.description}</p>
+                      <ul className={styles.serviceItems}>
+                        {service.items.map((item) => (
+                          <li key={item} className={styles.serviceItem}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <h3 className={styles.serviceTitle}>{service.title}</h3>
-                    <p className={styles.serviceDescription}>{service.description}</p>
-                    <div className={styles.tags}>
-                      {service.tags.map((tag) => (
-                        <span key={tag} className={styles.tag}>{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </BuildCards>
             </section>
           </ScrollReveal>

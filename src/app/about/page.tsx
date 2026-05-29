@@ -7,7 +7,7 @@ import { Team } from '@/components/Team';
 export const metadata = {
   title: 'About',
   description:
-    'Ubunifu Technologies is a small software team in Arusha, Tanzania, building products and consulting for African businesses, built from local workflows rather than adapted from elsewhere.',
+    'Ubunifu Technologies is a digital-solutions agency in Arusha, Tanzania, helping organisations across the country with web, data, AI, branding, and strategy.',
 };
 
 export default function AboutPage() {
@@ -17,8 +17,8 @@ export default function AboutPage() {
       <main>
         <PageHeader
           eyebrow="About us"
-          title="Software built for Africa, from Africa."
-          lead="We are a small team in Arusha, Tanzania, building products and consulting for the businesses around us. We start from how this market actually works, not from tools made for somewhere else."
+          title="A digital partner that gets the local context."
+          lead="We're a small, senior team in Arusha helping organisations across Tanzania build, run, and grow their digital side. Deep technical skill, a real read of the market."
         />
 
         <About hideHeader />

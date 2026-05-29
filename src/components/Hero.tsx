@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Topography } from './Topography';
 import styles from './Hero.module.css';
@@ -15,7 +16,7 @@ const fadeUp = {
   }),
 };
 
-const trust = ['2 live products', 'Client platforms in production', 'Swahili-first AI'];
+const trust = ['Live client platforms', 'Our own SaaS products', 'Swahili-first AI'];
 
 export const Hero: React.FC = () => {
   const reduceMotion = useReducedMotion();
@@ -42,7 +43,7 @@ export const Hero: React.FC = () => {
               custom={0.05}
               variants={fadeUp}
             >
-              Software studio · Arusha, Tanzania
+              Digital solutions · Arusha, Tanzania
             </motion.p>
 
             <motion.h1
@@ -52,10 +53,10 @@ export const Hero: React.FC = () => {
               custom={0.15}
               variants={fadeUp}
             >
-              We build software
+              Digital solutions,
               <br />
               <span className={styles.gradientWrap}>
-                <span className={styles.titleGradient}>for Africa.</span>
+                <span className={styles.titleGradient}>built for Tanzania.</span>
                 <svg
                   className={styles.underline}
                   viewBox="0 0 300 18"
@@ -88,9 +89,9 @@ export const Hero: React.FC = () => {
               custom={0.3}
               variants={fadeUp}
             >
-              A software studio in Arusha. We take on custom builds for businesses
-              across the continent, and ship our own products, made for how things
-              actually work here, not adapted from somewhere else.
+              A digital-solutions agency in Arusha. We design, build, and run web,
+              data, AI, and branding for organisations across Tanzania, built around
+              how this market actually works.
             </motion.p>
 
             <motion.div
@@ -100,15 +101,15 @@ export const Hero: React.FC = () => {
               custom={0.45}
               variants={fadeUp}
             >
-              <a href="/contact" className={styles.btnPrimary}>
+              <Link href="/contact" className={styles.btnPrimary}>
                 Start a project
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
                 </svg>
-              </a>
-              <a href="/products" className={styles.btnSecondary}>
-                Explore our products
-              </a>
+              </Link>
+              <Link href="/work" className={styles.btnSecondary}>
+                See our work
+              </Link>
             </motion.div>
 
             <motion.ul
@@ -138,12 +139,12 @@ export const Hero: React.FC = () => {
                 <span className={styles.dot} />
                 <span className={styles.dot} />
                 <span className={styles.dot} />
-                <span className={styles.url}>sifa.ubunifutech.com</span>
+                <span className={styles.url}>safarikingafrica.com</span>
               </div>
               <div className={styles.shot}>
                 <Image
-                  src="/work/sifa-dashboard.png"
-                  alt="Ubunifu Sifa dashboard showing sales, stock and credit aging for a Tanzanian shop"
+                  src="/work/safari-king-admin.png"
+                  alt="Custom admin dashboard Ubunifu built for Safari King Africa, showing bookings, pipeline and revenue"
                   fill
                   sizes="(max-width: 980px) 100vw, 520px"
                   className={styles.shotImg}
@@ -153,7 +154,7 @@ export const Hero: React.FC = () => {
             </div>
             <span className={styles.proofTag}>
               <span className={styles.proofDot} />
-              Ubunifu Sifa · live
+              Safari King · client build
             </span>
           </motion.div>
         </div>

@@ -1,7 +1,7 @@
-// "About" / values cards. Icons are lucide-react names - see
-// https://lucide.dev/icons for available icons.
+// "Why we exist" / values cards on the About page. Icons are lucide-react.
+// Aligned with the agency positioning in POSITIONING.md.
 
-import { Globe, Zap, CreditCard, MapPin, type LucideIcon } from 'lucide-react';
+import { Globe, Wrench, Zap, Users, type LucideIcon } from 'lucide-react';
 
 export type Value = {
   icon: LucideIcon;
@@ -12,22 +12,22 @@ export type Value = {
 export const values: ReadonlyArray<Value> = [
   {
     icon: Globe,
-    title: 'Built for Africa from the start',
-    body: 'We do not adapt software built elsewhere. We start from the workflows, connectivity, and business models that exist here, and build around them.',
+    title: 'Built for Tanzania, not adapted',
+    body: 'We start from the workflows, connectivity, languages, and payment realities that exist here, and build around them, rather than retrofitting tools made for somewhere else.',
+  },
+  {
+    icon: Wrench,
+    title: 'We build it, then we run it',
+    body: 'We are not a launch-and-leave shop. Maintenance, monitoring, and steady improvement are part of the partnership, so your digital solutions keep delivering as you grow.',
   },
   {
     icon: Zap,
-    title: 'No unnecessary complexity',
-    body: 'Our products do one thing well. We ship what solves the problem, not what looks impressive in a demo.',
+    title: 'Pragmatic, not flashy',
+    body: 'We ship what solves the problem, not what looks impressive in a demo. AI and automation go in only where they genuinely earn their place.',
   },
   {
-    icon: CreditCard,
-    title: 'Pricing that matches the market',
-    body: 'Pay as you go, credit-based pricing. No annual contracts, no seat fees. If the product works for you, you will keep using it.',
-  },
-  {
-    icon: MapPin,
-    title: 'Tanzania-first, Africa-wide',
-    body: 'We are based in Arusha. We build for the businesses we know, then expand across the continent as we grow.',
+    icon: Users,
+    title: 'One team, no handoffs',
+    body: 'You work directly with the people who do the work. No account managers, no telephone game, just clear and honest communication.',
   },
 ];

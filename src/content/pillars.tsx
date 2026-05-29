@@ -1,6 +1,8 @@
-// Three-column strip beneath the hero. A snapshot of what we offer.
+// "Why Ubunifu" differentiators — the strip beneath the hero. Each is a real,
+// defensible reason to work with us (see POSITIONING.md). Shape is kept as
+// { icon, label, body } so the ProblemStrip component renders unchanged.
 
-import { Box, Wrench, ArrowRight, type LucideIcon } from 'lucide-react';
+import { Globe, Wrench, BadgeCheck, Cpu, type LucideIcon } from 'lucide-react';
 
 export type Pillar = {
   icon: LucideIcon;
@@ -10,18 +12,23 @@ export type Pillar = {
 
 export const pillars: ReadonlyArray<Pillar> = [
   {
-    icon: Box,
-    label: 'Products',
-    body: 'SaaS tools that solve real problems for African businesses: document AI, business management, and more on the way.',
+    icon: Globe,
+    label: 'Local and technical',
+    body: 'Serious engineering with a real read of the Tanzanian market. Modern technology that is also practical to run here.',
+  },
+  {
+    icon: BadgeCheck,
+    label: 'Proven in production',
+    body: 'We ship our own SaaS products and have built real client platforms. The work is live and in use, not slideware.',
+  },
+  {
+    icon: Cpu,
+    label: 'AI when it fits',
+    body: 'Pragmatic AI that solves a specific problem, like the grounded assistant we built into a client booking platform.',
   },
   {
     icon: Wrench,
-    label: 'Consulting',
-    body: 'Custom websites, data solutions, and digital strategy for businesses that need hands-on expertise.',
-  },
-  {
-    icon: ArrowRight,
-    label: 'Our approach',
-    body: 'Everything starts from the workflows, pricing, and infrastructure that exist here, not adapted from elsewhere.',
+    label: 'We build and run it',
+    body: 'We do not launch and leave. Maintenance, monitoring, and iteration are part of the partnership.',
   },
 ];

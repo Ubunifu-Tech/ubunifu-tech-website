@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Topography } from './Topography';
 import styles from './PageHeader.module.css';
 
 interface PageHeaderProps {
@@ -28,7 +29,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   return (
     <header className={styles.header}>
-      <div className="container">
+      <div className={styles.backdrop} aria-hidden="true">
+        <span className={`aurora ${styles.aurora}`} />
+        <div className="blueprint" />
+        <Topography className={styles.topo} />
+        <div className="grain" />
+      </div>
+      <div className={`container ${styles.inner}`}>
         <motion.span
           className="eyebrow"
           initial="hidden"

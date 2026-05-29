@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { site, footerColumns } from '@/content/site';
+import { Topography } from './Topography';
 import styles from './Footer.module.css';
 
 export const Footer: React.FC = () => {
@@ -10,10 +11,14 @@ export const Footer: React.FC = () => {
       <div className={styles.ctaSection}>
         <div className={`container ${styles.ctaContainer}`}>
           <div className={styles.ctaAurora} aria-hidden="true" />
+          <Topography className={styles.ctaTopo} />
+          <div className="grain" />
           <div className={styles.ctaContent}>
-            <h2 className={styles.ctaHeading}>Ready to build something?</h2>
+            <h2 className={styles.ctaHeading}>Got something to build?</h2>
             <p className={styles.ctaText}>
-              Whether you need a SaaS product, a custom website, or consulting, we are here to help.
+              A custom platform, a tricky data problem, or just a question about
+              one of our products — tell us what you&apos;re working on. We read
+              every message.
             </p>
             <div className={styles.ctaActions}>
               <a href={site.urls.contact} className={styles.ctaBtn}>

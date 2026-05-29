@@ -80,11 +80,26 @@ export const Contact: React.FC = () => {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <span className="eyebrow">Contact</span>
-            <h2 className={styles.heading}>Let&apos;s work together</h2>
+            <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
             <p className={styles.text}>
-              Have a question about our products, or interested in working with us?
-              Send us a message. We respond to every inquiry.
+              Trying one of our products, or starting a custom build? Write to us.
+              A real person reads every message — no bots, no ticket queue.
             </p>
+
+            <ol className={styles.nextSteps}>
+              <li className={styles.step}>
+                <span className={styles.stepNum}>1</span>
+                <span className={styles.stepText}>You tell us what you need.</span>
+              </li>
+              <li className={styles.step}>
+                <span className={styles.stepNum}>2</span>
+                <span className={styles.stepText}>We reply within two business days.</span>
+              </li>
+              <li className={styles.step}>
+                <span className={styles.stepNum}>3</span>
+                <span className={styles.stepText}>A short call to see if we&apos;re a fit. No obligation.</span>
+              </li>
+            </ol>
 
             <div className={styles.methods}>
               <div className={styles.method}>

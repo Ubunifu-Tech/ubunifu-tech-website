@@ -4,6 +4,40 @@
   padding-bottom: 56px;
   background: var(--background);
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.aurora {
+  top: -40%;
+  right: -6%;
+  width: 38vw;
+  height: 60vh;
+  max-width: 560px;
+  background: radial-gradient(circle, rgba(255, 107, 44, 0.22), transparent 65%);
+}
+
+.topo {
+  position: absolute;
+  top: 50%;
+  right: -4%;
+  width: 44vw;
+  max-width: 640px;
+  height: 220%;
+  transform: translateY(-50%);
+  color: var(--primary);
+  opacity: 0.07;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
 }
 
 .title {

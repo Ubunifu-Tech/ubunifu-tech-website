@@ -56,6 +56,11 @@
   /* Typography */
   --font-heading: var(--font-outfit), 'Outfit', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+
+  /* Warm-earth accent — a restrained savanna/clay note for editorial moments */
+  --clay: #C2693B;
+  --clay-dim: rgba(194, 105, 59, 0.10);
 
   /* Layout */
   --container-width: 1280px;
@@ -225,6 +230,79 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(109, 63, 232, 0.35);
+}
+
+/* ── Signature graphics ───────────────────────────
+ *
+ * A small, reusable visual language used across the site: a grain layer
+ * for tactile depth, drifting aurora glows, a blueprint grid, and a
+ * monospace "spec-sheet" label. Drop these in as aria-hidden overlays
+ * inside a position:relative container.
+ */
+
+/* Tactile film grain — sits over gradients so they never look flat-CSS. */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Blueprint grid — quiet engineering substrate, fades at the edges. */
+.blueprint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(31, 26, 54, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 26, 54, 0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 8%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 8%, transparent 75%);
+}
+
+/* Drifting aurora glow — soft brand-coloured light, not a flat fill. */
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+  animation: auroraDrift 26s ease-in-out infinite;
+}
+
+@keyframes auroraDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(5%, -4%, 0) scale(1.12); }
+}
+
+/* Monospace technical label — the "spec sheet" device. */
+.specLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.specLabel::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora {
+    animation: none;
+  }
 }
 
 /* ── Responsive ───────────────────────────────── */

@@ -8,6 +8,26 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 15. Design uplift — signature visual language + editorial home & blog
+A proper design pass to make the site feel like the work of people who know what they're doing. Verified visually in-browser (screenshots), not just built.
+
+**Signature visual system** (`src/components/Topography.tsx` + utilities in `globals.css`):
+- **Topographic contour lines** — concentric elevation rings rendered as scaled copies of one organic path. Nods to Tanzanian terrain (the Rift, Kilimanjaro, the Usambara range) without being literal; reads as cartography/precision. Tintable, reused across hero, blog feature, page headers, footer.
+- **Grain** overlay (`.grain`) over gradients so they never look flat-CSS; **drifting aurora** glows (`.aurora` + `auroraDrift` keyframes); a quiet **blueprint grid** (`.blueprint`); and a monospace **spec label** (`.specLabel`) for the "engineering spec-sheet" feel. New tokens: `--font-mono`, a restrained `--clay` warm-earth accent.
+
+**Home hero — rebuilt** (`Hero.tsx` / `Hero.module.css`):
+- Moved from the generic centered template to a confident **editorial split**: oversized left-aligned headline (with the signature animated underline preserved), human subtitle, two clear paths ("Start a project" / "Explore our products"), and a **trust row**.
+- Added **live product proof** — a tilted, browser-framed Sifa dashboard with a "live" tag — over the aurora + contour backdrop. Capped hero height (`min(92vh, 900px)`) so it never floats on tall screens.
+
+**Blog — rebuilt as a journal** (`BlogIndex.tsx`, `Blog.module.css`, `blog/page.tsx`):
+- Fixed the "thoughtless uniform grid" problem with real **editorial hierarchy**: a warm human intro, a **featured latest post** (60/40 with a signature contour panel, "01", "Latest" kicker), **category filter pills** (animated grid via Framer Motion `layout`), **reading time** (added to `lib/blog.ts`), and a **numbered** asymmetric grid. Renamed to "the journal".
+
+**Site-wide cohesion & invitation:**
+- `PageHeader` (products / work / about) and the **footer CTA** now carry the same backdrop, so the whole site reads as one system.
+- Contact gains a **"what happens next" 3-step micro-timeline** and doubt-removers ("no bots, no ticket queue", "reply within two business days").
+
+**Copy** — humanised the surface: hero subtitle, contact, footer CTA ("Got something to build?"), blog intro ("Notes from the workshop … no content calendar, no filler"). Striped value-words, varied sentence length, gave it a point of view.
+
 ### 12. Dynamic branded OG images
 Every page now generates an on-brand Open Graph card for social shares (WhatsApp / LinkedIn / X), instead of all links previewing the same logo.
 - **Shared renderer** `src/lib/og.tsx` (`renderOgImage`) — one source of truth, used by every route. Renders the U logo mark, stacked wordmark, an eyebrow, the page title, an optional subtitle, and a gradient accent bar, all in brand colours.

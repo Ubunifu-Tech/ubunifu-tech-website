@@ -13,6 +13,13 @@ export interface BlogPost {
   excerpt: string;
   content: string;
   tags: string[];
+  readingTime: number; // estimated minutes
+}
+
+// Rough reading time at ~200 words/minute, floored at 1 minute.
+function estimateReadingTime(content: string): number {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -39,6 +46,7 @@ export function getAllPosts(): BlogPost[] {
         excerpt: data.excerpt,
         tags: data.tags || [],
         content,
+        readingTime: estimateReadingTime(content),
       };
     });
 
@@ -65,8 +73,9 @@ export function getPostBySlug(slug: string): BlogPost | null {
       excerpt: data.excerpt,
       tags: data.tags || [],
       content,
+      readingTime: estimateReadingTime(content),
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

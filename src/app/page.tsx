@@ -1,6 +1,5 @@
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
-import { ProofBand } from '@/components/ProofBand';
 import { ProblemStrip } from '@/components/ProblemStrip';
 import {
   ServicesPreview,
@@ -22,7 +21,6 @@ export default function Home() {
     <main>
       <Navbar />
       <Hero />
-      <ProofBand />
       <ProblemStrip />
       <ServicesPreview />
       <SectorsStrip />

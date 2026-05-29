@@ -27,55 +27,57 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
-      <div className={`container ${styles.container}`}>
-        <Link href="/" className={styles.logo} onClick={closeMobileMenu}>
-          <span className={styles.logoMark}>U</span>
-          <span className={styles.logoText}>
-            <span className={styles.logoName}>Ubunifu</span><span className={styles.logoAccent}>Technologies</span>
-          </span>
-        </Link>
+      <div className="container">
+        <div className={styles.shell}>
+          <Link href="/" className={styles.logo} onClick={closeMobileMenu}>
+            <span className={styles.logoMark}>U</span>
+            <span className={styles.logoText}>
+              <span className={styles.logoName}>Ubunifu</span><span className={styles.logoAccent}>Technologies</span>
+            </span>
+          </Link>
 
-        <div className={styles.links}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`${styles.link} ${isActive(link.href) ? styles.linkActive : ''}`}
-              aria-current={isActive(link.href) ? 'page' : undefined}
-            >
-              {link.label}
-              {link.badge && <span className={styles.badge}>{link.badge}</span>}
-            </Link>
-          ))}
-        </div>
-
-        <div className={styles.actions}>
-          <button
-            className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`}
-            onClick={toggleMobileMenu}
-            aria-label="Toggle menu"
-          >
-            <span className={styles.bar}></span>
-            <span className={styles.bar}></span>
-            <span className={styles.bar}></span>
-          </button>
-        </div>
-
-        <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
-          <div className={styles.mobileLinks}>
+          <div className={styles.links}>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`${styles.mobileLink} ${isActive(link.href) ? styles.mobileLinkActive : ''}`}
+                className={`${styles.link} ${isActive(link.href) ? styles.linkActive : ''}`}
                 aria-current={isActive(link.href) ? 'page' : undefined}
-                onClick={closeMobileMenu}
               >
                 {link.label}
-                {link.badge && <span className={styles.mobileBadge}>{link.badge}</span>}
+                {link.badge && <span className={styles.badge}>{link.badge}</span>}
               </Link>
             ))}
           </div>
+
+          <div className={styles.actions}>
+            <button
+              className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`}
+              onClick={toggleMobileMenu}
+              aria-label="Toggle menu"
+            >
+              <span className={styles.bar}></span>
+              <span className={styles.bar}></span>
+              <span className={styles.bar}></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
+        <div className={styles.mobileLinks}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`${styles.mobileLink} ${isActive(link.href) ? styles.mobileLinkActive : ''}`}
+              aria-current={isActive(link.href) ? 'page' : undefined}
+              onClick={closeMobileMenu}
+            >
+              {link.label}
+              {link.badge && <span className={styles.mobileBadge}>{link.badge}</span>}
+            </Link>
+          ))}
         </div>
       </div>
     </nav>

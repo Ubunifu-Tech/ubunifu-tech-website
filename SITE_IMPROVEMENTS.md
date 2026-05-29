@@ -8,6 +8,13 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 26. Distinct chrome — floating navbar + dark footer
+
+Made the nav and footer read as separate from the page (per the reference sites), and removed the proof band.
+- **Navbar is now a floating, contained bar** — a glass/white pill with a gap from the top and sides, a hairline border, and a soft shadow, so it sits *above* the content instead of blending into the hero. Deepens its shadow on scroll. (Restructured markup: an inner `.shell` bar inside the container; mobile menu moved to a nav-level overlay.)
+- **Footer is now one dark, self-contained block** — the CTA and link columns share a deep purple-navy gradient with aurora glows and faint topography; all text recoloured for the dark theme. Clearly delineates the bottom of every page.
+- **Removed the proof band** (it wasn't pulling its weight).
+
 ### 25. Home page elevated to the new caliber
 
 Two additions that lift the home toward the references without repeating assets:

@@ -29,20 +29,20 @@ export async function generateMetadata({
   const url = `https://ubunifutech.com/work/${project.slug}`;
 
   return {
-    title: `${project.title} — Case study`,
+    title: `${project.title} · Case study`,
     description: project.description,
     alternates: { canonical: url },
     openGraph: {
       type: 'article',
       url,
-      title: `${project.title} — Case study`,
+      title: `${project.title} · Case study`,
       description: project.description,
       siteName: 'Ubunifu Technologies',
       // OG image provided by the colocated opengraph-image.tsx.
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${project.title} — Case study`,
+      title: `${project.title} · Case study`,
       description: project.description,
     },
   };

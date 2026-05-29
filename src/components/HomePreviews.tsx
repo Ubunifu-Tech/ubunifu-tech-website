@@ -148,7 +148,7 @@ export const WorkPreview: React.FC = () => {
           <span className="eyebrow">Selected work</span>
           <h2 className={styles.heading}>Built for clients, in production</h2>
           <p className={styles.sub}>
-            Platforms and sites we&apos;ve shipped for businesses across Tanzania —
+            Platforms and sites we&apos;ve shipped for businesses across Tanzania,
             built by the same team behind our products.
           </p>
         </motion.div>
@@ -214,9 +214,9 @@ export const AboutPreview: React.FC = () => {
           <span className="eyebrow">About</span>
           <h2 className={styles.heading}>A small team building from Arusha</h2>
           <p className={styles.aboutText}>
-            We&apos;re a small, focused team in Arusha, Tanzania — shipping our own
-            SaaS products and taking on custom builds for African businesses. We
-            start from the workflows that exist here.
+            We&apos;re a small, focused team in Arusha, Tanzania. We ship our own
+            SaaS products and take on custom builds for African businesses,
+            starting from the workflows that exist here.
           </p>
           <Link href="/about" className={styles.link}>
             More about the team <Arrow />

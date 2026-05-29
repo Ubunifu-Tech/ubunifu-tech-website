@@ -26,7 +26,7 @@ None of that lives on the marketing site. So we built the part that does: a cust
 
 ## What we built behind the curtain
 
-The booking flow captures trip basics, safari preferences, and guest details up front, so the first reply can be specific instead of "thanks, tell us more." From there, the team proposes an itinerary and shares it with the customer through a private link — no account, no friction on the traveller's side.
+The booking flow captures trip basics, safari preferences, and guest details up front, so the first reply can be specific instead of "thanks, tell us more." From there, the team proposes an itinerary and shares it with the customer through a private link, with no account and no friction on the traveller's side.
 
 Behind that sits a real CRM. Every customer has a timeline, internal notes, and booking history. Enquiries carry a status, so nothing sits unanswered for a week. It is the difference between *having* customer information and being able to *use* it.
 
@@ -39,13 +39,13 @@ The features that demo well are easy to talk about. The features that make a sys
 - **Two-factor authentication** on the admin, because this system holds real customer data.
 - **An audit log** of every admin action, so there is always an answer to "what happened here?"
 - **Soft deletes**, so a mistaken deletion is recoverable instead of catastrophic.
-- **Search-safe migration** — dozens of redirects maintained so that years of accumulated search ranking did not evaporate the day the new site went live.
+- **Search-safe migration.** Dozens of redirects maintained so that years of accumulated search ranking did not evaporate the day the new site went live.
 
 These are not the parts a client asks for. They are the parts we include because we have seen what happens without them.
 
 ## The lesson
 
-The most useful question we asked on this project was not "what should the website look like?" It was "what does running this business actually involve, day to day?" The website fell out of the answer to that second question — not the other way around.
+The most useful question we asked on this project was not "what should the website look like?" It was "what does running this business actually involve, day to day?" The website fell out of the answer to that second question, not the other way around.
 
 A lot of businesses are sold a website when what they need is a system. The website is the part you see. The system is the part that decides whether the business gets easier to run or just gets a prettier front door on the same chaos.
 

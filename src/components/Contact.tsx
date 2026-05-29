@@ -85,7 +85,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
                 <p className={styles.text}>
                   Trying one of our products, or starting a custom build? Write to
-                  us. A real person reads every message — no bots, no ticket queue.
+                  us. A real person reads every message. No bots, no ticket queue.
                 </p>
               </>
             )}

@@ -128,7 +128,7 @@ export default function BuildPage() {
                 </h1>
                 <p className={styles.lead}>
                   Not every business needs a SaaS product. Sometimes you need a team
-                  that knows your market and can build exactly what you need —
+                  that knows your market and can build exactly what you need:
                   websites, data tools, AI, and the systems to run them.
                 </p>
                 <a href="/contact" className={styles.heroBtn}>

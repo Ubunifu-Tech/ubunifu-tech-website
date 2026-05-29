@@ -33,7 +33,7 @@ export const Team: React.FC = () => {
           <h2 className={styles.heading}>Who you work with</h2>
           <p className={styles.intro}>
             We&apos;re small on purpose. You work directly with the people who
-            build the thing — no account managers, no handoffs, no telephone game.
+            build the thing. No account managers, no handoffs, no telephone game.
           </p>
         </motion.div>
 

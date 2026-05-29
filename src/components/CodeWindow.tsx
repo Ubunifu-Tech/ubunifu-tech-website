@@ -12,7 +12,7 @@ import styles from './CodeWindow.module.css';
 type Token = { text: string; kind?: 'kw' | 'fn' | 'str' | 'com' | 'type' | 'dec' | 'num' };
 
 const LINES: Token[][] = [
-  [{ text: '# A grounded agent — every answer traces to real data', kind: 'com' }],
+  [{ text: '# A grounded agent. Every answer traces to real data', kind: 'com' }],
   [{ text: 'from', kind: 'kw' }, { text: ' ubunifu ' }, { text: 'import', kind: 'kw' }, { text: ' agent, db' }],
   [],
   [{ text: '@agent.tool', kind: 'dec' }],

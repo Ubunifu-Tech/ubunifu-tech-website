@@ -6,7 +6,7 @@ import { Contact } from '@/components/Contact';
 export const metadata = {
   title: 'Contact',
   description:
-    'Start a project with Ubunifu Technologies, or ask us anything about our products. Based in Arusha, Tanzania — we reply within two business days.',
+    'Start a project with Ubunifu Technologies, or ask us anything about our products. Based in Arusha, Tanzania. We reply within two business days.',
   alternates: { canonical: 'https://ubunifutech.com/contact' },
 };
 

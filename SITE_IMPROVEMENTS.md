@@ -8,6 +8,17 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 19. Cleanup pass — em dashes, dead code, role/skill accuracy
+
+- **Roles shortened + HappyGod's full scope.** Richard is now `Data · Software · AI`; HappyGod is `IT · Design · Support`, with his bio and skills updated to include the creative / brand / design work he actually does (not just systems).
+- **Em dashes reduced** across the visible copy — hero, product/portfolio data, page leads, footer, contact, testimonial, blog index, and all four recent blog posts. Replaced with periods, commas, colons, or parentheses. (Only the conventional quote-attribution dash remains.)
+- **Dead code / assets removed:**
+  - `products.tsx`: dropped the unused `size` / `ProductSize` (left over from the old bento).
+  - Deleted the orphaned `src/app/about/About.module.css` (its CTA section was removed earlier).
+  - Removed the dead CTA classes from `Build.module.css`.
+  - Deleted the unreferenced logo images in `public/images/` (the `Clients` strip that used them is gone); removed the now-empty folder.
+- Build, typecheck, and lint all clean (33 static pages).
+
 ### 18. Uniform product cards + bio accuracy
 
 - **Products section rebuilt as a uniform grid.** The old bento mixed full-width split cards with smaller 2-up cards (different sizes) and crammed dense screenshots beside text. Now every product card is the **same size**: a 16:9 media panel on top (real screenshot for Insight/Sifa; a branded topography panel for Rafiki/Build) with a status badge overlay, then content below. Equal-height rows (`grid-auto-rows: 1fr`), generous spacing — no longer crammed. Homepage product preview cards are equal-height too.

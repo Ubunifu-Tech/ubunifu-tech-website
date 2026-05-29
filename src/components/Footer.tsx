@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
             <h2 className={styles.ctaHeading}>Got something to build?</h2>
             <p className={styles.ctaText}>
               A custom platform, a tricky data problem, or just a question about
-              one of our products — tell us what you&apos;re working on. We read
+              one of our products. Tell us what you&apos;re working on, and we read
               every message.
             </p>
             <div className={styles.ctaActions}>

@@ -42,7 +42,7 @@ export const Hero: React.FC = () => {
               custom={0.05}
               variants={fadeUp}
             >
-              Software studio — Arusha, Tanzania
+              Software studio · Arusha, Tanzania
             </motion.p>
 
             <motion.h1
@@ -89,7 +89,7 @@ export const Hero: React.FC = () => {
               variants={fadeUp}
             >
               A software studio in Arusha. We take on custom builds for businesses
-              across the continent, and ship our own products — made for how things
+              across the continent, and ship our own products, made for how things
               actually work here, not adapted from somewhere else.
             </motion.p>
 

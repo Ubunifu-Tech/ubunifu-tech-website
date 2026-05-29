@@ -3,11 +3,10 @@
 // over it and don't care about specific products.
 //
 // `primary` is an optional screenshot of the live product. Only include real
-// screenshots — if the product isn't live or we don't have a screenshot, leave
-// `primary` undefined and the card renders as a text-only block.
+// screenshots. If the product isn't live or we don't have a screenshot, leave
+// `primary` undefined and the card renders a branded placeholder panel.
 
 export type ProductStatus = 'live' | 'soon' | 'available';
-export type ProductSize = 'featured' | 'wide' | 'default';
 
 export type ProductScreenshot = {
   src: string;
@@ -23,7 +22,6 @@ export type Product = {
   url: string | null;
   domain: string;
   cta: string;
-  size: ProductSize;
   primary?: ProductScreenshot;
 };
 
@@ -32,7 +30,7 @@ export const products: ReadonlyArray<Product> = [
     name: 'Ubunifu Insight',
     tagline: 'Document AI, built for here',
     description:
-      'Upload your contracts, reports, lesson plans, or tax invoices, then ask questions, extract structured data, or generate new documents from your own templates. Includes specialised AI agents — including an Education Tutor that teaches in Swahili.',
+      'Upload your contracts, reports, lesson plans, or tax invoices, then ask questions, extract structured data, or generate new documents from your own templates. It includes specialised AI agents, including an Education Tutor that teaches in Swahili.',
     features: [
       'RAG chat with citations',
       'Data extraction from PDFs',
@@ -44,10 +42,9 @@ export const products: ReadonlyArray<Product> = [
     url: 'https://insight.ubunifutech.com',
     domain: 'insight.ubunifutech.com',
     cta: 'Try Insight',
-    size: 'featured',
     primary: {
       src: '/work/insight-generator.png',
-      alt: 'Insight Document Generator template gallery — including a Tanzania Tax Invoice template alongside NDAs, SOWs, lesson plans and offer letters',
+      alt: 'Insight Document Generator template gallery, including a Tanzania Tax Invoice template alongside NDAs, SOWs, lesson plans and offer letters',
     },
   },
   {
@@ -66,7 +63,6 @@ export const products: ReadonlyArray<Product> = [
     url: 'https://sifa.ubunifutech.com',
     domain: 'sifa.ubunifutech.com',
     cta: 'Start free',
-    size: 'wide',
     primary: {
       src: '/work/sifa-dashboard.png',
       alt: 'Sifa Intelligence Dashboard for Mama Amina Duka, showing daily sales, low-stock alerts, outstanding credit and credit aging buckets in TZS',
@@ -76,24 +72,22 @@ export const products: ReadonlyArray<Product> = [
     name: 'Ubunifu Rafiki',
     tagline: 'Embeddable tools for your website',
     description:
-      'Drop-in widgets for the basics: contact forms, booking widgets, blog tools. For when you have a site already and just need the working parts.',
+      'Drop-in widgets for the basics: contact forms, booking systems, and blog tools. For when you have a site already and just need the working parts.',
     features: ['Contact forms', 'Booking widgets', 'Blog tools'],
     status: 'soon',
     url: null,
     domain: 'rafiki.ubunifutech.com',
     cta: 'Coming soon',
-    size: 'default',
   },
   {
     name: 'Ubunifu Build',
     tagline: 'Custom software & consulting',
     description:
-      'When the answer is a custom build, not a SaaS subscription. Websites, custom platforms, AI integrations, data work, and brand design — see Selected work for what that looks like.',
+      'When the answer is a custom build, not a SaaS subscription. Websites, custom platforms, AI integrations, data work, and brand design. See Selected work for what that looks like.',
     features: ['Web development', 'Data analytics', 'Brand design', 'AI & automation'],
     status: 'available',
     url: '/build',
     domain: 'ubunifutech.com/build',
     cta: 'Learn more',
-    size: 'default',
   },
 ];

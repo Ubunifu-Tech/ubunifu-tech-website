@@ -46,13 +46,13 @@ The thing about building a website that converts is that no single decision wins
 - Forms that ask for enough context to write a real reply, but not so much that nobody finishes them
 - Mobile pages that respect that a lot of visitors will browse on a phone, on slow data, in a hurry
 
-A good way to know whether a site is doing its job: ask the operator whether they are receiving better inquiries. Not just more — better. Inquiries from people who have read the site, understood the offering, and are ready to talk specifics. Quality of inquiry is the single best proxy for whether the site is actually working.
+A good way to know whether a site is doing its job: ask the operator whether they are receiving better inquiries. Not just more. Better. Inquiries from people who have read the site, understood the offering, and are ready to talk specifics. Quality of inquiry is the single best proxy for whether the site is actually working.
 
 ## What clients tell us
 
 We recently shipped a website for [Usambara Destination Eco Tours](https://www.usambaradestination.com/), an eco-tourism operator based in the Usambara Mountains. After the launch, the team there told us what changed:
 
-> Since Ubunifu rebuilt our website, client trust has gone up and inquiries from people interested in visiting Tanzania have grown. The design is unique and professional — visitors regularly tell us it is what gave them the confidence to book.
+> Since Ubunifu rebuilt our website, client trust has gone up and inquiries from people interested in visiting Tanzania have grown. The design is unique and professional, and visitors regularly tell us it is what gave them the confidence to book.
 >
 > — Isaac, Managing Director, Usambara Destination Eco Tours
 
@@ -72,7 +72,7 @@ A few things we hold ourselves to, on every tourism project:
 
 ## A note on the harder questions
 
-A tourism website cannot fix everything. If the operation is genuinely under-resourced, or the photography is genuinely thin, the website can only do so much. We are honest about that. The strongest tourism sites we have built were built on top of operators who were already doing the work well — and just needed a place online that matched the calibre of the trips they were leading.
+A tourism website cannot fix everything. If the operation is genuinely under-resourced, or the photography is genuinely thin, the website can only do so much. We are honest about that. The strongest tourism sites we have built were built on top of operators who were already doing the work well, and just needed a place online that matched the calibre of the trips they were leading.
 
 The website is not the marketing. The trip is the marketing. The website is the place where the trip earns its first chance to be considered.
 

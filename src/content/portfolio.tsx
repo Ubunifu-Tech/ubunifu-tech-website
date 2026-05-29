@@ -1,7 +1,7 @@
 // Client projects shown in the "Our work" section and on per-project case
 // study pages (/work/[slug]).
 //
-// Everything here is grounded in the actual project codebases — no invented
+// Everything here is grounded in the actual project codebases. No invented
 // metrics, no imagined briefs. `capabilities` are short chips for the card;
 // `highlights` are the detailed "what we built" breakdown for the case study
 // page; `overview` is the factual intro. If we don't know something (e.g. a
@@ -89,7 +89,7 @@ export const projects: ReadonlyArray<Project> = [
       },
       {
         title: 'Bookings, end to end',
-        body: 'A multi-step inquiry flow captures trip basics, safari preferences and guest details. The team proposes an itinerary and shares it with the customer through a secure tokenised link — no account required on the traveller’s side.',
+        body: 'A multi-step inquiry flow captures trip basics, safari preferences and guest details. The team proposes an itinerary and shares it with the customer through a secure tokenised link, with no account required on the traveller’s side.',
       },
       {
         title: 'A real CRM behind the site',
@@ -105,11 +105,11 @@ export const projects: ReadonlyArray<Project> = [
       },
       {
         title: 'Built to scale',
-        body: 'Roughly 95 pages across destinations, experiences, trekking and beaches, 48 API routes, and 13 data models — a genuine platform, not a brochure.',
+        body: 'Roughly 95 pages across destinations, experiences, trekking and beaches, 48 API routes, and 13 data models. A genuine platform, not a brochure.',
       },
     ],
     overview: [
-      'Safari King Africa is a private-guided safari operator in Tanzania. We built their entire digital operation — not just a website, but the system that runs the business behind it.',
+      'Safari King Africa is a private-guided safari operator in Tanzania. We built their entire digital operation: not just a website, but the system that runs the business behind it.',
       'The public site covers every Tanzanian national park, all four safari circuits, the major treks and the coastal destinations. Behind it sits a custom admin platform: bookings, a customer CRM, content management, email automation, and an AI assistant the team reaches for every day.',
     ],
     tech: [
@@ -131,7 +131,7 @@ export const projects: ReadonlyArray<Project> = [
     title: 'Usambara Destination',
     category: 'Eco-tourism site + enquiry engine',
     description:
-      'A fast, accessible eco-tourism site for an operator in the Usambara Mountains — built on Node and Express with a real enquiry workflow, strong search visibility, and WCAG AA accessibility.',
+      'A fast, accessible eco-tourism site for an operator in the Usambara Mountains, built on Node and Express with a real enquiry workflow, strong search visibility, and WCAG AA accessibility.',
     domain: 'usambaradestination.com',
     link: 'https://www.usambaradestination.com/',
     primary: {
@@ -145,7 +145,7 @@ export const projects: ReadonlyArray<Project> = [
         src: '/work/usambara-contact.png',
         alt: 'Usambara Destination contact page with a full-trip-context enquiry form and quick-connect cards',
         caption:
-          'The enquiry form captures full trip context and triggers a two-email workflow — one to the operator, one back to the visitor.',
+          'The enquiry form captures full trip context and triggers a two-email workflow: one to the operator, one back to the visitor.',
       },
     ],
     capabilities: [
@@ -159,11 +159,11 @@ export const projects: ReadonlyArray<Project> = [
     highlights: [
       {
         title: 'Not a static template',
-        body: 'The site runs on a lightweight Node.js and Express server with Helmet security headers, HTTP compression and per-IP rate limiting — a real application, built for speed and resilience.',
+        body: 'The site runs on a lightweight Node.js and Express server with Helmet security headers, HTTP compression and per-IP rate limiting. A real application, built for speed and resilience.',
       },
       {
         title: 'An enquiry form that does the operator’s prep',
-        body: 'The contact form captures full trip context — dates, party size, interests — and triggers a two-email flow: a structured notification to the operator and a confirmation with next steps to the visitor. Drafts auto-save to the browser so a half-finished enquiry is never lost.',
+        body: 'The contact form captures full trip context (dates, party size, interests) and triggers a two-email flow: a structured notification to the operator and a confirmation with next steps to the visitor. Drafts auto-save to the browser so a half-finished enquiry is never lost.',
       },
       {
         title: 'Search visibility as a feature',
@@ -175,7 +175,7 @@ export const projects: ReadonlyArray<Project> = [
       },
       {
         title: 'Built to browse',
-        body: '22+ pages including nine destination guides and a blog, plus a filterable lightbox gallery — fast on a mid-range phone and a slow connection.',
+        body: '22+ pages including nine destination guides and a blog, plus a filterable lightbox gallery. Fast on a mid-range phone and a slow connection.',
       },
     ],
     overview: [

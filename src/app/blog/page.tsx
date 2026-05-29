@@ -33,7 +33,7 @@ export default function BlogPage() {
             <span className="specLabel">The journal</span>
             <h1 className={styles.heading}>Notes from the workshop</h1>
             <p className={styles.subheading}>
-              We write when we have something worth saying — about building
+              We write when we have something worth saying: about building
               software in Tanzania, the decisions behind our products, and what
               the work actually teaches us. No content calendar, no filler.
             </p>

@@ -132,7 +132,7 @@ export const BlogIndex: React.FC<{ posts: PostMeta[] }> = ({ posts }) => {
       </motion.div>
 
       {grid.length === 0 && !featured && (
-        <p className={styles.empty}>No posts under “{active}” yet — check back soon.</p>
+        <p className={styles.empty}>No posts under “{active}” yet. Check back soon.</p>
       )}
     </>
   );

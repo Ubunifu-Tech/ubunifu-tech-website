@@ -3,12 +3,13 @@ import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Portfolio } from '@/components/Portfolio';
+import { ProductsProof } from '@/components/HomePreviews';
 import { Testimonial } from '@/components/Testimonial';
 
 export const metadata = {
   title: 'Our Work',
   description:
-    'Selected platforms and websites designed and built by Ubunifu Technologies for businesses across Tanzania.',
+    'Platforms, custom CRMs, and AI-augmented sites Ubunifu has shipped for clients across Tanzania, plus our own live SaaS products, Insight and Sifa.',
 };
 
 export default function WorkPage() {
@@ -18,11 +19,12 @@ export default function WorkPage() {
       <main>
         <PageHeader
           eyebrow="Our work"
-          title="Platforms we have designed and built."
-          lead="A selection of the websites, custom CRMs, and AI-augmented platforms we have shipped for businesses across Tanzania."
+          title="Built for clients, and for ourselves."
+          lead="Custom platforms and sites for businesses across Tanzania, plus the SaaS products we design, build, and run ourselves."
         />
 
         <Portfolio hideHeader />
+        <ProductsProof />
         <Testimonial />
       </main>
       <CtaBand />

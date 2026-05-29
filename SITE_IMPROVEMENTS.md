@@ -8,6 +8,10 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 29. Our own products now count as "work"
+
+The Work page showed only client projects. Our own live SaaS (Insight, Sifa) is arguably our strongest proof, so `/work` now presents two groups: **client projects** (Safari King, Usambara, with case studies) followed by **our own products** (the reused `ProductsProof` section, linking to the live apps), with a tonal background shift between them. Header reframed to "Built for clients, and for ourselves."
+
 ### 28. Contact form hardened
 
 Reviewed the form end to end and fixed a real robustness bug in `src/app/api/contact/route.ts`:

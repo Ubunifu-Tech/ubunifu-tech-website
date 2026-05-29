@@ -87,10 +87,11 @@ clients. The homepage `SectorsStrip` links here.
 
 ## Work (`/work`)
 
-`src/content/portfolio.tsx` — **Safari King Africa** (booking platform + CRM +
-AI assistant) and **Usambara Destination** (eco-tourism site). Each has a full
-case study at `/work/[slug]` with overview, highlights, gallery, stack, and a
-"next project" link.
+Two groups: **client projects** (`src/content/portfolio.tsx` — **Safari King
+Africa** and **Usambara Destination**, each with a full `/work/[slug]` case
+study) followed by **our own products** (the `ProductsProof` section — Insight
++ Sifa, linking to the live apps). The header frames both: "Built for clients,
+and for ourselves." Our SaaS counts as work, and it's some of our best proof.
 
 ## Products (proof)
 

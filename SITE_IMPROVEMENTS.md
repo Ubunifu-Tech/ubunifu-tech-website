@@ -8,6 +8,12 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 25. Home page elevated to the new caliber
+
+Two additions that lift the home toward the references without repeating assets:
+- **Proof band** (`ProofBand`) right under the hero — a dark gradient panel with four *truthful* points (2 live SaaS products · 5.0★ TripAdvisor rating · Claude · 100% built in Arusha), gradient values, dividers, faint topography. Breaks the run of light card sections with a premium "impact" beat.
+- **"Latest thinking" insights section** (`Insights`) — surfaces the blog on the home for the first time (a real gap; very McKinsey). Shows the three most recent posts as cards linking through to `/blog`. The home page reads posts via `getAllPosts()` and passes them in.
+
 ### 24. New Industries / "Who we serve" page
 
 The per-sector depth that was missing — sectors were only a home teaser. New `/industries` page:

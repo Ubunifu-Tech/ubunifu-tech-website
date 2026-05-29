@@ -37,10 +37,10 @@ export const navLinks: ReadonlyArray<{
 }> = [
   { label: 'Home', href: '/' },
   { label: 'Services', href: '/build' },
+  { label: 'Industries', href: '/industries' },
   { label: 'Work', href: '/work' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Careers', href: '/careers' },
   { label: 'Contact', href: '/contact' },
 ];
 
@@ -67,6 +67,7 @@ export const footerColumns: ReadonlyArray<{
     title: 'Company',
     links: [
       { label: 'Services', href: '/build' },
+      { label: 'Industries', href: '/industries' },
       { label: 'Our Work', href: '/work' },
       { label: 'About', href: '/about' },
       { label: 'Blog', href: '/blog' },

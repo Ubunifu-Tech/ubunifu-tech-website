@@ -8,6 +8,15 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 24. New Industries / "Who we serve" page
+
+The per-sector depth that was missing — sectors were only a home teaser. New `/industries` page:
+- **Tourism leads as a proven spotlight** (reuses the `Spotlight` component): the real Safari King site in a browser frame, a "Proven · Built for Safari King & Usambara" overlapping card, and a "See the work" link.
+- **The other seven sectors** (SMEs/retail, finance, NGOs, healthcare, agriculture, education, government) as substantive cards — icon, what we'd build for them, and specific offerings — framed honestly as capability, not claimed clients (see POSITIONING.md). Education notes the real Swahili AI tutor.
+- Closing "Don't see your sector?" line linking to contact.
+- `content/sectors.tsx` extended with per-sector `summary` + `offerings`.
+- Wired into the nav (replacing Careers, which moves to footer-only to keep the bar tight: Home · Services · Industries · Work · About · Blog · Contact), the footer, the sitemap, and the homepage Sectors strip now links here.
+
 ### 23. Services page rebuilt as capability spotlights
 
 Took the elevated caliber to the Services page (the capability depth that was flagged):

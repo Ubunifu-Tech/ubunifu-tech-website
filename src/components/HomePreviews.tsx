@@ -121,6 +121,10 @@ export const SectorsStrip: React.FC = () => {
             );
           })}
         </div>
+
+        <Link href="/industries" className={styles.link}>
+          See how we help each sector <Arrow />
+        </Link>
       </div>
     </section>
   );

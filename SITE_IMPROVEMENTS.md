@@ -8,6 +8,22 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 22. About page redesigned as an editorial story (flagship caliber)
+
+A genuine *layout* redesign (not just content) to the standard of the reference/agency sites — the new home for vision, mission, and objectives, told as a story:
+
+- **Header:** confident centred statement ("We make technology work for Tanzanian organisations.").
+- **Vision & Mission:** two statement cards with gradient icon marks and large editorial type (`src/content/about.tsx`).
+- **Why we exist:** a story split — narrative on the left, a **brand-tinted** photo on the right (`public/about/collaboration.jpg`, treated with a purple/orange multiply overlay so it reads as branded, not generic stock) with an **overlapping** "One team, no handoffs" card.
+- **Objectives:** "Four things we hold ourselves to" — icon cards.
+- **What we believe:** the four values (reused `About` component, now accepts heading overrides).
+- **How we work:** a numbered four-step approach with a gradient connecting line.
+- **Team** closes the page.
+- `ScrollReveal` now accepts a `className` so sections can animate in while keeping their layout classes.
+- **Capability messaging sharpened** in `src/content/services.tsx` to outcome framing ("We help you harness AI where it actually pays off…", "We help you turn raw data into decisions…").
+
+This is the flagship for the elevated caliber; the same patterns (statement blocks, alternating image/text, numbered steps, treated imagery) can roll out to the other pages next.
+
 ### 21. Repositioned as a digital-solutions agency
 
 Reframed the site from "product company + consulting" to a **Tanzania-based digital-solutions agency** (per `POSITIONING.md`), adopting the structure of strong agency sites while keeping our purple/orange + topography identity. Products are now **proof, not the headline**.

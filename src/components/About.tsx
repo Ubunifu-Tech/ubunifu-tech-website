@@ -5,8 +5,18 @@ import { motion } from 'framer-motion';
 import { values } from '@/content/values';
 import styles from './About.module.css';
 
-export const About: React.FC<{ hideHeader?: boolean }> = ({
+type AboutProps = {
+  hideHeader?: boolean;
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+};
+
+export const About: React.FC<AboutProps> = ({
   hideHeader = false,
+  eyebrow = 'What we believe',
+  heading = 'What we stand for',
+  intro = 'A few principles that shape every project we take on.',
 }) => {
   return (
     <section id="about" className={`section ${styles.about}`}>
@@ -18,14 +28,9 @@ export const About: React.FC<{ hideHeader?: boolean }> = ({
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="eyebrow">About</span>
-            <h2 className={styles.heading}>Why we exist</h2>
-            <p className={styles.intro}>
-              Ubunifu Technologies is a digital-solutions agency in Arusha. We help
-              businesses and organisations across Tanzania with web, data, AI,
-              branding, and strategy, building from how this market actually works.
-              We ship our own products too, which is how we know we can build yours.
-            </p>
+            <span className="eyebrow">{eyebrow}</span>
+            <h2 className={styles.heading}>{heading}</h2>
+            <p className={styles.intro}>{intro}</p>
           </motion.div>
         )}
 

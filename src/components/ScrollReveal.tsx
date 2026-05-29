@@ -6,9 +6,10 @@ import styles from './ScrollReveal.module.css';
 interface ScrollRevealProps {
   children: React.ReactNode;
   delay?: number;
+  className?: string;
 }
 
-export const ScrollReveal: React.FC<ScrollRevealProps> = ({ children, delay = 0 }) => {
+export const ScrollReveal: React.FC<ScrollRevealProps> = ({ children, delay = 0, className = '' }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -33,7 +34,7 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({ children, delay = 0 
   return (
     <div
       ref={ref}
-      className={`${styles.reveal} ${visible ? styles.visible : ''}`}
+      className={`${styles.reveal} ${visible ? styles.visible : ''} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}

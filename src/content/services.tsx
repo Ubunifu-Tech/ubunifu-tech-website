@@ -57,7 +57,7 @@ export const services: ReadonlyArray<Service> = [
     title: 'Data Analytics & BI',
     summary: 'Turn your data into decisions.',
     description:
-      'From cleaning and organising your data to dashboards, KPIs, and the pipelines behind them. We make the numbers that matter clear and actionable.',
+      'We help you turn raw data into decisions: cleaned and organised, the KPIs that matter surfaced, and the dashboards and pipelines that keep them live and trustworthy.',
     items: [
       'Analysis & reporting',
       'Dashboards & visualisation',
@@ -72,7 +72,7 @@ export const services: ReadonlyArray<Service> = [
     title: 'Intelligent Automation & AI',
     summary: 'AI that earns its place.',
     description:
-      'Practical AI and automation for specific problems, not hype. Predictive models, process automation, and grounded AI assistants like the one we built into Safari King.',
+      'We help you harness AI where it actually pays off: grounded assistants, predictive models, and automation for the repetitive work. Practical and responsible, deployed only where it solves a real problem, like the assistant we built into Safari King.',
     items: [
       'Custom AI / ML projects',
       'Grounded AI assistants',
@@ -87,7 +87,7 @@ export const services: ReadonlyArray<Service> = [
     title: 'Digital Strategy & Consulting',
     summary: 'A plan, and the skills to run it.',
     description:
-      'Digital-transformation roadmaps, capacity building, and the ongoing partnership to keep it all moving, so the technology keeps delivering as you grow.',
+      'We help you plan the digital side and build the capability to run it: transformation roadmaps, maturity assessment, training for your team, and a partnership that continues long after launch.',
     items: [
       'Transformation roadmaps',
       'Digital maturity assessment',

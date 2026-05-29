@@ -44,10 +44,33 @@
   pointer-events: none;
 }
 
-.header {
+.heroGrid {
   position: relative;
   z-index: 2;
-  max-width: 760px;
+  display: grid;
+  grid-template-columns: 1.02fr 0.98fr;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+}
+
+.header {
+  max-width: 600px;
+}
+
+.heroVisual {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .heroVisual {
+    max-width: 520px;
+  }
 }
 
 .heroBadge {

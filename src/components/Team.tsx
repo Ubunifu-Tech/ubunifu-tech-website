@@ -3,8 +3,21 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { Github, Linkedin, Globe } from 'lucide-react';
 import { team } from '@/content/team';
 import styles from './Team.module.css';
+
+const linkIcon = {
+  github: Github,
+  linkedin: Linkedin,
+  site: Globe,
+} as const;
+
+const linkLabel = {
+  github: 'GitHub',
+  linkedin: 'LinkedIn',
+  site: 'Website',
+} as const;
 
 export const Team: React.FC = () => {
   return (
@@ -19,8 +32,8 @@ export const Team: React.FC = () => {
           <span className="eyebrow">The team</span>
           <h2 className={styles.heading}>Who you work with</h2>
           <p className={styles.intro}>
-            Ubunifu is a small, focused team based in Arusha. You work directly
-            with the people who build and design the product. No layers, no handoffs.
+            We&apos;re small on purpose. You work directly with the people who
+            build the thing — no account managers, no handoffs, no telephone game.
           </p>
         </motion.div>
 
@@ -66,6 +79,26 @@ export const Team: React.FC = () => {
                   </span>
                 ))}
               </div>
+
+              {member.links && member.links.length > 0 && (
+                <div className={styles.links}>
+                  {member.links.map((link) => {
+                    const Icon = linkIcon[link.type];
+                    return (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.link}
+                        aria-label={`${member.name} on ${linkLabel[link.type]}`}
+                      >
+                        <Icon size={17} />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </motion.article>
           ))}
         </div>

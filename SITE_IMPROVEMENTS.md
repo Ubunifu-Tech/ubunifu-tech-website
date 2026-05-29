@@ -8,6 +8,21 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 17. Fuller pages, real bios, code-window, fewer CTAs
+
+**Page headers no longer feel empty.** The inner-page headers (products / work / about / careers / contact) were left-aligned text with a void on the right. Re-centred the `PageHeader` content over a symmetric topography "radar" + aurora backdrop — it now reads as a confident, full statement instead of text shoved to one side.
+
+**Build hero — an animated code window.** The Build hero's empty right side now holds a small editor panel (`CodeWindow`) that "writes" a short, real snippet line by line — a grounded AI-agent tool, the kind of thing we actually build. Honours `prefers-reduced-motion` (renders complete, no cursor sweep). This is the "animate code" idea placed where it's genuinely true: the engineering page.
+
+**Real team bios.** Rewrote both founders accurately from their own material:
+- **Richard Pallangyo — Data & AI:** senior data engineer (led a 30-person Data & AI team), finishing an MS in Data Science at UW, builds the RAG / agentic-AI systems and pipelines. Added GitHub + LinkedIn links.
+- **HappyGod Pallangyo — IT & Systems:** system/network administration, hosting, cPanel, domains, technical support; computer-engineering + accountancy background. (Corrected from the old placeholder "Creative Director" — his real focus is infrastructure/IT.)
+Team cards now render skill chips + social-link icons (lucide `Github` / `Linkedin`).
+
+**Removed repeating CTAs.** The Build and About pages each had a bespoke CTA section stacked right above the global footer CTA band. Removed both — every page now closes with the single footer CTA, no double-ask.
+
+**Stock images — declined, on purpose.** The provided Unsplash photos (the famous Fotis dual-monitor code shot, the Growtika AI-brain render, etc.) are heavily-used stock. Using them would undercut the authenticity our real product screenshots give us, so they stay out of the live site (kept in the gitignored `work-screenshots/`). We fill "empty" space with authentic visuals instead — code window, centred headers, richer cards.
+
 ### 16. Consistency, de-duplication & full-site polish
 A pass for consistency and to push the whole site to a professional bar. Verified in-browser page by page.
 

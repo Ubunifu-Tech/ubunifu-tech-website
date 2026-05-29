@@ -1,10 +1,11 @@
 .header {
   position: relative;
-  padding-top: calc(var(--nav-height) + 88px);
-  padding-bottom: 56px;
+  padding-top: calc(var(--nav-height) + 96px);
+  padding-bottom: 72px;
   background: var(--background);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
+  text-align: center;
 }
 
 .backdrop {
@@ -14,23 +15,30 @@
   overflow: hidden;
 }
 
+/* Centred glow behind the title. */
 .aurora {
-  top: -40%;
-  right: -6%;
-  width: 38vw;
-  height: 60vh;
-  max-width: 560px;
-  background: radial-gradient(circle, rgba(255, 107, 44, 0.22), transparent 65%);
+  top: -45%;
+  left: 50%;
+  width: 70vw;
+  height: 120%;
+  max-width: 900px;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 44, 0.16),
+    rgba(109, 63, 232, 0.1) 40%,
+    transparent 68%
+  );
 }
 
+/* Concentric contours centred behind the heading — reads as cartography. */
 .topo {
   position: absolute;
   top: 50%;
-  right: -4%;
-  width: 44vw;
-  max-width: 640px;
-  height: 220%;
-  transform: translateY(-50%);
+  left: 50%;
+  width: 760px;
+  height: 320%;
+  transform: translate(-50%, -50%);
   color: var(--primary);
   opacity: 0.07;
 }
@@ -38,16 +46,21 @@
 .inner {
   position: relative;
   z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .title {
   font-size: clamp(2.25rem, 5vw, 3.5rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.08;
-  margin-bottom: 1.25rem;
+  line-height: 1.06;
+  margin: 1rem 0 1.25rem;
   color: var(--text-primary);
-  max-width: 16ch;
+  max-width: 18ch;
 }
 
 .lead {
@@ -60,6 +73,7 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.875rem;
   margin-top: 2rem;
 }
@@ -67,6 +81,6 @@
 @media (max-width: 768px) {
   .header {
     padding-top: calc(var(--nav-height) + 56px);
-    padding-bottom: 40px;
+    padding-bottom: 48px;
   }
 }

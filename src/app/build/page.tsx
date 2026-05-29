@@ -4,6 +4,7 @@ import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { Topography } from '@/components/Topography';
+import { CodeWindow } from '@/components/CodeWindow';
 import styles from './Build.module.css';
 
 export const metadata = {
@@ -112,27 +113,33 @@ export default function BuildPage() {
           <div className="grain" />
 
           <div className="container">
-            <div className={styles.header}>
-              <span className={styles.heroBadge}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="16 18 22 12 16 6" />
-                  <polyline points="8 6 2 12 8 18" />
-                </svg>
-                Ubunifu Build
-              </span>
-              <h1 className={styles.title}>
-                We build it<br />
-                <span className={styles.titleGradient}>for you.</span>
-              </h1>
-              <p className={styles.lead}>
-                Not every business needs a SaaS product. Sometimes you need a team that understands
-                your market and can build exactly what you need: websites, data solutions, branding,
-                and digital strategy for Tanzanian businesses.
-              </p>
-              <a href="/contact" className={styles.heroBtn}>
-                Start a project
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-              </a>
+            <div className={styles.heroGrid}>
+              <div className={styles.header}>
+                <span className={styles.heroBadge}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                  Ubunifu Build
+                </span>
+                <h1 className={styles.title}>
+                  We build it<br />
+                  <span className={styles.titleGradient}>for you.</span>
+                </h1>
+                <p className={styles.lead}>
+                  Not every business needs a SaaS product. Sometimes you need a team
+                  that knows your market and can build exactly what you need —
+                  websites, data tools, AI, and the systems to run them.
+                </p>
+                <a href="/contact" className={styles.heroBtn}>
+                  Start a project
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                </a>
+              </div>
+
+              <div className={styles.heroVisual}>
+                <CodeWindow />
+              </div>
             </div>
           </div>
         </div>
@@ -187,23 +194,6 @@ export default function BuildPage() {
         <ScrollReveal>
           <WorkPreview />
         </ScrollReveal>
-
-        {/* CTA */}
-        <div className="container">
-          <ScrollReveal>
-            <section className={styles.ctaSection}>
-              <h2 className={styles.ctaHeading}>Have a project in mind?</h2>
-              <p className={styles.ctaText}>
-                Tell us what you need, and we will give you an honest assessment of what is realistic
-                for your budget and timeline.
-              </p>
-              <a href="/contact" className={styles.ctaBtn}>
-                Get in touch
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-              </a>
-            </section>
-          </ScrollReveal>
-        </div>
       </main>
       <Footer />
     </>

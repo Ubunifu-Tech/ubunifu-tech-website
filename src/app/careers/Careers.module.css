@@ -1,32 +1,11 @@
 .main {
-  padding-top: calc(var(--nav-height) + 80px);
   padding-bottom: 100px;
   min-height: 100vh;
   background: var(--background);
 }
 
-.header {
-  max-width: 760px;
-  margin-bottom: 4rem;
-}
-
-.title {
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  margin-bottom: 1.25rem;
-  color: var(--text-primary);
-}
-
-.lead {
-  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-  color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 620px;
-}
-
 .openSection {
+  margin-top: 4rem;
   margin-bottom: 5rem;
 }
 

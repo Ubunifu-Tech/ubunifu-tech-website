@@ -8,6 +8,21 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 16. Consistency, de-duplication & full-site polish
+A pass for consistency and to push the whole site to a professional bar. Verified in-browser page by page.
+
+**Contact — one place instead of five.** The full contact form was rendering on the home, products, work, build, and case-study pages. Consolidated into a single dedicated `/contact` page (PageHeader + form + a "what happens next" timeline). Every CTA now points to `/contact`; added Contact to the nav, footer column, and sitemap. The global footer CTA band remains the consistent closing invite on every page.
+
+**Homepage cards — real substance.** The Products and Work previews were thin (name + tagline; thumbnail + title). Rebuilt them to carry domain, status, tagline, a description, three features / capabilities, and a contextual CTA each — pulled from existing data, still lighter than the full `/products` and `/work` pages so they don't duplicate them.
+
+**Consistent type hierarchy.** Section headings were defined five different ways across components (`clamp(2rem,4vw,3rem)`, `1.85rem…`, `1.75rem…`). Unified every section `h2` to one canonical scale (`clamp(1.9rem, 3.6vw, 2.6rem)`), aligned the blog title to the page-title tier, and **documented the four-tier scale + the specLabel-vs-eyebrow rule** in `globals.css` so it stays consistent.
+
+**Every page reviewed and brought onto the system:**
+- **Build** — its bespoke hero now carries the signature topography motif; CTAs point to `/contact`.
+- **Careers** — switched from a one-off header to the shared `PageHeader` (signature backdrop), and removed the now-dead header CSS.
+- **Blog post pages** — added a reading-progress bar, a category pill, and a richer meta line (author · date · reading time). Title bumped to the page-title weight/scale.
+- **Products / Work / About / Contact** — all use `PageHeader` with the shared backdrop; section headings now match.
+
 ### 15. Design uplift — signature visual language + editorial home & blog
 A proper design pass to make the site feel like the work of people who know what they're doing. Verified visually in-browser (screenshots), not just built.
 

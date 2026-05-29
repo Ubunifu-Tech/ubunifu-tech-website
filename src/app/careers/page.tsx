@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { PageHeader } from '@/components/PageHeader';
 import styles from './Careers.module.css';
 
 export const metadata = {
@@ -32,16 +33,12 @@ export default function CareersPage() {
     <>
       <Navbar />
       <main className={styles.main}>
+        <PageHeader
+          eyebrow="Careers"
+          title="Work at Ubunifu"
+          lead="We're a small team building software for African businesses, starting in Tanzania. We move deliberately, ship real things, and care about the details."
+        />
         <div className="container">
-          <div className={styles.header}>
-            <span className="eyebrow">Careers</span>
-            <h1 className={styles.title}>Work at Ubunifu</h1>
-            <p className={styles.lead}>
-              We are a small team building SaaS products for African businesses, starting in Tanzania.
-              We move deliberately, ship real things, and focus on work that matters.
-            </p>
-          </div>
-
           <div className={styles.openSection}>
             <div className={styles.noRoles}>
               <h2 className={styles.noRolesTitle}>No open roles right now</h2>

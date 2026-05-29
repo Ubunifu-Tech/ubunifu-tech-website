@@ -3,6 +3,7 @@ import { WorkPreview } from '@/components/HomePreviews';
 import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
+import { Topography } from '@/components/Topography';
 import styles from './Build.module.css';
 
 export const metadata = {
@@ -107,6 +108,8 @@ export default function BuildPage() {
         <div className={styles.heroSection}>
           <div className={styles.heroBg} aria-hidden="true" />
           <div className={styles.heroDots} aria-hidden="true" />
+          <Topography className={styles.heroTopo} />
+          <div className="grain" />
 
           <div className="container">
             <div className={styles.header}>

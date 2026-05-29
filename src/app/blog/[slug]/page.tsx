@@ -5,7 +5,14 @@ import type { Metadata } from 'next';
 import { getAllPosts, getPostBySlug } from '@/lib/blog';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { ReadingProgress } from '@/components/ReadingProgress';
 import styles from './BlogSlug.module.css';
+
+function formatDate(date: string): string {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
 // Return a list of `params` to populate the [slug] dynamic segment
 export async function generateStaticParams() {
@@ -96,16 +103,19 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <ReadingProgress />
       <Navbar />
       <article className={`container ${styles.articleContainer}`}>
         <div className={styles.header}>
-          <div className={styles.meta}>
-            <span className={styles.date}>{post.date}</span>
-            <span>•</span>
-            <span>{post.tags.join(', ')}</span>
-          </div>
+          {post.tags[0] && <span className={styles.category}>{post.tags[0]}</span>}
           <h1 className={styles.title}>{post.title}</h1>
-          <div className={styles.author}>By {post.author}</div>
+          <div className={styles.meta}>
+            <span className={styles.author}>By {post.author}</span>
+            <span className={styles.metaDot} />
+            <span className={styles.date}>{formatDate(post.date)}</span>
+            <span className={styles.metaDot} />
+            <span>{post.readingTime} min read</span>
+          </div>
         </div>
 
         <div className={styles.content}>

@@ -17,7 +17,6 @@ function isRateLimited(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const { name, email, subject, message, company_url, elapsedMs } =
       await req.json();
@@ -68,6 +67,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Email is configured per-deployment; fail clearly if it isn't.
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.error('Contact form: RESEND_API_KEY is not set');
+      return NextResponse.json(
+        { error: 'Email is not configured. Please email info@ubunifutech.com directly.' },
+        { status: 503 }
+      );
+    }
+    const resend = new Resend(apiKey);
+
     // Send notification to Ubunifu team
     await resend.emails.send({
       from: 'Ubunifu Website <notifications@ubunifutech.com>',
@@ -106,7 +116,9 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    // Send acknowledgement to the sender
+    // Acknowledgement to the sender — best-effort; the team notification
+    // already went out, so a failure here must not fail the request.
+    try {
     await resend.emails.send({
       from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
       to: email,
@@ -140,6 +152,9 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     });
+    } catch (ackError) {
+      console.warn('Contact form: acknowledgement email failed:', ackError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

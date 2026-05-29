@@ -8,6 +8,15 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 28. Contact form hardened
+
+Reviewed the form end to end and fixed a real robustness bug in `src/app/api/contact/route.ts`:
+- **Resend was instantiated outside the `try`** (`new Resend(process.env.RESEND_API_KEY)`), and the SDK throws when the key is missing — so the endpoint returned **500 for *every* request**, including spam-filtered (honeypot/timing) ones, with no graceful degradation. Moved instantiation to *after* validation, inside the try, with an explicit missing-key guard (clear 503 + logged error).
+- **Acknowledgement email is now best-effort** (its own try/catch) so a failed confirmation to the sender never fails a successful team notification.
+- Verified every branch against the running server: honeypot → 200 (silent), too-fast → 200 (silent), missing fields → 400, invalid email → 400, valid → reaches the email step (200 in prod with the key; clear 503 locally without it). The form UI, the accessible `SelectField`, and HTML-escaping in the emails were already clean.
+
+> Reminder: `RESEND_API_KEY` must be set in the deployment env (it isn't in the repo, correctly). Without it the form returns the clear 503 above.
+
 ### 27. CTA out of the footer, mobile pass, cleanup
 
 - **CTA extracted from the footer.** A CTA doesn't belong in a footer. Moved "Got something to build?" into its own `CtaBand` section (a contained dark card on a light band), rendered before the footer on content pages (not on `/contact` or the 404). The footer is now just the dark columns + legal.

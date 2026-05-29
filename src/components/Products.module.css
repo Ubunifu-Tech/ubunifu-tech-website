@@ -6,8 +6,8 @@
 
 .heading {
   font-size: clamp(1.9rem, 3.6vw, 2.6rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
   margin-bottom: 0.75rem;
 }
@@ -20,148 +20,115 @@
   line-height: 1.7;
 }
 
-/* ── Bento Grid ───────────────────────────────────
- *
- * Live products with screenshots get a full row (12-col span) with
- * screenshot left / content right at desktop. Smaller / soon products
- * sit beneath as a 2-up of regular cards.
- */
+/* ── Uniform product grid — every card the same size ── */
 
-.bento {
+.grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1.75rem;
 }
-
-.featured,
-.wide {
-  grid-column: span 12;
-}
-
-.default {
-  grid-column: span 6;
-}
-
-/* ── Card base ────────────────────────────────── */
 
 .card {
-  position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
+  height: 100%;
+  border-radius: 18px;
   overflow: hidden;
-  background: #FFFFFF;
+  background: #fff;
   border: 1px solid var(--border);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .card:hover {
   border-color: var(--primary-border);
-  box-shadow: 0 18px 40px rgba(109, 63, 232, 0.12);
-  transform: translateY(-3px);
+  box-shadow: 0 20px 44px rgba(109, 63, 232, 0.12);
+  transform: translateY(-4px);
 }
 
 .cardSoon {
-  opacity: 0.78;
+  opacity: 0.9;
 }
 
-.cardGlow {
-  position: absolute;
-  top: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 2;
-}
+/* ── Media panel ──────────────────────────────── */
 
-.card:hover .cardGlow {
-  opacity: 1;
-}
-
-/* ── Cards WITH screenshot: split layout ──────── */
-
-.cardWithImage {
-  flex-direction: row;
-  align-items: stretch;
-}
-
-.screenshotFrame {
+.media {
   position: relative;
-  flex: 1 1 55%;
-  min-height: 380px;
-  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
-  border-right: 1px solid var(--border);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
   overflow: hidden;
 }
 
-.screenshot {
+.shot {
   object-fit: cover;
-  object-position: top left;
+  object-position: top center;
   transition: transform 0.6s var(--ease-out-expo);
 }
 
-.card:hover .screenshot {
-  transform: scale(1.02);
+.card:hover .shot {
+  transform: scale(1.03);
 }
 
-.cardWithImage .cardInner {
-  flex: 1 1 45%;
-  padding: 2rem;
-}
-
-/* ── Card inner content ───────────────────────── */
-
-.cardInner {
+.placeholder {
+  position: absolute;
+  inset: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex: 1;
-  padding: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 107, 44, 0.16), transparent 60%),
+    linear-gradient(135deg, var(--surface-3), var(--surface-2));
 }
 
-.cardTop {
-  flex: 1;
+.placeholderTopo {
+  position: absolute;
+  inset: 0;
+  color: var(--primary);
+  opacity: 0.12;
 }
 
-.cardHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
-}
-
-.productName {
+.placeholderMark {
+  position: relative;
   font-family: var(--font-heading);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
-  margin-bottom: 0.125rem;
+  opacity: 0.35;
 }
 
-.domain {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  font-family: monospace;
-}
+/* ── Status badge (overlaid on media) ─────────── */
 
-.badgeLive {
+.badge {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.25rem 0.75rem;
-  background: var(--primary-dim);
-  color: var(--primary);
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   border-radius: 100px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.badgeLive {
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--primary-border);
-  white-space: nowrap;
+}
+
+.badgeSoon {
+  color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .badgeDot {
@@ -177,33 +144,47 @@
   50% { opacity: 0.4; }
 }
 
-.badgeSoon {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  background: var(--surface-3);
-  color: var(--text-tertiary);
+/* ── Body ─────────────────────────────────────── */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.75rem;
+}
+
+.head {
+  margin-bottom: 1rem;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.domain {
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: 100px;
-  border: 1px solid var(--border);
-  white-space: nowrap;
+  color: var(--text-tertiary);
+  margin-top: 0.15rem;
 }
 
 .tagline {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--primary);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .description {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  line-height: 1.7;
-  margin-bottom: 1.5rem;
+  line-height: 1.65;
+  margin-bottom: 1.25rem;
 }
 
 .features {
@@ -211,109 +192,69 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin: 0 0 1.5rem;
   padding: 0;
 }
 
 .feature {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  font-size: 0.9375rem;
+  gap: 0.6rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
 .feature svg {
-  color: var(--primary);
+  color: var(--brand);
   flex-shrink: 0;
 }
 
-.cardFooter {
+.footer {
+  margin-top: auto;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
 }
 
-.btnLive {
+.btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.625rem 1.25rem;
+  padding: 0.7rem 1.4rem;
   background: var(--cta);
   color: #fff;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
   border-radius: 10px;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   text-decoration: none;
   box-shadow: 0 4px 12px var(--cta-shadow);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btnLive:hover {
+.btn:hover {
   background: var(--cta-hover);
   color: #fff;
   transform: translateY(-1px);
   box-shadow: 0 6px 18px var(--cta-shadow);
 }
 
-.btnLive:active {
-  transform: translateY(0) scale(0.98);
-}
-
 .btnDisabled {
   display: inline-flex;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--text-tertiary);
   cursor: default;
 }
 
 /* ── Responsive ───────────────────────────────── */
 
-@media (max-width: 1024px) {
-  .bento {
-    grid-template-columns: repeat(6, 1fr);
-  }
-
-  .featured,
-  .wide {
-    grid-column: span 6;
-  }
-
-  .default {
-    grid-column: span 3;
-  }
-}
-
 @media (max-width: 768px) {
-  .bento {
+  .grid {
     grid-template-columns: 1fr;
+    grid-auto-rows: auto;
   }
 
-  .featured,
-  .wide,
-  .default {
-    grid-column: span 1;
-  }
-
-  /* Stack image above content when the card narrows. */
-  .cardWithImage {
-    flex-direction: column;
-  }
-
-  .screenshotFrame {
-    flex: none;
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    min-height: 0;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .cardWithImage .cardInner {
-    padding: 1.5rem;
-  }
-
-  .cardInner {
+  .body {
     padding: 1.5rem;
   }
 }

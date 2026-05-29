@@ -20,10 +20,10 @@ export type TeamMember = {
 export const team: ReadonlyArray<TeamMember> = [
   {
     name: 'Richard Pallangyo',
-    role: 'Data & AI',
+    role: 'Data, Software & AI Engineer',
     initials: 'RP',
-    bio: 'Richard builds the data and AI. He spent years as a senior data engineer — architecting cloud platforms and leading a 30-person Data & AI team for enterprise clients — and is finishing a Master’s in Data Science at the University of Washington. At Ubunifu he builds the RAG and agentic-AI systems, the data pipelines, and the product engineering behind everything we ship.',
-    skills: ['AI & Agentic Systems', 'Data Engineering', 'Python / FastAPI', 'Cloud (Azure / AWS)', 'Next.js / React'],
+    bio: 'Richard is a data, software, and AI engineer. He builds the systems behind everything we ship — data pipelines, backend services, and the RAG and agentic-AI that make our products work. He is at home across Python, the modern cloud data stack, and the web, turning hard data and AI problems into software that runs in production.',
+    skills: ['Data Engineering', 'AI & Agentic Systems', 'Software Engineering', 'Python / FastAPI', 'Cloud (Azure / AWS)'],
     links: [
       { type: 'github', href: 'https://github.com/rapaugustino' },
       { type: 'linkedin', href: 'https://linkedin.com/in/rapaugustino' },

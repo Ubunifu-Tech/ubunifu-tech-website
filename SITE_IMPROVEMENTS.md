@@ -8,6 +8,11 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 18. Uniform product cards + bio accuracy
+
+- **Products section rebuilt as a uniform grid.** The old bento mixed full-width split cards with smaller 2-up cards (different sizes) and crammed dense screenshots beside text. Now every product card is the **same size**: a 16:9 media panel on top (real screenshot for Insight/Sifa; a branded topography panel for Rafiki/Build) with a status badge overlay, then content below. Equal-height rows (`grid-auto-rows: 1fr`), generous spacing — no longer crammed. Homepage product preview cards are equal-height too.
+- **Bio correction.** Richard's bio is now present-tense and identity-first — "a data, software, and AI engineer" — with no past-tense career framing, no degree, no location, per his direction.
+
 ### 17. Fuller pages, real bios, code-window, fewer CTAs
 
 **Page headers no longer feel empty.** The inner-page headers (products / work / about / careers / contact) were left-aligned text with a void on the right. Re-centred the `PageHeader` content over a symmetric topography "radar" + aurora backdrop — it now reads as a confident, full statement instead of text shoved to one side.

@@ -8,6 +8,14 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 23. Services page rebuilt as capability spotlights
+
+Took the elevated caliber to the Services page (the capability depth that was flagged):
+
+- **New reusable `Spotlight` component** — an alternating image/text "feature row" with a checklist, an optional **overlapping card**, and a **branded fallback panel** (gradient icon + topography + chips) for capabilities without a screenshot. Designed to be reused on Industries / Home next.
+- **Services page** now presents the five capabilities as five alternating spotlight rows, each with real proof: Web → the Usambara site, Data → the Sifa dashboard, AI → Insight's Swahili tutor ("Answers in Swahili"); Branding and Strategy use branded panels. Numbered, outcome-framed, with a jump-chip sub-nav at the top.
+- Removed the old icon-card grid styles (dead code).
+
 ### 22. About page redesigned as an editorial story (flagship caliber)
 
 A genuine *layout* redesign (not just content) to the standard of the reference/agency sites — the new home for vision, mission, and objectives, told as a story:

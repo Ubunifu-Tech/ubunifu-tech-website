@@ -5,8 +5,50 @@ import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { Topography } from '@/components/Topography';
 import { CodeWindow } from '@/components/CodeWindow';
-import { services } from '@/content/services';
+import { Spotlight } from '@/components/Spotlight';
+import { services, type Service } from '@/content/services';
 import styles from './Build.module.css';
+
+// Real proof (or a branded panel) for each service spotlight.
+function spotlightMedia(service: Service) {
+  switch (service.key) {
+    case 'web':
+      return {
+        image: {
+          src: '/work/usambara-hero.png',
+          alt: 'Usambara Destination website built by Ubunifu',
+          domain: 'usambaradestination.com',
+        },
+        overlap: { title: 'Live site', sub: 'Fast, accessible, SEO-strong' },
+      };
+    case 'data':
+      return {
+        image: {
+          src: '/work/sifa-dashboard.png',
+          alt: 'Sifa intelligence dashboard with sales, stock and credit aging',
+        },
+        overlap: { title: 'Real dashboards', sub: 'Sales, stock and credit aging' },
+      };
+    case 'ai':
+      return {
+        image: {
+          src: '/work/insight-tutor.png',
+          alt: 'Ubunifu Insight tutor answering a question in Swahili',
+        },
+        overlap: { title: 'Answers in Swahili', sub: 'Grounded, with citations' },
+      };
+    case 'branding':
+      return {
+        panelIcon: service.icon,
+        panelChips: ['Logo & identity', 'Style guide', 'UI/UX', 'Print + digital'],
+      };
+    default:
+      return {
+        panelIcon: service.icon,
+        panelChips: ['Roadmap', 'Maturity assessment', 'Training', 'Advisory'],
+      };
+  }
+}
 
 export const metadata = {
   title: 'Services',
@@ -75,45 +117,42 @@ export default function BuildPage() {
           </div>
         </div>
 
-        {/* Services */}
-        <div className="container">
-          <ScrollReveal>
-            <section className={styles.servicesSection}>
+        {/* Services — spotlight rows */}
+        <section className={styles.servicesSection}>
+          <div className="container">
+            <ScrollReveal>
               <span className="eyebrow">What we do</span>
-              <h2 className={styles.sectionHeading}>Five ways we help</h2>
-              <BuildCards className={styles.servicesGrid}>
-                {services.map((service, index) => {
-                  const Icon = service.icon;
-                  return (
-                    <div key={service.key} className={styles.serviceCard}>
-                      <div className={styles.serviceTop}>
-                        <div className={styles.serviceIcon}>
-                          <Icon size={22} />
-                        </div>
-                        <span className={styles.serviceNumber}>
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                      </div>
-                      <h3 className={styles.serviceTitle}>{service.title}</h3>
-                      <p className={styles.serviceSummary}>{service.summary}</p>
-                      <p className={styles.serviceDescription}>{service.description}</p>
-                      <ul className={styles.serviceItems}>
-                        {service.items.map((item) => (
-                          <li key={item} className={styles.serviceItem}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </BuildCards>
-            </section>
-          </ScrollReveal>
-        </div>
+              <h2 className={styles.sectionHeading}>Five ways we help you grow</h2>
+              <p className={styles.servicesSub}>
+                Pick one, or hand us the whole digital side. Each of these is
+                something we run for clients today.
+              </p>
+              <div className={styles.jump}>
+                {services.map((s) => (
+                  <a key={s.key} href={`#${s.key}`} className={styles.jumpChip}>
+                    {s.title}
+                  </a>
+                ))}
+              </div>
+            </ScrollReveal>
+
+            <div className={styles.spotlights}>
+              {services.map((service, index) => (
+                <Spotlight
+                  key={service.key}
+                  id={service.key}
+                  index={index + 1}
+                  eyebrow={service.summary}
+                  title={service.title}
+                  body={service.description}
+                  items={service.items}
+                  reversed={index % 2 === 1}
+                  {...spotlightMedia(service)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* Process */}
         <section className={styles.processSection}>

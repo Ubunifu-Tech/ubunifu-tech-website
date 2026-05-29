@@ -1,0 +1,290 @@
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  padding: clamp(2.5rem, 5vw, 4.5rem) 0;
+}
+
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.reversed .text {
+  order: 2;
+}
+
+.reversed .media {
+  order: 1;
+}
+
+/* ── Text column ──────────────────────────────── */
+
+.heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.index {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand);
+  padding-top: 0.4rem;
+  flex-shrink: 0;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 0.4rem;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.body {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  max-width: 46ch;
+}
+
+.items {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1.25rem;
+  margin: 0 0 1.75rem;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.check {
+  display: inline-flex;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--brand);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.cta:hover {
+  gap: 0.7rem;
+  color: var(--brand-hover);
+}
+
+/* ── Media column ─────────────────────────────── */
+
+.media {
+  position: relative;
+}
+
+.frame {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: 0 30px 60px -30px rgba(27, 14, 71, 0.32);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #f4f2f8, #ece9f2);
+  border-bottom: 1px solid var(--border);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cfc9dd;
+  flex-shrink: 0;
+}
+
+.dot:nth-child(1) { background: #ff5f57; }
+.dot:nth-child(2) { background: #febc2e; }
+.dot:nth-child(3) { background: #28c840; }
+
+.url {
+  margin-left: 10px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.shotWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.shot {
+  object-fit: cover;
+  object-position: top center;
+}
+
+.tint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 44, 0.32), rgba(109, 63, 232, 0.5));
+  mix-blend-mode: multiply;
+}
+
+/* ── Branded fallback panel ───────────────────── */
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  aspect-ratio: 16 / 11;
+  padding: 2rem;
+  border-radius: 16px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 107, 44, 0.16), transparent 60%),
+    linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  border: 1px solid var(--border);
+}
+
+.panelTopo {
+  position: absolute;
+  inset: 0;
+  color: var(--primary);
+  opacity: 0.12;
+}
+
+.panelIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--brand), var(--primary));
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(255, 107, 44, 0.28);
+}
+
+.panelChips {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 320px;
+}
+
+.panelChip {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── Overlapping card ─────────────────────────── */
+
+.overlap {
+  position: absolute;
+  right: -1.25rem;
+  bottom: -1.5rem;
+  max-width: 240px;
+  padding: 1.1rem 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 22px 46px -22px rgba(27, 14, 71, 0.32);
+}
+
+.reversed .overlap {
+  right: auto;
+  left: -1.25rem;
+}
+
+.overlapTitle {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.overlapSub {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 0.25rem;
+}
+
+/* ── Responsive ───────────────────────────────── */
+
+@media (max-width: 900px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .reversed .text,
+  .reversed .media {
+    order: 0;
+  }
+
+  .media {
+    margin-bottom: 1.5rem;
+  }
+
+  .overlap,
+  .reversed .overlap {
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .items {
+    grid-template-columns: 1fr;
+  }
+}

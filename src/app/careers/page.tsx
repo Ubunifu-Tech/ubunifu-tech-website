@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
+import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import styles from './Careers.module.css';
@@ -67,6 +68,7 @@ export default function CareersPage() {
           </div>
         </div>
       </main>
+      <CtaBand />
       <Footer />
     </>
   );

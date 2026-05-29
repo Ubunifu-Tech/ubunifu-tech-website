@@ -1,4 +1,5 @@
 import { Navbar } from '@/components/Navbar';
+import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Spotlight } from '@/components/Spotlight';
@@ -95,6 +96,7 @@ export default function IndustriesPage() {
           </div>
         </section>
       </main>
+      <CtaBand />
       <Footer />
     </>
   );

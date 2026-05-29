@@ -1,5 +1,6 @@
 import { Navbar } from '@/components/Navbar';
 import { WorkPreview } from '@/components/HomePreviews';
+import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
@@ -178,6 +179,7 @@ export default function BuildPage() {
           <WorkPreview />
         </ScrollReveal>
       </main>
+      <CtaBand />
       <Footer />
     </>
   );

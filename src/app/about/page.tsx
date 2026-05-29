@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Navbar } from '@/components/Navbar';
+import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { About } from '@/components/About';
@@ -147,6 +148,7 @@ export default function AboutPage() {
 
         <Team />
       </main>
+      <CtaBand />
       <Footer />
     </>
   );

@@ -11,6 +11,7 @@ import {
 import { Testimonial } from '@/components/Testimonial';
 import { Insights } from '@/components/Insights';
 import { TechMarquee } from '@/components/TechMarquee';
+import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { getAllPosts } from '@/lib/blog';
 
@@ -30,6 +31,7 @@ export default function Home() {
       <Insights posts={posts} />
       <TechMarquee />
       <AboutPreview />
+      <CtaBand />
       <Footer />
     </main>
   );

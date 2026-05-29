@@ -1,4 +1,5 @@
 import { Navbar } from '@/components/Navbar';
+import { CtaBand } from '@/components/CtaBand';
 import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Portfolio } from '@/components/Portfolio';
@@ -24,6 +25,7 @@ export default function WorkPage() {
         <Portfolio hideHeader />
         <Testimonial />
       </main>
+      <CtaBand />
       <Footer />
     </>
   );

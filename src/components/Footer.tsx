@@ -1,41 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { site, footerColumns } from '@/content/site';
-import { Topography } from './Topography';
 import styles from './Footer.module.css';
 
 export const Footer: React.FC = () => {
   return (
     <footer className={styles.footer}>
-      {/* CTA Section */}
-      <div className={styles.ctaSection}>
-        <div className={`container ${styles.ctaContainer}`}>
-          <div className={styles.ctaAurora} aria-hidden="true" />
-          <Topography className={styles.ctaTopo} />
-          <div className="grain" />
-          <div className={styles.ctaContent}>
-            <h2 className={styles.ctaHeading}>Got something to build?</h2>
-            <p className={styles.ctaText}>
-              A custom platform, a tricky data problem, or just a question about
-              one of our products. Tell us what you&apos;re working on, and we read
-              every message.
-            </p>
-            <div className={styles.ctaActions}>
-              <a href={site.urls.contact} className={styles.ctaBtn}>
-                Get in touch
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
-                </svg>
-              </a>
-              <a href={site.urls.insight} target="_blank" rel="noopener noreferrer" className={styles.ctaBtnSecondary}>
-                Try Insight free
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer links */}
       <div className={`container ${styles.container}`}>
         <div className={styles.top}>
           <div className={styles.brand}>

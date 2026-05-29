@@ -237,30 +237,40 @@
 }
 
 .approachGrid {
-  position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
 }
 
-/* Connecting line behind the number markers */
-.approachLine {
+.approachStep {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Connector to the next step's number, drawn exactly between number
+   centres so it never misses the first or overshoots the last. */
+.approachStep::after {
+  content: '';
   position: absolute;
   top: 23px;
-  left: 12%;
-  right: 12%;
+  left: 50%;
+  width: calc(100% + 1.5rem);
   height: 2px;
   background: linear-gradient(90deg, var(--brand), var(--primary));
-  opacity: 0.25;
+  opacity: 0.28;
   z-index: 0;
 }
 
-.approachStep {
-  position: relative;
-  z-index: 1;
+.approachStep:last-child::after {
+  display: none;
 }
 
 .approachNum {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -288,6 +298,7 @@
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.6;
+  max-width: 28ch;
 }
 
 /* ── Responsive ───────────────────────────────── */
@@ -298,7 +309,8 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .approachLine {
+  /* Connectors only make sense in the single 4-across row. */
+  .approachStep::after {
     display: none;
   }
 }

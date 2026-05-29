@@ -130,7 +130,6 @@ export default function AboutPage() {
               <h2 className={styles.sectionHeading}>From first call to long-term partner</h2>
             </ScrollReveal>
             <div className={styles.approachGrid}>
-              <div className={styles.approachLine} aria-hidden="true" />
               {approach.map((step, index) => (
                 <ScrollReveal
                   key={step.title}

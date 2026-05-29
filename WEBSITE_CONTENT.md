@@ -1,8 +1,9 @@
 # Ubunifu Technologies — Website Reference
 
-A maintenance reference for ubunifutech.com. This describes the site **as it is
-actually built** — pages, where each piece of content lives, and the design
-tokens in use. Edit content in the data files noted below, not in components.
+A maintenance reference for ubunifutech.com — the site **as it is actually
+built**: pages, where each piece of content lives, and the data files to edit.
+For positioning/voice see `POSITIONING.md`; for the visual system see
+`BRANDING.md`; for the change log see `SITE_IMPROVEMENTS.md`.
 
 Last refreshed: May 2026.
 
@@ -11,34 +12,37 @@ Last refreshed: May 2026.
 ## Company facts
 
 - **Name:** Ubunifu Technologies
-- **Tagline:** Building software for Africa.
-- **Location:** Arusha, Tanzania
+- **What we are:** a Tanzania-based digital-solutions agency
+- **Tagline:** Digital solutions for Tanzania.
+- **HQ:** Arusha, Tanzania (serving nationwide)
 - **Email:** info@ubunifutech.com
 - **Phone / WhatsApp:** +255 748 548 816
 
-These live in `src/content/site.ts` — the single source of truth for company
-info, navigation, and footer links.
+Single source of truth: `src/content/site.ts`.
 
 ---
 
 ## Page map
 
-The site is multi-page. Routes:
-
 | Route | Page | File |
 |---|---|---|
-| `/` | Home — overview of everything | `src/app/page.tsx` |
-| `/products` | Products — the four-product lineup | `src/app/products/page.tsx` |
-| `/build` | Services — custom software & consulting | `src/app/build/page.tsx` |
+| `/` | Home — agency overview | `src/app/page.tsx` |
+| `/build` | Services — the five pillars | `src/app/build/page.tsx` |
 | `/work` | Our Work — client projects | `src/app/work/page.tsx` |
-| `/about` | About — mission, values, team | `src/app/about/page.tsx` |
-| `/blog` | Blog — post listing | `src/app/blog/page.tsx` |
-| `/blog/[slug]` | Individual blog post | `src/app/blog/[slug]/page.tsx` |
+| `/work/[slug]` | Case study | `src/app/work/[slug]/page.tsx` |
+| `/about` | About — vision, values, team | `src/app/about/page.tsx` |
+| `/blog` | Blog index (category filter) | `src/app/blog/page.tsx` |
+| `/blog/[slug]` | Blog post | `src/app/blog/[slug]/page.tsx` |
 | `/careers` | Careers | `src/app/careers/page.tsx` |
+| `/contact` | Contact — the only form | `src/app/contact/page.tsx` |
+| `/products` | Products (proof page; not in nav) | `src/app/products/page.tsx` |
 
-Navigation order (nav bar): Services, Products, Work, About, Blog, Careers.
-Contact is a section (`#contact`) included on the Home, Products, and Work
-pages rather than a standalone route.
+**Nav order:** Home · Services · Work · About · Blog · Careers · Contact.
+"Products" is intentionally not a headline nav item — products appear as
+proof on the home page and in the footer.
+
+Branded `not-found.tsx`, dynamic OG cards (`opengraph-image.tsx` at root +
+per blog post + per case study), and `sitemap.ts` round out the app routes.
 
 ---
 
@@ -46,146 +50,108 @@ pages rather than a standalone route.
 
 ```
 Navbar
-Hero            — "We build software for Africa."
-ProblemStrip    — 3 columns: Products / Consulting / Our approach
-Products        — the 4-product grid
-About           — "Why we exist" + 4 values cards
-Portfolio       — client project showcase
-Clients         — logo strip (Safari King, Usambara)
-Contact         — info + message form
+Hero            — "Digital solutions, built for Tanzania." + client-build proof
+ProblemStrip    — "Why Ubunifu": 4 differentiators (icons)
+ServicesPreview — 5 service icon cards + gradient CTA tile
+SectorsStrip    — sectors we serve (icon tiles)
+WorkPreview     — client case-study cards
+ProductsProof   — Insight + Sifa as "products we've built"
+Testimonial     — Isaac, Usambara
+TechMarquee     — scrolling tech logos
+AboutPreview    — short about + link
 Footer          — CTA band + link columns
 ```
 
 ---
 
-## Products
-
-Four products. Content lives in `src/content/products.tsx`.
-
-1. **Ubunifu Insight** — *Live.* Document AI for teams: upload documents, ask
-   questions in plain language, get cited answers, extract data, generate
-   reports. `insight.ubunifutech.com`
-2. **Ubunifu Sifa** — *Live.* Business management for Tanzanian SMBs: sales/POS,
-   inventory, employees, reporting. Works offline. `sifa.ubunifutech.com`
-3. **Ubunifu Rafiki** — *Coming soon.* Embeddable website widgets — contact
-   forms, booking systems, blog tools. `rafiki.ubunifutech.com`
-4. **Ubunifu Build** — *Available.* Custom software, websites, data, and
-   consulting. Lives at `/build`.
-
----
-
 ## Services (`/build`)
 
-Five service areas (defined in `src/app/build/page.tsx`): Web Development, Data
-Analytics, Brand Design, AI & Automation, Digital Strategy. Followed by a
-three-step process (Tell us what you need → We scope and plan → We build and
-deliver) and the Portfolio showcase.
+Five pillars, defined in `src/content/services.tsx` (icon, title, summary,
+description, items): **Digital Presence & Web · Branding & Visual
+Communication · Data Analytics & BI · Intelligent Automation & AI · Digital
+Strategy & Consulting.** Rendered as icon cards with checklists, then a
+three-step process and the Work preview. Hero carries the animated
+`CodeWindow`.
 
----
+## Sectors
+
+`src/content/sectors.tsx` — Tourism (proven) plus SMEs/Retail, Finance, NGOs,
+Healthcare, Agriculture, Education, Government (targeted). Presented as focus
+areas, not as claimed clients.
 
 ## Work (`/work`)
 
-Client projects, defined in `src/content/portfolio.tsx`:
+`src/content/portfolio.tsx` — **Safari King Africa** (booking platform + CRM +
+AI assistant) and **Usambara Destination** (eco-tourism site). Each has a full
+case study at `/work/[slug]` with overview, highlights, gallery, stack, and a
+"next project" link.
 
-- **Safari King Africa** — safari booking platform. `safarikingafrica.com`
-- **Usambara Destination** — eco-tourism website. `usambaradestination.com`
+## Products (proof)
 
-The same two clients appear as a logo strip via the `Clients` component on the
-Home, Products, and About pages.
-
----
+`src/content/products.tsx` — **Insight** (live, document AI), **Sifa** (live,
+business management), **Rafiki** (coming soon). Shown as proof of capability,
+not the site's headline. The `/products` page still renders the full uniform
+grid for anyone who wants the detail.
 
 ## About (`/about`)
 
-Page header → values cards → team → client logos → CTA.
-
-Values (`src/content/values.tsx`): Built for Africa from the start · No
-unnecessary complexity · Pricing that matches the market · Tanzania-first,
-Africa-wide.
+PageHeader → values (4, `src/content/values.tsx`: Built for Tanzania · We
+build it then run it · Pragmatic not flashy · One team no handoffs) → team.
 
 Team (`src/content/team.tsx`):
-
-- **Richard Pallangyo** — Data & AI Builder. AI/ML, data engineering, Python/FastAPI, product.
-- **HappyGod Pallangyo** — Creative Director. Brand identity, UI/UX, visual direction, video.
-
-Team photos are currently branded initials avatars. To use real headshots,
-drop image files into `public/images/` and set the `photo` field in
-`src/content/team.tsx`.
-
----
+- **Richard Pallangyo — Data, Software & AI Engineer.** GitHub + LinkedIn.
+- **HappyGod Pallangyo — IT, Design & Support.**
 
 ## Blog (`/blog`)
 
-The listing page reads markdown files from the `_posts/` directory via
-`src/lib/blog.ts`. Two posts are published:
+Markdown in `_posts/` via `src/lib/blog.ts`. Featured latest post, category
+filter (`BlogIndex`), reading time, numbered editorial grid. Posts carry a
+reading-progress bar and per-post metadata + OG cards. Seven posts published.
 
-- *Building Software for Africa: Where the Real Opportunity Is*
-- *Why We Chose Pay-as-You-Go Pricing*
+## Contact (`/contact`)
 
-To add a post, create a new `.md` file in `_posts/` with frontmatter
-(`title`, `date`, `author`, `excerpt`, `tags`). Draft outlines for upcoming
-posts are tracked separately in `BLOG_OUTLINES.md`.
+The single contact form (`Contact` with `hideIntro`) under a PageHeader, with a
+"what happens next" micro-timeline. Every page's footer CTA links here.
 
 ---
 
 ## Content data files
 
-All editable content is separated from components:
-
 | File | Controls |
 |---|---|
 | `src/content/site.ts` | Company info, nav links, footer columns |
-| `src/content/products.tsx` | The four products |
-| `src/content/values.tsx` | About-page values cards |
-| `src/content/pillars.tsx` | Home ProblemStrip (3 columns) |
-| `src/content/portfolio.tsx` | Client projects / Work page |
+| `src/content/services.tsx` | The five service pillars |
+| `src/content/sectors.tsx` | Sectors we serve |
+| `src/content/pillars.tsx` | Home "Why Ubunifu" strip |
+| `src/content/values.tsx` | About values |
+| `src/content/products.tsx` | Products (proof) |
+| `src/content/portfolio.tsx` | Client projects + case studies |
 | `src/content/team.tsx` | Team members |
+| `src/content/testimonials.tsx` | Client testimonials |
 | `_posts/*.md` | Blog posts |
 
 ---
 
-## Design tokens (`src/app/globals.css`)
+## Design tokens & components
 
-The site uses a warm-orange brand with a deep-purple accent on a light
-lavender background.
+Visual system lives in `BRANDING.md` and `src/app/globals.css` (warm-orange
+brand `#FF6B2C`, purple accent `#6D3FE8`, lavender background `#F4F2FB`; Outfit
++ Inter; topography + grain + aurora signature). Icons via `lucide-react`
+(UI) and `react-icons` (tech logos). Animations via `framer-motion`, smooth
+scroll via Lenis (`SmoothScroll`), all reduced-motion-gated.
 
-| Token | Value | Usage |
-|---|---|---|
-| `--background` | `#F4F2FB` | Page background (light lavender) |
-| `--surface` | `#FFFFFF` | Cards, panels |
-| `--brand` | `#FF6B2C` | Primary brand — CTAs, buttons, eyebrows |
-| `--brand-hover` | `#E8581E` | CTA hover |
-| `--primary` | `#6D3FE8` | Purple accent — gradients, hover states |
-| `--accent` | `#2E5BFF` | Blue accent — used sparingly |
-| `--text-primary` | `#1F1A36` | Headings, body |
-| `--text-secondary` | `#5A5170` | Supporting text |
-| `--text-tertiary` | `#8B82A0` | Captions, meta |
-| `--border` | `rgba(31,26,54,0.08)` | Card borders |
-
-**Type:** Outfit for headings (`--font-heading`), Inter for body
-(`--font-body`).
-
-**Layout:** max content width `1280px`; nav height `72px`; standard section
-padding `120px` vertical.
-
----
-
-## Shared components
-
-`Navbar`, `Footer`, `PageHeader` (clean page intro for sub-pages), `Hero`,
-`ProblemStrip`, `Products`, `About`, `Team`, `Portfolio`, `Clients`, `Contact`,
-`WhatsAppButton`, plus animation helpers (`ScrollReveal`, `MotionCard`,
-`BuildCards`, `SmoothScroll`).
+Notable components: `Hero`, `ProblemStrip`, `HomePreviews` (Services / Sectors
+/ Work / ProductsProof / About previews), `Products`, `Portfolio`, `Testimonial`,
+`CodeWindow`, `Topography`, `PageHeader`, `Contact`, `BlogIndex`,
+`ReadingProgress`, `TechMarquee`, `Footer`, `WhatsAppButton`.
 
 ---
 
 ## Known follow-ups
 
-- Replace team initials avatars with real headshots.
-- Replace the Portfolio "browser mockup" logo treatment with real project
-  screenshots when available.
-- Add real testimonials / client quotes once collected.
-- Consider a standalone `/contact` page if the contact section outgrows
-  being a shared section.
-- Publish the blog posts outlined in `BLOG_OUTLINES.md` once the facts in
-  each `[NEEDS INPUT]` marker are confirmed.
+- Add real outcome metrics to case studies once measured.
+- Real team headshots (currently branded initials).
+- Capture more Sifa / Insight screenshots (and recapture Insight with
+  populated data); the Education Tutor Swahili screen is the strongest asset.
+- Keep publishing blog posts (Swahili + English).
+- Consider dark mode and a newsletter capture.

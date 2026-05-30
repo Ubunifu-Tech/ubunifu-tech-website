@@ -8,6 +8,15 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 ## Shipped (latest pass)
 
+### 30. Redesigned transactional emails + full link audit
+
+The contact form's two automated emails were generic. Extracted them into a dedicated template module (`src/lib/emails.ts`) and rebuilt both to match the site's brand.
+- **New module `src/lib/emails.ts`** exports `notificationEmail()`, `acknowledgementEmail()`, and a shared `escapeHtml()`. Table-based, inline-styled, absolute-URL HTML built to render across email clients, with hidden preheader text, a branded dark header (gradient "U" mark + stacked *Ubunifu / TECHNOLOGIES* wordmark), and a dark footer carrying real contact links (email, tel, WhatsApp, Website, Services, Our work) + © year.
+- **Team notification**: "New enquiry → *{name} got in touch*", a clean Name / Email / Subject table, the message in a tinted box, and a one-click **Reply to {name}** mailto button (pre-filled `Re:` subject). Reply-To is still the sender.
+- **Sender acknowledgement**: "Thanks for reaching out, {name}.", confirms the subject, a numbered **what-happens-next** (mirrors the `/contact` timeline), then **Try Ubunifu Insight** / **Try Ubunifu Sifa** product buttons.
+- **Route wired to the templates.** `src/app/api/contact/route.ts` now imports the two builders and dropped its inline HTML + duplicate `escapeHtml`. All prior hardening (honeypot, timing, IP rate-limit, validation, best-effort ack, missing-key 503) is intact.
+- **Link audit (email + site).** Rendered both emails and verified visually at 760px. Every link checked: all 14 internal routes return 200 on the live server; every external URL (ubunifutech.com, insight/sifa subdomains, Safari King, Usambara, GitHub, WhatsApp) returns 200 — LinkedIn returns its usual bot-blocking `999` but is valid in a browser. Em dashes removed from the email copy to match the site's voice. Typecheck + lint + build clean (34 pages).
+
 ### 29. Our own products now count as "work"
 
 The Work page showed only client projects. Our own live SaaS (Insight, Sifa) is arguably our strongest proof, so `/work` now presents two groups: **client projects** (Safari King, Usambara, with case studies) followed by **our own products** (the reused `ProductsProof` section, linking to the live apps), with a tonal background shift between them. Header reframed to "Built for clients, and for ourselves."

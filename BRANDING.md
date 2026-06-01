@@ -87,12 +87,13 @@ Used very sparingly — only in soft decorative background gradients (the `/buil
 
 ## 3. Typography
 
-Two typefaces, loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`](src/app/layout.tsx).
+Two webfonts (loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`](src/app/layout.tsx)) plus a system monospace used for labels. **There is no serif anywhere in the system.**
 
 | Role | Font | Weights | Token |
 | ---- | ---- | ------- | ----- |
-| Display / headings | **Outfit** | 600 – 800 | `--font-heading` |
+| Display / headings | **Poppins** | 600 – 800 | `--font-heading` |
 | Body / UI | **Inter** | 400 – 700 | `--font-body` |
+| Mono labels / spec | **System monospace** (SF Mono / JetBrains Mono / Menlo) | 500 | `--font-mono` |
 
 ### Type scale
 
@@ -104,7 +105,10 @@ Two typefaces, loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`
 | Body | 1rem | 400 | 1.7 | normal |
 | Small / labels | 0.75 – 0.8125rem | 500 – 700 | 1.4 | 0.06 – 0.08em (uppercase) |
 
-**Eyebrow labels** (small uppercase text above headings) use the `.eyebrow` utility class in `globals.css`. Always purple, always rounded-pill background.
+**Label / eyebrow styles** — there are two, and they don't mix within a single tier (there's a note to this effect in `globals.css`):
+
+- **`.eyebrow`** — an **orange** rounded pill (`--brand` / `--brand-dim` / `--brand-border`), uppercase, 0.8rem. Marks an in-page section or a standard page header.
+- **`.specLabel`** — a **monospace** kicker (`--font-mono`, tertiary grey, wide tracking, with a leading dash), uppercase, 0.72rem. Marks an editorial / page-level identity — e.g. the hero line "Digital solutions · Arusha, Tanzania" and the blog "journal" line.
 
 ---
 
@@ -125,7 +129,9 @@ Two typefaces, loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`
 
 ### Logo mark
 
-The "U" mark is rendered as a CSS gradient block: `linear-gradient(135deg, var(--brand), var(--primary))` — orange to deep purple. It appears in the Navbar, Footer, and email templates. Favicon and Apple touch icon use the same gradient — see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
+The canonical mark is the **"U"** block, rendered as a CSS gradient: `linear-gradient(135deg, var(--brand), var(--primary))` — orange to deep purple. It appears in the Navbar and Footer; the favicon and Apple touch icon use the same gradient — see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
+
+> **Standalone asset.** [`public/logo.png`](public/logo.png) is the orange→purple **"U"** mark (512px, exported from the Canva brand kit), matching the in-app mark. The full lockups — mark + "Ubunifu TECHNOLOGIES", and the tagline lockup with "Digital solutions, built for Tanzania." — live in a local `branding/` archive (high-res masters, kept out of git and synced to Drive). The retired blue→purple hexagon and "Technology. Strategy. Results." slogan are no longer in use.
 
 ### Icons
 
@@ -182,11 +188,15 @@ Page content lives in [`src/content/`](src/content/) — separated from presenta
 | File | Owns |
 | ---- | ---- |
 | `site.ts` | Company info, contact details, navigation links, footer columns |
-| `pillars.tsx` | Three-up strip below the hero (Products / Consulting / Approach) |
-| `values.tsx` | "Why we exist" cards in the About section |
-| `products.tsx` | Product bento grid (Insight, Sifa, Rafiki, Build) |
-| `portfolio.tsx` | Client projects (logo URLs, brand colors, descriptions) |
+| `services.tsx` | The five service pillars (`/build`) |
+| `sectors.tsx` | Sectors / Industries — summary + offerings (`/industries`) |
+| `pillars.tsx` | Home "Why Ubunifu" strip — 4 differentiators |
+| `values.tsx` | "Why we exist" values in the About section |
+| `about.tsx` | About narrative — vision, mission, objectives, approach |
+| `products.tsx` | Products (Insight, Sifa, Rafiki, Build) |
+| `portfolio.tsx` | Client projects + case studies (Safari King, Usambara) |
 | `team.tsx` | Team member profiles (name, role, bio, skills) |
+| `testimonials.tsx` | Client testimonials |
 
 ### How to update copy
 
@@ -207,49 +217,47 @@ Page content lives in [`src/content/`](src/content/) — separated from presenta
 
 ```
 src/
-├── app/                   # Next.js App Router pages
+├── app/                   # Next.js App Router
 │   ├── globals.css        # CSS custom properties (design tokens)
 │   ├── layout.tsx         # Root layout + fonts + JSON-LD
 │   ├── page.tsx           # Homepage (highlight-reel previews)
-│   ├── products/          # /products page
-│   ├── build/             # /build — Services page
-│   ├── work/              # /work — client projects
-│   ├── about/             # /about — values + team
-│   ├── blog/              # /blog and /blog/[slug]
-│   ├── careers/           # /careers
-│   ├── api/contact/       # POST /api/contact (Resend + bot protection)
-│   ├── icon.tsx           # Favicon (generated)
+│   ├── icon.tsx           # Favicon (generated, orange→purple "U")
 │   ├── apple-icon.tsx     # Apple touch icon (generated)
-│   └── sitemap.ts         # sitemap.xml
+│   ├── opengraph-image.tsx  # Default Open Graph card
+│   ├── sitemap.ts         # sitemap.xml
+│   ├── not-found.tsx      # Branded 404
+│   ├── build/             # /build — Services
+│   ├── industries/        # /industries — sectors we serve
+│   ├── work/              # /work and /work/[slug] — case studies
+│   ├── products/          # /products — our SaaS (proof)
+│   ├── about/             # /about — vision, mission, story, team
+│   ├── blog/              # /blog and /blog/[slug]
+│   ├── careers/           # /careers (footer link)
+│   ├── contact/           # /contact — the single form
+│   └── api/contact/       # POST /api/contact (Resend + bot protection)
 │
-├── components/            # One folder per section / UI element
-│   ├── Navbar.tsx + .module.css
-│   ├── Hero.tsx + .module.css
-│   ├── PageHeader.tsx + .module.css   # shared sub-page header
-│   ├── ProblemStrip.tsx + .module.css
-│   ├── HomePreviews.tsx + .module.css # homepage product/work/about previews
-│   ├── Products.tsx + .module.css
-│   ├── About.tsx + .module.css
-│   ├── Team.tsx + .module.css
-│   ├── Portfolio.tsx + .module.css    # animated browser mockups
-│   ├── Clients.tsx + .module.css      # client logo strip
-│   ├── TechMarquee.tsx + .module.css  # scrolling technology strip
-│   ├── Contact.tsx + .module.css
-│   ├── SelectField.tsx + .module.css  # custom branded dropdown
-│   ├── Footer.tsx + .module.css
-│   ├── WhatsAppButton.tsx + .module.css
-│   ├── ScrollReveal.tsx               # scroll-triggered reveals
-│   ├── SmoothScroll.tsx               # Lenis smooth scroll
-│   ├── MotionCard.tsx                 # animated card wrapper
-│   └── BuildCards.tsx                 # MotionCard list wrapper
+├── components/            # Section + UI components (co-located CSS Modules)
+│   ├── Navbar · Footer · WhatsAppButton          — chrome
+│   ├── Hero · CodeWindow · Topography            — hero + signature visuals
+│   ├── ProblemStrip · HomePreviews · Insights    — homepage sections
+│   ├── Spotlight                                 — alternating feature rows (Services + Industries)
+│   ├── Products · Portfolio · Testimonial · CtaBand
+│   ├── About · Team · TechMarquee · PageHeader
+│   ├── BlogIndex · ReadingProgress               — blog
+│   ├── Contact · SelectField                     — contact form
+│   └── ScrollReveal · SmoothScroll · MotionCard · BuildCards   — motion helpers
 │
 ├── content/               # Editable page data — no JSX logic
-│   ├── site.ts
-│   ├── pillars.tsx
-│   ├── values.tsx
-│   ├── products.tsx
-│   ├── portfolio.tsx
-│   └── team.tsx
+│   ├── site.ts            # company info, nav, footer
+│   ├── services.tsx       # five service pillars
+│   ├── sectors.tsx        # industries / sectors
+│   ├── pillars.tsx        # home "Why Ubunifu" strip
+│   ├── values.tsx         # about values
+│   ├── about.tsx          # about narrative
+│   ├── products.tsx       # products (proof)
+│   ├── portfolio.tsx      # client projects + case studies
+│   ├── team.tsx           # team profiles
+│   └── testimonials.tsx   # client testimonials
 │
 └── lib/
     └── blog.ts            # Blog post data + helpers

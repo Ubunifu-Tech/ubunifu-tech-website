@@ -13,7 +13,7 @@ Last refreshed: May 2026.
 
 - **Name:** Ubunifu Technologies
 - **What we are:** a Tanzania-based digital-solutions agency
-- **Tagline:** Digital solutions for Tanzania.
+- **Tagline:** Digital solutions, built for Tanzania.
 - **HQ:** Arusha, Tanzania (serving nationwide)
 - **Email:** info@ubunifutech.com
 - **Phone / WhatsApp:** +255 748 548 816
@@ -145,7 +145,7 @@ The single contact form (`Contact` with `hideIntro`) under a PageHeader, with a
 ## Design tokens & components
 
 Visual system lives in `BRANDING.md` and `src/app/globals.css` (warm-orange
-brand `#FF6B2C`, purple accent `#6D3FE8`, lavender background `#F4F2FB`; Outfit
+brand `#FF6B2C`, purple accent `#6D3FE8`, lavender background `#F4F2FB`; Poppins
 + Inter; topography + grain + aurora signature). Icons via `lucide-react`
 (UI) and `react-icons` (tech logos). Animations via `framer-motion`, smooth
 scroll via Lenis (`SmoothScroll`), all reduced-motion-gated.

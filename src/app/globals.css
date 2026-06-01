@@ -54,7 +54,7 @@
   --glass-border-hover: rgba(255, 107, 44, 0.30);
 
   /* Typography */
-  --font-heading: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+  --font-heading: var(--font-poppins), 'Poppins', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
 

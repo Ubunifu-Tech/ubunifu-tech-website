@@ -60,7 +60,7 @@ function footer(): string {
   <tr>
     <td style="background:#14101e;padding:28px 32px;font-family:${FONT};">
       <div style="color:#ffffff;font-weight:700;font-size:14px;margin-bottom:4px;">Ubunifu Technologies</div>
-      <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:18px;">Digital solutions for Tanzania.</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:18px;">Digital solutions, built for Tanzania.</div>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
         <tr>
           <td style="color:rgba(255,255,255,0.7);font-size:13px;line-height:1.9;">

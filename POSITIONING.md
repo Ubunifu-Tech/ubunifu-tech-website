@@ -97,7 +97,6 @@ We are **equipped to serve** a broad range of Tanzanian organisations. Be precis
 | Agriculture | Targeted — farm/market platforms, supply-chain, yield analytics. |
 | Education | Targeted — e-learning, student management, digital resources. |
 | Government / public sector | Targeted — service delivery, citizen engagement, data systems. |
-| Corporate (banks, telcos, large retail) | Targeted — advanced analytics, AI personalisation, automation. |
 
 On the site, present these as "sectors we serve" / "built for" — a statement of focus and capability, **not** a claim of existing clients in each.
 
@@ -110,6 +109,7 @@ We lead with the agency, but our products are some of our best proof. They live 
 - **Ubunifu Insight** — *Live* (`insight.ubunifutech.com`). Document AI: upload documents, ask questions with cited answers, extract data, generate from templates. Includes specialised AI agents, including a Swahili-speaking Education Tutor. Tanzania-localised templates (e.g. a TZ tax invoice).
 - **Ubunifu Sifa** — *Live* (`sifa.ubunifutech.com`). Business management for shops, restaurants, distributors: sales/POS, inventory, suppliers, customers, and first-class credit-selling with aging buckets. Works offline, native to TZS.
 - **Ubunifu Rafiki** — *Coming soon.* Embeddable widgets (contact forms, booking, blog tools).
+- **Ubunifu Build** — not a SaaS product but our custom software & consulting (the pillars in §5). It surfaces alongside the products on `/products` as the "when the answer is a custom build, not a subscription" option.
 
 ---
 

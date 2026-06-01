@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Poppins } from 'next/font/google';
 import { SmoothScroll } from '@/components/SmoothScroll';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import './globals.css';
@@ -10,15 +10,16 @@ const inter = Inter({
   display: 'swap',
 });
 
-const outfit = Outfit({
+const poppins = Poppins({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ubunifu Technologies · Digital Solutions for Tanzania',
+    default: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
     template: '%s | Ubunifu Technologies',
   },
   description: 'Ubunifu Technologies is a Tanzania-based digital-solutions agency. Web development, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
@@ -48,14 +49,14 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies · Digital Solutions for Tanzania',
+    title: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
     description: 'A Tanzania-based digital-solutions agency: web, data, AI, branding, and digital strategy.',
     // OG image is provided by the file-based opengraph-image.tsx convention
     // (src/app/opengraph-image.tsx and per-route overrides).
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ubunifu Technologies · Digital Solutions for Tanzania',
+    title: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
     description: 'A Tanzania-based digital-solutions agency: web, data, AI, branding, and digital strategy.',
   },
   robots: {
@@ -116,7 +117,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.variable} ${outfit.variable}`}>
+      <body className={`${inter.variable} ${poppins.variable}`}>
         <SmoothScroll>
           {children}
           <WhatsAppButton />

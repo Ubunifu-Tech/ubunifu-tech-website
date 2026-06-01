@@ -269,7 +269,7 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 | **Usambara proof is visual-only** | Current screenshots show a generic-looking marketing site. The real value was SEO + performance + schema.org — none of which is visible. | Capture Lighthouse 100/100 score, schema.org rich-result, Google Search Console ranking, or 3G load time. Replace primary Usambara visual. |
 | **Education Tutor screenshot is cropped** | Best single asset on the site (Swahili "Karibu sana!" chapati fractions response) is captured mid-scroll. | Re-screenshot scrolled to the top, showing prompt + opening response in one clean frame. |
 | **Team bios are thin** | "Richard enjoys building and innovating" is too soft for a serious-builders positioning. Need credentials, links to public work, specific past projects. | Richard + HappyGod to provide expanded bios (~80 words each) with verifiable credentials, GitHub/portfolio links, talks given, etc. |
-| **Client logos / "Trusted by" strip** | `Clients.tsx` component exists but no real client logos in use beyond Safari King + Usambara. | Either populate with real logos of past clients or remove the component entirely. No fake logos. |
+| ~~**Client logos / "Trusted by" strip**~~ | ✅ **Resolved** — `Clients.tsx` was removed rather than ship with fake logos. | Revisit only if we have real client logos to show. |
 
 ### Design / layout work
 
@@ -277,6 +277,8 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 |---|---|
 | **Homepage hero redesign with screenshot** | Current hero is text-only. The Education Tutor Swahili screenshot (or a rotating gallery) would dramatically increase impact. Deferred because we want the screenshot recaptured first (see above). |
 | **Product demo videos** | A 20–40s loop of Insight chat or Sifa POS would outperform any screenshot. Needs screen recording + editing pass. |
+| ~~**Regenerate `public/logo.png`**~~ | ✅ **Done** — replaced with the orange→purple "U" mark (512px) from the Canva brand kit. Full lockups kept in the local `branding/` archive (synced to Drive). |
+| **Swap OG-card font to Poppins** | OG social-card images (`src/lib/og.tsx`) still render titles in **Outfit** (local WOFF files). Add `Poppins-400.woff` / `Poppins-700.woff` to `src/lib/og-fonts/` and switch `og.tsx` to match the new heading font. |
 | ~~**Case study detail pages**~~ | ✅ **Shipped**, including the "next project" footer link. Still deferrable later: add an *outcome/metrics* row once we have verified numbers. |
 | **Pricing page** | Pay-as-you-go is a differentiator. Deserves a dedicated page showing the model + sample math. **On hold** at the team's request for now. |
 | **Dark mode** | Most developer-adjacent buyers default to dark. Skipped for now to focus on content first. |

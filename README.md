@@ -1,198 +1,157 @@
 # Ubunifu Technologies Website
 
-Official website for **Ubunifu Technologies** - A Tanzania-based digital transformation and strategic consulting firm.
+Official website for **Ubunifu Technologies** — a Tanzania-based digital-solutions agency.
 
-**Technology. Strategy. Results.**
-
----
-
-## About Ubunifu Technologies
-
-Ubunifu Technologies empowers Tanzanian businesses and organizations through strategic implementation of digital solutions. We combine Silicon Valley-caliber technical expertise with deep understanding of the local market to deliver world-class digital transformation services.
-
-### Services
-- Web Development & Digital Presence
-- Data Analytics & Business Intelligence
-- Brand Design & Visual Identity
-- AI & Automation Solutions
-- Digital Strategy & Training
-
-### Target Sectors
-SMEs, Tourism & Hospitality, NGOs, Healthcare, Financial Services, Agriculture, Education, Government, Retail & Manufacturing
+**Digital solutions, built for Tanzania.**
 
 ---
 
-## Tech Stack
+## About
 
-### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: CSS Modules
-- **Fonts**: Inter (body), Outfit (headings)
-- **UI**: Glassmorphism design with dark mode
+Ubunifu Technologies is a digital-solutions agency in Arusha. We design, build, and run web,
+data, AI, and branding for organisations across Tanzania — built around how this market
+actually works. We pair genuine engineering depth (cloud, data, modern AI, full-stack web)
+with a close read of the local market, and we stay on to run what we ship.
 
-### Planned Backend (Phase 2)
-- **API**: Python FastAPI
-- **Database**: PostgreSQL
-- **Deployment**: TBD
+For the full positioning, voice, and messaging, see [`POSITIONING.md`](POSITIONING.md).
+
+### What we offer
+
+**Services** (`/build`) — five pillars:
+Digital Presence & Web · Branding & Visual Communication · Data Analytics & BI ·
+Intelligent Automation & AI · Digital Strategy & Consulting.
+
+**Products** (`/products`) — our own SaaS, as proof:
+- **Ubunifu Insight** — *live* · document AI with Swahili-speaking agents (`insight.ubunifutech.com`)
+- **Ubunifu Sifa** — *live* · business management with credit-selling built in (`sifa.ubunifutech.com`)
+- **Ubunifu Rafiki** — *coming soon* · embeddable widgets (forms, booking, blog)
+- **Ubunifu Build** — custom software & consulting
+
+**Industries** (`/industries`) — equipped to serve eight sectors. Tourism & Hospitality is
+*proven* (Safari King Africa, Usambara Destination); SMEs/Retail, Finance, NGOs, Healthcare,
+Agriculture, Education, and Government are *targeted* (capability, not claimed clients).
 
 ---
 
-## Getting Started
+## Tech stack
+
+- **Framework:** Next.js 16 (App Router) · React 19
+- **Language:** TypeScript
+- **Styling:** CSS Modules + design tokens in [`src/app/globals.css`](src/app/globals.css)
+- **Fonts:** Poppins (headings) · Inter (body) — via `next/font`
+- **Animation:** Framer Motion · Lenis smooth scroll (reduced-motion gated)
+- **Icons:** `lucide-react` (UI) · `react-icons` (tech logos)
+- **Content:** Markdown blog (`gray-matter` + `react-markdown`)
+- **Email:** Resend (contact form), with honeypot + timing + rate-limit bot protection
+
+---
+
+## Getting started
 
 ### Prerequisites
-- Node.js 18+ 
-- npm, yarn, pnpm, or bun
+- Node.js 18+
+- npm (or yarn / pnpm / bun)
 
-### Installation
+### Install & run
 
 ```bash
-# Clone the repository
 git clone https://github.com/rapaugustino/ubunifu-tech-website.git
 cd ubunifu-tech-website
-
-# Install dependencies
 npm install
-# or
-yarn install
+
+npm run dev      # http://localhost:3000
 ```
 
-### Development
+### Build for production
 
 ```bash
-# Run development server
-npm run dev
-# or
-yarn dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the site.
-
-### Build for Production
-
-```bash
-# Create optimized production build
 npm run build
-# or
-yarn build
-
-# Start production server
 npm start
-# or
-yarn start
 ```
+
+The contact form needs a `RESEND_API_KEY` in `.env.local` to send mail; without it the API
+degrades gracefully (it logs and returns success rather than crashing).
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 ubunifu-tech-website/
-├── public/
-│   ├── logo.png              # Company logo
-│   └── images/               # Portfolio and asset images
+├── public/                  # Static assets (logo.png, robots.txt, work/ + about/ images)
+├── _posts/                  # Blog posts (Markdown — 7 published)
 ├── src/
-│   ├── app/
-│   │   ├── layout.tsx        # Root layout with metadata
-│   │   ├── page.tsx          # Homepage
-│   │   ├── globals.css       # Global styles and CSS variables
-│   │   └── blog/             # Blog section (coming soon)
-│   ├── components/
-│   │   ├── Navbar.tsx        # Navigation with logo
-│   │   ├── Hero.tsx          # Hero section
-│   │   ├── Services.tsx      # 5 service categories
-│   │   ├── Industries.tsx    # Target sectors showcase
-│   │   ├── Portfolio.tsx     # Real project portfolio
-│   │   ├── SocialProof.tsx   # Why work with us section
-│   │   ├── About.tsx         # Team and mission
-│   │   ├── LeadMagnet.tsx    # Free assessment CTA
-│   │   ├── Contact.tsx       # Contact form and details
-│   │   ├── Footer.tsx        # Site footer
-│   │   └── ui/               # Reusable UI components
-│   └── lib/
-│       └── blog.ts           # Blog utilities (for future use)
-├── BRANDING.md               # Complete brand guidelines
-├── PROJECT_ROADMAP.md        # Development roadmap
-└── README.md                 # This file
+│   ├── app/                 # Next.js App Router
+│   │   ├── layout.tsx       # Root layout: fonts (Poppins + Inter), metadata, JSON-LD
+│   │   ├── page.tsx         # Home
+│   │   ├── globals.css      # Design tokens (CSS variables) + base styles
+│   │   ├── icon.tsx         # Generated favicon — orange→purple "U" mark
+│   │   ├── apple-icon.tsx   # Generated Apple touch icon
+│   │   ├── build/           # /build — Services
+│   │   ├── industries/      # /industries — sectors we serve
+│   │   ├── work/            # /work + /work/[slug] — client case studies
+│   │   ├── products/        # /products — our SaaS (proof)
+│   │   ├── about/           # /about — vision, mission, story, team
+│   │   ├── blog/            # /blog + /blog/[slug]
+│   │   ├── careers/         # /careers (footer link)
+│   │   ├── contact/         # /contact — the single form
+│   │   └── api/contact/     # POST /api/contact (Resend + bot protection)
+│   ├── components/          # Section + UI components (co-located CSS Modules)
+│   ├── content/             # Editable page data — no JSX logic (see below)
+│   └── lib/blog.ts          # Blog data helpers
+├── BRANDING.md              # Visual system: colors, type, components
+├── POSITIONING.md           # Who we are, services, sectors, voice
+├── WEBSITE_CONTENT.md       # "Site as built" reference / page map
+├── PROJECT_ROADMAP.md       # Development roadmap
+├── SITE_IMPROVEMENTS.md     # Changelog
+└── README.md                # This file
 ```
 
----
-
-## Branding
-
-### Color Palette
-- **Primary Blue**: `#00d4ff` - Main brand color
-- **Secondary Purple**: `#7928ca` - Accent color
-- **Background**: `#0a0f1c` - Deep blue/black
-- **Gold Accent**: `#ffd700` - Highlights
-
-See `BRANDING.md` for complete brand guidelines including typography, logo usage, and design system.
-
-### Logo
-Located at `/public/logo.png` - Features hexagonal network pattern with gradient blue-to-purple scheme.
+**Content is data.** Copy and lists live in [`src/content/`](src/content/) so marketing edits
+don't touch component code: `site.ts` (company info, nav, footer), `services.tsx`,
+`sectors.tsx`, `pillars.tsx`, `values.tsx`, `about.tsx`, `products.tsx`, `portfolio.tsx`,
+`team.tsx`, `testimonials.tsx`.
 
 ---
 
-## Key Features
+## Brand
 
-- **Responsive Design**: Mobile-first, works on all devices
-- **Glassmorphism UI**: Modern dark mode with blur effects
-- **Professional Icons**: SVG icons throughout (no emojis)
-- **SEO Optimized**: Proper metadata and semantic HTML
-- **Type-Safe**: Full TypeScript implementation
-- **Performance**: Next.js 15 with image optimization
-- **Honest Positioning**: Transparent about being a new consultancy
+Light, warm, modern: a soft lavender background (`#F4F2FB`), a warm-orange primary
+(`#FF6B2C`), and a deep-purple accent (`#6D3FE8`) on deep-navy text (`#1F1A36`). The logo is
+the orange→purple **"U"** mark (`linear-gradient(135deg, var(--brand), var(--primary))`),
+rendered in the Navbar, Footer, and favicon.
 
----
+Design tokens are the single source of truth — every color, font, and spacing value lives in
+[`src/app/globals.css`](src/app/globals.css). See [`BRANDING.md`](BRANDING.md) for the full
+system.
 
-## Contact & Links
-
-- **Website**: [ubunifutech.com](https://ubunifutech.com)
-- **Email**: richardpallangyo@ubunifutech.com
-- **Location**: Dar es Salaam, Tanzania
-- **GitHub**: [github.com/rapaugustino/ubunifu-tech-website](https://github.com/rapaugustino/ubunifu-tech-website)
+> **Note:** `public/logo.png` is the orange→purple "U" mark (512px, exported from the Canva
+> brand kit). The full lockups (mark + "Ubunifu TECHNOLOGIES", and the tagline lockup) live in
+> a local `branding/` archive that is kept out of git and synced to Drive.
 
 ---
 
-## Development Roadmap
+## Documentation
 
-### Phase 1: Frontend & Brand Identity (Current - 95% Complete)
-- ✅ Core Next.js architecture
-- ✅ All main sections and components
-- ✅ Professional branding with logo
-- ✅ SVG icons throughout
-- ✅ Comprehensive service offerings
-- ✅ Industries section
-- ✅ Blog structure (coming soon message)
-- 🔄 Final SEO optimization
-- 🔄 Performance tuning
-
-### Phase 2: Backend Infrastructure (Planned)
-- FastAPI backend setup
-- PostgreSQL database
-- Contact form submission handling
-- Lead magnet delivery system
-- Admin dashboard
-
-### Phase 3: Content & Launch (Planned)
-- Blog content creation
-- Case studies and detailed portfolio
-- Client testimonials (when available)
-- Analytics integration
-- Production deployment
+| Doc | Owns |
+|---|---|
+| [`POSITIONING.md`](POSITIONING.md) | Vision, mission, services, sectors, approach, voice |
+| [`BRANDING.md`](BRANDING.md) | Visual system: colors, type, component patterns, tokens |
+| [`WEBSITE_CONTENT.md`](WEBSITE_CONTENT.md) | "Site as built" — page map, where each piece of content lives |
+| [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md) | Development roadmap (phases + status) |
+| [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) | Running changelog of site work |
 
 ---
 
-## Contributing
+## Contact
 
-This is a private project for Ubunifu Technologies. For inquiries, contact richardpallangyo@ubunifutech.com
+- **Website:** [ubunifutech.com](https://ubunifutech.com)
+- **Email:** info@ubunifutech.com
+- **Phone / WhatsApp:** +255 748 548 816
+- **Location:** Arusha, Tanzania
 
 ---
-
-## License
 
 © 2026 Ubunifu Technologies. All rights reserved.
 
----
-
-**Built with ❤️ in Dar es Salaam, Tanzania**
+**Built in Arusha, Tanzania.**

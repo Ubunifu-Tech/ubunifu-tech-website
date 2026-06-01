@@ -46,3 +46,7 @@ next-env.d.ts
 # screenshot source library (originals live here for reference, optimised
 # copies committed under public/work/)
 /work-screenshots/
+
+# brand-asset masters (high-res Canva exports; archived to Google Drive;
+# optimised copy committed as public/logo.png)
+/branding/

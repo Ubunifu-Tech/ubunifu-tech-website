@@ -3,7 +3,7 @@
 
 export const site = {
   name: 'Ubunifu Technologies',
-  tagline: 'Digital solutions for Tanzania.',
+  tagline: 'Digital solutions, built for Tanzania.',
   shortDescription:
     'A Tanzania-based digital-solutions agency: web, data, AI, branding, and strategy.',
   location: 'Arusha, Tanzania',

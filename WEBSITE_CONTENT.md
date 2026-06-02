@@ -37,10 +37,13 @@ Single source of truth: `src/content/site.ts`.
 | `/careers` | Careers (footer link only) | `src/app/careers/page.tsx` |
 | `/contact` | Contact — the only form | `src/app/contact/page.tsx` |
 | `/products` | Products (proof page; not in nav) | `src/app/products/page.tsx` |
+| `/brand` | Brand kit — colours, type, logo (not in nav, noindex) | `src/app/brand/page.tsx` |
 
 **Nav order:** Home · Services · Industries · Work · About · Blog · Contact.
-"Products" and "Careers" are intentionally not headline nav items (products
-appear as proof; Careers lives in the footer).
+"Products", "Careers", and "Brand" (`/brand`) are intentionally not headline nav
+items — products appear as proof, Careers lives in the footer, and `/brand` is an
+internal reference. A shareable **brand-guide PDF** lives at
+`public/ubunifu-brand-guide.pdf` (served at `/ubunifu-brand-guide.pdf`, linked from `/brand`).
 
 Branded `not-found.tsx`, dynamic OG cards (`opengraph-image.tsx` at root +
 per blog post + per case study), and `sitemap.ts` round out the app routes.

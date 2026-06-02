@@ -2,6 +2,8 @@
 
 The visual system for the Ubunifu Technologies website. This is the source of truth — if you're changing colors, fonts, or component patterns, update this document and the relevant CSS variables together.
 
+> **Sharing with collaborators?** There's a live, always-current brand page at **`/brand`** (not in nav) and a shareable **PDF** at **`public/ubunifu-brand-guide.pdf`** (served at `/ubunifu-brand-guide.pdf`) — colours with hex + RGB, type, logo, and usage rules.
+
 ---
 
 ## 1. Brand Personality

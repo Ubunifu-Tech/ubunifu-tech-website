@@ -1,5 +1,3 @@
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Contact } from '@/components/Contact';
 
@@ -13,7 +11,6 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <>
-      <Navbar />
       <main>
         <PageHeader
           eyebrow="Contact"
@@ -22,7 +19,6 @@ export default function ContactPage() {
         />
         <Contact hideIntro />
       </main>
-      <Footer />
     </>
   );
 }

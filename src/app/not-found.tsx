@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { Topography } from '@/components/Topography';
 import styles from './NotFound.module.css';
 
@@ -11,7 +9,6 @@ export const metadata = {
 export default function NotFound() {
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.backdrop} aria-hidden="true">
           <div className={styles.aurora} />
@@ -38,7 +35,6 @@ export default function NotFound() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

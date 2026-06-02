@@ -1,6 +1,4 @@
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Spotlight } from '@/components/Spotlight';
 import { ScrollReveal } from '@/components/ScrollReveal';
@@ -19,7 +17,6 @@ export default function IndustriesPage() {
 
   return (
     <>
-      <Navbar />
       <main>
         <PageHeader
           eyebrow="Who we serve"
@@ -97,7 +94,6 @@ export default function IndustriesPage() {
         </section>
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

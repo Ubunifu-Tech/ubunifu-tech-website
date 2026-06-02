@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import styles from './Careers.module.css';
 
@@ -32,7 +30,6 @@ const futureRoles = [
 export default function CareersPage() {
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         <PageHeader
           eyebrow="Careers"
@@ -69,7 +66,6 @@ export default function CareersPage() {
         </div>
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

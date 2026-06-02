@@ -50,20 +50,22 @@ per blog post + per case study), and `sitemap.ts` round out the app routes.
 ## Home page (`/`) — section order
 
 ```
-Navbar          — floating, contained glass bar (sits above the page)
+Navbar          — floating glass bar (rendered once in the root layout, in <header>)
 Hero            — "Digital solutions, built for Tanzania." + client-build proof
-ProblemStrip    — "Why Ubunifu": 4 differentiators (icons)
+ProblemStrip    — "Why Ubunifu": 4 numbered cards with orange icon tiles
+WorkPreview     — client case-study cards (proof first — lead with the work)
+ProductsProof   — Insight + Sifa as "products we've built"
 ServicesPreview — 5 service icon cards + gradient CTA tile → /build
 SectorsStrip    — sectors we serve (icon tiles) → /industries
-WorkPreview     — client case-study cards
-ProductsProof   — Insight + Sifa as "products we've built"
 Testimonial     — Isaac, Usambara
-Insights        — three most recent blog posts → /blog
-TechMarquee     — scrolling tech logos
-AboutPreview    — short about + link
 CtaBand         — "Got something to build?" (its own section, not the footer)
-Footer          — dark, self-contained columns block
+Footer          — dark columns block (rendered once in the root layout)
 ```
+
+Tightened to lead with proof: **Work + Products** now sit right after the pillars,
+before Services/Sectors. The blog teaser (`Insights`), `TechMarquee`, and
+`AboutPreview` were removed from the homepage to cut length — that content lives on
+`/blog` and `/about`; those components still exist but aren't rendered on home.
 
 ---
 

@@ -1,6 +1,4 @@
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Portfolio } from '@/components/Portfolio';
 import { ProductsProof } from '@/components/HomePreviews';
@@ -15,7 +13,6 @@ export const metadata = {
 export default function WorkPage() {
   return (
     <>
-      <Navbar />
       <main>
         <PageHeader
           eyebrow="Our work"
@@ -28,7 +25,6 @@ export default function WorkPage() {
         <Testimonial />
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

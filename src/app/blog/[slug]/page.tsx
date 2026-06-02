@@ -3,9 +3,7 @@ import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import type { Metadata } from 'next';
 import { getAllPosts, getPostBySlug } from '@/lib/blog';
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import styles from './BlogSlug.module.css';
 
@@ -105,7 +103,6 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ReadingProgress />
-      <Navbar />
       <article className={`container ${styles.articleContainer}`}>
         <div className={styles.header}>
           {post.tags[0] && <span className={styles.category}>{post.tags[0]}</span>}
@@ -128,7 +125,6 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         </Link>
       </article>
       <CtaBand />
-      <Footer />
     </main>
   );
 }

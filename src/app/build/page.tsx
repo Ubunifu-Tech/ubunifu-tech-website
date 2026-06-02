@@ -1,7 +1,5 @@
-import { Navbar } from '@/components/Navbar';
 import { WorkPreview } from '@/components/HomePreviews';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { Topography } from '@/components/Topography';
@@ -77,7 +75,6 @@ const process = [
 export default function BuildPage() {
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         {/* Hero */}
         <div className={styles.heroSection}>
@@ -180,7 +177,6 @@ export default function BuildPage() {
         </ScrollReveal>
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

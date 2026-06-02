@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import { SmoothScroll } from '@/components/SmoothScroll';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import './globals.css';
 
@@ -12,7 +14,7 @@ const inter = Inter({
 
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['600', '700', '800'],
   variable: '--font-poppins',
   display: 'swap',
 });
@@ -118,8 +120,13 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${poppins.variable}`}>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         <SmoothScroll>
-          {children}
+          <Navbar />
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
+          <Footer />
           <WhatsAppButton />
         </SmoothScroll>
       </body>

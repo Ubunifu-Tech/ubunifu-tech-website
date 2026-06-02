@@ -5,9 +5,7 @@ import type { Metadata } from 'next';
 import { ArrowLeft, ArrowUpRight, ArrowRight, Check } from 'lucide-react';
 import { projects, getProjectBySlug } from '@/content/portfolio';
 import { testimonials } from '@/content/testimonials';
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { Testimonial } from '@/components/Testimonial';
 import styles from './CaseStudy.module.css';
 
@@ -89,7 +87,6 @@ export default async function CaseStudyPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Navbar />
 
       {/* Hero */}
       <header className={styles.hero}>
@@ -243,7 +240,6 @@ export default async function CaseStudyPage({
       )}
 
       <CtaBand />
-      <Footer />
     </main>
   );
 }

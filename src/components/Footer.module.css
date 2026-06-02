@@ -9,12 +9,13 @@
 
 /* ── Footer columns ───────────────────────────── */
 
-.container {
+/* Scoped under .footer so this padding always beats the global `.container`
+   shorthand (padding: 0 2rem) regardless of stylesheet order. */
+.footer .container {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  padding-top: 3.5rem;
-  padding-bottom: 2.25rem;
+  padding: 3.5rem 2rem 2.25rem;
 }
 
 .top {

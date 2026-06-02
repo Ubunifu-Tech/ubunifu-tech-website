@@ -1,6 +1,4 @@
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { getAllPosts } from '@/lib/blog';
 import { BlogIndex, type PostMeta } from '@/components/BlogIndex';
 import styles from './Blog.module.css';
@@ -27,7 +25,6 @@ export default function BlogPage() {
 
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         <div className="container">
           <header className={styles.header}>
@@ -48,7 +45,6 @@ export default function BlogPage() {
         </div>
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

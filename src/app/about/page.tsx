@@ -1,7 +1,5 @@
 import Image from 'next/image';
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { About } from '@/components/About';
 import { Team } from '@/components/Team';
@@ -23,7 +21,6 @@ export default function AboutPage() {
 
   return (
     <>
-      <Navbar />
       <main>
         <PageHeader
           eyebrow="About us"
@@ -149,7 +146,6 @@ export default function AboutPage() {
         <Team />
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

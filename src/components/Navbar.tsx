@@ -26,6 +26,7 @@ export const Navbar: React.FC = () => {
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
+    <header>
     <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
       <div className="container">
         <div className={styles.shell}>
@@ -81,5 +82,6 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
     </nav>
+    </header>
   );
 };

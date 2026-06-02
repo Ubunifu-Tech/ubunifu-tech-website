@@ -1,6 +1,4 @@
-import { Navbar } from '@/components/Navbar';
 import { CtaBand } from '@/components/CtaBand';
-import { Footer } from '@/components/Footer';
 import { PageHeader } from '@/components/PageHeader';
 import { Products } from '@/components/Products';
 
@@ -13,7 +11,6 @@ export const metadata = {
 export default function ProductsPage() {
   return (
     <>
-      <Navbar />
       <main>
         <PageHeader
           eyebrow="Our products"
@@ -24,7 +21,6 @@ export default function ProductsPage() {
         <Products hideHeader />
       </main>
       <CtaBand />
-      <Footer />
     </>
   );
 }

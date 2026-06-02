@@ -4,6 +4,8 @@ The visual system for the Ubunifu Technologies website. This is the source of tr
 
 > **Sharing with collaborators?** There's a live, always-current brand page at **`/brand`** (not in nav) and a shareable **PDF** at **`public/ubunifu-brand-guide.pdf`** (served at `/ubunifu-brand-guide.pdf`) — colours with hex + RGB, type, logo, and usage rules.
 
+> **Rolling the brand out to a product app?** See **[`PRODUCT_BRAND_PROMPTS.md`](PRODUCT_BRAND_PROMPTS.md)** — paste-ready brand-adoption prompts for each Ubunifu product (Sifa · Insight · Rafiki · Fanisi) plus a template for any new product you build, with the WCAG-AA contrast rules baked in.
+
 ---
 
 ## 1. Brand Personality
@@ -74,7 +76,7 @@ Used very sparingly — only in soft decorative background gradients (the `/buil
 | ----- | --- | --- |
 | `--text-primary` | `#1F1A36` | Headings & body — deep navy with a faint purple undertone |
 | `--text-secondary` | `#5A5170` | Subheadings, paragraph copy |
-| `--text-tertiary` | `#8B82A0` | Labels, captions, helper text |
+| `--text-tertiary` | `#6B6385` | Labels, captions, helper text — AA-safe (darkened from the old `#8B82A0`) |
 
 ### 2.6 Borders & Glass
 

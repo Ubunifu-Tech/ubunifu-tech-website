@@ -38,10 +38,10 @@ function preheader(text: string): string {
 function header(): string {
   return `
   <tr>
-    <td style="background:linear-gradient(135deg,#241c40,#14101e);padding:26px 32px;">
+    <td bgcolor="#14101e" style="background-color:#14101e;background-image:linear-gradient(135deg,#241c40,#14101e);padding:26px 32px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td style="width:42px;height:42px;background:linear-gradient(135deg,#FF6B2C,#6D3FE8);border-radius:11px;text-align:center;vertical-align:middle;color:#ffffff;font-family:${FONT};font-weight:700;font-size:19px;">U</td>
+          <td bgcolor="#C44615" width="42" height="42" style="width:42px;height:42px;background-color:#C44615;background-image:linear-gradient(135deg,#FF6B2C,#6D3FE8);border-radius:11px;text-align:center;vertical-align:middle;color:#ffffff;font-family:${FONT};font-weight:700;font-size:19px;">U</td>
           <td style="padding-left:13px;vertical-align:middle;">
             <div style="color:#ffffff;font-family:${FONT};font-weight:700;font-size:16px;line-height:1.05;">Ubunifu</div>
             <div style="color:#FF8F5A;font-family:${FONT};font-weight:700;font-size:10px;letter-spacing:2.5px;">TECHNOLOGIES</div>
@@ -133,24 +133,24 @@ export function notificationEmail(input: {
 
   const row = (label: string, value: string) => `
     <tr>
-      <td style="padding:11px 0;border-bottom:1px solid #eceaf3;color:#8B82A0;font-size:13px;width:96px;vertical-align:top;">${label}</td>
+      <td style="padding:11px 0;border-bottom:1px solid #eceaf3;color:#6B6385;font-size:13px;width:96px;vertical-align:top;">${label}</td>
       <td style="padding:11px 0;border-bottom:1px solid #eceaf3;color:#1F1A36;font-size:14px;font-weight:500;">${value}</td>
     </tr>`;
 
   const body = `
-    <p style="margin:0 0 4px;color:#8B82A0;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">New enquiry</p>
+    <p style="margin:0 0 4px;color:#6B6385;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">New enquiry</p>
     <h1 style="margin:0 0 22px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${name} got in touch</h1>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
       ${row('Name', name)}
       ${row('Email', `<a href="mailto:${email}" style="color:#6D3FE8;text-decoration:none;">${email}</a>`)}
       ${row('Subject', subject)}
     </table>
-    <p style="margin:26px 0 8px;color:#8B82A0;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
+    <p style="margin:26px 0 8px;color:#6B6385;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
     <div style="background:#faf9fe;border:1px solid #eceaf3;border-radius:10px;padding:18px;color:#1F1A36;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}</div>
     <div style="margin-top:26px;">${button(`mailto:${email}?subject=${encodeURIComponent(
       'Re: ' + input.subject,
     )}`, `Reply to ${name}`)}</div>
-    <p style="margin:18px 0 0;color:#9a92ad;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
+    <p style="margin:18px 0 0;color:#6B6385;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
 
   return shell(`New enquiry from ${input.name}: ${input.subject}`, body);
 }

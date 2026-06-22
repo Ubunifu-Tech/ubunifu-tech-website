@@ -36,10 +36,16 @@ function spotlightMedia(service: Service) {
         },
         overlap: { title: 'Answers in Swahili', sub: 'Grounded, with citations' },
       };
+    case 'hosting':
+      return {
+        panelIcon: service.icon,
+        panelChips: ['cPanel hosting', 'SSL included', 'Backups', 'Local support'],
+        overlap: { title: 'We keep you online', sub: 'Hosting, domains & email, managed' },
+      };
     case 'branding':
       return {
         panelIcon: service.icon,
-        panelChips: ['Logo & identity', 'Style guide', 'UI/UX', 'Print + digital'],
+        panelChips: ['Logo design', 'Banners & flyers', 'Social graphics', 'Style guides'],
       };
     default:
       return {
@@ -51,7 +57,7 @@ function spotlightMedia(service: Service) {
 
 export const metadata = {
   title: 'Services',
-  description: 'Web development, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
+  description: 'Web development, hosting, domain management, professional email, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
 };
 
 const process = [
@@ -98,9 +104,9 @@ export default function BuildPage() {
                   <span className={styles.titleGradient}>digital side needs.</span>
                 </h1>
                 <p className={styles.lead}>
-                  Five things we do well: web, data, AI, branding, and strategy.
-                  Pick one, or let us handle the whole digital side of your business
-                  and run it for you.
+                  Six things we do well: web, hosting, data, AI, branding, and
+                  strategy. Pick one, or let us handle the whole digital side of
+                  your business &mdash; build it, host it, and run it for you.
                 </p>
                 <a href="/contact" className={styles.heroBtn}>
                   Start a project
@@ -120,7 +126,7 @@ export default function BuildPage() {
           <div className="container">
             <ScrollReveal>
               <span className="eyebrow">What we do</span>
-              <h2 className={styles.sectionHeading}>Five ways we help you grow</h2>
+              <h2 className={styles.sectionHeading}>Six ways we help you grow</h2>
               <p className={styles.servicesSub}>
                 Pick one, or hand us the whole digital side. Each of these is
                 something we run for clients today.

@@ -11,7 +11,7 @@ import styles from './About.module.css';
 export const metadata = {
   title: 'About',
   description:
-    'Ubunifu Technologies is a digital-solutions agency in Arusha, Tanzania, helping organisations across the country with web, data, AI, branding, and strategy.',
+    'Ubunifu Technologies is a digital-solutions agency in Arusha, Tanzania, helping organisations across the country with web, hosting, data, AI, branding, and strategy.',
 };
 
 export default function AboutPage() {

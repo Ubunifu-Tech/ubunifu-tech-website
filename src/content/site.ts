@@ -5,7 +5,7 @@ export const site = {
   name: 'Ubunifu Technologies',
   tagline: 'Digital solutions, built for Tanzania.',
   shortDescription:
-    'A Tanzania-based digital-solutions agency: web, data, AI, branding, and strategy.',
+    'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and strategy.',
   location: 'Arusha, Tanzania',
 
   contact: {
@@ -64,9 +64,20 @@ export const footerColumns: ReadonlyArray<{
     ],
   },
   {
+    title: 'Services',
+    links: [
+      { label: 'Web & Apps', href: '/build#web' },
+      { label: 'Hosting & Email', href: '/build#hosting' },
+      { label: 'Branding', href: '/build#branding' },
+      { label: 'Data & BI', href: '/build#data' },
+      { label: 'AI & Automation', href: '/build#ai' },
+      { label: 'Strategy', href: '/build#strategy' },
+    ],
+  },
+  {
     title: 'Company',
     links: [
-      { label: 'Services', href: '/build' },
+      { label: 'All services', href: '/build' },
       { label: 'Industries', href: '/industries' },
       { label: 'Our Work', href: '/work' },
       { label: 'About', href: '/about' },

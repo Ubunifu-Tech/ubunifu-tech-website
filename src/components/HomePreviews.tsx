@@ -33,10 +33,10 @@ export const ServicesPreview: React.FC = () => {
           transition={{ duration: 0.5, ease }}
         >
           <span className="eyebrow">What we do</span>
-          <h2 className={styles.heading}>Five ways we help you grow</h2>
+          <h2 className={styles.heading}>Six ways we help you grow</h2>
           <p className={styles.sub}>
-            From the website to the data behind it, we cover the whole digital
-            side of your business, and run it for you.
+            From building and hosting the website to the data behind it, we cover
+            the whole digital side of your business, and run it for you.
           </p>
         </motion.div>
 
@@ -61,7 +61,7 @@ export const ServicesPreview: React.FC = () => {
             );
           })}
 
-          {/* Trailing CTA tile */}
+          {/* Trailing CTA — spans the full grid width as a banner */}
           <motion.div
             className={`${styles.serviceCard} ${styles.serviceCta}`}
             initial={{ opacity: 0, y: 20 }}
@@ -69,7 +69,10 @@ export const ServicesPreview: React.FC = () => {
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.45, delay: services.length * 0.06, ease }}
           >
-            <p className={styles.serviceCtaText}>Need more than one? That&apos;s the usual.</p>
+            <p className={styles.serviceCtaText}>
+              Need more than one? That&apos;s the usual &mdash; most clients
+              combine a few.
+            </p>
             <Link href="/build" className={styles.serviceCtaLink}>
               Explore all services <Arrow />
             </Link>

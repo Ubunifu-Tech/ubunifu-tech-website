@@ -38,7 +38,7 @@ Everything below is real and verifiable — it is what lets us position this way
 - **We ship our own products.** Ubunifu Insight (document AI with Swahili-speaking agents) and Ubunifu Sifa (business management with credit-selling built in) are live and in use. Building and running our own SaaS is proof we can build yours.
 - **We have shipped real client platforms.** Safari King Africa (a full booking platform + custom CRM + Claude-powered AI assistant) and Usambara Destination (a fast, accessible, SEO-strong eco-tourism site on Node/Express) are both in production.
 - **A real client has vouched for the work.** Usambara's Managing Director is on record about the results, and the site carries a 5.0★ TripAdvisor rating.
-- **The team's skills match the offer.** Data/software/AI engineering and IT/systems/design are exactly the disciplines the five service pillars require.
+- **The team's skills match the offer.** Data/software/AI engineering and IT/systems/design are exactly the disciplines the six service pillars require.
 
 > **Honesty rule:** never invent metrics, client logos, or sector experience we don't have. Where a claim isn't yet provable, say the weaker true version (e.g. "equipped to serve healthcare" rather than "trusted by hospitals").
 
@@ -46,36 +46,45 @@ Everything below is real and verifiable — it is what lets us position this way
 
 ## 5. Service pillars
 
-The five things we do. These are the backbone of the Services page and the home page.
+The six things we do. These are the backbone of the Services page and the home page.
 
 ### 1. Digital Presence & Web Solutions
 Professional, fast, user-friendly websites and web applications — from informational sites to e-commerce and custom platforms.
 - Strategic website & web-app development
 - E-commerce
 - CMS so clients control their own content
-- Hosting & domain coordination (incl. cPanel)
+- SEO & accessibility
 - QA, performance, and UX optimisation across devices
 
-### 2. Branding & Visual Communication
-Cohesive visual identity and the materials that carry it.
-- Logo, colour, and style-guide / visual identity
-- Marketing collateral (digital + print): brochures, social graphics, decks, banners
+### 2. Hosting, Domains & Email
+The infrastructure that keeps clients online, managed end to end. A real capability today, not aspirational (cPanel hosting, domains, email, support — see the team in §9).
+- Website & app hosting (cPanel)
+- Domain registration & DNS
+- Professional email on the client's own domain
+- SSL certificates & backups
+- Renewals and ongoing support
+
+### 3. Branding & Graphic Design
+Cohesive visual identity and the day-to-day graphic design that carries it.
+- Logo design, brand identity, and style guides
+- Banners, flyers, posters, and social media graphics
+- Business cards, stationery, and marketing collateral (digital + print)
 - UI/UX design for web and mobile
 
-### 3. Data Analytics & Business Intelligence
+### 4. Data Analytics & Business Intelligence
 Turning data into decisions.
 - Data cleaning, organisation, KPIs, and reporting
 - Dashboards and visualisation
 - Advanced: data warehousing strategy, ETL/ELT pipelines, analytical models
 
-### 4. Intelligent Automation & AI Solutions
+### 5. Intelligent Automation & AI Solutions
 Practical AI that solves a specific problem, not AI for its own sake.
 - Custom AI / ML projects (predictive models, segmentation, automation)
 - AI-powered interactive systems (e.g. grounded assistants like Safari King's)
 - Pragmatic, value-first deployment — only where it earns its place
 - Ethical, responsible use of data and AI
 
-### 5. Digital Strategy, Consulting & Capacity Building
+### 6. Digital Strategy, Consulting & Capacity Building
 Helping organisations plan and grow their digital capability.
 - Digital-transformation roadmaps & maturity assessment
 - Digital-skills workshops and training (data literacy, tools, online safety)

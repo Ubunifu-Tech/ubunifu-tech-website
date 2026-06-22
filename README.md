@@ -8,8 +8,8 @@ Official website for **Ubunifu Technologies** — a Tanzania-based digital-solut
 
 ## About
 
-Ubunifu Technologies is a digital-solutions agency in Arusha. We design, build, and run web,
-data, AI, and branding for organisations across Tanzania — built around how this market
+Ubunifu Technologies is a digital-solutions agency in Arusha. We design, build, host, and run
+web, data, AI, and branding for organisations across Tanzania — built around how this market
 actually works. We pair genuine engineering depth (cloud, data, modern AI, full-stack web)
 with a close read of the local market, and we stay on to run what we ship.
 
@@ -17,9 +17,9 @@ For the full positioning, voice, and messaging, see [`POSITIONING.md`](POSITIONI
 
 ### What we offer
 
-**Services** (`/build`) — five pillars:
-Digital Presence & Web · Branding & Visual Communication · Data Analytics & BI ·
-Intelligent Automation & AI · Digital Strategy & Consulting.
+**Services** (`/build`) — six pillars:
+Digital Presence & Web · Hosting, Domains & Email · Branding & Graphic Design ·
+Data Analytics & BI · Intelligent Automation & AI · Digital Strategy & Consulting.
 
 **Products** (`/products`) — our own SaaS, as proof:
 - **Ubunifu Insight** — *live* · document AI with Swahili-speaking agents (`insight.ubunifutech.com`)

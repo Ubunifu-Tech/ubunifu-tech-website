@@ -9,6 +9,6 @@ export default function Image() {
   return renderOgImage({
     eyebrow: 'Digital solutions agency',
     title: 'Digital solutions, built for Tanzania.',
-    subtitle: 'Web, data, AI, branding, and strategy for organisations across Tanzania.',
+    subtitle: 'Web, hosting, data, AI, branding, and strategy for organisations across Tanzania.',
   });
 }

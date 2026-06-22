@@ -4,6 +4,7 @@ import { SmoothScroll } from '@/components/SmoothScroll';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
+import { services } from '@/content/services';
 import './globals.css';
 
 const inter = Inter({
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     default: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
     template: '%s | Ubunifu Technologies',
   },
-  description: 'Ubunifu Technologies is a Tanzania-based digital-solutions agency. Web development, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
+  description: 'Ubunifu Technologies is a Tanzania-based digital-solutions agency. Web development, hosting, domain management, professional email, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
   keywords: [
     'SaaS Tanzania',
     'software Africa',
@@ -33,6 +34,11 @@ export const metadata: Metadata = {
     'Ubunifu Sifa',
     'Ubunifu Build',
     'web development Tanzania',
+    'web hosting Tanzania',
+    'domain registration Tanzania',
+    'business email Tanzania',
+    'graphic design Tanzania',
+    'logo design Tanzania',
     'business software Tanzania',
     'software Arusha',
     'consulting Tanzania',
@@ -52,14 +58,14 @@ export const metadata: Metadata = {
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
     title: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
-    description: 'A Tanzania-based digital-solutions agency: web, data, AI, branding, and digital strategy.',
+    description: 'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and digital strategy.',
     // OG image is provided by the file-based opengraph-image.tsx convention
     // (src/app/opengraph-image.tsx and per-route overrides).
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
-    description: 'A Tanzania-based digital-solutions agency: web, data, AI, branding, and digital strategy.',
+    description: 'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and digital strategy.',
   },
   robots: {
     index: true,
@@ -83,7 +89,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ubunifu Technologies',
-    description: 'A Tanzania-based digital-solutions agency: web, data, AI, branding, and digital strategy.',
+    description: 'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and digital strategy.',
     url: 'https://ubunifutech.com',
     logo: 'https://ubunifutech.com/logo.png',
     contactPoint: {
@@ -109,6 +115,20 @@ export default function RootLayout({
       'Ubunifu Sifa',
       'Ubunifu Build',
     ],
+    // Machine-readable list of the service pillars, kept in sync with
+    // src/content/services.tsx (the same source the /build page renders).
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Services',
+      itemListElement: services.map((service) => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: service.title,
+          description: service.summary,
+        },
+      })),
+    },
   };
 
   return (

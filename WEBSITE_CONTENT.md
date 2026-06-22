@@ -5,7 +5,7 @@ built**: pages, where each piece of content lives, and the data files to edit.
 For positioning/voice see `POSITIONING.md`; for the visual system see
 `BRANDING.md`; for the change log see `SITE_IMPROVEMENTS.md`.
 
-Last refreshed: May 2026.
+Last refreshed: June 2026.
 
 ---
 
@@ -27,7 +27,7 @@ Single source of truth: `src/content/site.ts`.
 | Route | Page | File |
 |---|---|---|
 | `/` | Home — agency overview | `src/app/page.tsx` |
-| `/build` | Services — five capability spotlights | `src/app/build/page.tsx` |
+| `/build` | Services — six capability spotlights | `src/app/build/page.tsx` |
 | `/industries` | Industries — who we serve | `src/app/industries/page.tsx` |
 | `/work` | Our Work — client projects | `src/app/work/page.tsx` |
 | `/work/[slug]` | Case study | `src/app/work/[slug]/page.tsx` |
@@ -58,7 +58,7 @@ Hero            — "Digital solutions, built for Tanzania." + client-build proo
 ProblemStrip    — "Why Ubunifu": 4 numbered cards with orange icon tiles
 WorkPreview     — client case-study cards (proof first — lead with the work)
 ProductsProof   — Insight + Sifa as "products we've built"
-ServicesPreview — 5 service icon cards + gradient CTA tile → /build
+ServicesPreview — 6 service icon cards + full-width gradient CTA banner → /build
 SectorsStrip    — sectors we serve (icon tiles) → /industries
 Testimonial     — Isaac, Usambara
 CtaBand         — "Got something to build?" (its own section, not the footer)
@@ -74,10 +74,10 @@ before Services/Sectors. The blog teaser (`Insights`), `TechMarquee`, and
 
 ## Services (`/build`)
 
-Five pillars, defined in `src/content/services.tsx` (icon, title, summary,
-description, items): **Digital Presence & Web · Branding & Visual
-Communication · Data Analytics & BI · Intelligent Automation & AI · Digital
-Strategy & Consulting.** Rendered as alternating **`Spotlight`** rows (real
+Six pillars, defined in `src/content/services.tsx` (icon, title, summary,
+description, items): **Digital Presence & Web · Hosting, Domains & Email ·
+Branding & Graphic Design · Data Analytics & BI · Intelligent Automation & AI ·
+Digital Strategy & Consulting.** Rendered as alternating **`Spotlight`** rows (real
 proof screenshot or a branded panel, with an overlapping card), a jump-chip
 sub-nav, then a three-step process and the Work preview. Hero carries the
 animated `CodeWindow`. Copy is outcome-framed ("We help you harness AI…").
@@ -133,8 +133,8 @@ The single contact form (`Contact` with `hideIntro`) under a PageHeader, with a
 
 | File | Controls |
 |---|---|
-| `src/content/site.ts` | Company info, nav links, footer columns |
-| `src/content/services.tsx` | The five service pillars |
+| `src/content/site.ts` | Company info, nav links, footer columns (Products · Services · Company · Contact) |
+| `src/content/services.tsx` | The six service pillars |
 | `src/content/sectors.tsx` | Sectors / Industries (summary + offerings) |
 | `src/content/pillars.tsx` | Home "Why Ubunifu" strip |
 | `src/content/values.tsx` | About values |

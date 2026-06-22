@@ -33,7 +33,6 @@
 .serviceGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr;
   gap: 1.25rem;
 }
 
@@ -89,10 +88,15 @@
   line-height: 1.55;
 }
 
-/* Trailing CTA tile */
+/* Trailing CTA — full-width banner below the 2×3 grid */
 .serviceCta {
-  justify-content: center;
-  gap: 1rem;
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  padding: 1.6rem 2.25rem;
   background: linear-gradient(135deg, var(--brand), var(--primary));
   border: none;
 }
@@ -103,21 +107,29 @@
   font-weight: 700;
   line-height: 1.3;
   color: #fff;
+  max-width: 36ch;
 }
 
+/* Solid white pill with brand-coloured text: ~6:1 contrast at any point on
+   the orange→purple gradient, and reads as a clear primary action. */
 .serviceCtaLink {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  color: #fff;
+  flex-shrink: 0;
+  padding: 0.6rem 1.2rem;
+  color: var(--primary);
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
-  transition: gap 0.2s ease;
+  background: #fff;
+  border-radius: 100px;
+  transition: gap 0.2s ease, background 0.2s ease;
 }
 
 .serviceCta:hover .serviceCtaLink {
   gap: 0.7rem;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 /* ── Sectors grid ─────────────────────────────── */

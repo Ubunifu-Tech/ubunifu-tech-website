@@ -1,9 +1,14 @@
-// The five service pillars. Source of truth for the Services page and the
+// The six service pillars. Source of truth for the Services page and the
 // homepage services section. Icons are lucide-react. Keep descriptions
 // specific and grounded (see POSITIONING.md).
+//
+// The count is spelled out in two headings ("Six ways we help you grow" on the
+// homepage and /build) and the /build hero lead — update those if you add or
+// remove a pillar.
 
 import {
   Code2,
+  Server,
   Palette,
   BarChart3,
   Sparkles,
@@ -32,23 +37,39 @@ export const services: ReadonlyArray<Service> = [
       'Websites & web applications',
       'E-commerce',
       'CMS you control',
-      'Hosting & domain coordination',
+      'SEO & accessibility',
       'Performance & UX',
+    ],
+  },
+  {
+    key: 'hosting',
+    icon: Server,
+    title: 'Hosting, Domains & Email',
+    summary: 'Keep your business online.',
+    description:
+      'The infrastructure that keeps you online, looked after end to end: fast, secure hosting for your website and apps, your domain registered and pointed where it should be, and professional email on your own domain. We set it up, keep it running, and stay on top of the renewals, so a lapsed domain or forgotten invoice never quietly takes your site or inbox offline.',
+    items: [
+      'Website & app hosting',
+      'Domain registration & DNS',
+      'Professional email on your domain',
+      'SSL certificates & backups',
+      'Renewals & ongoing support',
     ],
   },
   {
     key: 'branding',
     icon: Palette,
-    title: 'Branding & Visual Communication',
+    title: 'Branding & Graphic Design',
     summary: 'A look that earns trust.',
     description:
-      'A cohesive visual identity and the materials that carry it, from logo and style guide to the marketing collateral and product interfaces that represent you.',
+      'A cohesive visual identity and the design work that carries it day to day: logo, brand identity and style guide, plus the banners, flyers, social posts, business cards and marketing collateral your business runs on, all in one consistent look.',
     items: [
-      'Logo & visual identity',
-      'Style guides',
-      'Marketing collateral',
+      'Logo design & brand identity',
+      'Banners, flyers & posters',
+      'Social media graphics',
+      'Business cards & stationery',
+      'Marketing collateral & print',
       'UI/UX design',
-      'Social & print graphics',
     ],
   },
   {

@@ -89,9 +89,9 @@ export const Hero: React.FC = () => {
               custom={0.3}
               variants={fadeUp}
             >
-              A digital-solutions agency in Arusha. We design, build, and run web,
-              data, AI, and branding for organisations across Tanzania, built around
-              how this market actually works.
+              A digital-solutions agency in Arusha. We design, build, host, and run
+              web, data, AI, and branding for organisations across Tanzania, built
+              around how this market actually works.
             </motion.p>
 
             <motion.div

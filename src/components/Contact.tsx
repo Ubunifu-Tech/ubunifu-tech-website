@@ -11,6 +11,8 @@ type FormStatus = 'idle' | 'sending' | 'success' | 'error';
 const SUBJECT_OPTIONS = [
   'Product inquiry',
   'Custom build / Consulting',
+  'Hosting, domains & email',
+  'Branding & design',
   'Partnership',
   'Careers',
   'Other',

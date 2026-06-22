@@ -3,7 +3,7 @@ import { CtaBand } from '@/components/CtaBand';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { Topography } from '@/components/Topography';
-import { CodeWindow } from '@/components/CodeWindow';
+import { ServiceConstellation } from '@/components/visuals/ServiceConstellation';
 import { Spotlight } from '@/components/Spotlight';
 import { services, type Service } from '@/content/services';
 import styles from './Build.module.css';
@@ -115,7 +115,7 @@ export default function BuildPage() {
               </div>
 
               <div className={styles.heroVisual}>
-                <CodeWindow />
+                <ServiceConstellation />
               </div>
             </div>
           </div>

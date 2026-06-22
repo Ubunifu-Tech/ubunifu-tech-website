@@ -1,0 +1,138 @@
+.section {
+  padding: 104px 0;
+  background: var(--background);
+}
+
+.head {
+  margin-bottom: 2.75rem;
+  max-width: 640px;
+}
+
+.heading {
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin: 0.5rem 0 0.75rem;
+}
+
+.sub {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 620px;
+}
+
+/* Flow: a canvas particle layer sits BEHIND the stage cards. */
+.flow {
+  position: relative;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 16px 36px rgba(109, 63, 232, 0.1);
+  transform: translateY(-3px);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--primary-dim);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.card:hover .icon {
+  background: var(--primary);
+  color: #fff;
+}
+
+.step {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.ctitle {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin: 0.1rem 0 0.2rem;
+}
+
+.csub {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 2.5rem;
+  color: var(--brand);
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.link:hover {
+  gap: 0.7rem;
+  color: var(--brand-hover);
+}
+
+/* 4-col horizontal pipeline on desktop, straight to a 1-col vertical flow
+   below — no 2-col step, so the connector polyline never crosses diagonally. */
+@media (max-width: 880px) {
+  .grid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 80px 0;
+  }
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { site } from '@/content/site';
 import { Topography } from './Topography';
+import { LogoConstellation } from './visuals/LogoConstellation';
 import styles from './CtaBand.module.css';
 
 // Closing call-to-action. Its own section (a contained card), kept separate
@@ -12,6 +13,8 @@ export const CtaBand: React.FC = () => {
         <div className={styles.panel}>
           <div className={styles.aurora} aria-hidden="true" />
           <Topography className={styles.topo} />
+          <LogoConstellation />
+          <div className={styles.scrim} aria-hidden="true" />
           <div className={styles.content}>
             <h2 className={styles.heading}>Got something to build?</h2>
             <p className={styles.text}>

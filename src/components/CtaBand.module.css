@@ -33,6 +33,21 @@
   pointer-events: none;
 }
 
+/* Soft vignette between the particle "U" and the copy, so text stays legible
+   over the dots while the glyph still reads at the edges. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 90% 80% at 50% 44%,
+    rgba(18, 14, 28, 0.62) 0%,
+    rgba(18, 14, 28, 0.2) 54%,
+    rgba(18, 14, 28, 0) 78%
+  );
+}
+
 .content {
   position: relative;
   z-index: 1;

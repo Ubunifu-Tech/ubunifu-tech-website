@@ -1,0 +1,33 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.92;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Keyboard / screen-reader equivalent of the clickable nodes. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .wrap {
+    aspect-ratio: 1 / 1;
+    max-width: 420px;
+  }
+}

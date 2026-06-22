@@ -6,6 +6,7 @@ import {
   WorkPreview,
   ProductsProof,
 } from '@/components/HomePreviews';
+import { DataFlow } from '@/components/visuals/DataFlow';
 import { Testimonial } from '@/components/Testimonial';
 import { CtaBand } from '@/components/CtaBand';
 
@@ -19,6 +20,7 @@ export default function Home() {
       <ProductsProof />
       {/* Then the offering */}
       <ServicesPreview />
+      <DataFlow />
       <SectorsStrip />
       <Testimonial />
       <CtaBand />

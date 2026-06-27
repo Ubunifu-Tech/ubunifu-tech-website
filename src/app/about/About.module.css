@@ -126,6 +126,8 @@
   aspect-ratio: 4 / 3;
   border-radius: 20px;
   overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   box-shadow: 0 30px 60px -28px rgba(27, 14, 71, 0.35);
 }
 
@@ -136,12 +138,10 @@
 .storyTint {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 107, 44, 0.35),
-    rgba(109, 63, 232, 0.55)
-  );
-  mix-blend-mode: multiply;
+  background:
+    linear-gradient(180deg, rgba(31, 26, 54, 0) 46%, rgba(31, 26, 54, 0.2) 100%),
+    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.36), transparent 34%);
+  pointer-events: none;
 }
 
 .storyCard {

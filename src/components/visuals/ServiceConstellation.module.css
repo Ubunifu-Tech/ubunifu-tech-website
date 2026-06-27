@@ -12,7 +12,7 @@
   height: 100%;
 }
 
-/* Keyboard / screen-reader equivalent of the clickable nodes. */
+/* Keyboard / screen-reader equivalent of the clickable canvas nodes. */
 .srOnly {
   position: absolute;
   width: 1px;

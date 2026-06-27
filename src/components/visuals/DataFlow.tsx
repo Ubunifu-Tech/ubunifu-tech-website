@@ -6,6 +6,7 @@
 // under the (opaque) cards, so each stage reads as "processing" the stream.
 
 import React, { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Database, Filter, Sparkles, LineChart } from 'lucide-react';
@@ -189,20 +190,38 @@ export const DataFlow: React.FC = () => {
   return (
     <section className={styles.section}>
       <div className="container">
-        <motion.div
-          className={styles.head}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease }}
-        >
-          <span className="eyebrow">Data &amp; AI</span>
-          <h2 className={styles.heading}>From raw data to decisions</h2>
-          <p className={styles.sub}>
-            The analytics and AI side of what we do: we take raw, messy data and
-            turn it into models and live dashboards your team actually uses.
-          </p>
-        </motion.div>
+        <div className={styles.introGrid}>
+          <motion.div
+            className={styles.head}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease }}
+          >
+            <span className="eyebrow">Data &amp; AI</span>
+            <h2 className={styles.heading}>From raw data to decisions</h2>
+            <p className={styles.sub}>
+              The analytics and AI side of what we do: we take raw, messy data and
+              turn it into models and live dashboards your team actually uses.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className={styles.visual}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.55, delay: 0.08, ease }}
+          >
+            <Image
+              src="/editorial/data-to-decisions.png"
+              alt="Editorial illustration of unstructured documents and data flowing into clean dashboard-like decision panels"
+              fill
+              sizes="(max-width: 900px) 100vw, 560px"
+              className={styles.visualImg}
+            />
+          </motion.div>
+        </div>
 
         <div className={styles.flow} ref={flowRef}>
           <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />

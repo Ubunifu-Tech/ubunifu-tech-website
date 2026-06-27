@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Topography } from './Topography';
 import styles from '../app/blog/Blog.module.css';
 
 export type PostMeta = {
@@ -58,8 +58,14 @@ const FeaturedCard: React.FC<{ post: PostMeta }> = ({ post }) => (
       </div>
     </div>
     <div className={styles.featuredVisual} aria-hidden="true">
-      <span className={`aurora ${styles.featuredAurora}`} />
-      <Topography className={styles.featuredTopo} />
+      <Image
+        src="/editorial/journal-workshop.png"
+        alt=""
+        fill
+        sizes="(max-width: 860px) 100vw, 420px"
+        className={styles.featuredImage}
+      />
+      <span className={styles.featuredShade} />
       <span className={styles.featuredIndex}>01</span>
       <span className={styles.featuredKicker}>Latest</span>
     </div>

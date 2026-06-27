@@ -70,8 +70,8 @@ export default function AboutPage() {
               <ScrollReveal className={styles.storyMedia} delay={120}>
                 <div className={styles.storyImageWrap}>
                   <Image
-                    src="/about/collaboration.jpg"
-                    alt="A working session reviewing plans and screens together"
+                    src="/editorial/journal-workshop.png"
+                    alt="Editorial illustration of notebooks, planning cards, and interface tiles on a workshop desk"
                     fill
                     sizes="(max-width: 900px) 100vw, 520px"
                     className={styles.storyImg}

@@ -3,8 +3,15 @@
   background: var(--background);
 }
 
+.introGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  margin-bottom: 2.5rem;
+}
+
 .head {
-  margin-bottom: 2.75rem;
   max-width: 640px;
 }
 
@@ -21,6 +28,21 @@
   color: var(--text-secondary);
   line-height: 1.7;
   max-width: 620px;
+}
+
+.visual {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-2);
+  box-shadow: 0 24px 70px -36px rgba(109, 63, 232, 0.28);
+}
+
+.visualImg {
+  object-fit: cover;
+  object-position: center;
 }
 
 /* Flow: a canvas particle layer sits BEHIND the stage cards. */
@@ -124,6 +146,15 @@
 /* 4-col horizontal pipeline on desktop, straight to a 1-col vertical flow
    below — no 2-col step, so the connector polyline never crosses diagonally. */
 @media (max-width: 880px) {
+  .introGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .visual {
+    min-height: auto;
+    aspect-ratio: 16 / 10;
+  }
+
   .grid {
     grid-template-columns: 1fr;
     max-width: 520px;
@@ -134,5 +165,11 @@
 @media (max-width: 900px) {
   .section {
     padding: 80px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 64px 0;
   }
 }

@@ -49,8 +49,11 @@ function spotlightMedia(service: Service) {
       };
     default:
       return {
-        panelIcon: service.icon,
-        panelChips: ['Roadmap', 'Maturity assessment', 'Training', 'Advisory'],
+        image: {
+          src: '/editorial/digital-workbench.png',
+          alt: 'Editorial illustration of a digital workbench with abstract planning boards and interface blocks',
+        },
+        overlap: { title: 'Plan, build, support', sub: 'Roadmaps, training and advisory' },
       };
   }
 }

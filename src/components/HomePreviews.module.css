@@ -28,6 +28,64 @@
   max-width: 620px;
 }
 
+.serviceFeature {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: 1.75rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px -40px rgba(27, 14, 71, 0.28);
+}
+
+.serviceFeatureMedia {
+  position: relative;
+  min-height: 310px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.serviceFeatureImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.serviceFeatureCopy {
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 2rem);
+}
+
+.serviceFeatureLabel {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin-bottom: 0.9rem;
+}
+
+.serviceFeatureTitle {
+  font-family: var(--font-heading);
+  font-size: clamp(1.45rem, 2.4vw, 2.05rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: 0;
+  color: var(--text-primary);
+  max-width: 18ch;
+  margin-bottom: 1rem;
+}
+
+.serviceFeatureText {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 48ch;
+}
+
 /* ── Services grid ────────────────────────────── */
 
 .serviceGrid {
@@ -429,6 +487,15 @@
   .section {
     padding: 80px 0;
   }
+
+  .serviceFeature {
+    grid-template-columns: 1fr;
+  }
+
+  .serviceFeatureMedia {
+    min-height: auto;
+    aspect-ratio: 16 / 10;
+  }
 }
 
 @media (max-width: 680px) {
@@ -440,5 +507,19 @@
 
   .sectorGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .serviceFeature {
+    padding: 0.75rem;
+  }
+
+  .serviceFeatureMedia {
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 64px 0;
   }
 }

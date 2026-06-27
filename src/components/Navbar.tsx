@@ -56,6 +56,8 @@ export const Navbar: React.FC = () => {
               className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`}
               onClick={toggleMobileMenu}
               aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
               <span className={styles.bar}></span>
               <span className={styles.bar}></span>
@@ -65,7 +67,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
+      <div id="mobile-navigation" className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
         <div className={styles.mobileLinks}>
           {navLinks.map((link) => (
             <Link

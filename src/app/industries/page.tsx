@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { Spotlight } from '@/components/Spotlight';
@@ -46,14 +47,27 @@ export default function IndustriesPage() {
         {/* Other sectors */}
         <section className={`section ${styles.gridSection}`}>
           <div className="container">
-            <ScrollReveal>
-              <span className="eyebrow">And across the economy</span>
-              <h2 className={styles.heading}>Where else we can help</h2>
-              <p className={styles.sub}>
-                We&apos;re equipped to serve these sectors. Framed as what we&apos;d
-                build, not clients we claim, until the work is shipped.
-              </p>
-            </ScrollReveal>
+            <div className={styles.sectionIntro}>
+              <ScrollReveal className={styles.introCopy}>
+                <span className="eyebrow">And across the economy</span>
+                <h2 className={styles.heading}>Where else we can help</h2>
+                <p className={styles.sub}>
+                  We&apos;re equipped to serve these sectors. Framed as what we&apos;d
+                  build, not clients we claim, until the work is shipped.
+                </p>
+              </ScrollReveal>
+
+              <ScrollReveal className={styles.introVisual} delay={120}>
+                <Image
+                  src="/editorial/sector-network-map.png"
+                  alt="Editorial illustration of Tanzanian business sectors connected by digital system paths"
+                  fill
+                  sizes="(max-width: 900px) 100vw, 520px"
+                  className={styles.introImg}
+                />
+                <span className={styles.introBadge}>Capability map</span>
+              </ScrollReveal>
+            </div>
 
             <div className={styles.grid}>
               {others.map((sector, index) => {

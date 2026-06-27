@@ -40,6 +40,32 @@ export const ServicesPreview: React.FC = () => {
           </p>
         </motion.div>
 
+        <motion.div
+          className={styles.serviceFeature}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, ease }}
+        >
+          <div className={styles.serviceFeatureMedia}>
+            <Image
+              src="/editorial/digital-workbench.png"
+              alt="Editorial illustration of a digital workbench with abstract planning boards, hosting cards and interface blocks"
+              fill
+              sizes="(max-width: 900px) 100vw, 560px"
+              className={styles.serviceFeatureImg}
+            />
+          </div>
+          <div className={styles.serviceFeatureCopy}>
+            <p className={styles.serviceFeatureLabel}>One team, the whole digital side</p>
+            <h3 className={styles.serviceFeatureTitle}>Strategy, design, build, hosting, and support under one roof.</h3>
+            <p className={styles.serviceFeatureText}>
+              Most projects need more than a website. They need the brand, the
+              infrastructure, the data, and the support model to work together.
+            </p>
+          </div>
+        </motion.div>
+
         <div className={styles.serviceGrid}>
           {services.map((service, index) => {
             const Icon = service.icon;

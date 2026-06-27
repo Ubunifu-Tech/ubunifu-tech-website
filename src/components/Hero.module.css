@@ -335,8 +335,12 @@
 
 @media (max-width: 600px) {
   .container {
-    padding-top: 32px;
+    padding-top: 24px;
     padding-bottom: 48px;
+  }
+
+  .layout {
+    gap: 2.25rem;
   }
 
   .actions {

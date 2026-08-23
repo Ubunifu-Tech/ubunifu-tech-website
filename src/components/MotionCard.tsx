@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface MotionCardProps {
   children: React.ReactNode;
@@ -10,15 +10,17 @@ interface MotionCardProps {
 }
 
 export const MotionCard: React.FC<MotionCardProps> = ({ children, index = 0, className }) => {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 24 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
+      viewport={{ once: true, amount: 0.18, margin: '0px 0px -40px' }}
       transition={{
-        duration: 0.5,
-        delay: index * 0.1,
+        duration: reduceMotion ? 0 : 0.5,
+        delay: reduceMotion ? 0 : index * 0.075,
         ease: [0.16, 1, 0.3, 1],
       }}
     >

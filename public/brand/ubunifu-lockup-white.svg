@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 96" role="img" aria-labelledby="title desc">
+  <title id="title">Ubunifu Technologies reversed logo</title>
+  <desc id="desc">The Ubunifu Ligature mark with the full white Ubunifu Technologies wordmark.</desc>
+  <g transform="translate(10 16) scale(.95)">
+    <path d="M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5" fill="none" stroke="#FF6B2C" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
+    <path d="M43 13v23c0 11 6 18 14 18" fill="none" stroke="#6D3FE8" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
+    <path d="M29 16 57 10" fill="none" stroke="#6D3FE8" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
+  </g>
+  <text x="90" y="58" fill="#FFFFFF" font-family="Poppins, Inter, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="-1.4">Ubunifu</text>
+  <text x="224" y="58" fill="#FFFFFF" font-family="Poppins, Inter, Arial, sans-serif" font-size="25" font-weight="600" letter-spacing="-.55">Technologies</text>
+</svg>

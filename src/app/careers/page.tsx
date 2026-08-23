@@ -2,28 +2,30 @@ import Link from 'next/link';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import styles from './Careers.module.css';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: 'Careers',
-  description: 'Join Ubunifu Technologies. We build SaaS products for African businesses. Open roles will be posted here as we grow.',
-};
+  description: 'Ubunifu Technologies has no advertised vacancies at present. Confirmed opportunities and application instructions will be published here.',
+  path: '/careers',
+});
 
-const futureRoles = [
+const capabilityAreas = [
   {
-    title: 'Software Engineer',
-    description: 'Python, FastAPI, TypeScript, Next.js. Experience with AI/ML systems a bonus.',
+    title: 'Software engineering',
+    description: 'Web applications and services across Python, TypeScript, FastAPI, and Next.js.',
   },
   {
-    title: 'Product Designer',
-    description: 'UI/UX for web applications. Strong craft, no-nonsense approach to complexity.',
+    title: 'Product design',
+    description: 'Clear, accessible product experiences for web applications and complex workflows.',
   },
   {
-    title: 'Data Engineer',
-    description: 'Pipelines, vector databases, document processing. Experience with RAG systems preferred.',
+    title: 'Data and applied AI',
+    description: 'Data pipelines, document processing, retrieval systems, and practical automation.',
   },
   {
-    title: 'Sales & Partnerships',
-    description: 'Tanzania and East Africa market. Swahili required. B2B SaaS experience a plus.',
+    title: 'Partnerships',
+    description: 'Thoughtful business development and customer partnerships in Tanzania and East Africa.',
   },
 ];
 
@@ -34,35 +36,54 @@ export default function CareersPage() {
         <PageHeader
           eyebrow="Careers"
           title="Work at Ubunifu"
-          lead="We're a small team building software for African businesses, starting in Tanzania. We move deliberately, ship real things, and care about the details."
+          lead="We grow deliberately and publish confirmed opportunities with their specific requirements and application process on this page."
+          artwork={{
+            primary: {
+              src: '/editorial/brand-system-art.webp',
+              alt: 'Tactile system showing one clear idea applied consistently across many touchpoints',
+            },
+            caption: 'Craft · Judgment · Close collaboration',
+          }}
         />
         <div className="container">
           <div className={styles.openSection}>
             <div className={styles.noRoles}>
               <h2 className={styles.noRolesTitle}>No open roles right now</h2>
               <p className={styles.noRolesText}>
-                We are heads-down building. When we are ready to hire, we will post roles here.
-                If you want to be notified, send a brief note to{' '}
+                We are not currently advertising jobs, internships, or contract roles. If you
+                would still like to make a general introduction, send a short note to{' '}
                 <a href="mailto:info@ubunifutech.com" className={styles.emailLink}>info@ubunifutech.com</a>{' '}
-                with the kind of work you do.
+                with the kind of work you do or a link to your portfolio. A general introduction
+                is not an application, and we cannot promise a reply or future consideration.
+              </p>
+              <p className={styles.privacyNote}>
+                Please do not email identity documents, financial details, health information, or
+                other sensitive personal information. See our <Link href="/privacy">privacy notice</Link>{' '}
+                for how we handle careers enquiries.
               </p>
               <Link href="/contact" className={styles.contactBtn}>
-                Get in touch
+                General enquiry
               </Link>
             </div>
           </div>
 
-          <div className={styles.futureSection}>
-            <h2 className={styles.futureHeading}>Roles we will hire for as we grow</h2>
+          <section className={styles.futureSection} aria-labelledby="capability-areas-heading">
+            <h2 id="capability-areas-heading" className={styles.futureHeading}>
+              Areas where we may add capacity
+            </h2>
+            <p className={styles.futureIntro}>
+              These are examples of capabilities relevant to our work, not current vacancies or a
+              commitment to hire. Any confirmed role may use different titles or requirements.
+            </p>
             <div className={styles.rolesGrid}>
-              {futureRoles.map((role) => (
-                <div key={role.title} className={styles.roleCard}>
-                  <h3 className={styles.roleTitle}>{role.title}</h3>
-                  <p className={styles.roleDesc}>{role.description}</p>
+              {capabilityAreas.map((area) => (
+                <div key={area.title} className={styles.roleCard}>
+                  <h3 className={styles.roleTitle}>{area.title}</h3>
+                  <p className={styles.roleDesc}>{area.description}</p>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         </div>
       </main>
       <CtaBand />

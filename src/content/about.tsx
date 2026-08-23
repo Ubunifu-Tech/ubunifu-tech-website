@@ -23,8 +23,8 @@ export const visionMission = {
 };
 
 export const story: ReadonlyArray<string> = [
-  'Most software was built for somewhere else. It assumes fast, constant internet, credit-card payments, English-first users, and budgets that fit a foreign price list. For a lot of organisations in Tanzania, that means working around the tool instead of with it.',
-  'We started Ubunifu to close that gap. We bring serious engineering — cloud, data, modern AI, full-stack web — and pair it with a real read of how business actually runs here. We build the digital side, then we stay on to run it with you.',
+  'The gap we keep encountering is rarely a total lack of technology. It is a patchwork of tools, spreadsheets, messages, and manual work that does not quite match the workflow or the support reality around it.',
+  'We started Ubunifu to work inside that gap. Consulting lets us understand specific organisations. Building products forces us to make those lessons reusable, dependable, and simple enough to operate. Each side makes the other sharper.',
 ];
 
 export type Objective = {
@@ -52,7 +52,7 @@ export const objectives: ReadonlyArray<Objective> = [
   {
     icon: HeartHandshake,
     title: 'Build for the long term',
-    body: 'Not launch-and-leave. We run, support, and grow what we build, and help your team build its own digital confidence.',
+    body: 'Plan ownership beyond launch. When support is part of the engagement, we maintain and improve what we build while helping your team grow its own digital confidence.',
   },
 ];
 
@@ -72,10 +72,10 @@ export const approach: ReadonlyArray<ApproachStep> = [
   },
   {
     title: 'Build iteratively',
-    body: 'Working software, shipped in steps, with you involved throughout. No big-bang surprises.',
+    body: 'Working software, shipped in reviewable steps, with you involved throughout. Early feedback reduces late surprises.',
   },
   {
     title: 'Run and evolve',
-    body: 'We stay on to maintain, monitor, and improve it, so the solution keeps delivering as you grow.',
+    body: 'Where ongoing support is agreed, we maintain, monitor, and improve the system as needs change.',
   },
 ];

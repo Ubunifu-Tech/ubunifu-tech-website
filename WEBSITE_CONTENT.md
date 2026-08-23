@@ -1,178 +1,190 @@
-# Ubunifu Technologies — Website Reference
+# Ubunifu Technologies — Site as Built
 
-A maintenance reference for ubunifutech.com — the site **as it is actually
-built**: pages, where each piece of content lives, and the data files to edit.
-For positioning/voice see `POSITIONING.md`; for the visual system see
-`BRANDING.md`; for the change log see `SITE_IMPROVEMENTS.md`.
+This is the maintenance map for `ubunifutech.com`: current routes, rendered narratives, content sources, and operational behavior. Use [`POSITIONING.md`](POSITIONING.md) for company claims and voice, [`BRANDING.md`](BRANDING.md) for the visual system, and [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) for change history.
 
-Last refreshed: June 2026.
+Last refreshed: 23 August 2026.
 
----
+## Company frame
 
-## Company facts
+- **Category:** Arusha-based consulting company + product studio
+- **Tagline:** Consulting + products, built in Tanzania.
+- **Location:** Arusha, Tanzania
+- **Contact:** `info@ubunifutech.com` · `+255 748 548 816`
 
-- **Name:** Ubunifu Technologies
-- **What we are:** a Tanzania-based digital-solutions agency
-- **Tagline:** Digital solutions, built for Tanzania.
-- **HQ:** Arusha, Tanzania (serving nationwide)
-- **Email:** info@ubunifutech.com
-- **Phone / WhatsApp:** +255 748 548 816
+Company details, primary navigation, footer columns, and product/service URLs are centralized in [`src/content/site.ts`](src/content/site.ts). The Footer component owns its Privacy and Brand-kit legal links.
 
-Single source of truth: `src/content/site.ts`.
+## Navigation and shared chrome
 
----
+The full **Ubunifu Technologies** lockup links home. Its custom Ubunifu Ligature is an interlocking orange U and purple T with a rising angled T crown; the name sits on one readable baseline. Primary navigation is:
 
-## Page map
+> Services · Work · Products · Insights · About
 
-| Route | Page | File |
+“Start a project” links to `/contact` as the desktop and mobile CTA. The positioning line “Consulting + products, built in Tanzania.” is supporting copy and never appears inside the navigation or logo lockup. The footer adds product links, all service anchors, Industries, Careers, Contact, Privacy, and the Brand kit.
+
+[`src/app/layout.tsx`](src/app/layout.tsx) renders the skip link, Navbar, page content, Footer, and WhatsApp button. Lenis smooth scrolling is disabled for reduced-motion users. Most marketing pages render their own closing `CtaBand`; Contact, Privacy, Brand, and the 404 do not.
+
+## Route map
+
+| Route | Current purpose | Primary source |
 |---|---|---|
-| `/` | Home — agency overview | `src/app/page.tsx` |
-| `/build` | Services — six capability spotlights | `src/app/build/page.tsx` |
-| `/industries` | Industries — who we serve | `src/app/industries/page.tsx` |
-| `/work` | Our Work — client projects | `src/app/work/page.tsx` |
-| `/work/[slug]` | Case study | `src/app/work/[slug]/page.tsx` |
-| `/about` | About — vision, mission, story, team | `src/app/about/page.tsx` |
-| `/blog` | Blog index (category filter) | `src/app/blog/page.tsx` |
-| `/blog/[slug]` | Blog post | `src/app/blog/[slug]/page.tsx` |
-| `/careers` | Careers (footer link only) | `src/app/careers/page.tsx` |
-| `/contact` | Contact — the only form | `src/app/contact/page.tsx` |
-| `/products` | Products (proof page; not in nav) | `src/app/products/page.tsx` |
-| `/brand` | Brand kit — colours, type, logo (not in nav, noindex) | `src/app/brand/page.tsx` |
+| `/` | Consulting + products homepage | `src/app/page.tsx` |
+| `/build` | Six consulting service capabilities and delivery process | `src/app/build/page.tsx` |
+| `/work` | Named client work and testimonial | `src/app/work/page.tsx` |
+| `/work/[slug]` | Full client case study | `src/app/work/[slug]/page.tsx` |
+| `/products` | Insight, Sifa, and Rafiki product family | `src/app/products/page.tsx` |
+| `/blog` | “The journal” index | `src/app/blog/page.tsx` |
+| `/blog/[slug]` | Markdown journal article | `src/app/blog/[slug]/page.tsx` |
+| `/about` | Studio story, principles, approach, and team | `src/app/about/page.tsx` |
+| `/industries` | Proven tourism work and potential sector fits | `src/app/industries/page.tsx` |
+| `/contact` | Project, product, support, partnership, and general enquiries | `src/app/contact/page.tsx` |
+| `/careers` | No-current-vacancies notice and informal enquiry guidance | `src/app/careers/page.tsx` |
+| `/privacy` | Contact-form and careers-enquiry privacy notice | `src/app/privacy/page.tsx` |
+| `/brand` | Ubunifu Ligature kit, palette, type, rules, and downloads | `src/app/brand/page.tsx` |
+| `/api/contact` | Validated contact-form email endpoint | `src/app/api/contact/route.ts` |
 
-**Nav order:** Home · Services · Industries · Work · About · Blog · Contact.
-"Products", "Careers", and "Brand" (`/brand`) are intentionally not headline nav
-items — products appear as proof, Careers lives in the footer, and `/brand` is an
-internal reference. A shareable **brand-guide PDF** lives at
-`public/ubunifu-brand-guide.pdf` (served at `/ubunifu-brand-guide.pdf`, linked from `/brand`).
+[`src/app/sitemap.ts`](src/app/sitemap.ts) publishes static routes plus every case study and journal article. [`src/app/not-found.tsx`](src/app/not-found.tsx) owns the branded 404. Shared page metadata uses [`src/lib/metadata.ts`](src/lib/metadata.ts) and `/og.png`; case studies have generated route-level cards, while journal articles use their own cover images for social metadata.
 
-Branded `not-found.tsx`, dynamic OG cards (`opengraph-image.tsx` at root +
-per blog post + per case study), and `sitemap.ts` round out the app routes.
+## Homepage narrative
 
+The homepage tells one story: Ubunifu can build a specific system with a client or offer a product it already operates.
+
+1. **Hero** — “Build the system your business actually needs.” A near-viewport, full-width editorial marquee leads with the consulting proposition; a dark credential rail states the delivery model and Arusha grounding without product-dashboard UI.
+2. **ProblemStrip** — four grounded differentiators from `src/content/pillars.tsx`.
+3. **WorkPreview** — Safari King Africa and Usambara Destination, drawn from the client portfolio.
+4. **Testimonial** — sourced from `src/content/testimonials.tsx`, reinforcing the client work before products are introduced.
+5. **ProductsProof** — Insight and Sifa as live products; Rafiki as in development.
+6. **Insights** — the three newest journal posts from `getAllPosts()`.
+7. **CtaBand** — closes the page with a route to Contact.
+
+The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `Hero`, `ProblemStrip`, `WorkPreview`, `Testimonial`, `ProductsProof`, and `Insights` own the corresponding presentation.
+
+## Consulting, work, products, and sectors
+
+### Services (`/build`)
+
+Six service records in [`src/content/services.tsx`](src/content/services.tsx):
+
+1. Digital Presence & Web
+2. Hosting, Domains & Email
+3. Branding & Graphic Design
+4. Data Analytics & BI
+5. Intelligent Automation & AI
+6. Digital Strategy & Consulting
+
+The page uses the same full-width editorial header system as the other principal routes, followed by anchor chips, alternating capability spotlights, the Understand → Shape → Build → Operate process, and a selected-work preview. Real screenshots are used where evidence exists; other services receive branded panels.
+
+### Work (`/work`)
+
+[`src/content/portfolio.tsx`](src/content/portfolio.tsx) owns the two named client projects:
+
+- **Safari King Africa** — booking platform + operations system
+- **Usambara Destination** — eco-tourism site + enquiry engine
+
+Each record supplies the listing card, `/work/[slug]` case study, screenshots, factual overview, capabilities, highlights, and technology list. The Work page does not double as the product index.
+
+### Products (`/products`)
+
+[`src/content/products.tsx`](src/content/products.tsx) is the status and copy authority:
+
+| Product | Code status | Current presentation |
+|---|---|---|
+| Ubunifu Insight | `live` | Document AI; links to `insight.ubunifutech.com` |
+| Ubunifu Sifa | `live` | Business operations and credit-ledger workflows; links to `sifa.ubunifutech.com` |
+| Ubunifu Rafiki | `soon` | Embeddable website tools; shown as in development |
+
+Custom consulting belongs under `/build`; it is not a fourth product. Product availability is not evidence of customer counts or usage.
+
+### Industries (`/industries`)
+
+[`src/content/sectors.tsx`](src/content/sectors.tsx) carries a `proven` flag plus summaries and possible offerings. Tourism & Hospitality is the only proven sector and links to named work. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture, Education, and Government are framed as potential capability fits, with specialist and regulatory caveats where needed.
+
+## About and careers
+
+[`src/content/about.tsx`](src/content/about.tsx) owns the studio story and four-step approach. [`src/content/values.tsx`](src/content/values.tsx) owns operating principles, and [`src/content/team.tsx`](src/content/team.tsx) owns team bios and links. `/about` combines those sources with a tactile editorial image from `public/editorial/`.
+
+`/careers` currently advertises no jobs, internships, or contracts. Its capability areas are illustrative, not promised vacancies. Informal introductions are not applications and link to `/privacy` for data-handling guidance.
+
+## Journal and cover images
+
+Journal articles are Markdown files in [`_posts/`](_posts/) parsed by [`src/lib/blog.ts`](src/lib/blog.ts). The index derives its published count and post order at render time; do not hard-code either in documentation.
+
+Standard frontmatter (`coverImage` and `coverAlt` are an optional pair):
+
+```yaml
 ---
-
-## Home page (`/`) — section order
-
+title: "Article title"
+date: "YYYY-MM-DD"
+author: "Author name"
+excerpt: "One concise summary"
+tags: ["Topic", "Another topic"]
+coverImage: "/editorial/example.webp"
+coverAlt: "Meaningful description of the cover"
+---
 ```
-Navbar          — floating glass bar (rendered once in the root layout, in <header>)
-Hero            — "Digital solutions, built for Tanzania." + client-build proof
-ProblemStrip    — "Why Ubunifu": 4 numbered cards with orange icon tiles
-WorkPreview     — client case-study cards (proof first — lead with the work)
-ProductsProof   — Insight + Sifa as "products we've built"
-ServicesPreview — 6 service icon cards + full-width gradient CTA banner → /build
-SectorsStrip    — sectors we serve (icon tiles) → /industries
-Testimonial     — Isaac, Usambara
-CtaBand         — "Got something to build?" (its own section, not the footer)
-Footer          — dark columns block (rendered once in the root layout)
-```
 
-Tightened to lead with proof: **Work + Products** now sit right after the pillars,
-before Services/Sectors. The blog teaser (`Insights`), `TechMarquee`, and
-`AboutPreview` were removed from the homepage to cut length — that content lives on
-`/blog` and `/about`; those components still exist but aren't rendered on home.
+Rules enforced by `src/lib/blog.ts`:
 
----
+- filename is a lowercase, hyphen-separated slug;
+- `title`, `date`, `author`, `excerpt`, and `tags` are required and validated;
+- `coverImage` and `coverAlt` are optional but must appear together;
+- cover paths must be safe site-relative AVIF, JPEG, PNG, or WebP paths;
+- duplicate or empty tags are rejected;
+- posts sort by newest date, then slug; reading time is estimated from Markdown at roughly 200 words per minute.
 
-## Services (`/build`)
+If no cover pair is supplied, the fallback is `/editorial/build-or-buy.webp` with its default alt text. The resolved cover appears in the Journal grid, article hero, Open Graph/Twitter metadata, and `BlogPosting` JSON-LD. Store journal concepts in [`public/editorial/`](public/editorial/); current covers use the 1672 × 941 editorial format documented in [`BRANDING.md`](BRANDING.md).
 
-Six pillars, defined in `src/content/services.tsx` (icon, title, summary,
-description, items): **Digital Presence & Web · Hosting, Domains & Email ·
-Branding & Graphic Design · Data Analytics & BI · Intelligent Automation & AI ·
-Digital Strategy & Consulting.** Rendered as alternating **`Spotlight`** rows (real
-proof screenshot or a branded panel, with an overlapping card), a jump-chip
-sub-nav, then a three-step process and the Work preview. Hero carries the
-animated `CodeWindow`. Copy is outcome-framed ("We help you harness AI…").
+## Brand kit and assets
 
-## Industries (`/industries`)
+`/brand` is a public footer route and sitemap entry, not a primary-navigation item. It previews the two-color Ubunifu Ligature, its full “Ubunifu Technologies” one-line lockup, primary and reversed treatments, canonical colors, typography, voice, and basic usage rules.
 
-`src/content/sectors.tsx` — per-sector `summary` + `offerings`. Tourism leads
-as a proven `Spotlight` (real Safari King site + overlapping "Proven" card);
-the other seven sectors (SMEs/Retail, Finance, NGOs, Healthcare, Agriculture,
-Education, Government) are substantive cards. Framed as capability, not claimed
-clients. The homepage `SectorsStrip` links here.
+Canonical downloads live in [`public/brand/`](public/brand/):
 
-## Work (`/work`)
+- `ubunifu-mark.svg`
+- `ubunifu-lockup.svg`
+- `ubunifu-mark-navy.svg`
+- `ubunifu-mark-white.svg`
+- `ubunifu-lockup-white.svg`
 
-Two groups: **client projects** (`src/content/portfolio.tsx` — **Safari King
-Africa** and **Usambara Destination**, each with a full `/work/[slug]` case
-study) followed by **our own products** (the `ProductsProof` section — Insight
-+ Sifa, linking to the live apps). The header frames both: "Built for clients,
-and for ourselves." Our SaaS counts as work, and it's some of our best proof.
+`public/logo-v2.png` is the 512 × 512 social avatar, and `public/og.png` is the default 1672 × 941 social preview. Use `public/work/` for real client/product evidence and `public/editorial/` for conceptual imagery. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
 
-## Products (proof)
+## Contact and privacy behavior
 
-`src/content/products.tsx` — **Insight** (live, document AI), **Sifa** (live,
-business management), **Rafiki** (coming soon). Shown as proof of capability,
-not the site's headline. The `/products` page still renders the full uniform
-grid for anyone who wants the detail.
+The `/contact` form collects name, email, enquiry type, and a 20–5,000 character message. The client also sends a generated submission ID and an empty honeypot field.
 
-## About (`/about`)
+`POST /api/contact`:
 
-An editorial story (`src/content/about.tsx` holds the narrative): PageHeader →
-**Vision & Mission** statement cards → **Why we exist** (narrative + a
-brand-tinted photo with an overlapping card) → **Objectives** → values (4,
-`src/content/values.tsx`) → **How we work** (numbered four-step approach) → team.
+- accepts JSON only and caps the body at 16 KB;
+- validates field lengths, email shape, subject allowlist, message length, and submission ID;
+- quietly accepts honeypot submissions without sending mail;
+- applies a bounded process-local limit of five attempts per Vercel-provided client address, with email as the non-Vercel development fallback; production should also enforce a distributed Vercel WAF rule for `/api/contact`;
+- requires the server-only `RESEND_API_KEY`;
+- sends the team notification first, then attempts an acknowledgement to the sender; acknowledgement errors and exceptions are logged without failing the successful team notification;
+- returns `503` with the direct email address when Resend is not configured.
 
-Team (`src/content/team.tsx`):
-- **Richard Pallangyo — Data, Software & AI Engineer.** GitHub + LinkedIn.
-- **HappyGod Pallangyo — IT, Design & Support.**
+The form warns against sending passwords or sensitive records and links to `/privacy`. The privacy page explains contact and careers data, limited anti-abuse information, Resend delivery, retention, external services, and correction/deletion requests. Email templates live in [`src/lib/emails.ts`](src/lib/emails.ts); environment setup lives in [`.env.example`](.env.example) and [`README.md`](README.md).
 
-## Blog (`/blog`)
+## Source map
 
-Markdown in `_posts/` via `src/lib/blog.ts`. Featured latest post, category
-filter (`BlogIndex`), reading time, numbered editorial grid. Posts carry a
-reading-progress bar and per-post metadata + OG cards. Seven posts published.
-
-## Contact (`/contact`)
-
-The single contact form (`Contact` with `hideIntro`) under a PageHeader, with a
-"what happens next" micro-timeline. The `CtaBand` on every other page links here.
-
----
-
-## Content data files
-
-| File | Controls |
+| Source | Controls |
 |---|---|
-| `src/content/site.ts` | Company info, nav links, footer columns (Products · Services · Company · Contact) |
-| `src/content/services.tsx` | The six service pillars |
-| `src/content/sectors.tsx` | Sectors / Industries (summary + offerings) |
-| `src/content/pillars.tsx` | Home "Why Ubunifu" strip |
-| `src/content/values.tsx` | About values |
-| `src/content/about.tsx` | About vision / mission / objectives / approach |
-| `src/content/products.tsx` | Products (proof) |
-| `src/content/portfolio.tsx` | Client projects + case studies |
-| `src/content/team.tsx` | Team members |
-| `src/content/testimonials.tsx` | Client testimonials |
-| `_posts/*.md` | Blog posts |
+| `src/content/site.ts` | Company facts, primary nav, footer, product/service URLs |
+| `src/content/services.tsx` | Six consulting capabilities |
+| `src/content/portfolio.tsx` | Client listing and case-study evidence |
+| `src/content/products.tsx` | Product status, descriptions, links, screenshots |
+| `src/content/sectors.tsx` | Proven sector flag, potential fits, caveats |
+| `src/content/pillars.tsx` | Homepage differentiators |
+| `src/content/about.tsx` | Studio story and approach |
+| `src/content/values.tsx` | Operating principles |
+| `src/content/team.tsx` | Team bios and profile links |
+| `src/content/testimonials.tsx` | Published testimonial content |
+| `_posts/*.md` | Journal frontmatter and article bodies |
+| `src/lib/blog.ts` | Journal validation, sorting, fallback cover, reading time |
+| `src/lib/metadata.ts` | Shared canonical, Open Graph, and Twitter metadata |
+| `src/lib/emails.ts` | Contact notification and acknowledgement HTML |
+| `src/app/globals.css` | Design tokens, global accessibility, visual utilities |
+| `src/components/BrandMark.tsx` | Runtime Ubunifu Ligature mark and full-name lockups |
+| `public/brand/` | Canonical vector logo assets |
+| `public/editorial/` | Conceptual editorial imagery |
+| `public/work/` | Real client and product screenshots |
 
----
-
-## Design tokens & components
-
-Visual system lives in `BRANDING.md` and `src/app/globals.css` (warm-orange
-brand `#FF6B2C`, purple accent `#6D3FE8`, lavender background `#F4F2FB`; Poppins
-+ Inter; topography + grain + aurora signature). Icons via `lucide-react`
-(UI) and `react-icons` (tech logos). Animations via `framer-motion`, smooth
-scroll via Lenis (`SmoothScroll`), all reduced-motion-gated.
-
-**Chrome:** the `Navbar` is a floating, contained glass bar (sits above the
-page); the `Footer` is a dark, self-contained columns block; the closing CTA is
-its own `CtaBand` section (a contained dark card), never inside the footer.
-
-Notable components: `Hero`, `ProblemStrip`, `HomePreviews` (Services / Sectors
-/ Work / ProductsProof / About previews), `Spotlight` (alternating feature
-rows, reused on Services + Industries), `CtaBand`, `Insights`, `Products`,
-`Portfolio`, `Testimonial`, `CodeWindow`, `Topography`, `PageHeader`, `Contact`,
-`BlogIndex`, `ReadingProgress`, `TechMarquee`, `Navbar`, `Footer`,
-`WhatsAppButton`.
-
----
-
-## Known follow-ups
-
-- Add real outcome metrics to case studies once measured.
-- Real team headshots (currently branded initials).
-- Capture more Sifa / Insight screenshots (and recapture Insight with
-  populated data); the Education Tutor Swahili screen is the strongest asset.
-- Keep publishing blog posts (Swahili + English).
-- Consider dark mode and a newsletter capture.
+When facts change, edit the owning source first. Keep this map descriptive; do not use it to introduce claims that are absent from the rendered site or content records.

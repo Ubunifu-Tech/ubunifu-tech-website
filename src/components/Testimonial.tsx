@@ -45,6 +45,7 @@ export const Testimonial: React.FC<Props> = ({ project, hideHeader = false }) =>
             <div className={styles.head}>
               <span className="eyebrow">In their words</span>
               <h2 className={styles.heading}>What clients say after we ship</h2>
+              <p className={styles.note}>Feedback lightly edited for length and clarity.</p>
             </div>
           )}
 

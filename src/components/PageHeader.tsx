@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Topography } from './Topography';
+import { HeroArtwork, type HeroArtworkConfig } from './HeroArtwork';
 import styles from './PageHeader.module.css';
 
 interface PageHeaderProps {
@@ -10,6 +11,7 @@ interface PageHeaderProps {
   title: React.ReactNode;
   lead?: string;
   children?: React.ReactNode;
+  artwork?: HeroArtworkConfig;
 }
 
 const fade = {
@@ -26,29 +28,32 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   lead,
   children,
+  artwork,
 }) => {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${artwork ? styles.withArtwork : ''}`}>
       <div className={styles.backdrop} aria-hidden="true">
-        <span className={`aurora ${styles.aurora}`} />
-        <div className="blueprint" />
         <Topography className={styles.topo} />
         <div className="grain" />
       </div>
-      <div className={`container ${styles.inner}`}>
-        <motion.span
-          className="eyebrow"
-          initial="hidden"
+      <div className={styles.brandEdge} aria-hidden="true"><span /><span /></div>
+      <div className={styles.inner}>
+        <motion.div
+          className={styles.topline}
+          initial={reduceMotion ? false : 'hidden'}
           animate="visible"
           custom={0.05}
           variants={fade}
         >
-          {eyebrow}
-        </motion.span>
+          <span>{eyebrow}</span>
+          <span>Ubunifu Technologies</span>
+        </motion.div>
 
         <motion.h1
           className={styles.title}
-          initial="hidden"
+          initial={reduceMotion ? false : 'hidden'}
           animate="visible"
           custom={0.15}
           variants={fade}
@@ -56,29 +61,33 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           {title}
         </motion.h1>
 
-        {lead && (
-          <motion.p
-            className={styles.lead}
-            initial="hidden"
-            animate="visible"
-            custom={0.25}
-            variants={fade}
-          >
-            {lead}
-          </motion.p>
-        )}
+        <div className={styles.supportRow}>
+          {lead && (
+            <motion.p
+              className={styles.lead}
+              initial={reduceMotion ? false : 'hidden'}
+              animate="visible"
+              custom={0.25}
+              variants={fade}
+            >
+              {lead}
+            </motion.p>
+          )}
 
-        {children && (
-          <motion.div
-            className={styles.actions}
-            initial="hidden"
-            animate="visible"
-            custom={0.35}
-            variants={fade}
-          >
-            {children}
-          </motion.div>
-        )}
+          {children && (
+            <motion.div
+              className={styles.actions}
+              initial={reduceMotion ? false : 'hidden'}
+              animate="visible"
+              custom={0.35}
+              variants={fade}
+            >
+              {children}
+            </motion.div>
+          )}
+        </div>
+
+        {artwork && <HeroArtwork {...artwork} preload />}
       </div>
     </header>
   );

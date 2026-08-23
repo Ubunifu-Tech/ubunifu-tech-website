@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Ubunifu Ligature mark</title>
+  <desc id="desc">A custom orange U and purple T joined as one forward-moving symbol.</desc>
+  <path d="M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5" fill="none" stroke="#FF6B2C" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
+  <path d="M43 13v23c0 11 6 18 14 18" fill="none" stroke="#6D3FE8" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
+  <path d="M29 16 57 10" fill="none" stroke="#6D3FE8" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
+</svg>

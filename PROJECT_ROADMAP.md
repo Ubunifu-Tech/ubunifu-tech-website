@@ -1,58 +1,64 @@
-# Ubunifu Tech - Master Project Roadmap
+# Ubunifu Technologies — Project Roadmap
 
-This document serves as the master checklist to take **Ubunifu Tech** from its current state (High-Fidelity Prototype) to a fully operational, data-driven consulting platform.
+This roadmap starts from the site as it is now: a Next.js website for an Arusha-based consulting company and product studio. [`POSITIONING.md`](POSITIONING.md) owns company claims, [`WEBSITE_CONTENT.md`](WEBSITE_CONTENT.md) maps the implemented site, and [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) records completed redesign work.
 
-## 🟢 Phase 1: Frontend & Brand Identity (The "Shop Window")
-**Status: Complete**
-*Objective: Launch a credible, multi-page marketing site.*
+Last refreshed: 23 August 2026.
 
-- [x] **Core Architecture**: Next.js 16, TypeScript, CSS Modules.
-- [x] **Design System**: Light theme (warm orange + deep purple on soft lavender), responsive layouts, Framer Motion entrances.
-- [x] **Multi-page structure**: Home, Services (`/build`), Industries, Work, About, Blog, Contact, plus Products and Careers.
-- [x] **Homepage**: Highlight-reel layout — hero, three-pillar strip, product/work/about previews, technology marquee.
-- [x] **Portfolio**: Real client projects (Usambara, Safari King) with browser-mockup cards and a client logo strip.
-- [x] **Team Bios**: Profiles for Richard (Data · Software · AI) and HappyGod (IT · Design · Support).
-- [x] **Blog**: Markdown-based blog with a working listing page and individual post pages.
-- [x] **Contact**: API route with email delivery (Resend) plus bot protection (honeypot, timing check, rate limiting).
-- [x] **SEO Optimization**: Open Graph tags, metadata, sitemap, and robots.txt.
-- [x] **Polishing**: Mobile responsiveness pass and hero micro-interaction.
+## Current baseline
 
----
+### Positioning and information architecture
 
-## 🟡 Phase 2: Backyard Infrastructure (The "Engine")
-**Status: Pending**
-*Objective: Build the scalable Python foundation requested to demonstrate technical prowess.*
+- [x] Two connected engines are represented throughout: consulting services and Ubunifu software products.
+- [x] Primary navigation is **Services · Work · Products · Insights · About**, with a **Start a project** contact action.
+- [x] `/build` owns consulting capabilities; `/products` owns Insight, Sifa, and Rafiki; `/work` contains named client evidence rather than the product catalogue.
+- [x] Tourism and hospitality is the only proven sector. Other industry pages describe potential capability fits with appropriate caveats.
 
-- [ ] **API Setup**: Initialize **FastAPI** (Python) project.
-- [ ] **Database**: Set up **PostgreSQL** (via Supabase or Railway).
-    - *Schema*: `users`, `blog_posts`, `projects`, `contact_submissions`.
-- [ ] **API Endpoints**:
-    - `POST /contact`: Handle form submissions & trigger email notifications (Resend/SendGrid).
-    - `GET /posts`: Fetch blog articles (replacing local Markdown files).
-    - `GET /projects`: Fetch portfolio items dynamically.
-- [ ] **Integration**: Connect Next.js frontend to fetch data from this new FastAPI backend.
+### Homepage and public proof
 
----
+- [x] Homepage sequence: full-width consulting hero, four grounded differentiators, named client work, attributed testimonial, product family, latest Journal articles, and closing contact band.
+- [x] Safari King Africa and Usambara Destination have dedicated client case studies with real screenshots and documented functionality.
+- [x] Insight and Sifa are presented as available products; Rafiki is clearly marked as in development.
+- [x] Product availability is kept separate from customer-count, adoption, revenue, conversion, and performance claims.
 
-## 🟠 Phase 3: Admin Dashboard (The "Control Room")
-**Status: Pending**
-*Objective: Create internal tools for the team to manage the business without coding.*
+### Brand, content, and platform
 
-- [ ] **Authentication**: Secure login for Richard & HappyGod (JWT or NextAuth).
-- [ ] **Dashboard UI**: Private route (`/admin`) in the Next.js app.
-- [ ] **Features**:
-    - **Lead Manager**: View and manage contact form submissions.
-    - **Blog Editor**: WYSIWYG editor to publish articles directly to the DB.
-    - **Project Manager**: Add new client projects/logos easily.
+- [x] The solid two-color Ubunifu Ligature is implemented across the site: an interlocking orange U and purple T with a rising angled crown, paired with the full “Ubunifu Technologies” wordmark on one baseline; canonical SVG assets live in `public/brand/` and a public `/brand` kit.
+- [x] Poppins, Inter, the canonical palette, reduced-motion behavior, and the tactile editorial-cover system are documented in `BRANDING.md`.
+- [x] Journal articles are Markdown files in `_posts/`, with validated frontmatter, route-level metadata, and editorial cover images.
+- [x] The contact route uses strict validation, a honeypot, streaming body limits, bounded Vercel-aware throttling, Resend delivery, and best-effort acknowledgements.
+- [x] Contact and careers privacy language, security headers, sitemap coverage, metadata, and the branded 404 are implemented.
 
----
+## Next priorities
 
-## 🔵 Phase 4: Production Launch
-**Status: Pending**
-*Objective: Go live and start doing business.*
+### 1. Verify and strengthen evidence
 
-- [ ] **Frontend Deployment**: Deploy Next.js to **Vercel** (Recommended for speed/SEO).
-- [ ] **Backend Deployment**: Deploy FastAPI + Postgres to **Railway** or **Render**.
-- [ ] **Domain Configuration**: Point `ubunifutech.com` to the Vercel deployment.
-- [ ] **Email Setup**: Configure professional email records (MX, SPF, DKIM).
-- [ ] **Analytics**: Integrate PostHog or Google Analytics to track visitor behavior.
+- [ ] Recheck volatile product copy against the current Insight and Sifa interfaces before each release.
+- [ ] Replace broad case-study outcome language with measured results only when analytics or operational records support it and the client approves publication.
+- [ ] Add client testimonials only with clear attribution and retained source approval.
+- [ ] Add more real product and client screenshots when they demonstrate a verified workflow rather than decorative sample metrics.
+
+### 2. Production operations
+
+- [ ] Confirm the production environment has `RESEND_API_KEY`, verified sending-domain records, and delivery monitoring.
+- [ ] Add a distributed edge or WAF rate limit for `/api/contact`; the in-process throttle is only a bounded fallback and is not shared across instances.
+- [ ] Add privacy-respecting analytics only with a defined measurement purpose and corresponding privacy-notice update.
+- [ ] Document product-specific privacy, security, support, and status information on the product surfaces that own those facts.
+
+### 3. Content workflow
+
+- [ ] Keep Markdown as the default Journal workflow while it remains reliable and easy to review.
+- [ ] Consider a CMS or internal editor only when a real publishing bottleneck justifies authentication, storage, backup, and maintenance overhead.
+- [ ] Use [`BLOG_OUTLINES.md`](BLOG_OUTLINES.md) for optional topics, and require factual review before publication.
+
+### 4. Internal tools, if justified
+
+- [ ] Consider a lead-management or project-content tool only after documenting the current workflow, users, permissions, retention needs, and operational owner.
+- [ ] Choose the smallest architecture that solves the confirmed need. A separate FastAPI service, PostgreSQL database, or admin dashboard is not a default requirement for the marketing site.
+
+## Roadmap guardrails
+
+- Do not invent metrics, customer activity, ratings, partnerships, testimonials, or client outcomes.
+- Do not claim offline support, a permanent AI model/provider, or regulated-sector expertise without current verification.
+- Keep consulting and products equally visible; custom consulting under `/build` is not a fourth product.
+- Treat hosting, maintenance, monitoring, and ongoing operation as agreed engagement options, not automatic promises.
+- Prefer current source files over historical redesign notes when navigation, layouts, or claims have changed.

@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -47,6 +48,6 @@ next-env.d.ts
 # copies committed under public/work/)
 /work-screenshots/
 
-# brand-asset masters (high-res Canva exports; archived to Google Drive;
-# optimised copy committed as public/logo.png)
+# legacy brand-asset masters (current canonical files live in public/brand/;
+# the old local export archive remains intentionally untracked)
 /branding/

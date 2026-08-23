@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import { SmoothScroll } from '@/components/SmoothScroll';
+import { MotionProvider } from '@/components/MotionProvider';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
@@ -22,17 +23,16 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
+    default: 'Ubunifu Technologies · Consulting + Products',
     template: '%s | Ubunifu Technologies',
   },
-  description: 'Ubunifu Technologies is a Tanzania-based digital-solutions agency. Web development, hosting, domain management, professional email, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
+  description: 'Ubunifu Technologies is an Arusha-based consulting company and product studio. We work across strategy, brand, software, data, AI, hosting, and support.',
   keywords: [
     'SaaS Tanzania',
     'software Africa',
     'AI platform Tanzania',
     'Ubunifu Insight',
     'Ubunifu Sifa',
-    'Ubunifu Build',
     'web development Tanzania',
     'web hosting Tanzania',
     'domain registration Tanzania',
@@ -49,23 +49,27 @@ export const metadata: Metadata = {
   creator: 'Ubunifu Technologies',
   publisher: 'Ubunifu Technologies',
   metadataBase: new URL('https://ubunifutech.com'),
-  alternates: {
-    canonical: '/',
-  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
-    description: 'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and digital strategy.',
-    // OG image is provided by the file-based opengraph-image.tsx convention
-    // (src/app/opengraph-image.tsx and per-route overrides).
+    title: 'Ubunifu Technologies · Consulting + Products',
+    description: 'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
+    images: [
+      {
+        url: '/og.png',
+        width: 1672,
+        height: 941,
+        alt: 'Ubunifu Technologies — consulting and products, built in Tanzania.',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ubunifu Technologies · Digital Solutions, Built for Tanzania',
-    description: 'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and digital strategy.',
+    title: 'Ubunifu Technologies · Consulting + Products',
+    description: 'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
+    images: ['/og.png'],
   },
   robots: {
     index: true,
@@ -89,9 +93,9 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ubunifu Technologies',
-    description: 'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and digital strategy.',
+    description: 'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
     url: 'https://ubunifutech.com',
-    logo: 'https://ubunifutech.com/logo.png',
+    logo: 'https://ubunifutech.com/logo-v2.png',
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+255-748-548-816',
@@ -110,10 +114,25 @@ export default function RootLayout({
       name: 'Richard Pallangyo',
       jobTitle: 'Data & AI Builder',
     },
-    products: [
-      'Ubunifu Insight',
-      'Ubunifu Sifa',
-      'Ubunifu Build',
+    makesOffer: [
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'SoftwareApplication',
+          name: 'Ubunifu Insight',
+          applicationCategory: 'BusinessApplication',
+          url: 'https://insight.ubunifutech.com',
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'SoftwareApplication',
+          name: 'Ubunifu Sifa',
+          applicationCategory: 'BusinessApplication',
+          url: 'https://sifa.ubunifutech.com',
+        },
+      },
     ],
     // Machine-readable list of the service pillars, kept in sync with
     // src/content/services.tsx (the same source the /build page renders).
@@ -132,7 +151,11 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${poppins.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <head>
         <script
           type="application/ld+json"
@@ -141,14 +164,16 @@ export default function RootLayout({
       </head>
       <body>
         <a href="#main-content" className="skip-link">Skip to main content</a>
-        <SmoothScroll>
-          <Navbar />
-          <div id="main-content" tabIndex={-1}>
-            {children}
-          </div>
-          <Footer />
-          <WhatsAppButton />
-        </SmoothScroll>
+        <MotionProvider>
+          <SmoothScroll>
+            <Navbar />
+            <div id="main-content" tabIndex={-1}>
+              {children}
+            </div>
+            <Footer />
+            <WhatsAppButton />
+          </SmoothScroll>
+        </MotionProvider>
       </body>
     </html>
   );

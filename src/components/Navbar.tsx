@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { navLinks } from '@/content/site';
+import { BrandLockup } from './BrandMark';
 import styles from './Navbar.module.css';
 
 export const Navbar: React.FC = () => {
@@ -13,9 +14,27 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -27,14 +46,11 @@ export const Navbar: React.FC = () => {
 
   return (
     <header>
-    <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
+    <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`} aria-label="Primary navigation">
       <div className="container">
         <div className={styles.shell}>
-          <Link href="/" className={styles.logo} onClick={closeMobileMenu}>
-            <span className={styles.logoMark}>U</span>
-            <span className={styles.logoText}>
-              <span className={styles.logoName}>Ubunifu</span><span className={styles.logoAccent}>Technologies</span>
-            </span>
+          <Link href="/" className={styles.logo} onClick={closeMobileMenu} aria-label="Ubunifu Technologies home">
+            <BrandLockup />
           </Link>
 
           <div className={styles.links}>
@@ -52,10 +68,13 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className={styles.actions}>
+            <Link href="/contact" className={styles.cta}>
+              Start a project
+            </Link>
             <button
               className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`}
               onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-navigation"
             >
@@ -81,6 +100,9 @@ export const Navbar: React.FC = () => {
               {link.badge && <span className={styles.mobileBadge}>{link.badge}</span>}
             </Link>
           ))}
+          <Link href="/contact" className={styles.mobileCta} onClick={closeMobileMenu}>
+            Start a project
+          </Link>
         </div>
       </div>
     </nav>

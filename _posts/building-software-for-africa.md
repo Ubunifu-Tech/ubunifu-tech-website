@@ -1,37 +1,53 @@
 ---
-title: "Building Software for Africa: Where the Real Opportunity Is"
+title: "What We’re Learning Building Software in Tanzania"
 date: "2026-01-06"
 author: "Ubunifu Technologies"
-excerpt: "Most software tools were built for wealthy markets. Tanzania has a different set of needs, and that is an opportunity worth building for."
-tags: ["Product", "Africa", "Tanzania"]
+excerpt: "Lessons from building Insight and Sifa in Arusha: start with real workflows, make local context structural, and be precise about what the product can do."
+tags: ["Company", "Product", "Tanzania"]
+coverImage: "/editorial/software-tanzania-learning.webp"
+coverAlt: "Tactile paper workbench where blank research cards, modular pieces, and revision loops lead to one assembled outcome"
 ---
 
-Most software tools, from document AI to website builders to booking platforms, were designed for markets with fast internet, credit card payments, and English-speaking users.
+Building software in Tanzania does not produce one neat rulebook. It does change which questions deserve to come first.
 
-In Tanzania, businesses operate differently. Connectivity is variable. Devices are shared. Workflows are their own. The tools that exist today were not built for this context.
+At Ubunifu Technologies, we build from Arusha. Our two live products are Insight, a document AI workspace, and Sifa, business software for shops, restaurants, and distributors. They solve different problems, but the work has pushed us toward the same discipline: define the real workflow before choosing the feature set.
 
-That is not a complaint. It is an opening.
+These are working lessons, not claims about every business in Tanzania or across Africa. A retail counter, a school, a tour operator, and a law office do not share one universal “local context.” Useful software starts by getting more specific.
 
-## What this market actually needs
+## Start with the workflow, not the category
 
-Businesses here need software that works within their realities: lightweight enough to run on the infrastructure that exists, priced to match actual usage patterns, and built around the problems teams face every day.
+“Build software for small businesses” is too broad to guide a product decision. A better starting point is a task someone must complete and the information that task depends on.
 
-A law firm in Arusha should not have to pay a monthly seat fee for document AI it uses once a quarter. A hotel in Zanzibar should not need a developer to add a booking form to its website. An SME should not have to cobble together five different international tools to run its online presence.
+For Sifa, one such task is reviewing money owed by customers after goods have been sold on credit. That is why the product includes a credit ledger and aging buckets alongside sales, stock, suppliers, and customer records. Credit is part of the operating model, not a note added after the sale.
 
-## What we are building
+For Insight, the starting tasks include asking questions about documents, extracting structured information from PDFs, and generating documents from templates. The product also includes specialised agents, including an Education Tutor that teaches in Swahili, and Tanzania-localised templates such as a tax invoice.
 
-At Ubunifu Technologies, we are building three products to address this:
+The lesson is simple: a market label is not a product specification. A concrete workflow is.
 
-**Ubunifu Insight.** AI document intelligence for teams. Upload documents, ask questions in plain language, extract structured data, generate reports. Pay only when you use it.
+## Local context has to change the product
 
-**Ubunifu Rafiki.** Embeddable widgets for Tanzanian businesses. Contact forms, booking tools, and blog widgets that drop into any website. Built for the way local businesses already work.
+Localisation is often treated as a final layer: change the currency symbol, translate a menu, and ship. That can make a product look familiar without making it fit the work.
 
-**Ubunifu Build.** Custom software, websites, and consulting for businesses that need hands-on expertise. From brand-new web platforms to data pipelines and AI integrations.
+In Sifa, Tanzanian shillings are native to the records, and selling on credit is represented directly in the product. In Insight, Swahili is part of an agent’s teaching interaction rather than only a language option in the navigation. Those choices affect data, interface hierarchy, examples, and testing.
 
-## Why we build from here
+This is a useful test for any “built for here” claim: if removing the local context would leave the product unchanged, the claim is probably doing more work than the design.
 
-Every product starts from the workflows, pricing, and infrastructure that exist in Tanzania, not adapted from tools built elsewhere.
+## Pricing is part of product design
 
-Pricing follows pay-as-you-go models that match how businesses here actually spend.
+Insight uses pay-as-you-go credits. That model suits document work that may arrive in batches rather than at a perfectly steady rate. It also gives a team a way to begin without first choosing a recurring plan.
 
-We think the next generation of African software companies will be built this way: starting from local needs, not copying foreign solutions and hoping they translate.
+Usage-based pricing is not automatically more affordable, and it is not right for every product. A subscription can be easier to budget when usage is regular. A usage model needs clear units and visible costs so customers can estimate what a task will require. The broader lesson is to choose pricing around the way the product is used, then explain the trade-off plainly.
+
+## Products and client work sharpen each other
+
+Our client platforms force us to study a specific operation in depth. Our own products force us to maintain a shared system over time. Both kinds of work reward the same habits: listen before scoping, make important states visible, plan for support, and separate a demonstrated outcome from an assumption.
+
+That last distinction matters in our writing too. We can describe the features we have shipped. We should not invent adoption figures, time savings, or revenue impact before we have measured them. “Live and usable” is a meaningful milestone, but it is not the same as a verified business result.
+
+## What we are still learning
+
+The next questions are operational. Which workflows are used most often? Where do people stop or ask for help? Which parts need to work better on lower-cost devices or inconsistent connections? What does a team need before it will trust a new system with important records?
+
+Those answers come from use, support, and careful measurement. They cannot be supplied by a slogan about innovation or by assuming that one Tanzanian customer represents a whole region.
+
+Building from Tanzania gives us a clear vantage point. The responsibility is to stay close to the work, state what we know, and keep revising the product when the evidence changes.

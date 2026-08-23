@@ -8,7 +8,7 @@
   overflow: hidden;
   border-radius: 24px;
   padding: 4.5rem 2rem;
-  background: linear-gradient(135deg, #241c40 0%, #16121f 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-deep) 100%);
   box-shadow: 0 40px 80px -36px rgba(27, 14, 71, 0.5);
 }
 
@@ -80,7 +80,7 @@
 }
 
 .btn:hover {
-  background: var(--cta-hover);
+  background: var(--primary-deep);
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(255, 107, 44, 0.4);

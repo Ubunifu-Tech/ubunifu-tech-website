@@ -18,8 +18,8 @@ export const pillars: ReadonlyArray<Pillar> = [
   },
   {
     icon: BadgeCheck,
-    label: 'Proven in production',
-    body: 'We ship our own SaaS products and have built real client platforms. The work is live and in use, not slideware.',
+    label: 'Shipped, not imagined',
+    body: 'We operate software products and have shipped named client platforms. You can inspect the work, not just a slide deck.',
   },
   {
     icon: Cpu,
@@ -28,7 +28,7 @@ export const pillars: ReadonlyArray<Pillar> = [
   },
   {
     icon: Wrench,
-    label: 'We build and run it',
-    body: 'We do not launch and leave. Maintenance, monitoring, and iteration are part of the partnership.',
+    label: 'Ownership after launch',
+    body: 'Support, monitoring, iteration, or a clean handover are agreed explicitly, so ownership is clear after launch.',
   },
 ];

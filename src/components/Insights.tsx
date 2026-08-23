@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import styles from './Insights.module.css';
 
@@ -13,12 +14,19 @@ type InsightPost = {
   date: string;
   excerpt: string;
   tags: string[];
+  coverImage?: string;
+  coverAlt?: string;
 };
 
 function formatDate(date: string): string {
-  const d = new Date(date);
+  const d = new Date(`${date}T00:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 const Arrow: React.FC = () => (
@@ -59,15 +67,28 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
               transition={{ duration: 0.45, delay: index * 0.07, ease }}
             >
               <Link href={`/blog/${post.slug}`} className={styles.card}>
-                <div className={styles.meta}>
-                  <span className={styles.date}>{formatDate(post.date)}</span>
-                  {post.tags[0] && <span className={styles.tag}>{post.tags[0]}</span>}
+                {post.coverImage && post.coverAlt ? (
+                  <div className={styles.media}>
+                    <Image
+                      src={post.coverImage}
+                      alt={post.coverAlt}
+                      fill
+                      sizes="(max-width: 900px) 100vw, 390px"
+                      className={styles.image}
+                    />
+                  </div>
+                ) : null}
+                <div className={styles.body}>
+                  <div className={styles.meta}>
+                    <span className={styles.date}>{formatDate(post.date)}</span>
+                    {post.tags[0] && <span className={styles.tag}>{post.tags[0]}</span>}
+                  </div>
+                  <h3 className={styles.title}>{post.title}</h3>
+                  <p className={styles.excerpt}>{post.excerpt}</p>
+                  <span className={styles.readMore}>
+                    Read article <Arrow />
+                  </span>
                 </div>
-                <h3 className={styles.title}>{post.title}</h3>
-                <p className={styles.excerpt}>{post.excerpt}</p>
-                <span className={styles.readMore}>
-                  Read article <Arrow />
-                </span>
               </Link>
             </motion.div>
           ))}

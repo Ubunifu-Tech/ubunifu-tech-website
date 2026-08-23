@@ -18,7 +18,7 @@ const NODES: ReadonlyArray<Node> = [
   { key: 'web', label: 'Web', detail: 'Sites & apps', color: '#FF6B2C' },
   { key: 'hosting', label: 'Hosting', detail: 'Domains & email', color: '#2E5BFF' },
   { key: 'data', label: 'Data', detail: 'Dashboards', color: '#6D3FE8' },
-  { key: 'ai', label: 'AI', detail: 'Automation', color: '#FF8F5A' },
+  { key: 'ai', label: 'AI', detail: 'Automation', color: '#FF6B2C' },
   { key: 'branding', label: 'Branding', detail: 'Identity', color: '#C2693B' },
   { key: 'strategy', label: 'Strategy', detail: 'Roadmaps', color: '#3D1FA0' },
 ];
@@ -220,7 +220,7 @@ export const ServiceConstellation: React.FC = () => {
           const py = cy + (n.y - cy) * p;
           ctx.save();
           ctx.globalAlpha = (1 - p) * (active ? 0.9 : 0.42) * (0.45 + n.depth * 0.55);
-          ctx.fillStyle = active ? n.node.color : '#FF8F5A';
+          ctx.fillStyle = active ? n.node.color : '#FF6B2C';
           ctx.beginPath();
           ctx.arc(px, py, active ? 3 : 2.2, 0, Math.PI * 2);
           ctx.fill();
@@ -254,19 +254,25 @@ export const ServiceConstellation: React.FC = () => {
       ctx.restore();
 
       const mark = compact ? 34 : 42;
-      const markGradient = ctx.createLinearGradient(cx - mark, cy - mark, cx + mark, cy + mark);
-      markGradient.addColorStop(0, '#FF6B2C');
-      markGradient.addColorStop(1, '#6D3FE8');
-      ctx.fillStyle = markGradient;
-      rr(cx - mark / 2, cy - hubH * 0.28, mark, mark, compact ? 10 : 12);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = `800 ${compact ? 19 : 24}px Poppins, system-ui, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('U', cx, cy - hubH * 0.28 + mark / 2 + 1);
+      const markTop = cy - hubH * 0.35;
+      const markScale = mark / 64;
+      ctx.save();
+      ctx.translate(cx - mark / 2, markTop);
+      ctx.scale(markScale, markScale);
+      ctx.fillStyle = 'transparent';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'square';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#FF6B2C';
+      ctx.stroke(new Path2D('M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5'));
+      ctx.strokeStyle = '#6D3FE8';
+      ctx.stroke(new Path2D('M43 13v23c0 11 6 18 14 18'));
+      ctx.stroke(new Path2D('M29 16 57 10'));
+      ctx.restore();
 
       ctx.fillStyle = '#1F1A36';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.font = `800 ${compact ? 13 : 15}px Inter, system-ui, sans-serif`;
       ctx.fillText('Digital side', cx, cy + hubH * 0.22);
       ctx.fillStyle = 'rgba(90,81,112,0.9)';

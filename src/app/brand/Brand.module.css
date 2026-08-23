@@ -34,18 +34,8 @@
 }
 
 .markLg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 96px;
   height: 96px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, var(--brand), var(--primary));
-  color: #fff;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 3.4rem;
-  box-shadow: 0 10px 28px rgba(255, 107, 44, 0.3);
 }
 
 .wordmark {
@@ -71,7 +61,7 @@
   font-weight: 700;
   font-size: 0.7rem;
   letter-spacing: 0.14em;
-  color: var(--brand);
+  color: var(--brand-deep);
 }
 
 .title {
@@ -82,7 +72,7 @@
 }
 .tagline {
   font-size: 1.15rem;
-  color: var(--brand);
+  color: var(--brand-deep);
   font-weight: 600;
   margin-top: 0.25rem;
 }
@@ -92,15 +82,23 @@
   margin-top: 1rem;
 }
 .download {
-  display: inline-block;
-  margin-top: 1.75rem;
-  padding: 0.8rem 1.6rem;
-  background: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.15rem;
+  background: var(--brand-deep);
   color: #fff;
   font-weight: 600;
   border-radius: 12px;
   box-shadow: 0 6px 20px var(--brand-shadow);
   transition: transform 0.2s ease;
+}
+
+.assetLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
 }
 .download:hover {
   transform: translateY(-2px);
@@ -115,7 +113,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--brand);
+  color: var(--brand-deep);
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);

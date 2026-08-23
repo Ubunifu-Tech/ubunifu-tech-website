@@ -1,37 +1,74 @@
 ---
-title: "Why We Chose Pay-as-You-Go Pricing"
+title: "Why Insight Uses Usage-Based Pricing"
 date: "2026-01-05"
 author: "Ubunifu Technologies"
-excerpt: "Annual subscriptions are the default in SaaS. We decided to do something different, and the reason comes from how businesses actually work in Tanzania."
-tags: ["Product", "Pricing", "Tanzania"]
+excerpt: "Why pay-as-you-go credits fit Insight’s document workflows, where the model helps, and what usage pricing must do to remain understandable and predictable."
+tags: ["Product", "Pricing", "Insight"]
+coverImage: "/editorial/data-to-decisions.webp"
+coverAlt: "Abstract data stream passing through a glowing processor into organised charts and decision panels"
 ---
 
-When we started building our products, the obvious pricing move was a monthly subscription. It is what every SaaS company does. Predictable revenue, easy to model, familiar to investors.
+Ubunifu Insight uses pay-as-you-go credits. Customers pay for activity in the product rather than choosing a recurring seat plan as the only way to begin.
 
-We went a different direction.
+That choice follows the shape of the work Insight handles. A team may need to analyse a group of documents, extract data from PDFs, generate documents from templates, or use a specialised agent for a particular task. The volume can change from one period to the next.
 
-## The subscription problem in Tanzania
+Usage pricing is not a universal argument against subscriptions. It is one way to align a price with an uneven workload, and it brings its own design obligations.
 
-A monthly subscription assumes the user has consistent, predictable usage. It assumes they will use the product every month, at roughly the same level, indefinitely.
+## Document work often arrives in batches
 
-That is not how most businesses here work.
+Many software subscriptions assume continuing access is the main unit of value. That makes sense for a tool used by the same people throughout each working day.
 
-A law firm in Arusha might process a hundred contracts in one month and almost none the next. A hotel in Zanzibar might need its booking widget heavily during peak season and barely at all during the quiet months. An SME might use document AI intensively during tax season and not touch it otherwise.
+Document tasks can be more episodic. A set of contracts arrives. A report has to be reviewed. Information needs to be extracted for a deadline. A template is used to generate several documents, followed by a quieter period.
 
-Forcing those users onto a monthly seat fee means they pay for months they barely use the product. That is bad for them, and it is the kind of friction that kills adoption.
+In that pattern, a seat can be a poor description of what the customer is buying. Usage is closer to the work performed. It also lets a new customer try a bounded task without first estimating how many months the tool will remain active.
 
-## Pay as you go
+This is the rationale for Insight’s credit model. It is a product-fit decision, not a claim that every Tanzanian business has the same cash flow or usage pattern.
 
-Our products use credit-based and usage-based pricing. You pay when you use them. If you do not use them for a month, you do not pay. Your credits do not expire. There are no seat minimums.
+## Paying for usage is not automatically cheaper
 
-This applies across Ubunifu Insight (document AI), and will carry through to Ubunifu Rafiki (website widgets) when it launches.
+A usage model can cost less for occasional work and more for sustained, high-volume work. The result depends on the actual unit price and the customer’s behaviour.
 
-For businesses with variable workloads and seasonal patterns, this is the only model that makes sense.
+That is why “pay only when you use it” is incomplete as a pricing explanation. A customer also needs to understand what counts as usage, how credits are consumed, and what a typical task might require. Without that information, a flexible price can become difficult to budget.
 
-## A secondary benefit: trust
+We should judge the model by the complete experience, not the slogan attached to it.
 
-Pay-as-you-go is also an honesty signal. It says: we are confident you will find value in this, so we are not locking you into a contract to guarantee your money.
+## Predictability is a product requirement
 
-If our products stop being useful to you, you stop paying. That is the right relationship between a company and its users.
+Good usage pricing needs controls that make cost visible before it becomes a surprise. The product and its pricing material should make it possible to answer practical questions:
 
-We think more software companies building for African markets should work this way, where cash flow is unpredictable and trust is earned, not assumed.
+- What action consumes credits?
+- Can the customer see the balance and recent consumption?
+- Is the likely cost clear before a larger action runs?
+- What happens when the balance is too low?
+- Can a team estimate a recurring workflow from past use?
+
+These are standards for the model, not a claim that every desired control is finished. Pricing should be tested and improved like any other part of the interface.
+
+## Subscriptions still solve a real problem
+
+A subscription can be easier to understand when use is frequent and stable. A fixed recurring amount supports budgeting, and a plan can bundle support, storage, collaboration, or service levels in a way that individual actions do not capture well.
+
+For some customers, a subscription or committed-usage plan may eventually be the clearer option. Usage-based and subscription pricing can also coexist. The right structure depends on observed use, support costs, and what customers are actually trying to budget.
+
+We would rather preserve that possibility than present one billing model as morally better than another.
+
+## Pricing does not create value by itself
+
+Removing a recurring commitment may lower the barrier to trying a product. It does not make the product useful. Insight still has to answer questions with appropriate grounding, extract data accurately enough for review, produce useful documents, protect customer information, and explain the limits of its AI output.
+
+Pricing also does not solve procurement rules, connectivity, training, or trust. Those concerns have to be addressed through the product and the way it is supported.
+
+The honest promise of usage pricing is narrower: cost can follow activity more closely than a fixed seat fee. Whether that is better for a particular customer should be checked against real expected use.
+
+## How to compare the options
+
+Before choosing a plan or a competing tool, estimate the work rather than only the number of users. List the document types, likely volume, frequency, and actions required. Then compare:
+
+- the expected usage cost;
+- any recurring platform or storage charges;
+- minimum commitments;
+- collaboration and support included;
+- limits that affect the workflow; and
+- the cost of a high-volume month, not only an average one.
+
+We chose pay-as-you-go credits for Insight because they fit the variable document workflows the product is designed to handle. The model earns trust only if its units remain clear, its costs remain visible, and we keep checking the choice against how customers actually use the product.

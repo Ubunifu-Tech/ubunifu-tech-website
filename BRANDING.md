@@ -1,323 +1,132 @@
-# Ubunifu Technologies — Brand & Design System
+# Ubunifu Technologies — Brand System
 
-The visual system for the Ubunifu Technologies website. This is the source of truth — if you're changing colors, fonts, or component patterns, update this document and the relevant CSS variables together.
+This is the concise source of truth for Ubunifu’s visual identity. Keep it aligned with the implemented tokens in [`src/app/globals.css`](src/app/globals.css), the logo component in [`src/components/BrandMark.tsx`](src/components/BrandMark.tsx), and the live brand kit at [`/brand`](https://ubunifutech.com/brand).
 
-> **Sharing with collaborators?** There's a live, always-current brand page at **`/brand`** (not in nav) and a shareable **PDF** at **`public/ubunifu-brand-guide.pdf`** (served at `/ubunifu-brand-guide.pdf`) — colours with hex + RGB, type, logo, and usage rules.
+Last updated: 23 August 2026.
 
-> **Rolling the brand out to a product app?** See **[`PRODUCT_BRAND_PROMPTS.md`](PRODUCT_BRAND_PROMPTS.md)** — paste-ready brand-adoption prompts for each Ubunifu product (Sifa · Insight · Rafiki · Fanisi) plus a template for any new product you build, with the WCAG-AA contrast rules baked in.
+## Brand idea
 
----
+Ubunifu is an Arusha-based consulting company and product studio. The identity should feel technically credible, practical, warm, and built close to the work.
 
-## 1. Brand Personality
+The canonical tagline is:
 
-| Trait | What it means |
-| ----- | ------------- |
-| **African-built** | Designed in Arusha, Tanzania. The brand reflects local context: warm, optimistic, modern. |
-| **Confident, not corporate** | We build for businesses that are tired of bloated foreign software. The tone is direct and warm, not stiff. |
-| **Modern + grounded** | Deep purple type + soft lavender backgrounds give a tech-forward feel; warm orange CTAs keep it human. |
+> Consulting + products, built in Tanzania.
 
----
+Use the tagline as supporting copy, never inside the navigation or logo lockup.
 
-## 2. Color Palette
+## The Ubunifu Ligature
 
-All colors are CSS custom properties defined in [`src/app/globals.css`](src/app/globals.css). Reference them by variable — never hard-code hex values in component CSS.
+The canonical mark is the **Ubunifu Ligature**: an interlocking U/T glyph built specifically for **Ubunifu Technologies**. The orange U supplies an open, grounded base; the purple T crosses and continues through it, with a rising angled crown that gives the symbol momentum. Together the two letters read as one connected piece of craft rather than a generic technology icon.
 
-The palette has **one primary brand color (warm orange)** plus two supporting accents (deep purple and blue). Text and headings are a very dark navy with a faint purple undertone — close to Intercept Intelligence's heading treatment.
+The full horizontal lockup always spells **Ubunifu Technologies** on one baseline. Neither word is a descriptor or optional subline: both carry the company name at a clear, readable scale.
 
-### 2.1 Foundation
+The master mark uses two crisp solid colors:
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--background` | `#F4F2FB` | Page background (soft lavender) |
-| `--surface` | `#FFFFFF` | Cards, forms, navbar when scrolled |
-| `--surface-2` | `#FAF8FE` | Alternate section background (Products, Contact) |
-| `--surface-3` | `#F0EDF9` | Subtle panel / tag background |
+- Orange U: `#FF6B2C`
+- Purple T: `#6D3FE8`
 
-### 2.2 Brand — Warm Orange (Primary)
+The orange-to-purple gradient is a separate signature device for large headlines, paths, progress treatments, and atmospheric backgrounds. Do not apply a gradient to the master Ligature.
 
-The dominant brand color. Used for the logo mark gradient, eyebrows, primary CTAs, and active states. If you only see one accent color on a section, it should be this one.
+### Canonical assets
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--brand` | `#FF6B2C` | Logo gradient, eyebrows, CTAs, active states |
-| `--brand-hover` | `#E8581E` | Hover state on primary buttons & eyebrows |
-| `--brand-deep` | `#C44615` | Deepest orange, for pressed states / strong shadows |
-| `--brand-dim` | `rgba(255, 107, 44, 0.10)` | Eyebrow background, soft-orange highlights |
-| `--brand-border` | `rgba(255, 107, 44, 0.22)` | Subtle orange border on eyebrows / pills |
-| `--brand-shadow` | `rgba(255, 107, 44, 0.30)` | Drop shadow under CTA buttons & logo |
+Downloadable vector masters live in [`public/brand/`](public/brand/):
 
-The legacy `--cta`, `--cta-hover`, `--cta-dim`, `--cta-border`, and `--cta-shadow` tokens are aliased to the brand orange — both names refer to the same color.
+| Asset | Use |
+|---|---|
+| [`ubunifu-mark.svg`](public/brand/ubunifu-mark.svg) | Default two-color Ligature on light backgrounds |
+| [`ubunifu-lockup.svg`](public/brand/ubunifu-lockup.svg) | Full-color “Ubunifu Technologies” horizontal lockup on light backgrounds |
+| [`ubunifu-mark-navy.svg`](public/brand/ubunifu-mark-navy.svg) | Single-color mark where a restrained treatment is needed |
+| [`ubunifu-mark-white.svg`](public/brand/ubunifu-mark-white.svg) | Reversed mark on dark backgrounds |
+| [`ubunifu-lockup-white.svg`](public/brand/ubunifu-lockup-white.svg) | Reversed horizontal lockup on dark backgrounds |
 
-### 2.3 Accent — Deep Purple
+Raster delivery assets:
 
-A secondary accent. Used sparingly: paired with orange in the logo gradient and hero-title gradient, and for purple-tinted hover states on product/portfolio cards.
+- [`public/logo-v2.png`](public/logo-v2.png) — 512 × 512 social avatar
+- [`public/og.png`](public/og.png) — 1672 × 941 default social preview; a dimensional campaign rendering, not a replacement logo master
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--primary` | `#6D3FE8` | Logo gradient end, card hover borders, link hover |
-| `--primary-hover` | `#5A2DD0` | Deeper purple on hover |
-| `--primary-dim` | `rgba(109, 63, 232, 0.10)` | Soft purple background for product/portfolio badges & tags |
-| `--primary-border` | `rgba(109, 63, 232, 0.22)` | Subtle purple border on cards / pills |
-| `--primary-shadow` | `rgba(109, 63, 232, 0.28)` | Drop shadow for purple-themed lifts |
+The [`/brand`](https://ubunifutech.com/brand) page is the shareable reference and download surface. The five SVG files are the canonical logo masters; raster artwork is derived delivery media.
 
-### 2.4 Accent — Blue
+### Logo rules
 
-Used very sparingly — only in soft decorative background gradients (the `/build` hero glow and the footer CTA band). Not used in typography or interactive states.
+- Preserve the Ligature’s interlocking U/T geometry, rising angled T crown, rounded joins, and clear silhouette.
+- Use the default mark on light surfaces and the white or navy alternatives when contrast requires them.
+- Keep generous clear space around the mark; do not crowd it with copy or other symbols.
+- Do not stretch, rotate, crop, outline, shadow, box in, recolor, or redraw the mark.
+- Do not add a tagline inside the navigation or lockup, or use the Ligature as a decorative letter inside another word.
+- Use the mark alone for favicons, avatars, and compact product signatures; use the full “Ubunifu Technologies” lockup whenever the company name should be explicit.
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--accent` | `#2E5BFF` | Decorative dots/blobs only |
-| `--accent-dim` | `rgba(46, 91, 255, 0.10)` | Soft-blue decorative tints |
-| `--accent-border` | `rgba(46, 91, 255, 0.22)` | Subtle blue borders on shapes |
+## Canonical palette
 
-### 2.5 Text
+Use CSS tokens in product code. Hex values are for exported assets and external tools.
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--text-primary` | `#1F1A36` | Headings & body — deep navy with a faint purple undertone |
-| `--text-secondary` | `#5A5170` | Subheadings, paragraph copy |
-| `--text-tertiary` | `#6B6385` | Labels, captions, helper text — AA-safe (darkened from the old `#8B82A0`) |
+| Role | Token | Hex | Primary use |
+|---|---|---|---|
+| Page background | `--background` | `#F4F2FB` | Default soft-lavender canvas |
+| Surface | `--surface` | `#FFFFFF` | Cards, forms, navigation |
+| Alternate surface | `--surface-2` | `#FAF8FE` | Section contrast |
+| Subtle surface | `--surface-3` | `#F0EDF9` | Panels and quiet dividers |
+| Primary text | `--text-primary` | `#1F1A36` | Headings and body copy |
+| Secondary text | `--text-secondary` | `#5A5170` | Supporting copy |
+| Tertiary text | `--text-tertiary` | `#6B6385` | Labels and helper text |
+| Brand orange | `--brand` | `#FF6B2C` | Ligature U, large accents, paths |
+| Orange hover | `--brand-hover` | `#E8581E` | Decorative interaction state |
+| Deep orange | `--brand-deep` | `#C44615` | Accessible orange button fill |
+| Purple | `--primary` | `#6D3FE8` | Ligature T, links, secondary accent |
+| Purple hover | `--primary-hover` | `#5A2DD0` | Purple interaction state |
+| Deep purple | `--primary-deep` | `#3D1FA0` | Strong text and pressed states |
+| Blue | `--accent` | `#2E5BFF` | Rare decorative emphasis |
+| Clay | `--clay` | `#C2693B` | Restrained editorial warmth |
 
-### 2.6 Borders & Glass
+Orange and purple are the identity pair. Navy carries the message. Blue and clay are supporting notes, never competing primaries.
+The interactive aliases deliberately use `--cta: var(--brand-deep)` and `--cta-hover: var(--text-primary)` so white CTA text retains contrast.
 
-| Token | Hex | Use |
-| ----- | --- | --- |
-| `--border` | `rgba(31, 26, 54, 0.08)` | Default borders on cards, inputs, dividers |
-| `--border-hover` | `rgba(31, 26, 54, 0.16)` | Hover state borders |
-| `--glass-bg` | `rgba(255, 255, 255, 0.65)` | Frosted-glass card backgrounds |
-| `--glass-border-hover` | `rgba(255, 107, 44, 0.30)` | Orange-tinted border on hover |
+### Contrast rules
 
----
+- Use navy, secondary, tertiary, purple, or deep purple for normal text on light surfaces.
+- Bright orange `#FF6B2C` is for the Ligature and large decoration, not small text or essential control boundaries on light backgrounds.
+- For white text on an orange CTA, use deep orange `#C44615`, not bright orange.
+- Clay is decorative on light surfaces; do not use it for normal-size body text.
+- Body text and interactive text must meet WCAG AA contrast: at least `4.5:1` for normal text and `3:1` for large text. Essential non-text controls and focus indicators need at least `3:1` against adjacent colors.
+- Never communicate status, errors, or selection through color alone. Pair color with text, shape, iconography, or another visible state.
+- Keep visible keyboard focus. Motion and smooth scrolling must respect `prefers-reduced-motion`.
 
-## 3. Typography
+## Typography
 
-Two webfonts (loaded from Google Fonts via `next/font` in [`src/app/layout.tsx`](src/app/layout.tsx)) plus a system monospace used for labels. **There is no serif anywhere in the system.**
+Fonts are loaded through `next/font` in [`src/app/layout.tsx`](src/app/layout.tsx).
 
-| Role | Font | Weights | Token |
-| ---- | ---- | ------- | ----- |
-| Display / headings | **Poppins** | 600 – 800 | `--font-heading` |
-| Body / UI | **Inter** | 400 – 700 | `--font-body` |
-| Mono labels / spec | **System monospace** (SF Mono / JetBrains Mono / Menlo) | 500 | `--font-mono` |
+| Role | Family | Weights | Guidance |
+|---|---|---|---|
+| Display and headings | Poppins | 600, 700, 800 | Compact, confident, tight tracking |
+| Body and interface | Inter | 400–700 | Clear, neutral, generous line height |
+| Labels and kickers | System monospace | 500–700 | Uppercase, short, widely tracked |
 
-### Type scale
+Use Poppins for hierarchy, not paragraphs. Use Inter for all sustained reading and controls. Monospace is a small editorial device for labels and process language, not a body face. There is no serif in the core system.
 
-| Element | Size | Weight | Line-height | Letter-spacing |
-| ------- | ---- | ------ | ----------- | -------------- |
-| Hero title (`h1`) | `clamp(2.2rem, 8vw, 5.5rem)` | 800 | 1.04 | −0.04em |
-| Section heading (`h2`) | `clamp(2rem, 4vw, 3rem)` | 700 | 1.1 | −0.02em |
-| Card title (`h3`) | 1.125 – 1.3rem | 700 – 800 | 1.2 | −0.01em |
-| Body | 1rem | 400 | 1.7 | normal |
-| Small / labels | 0.75 – 0.8125rem | 500 – 700 | 1.4 | 0.06 – 0.08em (uppercase) |
+## Editorial image system
 
-**Label / eyebrow styles** — there are two, and they don't mix within a single tier (there's a note to this effect in `globals.css`):
+Editorial imagery explains an idea instead of decorating a page. It should feel like a premium adult learning object: precise, tactile, calm, and recognizably part of Ubunifu.
 
-- **`.eyebrow`** — an **orange** rounded pill (`--brand` / `--brand-dim` / `--brand-border`), uppercase, 0.8rem. Marks an in-page section or a standard page header.
-- **`.specLabel`** — a **monospace** kicker (`--font-mono`, tertiary grey, wide tracking, with a leading dash), uppercase, 0.72rem. Marks an editorial / page-level identity — e.g. the hero line "Digital solutions · Arusha, Tanzania" and the blog "journal" line.
+### Visual language
 
----
+- Start with one clear conceptual metaphor or part-to-whole relationship.
+- Prefer top-down or carefully staged compositions with strong geometry and generous breathing room.
+- Use matte paper, unglazed ceramic, textile, subtle topographic embossing, and restrained real-world texture.
+- Light with a warm directional source and soft, controlled shadows. Keep depth of field restrained enough that the idea remains legible.
+- Use one orange-to-purple path or progression when connection, reasoning, or the delivery loop is part of the story.
+- Keep the image inside the canonical palette above. Natural materials may use closely controlled clay and warm neutral values.
+- Avoid generic technology stock imagery, glowing screens, fake dashboards, fake metrics, logos, watermarks, cartoon styling, decorative pseudo-text, flags, and stereotyped regional patterns.
+- Do not put readable copy inside generated images. Titles and captions belong in accessible HTML.
 
-## 4. Spacing & Layout
+### Composition and delivery
 
-| Token | Value | Use |
-| ----- | ----- | --- |
-| `--container-width` | `1280px` | Max width of every `.container` wrapper |
-| `--nav-height` | `72px` | Fixed navbar height; sections offset accordingly |
+- Standard editorial canvas: **1672 × 941, 16:9**.
+- Keep the focal idea inside a centered safe area so the image can crop to 4:3 and square without losing meaning.
+- Store editorial concepts in [`public/editorial/`](public/editorial/). Prefer WebP at runtime when a paired WebP exists; retain PNG only when it is the required source or delivery format.
+- Store real client and product evidence in [`public/work/`](public/work/). Do not present a generated concept image as proof of shipped work.
+- Write alt text for the idea and meaningful objects, not for every decorative texture or the generation style.
 
-**Section padding:** `120px` top/bottom on desktop, `80px` on tablet, `64px` on phone. Use the `.section` utility class.
+## Voice and usage
 
-**Card padding:** `1.5rem – 2rem` depending on density. Use `border-radius: 16px` (cards) or `12px` (smaller elements like buttons).
+The visual system and writing voice should agree: confident, warm, specific, and honest. Favor concrete outcomes over adjectives. Do not invent customer counts, ratings, performance metrics, sector experience, or product usage.
 
----
-
-## 5. Iconography & Logo
-
-### Logo mark
-
-The canonical mark is the **"U"** block, rendered as a CSS gradient: `linear-gradient(135deg, var(--brand), var(--primary))` — orange to deep purple. It appears in the Navbar and Footer; the favicon and Apple touch icon use the same gradient — see [`src/app/icon.tsx`](src/app/icon.tsx) and [`src/app/apple-icon.tsx`](src/app/apple-icon.tsx).
-
-> **Standalone asset.** [`public/logo.png`](public/logo.png) is the orange→purple **"U"** mark (512px, exported from the Canva brand kit), matching the in-app mark. The full lockups — mark + "Ubunifu TECHNOLOGIES", and the tagline lockup with "Digital solutions, built for Tanzania." — live in a local `branding/` archive (high-res masters, kept out of git and synced to Drive). The retired blue→purple hexagon and "Technology. Strategy. Results." slogan are no longer in use.
-
-### Icons
-
-We use [lucide-react](https://lucide.dev) throughout. Default size is **20–22px** in nav/cards, **14–16px** in buttons. Stroke width is `2` (`2.5` for badges and "live" pulse dots).
-
----
-
-## 6. Component Patterns
-
-### 6.1 Buttons
-
-| Variant | Background | Text | Use |
-| ------- | ---------- | ---- | --- |
-| **Primary CTA** | `--cta` (orange) | White | "Explore products", "Submit", footer CTA |
-| **Secondary** | White / transparent | `--text-primary` with `--border-hover` | "Get in touch" alongside primary CTA |
-| **Product CTA** | `--cta` (orange) | White | Product card "Try X" / "Learn more" buttons |
-
-All primary buttons have:
-- `border-radius: 12px`
-- `padding: 0.875rem 1.75rem`
-- `font-weight: 600`
-- A colored drop-shadow (`box-shadow: 0 6px 20px var(--cta-shadow)`)
-- Hover: `translateY(-2px)` + deeper shadow
-
-### 6.2 Cards
-
-White background, 1px border (`--border`), `16–18px` radius, subtle shadow (`0 1px 2px rgba(27, 14, 71, 0.04)`). On hover: purple border + lifted purple shadow + `translateY(-3px)`.
-
-### 6.3 Badges & Pills
-
-- **Eyebrow** (`.eyebrow` in `globals.css`): orange pill, uppercase, 0.8rem. Uses `--brand`/`--brand-dim`/`--brand-border`.
-- **Status badges** ("Live", "Coming soon"): purple-dim styling, with an animated dot for live products. Purple here adds a second flavor to the card grid.
-- **Tech tags** (Portfolio): purple pill with `--primary-dim` background and `--primary` text.
-
-### 6.4 Animation
-
-We use [framer-motion](https://www.framer.com/motion/) for component entrances. Standard pattern:
-
-```tsx
-initial={{ opacity: 0, y: 24 }}
-whileInView={{ opacity: 1, y: 0 }}
-viewport={{ once: true, margin: '-40px' }}
-transition={{ duration: 0.5, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
-```
-
-CSS animations use the easing token `--ease-out-expo`. All animations are gated by `prefers-reduced-motion: reduce` in portfolio mockups.
-
----
-
-## 7. Content Architecture
-
-Page content lives in [`src/content/`](src/content/) — separated from presentation so non-technical edits don't require touching component code.
-
-| File | Owns |
-| ---- | ---- |
-| `site.ts` | Company info, contact details, navigation links, footer columns |
-| `services.tsx` | The five service pillars (`/build`) |
-| `sectors.tsx` | Sectors / Industries — summary + offerings (`/industries`) |
-| `pillars.tsx` | Home "Why Ubunifu" strip — 4 differentiators |
-| `values.tsx` | "Why we exist" values in the About section |
-| `about.tsx` | About narrative — vision, mission, objectives, approach |
-| `products.tsx` | Products (Insight, Sifa, Rafiki, Build) |
-| `portfolio.tsx` | Client projects + case studies (Safari King, Usambara) |
-| `team.tsx` | Team member profiles (name, role, bio, skills) |
-| `testimonials.tsx` | Client testimonials |
-
-### How to update copy
-
-1. Open the file under `src/content/` that matches the section.
-2. Edit the strings or add/remove items in the exported array.
-3. No component code needs to change — the section iterates over the data.
-
-### How to add a new portfolio project
-
-1. Append a new entry to `projects` in `src/content/portfolio.tsx`.
-2. Set `logo` to the absolute URL of the client's logo on their live site (auto-updates if they rebrand).
-3. If the logo is hosted on a new domain, add that hostname to `images.remotePatterns` in [`next.config.ts`](next.config.ts).
-4. Pick `logoBg` (light brand-tinted hex) and `accent` (brand-colored hex) for the mockup.
-
----
-
-## 8. File Structure
-
-```
-src/
-├── app/                   # Next.js App Router
-│   ├── globals.css        # CSS custom properties (design tokens)
-│   ├── layout.tsx         # Root layout + fonts + JSON-LD
-│   ├── page.tsx           # Homepage (highlight-reel previews)
-│   ├── icon.tsx           # Favicon (generated, orange→purple "U")
-│   ├── apple-icon.tsx     # Apple touch icon (generated)
-│   ├── opengraph-image.tsx  # Default Open Graph card
-│   ├── sitemap.ts         # sitemap.xml
-│   ├── not-found.tsx      # Branded 404
-│   ├── build/             # /build — Services
-│   ├── industries/        # /industries — sectors we serve
-│   ├── work/              # /work and /work/[slug] — case studies
-│   ├── products/          # /products — our SaaS (proof)
-│   ├── about/             # /about — vision, mission, story, team
-│   ├── blog/              # /blog and /blog/[slug]
-│   ├── careers/           # /careers (footer link)
-│   ├── contact/           # /contact — the single form
-│   └── api/contact/       # POST /api/contact (Resend + bot protection)
-│
-├── components/            # Section + UI components (co-located CSS Modules)
-│   ├── Navbar · Footer · WhatsAppButton          — chrome
-│   ├── Hero · CodeWindow · Topography            — hero + signature visuals
-│   ├── ProblemStrip · HomePreviews · Insights    — homepage sections
-│   ├── Spotlight                                 — alternating feature rows (Services + Industries)
-│   ├── Products · Portfolio · Testimonial · CtaBand
-│   ├── About · Team · TechMarquee · PageHeader
-│   ├── BlogIndex · ReadingProgress               — blog
-│   ├── Contact · SelectField                     — contact form
-│   └── ScrollReveal · SmoothScroll · MotionCard · BuildCards   — motion helpers
-│
-├── content/               # Editable page data — no JSX logic
-│   ├── site.ts            # company info, nav, footer
-│   ├── services.tsx       # five service pillars
-│   ├── sectors.tsx        # industries / sectors
-│   ├── pillars.tsx        # home "Why Ubunifu" strip
-│   ├── values.tsx         # about values
-│   ├── about.tsx          # about narrative
-│   ├── products.tsx       # products (proof)
-│   ├── portfolio.tsx      # client projects + case studies
-│   ├── team.tsx           # team profiles
-│   └── testimonials.tsx   # client testimonials
-│
-└── lib/
-    └── blog.ts            # Blog post data + helpers
-```
-
-### Why this structure?
-
-- **Sections own their styles.** Each component has a co-located CSS module — touch one section without affecting others.
-- **Content is data.** Copy, lists, and URLs live in `src/content/`, so marketing edits don't risk breaking layout.
-- **Design tokens are the single source of truth.** Every color, font, and spacing value lives in `globals.css`. Components reference tokens, never hex values.
-
----
-
-## 9. Adding a new section
-
-1. Create `src/components/MySection.tsx` and `src/components/MySection.module.css`.
-2. If the section has list content, create `src/content/mysection.tsx` with the data.
-3. Import and place in [`src/app/page.tsx`](src/app/page.tsx) (or the relevant page).
-4. Use the shared utility classes from `globals.css`: `.container`, `.section`, `.eyebrow`, `.sectionHeading`, `.sectionSubtext`.
-5. Reference design tokens (`var(--primary)`, `var(--cta)`, etc.) — no hardcoded colors.
-
----
-
-## 10. Accessibility Conventions
-
-- All animations respect `prefers-reduced-motion: reduce` (see `Portfolio.module.css` and `ScrollReveal.module.css`).
-- Decorative elements (auroras, dots, cursors) have `aria-hidden="true"`.
-- Color contrast: text-primary (`#1F1A36`) on background (`#F4F2FB`) — passes WCAG AA at all body sizes.
-- Focus states use a 3px purple-dim outline on form fields.
-
----
-
-## 11. Quick Reference
-
-```css
-/* Page background */
-background: var(--background);
-
-/* Headings (dark navy with purple undertone) */
-color: var(--text-primary);
-font-family: var(--font-heading);
-
-/* CTA button (orange) */
-background: var(--brand);
-box-shadow: 0 6px 20px var(--brand-shadow);
-
-/* Card */
-background: #FFFFFF;
-border: 1px solid var(--border);
-border-radius: 16px;
-box-shadow: 0 1px 2px rgba(31, 26, 54, 0.04);
-
-/* Eyebrow (orange pill) */
-color: var(--brand);
-background: var(--brand-dim);
-
-/* Logo gradient (orange to purple) */
-background: linear-gradient(135deg, var(--brand), var(--primary));
-```
+For company positioning and claim boundaries, use [`POSITIONING.md`](POSITIONING.md). For implementation details, use the live tokens and components; if the implementation and this guide diverge, resolve both rather than creating a third variant.

@@ -55,9 +55,9 @@ export const Portfolio: React.FC<{ hideHeader?: boolean }> = ({
                   aria-label={`${project.title} case study`}
                 >
                   <div className={styles.browserBar}>
-                    <span className={styles.dot} style={{ background: '#ff5f57' }} />
-                    <span className={styles.dot} style={{ background: '#febc2e' }} />
-                    <span className={styles.dot} style={{ background: '#28c840' }} />
+                    <span className={styles.dot} style={{ background: '#FF6B2C' }} />
+                    <span className={styles.dot} style={{ background: '#6D3FE8' }} />
+                    <span className={styles.dot} style={{ background: '#2E5BFF' }} />
                     <div className={styles.urlBar}>
                       <span className={styles.urlLock} aria-hidden="true">🔒</span>
                       <span className={styles.urlText}>{project.domain}</span>

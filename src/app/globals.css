@@ -15,8 +15,8 @@
   --brand-shadow: rgba(255, 107, 44, 0.30);
 
   /* CTA tokens — alias the brand so existing styles keep working */
-  --cta: var(--brand);
-  --cta-hover: var(--brand-hover);
+  --cta: var(--brand-deep);
+  --cta-hover: var(--text-primary);
   --cta-dim: var(--brand-dim);
   --cta-border: var(--brand-border);
   --cta-shadow: var(--brand-shadow);
@@ -196,7 +196,7 @@ a {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--brand);
+  color: var(--text-primary);
   padding: 0.4rem 1rem;
   background: var(--brand-dim);
   border: 1px solid var(--brand-border);
@@ -342,6 +342,20 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .aurora {
     animation: none;
   }

@@ -214,7 +214,7 @@ export const DataFlow: React.FC = () => {
             transition={{ duration: 0.55, delay: 0.08, ease }}
           >
             <Image
-              src="/editorial/data-to-decisions.png"
+              src="/editorial/data-to-decisions.webp"
               alt="Editorial illustration of unstructured documents and data flowing into clean dashboard-like decision panels"
               fill
               sizes="(max-width: 900px) 100vw, 560px"

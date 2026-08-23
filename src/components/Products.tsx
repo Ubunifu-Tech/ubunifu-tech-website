@@ -30,7 +30,7 @@ export const Products: React.FC<{ hideHeader?: boolean }> = ({
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <span className="eyebrow">What we offer</span>
-            <h2 className={styles.heading}>Products &amp; services</h2>
+            <h2 className={styles.heading}>Software products</h2>
             <p className={styles.subheading}>
               Two live SaaS products you can use today, plus consulting when you need a
               custom build.

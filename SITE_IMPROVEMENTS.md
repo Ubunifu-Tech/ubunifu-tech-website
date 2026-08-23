@@ -4,29 +4,73 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 **Rule we follow:** never invent metrics, testimonials, client logos, or capabilities. If a claim isn't backed by something true (a shipping product, a real screenshot, a verifiable fact), it doesn't go on the site. Where the strongest version of a claim isn't yet provable, we ship a weaker truthful version and flag the better version under Deferred.
 
+Entries before #31 are retained as implementation history. Where an older entry describes retired navigation, layouts, claims, or brand assets, #31 and the current source files take precedence.
+
 ---
 
 ## Shipped (latest pass)
 
+### 36. Art-directed hero system — 23 August 2026
+
+- Added an original panoramic homepage artwork: scattered business inputs becoming one coherent operating system, photographed in the established paper-and-ceramic editorial language and restricted to Ubunifu's existing navy, orange, purple, blue, clay, and off-white palette.
+- Built a reusable responsive hero-art component with a wide primary field, optional overlapping proof image, concise caption rail, meaningful image alternatives, optimised Next.js image loading, one-shot entrance motion, and reduced-motion support.
+- Reframed every main commercial page as a centred consulting hero with a visual narrative beneath the proposition. Services, Industries, About, Contact, and Careers use tactile editorial work; Work and Products use real client/product screens rather than fabricated interface art.
+- Kept Privacy intentionally restrained and image-free. The system distinguishes ideas from evidence: generated art explains a concept, while real screenshots substantiate shipped work.
+
+### 35. Editorial art in service storytelling — 23 August 2026
+
+- Added two original, text-free editorial artworks to replace icon-only fallback panels in the Services page: a connected infrastructure system for hosting/domains/email/backups, and a tactile identity system spanning brand touchpoints.
+- Kept the artwork in the same photographed paper-and-ceramic family as the existing Journal imagery, using only the established orange, purple, blue, clay, navy, and off-white palette.
+- Preserved icons where they improve scanning and interaction, while using imagery for the larger narrative moments where it can carry meaning.
+
+### 34. Service interaction and motion system — 23 August 2026
+
+- Replaced the old frame-rate-dependent canvas orbit with a full-width, semantic capability navigator: six real service controls, one stable narrative panel, restrained directional transitions, and direct links to each detailed service.
+- Added a one-pass guided sequence with visible progress and pause control. It pauses out of view, on hover or keyboard focus, stops after deliberate selection, and is disabled for reduced-motion preferences.
+- Reframed the experience as a mobile accordion below 820px so service copy remains readable and every control stays touch- and keyboard-accessible.
+- Restored the intended entrance choreography for the home hero, shared page headers, scroll reveals, and staggered process cards using one easing curve and short travel distances. Removed the conflicting duration setting from smooth scrolling so it responds more cleanly.
+- Used only the established Ubunifu palette and existing dependencies.
+
+### 33. Full-width consulting presentation — 23 August 2026
+
+- Replaced the homepage's tilted two-engine interface card with a near-viewport editorial hero: one large consulting proposition, one supporting paragraph, two restrained actions, and a full-width credibility rail.
+- Rebuilt the shared page-header system as wide, left-aligned editorial fields across Services, Work, Products, Industries, About, Contact, and Careers. The Services page now leads with consulting language rather than an animated product-style constellation.
+- Simplified the navbar's glass, pill, shadow, and gradient treatments into a flat professional header with a rectangular project CTA.
+- Moved the attributed client testimonial ahead of the product family on the homepage so consulting evidence establishes authority before owned software appears.
+- The direction was informed by current official sites from BCG X, Thoughtworks, frog, Work & Co, ustwo, Genesis Analytics, BBD Software, Invent Consulting, and YUX Design; no visual assets, claims, colors, or copy were copied.
+
+### 32. Ubunifu Technologies identity refinement — 23 August 2026
+
+- Replaced the generic route symbol with the custom **Ubunifu Ligature**: an interlocking orange U and purple T in solid brand colors, finished with a rising angled T crown.
+- Restored the full company name as the primary wordmark: **Ubunifu Technologies** now sits on one readable baseline in the horizontal lockup.
+- Kept “Consulting + products, built in Tanzania.” as positioning copy only; it does not appear inside the navigation or logo lockup.
+
+### 31. Consultancy + product studio redesign — 23 August 2026
+
+- Repositioned Ubunifu around two connected engines, consulting and products, with a new primary navigation: Services · Work · Products · Insights · About, plus the Contact CTA.
+- Rebuilt the homepage narrative around the two-engine hero, named client work, Insight/Sifa/Rafiki, a grounded testimonial, and the latest Journal notes; `/work` is client evidence and `/products` is the product catalogue.
+- Introduced the two-color house-mark system, canonical vector assets in `public/brand/`, the `/brand` kit, and a tactile 16:9 editorial-cover system for pages and Journal posts. The symbol from this pass was superseded by the Ubunifu Ligature in #32.
+- Tightened claim boundaries, sector language, contact/privacy behavior, reduced-motion support, security headers, and project documentation for the current site.
+
 ### 30. Redesigned transactional emails + full link audit
 
 The contact form's two automated emails were generic. Extracted them into a dedicated template module (`src/lib/emails.ts`) and rebuilt both to match the site's brand.
-- **New module `src/lib/emails.ts`** exports `notificationEmail()`, `acknowledgementEmail()`, and a shared `escapeHtml()`. Table-based, inline-styled, absolute-URL HTML built to render across email clients, with hidden preheader text, a branded dark header (gradient "U" mark + stacked *Ubunifu / TECHNOLOGIES* wordmark), and a dark footer carrying real contact links (email, tel, WhatsApp, Website, Services, Our work) + © year.
+- **New module `src/lib/emails.ts`** exports `notificationEmail()`, `acknowledgementEmail()`, and a shared `escapeHtml()`. Table-based, inline-styled, absolute-URL HTML built to render across email clients, with hidden preheader text, the solid two-color house mark, and a dark footer carrying real contact links (email, tel, WhatsApp, Website, Services, Our work) + © year. The current mark is the Ubunifu Ligature introduced in #32.
 - **Team notification**: "New enquiry → *{name} got in touch*", a clean Name / Email / Subject table, the message in a tinted box, and a one-click **Reply to {name}** mailto button (pre-filled `Re:` subject). Reply-To is still the sender.
 - **Sender acknowledgement**: "Thanks for reaching out, {name}.", confirms the subject, a numbered **what-happens-next** (mirrors the `/contact` timeline), then **Try Ubunifu Insight** / **Try Ubunifu Sifa** product buttons.
-- **Route wired to the templates.** `src/app/api/contact/route.ts` now imports the two builders and dropped its inline HTML + duplicate `escapeHtml`. All prior hardening (honeypot, timing, IP rate-limit, validation, best-effort ack, missing-key 503) is intact.
+- **Route wired to the templates.** `src/app/api/contact/route.ts` now imports the two builders and dropped its inline HTML + duplicate `escapeHtml`. Current hardening includes strict JSON validation, a honeypot, streaming body limits, bounded Vercel-aware throttling, idempotency keys, best-effort acknowledgement, and a missing-key 503.
 - **Link audit (email + site).** Rendered both emails and verified visually at 760px. Every link checked: all 14 internal routes return 200 on the live server; every external URL (ubunifutech.com, insight/sifa subdomains, Safari King, Usambara, GitHub, WhatsApp) returns 200 — LinkedIn returns its usual bot-blocking `999` but is valid in a browser. Em dashes removed from the email copy to match the site's voice. Typecheck + lint + build clean (34 pages).
 
-### 29. Our own products now count as "work"
+### 29. Our own products once counted as "work" (superseded by #31)
 
-The Work page showed only client projects. Our own live SaaS (Insight, Sifa) is arguably our strongest proof, so `/work` now presents two groups: **client projects** (Safari King, Usambara, with case studies) followed by **our own products** (the reused `ProductsProof` section, linking to the live apps), with a tonal background shift between them. Header reframed to "Built for clients, and for ourselves."
+This iteration briefly grouped client projects and Ubunifu products on `/work`. The current architecture introduced in #31 separates them: `/work` contains client evidence, while `/products` is the product catalogue.
 
 ### 28. Contact form hardened
 
 Reviewed the form end to end and fixed a real robustness bug in `src/app/api/contact/route.ts`:
-- **Resend was instantiated outside the `try`** (`new Resend(process.env.RESEND_API_KEY)`), and the SDK throws when the key is missing — so the endpoint returned **500 for *every* request**, including spam-filtered (honeypot/timing) ones, with no graceful degradation. Moved instantiation to *after* validation, inside the try, with an explicit missing-key guard (clear 503 + logged error).
+- **Resend was instantiated outside the `try`** (`new Resend(process.env.RESEND_API_KEY)`), and the SDK throws when the key is missing — so the endpoint returned **500 for every request**, including honeypot submissions, with no graceful degradation. Moved instantiation to after validation, inside the try, with an explicit missing-key guard (clear 503 + logged error).
 - **Acknowledgement email is now best-effort** (its own try/catch) so a failed confirmation to the sender never fails a successful team notification.
-- Verified every branch against the running server: honeypot → 200 (silent), too-fast → 200 (silent), missing fields → 400, invalid email → 400, valid → reaches the email step (200 in prod with the key; clear 503 locally without it). The form UI, the accessible `SelectField`, and HTML-escaping in the emails were already clean.
+- Verified every branch against the running server: honeypot → 200 (silent), too-fast → 200 (silent), missing fields → 400, invalid email → 400, valid → reaches the email step (200 in prod with the key; clear 503 locally without it). The form UI now uses an accessible native select, and email output is HTML-escaped.
 
 > Reminder: `RESEND_API_KEY` must be set in the deployment env (it isn't in the repo, correctly). Without it the form returns the clear 503 above.
 
@@ -47,7 +91,7 @@ Made the nav and footer read as separate from the page (per the reference sites)
 ### 25. Home page elevated to the new caliber
 
 Two additions that lift the home toward the references without repeating assets:
-- **Proof band** (`ProofBand`) right under the hero — a dark gradient panel with four *truthful* points (2 live SaaS products · 5.0★ TripAdvisor rating · Claude · 100% built in Arusha), gradient values, dividers, faint topography. Breaks the run of light card sections with a premium "impact" beat.
+- **Proof band** (`ProofBand`) right under the hero — an experimental dark panel later removed in #26. Its volatile product-count, review, model-provider, and location claims are not part of the current site.
 - **"Latest thinking" insights section** (`Insights`) — surfaces the blog on the home for the first time (a real gap; very McKinsey). Shows the three most recent posts as cards linking through to `/blog`. The home page reads posts via `getAllPosts()` and passes them in.
 
 ### 24. New Industries / "Who we serve" page
@@ -83,14 +127,14 @@ A genuine *layout* redesign (not just content) to the standard of the reference/
 
 This is the flagship for the elevated caliber; the same patterns (statement blocks, alternating image/text, numbered steps, treated imagery) can roll out to the other pages next.
 
-### 21. Repositioned as a digital-solutions agency
+### 21. Repositioned as a digital-solutions agency (superseded by #31)
 
-Reframed the site from "product company + consulting" to a **Tanzania-based digital-solutions agency** (per `POSITIONING.md`), adopting the structure of strong agency sites while keeping our purple/orange + topography identity. Products are now **proof, not the headline**.
+This was an earlier agency-led direction. #31 restored a balanced **consulting + products** model, with both engines represented in the navigation and homepage narrative.
 
 - **Five service pillars** (`src/content/services.tsx`): Digital Presence & Web, Branding & Visual Communication, Data Analytics & BI, Intelligent Automation & AI, Digital Strategy & Consulting. Each an icon-driven card.
 - **Services page** (`/build`) rebuilt around the pillars: icon cards with brand-coloured summaries, checklists, "01–05" spec numbers, the code-window hero retitled "Everything your digital side needs."
 - **Homepage rebuilt, agency-led:**
-  - Hero → "Digital solutions, built for Tanzania." with Safari King client-build proof and trust chips.
+  - Historical hero → "Digital solutions, built for Tanzania." with Safari King client-build proof and trust chips; retired in #31.
   - "Why Ubunifu" strip (4 differentiators with icons): Local and technical · Proven in production · AI when it fits · We build and run it.
   - **Services preview** — five icon cards + a gradient "Explore all services" CTA tile.
   - **Sectors strip** (`src/content/sectors.tsx`) — icon tiles for the sectors we serve (tourism proven, the rest targeted; no fabricated clients).
@@ -172,9 +216,9 @@ A proper design pass to make the site feel like the work of people who know what
 
 ### 12. Dynamic branded OG images
 Every page now generates an on-brand Open Graph card for social shares (WhatsApp / LinkedIn / X), instead of all links previewing the same logo.
-- **Shared renderer** `src/lib/og.tsx` (`renderOgImage`) — one source of truth, used by every route. Renders the U logo mark, stacked wordmark, an eyebrow, the page title, an optional subtitle, and a gradient accent bar, all in brand colours.
+- **Shared renderer** `src/lib/og.tsx` (`renderOgImage`) — one source of truth, used by every route. Renders the current Ubunifu Ligature, the full “Ubunifu Technologies” one-line wordmark, an eyebrow, the page title, an optional subtitle, and a gradient accent bar, all in brand colours.
 - **Routes**: `src/app/opengraph-image.tsx` (site-wide default, inherited everywhere), `src/app/blog/[slug]/opengraph-image.tsx` (per-post title card), `src/app/work/[slug]/opengraph-image.tsx` (per-case-study card). All prerender statically at build via `generateStaticParams`.
-- **Fonts** bundled at `src/lib/og-fonts/` (Outfit 400/700, OFL-licensed WOFF), read with `fs` at build — no fragile runtime font fetches.
+- **Fonts** bundled at `src/lib/og-fonts/` (Poppins and Inter, OFL-licensed TTF), read with `fs` at build — no fragile runtime font fetches.
 - Removed the `logo.png` OG image overrides from `layout.tsx` and the screenshot OG override from the case study metadata so the generated card is the single `og:image` source (no duplicate tags).
 
 ### 13. Three more blog posts
@@ -198,8 +242,7 @@ Built dynamic per-project case study pages, grounded entirely in the **actual pr
 
 #### Accuracy corrections made from the real repos
 - **Usambara was described as a static "HTML, CSS" site — it isn't.** It's a Node.js + Express application (Resend email with a two-email workflow, Helmet security, compression, per-IP rate limiting, WCAG AA accessibility, TravelAgency/FAQ/ContactPage/Blog/ImageGallery schema). Corrected the stack and capabilities.
-- **Safari King was undersold as an "AI marketing copilot."** The Claude Sonnet 4.6 integration generates itineraries, blog posts, SEO metadata, booking replies, inquiry replies and newsletters, plus a streaming multi-turn admin assistant with prompt caching. It also has 2FA admin auth, full audit logging, a customer CRM, ~95 pages, 48 API routes and 13 data models. Expanded the description, capabilities, highlights and stack to match reality.
-- Nice corroboration: Isaac (our testimonial author) is a named 5.0★ reviewer in Usambara's own published structured data.
+- **Safari King was undersold as an "AI marketing copilot."** The project includes booking, customer-management, content, email, security, and assisted-drafting workflows. The public case study now avoids volatile model-version and codebase-count claims.
 
 ### 6. Testimonial integration
 - New `src/content/testimonials.tsx` data file. Currently holds one real testimonial — Isaac, Managing Director of Usambara Destination Eco Tours. Quote is rewritten for length and rhythm while preserving the original meaning (the source language and sentiment).
@@ -226,7 +269,7 @@ Built dynamic per-project case study pages, grounded entirely in the **actual pr
 - **Home link missing from nav** — Added `{ label: 'Home', href: '/' }` to `navLinks` in `src/content/site.ts`.
 
 ### 2. Logo stack
-- "Technologies" now stacks below "Ubunifu" in both navbar and footer logo blocks (per design direction).
+- Historical: “Technologies” was stacked below “Ubunifu” in both navbar and footer logo blocks. This was superseded by #32; the current lockup puts the full **Ubunifu Technologies** name on one baseline.
 
 ### 3. Real screenshots integrated
 Replaced fake browser-mockup animations with real product/work screenshots:
@@ -246,8 +289,8 @@ Screenshot library: `public/work/` (committed). Originals: `work-screenshots/` (
 Truthful, specific rewrites — kept only claims backed by shipping product or visible screenshots:
 - **Hero subtitle** — `"Two live SaaS products and custom builds for businesses across Tanzania. Document AI that answers in Swahili. Business software with credit selling built in. Shipped from Arusha."` Every claim is proven by a screenshot.
 - **Insight tagline** — `"Document AI, built for here"` with description that names the Swahili AI agents and Tanzania-localised templates.
-- **Sifa tagline** — `"Run your shop, restaurant, or distributor"` with description that names credit selling and offline support.
-- **Safari King case study** — rewritten to reflect what we actually built: booking platform + custom CRM admin + AI marketing assistant powered by Claude Sonnet 4.6.
+- **Sifa tagline** — `"Run your shop, restaurant, or distributor"` with a description centred on verified sales, inventory, and credit workflows.
+- **Safari King case study** — rewritten to reflect the booking platform, custom CRM administration, and assisted content workflows without pinning the site to a volatile model version.
 - **`/products` lead** — removed the "supported the way this market actually works" tail.
 - **`/work` lead** — now mentions custom CRMs and AI-augmented platforms (what we actually ship), not just "websites".
 - **Homepage previews** — tightened ProductsPreview and WorkPreview copy. AboutPreview now says "shipping our own SaaS products and taking on custom builds" (specific) instead of the older vague version.
@@ -275,10 +318,10 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 
 | Item | Note |
 |---|---|
-| **Homepage hero redesign with screenshot** | Current hero is text-only. The Education Tutor Swahili screenshot (or a rotating gallery) would dramatically increase impact. Deferred because we want the screenshot recaptured first (see above). |
+| ~~**Homepage hero redesign with screenshot**~~ | ✅ **Resolved in #36** with an original panoramic system artwork; real product screens remain reserved for product and work proof. |
 | **Product demo videos** | A 20–40s loop of Insight chat or Sifa POS would outperform any screenshot. Needs screen recording + editing pass. |
-| ~~**Regenerate `public/logo.png`**~~ | ✅ **Done** — replaced with the orange→purple "U" mark (512px) from the Canva brand kit. Full lockups kept in the local `branding/` archive (synced to Drive). |
-| **Swap OG-card font to Poppins** | OG social-card images (`src/lib/og.tsx`) still render titles in **Outfit** (local WOFF files). Add `Poppins-400.woff` / `Poppins-700.woff` to `src/lib/og-fonts/` and switch `og.tsx` to match the new heading font. |
+| ~~**Regenerate the legacy raster logo**~~ | ✅ **Superseded by #31** — canonical SVG masters now live in `public/brand/`, with `public/logo-v2.png` as the raster avatar. |
+| ~~**Swap OG-card font to Poppins**~~ | ✅ **Done in #31** — case-study cards use bundled Poppins for headings and Inter for supporting text. |
 | ~~**Case study detail pages**~~ | ✅ **Shipped**, including the "next project" footer link. Still deferrable later: add an *outcome/metrics* row once we have verified numbers. |
 | **Pricing page** | Pay-as-you-go is a differentiator. Deserves a dedicated page showing the model + sample math. **On hold** at the team's request for now. |
 | **Dark mode** | Most developer-adjacent buyers default to dark. Skipped for now to focus on content first. |
@@ -286,13 +329,13 @@ Truthful, specific rewrites — kept only claims backed by shipping product or v
 | ~~**More blog posts**~~ | ✅ Grew 3 → 7 (tourism, Safari King "operating system", Swahili AI, selling on credit). Keep adding over time; a Sifa offline-first piece and an Insight data-extraction piece are still good future topics. |
 | ~~**Branded OG images**~~ | ✅ **Shipped.** Dynamic per-route OG cards via `src/lib/og.tsx`. |
 | **Insight & Sifa multi-screenshot galleries** | Single hero screenshot per product is the v1. A click-to-expand lightbox or in-card carousel would let us show 3–5 angles per product. Deferred to v2. |
-| **Visual signature** | Site is clean but conventional. A distinctive design element (interactive Tanzania map, terminal motif, animated data viz tied to a real product) would lift it from "polished SaaS" to "memorable." Needs design exploration. |
+| ~~**Visual signature**~~ | ✅ **Addressed in #31–#32** with the Ubunifu Ligature, tactile editorial covers, topographic details, and connected-system layouts. |
 
 ### Operational
 
 | Item | Note |
 |---|---|
-| **Privacy policy / Terms** | Standard SaaS expectation. Especially relevant for Insight (handles uploaded documents). |
+| **Product-specific privacy terms** | The corporate site now has `/privacy`; Insight and Sifa still need product-specific data-handling terms maintained alongside each product. |
 | **Security notes for Insight** | What happens to uploaded docs? Where is data stored? Encryption? Buyer due diligence will ask. |
 | **Status page / SLA mention** | Not urgent at current scale but signals operational seriousness as we grow. |
 
@@ -305,9 +348,9 @@ Sections that currently appear in more than one place. Most are intentional (lan
 | Component | Where it's used | Action |
 |---|---|---|
 | `Products` | `/` (via `ProductsPreview` in HomePreviews) + `/products` page | OK — preview vs. full. Both pull from `src/content/products.tsx`, so copy stays in sync. |
-| `Portfolio` | `/work` page + `/build` page | OK — both intentional, but verify the Build page version isn't drifting. |
+| `Portfolio` | `/work` page, with a lighter client-work preview elsewhere | Current architecture keeps the full client portfolio on `/work`; other pages link into it without duplicating the catalogue. |
 | `About` (values cards) | `/` (via `AboutPreview`) + `/about` page | OK — both pull from `src/content/values.tsx`. |
-| `Contact` | `/`, `/products`, `/build` | Kept on all for conversion. Single source: `Contact.tsx`. |
+| `Contact` | Dedicated `/contact` route | Other pages use focused calls to action that link to the single form. |
 | Phrase **"designed for how this market actually works"** | Was in Hero, Products, several other places | Removed duplicates this pass — kept once in About so it's a thesis, not a slogan. |
 
 ---

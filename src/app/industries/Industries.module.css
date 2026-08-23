@@ -37,23 +37,24 @@
 
 .introVisual {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   min-height: 360px;
+  padding: clamp(2rem, 5vw, 3.5rem);
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--surface);
+  background:
+    radial-gradient(circle at 86% 12%, var(--primary-dim), transparent 38%),
+    radial-gradient(circle at 12% 88%, var(--brand-dim), transparent 40%),
+    var(--text-primary);
   box-shadow: 0 24px 70px -36px rgba(27, 14, 71, 0.3);
 }
 
-.introImg {
-  object-fit: cover;
-  object-position: center;
-}
-
 .introBadge {
-  position: absolute;
-  left: 1rem;
-  bottom: 1rem;
+  position: relative;
+  width: fit-content;
   display: inline-flex;
   align-items: center;
   padding: 0.42rem 0.8rem;
@@ -63,11 +64,30 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #fff;
-  background: rgba(31, 26, 54, 0.56);
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 100px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.introStatement {
+  max-width: 18ch;
+  margin-top: 1.5rem;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.13;
+}
+
+.introFoot {
+  max-width: 50ch;
+  margin-top: 1.2rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.9rem;
+  line-height: 1.65;
 }
 
 .grid {
@@ -103,7 +123,7 @@
   margin-bottom: 1.1rem;
   border-radius: 12px;
   background: var(--brand-dim);
-  color: var(--brand);
+  color: var(--brand-deep);
   border: 1px solid var(--brand-border);
 }
 
@@ -146,13 +166,13 @@
 }
 
 .noteLink {
-  color: var(--brand);
+  color: var(--brand-deep);
   font-weight: 700;
   text-decoration: none;
 }
 
 .noteLink:hover {
-  color: var(--brand-hover);
+  color: var(--text-primary);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

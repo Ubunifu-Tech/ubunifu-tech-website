@@ -16,8 +16,8 @@ export const CtaBand: React.FC = () => {
             <h2 className={styles.heading}>Got something to build?</h2>
             <p className={styles.text}>
               A custom platform, a tricky data problem, or just a question about
-              one of our products. Tell us what you&apos;re working on, and we read
-              every message.
+              one of our products. Tell us what you&apos;re working on; your note
+              goes directly to the Ubunifu team.
             </p>
             <div className={styles.actions}>
               <a href={site.urls.contact} className={styles.btn}>

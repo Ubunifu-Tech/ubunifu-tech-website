@@ -3,7 +3,7 @@
 Ready-to-paste prompts for bringing each **Ubunifu Technologies product** under the company
 brand (the warm-orange + purple system defined in this repo's
 [`src/app/globals.css`](src/app/globals.css), [`BRANDING.md`](BRANDING.md), the live `/brand`
-page, and `public/ubunifu-brand-guide.pdf`).
+page, and the canonical masters in [`public/brand/`](public/brand/)).
 
 Each prompt below is **self-contained** — open the target product in its own session, paste the
 whole block, and the agent has everything it needs. The last one is a **reusable template** for
@@ -27,7 +27,7 @@ any new product you build.
 
 | Role | Hex | Notes |
 |---|---|---|
-| Brand — Warm Orange | `#FF6B2C` | Primary identity, accents, logo gradient |
+| Brand — Warm Orange | `#FF6B2C` | Ligature U, large accents, paths |
 | Orange hover | `#E8581E` | |
 | **Orange deep** | `#C44615` | **The accessible variant — use for anything with white text** |
 | Accent — Purple | `#6D3FE8` | Second accent |
@@ -37,14 +37,21 @@ any new product you build.
 | Text secondary | `#5A5170` | |
 | Text tertiary | `#6B6385` | (AA-safe; darkened from the old `#8B82A0`) |
 
-Signature gradient: `linear-gradient(135deg, #FF6B2C, #6D3FE8)` (the logo/mark gradient).
+Signature gradient: `linear-gradient(135deg, #FF6B2C, #6D3FE8)`. It is a separate large-scale
+device for paths, progress treatments, headlines, and atmospheric backgrounds. It is **not**
+the logo fill and must never replace the Ligature's two solid colors.
 
 **Type:** Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small
 UPPERCASE labels. **No serif anywhere.**
 
-**Logo:** the gradient **"U"** mark (orange→purple) + "Ubunifu TECHNOLOGIES" wordmark. The
-tagline **"Digital solutions, built for Tanzania."** is a separate element — never baked into
-the mark.
+**Logo:** the canonical **Ubunifu Ligature**: a custom interlocking U/T glyph in two crisp
+solid-color paths, with an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) whose crown rises
+at an angle. The horizontal lockup spells **“Ubunifu Technologies”** on one readable baseline.
+Use the supplied masters in [`public/brand/`](public/brand/): `ubunifu-mark.svg`,
+`ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and
+`ubunifu-lockup-white.svg`. Do not redraw, gradient-fill, recolor, box in, or substitute another
+mark for the Ligature. The tagline **"Consulting + products, built in Tanzania."** is supporting
+copy, never part of the navigation, mark, or lockup.
 
 **The accessibility bar (the #1 rule, learned the hard way):** bright `#FF6B2C` on white is only
 **2.84:1 — it fails WCAG AA for text.** So white text/icons sit on **`#C44615`** (≈4.9:1) or
@@ -82,11 +89,18 @@ in the `frontend/` subfolder.
 ## The Ubunifu brand (the shared foundation to adopt)
 - Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
 - Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — the logo/mark gradient.
+- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
+  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
+  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
+  progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
 - Decorative blue `#2E5BFF` — soft glows only, never text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small labels.
-- Logo: gradient "U" mark + "Ubunifu TECHNOLOGIES" wordmark; the tagline "Digital solutions,
-  built for Tanzania." is separate — never baked into the mark.
+- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
+  inside the navigation, mark, or lockup.
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA — in BOTH light AND dark mode (Sifa has dark mode via next-themes).
@@ -102,7 +116,9 @@ in the `frontend/` subfolder.
 3. NO REGRESSIONS. ~70% of colour is centralised, but the landing page (`frontend/src/app/page.tsx`)
    and several dashboard widgets carry scattered `bg-teal-*` / amber utility classes — migrate
    those onto tokens too, or half the app will stay teal. Verify by building + rendering.
-4. The logo gradient is fixed brand identity — re-skin it; never "fix" its contrast by recolouring.
+4. The Ubunifu Ligature artwork is fixed brand identity. Use the supplied default, navy, or white
+   master appropriate to the surface; never redraw, gradient-fill, recolour, box in, or replace it
+   with another mark. Keep product naming adjacent and separate.
 
 ## Current state (audited — re-verify before editing)
 - Stack: Next.js 16 + Tailwind v4 + shadcn (Base-UI) + next-themes.
@@ -122,9 +138,13 @@ in the `frontend/` subfolder.
    amber, decoupled from accent).
 2. Add web fonts: Poppins (headings, 600/700/800) + Inter (body) via `next/font/google` in
    `layout.tsx` (currently system fonts).
-3. Re-skin `frontend/public/logo.svg` from the teal square + "S" to the Ubunifu orange→purple
-   gradient (keep an "S" product mark or align to the "U" system — keep it crisp small). Update
-   `manifest.json` `theme_color` and the `layout.tsx` `themeColor` to the brand.
+3. Replace the teal square + "S" identity with the canonical Ubunifu Ligature assets. Copy the exact
+   relevant masters from the company website repo's `public/brand/` into Sifa's public assets:
+   use `ubunifu-mark.svg` for compact light-surface signatures, `ubunifu-mark-white.svg` where a
+   reversed mark is required, and `ubunifu-lockup.svg` where the full “Ubunifu Technologies” name is useful.
+   Keep "Sifa" as adjacent product text, not inside or substituted for the Ligature. Update existing
+   asset references, `manifest.json` `theme_color`, and `layout.tsx` `themeColor`; do not recreate
+   the SVG or turn the Ligature into a gradient.
 4. Migrate the scattered `bg-teal-*` / amber classes on `frontend/src/app/page.tsx` and the
    dashboard widgets onto brand tokens.
 
@@ -155,12 +175,19 @@ with **zero regressions**. The app lives in the `frontend/` subfolder.
 ## The Ubunifu brand (the shared foundation to adopt)
 - Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
 - Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)`.
+- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
+  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
+  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
+  progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
 - Decorative blue `#2E5BFF` — soft glows only, never text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small labels.
   No serif in the house system.
-- Logo: gradient "U" mark + "Ubunifu TECHNOLOGIES" wordmark; tagline "Digital solutions, built
-  for Tanzania." is separate.
+- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
+  inside the navigation, mark, or lockup.
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA. Bright `#FF6B2C` on white is 2.84:1 → FAILS for text. White
@@ -179,7 +206,9 @@ with **zero regressions**. The app lives in the `frontend/` subfolder.
      it working; only update its default palette and ensure choices stay accessible).
    - The landing capability cards use blue/emerald/purple.
    Verify by building + rendering.
-4. The logo gradient is fixed brand identity.
+4. The Ubunifu Ligature artwork is fixed brand identity. Use the supplied default, navy, or white
+   master appropriate to the surface; never redraw, gradient-fill, recolour, box in, or replace it
+   with another mark or generic interface icon. Keep product naming adjacent and separate.
 
 ## Current state (audited — re-verify before editing)
 - Stack: Next.js 16 + React 19 + Tailwind v4 + shadcn (Radix).
@@ -197,9 +226,13 @@ with **zero regressions**. The app lives in the `frontend/` subfolder.
    NO serif — replace Merriweather for UI/headings with Poppins. (If Merriweather is rendering
    long-form *document body* text where a serif genuinely aids reading, that's a product-content
    choice you may keep — but app chrome and headings should be Poppins.)
-3. Logo: there's no mark today — create one: the Ubunifu "U" gradient mark (or an Insight product
-   mark on the orange→purple gradient). Re-skin the favicon (`icon.tsx`, currently `#059669`) and
-   the emerald `LayoutDashboard` icon to the brand.
+3. Logo: there is no mark today, so adopt the canonical assets rather than designing one. Copy
+   the exact relevant masters from the company website repo's `public/brand/` into Insight's
+   public assets. Use `ubunifu-mark.svg` for the favicon and compact light-surface signatures,
+   `ubunifu-mark-white.svg` on dark surfaces, and `ubunifu-lockup.svg` where the company name is
+   needed; keep "Insight" as adjacent product text. Replace the emerald `LayoutDashboard` icon
+   only where it is being used as the brand mark, and keep ordinary functional icons semantic.
+   Do not recreate the SVG or apply the signature gradient to the Ligature.
 4. Hardcoded hexes: migrate the favicon, the login screen (`bg-[#111827]` + emerald), the
    `CreateWorkspaceDialog` colour picker (keep the feature; refresh its default palette + ensure
    accessible contrast), and the landing capability cards onto brand tokens.
@@ -232,11 +265,18 @@ job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, access
 ## The Ubunifu brand (the shared foundation to adopt)
 - Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
 - Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — the logo/mark gradient.
+- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
+  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
+  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
+  progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
 - Decorative blue `#2E5BFF` — soft glows only, never text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small labels.
-- Logo: gradient "U" mark + "Ubunifu TECHNOLOGIES" wordmark; tagline "Digital solutions, built
-  for Tanzania." is separate — never baked into the mark.
+- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
+  inside the navigation, mark, or lockup.
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA — this is the #1 requirement. Bright `#FF6B2C` on white is 2.84:1 →
@@ -253,7 +293,9 @@ job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, access
    the new brand orange (nudge it yellower/cooler if needed).
 3. NO REGRESSIONS. Don't break the build, layout, animations, or the per-client custom
    widget-colour feature (below). Verify by building + rendering before declaring done.
-4. The logo gradient is fixed brand identity — re-skin it; never "fix" its contrast by recolouring.
+4. The Ubunifu Ligature artwork is fixed brand identity. Use the supplied default, navy, or white
+   master appropriate to the surface; never redraw, gradient-fill, recolour, box in, or replace it
+   with another mark. Keep product naming adjacent and separate.
 
 ## Current state (audited — re-verify before editing)
 - Stack: Next.js 16 + React 19 + Tailwind v4 (PostCSS). NO `tailwind.config.*` — all design
@@ -280,9 +322,12 @@ job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, access
    keep ≥ 4.5:1). Check every variant's text contrast.
 3. `frontend/src/components/ui/Badge.tsx`: keep semantic variants mapped to real meanings
    (success=green, etc.); only brand/neutral variants move to orange.
-4. `frontend/src/app/icon.tsx` + `apple-icon.tsx`: re-skin the monogram to
-   `linear-gradient(135deg, #FF6B2C, #6D3FE8)`. Keep the letters white and legible (the purple
-   half gives white better contrast). Keep "UR" or switch to the Ubunifu "U" — crisp at favicon size.
+4. `frontend/src/app/icon.tsx` + `apple-icon.tsx`: replace the generated "UR" monogram with the
+   canonical Ubunifu Ligature. Copy the exact `ubunifu-mark.svg` master from the company website
+   repo's `public/brand/` and adapt the icon delivery mechanism without redrawing its paths;
+   use `ubunifu-mark-white.svg` only when a dark icon surface requires the reversed version.
+   Copy `ubunifu-lockup.svg` only where the full “Ubunifu Technologies” name is needed, with “Rafiki” adjacent
+   as product text. Do not alter the interlocking U/T artwork or turn it into a gradient.
 5. Per-client default colour: change the default `primary_color` fallback from emerald to the
    brand. IMPORTANT: clients can still pick their own colour — do not hardcode-override their
    choices. For the widget's own white-on-colour buttons, default to the accessible deep orange
@@ -293,7 +338,7 @@ job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, access
 ## Verify before you call it done
 - `npm run build` + `npm run lint` (in `frontend/`) clean.
 - Render (`npm run dev`) and eyeball: landing, dashboard, buttons, badges, a form/widget preview,
-  the favicon/monogram.
+  the favicon/Ligature signature.
 - Contrast-check the new combos (primary button text, orange-on-light text, badges, focus rings)
   ≥ 4.5:1 (≥ 3:1 large/UI). Fix failures with the deeper orange/navy.
 - Confirm `success` still reads green and the per-client colour picker still works.
@@ -327,12 +372,18 @@ with product latitude."
 ## The Ubunifu house foundation
 - Brand orange `#FF6B2C` (hover `#E8581E`, deep `#C44615` for white-text use).
 - Purple `#6D3FE8` (deep `#3D1FA0`) — the HOUSE purple.
-- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — used on the Ubunifu "U"
-  co-brand mark.
+- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
+  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
+  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
+  progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
 - Type to adopt: Poppins headings (600/700/800) + Inter body (400–700).
-- Logo system: the Ubunifu mark is a gradient "U" + "Ubunifu TECHNOLOGIES" wordmark — the
-  co-brand signature you ADD alongside Fanisi's own "F" mark, never replacing it.
-- Tagline (Ubunifu's): "Digital solutions, built for Tanzania."
+- Logo system: use the supplied Ubunifu Ligature or full “Ubunifu Technologies” horizontal lockup as the secondary co-brand
+  signature you ADD alongside Fanisi's own "F" mark, never replacing it or merging the marks.
+- Tagline (Ubunifu's): "Consulting + products, built in Tanzania." It remains supporting copy,
+  never part of the navigation, either mark, or either lockup.
 
 ## KEEP (Fanisi's protected product identity — do NOT change)
 - The primary purple + amber palette. Fanisi stays purple-led with the amber accent (the
@@ -353,9 +404,13 @@ with product latitude."
    warmth; Poppins is the house equivalent and keeps that rounded warmth.)
 2. Add a Ubunifu co-brand lockup. Fanisi should visibly read as a Ubunifu product. The footer
    already says "© Ubunifu Tech · Fanisi" — strengthen this into a VISUAL "by Ubunifu" lockup
-   (the gradient "U" mark + "Ubunifu" wordmark) in the right places: marketing footer/header, the
-   auth/login screen, and any "about/powered-by" line. Consider a `UbunifuCobrand` variant near
-   `frontend/components/brand-mark.tsx`. Keep it tasteful and secondary to the Fanisi "F".
+   in the right places: marketing footer/header, the auth/login screen, and any
+   "about/powered-by" line. Copy and render the exact canonical `ubunifu-lockup.svg` on light
+   surfaces and `ubunifu-lockup-white.svg` on dark surfaces; use `ubunifu-mark.svg` only where
+   space requires the compact Ligature. A small separate "by" label may precede the asset, but do
+   not rebuild the wordmark, merge it with Fanisi's "F", or gradient-fill the Ligature. Consider a
+   `UbunifuCobrand` wrapper near `frontend/components/brand-mark.tsx` that selects the supplied
+   light/dark asset. Keep it tasteful and secondary to the Fanisi "F".
 3. Harmonise the purple toward the house family. Fanisi's primary is `#560591` (HSL ≈ 279° 93%
    29% — a deep, magenta-leaning violet). The house purple is `#6D3FE8` (≈ 256° 79% 58% —
    brighter, bluer). Nudge Fanisi's purple INTO the same family without flattening its character:
@@ -379,7 +434,11 @@ with product latitude."
    `@theme inline` + HSL CSS variables in `frontend/app/globals.css` (`:root` + `.dark`), shadcn
    primitives. No new styling paradigm, no inline hexes in JSX. Don't break the build, the
    dark-mode toggle, or layout.
-4. UPDATE THE DOCS. Reflect the changes in `docs/branding.md`: the new type (Poppins/Inter), the
+4. KEEP THE UBUNIFU CO-BRAND CANONICAL. Use the supplied default or reversed Ligature/lockup master
+   appropriate to the surface; never redraw, gradient-fill, recolour, box in, or merge it with
+   Fanisi's protected "F" mark. The Fanisi mark remains primary; the Ubunifu asset remains a
+   distinct secondary signature.
+5. UPDATE THE DOCS. Reflect the changes in `docs/branding.md`: the new type (Poppins/Inter), the
    co-brand relationship with Ubunifu (and where the lockup appears), and any harmonised purple
    values. Keep it the accurate source of truth.
 
@@ -449,12 +508,19 @@ Report, quoting real file paths + values:
 ## The Ubunifu brand (the shared foundation)
 - Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
 - Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — the logo/mark gradient.
+- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
+  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
+  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+- Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
+  progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
 - Decorative blue `#2E5BFF` — soft glows only, never text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small UPPERCASE
   labels. No serif in the house system.
-- Logo: gradient "U" mark + "Ubunifu TECHNOLOGIES" wordmark; the tagline "Digital solutions,
-  built for Tanzania." is a separate element — never baked into the mark.
+- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
+  inside the navigation, mark, or lockup.
 - Keep a clean neutral app canvas (white/near-white) — do NOT force the marketing site's lavender
   into an app UI. Brand colours are ACCENTS on that neutral base.
 
@@ -469,8 +535,10 @@ Report, quoting real file paths + values:
 3. NO REGRESSIONS, FULL COMPATIBILITY. Work inside the existing token system and format (hex/HSL/
    OKLch) — no new styling paradigm, no inline hexes in JSX. Don't break the build, dark mode,
    layout, or any feature. Verify by building + rendering before "done."
-4. The logo gradient is fixed brand identity — re-skin to the Ubunifu gradient; never "fix" its
-   contrast by recolouring (a large gradient fill is exempt).
+4. The Ubunifu Ligature artwork is fixed brand identity. ADOPT projects use the supplied Ligature as the
+   house mark; RECONCILE projects keep their protected product mark and add the supplied Ligature or
+   lockup as a secondary co-brand. Use the default, navy, or white master appropriate to the
+   surface; never redraw, gradient-fill, recolour, box in, or replace the Ligature with another mark.
 
 ## WATCH-OUTS (learned from the other products)
 - A semantic token that happens to EQUAL the old brand (e.g. success == old brand green, or
@@ -481,6 +549,9 @@ Report, quoting real file paths + values:
 - Preserve any per-client/workspace colour-picker feature; only change its default + ensure the
   default and any pick stay accessible.
 - If you adopt fonts, match the house exactly: Poppins headings + Inter body (no serif for UI).
+- Do not invent a product mark as a substitute for the house identity. Product naming sits
+  adjacent to the canonical Ligature; an existing deliberate product mark survives only under the
+  RECONCILE decision.
 
 ## Verify before you call it done
 - `npm run build` + `npm run lint` clean.
@@ -497,8 +568,9 @@ Report, quoting real file paths + values:
 
 ## Maintaining these prompts
 
-The canonical brand source is this repo: [`src/app/globals.css`](src/app/globals.css) (the
-tokens), [`BRANDING.md`](BRANDING.md), the `/brand` page, and `public/ubunifu-brand-guide.pdf`.
-If the brand changes there, update the hex values / type / logo notes in the prompts above to
-match. Each prompt is deliberately self-contained (the brand spec is repeated in every block) so
-it can be pasted standalone — that's by design, not duplication to "fix."
+The canonical brand source is this repo: [`BRANDING.md`](BRANDING.md), the supplied vector
+masters in [`public/brand/`](public/brand/), the live `/brand` page, and the implemented tokens in
+[`src/app/globals.css`](src/app/globals.css). If the brand changes there, update the hex values,
+type, Ligature rules, asset list, full-name lockup, and tagline guidance in every prompt above to match. Each prompt is
+deliberately self-contained (the brand spec is repeated in every block) so it can be pasted
+standalone — that's by design, not duplication to "fix."

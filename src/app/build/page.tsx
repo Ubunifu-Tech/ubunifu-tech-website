@@ -2,11 +2,12 @@ import { WorkPreview } from '@/components/HomePreviews';
 import { CtaBand } from '@/components/CtaBand';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
-import { Topography } from '@/components/Topography';
-import { ServiceConstellation } from '@/components/visuals/ServiceConstellation';
+import { PageHeader } from '@/components/PageHeader';
+import { ServiceCycle } from '@/components/ServiceCycle';
 import { Spotlight } from '@/components/Spotlight';
 import { services, type Service } from '@/content/services';
 import styles from './Build.module.css';
+import { pageMetadata } from '@/lib/metadata';
 
 // Real proof (or a branded panel) for each service spotlight.
 function spotlightMedia(service: Service) {
@@ -18,7 +19,7 @@ function spotlightMedia(service: Service) {
           alt: 'Usambara Destination website built by Ubunifu',
           domain: 'usambaradestination.com',
         },
-        overlap: { title: 'Live site', sub: 'Fast, accessible, SEO-strong' },
+        overlap: { title: 'Live site', sub: 'Clear, accessible, enquiry-focused' },
       };
     case 'data':
       return {
@@ -38,46 +39,57 @@ function spotlightMedia(service: Service) {
       };
     case 'hosting':
       return {
-        panelIcon: service.icon,
-        panelChips: ['cPanel hosting', 'SSL included', 'Backups', 'Local support'],
-        overlap: { title: 'We keep you online', sub: 'Hosting, domains & email, managed' },
+        image: {
+          src: '/editorial/hosting-system-art.webp',
+          alt: 'Tactile connected system representing hosting, domains, professional email, backups, and security',
+        },
+        overlap: { title: 'One cared-for system', sub: 'Hosting, domains, email & backups' },
       };
     case 'branding':
       return {
-        panelIcon: service.icon,
-        panelChips: ['Logo design', 'Banners & flyers', 'Social graphics', 'Style guides'],
+        image: {
+          src: '/editorial/brand-system-art.webp',
+          alt: 'Tactile brand system translating one visual identity across coordinated print and digital touchpoints',
+        },
+        overlap: { title: 'Built to stay consistent', sub: 'One identity across every touchpoint' },
       };
     default:
       return {
         image: {
-          src: '/editorial/digital-workbench.png',
-          alt: 'Editorial illustration of a digital workbench with abstract planning boards and interface blocks',
+          src: '/editorial/software-tanzania-learning.webp',
+          alt: 'Tactile workbench where research cards, modular pieces, and revision loops lead to one working assembly',
         },
         overlap: { title: 'Plan, build, support', sub: 'Roadmaps, training and advisory' },
       };
   }
 }
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: 'Services',
   description: 'Web development, hosting, domain management, professional email, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
-};
+  path: '/build',
+});
 
 const process = [
   {
     step: '1',
-    title: 'Tell us what you need',
-    description: 'We start with a conversation. You tell us the problem, we figure out the right solution together.',
+    title: 'Understand',
+    description: 'We learn the workflow, the people, the risk, and the outcome before prescribing technology.',
   },
   {
     step: '2',
-    title: 'We scope and plan',
-    description: 'You get a clear timeline, deliverables, and honest pricing. No surprises.',
+    title: 'Shape',
+    description: 'We turn the problem into a clear scope, working model, timeline, and decision path.',
   },
   {
     step: '3',
-    title: 'We build and deliver',
-    description: 'We ship iteratively, keeping you involved. You get working software, not just mockups.',
+    title: 'Build',
+    description: 'We ship useful increments, keep you close to the work, and test the system as it takes shape.',
+  },
+  {
+    step: '4',
+    title: 'Operate',
+    description: 'We host, support, review, and improve the result after launch when the engagement calls for it.',
   },
 ];
 
@@ -85,62 +97,53 @@ export default function BuildPage() {
   return (
     <>
       <main className={styles.main}>
-        {/* Hero */}
-        <div className={styles.heroSection}>
-          <div className={styles.heroBg} aria-hidden="true" />
-          <div className={styles.heroDots} aria-hidden="true" />
-          <Topography className={styles.heroTopo} />
-          <div className="grain" />
+        <PageHeader
+          eyebrow="Consulting services"
+          title="From strategy to systems built to keep evolving."
+          lead="We advise, design, and build, then operate when the engagement calls for it. Bring us one focused problem or a connected set of systems. The same senior team stays close through delivery."
+          artwork={{
+            primary: {
+              src: '/editorial/software-tanzania-learning.webp',
+              alt: 'Tactile workbench showing research, modular decisions, and a working system coming together',
+            },
+            secondary: {
+              src: '/editorial/hosting-system-art.webp',
+              alt: 'Tactile connected infrastructure system for hosting, domains, email, backups, and security',
+            },
+            caption: 'Strategy → design → build → operate',
+          }}
+        >
+          <a href="/contact" className={styles.heroBtn}>
+            Start a project <span aria-hidden="true">→</span>
+          </a>
+        </PageHeader>
 
+        <section className={styles.cycleSection} aria-labelledby="capability-cycle-title">
           <div className="container">
-            <div className={styles.heroGrid}>
-              <div className={styles.header}>
-                <span className={styles.heroBadge}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="16 18 22 12 16 6" />
-                    <polyline points="8 6 2 12 8 18" />
-                  </svg>
-                  Our services
-                </span>
-                <h1 className={styles.title}>
-                  Everything your<br />
-                  <span className={styles.titleGradient}>digital side needs.</span>
-                </h1>
-                <p className={styles.lead}>
-                  Six things we do well: web, hosting, data, AI, branding, and
-                  strategy. Pick one, or let us handle the whole digital side of
-                  your business &mdash; build it, host it, and run it for you.
-                </p>
-                <a href="/contact" className={styles.heroBtn}>
-                  Start a project
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-                </a>
-              </div>
-
-              <div className={styles.heroVisual}>
-                <ServiceConstellation />
-              </div>
-            </div>
+            <ScrollReveal className={styles.cycleIntro}>
+              <span className={styles.cycleEyebrow}>Connected capabilities</span>
+              <h2 id="capability-cycle-title" className={styles.cycleHeading}>
+                Six disciplines. One accountable team.
+              </h2>
+              <p className={styles.cycleLead}>
+                Choose any starting point. The sequence shows how each capability
+                connects to the wider system—and where we can go deeper together.
+              </p>
+            </ScrollReveal>
+            <ServiceCycle />
           </div>
-        </div>
+        </section>
 
         {/* Services — spotlight rows */}
         <section className={styles.servicesSection}>
           <div className="container">
             <ScrollReveal>
-              <span className="eyebrow">What we do</span>
-              <h2 className={styles.sectionHeading}>Six ways we help you grow</h2>
+              <span className="eyebrow">Capability detail</span>
+              <h2 className={styles.sectionHeading}>Go deeper into each discipline</h2>
               <p className={styles.servicesSub}>
-                Pick one, or hand us the whole digital side. Each of these is
-                something we run for clients today.
+                Use one service or combine several around the outcome. We will
+                tell you when a simpler answer is enough.
               </p>
-              <div className={styles.jump}>
-                {services.map((s) => (
-                  <a key={s.key} href={`#${s.key}`} className={styles.jumpChip}>
-                    {s.title}
-                  </a>
-                ))}
-              </div>
             </ScrollReveal>
 
             <div className={styles.spotlights}>
@@ -166,7 +169,7 @@ export default function BuildPage() {
           <div className="container">
             <ScrollReveal>
               <span className="eyebrow">How it works</span>
-              <h2 className={styles.sectionHeading}>Our process</h2>
+              <h2 className={styles.sectionHeading}>A delivery loop, not a handoff</h2>
               <BuildCards className={styles.processGrid}>
                 {process.map((item) => (
                   <div key={item.step} className={styles.processCard}>

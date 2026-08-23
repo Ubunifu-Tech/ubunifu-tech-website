@@ -63,7 +63,7 @@
   align-items: center;
   gap: 6px;
   padding: 10px 12px;
-  background: linear-gradient(180deg, #F4F2F8, #ECE9F2);
+  background: linear-gradient(180deg, var(--background), var(--surface-3));
   border-bottom: 1px solid var(--border);
 }
 
@@ -240,7 +240,7 @@
   align-items: center;
   gap: 0.4rem;
   margin-top: 1.25rem;
-  color: var(--brand);
+  color: var(--brand-deep);
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
@@ -249,7 +249,7 @@
 
 .caseStudyLink:hover {
   gap: 0.65rem;
-  color: var(--brand-hover);
+  color: var(--text-primary);
 }
 
 /* ── Responsive ───────────────────────────────── */

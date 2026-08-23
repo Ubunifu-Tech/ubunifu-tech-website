@@ -1,27 +1,43 @@
-import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getAllPosts, getPostBySlug } from '@/lib/blog';
+import ReactMarkdown from 'react-markdown';
 import { CtaBand } from '@/components/CtaBand';
 import { ReadingProgress } from '@/components/ReadingProgress';
+import { getAllPosts, getPostBySlug, resolveBlogCover } from '@/lib/blog';
 import styles from './BlogSlug.module.css';
 
+const SITE_URL = 'https://ubunifutech.com';
+const longDate = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
 function formatDate(date: string): string {
-  const d = new Date(date);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) ? date : longDate.format(parsed);
 }
 
-// Return a list of `params` to populate the [slug] dynamic segment
-export async function generateStaticParams() {
-  const posts = getAllPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+function absoluteUrl(pathname: string): string {
+  return new URL(pathname, SITE_URL).toString();
 }
 
-// Per-post metadata for richer search results and social shares.
+function serializeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+export function generateStaticParams() {
+  return getAllPosts().map((post) => ({ slug: post.slug }));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -31,17 +47,19 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
 
   if (!post) {
-    return {
-      title: 'Post not found',
-    };
+    return { title: 'Post not found' };
   }
 
-  const url = `https://ubunifutech.com/blog/${post.slug}`;
+  const url = `${SITE_URL}/blog/${post.slug}`;
+  const cover = resolveBlogCover(post);
+  const coverUrl = absoluteUrl(cover.image);
+  const publishedTime = `${post.date}T00:00:00.000Z`;
 
   return {
     title: post.title,
     description: post.excerpt,
     keywords: post.tags,
+    authors: [{ name: post.author, url: SITE_URL }],
     alternates: { canonical: url },
     openGraph: {
       type: 'article',
@@ -49,19 +67,32 @@ export async function generateMetadata({
       title: post.title,
       description: post.excerpt,
       siteName: 'Ubunifu Technologies',
-      publishedTime: post.date,
+      publishedTime,
       authors: [post.author],
       tags: post.tags,
+      images: [
+        {
+          url: coverUrl,
+          width: 1672,
+          height: 941,
+          alt: cover.alt,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: [{ url: coverUrl, alt: cover.alt }],
     },
   };
 }
 
-export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
 
@@ -69,61 +100,117 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
     notFound();
   }
 
+  const postUrl = `${SITE_URL}/blog/${post.slug}`;
+  const publishedTime = `${post.date}T00:00:00.000Z`;
+  const cover = resolveBlogCover(post);
+  const coverUrl = absoluteUrl(cover.image);
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.excerpt,
-    datePublished: post.date,
+    url: postUrl,
+    datePublished: publishedTime,
+    dateModified: publishedTime,
+    inLanguage: 'en',
+    articleSection: post.tags[0],
+    keywords: post.tags,
+    image: {
+      '@type': 'ImageObject',
+      url: coverUrl,
+      width: 1672,
+      height: 941,
+      caption: cover.alt,
+    },
     author: {
-      '@type': 'Organization',
+      '@type': post.author === 'Ubunifu Technologies' ? 'Organization' : 'Person',
       name: post.author,
-      url: 'https://ubunifutech.com',
+      url: SITE_URL,
     },
     publisher: {
       '@type': 'Organization',
       name: 'Ubunifu Technologies',
-      url: 'https://ubunifutech.com',
+      url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: 'https://ubunifutech.com/logo.png',
+        url: `${SITE_URL}/logo-v2.png`,
+        width: 512,
+        height: 512,
       },
     },
-    keywords: post.tags.join(', '),
+    isPartOf: {
+      '@type': 'Blog',
+      name: 'The Ubunifu Journal',
+      url: `${SITE_URL}/blog`,
+    },
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `https://ubunifutech.com/blog/${post.slug}`,
+      '@id': postUrl,
     },
   };
 
   return (
-    <main>
+    <main className={styles.main}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <ReadingProgress />
-      <article className={`container ${styles.articleContainer}`}>
-        <div className={styles.header}>
-          {post.tags[0] && <span className={styles.category}>{post.tags[0]}</span>}
-          <h1 className={styles.title}>{post.title}</h1>
-          <div className={styles.meta}>
-            <span className={styles.author}>By {post.author}</span>
-            <span className={styles.metaDot} />
-            <span className={styles.date}>{formatDate(post.date)}</span>
-            <span className={styles.metaDot} />
-            <span>{post.readingTime} min read</span>
+
+      <article>
+        <header className={`container ${styles.articleHero}`}>
+          <div className={styles.header}>
+            <div className={styles.headerTopline}>
+              <Link href="/blog" className={styles.journalLink}>
+                <span aria-hidden="true">←</span> The journal
+              </Link>
+              {post.tags[0] ? <span className={styles.category}>{post.tags[0]}</span> : null}
+            </div>
+
+            <h1 className={styles.title}>{post.title}</h1>
+            <p className={styles.dek}>{post.excerpt}</p>
+
+            <div className={styles.meta}>
+              <span className={styles.author}>By {post.author}</span>
+              <span className={styles.metaDot} aria-hidden="true" />
+              <time className={styles.date} dateTime={post.date}>
+                {formatDate(post.date)}
+              </time>
+              <span className={styles.metaDot} aria-hidden="true" />
+              <span>{post.readingTime} min read</span>
+            </div>
           </div>
-        </div>
 
-        <div className={styles.content}>
-          <ReactMarkdown>{post.content}</ReactMarkdown>
-        </div>
+          <figure className={styles.cover}>
+            <Image
+              src={cover.image}
+              alt={cover.alt}
+              fill
+              priority
+              sizes="(max-width: 1280px) 100vw, 1200px"
+              className={styles.coverImage}
+            />
+          </figure>
+        </header>
 
-        <Link href="/blog" className={styles.backLink}>
-          &larr; Back to all articles
-        </Link>
+        <div className={`container ${styles.articleContainer}`}>
+          <div className={styles.content}>
+            <ReactMarkdown>{post.content}</ReactMarkdown>
+          </div>
+
+          <footer className={styles.articleFooter}>
+            <div className={styles.tagList} aria-label="Article topics">
+              {post.tags.map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
+            <Link href="/blog" className={styles.backLink}>
+              <span aria-hidden="true">←</span> Back to all articles
+            </Link>
+          </footer>
+        </div>
       </article>
+
       <CtaBand />
     </main>
   );

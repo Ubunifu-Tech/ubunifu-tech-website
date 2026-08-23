@@ -7,24 +7,25 @@ export const size = {
 };
 export const contentType = 'image/png';
 
-// Apple touch icon generation
 export default function AppleIcon() {
   return new ImageResponse(
     (
       <div
         style={{
-          fontSize: 120,
-          background: 'linear-gradient(135deg, #FF6B2C 0%, #6D3FE8 100%)',
+          background: '#FFFFFF',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
-          fontWeight: 'bold',
+          borderRadius: '38px',
         }}
       >
-        U
+        <svg width="148" height="148" viewBox="0 0 64 64">
+          <path d="M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5" fill="none" stroke="#FF6B2C" strokeWidth="10" strokeLinecap="square" strokeLinejoin="round" />
+          <path d="M43 13v23c0 11 6 18 14 18" fill="none" stroke="#6D3FE8" strokeWidth="10" strokeLinecap="square" strokeLinejoin="round" />
+          <path d="M29 16 57 10" fill="none" stroke="#6D3FE8" strokeWidth="10" strokeLinecap="square" strokeLinejoin="round" />
+        </svg>
       </div>
     ),
     {

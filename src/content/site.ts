@@ -3,9 +3,9 @@
 
 export const site = {
   name: 'Ubunifu Technologies',
-  tagline: 'Digital solutions, built for Tanzania.',
+  tagline: 'Consulting + products, built in Tanzania.',
   shortDescription:
-    'A Tanzania-based digital-solutions agency: web, hosting, data, AI, branding, and strategy.',
+    'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
   location: 'Arusha, Tanzania',
 
   contact: {
@@ -35,13 +35,11 @@ export const navLinks: ReadonlyArray<{
   href: string;
   badge?: string;
 }> = [
-  { label: 'Home', href: '/' },
   { label: 'Services', href: '/build' },
-  { label: 'Industries', href: '/industries' },
   { label: 'Work', href: '/work' },
+  { label: 'Products', href: '/products' },
+  { label: 'Insights', href: '/blog' },
   { label: 'About', href: '/about' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Contact', href: '/contact' },
 ];
 
 // Footer columns - edit titles, links, or order without touching Footer.tsx.

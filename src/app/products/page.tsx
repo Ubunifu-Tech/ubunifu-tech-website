@@ -1,12 +1,14 @@
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { Products } from '@/components/Products';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: 'Products',
   description:
-    'Ubunifu products: Insight (AI document intelligence), Sifa (business management for Tanzanian SMBs), Rafiki (embeddable website widgets), and Build (custom software and consulting).',
-};
+    'Ubunifu products: Insight for working with documents and data, Sifa for business operations, and Rafiki for embeddable website tools.',
+  path: '/products',
+});
 
 export default function ProductsPage() {
   return (
@@ -14,8 +16,22 @@ export default function ProductsPage() {
       <main>
         <PageHeader
           eyebrow="Our products"
-          title="Software products for African businesses."
-          lead="Each product solves a real problem for businesses in Tanzania. Pay-as-you-go pricing, no annual lock-in, and a free tier where it makes sense."
+          title="Software we build and operate ourselves."
+          lead="Insight and Sifa are live products. Rafiki is in development. Each is designed around a specific workflow we understand from the work."
+          artwork={{
+            primary: {
+              src: '/work/insight-tutor.png',
+              alt: 'Ubunifu Insight tutoring interface answering in context',
+              focus: 'top',
+            },
+            secondary: {
+              src: '/work/sifa-dashboard.png',
+              alt: 'Ubunifu Sifa business intelligence dashboard',
+              focus: 'top',
+            },
+            caption: 'Products we build and operate',
+            kind: 'proof',
+          }}
         />
 
         <Products hideHeader />

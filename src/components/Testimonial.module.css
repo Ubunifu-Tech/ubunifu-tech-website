@@ -20,6 +20,12 @@
   margin-top: 0.5rem;
 }
 
+.note {
+  margin-top: 0.75rem;
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+}
+
 /* ── Card ─────────────────────────────────────── */
 
 .card {

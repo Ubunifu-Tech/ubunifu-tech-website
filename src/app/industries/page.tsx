@@ -1,16 +1,17 @@
-import Image from 'next/image';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { Spotlight } from '@/components/Spotlight';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { sectors } from '@/content/sectors';
 import styles from './Industries.module.css';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: 'Industries',
   description:
     'How Ubunifu Technologies helps organisations across Tanzania: tourism, SMEs & retail, finance, NGOs, healthcare, agriculture, education, and government.',
-};
+  path: '/industries',
+});
 
 export default function IndustriesPage() {
   const tourism = sectors.find((s) => s.key === 'tourism')!;
@@ -21,8 +22,15 @@ export default function IndustriesPage() {
       <main>
         <PageHeader
           eyebrow="Who we serve"
-          title="Built for the way your sector works."
-          lead="We work across Tanzania's economy. Our shipped work is in tourism so far, and the same engineering applies wherever there's a real problem to solve."
+          title="Experience where it is proven. Capability where the problem fits."
+          lead="Our shipped client work is in tourism. The other sectors below are places where our capabilities may fit, not a client list or a claim of specialist regulation expertise."
+          artwork={{
+            primary: {
+              src: '/editorial/tourism-systems.webp',
+              alt: 'Tactile editorial study of a tourism enquiry becoming an organised operating workflow',
+            },
+            caption: 'Editorial study · From enquiry to operation',
+          }}
         />
 
         {/* Proven sector — spotlight */}
@@ -39,6 +47,7 @@ export default function IndustriesPage() {
                 alt: 'Safari King Africa booking site built by Ubunifu',
                 domain: 'safarikingafrica.com',
               }}
+              priority
               overlap={{ title: 'Proven', sub: 'Built for Safari King & Usambara' }}
             />
           </div>
@@ -49,23 +58,24 @@ export default function IndustriesPage() {
           <div className="container">
             <div className={styles.sectionIntro}>
               <ScrollReveal className={styles.introCopy}>
-                <span className="eyebrow">And across the economy</span>
-                <h2 className={styles.heading}>Where else we can help</h2>
+                <span className="eyebrow">Potential fit</span>
+                <h2 className={styles.heading}>Use cases we are equipped to explore</h2>
                 <p className={styles.sub}>
-                  We&apos;re equipped to serve these sectors. Framed as what we&apos;d
-                  build, not clients we claim, until the work is shipped.
+                  We start with the problem pattern, then earn the domain
+                  context with the people who know it best.
                 </p>
               </ScrollReveal>
 
               <ScrollReveal className={styles.introVisual} delay={120}>
-                <Image
-                  src="/editorial/sector-network-map.png"
-                  alt="Editorial illustration of Tanzanian business sectors connected by digital system paths"
-                  fill
-                  sizes="(max-width: 900px) 100vw, 520px"
-                  className={styles.introImg}
-                />
-                <span className={styles.introBadge}>Capability map</span>
+                <span className={styles.introBadge}>Our test</span>
+                <p className={styles.introStatement}>
+                  Does the problem match our capability, and can we learn the
+                  domain well enough to do responsible work?
+                </p>
+                <p className={styles.introFoot}>
+                  If not, we say so. If specialist partners are needed, we make
+                  that part of the plan.
+                </p>
               </ScrollReveal>
             </div>
 

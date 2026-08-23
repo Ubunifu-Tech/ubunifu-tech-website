@@ -1,0 +1,69 @@
+.mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.78rem;
+  min-width: max-content;
+}
+
+.lockupMark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+}
+
+.wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 0.36rem;
+  line-height: 1;
+}
+
+.name {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.descriptor {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.inverse .name {
+  color: var(--surface);
+}
+
+.inverse .descriptor {
+  color: var(--surface);
+}
+
+@media (max-width: 420px) {
+  .lockup {
+    gap: 0.58rem;
+  }
+
+  .lockupMark {
+    width: 34px;
+    height: 34px;
+  }
+
+  .name {
+    font-size: 0.92rem;
+  }
+
+  .descriptor {
+    font-size: 0.74rem;
+  }
+}

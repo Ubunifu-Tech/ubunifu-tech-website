@@ -1,43 +1,60 @@
 ---
-title: "Software That Understands Selling on Credit"
+title: "Designing Sifa Around Deni: Credit as a Core Workflow"
 date: "2026-05-26"
 author: "Ubunifu Technologies"
-excerpt: "Walk into almost any duka in Tanzania and you will find a notebook tracking who owes what. Most business software pretends that notebook does not exist. We built around it instead."
-tags: ["Product", "Tanzania", "SMB"]
+excerpt: "Why Sifa treats customer credit as part of the sale, with a TZS-native ledger and aging view instead of an accounting afterthought."
+tags: ["Product", "Sifa", "Tanzania"]
+coverImage: "/editorial/credit-ledger.webp"
+coverAlt: "Open paper ledger beside linked trays and counters on a shop worktop with stocked shelves in the background"
 ---
 
-Walk into almost any duka, hardware store, or wholesaler in Tanzania and ask how business works, and somewhere in the answer there is a notebook. A column of names. A column of amounts. A record of who took goods today and will pay later.
+In many retail relationships, a sale does not end when goods leave the counter. A known customer may pay later, in full or in parts. The resulting *deni*, money owed, has to remain visible until it is settled.
 
-Selling on credit, *deni*, is not an edge case here. It is how a huge share of everyday commerce actually runs. The customer who buys on credit this week is the loyal customer who comes back next week. Cutting them off is not an option; it is the relationship.
+The exact practice varies by business. Some shops do not sell on credit at all. Others make careful decisions based on the customer, the amount, and the relationship. We should not turn that variety into a claim about every Tanzanian retailer.
 
-So here is a question worth sitting with: why does almost no business software treat credit as a first-class thing?
+It is still a clear software-design problem. If a business does extend credit, a system that records only completed cash sales leaves an important part of the operation somewhere else.
 
-## The imported assumption
+## Credit changes the state of a sale
 
-Most point-of-sale and business management software was designed for markets where a sale is a single, instant, completed event. Money in, goods out, transaction closed. Credit, in that worldview, is an accounting afterthought. If it is handled at all, it is bolted on awkwardly, or left for the owner to track in that notebook on the side.
+A cash sale can usually be recorded as paid and complete. A credit sale remains open. The business needs to know that money is outstanding, which customer record it belongs to, and how long it has remained unresolved.
 
-That mismatch is not a minor inconvenience. It means the software does not actually model the business it is supposed to be running. The single most important number for many shop owners (*how much money is owed to me, and is any of it going bad?*) lives outside the system entirely.
+That is why credit cannot be treated only as a note field or an end-of-month accounting adjustment. It creates a state that affects customer records, cash expectations, and follow-up.
 
-## What it looks like to take credit seriously
+In Ubunifu Sifa, credit management sits alongside sales, inventory, suppliers, and customers. Records are native to Tanzanian shillings. The product’s intelligence view includes total outstanding credit and aging buckets, giving the owner a way to review balances by how long they have been open.
 
-In Ubunifu Sifa, credit is not a footnote. It sits on the main dashboard, next to sales and stock, where it belongs.
+## What an aging view does, and does not do
 
-The owner can see total outstanding credit at a glance. More importantly, they can see it broken into **aging buckets**: what is owed within the last 7 days, what has been outstanding for 8 to 30 days, and what has crossed 30 days. That last bucket is the one that keeps shop owners awake, because debt that ages is debt that turns into loss.
+Aging groups outstanding balances into time bands. A recent balance and an older balance may have the same amount, but they do not present the same follow-up question. Grouping them helps a business see where attention may be needed first.
 
-This is a standard concept in corporate finance: accounts-receivable aging. The insight is simply that a duka owner in Arusha needs it just as much as a finance department in a tower does, and deserves to have it presented just as clearly. The scale is different. The need is identical.
+An aging bucket is not a prediction that a customer will fail to pay. It does not know the history of the relationship, an agreed payment date, or the reason for a delay unless that context has been recorded. It is a review tool, not a verdict.
 
-## Why the detail matters
+That distinction matters. Software should make the state of the ledger clearer without pretending to replace the owner’s judgement.
 
-When credit is visible and aging is tracked, the owner's behaviour changes:
+## Visibility is more useful than a decorative dashboard
 
-- They know who to gently follow up with, and when, before a debt goes bad.
-- They can make a clear-eyed decision about whether to extend more credit to a given customer.
-- They stop carrying the whole picture in their head, which frees up attention for everything else running a shop demands.
+The point of putting credit on a dashboard is not to add another large number. A useful summary should lead back to records that can be checked and acted on.
 
-None of this requires the owner to become an accountant. The software does the bookkeeping quietly in the background. The owner just gets to see the truth about their own business, clearly, without keeping a separate notebook.
+For a business reviewing its position, the practical questions are straightforward:
 
-## The broader point
+- How much customer credit is currently outstanding?
+- How is that amount distributed across newer and older balances?
+- Which customer records need to be reviewed?
+- Has a payment or correction been entered consistently?
 
-We did not add credit tracking to Sifa because it appeared on a competitor's feature list. We added it because it is genuinely central to how the businesses we build for operate, and ignoring it would have meant building software for some other, imaginary market.
+Those questions shaped the feature. They are more useful than a generic “financial health” score whose meaning the user cannot inspect.
 
-That is the whole idea behind building from here rather than adapting from elsewhere. The notebook on the counter is not a sign that a shop is behind the times. It is a precise record of a real need. Good software should pick that need up and carry it, not pretend it isn't there.
+## The ledger is only as good as its records
+
+Moving credit from a notebook into software does not make the information automatically correct. Staff still need a consistent process for entering sales and payments, correcting mistakes, and deciding who is authorised to see or change customer balances.
+
+The paper ledger also should not be dismissed as evidence that a business is behind. It often contains a data model in practical form: a customer, an amount, a date, a payment, and a remaining balance. The design task is to understand what that record is doing, then improve retrieval and review without losing the business logic behind it.
+
+Digitisation is helpful when it makes the record easier to find, reconcile, and understand. It is harmful when it adds steps without giving the business a clearer view.
+
+## Local fit should be concrete
+
+“Built for Tanzania” is a broad statement. In Sifa, we want that statement to be testable in the product: TZS-native records, sales and inventory workflows, and credit management that is visible rather than hidden in a workaround.
+
+There is more to learn from real use, including how different businesses define their aging periods, handle partial payments, and divide responsibility among staff. We should validate those details rather than assume one shop’s process represents everyone.
+
+The core decision is already clear. When selling on credit is part of the business, the software should represent it honestly. Deni is not an exception to hide at the edge of the system. It is an open obligation that deserves a proper place in the workflow.

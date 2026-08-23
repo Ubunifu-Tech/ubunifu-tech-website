@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { site, footerColumns } from '@/content/site';
+import { BrandLockup } from './BrandMark';
 import styles from './Footer.module.css';
 
 export const Footer: React.FC = () => {
@@ -9,10 +10,7 @@ export const Footer: React.FC = () => {
       <div className={`container ${styles.container}`}>
         <div className={styles.top}>
           <div className={styles.brand}>
-            <div className={styles.logoMark}>U</div>
-            <span className={styles.brandName}>
-              <span className={styles.brandPrimary}>Ubunifu</span><span className={styles.brandAccent}>Technologies</span>
-            </span>
+            <BrandLockup inverse />
           </div>
           <p className={styles.tagline}>{site.tagline}</p>
         </div>
@@ -60,7 +58,11 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className={styles.bottom}>
-          <p className={styles.copy}>&copy; {new Date().getFullYear()} {site.name} Ltd. All rights reserved.</p>
+          <p className={styles.copy}>&copy; {new Date().getFullYear()} {site.name}. All rights reserved.</p>
+          <div className={styles.legalLinks}>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/brand">Brand kit</Link>
+          </div>
         </div>
       </div>
     </footer>

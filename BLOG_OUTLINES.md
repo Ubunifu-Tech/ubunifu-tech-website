@@ -1,120 +1,54 @@
-# Blog post outlines — for review
+# Ubunifu Journal — Editorial Roadmap
 
-These are **outlines only**, not finished posts. Each one marks where a real
-fact, number, or example is needed so nothing gets published that isn't true.
-Fill in the `[NEEDS INPUT: ...]` markers, edit the angle, then the post can be
-written and dropped into `_posts/` as a markdown file.
+The Journal supports both sides of Ubunifu: practical consulting lessons and the decisions behind the products. Published articles live in [`_posts/`](_posts/) and are the source of truth; this document is only a planning aid.
 
-Two posts already exist and are factual — leave them as they are:
-- *Building Software for Africa: Where the Real Opportunity Is*
-- *Why We Chose Pay-as-You-Go Pricing*
+## Published topics
 
-The four outlines below are new topics that do not overlap with those.
+These subjects are already covered and should be extended only when there is a genuinely new angle or new evidence:
 
----
+- **Building software in Tanzania and Africa** — [`building-software-for-africa.md`](_posts/building-software-for-africa.md)
+- **Usage-based pricing for Insight** — [`why-pay-as-you-go-pricing.md`](_posts/why-pay-as-you-go-pricing.md)
+- **Builder versus custom software decisions** — [`website-builder-or-custom-build.md`](_posts/website-builder-or-custom-build.md)
+- **Safari King as a connected website and operations platform** — [`safari-king-website-operating-system.md`](_posts/safari-king-website-operating-system.md)
+- **Professional tourism websites and enquiry design** — [`what-professional-means-tourism-website.md`](_posts/what-professional-means-tourism-website.md)
+- **Swahili-language AI interaction design** — [`why-our-ai-answers-in-swahili.md`](_posts/why-our-ai-answers-in-swahili.md)
+- **Credit-ledger workflows in Sifa** — [`software-that-understands-credit.md`](_posts/software-that-understands-credit.md)
 
-## 1. Website Builder or Custom Build: How to Choose
+## Optional future articles
 
-**Angle:** A consulting-credibility post. Helps a reader decide between a
-ready-made platform (a website builder, an off-the-shelf SaaS tool) and a
-custom build — using Safari King Africa as a worked example. Positions Ubunifu
-as giving honest, numbers-based advice.
-**Reader:** A business owner weighing a website builder or SaaS subscription
-against having something built for them.
-**Suggested tags:** Consulting, Custom Build, Decision
+### Lessons from building software in Tanzania
 
-**Outline:**
-1. The framing — a website builder or off-the-shelf SaaS is the right call for
-   plenty of businesses. But the economics have shifted: hosting is now very
-   cheap and writing code is cheaper than it used to be, so a custom build is a
-   realistic option far more often than people assume.
-2. The pricing mismatch — website builders charge a flat monthly rate whether
-   you use them or not; they do not bill as you go. For a seasonal business
-   that is a poor fit — you pay the same in the quiet months as in peak season.
-3. Worked example — Safari King Africa (a seasonal safari operator):
-   - Hosting their custom-built site costs under $5/month; the equivalent on a
-     website-builder platform would run $15+/month.
-     `[NEEDS INPUT: confirm these figures are current and OK to publish with
-     the client's name attached.]`
-   - Builders also cap how far the design can be customised — and today
-     customers expect a distinct, tailored experience, not a template.
-   - The tour-package catalogue is a bespoke booking structure; a generic
-     builder cannot create and customise packages like that out of the box.
-   - The website and the CRM were built as one application, so the client has
-     no second tool to maintain or pay for.
-4. The local-fit point — off-the-shelf and Western-built tools are rarely
-   designed for Tanzanian businesses out of the box; a custom build starts from
-   the local context instead of working around it.
-5. When a builder still wins — be honest: standard needs, the smallest budgets,
-   or needing to launch within days can all make a ready-made platform the
-   right call. Custom is not always the answer.
-6. Close — how to weigh it: usage pattern, customisation needs, and total cost
-   across a full year, not just the monthly sticker price.
+Focus on one or two observed lessons from real delivery or product work rather than making claims about every Tanzanian organisation.
 
----
+Before drafting, confirm:
 
-## 2. Building Software in Tanzania: What We've Learned
+- the specific project or product decision behind each lesson;
+- what changed because of local workflow, language, device, payment, or support constraints; and
+- what remains an open question rather than a proven conclusion.
 
-**Angle:** A reflective founder post. Builds trust by being specific and honest
-rather than promotional.
-**Reader:** Prospective clients, future hires, and other African founders.
-**Suggested tags:** Company, Tanzania, Lessons
+### Reviewable document extraction in Insight
 
-**Outline:**
-1. Short framing — Ubunifu has been building for `[NEEDS INPUT: how long?]`.
-2. Lesson 1 — infrastructure: building for variable connectivity and shared
-   devices. `[NEEDS INPUT: one concrete thing this changed in how you build.]`
-3. Lesson 2 — pricing: why usage-based pricing fits businesses with seasonal
-   and variable cash flow.
-4. Lesson 3 — sales and trust: how Tanzanian businesses decide to adopt software.
-   `[NEEDS INPUT: a real observation from talking to clients.]`
-5. What you would tell someone starting a software company here.
+Explain how structured extraction can support a real document workflow, with emphasis on review, traceability, and the limits of AI output.
 
----
+Before drafting, verify the current product interface, supported document types, citation or review behavior, and any pricing details against the live product.
 
-## 3. Why Offline-First Matters for Business Software Here
+### Designing for variable connectivity
 
-**Angle:** Explains a real design decision behind Ubunifu Sifa (it runs offline).
-Positions the company as thoughtful, not just feature-listing.
-**Reader:** SMBs deciding whether Sifa fits a shop with unreliable internet.
-**Suggested tags:** Product, Sifa, Engineering
+Discuss connectivity as a product-design constraint without describing Sifa or another product as offline-first unless current behavior has been tested and documented.
 
-**Outline:**
-1. The everyday reality — a shop loses connectivity mid-sale; the till cannot stop.
-2. What "offline-first" actually means in Sifa.
-   `[NEEDS INPUT: confirm what works offline and how/when data syncs — accuracy
-   matters here, do not claim more than the product does.]`
-3. The trade-offs — what is harder to build this way, and why it is worth it.
-4. Close — software should fit the infrastructure that exists, not assume better.
+A publishable article needs verified detail about failure states, retry behavior, data persistence, and synchronization. If that evidence is unavailable, keep the article at the general design-principles level or defer it.
 
----
+### A future client case study
 
-## 4. Case Study: Building the Safari King Africa Platform
+Use a named project only with client approval and a verified account of the brief, delivered scope, and evidence. If measured outcomes are unavailable, describe what was built and what can be inspected; do not substitute estimated savings, conversion lift, traffic, rankings, or booking volume.
 
-**Angle:** A consulting-credibility post — turns a portfolio entry into a story.
-Strongest fit with the consulting-heavy positioning.
-**Reader:** A business considering hiring Ubunifu for a custom build.
-**Suggested tags:** Consulting, Case Study, Web Development
+## Accuracy checklist
 
-**Outline:**
-1. The client and the brief.
-   `[NEEDS INPUT: confirm what Safari King asked for and any detail OK to share
-   publicly — check with the client before publishing.]`
-2. The challenge — what made it more than a brochure website (booking engine,
-   admin dashboard, lead capture, automated email).
-3. How it was approached — scope, the three-step process, the stack
-   (Next.js, PostgreSQL, Prisma, NextAuth, Resend).
-4. The outcome.
-   `[NEEDS INPUT: any real result — faster inquiries, bookings handled, time
-   saved. If no measurable result yet, describe what was delivered instead and
-   do not invent a metric.]`
-5. Close — what this kind of engagement looks like for other businesses.
+Before publication:
 
----
-
-### Note on accuracy
-
-Every `[NEEDS INPUT]` marker is a place where a claim would otherwise be guessed.
-None of these posts should be published until those are filled with real
-information. The case study (#4) in particular should be reviewed by the client
-before going live.
+1. Check product behavior against the current live interface or tested build.
+2. Check client functionality against the delivered system and obtain approval for sensitive details.
+3. Separate shipped capability from measured outcome.
+4. Do not imply customer counts, adoption, offline support, model-provider permanence, ratings, or sector expertise without evidence.
+5. Keep consulting and products visible as equal parts of the Ubunifu story.
+6. Add the finished article to `_posts/` with valid frontmatter and an editorial cover only after the factual review is complete.

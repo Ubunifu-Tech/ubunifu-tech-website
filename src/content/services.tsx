@@ -47,7 +47,7 @@ export const services: ReadonlyArray<Service> = [
     title: 'Hosting, Domains & Email',
     summary: 'Keep your business online.',
     description:
-      'The infrastructure that keeps you online, looked after end to end: fast, secure hosting for your website and apps, your domain registered and pointed where it should be, and professional email on your own domain. We set it up, keep it running, and stay on top of the renewals, so a lapsed domain or forgotten invoice never quietly takes your site or inbox offline.',
+      'The infrastructure behind your website and apps, looked after as one system: managed hosting, domain registration and DNS, professional email, backups, certificates, and clear renewal ownership. The goal is fewer preventable outages and no ambiguity about who is watching what.',
     items: [
       'Website & app hosting',
       'Domain registration & DNS',
@@ -108,7 +108,7 @@ export const services: ReadonlyArray<Service> = [
     title: 'Digital Strategy & Consulting',
     summary: 'A plan, and the skills to run it.',
     description:
-      'We help you plan the digital side and build the capability to run it: transformation roadmaps, maturity assessment, training for your team, and a partnership that continues long after launch.',
+      'We help you plan the digital side and build the capability to run it: transformation roadmaps, maturity assessment, training for your team, and ongoing advisory when the engagement calls for it.',
     items: [
       'Transformation roadmaps',
       'Digital maturity assessment',

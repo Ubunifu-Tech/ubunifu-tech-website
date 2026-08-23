@@ -123,9 +123,9 @@ export default async function CaseStudyPage({
       <section className="container">
         <figure className={styles.shotFrame}>
           <div className={styles.browserBar}>
-            <span className={styles.dot} style={{ background: '#ff5f57' }} />
-            <span className={styles.dot} style={{ background: '#febc2e' }} />
-            <span className={styles.dot} style={{ background: '#28c840' }} />
+            <span className={styles.dot} style={{ background: '#FF6B2C' }} />
+            <span className={styles.dot} style={{ background: '#6D3FE8' }} />
+            <span className={styles.dot} style={{ background: '#2E5BFF' }} />
             <div className={styles.urlBar}>
               <span aria-hidden="true">🔒</span>
               {project.domain}

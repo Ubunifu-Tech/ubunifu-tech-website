@@ -21,14 +21,16 @@ type OgOptions = {
 
 async function loadFonts() {
   const dir = join(process.cwd(), 'src/lib/og-fonts');
-  const [bold, regular] = await Promise.all([
-    readFile(join(dir, 'Outfit-700.woff')),
-    readFile(join(dir, 'Outfit-400.woff')),
+  const [bold, regular, regularBold] = await Promise.all([
+    readFile(join(dir, 'Poppins-700.ttf')),
+    readFile(join(dir, 'Inter-400.woff')),
+    readFile(join(dir, 'Inter-700.woff')),
   ]);
 
   return [
-    { name: 'Outfit', data: bold, weight: 700 as const, style: 'normal' as const },
-    { name: 'Outfit', data: regular, weight: 400 as const, style: 'normal' as const },
+    { name: 'Poppins', data: bold, weight: 700 as const, style: 'normal' as const },
+    { name: 'Inter', data: regular, weight: 400 as const, style: 'normal' as const },
+    { name: 'Inter', data: regularBold, weight: 700 as const, style: 'normal' as const },
   ];
 }
 
@@ -51,32 +53,22 @@ export async function renderOgImage({
           backgroundImage:
             'radial-gradient(circle at 85% 12%, rgba(255,107,44,0.14), transparent 45%), radial-gradient(circle at 12% 88%, rgba(109,63,232,0.14), transparent 45%)',
           padding: '72px 80px',
-          fontFamily: 'Outfit',
+          fontFamily: 'Inter',
         }}
       >
         {/* Logo row */}
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 76,
-              height: 76,
-              borderRadius: 18,
-              backgroundImage: 'linear-gradient(135deg, #FF6B2C, #6D3FE8)',
-              color: '#ffffff',
-              fontSize: 42,
-              fontWeight: 700,
-            }}
-          >
-            U
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 22 }}>
+          <svg width="76" height="76" viewBox="0 0 64 64">
+            <path d="M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5" fill="none" stroke="#FF6B2C" strokeWidth="10" strokeLinecap="square" strokeLinejoin="round" />
+            <path d="M43 13v23c0 11 6 18 14 18" fill="none" stroke="#6D3FE8" strokeWidth="10" strokeLinecap="square" strokeLinejoin="round" />
+            <path d="M29 16 57 10" fill="none" stroke="#6D3FE8" strokeWidth="10" strokeLinecap="square" strokeLinejoin="round" />
+          </svg>
+          <div style={{ display: 'flex', alignItems: 'baseline', marginLeft: 22 }}>
             <div
               style={{
                 fontSize: 32,
                 fontWeight: 700,
+                fontFamily: 'Poppins',
                 color: '#1F1A36',
                 lineHeight: 1.05,
               }}
@@ -85,13 +77,15 @@ export async function renderOgImage({
             </div>
             <div
               style={{
-                fontSize: 18,
+                fontSize: 24,
                 fontWeight: 700,
-                letterSpacing: 6,
-                color: '#FF6B2C',
+                fontFamily: 'Poppins',
+                color: '#1F1A36',
+                letterSpacing: -0.5,
+                marginLeft: 10,
               }}
             >
-              TECHNOLOGIES
+              Technologies
             </div>
           </div>
         </div>
@@ -118,6 +112,7 @@ export async function renderOgImage({
               display: 'flex',
               fontSize: 60,
               fontWeight: 700,
+              fontFamily: 'Poppins',
               color: '#1F1A36',
               lineHeight: 1.07,
               letterSpacing: -1,
@@ -152,7 +147,7 @@ export async function renderOgImage({
               backgroundImage: 'linear-gradient(90deg, #FF6B2C, #6D3FE8)',
             }}
           />
-          <div style={{ marginLeft: 24, fontSize: 22, color: '#8B82A0' }}>
+          <div style={{ marginLeft: 24, fontSize: 22, color: '#5A5170' }}>
             ubunifutech.com
           </div>
         </div>

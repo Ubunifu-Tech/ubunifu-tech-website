@@ -29,7 +29,21 @@
   font-size: 1rem;
   color: var(--text-secondary);
   line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.privacyNote {
   margin-bottom: 1.75rem;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.privacyNote a {
+  color: var(--primary-deep);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .emailLink {
@@ -71,8 +85,16 @@
 .futureHeading {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   color: var(--text-primary);
+}
+
+.futureIntro {
+  max-width: 720px;
+  margin-bottom: 2rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
 .rolesGrid {

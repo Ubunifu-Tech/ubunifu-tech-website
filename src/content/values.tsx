@@ -17,8 +17,8 @@ export const values: ReadonlyArray<Value> = [
   },
   {
     icon: Wrench,
-    title: 'We build it, then we run it',
-    body: 'We are not a launch-and-leave shop. Maintenance, monitoring, and steady improvement are part of the partnership, so your digital solutions keep delivering as you grow.',
+    title: 'Plan beyond launch',
+    body: 'Every engagement defines what happens next: an agreed support relationship, a documented handover, or a mix of both.',
   },
   {
     icon: Zap,

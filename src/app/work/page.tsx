@@ -1,14 +1,15 @@
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { Portfolio } from '@/components/Portfolio';
-import { ProductsProof } from '@/components/HomePreviews';
 import { Testimonial } from '@/components/Testimonial';
+import { pageMetadata } from '@/lib/metadata';
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: 'Our Work',
   description:
-    'Platforms, custom CRMs, and AI-augmented sites Ubunifu has shipped for clients across Tanzania, plus our own live SaaS products, Insight and Sifa.',
-};
+    'Production websites and operations platforms Ubunifu has shipped for clients in Tanzania.',
+  path: '/work',
+});
 
 export default function WorkPage() {
   return (
@@ -16,12 +17,25 @@ export default function WorkPage() {
       <main>
         <PageHeader
           eyebrow="Our work"
-          title="Built for clients, and for ourselves."
-          lead="Custom platforms and sites for businesses across Tanzania, plus the SaaS products we design, build, and run ourselves."
+          title="Systems running in the real world."
+          lead="Client work, shown honestly: the situation, the system we delivered, and the evidence we can stand behind."
+          artwork={{
+            primary: {
+              src: '/work/safari-king-admin.png',
+              alt: 'Safari King operations dashboard built by Ubunifu',
+              focus: 'top',
+            },
+            secondary: {
+              src: '/work/usambara-hero.png',
+              alt: 'Usambara Destination website built by Ubunifu',
+              focus: 'top',
+            },
+            caption: 'Live client systems · Tanzania',
+            kind: 'proof',
+          }}
         />
 
         <Portfolio hideHeader />
-        <ProductsProof />
         <Testimonial />
       </main>
       <CtaBand />

@@ -31,6 +31,8 @@ type SpotlightProps = {
   reversed?: boolean;
   /** Real screenshot. If omitted, a branded panel is rendered from icon/chips. */
   image?: SpotlightImage;
+  /** Load eagerly when this image is expected to be the page LCP. */
+  priority?: boolean;
   /** Brand-tint the image (for atmospheric photos, not product screenshots). */
   tint?: boolean;
   overlap?: SpotlightOverlap;
@@ -61,6 +63,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({
   cta,
   reversed = false,
   image,
+  priority = false,
   tint = false,
   overlap,
   panelIcon: PanelIcon,
@@ -115,6 +118,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({
                 src={image.src}
                 alt={image.alt}
                 fill
+                priority={priority}
                 sizes="(max-width: 900px) 100vw, 540px"
                 className={styles.shot}
               />

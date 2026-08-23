@@ -1,4 +1,4 @@
-// Products & services shown on the homepage Products section.
+// Software products shown across the product page and homepage.
 // Add, remove, or reorder products by editing this list. Components iterate
 // over it and don't care about specific products.
 //
@@ -51,13 +51,13 @@ export const products: ReadonlyArray<Product> = [
     name: 'Ubunifu Sifa',
     tagline: 'Run your shop, restaurant, or distributor',
     description:
-      'Sales, inventory, suppliers, customers, and credit management in one app. First-class support for selling on credit, with aging buckets so you know who owes what. Works offline, native to TZS.',
+      'Sales, inventory, suppliers, customers, and credit management in one app. Selling on credit is a core workflow, with aging buckets that make outstanding balances easier to review. Records are native to TZS.',
     features: [
       'Sales & POS',
       'Inventory with low-stock alerts',
       'Credit ledger with aging buckets',
       'Supplier & customer management',
-      'Works offline',
+      'TZS-native records',
     ],
     status: 'live',
     url: 'https://sifa.ubunifutech.com',
@@ -78,16 +78,5 @@ export const products: ReadonlyArray<Product> = [
     url: null,
     domain: 'rafiki.ubunifutech.com',
     cta: 'Coming soon',
-  },
-  {
-    name: 'Ubunifu Build',
-    tagline: 'Custom software & consulting',
-    description:
-      'When the answer is a custom build, not a SaaS subscription. Websites, custom platforms, AI integrations, data work, and brand design. See Selected work for what that looks like.',
-    features: ['Web development', 'Data analytics', 'Brand design', 'AI & automation'],
-    status: 'available',
-    url: '/build',
-    domain: 'ubunifutech.com/build',
-    cta: 'Learn more',
   },
 ];

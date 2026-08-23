@@ -1,69 +1,59 @@
-'use client';
-
 import React from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { pillars } from '@/content/pillars';
+import Link from 'next/link';
+import { Topography } from './Topography';
 import styles from './ProblemStrip.module.css';
 
-export const ProblemStrip: React.FC = () => {
-  return (
-    <section className={styles.strip}>
-      <div className={`container ${styles.inner}`}>
-        <motion.div
-          className={styles.media}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <Image
-            src="/editorial/tanzania-digital-map.png"
-            alt="Editorial illustration of a Tanzania-inspired terrain map with digital network paths"
-            fill
-            sizes="(max-width: 900px) 100vw, 560px"
-            className={styles.image}
-          />
-          <div className={styles.mediaShade} aria-hidden="true" />
-          <span className={styles.mediaLabel}>Arusha, Tanzania</span>
-        </motion.div>
+const stages = [
+  {
+    number: '01',
+    title: 'Understand',
+    body: 'We get close to the workflow, the people, and the constraint before proposing a solution.',
+  },
+  {
+    number: '02',
+    title: 'Design',
+    body: 'We shape the strategy, experience, brand, and system as one connected piece of work.',
+  },
+  {
+    number: '03',
+    title: 'Build',
+    body: 'We ship in useful increments, using the right level of technology for the problem.',
+  },
+  {
+    number: '04',
+    title: 'Run',
+    body: 'We host, support, measure, and improve what we launch. Delivery is not the finish line.',
+  },
+] as const;
 
-        <motion.div
-          className={styles.content}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <span className="eyebrow">Why Ubunifu</span>
-          <h2 className={styles.heading}>Local context, serious engineering.</h2>
-          <p className={styles.intro}>
-            We are based in Arusha and build around how Tanzanian organisations
-            actually work: the market, the devices, the support model, and the
-            systems that need to keep running after launch.
-          </p>
-
-          <div className={styles.pillars}>
-            {pillars.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.label} className={styles.item}>
-                  <span className={styles.number} aria-hidden="true">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className={styles.icon}>
-                    <Icon size={18} />
-                  </span>
-                  <div>
-                    <p className={styles.label}>{item.label}</p>
-                    <p className={styles.body}>{item.body}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
+export const ProblemStrip: React.FC = () => (
+  <section className={styles.strip}>
+    <Topography className={styles.topo} />
+    <div className={`container ${styles.inner}`}>
+      <div className={styles.intro}>
+        <p className={styles.kicker}>How we work</p>
+        <h2 className={styles.heading}>From uncertainty to a system that stays running.</h2>
+        <p className={styles.copy}>
+          Strategy, design, engineering, and support belong in the same
+          conversation. Our work moves through one continuous loop, with the
+          people doing the work present from the first call onward.
+        </p>
+        <Link href="/build" className={styles.link}>
+          See how we engage <span aria-hidden="true">↗</span>
+        </Link>
       </div>
-    </section>
-  );
-};
+
+      <ol className={styles.stages}>
+        {stages.map((stage) => (
+          <li key={stage.number} className={styles.stage}>
+            <span className={styles.number}>{stage.number}</span>
+            <div>
+              <h3>{stage.title}</h3>
+              <p>{stage.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+);

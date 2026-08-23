@@ -94,7 +94,7 @@
   align-items: center;
   gap: 6px;
   padding: 11px 14px;
-  background: linear-gradient(180deg, #f4f2f8, #ece9f2);
+  background: linear-gradient(180deg, var(--background), var(--surface-3));
   border-bottom: 1px solid var(--border);
 }
 

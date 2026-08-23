@@ -3,16 +3,28 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { SelectField } from './SelectField';
 import styles from './Contact.module.css';
 
 type FormStatus = 'idle' | 'sending' | 'success' | 'error';
 
+function createSubmissionId(): string {
+  if (typeof crypto !== 'undefined') {
+    if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    if (typeof crypto.getRandomValues === 'function') {
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    }
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 const SUBJECT_OPTIONS = [
-  'Product inquiry',
-  'Custom build / Consulting',
+  'Project enquiry',
+  'Product question',
   'Hosting, domains & email',
   'Branding & design',
+  'Support',
   'Partnership',
   'Careers',
   'Other',
@@ -28,9 +40,14 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
   });
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const mountedAt = useRef(Date.now());
+  const submissionId = useRef<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    submissionId.current = null;
+    if (status === 'error') {
+      setStatus('idle');
+      setErrorMsg('');
+    }
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -47,12 +64,13 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
     setErrorMsg('');
 
     try {
+      submissionId.current ??= createSubmissionId();
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
-          elapsedMs: Date.now() - mountedAt.current,
+          submissionId: submissionId.current,
         }),
       });
 
@@ -63,6 +81,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
 
       setStatus('success');
       setForm({ name: '', email: '', subject: '', message: '', company_url: '' });
+      submissionId.current = null;
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Failed to send message');
@@ -87,7 +106,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
                 <p className={styles.text}>
                   Trying one of our products, or starting a custom build? Write to
-                  us. A real person reads every message. No bots, no ticket queue.
+                  us. The team reviews enquiries directly.
                 </p>
               </>
             )}
@@ -99,11 +118,11 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
               </li>
               <li className={styles.step}>
                 <span className={styles.stepNum}>2</span>
-                <span className={styles.stepText}>We reply within two business days.</span>
+                <span className={styles.stepText}>We review the context and whether we can help.</span>
               </li>
               <li className={styles.step}>
                 <span className={styles.stepNum}>3</span>
-                <span className={styles.stepText}>A short call to see if we&apos;re a fit. No obligation.</span>
+                <span className={styles.stepText}>If useful, we suggest a short call. No obligation.</span>
               </li>
             </ol>
 
@@ -170,6 +189,9 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                   value={form.name}
                   onChange={handleChange}
                   required
+                  autoComplete="name"
+                  minLength={2}
+                  maxLength={120}
                   placeholder="Your name"
                   className={styles.input}
                 />
@@ -183,19 +205,30 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                   value={form.email}
                   onChange={handleChange}
                   required
+                  autoComplete="email"
+                  maxLength={254}
                   placeholder="you@company.com"
                   className={styles.input}
                 />
               </div>
             </div>
 
-            <SelectField
-              label="Subject"
-              placeholder="Select a topic"
-              value={form.subject}
-              onChange={(subject) => setForm((prev) => ({ ...prev, subject }))}
-              options={SUBJECT_OPTIONS}
-            />
+            <div className={styles.field}>
+              <label htmlFor="subject" className={styles.label}>What can we help with?</label>
+              <select
+                id="subject"
+                name="subject"
+                value={form.subject}
+                onChange={handleChange}
+                required
+                className={styles.input}
+              >
+                <option value="" disabled>Select an enquiry type</option>
+                {SUBJECT_OPTIONS.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
 
             <div className={styles.field}>
               <label htmlFor="message" className={styles.label}>Message</label>
@@ -205,21 +238,23 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 value={form.message}
                 onChange={handleChange}
                 required
-                placeholder="Tell us about your project or question..."
+                minLength={20}
+                maxLength={5000}
+                placeholder="What needs to work better, and what would a useful outcome look like?"
                 rows={5}
                 className={`${styles.input} ${styles.textarea}`}
               />
             </div>
 
             {status === 'success' && (
-              <div className={styles.statusSuccess}>
+              <div className={styles.statusSuccess} role="status" aria-live="polite">
                 <CheckCircle size={18} />
-                Message sent! We&apos;ll get back to you shortly.
+                Message sent to the Ubunifu team.
               </div>
             )}
 
             {status === 'error' && (
-              <div className={styles.statusError}>
+              <div className={styles.statusError} role="alert">
                 <AlertCircle size={18} />
                 {errorMsg}
               </div>
@@ -242,6 +277,11 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 </>
               )}
             </button>
+            <p className={styles.privacyNote}>
+              Please do not send passwords or sensitive records. By submitting,
+              you agree that we may use this information to respond to your enquiry.{' '}
+              <a href="/privacy">Privacy details</a>
+            </p>
           </motion.form>
         </div>
       </div>

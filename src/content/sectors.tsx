@@ -39,7 +39,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'SMEs & Retail',
     icon: Store,
     summary:
-      'A professional presence, e-commerce, and the day-to-day tools to run sales, stock, and customers, with credit selling built in.',
+      'Potential use cases include a professional presence, e-commerce, and tools for sales, stock, customers, and credit workflows.',
     offerings: ['Websites & e-commerce', 'POS & inventory', 'Credit & customers', 'Sales analytics'],
   },
   {
@@ -47,15 +47,15 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Finance',
     icon: Landmark,
     summary:
-      'Analytics, customer tools, and secure digital channels for banks, SACCOs, and financial-service providers.',
-    offerings: ['Data analytics', 'Customer portals', 'Secure channels', 'Reporting'],
+      'Potential use cases include analytics, reporting, and customer tools. Regulated work would be scoped with the required domain and compliance specialists.',
+    offerings: ['Data analytics', 'Customer portals', 'Reporting', 'Workflow design'],
   },
   {
     key: 'ngo',
     label: 'NGOs & Non-profits',
     icon: HeartHandshake,
     summary:
-      'Impact dashboards, process automation, and communication platforms that make your work visible to funders and communities.',
+      'Potential use cases include impact dashboards, process automation, data organisation, and communication platforms.',
     offerings: ['Impact dashboards', 'Process automation', 'Data management', 'Websites'],
   },
   {
@@ -63,15 +63,15 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Healthcare',
     icon: Stethoscope,
     summary:
-      'Patient and records systems, secure data handling, and health information tools, built with privacy in mind.',
-    offerings: ['Records systems', 'Secure data', 'Reporting dashboards', 'Websites'],
+      'Potential use cases include public websites, reporting, and non-clinical administration. Patient or clinical systems require specialist privacy and health partners.',
+    offerings: ['Public websites', 'Reporting dashboards', 'Admin workflows', 'Data planning'],
   },
   {
     key: 'agriculture',
     label: 'Agriculture',
     icon: Sprout,
     summary:
-      'Market-linkage and farm-management platforms, supply-chain tools, and analytics that help improve yields.',
+      'Potential use cases include market-linkage platforms, farm records, supply-chain tools, and operational analytics.',
     offerings: ['Market platforms', 'Farm management', 'Supply chain', 'Yield analytics'],
   },
   {
@@ -79,7 +79,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Education',
     icon: GraduationCap,
     summary:
-      'E-learning, student management, and digital resources, including Swahili-first AI tutoring built on our own Insight platform.',
+      'Potential use cases include e-learning, student administration, and digital resources, informed by the Swahili-language tutor in Insight.',
     offerings: ['E-learning', 'Student management', 'Swahili AI tutoring', 'Websites'],
   },
   {
@@ -87,7 +87,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Government',
     icon: Building2,
     summary:
-      'Citizen-facing services, data systems, and practical AI for public interaction and process efficiency.',
+      'Potential use cases include public information sites, service portals, data systems, and process design, with procurement and governance requirements scoped explicitly.',
     offerings: ['Citizen portals', 'Data systems', 'Process automation', 'AI assistants'],
   },
 ];

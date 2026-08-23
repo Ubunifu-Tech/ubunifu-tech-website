@@ -51,6 +51,20 @@
   opacity: 0.9;
 }
 
+.card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
+}
+
+.card:last-child:nth-child(odd) .media {
+  height: 100%;
+  min-height: 380px;
+  aspect-ratio: auto;
+  border-right: 1px solid var(--border);
+  border-bottom: 0;
+}
+
 /* ── Media panel ──────────────────────────────── */
 
 .media {
@@ -256,5 +270,18 @@
 
   .body {
     padding: 1.5rem;
+  }
+
+  .card:last-child:nth-child(odd) {
+    grid-column: auto;
+    display: flex;
+  }
+
+  .card:last-child:nth-child(odd) .media {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
   }
 }

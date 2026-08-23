@@ -1,204 +1,194 @@
 # Ubunifu Technologies — Positioning & Company Profile
 
-**The authoritative source for who we are, what we do, and how we talk about it.**
-Site copy, the home page, and the Services pages should all trace back to this document. For the *visual* system (colours, type, components) see `BRANDING.md`; for the running changelog of site work see `SITE_IMPROVEMENTS.md`.
+This is the authority for who Ubunifu is, what it offers, and which claims it can make. Site copy should trace back here. Use [`BRANDING.md`](BRANDING.md) for the visual system and [`src/content/site.ts`](src/content/site.ts) for company contact details.
 
-Last updated: May 2026.
+Last updated: 23 August 2026.
 
----
+## Core position
 
-## 1. One-liner
+**Ubunifu Technologies is an Arusha-based consulting company and product studio.** We advise, design, build, host, and operate brand, web, software, data, and AI systems for Tanzanian organisations, while building software products of our own.
 
-**Ubunifu Technologies is a Tanzania-based digital-solutions agency.** We help local businesses and organisations grow through web development, data analytics, intelligent automation, and design — built around how this market actually works.
+Canonical tagline:
 
----
+> Consulting + products, built in Tanzania.
 
-## 2. Vision
+### Category and audience
 
-To be a leading force for digital innovation in Tanzania — helping organisations of every size adopt technology, make sense of their data, and raise the quality of their operations and online presence. Digital transformation that is both ambitious and accessible.
+- **Category:** Technology consultancy + software product studio
+- **Based in:** Arusha, Tanzania
+- **For:** Businesses, non-profits, and public organisations that need a practical technology partner with engineering depth and local context
+- **Geographic focus:** Tanzania first; wider East African work where the fit is responsible and credible
 
-## 3. Mission
+The model has two connected engines:
 
-To partner with Tanzanian enterprises and organisations across sectors — tourism, finance, healthcare, NGOs, agriculture, education, government, retail, and more — and deliver digital solutions that are technically strong, culturally relevant, and practical to run in the Tanzanian context.
+1. **Consulting:** understand a specific organisation, advise on the right approach, and design, build, host, or support the resulting system.
+2. **Products:** turn repeatable problem patterns into software that organisations can use without commissioning a bespoke build.
 
----
+Neither side is secondary. Consulting keeps the studio close to real workflows; product work forces the team to make systems reusable and operable.
 
-## 4. Positioning
+## Vision
 
-**Category:** Digital-solutions / digital-transformation agency.
-**Where:** Based in Arusha, serving clients across Tanzania.
-**For:** Businesses, public-sector bodies, and non-profits that want to do something real with technology and want a partner who understands both the tech and the local context.
+To be a leading force for digital innovation in Tanzania, helping organisations adopt useful technology, make sense of their data, and improve how they work.
 
-We pair genuine engineering depth (cloud, data, modern AI, full-stack web) with a close read of the local market. That combination — serious technical capability *and* local fluency — is the core of the positioning. We are not a foreign vendor adapting tools built for somewhere else, and we are not a low-code shop reselling templates. We build.
+## Mission
 
-### What makes this credible (not just claims)
+To partner with Tanzanian organisations and deliver digital systems that are technically strong, locally relevant, and practical to operate, while turning repeatable lessons into accessible software products.
 
-Everything below is real and verifiable — it is what lets us position this way honestly:
+## Evidence and claim boundaries
 
-- **We ship our own products.** Ubunifu Insight (document AI with Swahili-speaking agents) and Ubunifu Sifa (business management with credit-selling built in) are live and in use. Building and running our own SaaS is proof we can build yours.
-- **We have shipped real client platforms.** Safari King Africa (a full booking platform + custom CRM + Claude-powered AI assistant) and Usambara Destination (a fast, accessible, SEO-strong eco-tourism site on Node/Express) are both in production.
-- **A real client has vouched for the work.** Usambara's Managing Director is on record about the results, and the site carries a 5.0★ TripAdvisor rating.
-- **The team's skills match the offer.** Data/software/AI engineering and IT/systems/design are exactly the disciplines the six service pillars require.
+### Proven
 
-> **Honesty rule:** never invent metrics, client logos, or sector experience we don't have. Where a claim isn't yet provable, say the weaker true version (e.g. "equipped to serve healthcare" rather than "trusted by hospitals").
+- **Named client work:** Safari King Africa and Usambara Destination have published case studies on `/work`. Describe only the functionality documented there.
+- **Product capability:** Ubunifu Insight and Ubunifu Sifa are available at their published domains. Product descriptions must match current interfaces, screenshots, and tested behavior.
+- **Team capability:** The team’s documented disciplines cover data, software, AI, systems, hosting, support, brand, and design.
 
----
+### Capability, not proof of sector experience
 
-## 5. Service pillars
+Outside tourism and hospitality, sector pages describe potential use cases that fit Ubunifu’s capabilities. They are not a client list and do not establish regulated-domain expertise.
 
-The six things we do. These are the backbone of the Services page and the home page.
+### Honesty rule
 
-### 1. Digital Presence & Web Solutions
-Professional, fast, user-friendly websites and web applications — from informational sites to e-commerce and custom platforms.
-- Strategic website & web-app development
-- E-commerce
-- CMS so clients control their own content
-- SEO & accessibility
-- QA, performance, and UX optimisation across devices
+Never invent or imply:
+
+- customer counts, daily usage, adoption, revenue, conversion, or performance metrics;
+- client ratings, awards, certifications, partnerships, or testimonials that are not sourced;
+- offline support, integrations, or workflows that have not been verified;
+- a specific AI model or provider as a permanent product feature;
+- specialist healthcare, finance, government, or compliance expertise without the required people and evidence;
+- product availability based only on a roadmap.
+
+Prefer the narrower true statement. “Potential use cases include…” is better than “trusted by…” when no named work supports the stronger claim. Recheck volatile product and technology details before publishing them.
+
+## Consulting services
+
+The six service pillars can stand alone or combine around one outcome.
+
+### 1. Digital Presence & Web
+
+- Websites and web applications
+- E-commerce and content management
+- SEO, accessibility, performance, and UX
+- Custom customer and operational platforms
 
 ### 2. Hosting, Domains & Email
-The infrastructure that keeps clients online, managed end to end. A real capability today, not aspirational (cPanel hosting, domains, email, support — see the team in §9).
-- Website & app hosting (cPanel)
-- Domain registration & DNS
-- Professional email on the client's own domain
-- SSL certificates & backups
-- Renewals and ongoing support
+
+- Website and application hosting
+- Domain registration and DNS
+- Professional email on a client-owned domain
+- SSL, backups, renewals, and ongoing support
 
 ### 3. Branding & Graphic Design
-Cohesive visual identity and the day-to-day graphic design that carries it.
-- Logo design, brand identity, and style guides
-- Banners, flyers, posters, and social media graphics
-- Business cards, stationery, and marketing collateral (digital + print)
-- UI/UX design for web and mobile
+
+- Logo and visual identity systems
+- Style guides and marketing collateral
+- Social, print, and presentation design
+- UI/UX design for web and mobile products
 
 ### 4. Data Analytics & Business Intelligence
-Turning data into decisions.
-- Data cleaning, organisation, KPIs, and reporting
-- Dashboards and visualisation
-- Advanced: data warehousing strategy, ETL/ELT pipelines, analytical models
 
-### 5. Intelligent Automation & AI Solutions
-Practical AI that solves a specific problem, not AI for its own sake.
-- Custom AI / ML projects (predictive models, segmentation, automation)
-- AI-powered interactive systems (e.g. grounded assistants like Safari King's)
-- Pragmatic, value-first deployment — only where it earns its place
-- Ethical, responsible use of data and AI
+- Data cleaning, organisation, and reporting
+- KPIs, dashboards, and visualisation
+- Data pipelines and warehousing strategy
+- Analytical models where the data and decision justify them
 
-### 6. Digital Strategy, Consulting & Capacity Building
-Helping organisations plan and grow their digital capability.
-- Digital-transformation roadmaps & maturity assessment
-- Digital-skills workshops and training (data literacy, tools, online safety)
-- Ongoing support, maintenance, monitoring, and strategic advisory
+### 5. Intelligent Automation & AI
 
----
+- Grounded assistants and document workflows
+- Process automation
+- Predictive or classification work where appropriate
+- Responsible deployment tied to a specific operational outcome
 
-## 6. Sectors we serve
+### 6. Digital Strategy & Consulting
 
-We are **equipped to serve** a broad range of Tanzanian organisations. Be precise on the site about what is *proven* vs *targeted*:
+- Transformation roadmaps and maturity assessment
+- System and workflow design
+- Skills workshops and capacity building
+- Ongoing support, maintenance, and advisory
 
-| Sector | Status |
+## Products
+
+Products are a first-class part of the studio, not a consulting package renamed as software.
+
+- **Ubunifu Insight** — available at `insight.ubunifutech.com`. Document AI for cited question answering, structured extraction, template-based generation, and specialised multilingual agents, including a Swahili-language education tutor.
+- **Ubunifu Sifa** — available at `sifa.ubunifutech.com`. Sales, inventory, supplier, customer, and credit-ledger workflows with TZS-native records and credit-aging views.
+- **Ubunifu Rafiki** — coming soon. Planned embeddable tools for contact, booking, and publishing workflows. Describe it as planned until it is released and verified.
+
+Custom software and consulting belong under `/build`; they are not a fourth product.
+
+## Sectors: proven versus potential fit
+
+| Sector | Claim boundary |
 |---|---|
-| **Tourism & hospitality** | **Proven** — Safari King Africa, Usambara Destination. |
-| SMEs / retail | Targeted — online presence, e-commerce, operations, analytics. |
-| Finance | Targeted — analytics, CRM, secure digital channels. |
-| NGOs & civil society | Targeted — automation, impact dashboards, communication platforms. |
-| Healthcare | Targeted — patient/data systems, secure information handling. |
-| Agriculture | Targeted — farm/market platforms, supply-chain, yield analytics. |
-| Education | Targeted — e-learning, student management, digital resources. |
-| Government / public sector | Targeted — service delivery, citizen engagement, data systems. |
+| **Tourism & hospitality** | **Proven client work:** Safari King Africa and Usambara Destination. |
+| SMEs & retail | Potential fit for web, commerce, sales, stock, customer, credit, and analytics workflows. |
+| Finance | Potential fit for analytics, reporting, and customer tools; regulated work requires appropriate domain and compliance specialists. |
+| NGOs & non-profits | Potential fit for impact reporting, process automation, data organisation, and communication platforms. |
+| Healthcare | Potential fit for public websites, reporting, and non-clinical administration; patient or clinical systems require specialist privacy and health partners. |
+| Agriculture | Potential fit for market-linkage, farm records, supply-chain tools, and operational analytics. |
+| Education | Potential fit for learning tools, student administration, digital resources, and multilingual educational workflows. |
+| Government | Potential fit for public information, service portals, data systems, and process design; procurement and governance requirements must be scoped explicitly. |
 
-On the site, present these as "sectors we serve" / "built for" — a statement of focus and capability, **not** a claim of existing clients in each.
+Use “proven” only where named shipped work supports it. For every other sector, lead with the problem pattern and the need to learn the domain with responsible partners.
 
----
+## How we work
 
-## 7. Our products (proof, not the headline)
+- **Listen first.** Start from the workflow, people, constraints, and desired outcome.
+- **Scope honestly.** Explain what is realistic, what is uncertain, and when a simpler answer is enough.
+- **Build iteratively.** Deliver useful increments and keep the client close to decisions.
+- **Operate when agreed.** Hosting, maintenance, monitoring, and improvement are available parts of the engagement, not an automatic promise for every project.
+- **Use AI when it fits.** Apply it to a defined problem with appropriate review, data handling, and fallback behavior.
+- **Bring in specialists when needed.** Do not stretch general technical capability into unsupported domain expertise.
 
-We lead with the agency, but our products are some of our best proof. They live as "products we've built" within the work/proof story, not as the site's primary destination.
+Typical flow:
 
-- **Ubunifu Insight** — *Live* (`insight.ubunifutech.com`). Document AI: upload documents, ask questions with cited answers, extract data, generate from templates. Includes specialised AI agents, including a Swahili-speaking Education Tutor. Tanzania-localised templates (e.g. a TZ tax invoice).
-- **Ubunifu Sifa** — *Live* (`sifa.ubunifutech.com`). Business management for shops, restaurants, distributors: sales/POS, inventory, suppliers, customers, and first-class credit-selling with aging buckets. Works offline, native to TZS.
-- **Ubunifu Rafiki** — *Coming soon.* Embeddable widgets (contact forms, booking, blog tools).
-- **Ubunifu Build** — not a SaaS product but our custom software & consulting (the pillars in §5). It surfaces alongside the products on `/products` as the "when the answer is a custom build, not a subscription" option.
+> Understand → Shape → Build → Operate
 
----
+This flow is a decision and delivery model, not a guarantee that every engagement includes every stage.
 
-## 8. How we work
+## Team
 
-- **Listen first.** We start from the client's reality — their workflows, their market — not a template.
-- **Build it right, then run it.** We ship working software and stay on for maintenance, monitoring, and iteration.
-- **Local + technical.** Solutions that are technologically modern *and* practical to operate in Tanzania (connectivity, devices, languages, payment realities).
-- **Plain, honest communication.** A real person answers. We give honest assessments of budget and timeline.
-- **One team, no handoffs.** Clients work directly with the people who build.
+- **Richard Pallangyo — Data · Software · AI.** Data engineering, backend and full-stack systems, cloud, document AI, and applied automation.
+- **HappyGod Pallangyo — IT · Design · Support.** Systems and network administration, hosting, domains, technical support, brand, and visual design.
 
-### Process
-Tell us what you need → We scope and plan (clear timeline, deliverables, honest pricing) → We build and deliver iteratively → We support and evolve it.
+Ubunifu is a small senior team. Describe collaborators only when they are actually part of an engagement; do not imply permanent headcount or disciplines that are not documented.
 
----
+## Commercial model
 
-## 9. Team
+- **Project work:** fixed or milestone-based proposals for clearly scoped consulting, design, software, data, and AI work.
+- **Ongoing services:** agreed retainers for hosting, maintenance, reporting, support, or advisory.
+- **Consulting and training:** scoped by session, day, programme, or defined outcome.
+- **Software products:** pricing and availability are owned by each current product surface and should not be copied into this document as permanent facts.
 
-- **Richard Pallangyo — Data, Software & AI Engineer.** Builds the data pipelines, backend systems, and the RAG / agentic-AI behind our products and client work. Python, the modern cloud data stack (Azure/AWS), and full-stack web.
-- **HappyGod Pallangyo — IT, Design & Support.** System & network administration, hosting/cPanel, domains, and technical support, plus the creative side: brand identity, design, and the visual work. Background in computer engineering and accountancy.
+Public pricing is not promised. Quotes should state scope, deliverables, assumptions, exclusions, timing, and support terms clearly.
 
-We're small on purpose. Specialist work outside the core (e.g. heavy design or sector-specific needs) is handled through trusted collaborators when a project calls for it.
+## Voice and messaging
 
----
+- **Specific over generic.** Name the workflow, object, or decision being improved.
+- **Confident and warm.** Write like an experienced collaborator, not a corporate brochure.
+- **Locally grounded.** Mention Tanzanian context where it materially shapes the work; do not use flags, clichés, or stereotypes as proof of local understanding.
+- **Plain about uncertainty.** Separate what exists now, what is planned, and what is a possible capability fit.
+- **Products and consulting together.** Present both engines consistently; do not reduce the company to only one side.
+- **Avoid empty value words.** Prefer evidence to “world-class,” “cutting-edge,” “seamless,” “revolutionary,” or similar claims.
 
-## 10. Marketing & growth approach
-
-- **Professional online presence** — this site, plus consistent activity on platforms used by the Tanzanian professional audience.
-- **Local networking** — expos, ICT forums, and meetups in Dar es Salaam, Arusha, Mwanza, Dodoma, and Zanzibar.
-- **Strategic alliances** — payment gateways, ISPs, business associations, sector consultancies.
-- **Thought leadership** — blog posts and guidance in Swahili and English on digital adoption, data, online safety, and growth.
-- **Client success & referrals** — word-of-mouth is powerful here; we earn it with results.
-- **Workshops & seminars** — introductory sessions that demonstrate expertise and give value upfront.
-
----
-
-## 11. Business model & pricing
-
-*Internal reference. Not published as a public pricing page (by decision) — used for quotes and proposals.*
-
-- **Project-based.** Fixed-fee for well-defined work (a website, a branding package, a specific analytics report) with clear deliverables and optional add-ons. Larger builds (custom development, data, AI) use detailed proposals with scope-of-work and milestone-based payments.
-- **Retainer (monthly / annual).**
-  - *Digital presence management* — maintenance, security, content updates, hosting support.
-  - *Data & analytics support* — monitoring, regular reporting, dashboard updates, AI model upkeep.
-  - *Strategic advisory* — ongoing consultation and guidance.
-- **Consulting & training.** Workshops priced per session/day/participant; strategic consulting billed hourly/daily.
-
-Always give clear quotations and make the value / ROI explicit.
-
----
-
-## 12. Voice & messaging
-
-- **Specific over generic.** "Document AI that answers in Swahili" beats "innovative AI solutions."
-- **Confident, warm, not corporate.** Write like a person who knows the subject and would say it to a client over coffee.
-- **Have a point of view.** Local fit, Swahili-first where it matters, build-don't-adapt.
-- **Avoid value-words** (passion, synergy, cutting-edge, world-class, seamless) and **avoid AI-tells** (over-balanced sentences, heavy em-dash use). Vary sentence length.
-- **Bilingual where it counts** — Swahili and English both belong here.
-
----
-
-## 13. Company facts
+## Company facts
 
 - **Name:** Ubunifu Technologies
-- **HQ:** Arusha, Tanzania (serving nationwide)
-- **Email:** info@ubunifutech.com
-- **Phone / WhatsApp:** +255 748 548 816
-- **Products:** insight.ubunifutech.com · sifa.ubunifutech.com
+- **Location:** Arusha, Tanzania
+- **Website:** `https://ubunifutech.com`
+- **Email:** `info@ubunifutech.com`
+- **Phone / WhatsApp:** `+255 748 548 816`
+- **Products:** `insight.ubunifutech.com` · `sifa.ubunifutech.com` · Rafiki (coming soon)
 
-Single source of truth for these in code: `src/content/site.ts`.
+## Document ownership
 
----
-
-## 14. Document ecosystem (avoid duplication)
-
-| Doc | Owns |
+| Source | Owns |
 |---|---|
-| **POSITIONING.md** (this file) | Vision, mission, services, sectors, approach, business model, voice. |
-| `BRANDING.md` | Visual system: colours, type, component patterns, design tokens. |
-| `WEBSITE_CONTENT.md` | "Site as built" reference: page map, where each piece of content lives. |
-| `SITE_IMPROVEMENTS.md` | Running changelog of site improvements + deferred items. |
+| [`POSITIONING.md`](POSITIONING.md) | Company position, claims, offers, sectors, process, and voice |
+| [`BRANDING.md`](BRANDING.md) | Logo, color, typography, editorial imagery, and visual rules |
+| [`src/content/site.ts`](src/content/site.ts) | Current company details, navigation, and footer links |
+| [`src/content/services.tsx`](src/content/services.tsx) | Service-page titles, summaries, and lists |
+| [`src/content/products.tsx`](src/content/products.tsx) | Current product status, descriptions, links, and screenshots |
+| [`src/content/sectors.tsx`](src/content/sectors.tsx) | Proven flags, sector summaries, and claim boundaries |
+| [`src/content/portfolio.tsx`](src/content/portfolio.tsx) | Named client case-study evidence |
 
-When positioning changes, update this file first, then propagate to `src/content/*` and the affected components.
+When the position changes, update this file first, then reconcile the relevant content source. When a product or client fact changes, update its content source and then revise this document if the strategic statement also changed.

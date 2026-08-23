@@ -33,10 +33,10 @@ export const ServicesPreview: React.FC = () => {
           transition={{ duration: 0.5, ease }}
         >
           <span className="eyebrow">What we do</span>
-          <h2 className={styles.heading}>Six ways we help you grow</h2>
+          <h2 className={styles.heading}>Six connected capabilities</h2>
           <p className={styles.sub}>
-            From building and hosting the website to the data behind it, we cover
-            the whole digital side of your business, and run it for you.
+            From the public experience to the data and infrastructure behind it,
+            we shape the parts as one working system.
           </p>
         </motion.div>
 
@@ -49,8 +49,8 @@ export const ServicesPreview: React.FC = () => {
         >
           <div className={styles.serviceFeatureMedia}>
             <Image
-              src="/editorial/digital-workbench.png"
-              alt="Editorial illustration of a digital workbench with abstract planning boards, hosting cards and interface blocks"
+              src="/editorial/software-tanzania-learning.webp"
+              alt="Tactile workbench where research cards, modular pieces, and revision loops lead to one working assembly"
               fill
               sizes="(max-width: 900px) 100vw, 560px"
               className={styles.serviceFeatureImg}
@@ -173,10 +173,10 @@ export const WorkPreview: React.FC = () => {
           transition={{ duration: 0.5, ease }}
         >
           <span className="eyebrow">Selected work</span>
-          <h2 className={styles.heading}>Built for clients, in production</h2>
+          <h2 className={styles.heading}>Systems running in the real world</h2>
           <p className={styles.sub}>
-            Platforms and sites we&apos;ve shipped for businesses across Tanzania,
-            built by the same team behind our products.
+            Two Tanzanian tourism businesses. Two very different operating
+            systems. Both shaped around what happens after a visitor clicks.
           </p>
         </motion.div>
 
@@ -228,7 +228,7 @@ export const WorkPreview: React.FC = () => {
 /* ── Products as proof ────────────────────────── */
 
 export const ProductsProof: React.FC = () => {
-  const live = products.filter((p) => p.status === 'live');
+  const suite = products.filter((p) => p.status === 'live' || p.status === 'soon');
 
   return (
     <section className={`${styles.section} ${styles.altBg}`}>
@@ -240,28 +240,32 @@ export const ProductsProof: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease }}
         >
-          <span className="eyebrow">Proof</span>
-          <h2 className={styles.heading}>We build our own products too</h2>
+          <span className="eyebrow">Product studio</span>
+          <h2 className={styles.heading}>Products shaped by the same work</h2>
           <p className={styles.sub}>
-            The clearest proof we can build yours: two live SaaS products of our
-            own, in daily use.
+            Insight and Sifa are live. Rafiki is the next product in the family.
+            Each starts with a workflow we believe deserves a better tool.
           </p>
         </motion.div>
 
         <div className={styles.proofGrid}>
-          {live.map((product, index) => (
+          {suite.map((product, index) => {
+            const isExternal = Boolean(product.url?.startsWith('http'));
+            const href = product.url ?? '/products';
+
+            return (
             <motion.a
               key={product.name}
-              href={product.url as string}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={href}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noopener noreferrer' : undefined}
               className={styles.proofCard}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.45, delay: index * 0.08, ease }}
             >
-              {product.primary && (
+              {product.primary ? (
                 <div className={styles.proofThumb}>
                   <Image
                     src={product.primary.src}
@@ -275,17 +279,25 @@ export const ProductsProof: React.FC = () => {
                     Live
                   </span>
                 </div>
+              ) : (
+                <div className={`${styles.proofThumb} ${styles.proofPlaceholder}`}>
+                  <span className={styles.proofPlaceholderName}>Rafiki</span>
+                  <span className={styles.proofBadge}>In development</span>
+                </div>
               )}
               <div className={styles.proofMeta}>
                 <span className={styles.proofName}>{product.name}</span>
                 <p className={styles.proofTagline}>{product.tagline}</p>
                 <span className={styles.workLink}>
-                  Visit {product.domain} <Arrow />
+                  {product.status === 'live' ? `Visit ${product.domain}` : 'Preview the product family'} <Arrow />
                 </span>
               </div>
             </motion.a>
-          ))}
+          )})}
         </div>
+        <Link href="/products" className={styles.link}>
+          Explore all products <Arrow />
+        </Link>
       </div>
     </section>
   );

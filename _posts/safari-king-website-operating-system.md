@@ -1,52 +1,65 @@
 ---
-title: "When a Website Becomes an Operating System"
+title: "Behind the Build: Safari King Africa’s Website and Operations Platform"
 date: "2026-05-28"
 author: "Ubunifu Technologies"
-excerpt: "A safari operator came to us for a website. What they actually needed was the system that runs the business behind it. Here is how that distinction shaped everything we built."
-tags: ["Consulting", "Custom Build", "AI"]
+excerpt: "A factual look at the connected public site, booking flow, CRM, content tools, and AI-assisted admin platform built for Safari King Africa."
+tags: ["Case Study", "Custom Software", "Tourism"]
+coverImage: "/editorial/tourism-systems.webp"
+coverAlt: "Top-down arrangement of a laptop, itinerary cards, and an orange workflow line connecting a tourism operations system"
 ---
 
-A tour operator came to us, like most do, asking for a website. Nicer photos, better structure, a contact form that works. A brochure, essentially, but a good one.
+Safari King Africa’s public website and admin platform are two sides of one system. The public side helps a traveller understand the operator’s destinations and begin an enquiry. The private side gives the team a structured place to develop that enquiry, manage the customer relationship, publish content, and communicate.
 
-We built that. But somewhere in the early conversations, it became clear that the website was the smaller half of the problem. The harder half was everything that happened *after* a traveller hit "enquire": the back-and-forth, the itinerary drafting, the follow-ups, the record-keeping, the marketing that was supposed to happen but never quite did because everyone was busy running actual safaris.
+That connection is the important part of the build. A polished tourism site can explain an offer well, but the work does not stop when someone submits a form. Trip preferences have to become an itinerary, conversations need context, and the team needs to know which enquiries are waiting for action.
 
-A beautiful website that funnels enquiries into an overwhelmed inbox is not a solution. It is a faster way to create a backlog.
+This is a description of what we shipped. We do not yet have verified conversion, booking-volume, or time-saved figures to publish, so we have not attached an invented result to the project.
 
-## The website is the front door, not the house
+## The public site structures the first enquiry
 
-For a tour operator, the public site is maybe 20% of the work that a digital system has to do. The other 80% is operational:
+The public site covers Tanzania’s safari circuits, parks, treks, and coastal destinations. Its booking flow asks for trip basics, safari preferences, and guest details before an enquiry reaches the admin platform.
 
-- A traveller submits an enquiry with their dates, party size, and the parks they care about.
-- Someone reads it, understands it, and drafts a personalised itinerary.
-- That itinerary gets sent, revised, and eventually turned into a booking.
-- The customer's history is remembered, so the next conversation does not start from zero.
-- And in whatever time is left, the business publishes content, sends a newsletter, and stays visible.
+The purpose is not to make a form long for its own sake. It is to collect enough context for a useful first response while keeping the traveller’s task understandable. A person can express the kind of trip they are considering; the operator receives the information in a consistent shape.
 
-None of that lives on the marketing site. So we built the part that does: a custom admin platform that sits behind the public pages and actually runs the operation.
+That shared structure matters later. The preferences gathered on the public side can remain connected to the booking record instead of being copied from an email into a separate tool.
 
-## What we built behind the curtain
+## An itinerary is a product surface
 
-The booking flow captures trip basics, safari preferences, and guest details up front, so the first reply can be specific instead of "thanks, tell us more." From there, the team proposes an itinerary and shares it with the customer through a private link, with no account and no friction on the traveller's side.
+After an enquiry is received, the team can develop a proposed itinerary and share it through a tokenised private link. The traveller does not need to create an account to view it.
 
-Behind that sits a real CRM. Every customer has a timeline, internal notes, and booking history. Enquiries carry a status, so nothing sits unanswered for a week. It is the difference between *having* customer information and being able to *use* it.
+This is a small design decision with operational consequences. The itinerary is not just an attachment produced somewhere else. It is part of the same workflow as the enquiry and booking, and it can be shared without introducing another login for the customer.
 
-And then there is the assistant. We built an in-app AI assistant on Claude that drafts the things that usually get skipped when everyone is busy: day-by-day itineraries, blog posts, SEO metadata, personalised replies to enquiries, and newsletters. It is not a gimmick bolted onto a settings page. It is wired into the daily workflow, where the drafting actually needs to happen.
+The system does not decide what makes a good safari. That remains the operator’s expertise. Its job is to hold the information and reduce avoidable handoffs around that work.
 
-## The boring parts that matter
+## The CRM carries context forward
 
-The features that demo well are easy to talk about. The features that make a system trustworthy are not, but they are the ones that decide whether a business can actually rely on it:
+The admin platform includes customer records with timelines, internal notes, and booking history. Contact enquiries have statuses, so the team can distinguish a new message from one already being handled.
 
-- **Two-factor authentication** on the admin, because this system holds real customer data.
-- **An audit log** of every admin action, so there is always an answer to "what happened here?"
-- **Soft deletes**, so a mistaken deletion is recoverable instead of catastrophic.
-- **Search-safe migration.** Dozens of redirects maintained so that years of accumulated search ranking did not evaporate the day the new site went live.
+A CRM is useful only if its states match the work. On this project, customer details, enquiries, proposed itineraries, and booking activity belong to the same operation. Representing them together gives the team a consistent record to work from. It does not guarantee a response or replace a service process, but it makes the current state visible.
 
-These are not the parts a client asks for. They are the parts we include because we have seen what happens without them.
+## Drafting tools sit beside the task
 
-## The lesson
+The admin includes an AI assistant that can draft day-by-day itineraries, articles, metadata, personalised booking replies, enquiry responses, and newsletters. It also supports a multi-turn chat for less structured drafting and research.
 
-The most useful question we asked on this project was not "what should the website look like?" It was "what does running this business actually involve, day to day?" The website fell out of the answer to that second question, not the other way around.
+The useful design choice is placement. These tools live inside the admin area where the source context and the next action already exist. They are drafting tools, not an autonomous travel planner. Facts, availability, prices, route feasibility, and promises to a customer still need review by the Safari King team before anything is sent or published.
 
-A lot of businesses are sold a website when what they need is a system. The website is the part you see. The system is the part that decides whether the business gets easier to run or just gets a prettier front door on the same chaos.
+That human review is especially important in tourism, where a confident but incorrect detail can affect a real trip.
 
-We would rather build the system.
+## Reliability includes the parts a visitor never sees
+
+The platform uses two-factor admin authentication, a whitelist-based admin model, and an audit log of admin actions. Records use soft deletion where recovery matters. These controls do not make any system risk-free, but they provide practical safeguards for an application holding customer and booking information.
+
+The public site also has a dynamic sitemap, structured data, and maintained redirects from earlier URLs. Redirects are not a guarantee of search performance. They do, however, reduce broken journeys for people and search crawlers when addresses change.
+
+## Why this became a custom platform
+
+Each capability could be assembled from separate services: a site builder, a form tool, a CRM, an itinerary document, a newsletter product, and an AI chat window. That can be a sensible approach for some teams.
+
+Safari King’s build takes a different route. The public enquiry and the admin record share one data model. The itinerary link belongs to the booking workflow. Content and communication tools sit in the same controlled environment. Custom software made that specific connection possible; it was not chosen merely to make the public pages look different.
+
+The trade-off is responsibility. A custom platform has to be maintained, secured, and changed deliberately. It is worthwhile when the connected workflow is valuable enough to justify that work.
+
+## The result we can stand behind
+
+The delivered result is a public tourism site plus an operations platform with booking intake, itinerary sharing, customer records, status tracking, content management, email tooling, and an AI drafting assistant.
+
+Calling it a website would leave out most of the system. Calling it an “operating system” may sound memorable, but the more useful description is also the plainest: software shaped around the way this operator presents trips and manages the work that follows an enquiry.

@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { MediaReveal } from './MediaReveal';
 import styles from './Insights.module.css';
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -36,6 +37,8 @@ const Arrow: React.FC = () => (
 );
 
 export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
+  const reduceMotion = useReducedMotion();
+
   if (!posts.length) return null;
 
   const [lead, ...dispatches] = posts;
@@ -45,10 +48,10 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
       <div className="container">
         <motion.div
           className={styles.head}
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease }}
+          transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
           <div>
             <span className="eyebrow">Latest thinking</span>
@@ -62,21 +65,23 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
         <div className={styles.editorialGrid}>
           <motion.div
             className={styles.leadWrap}
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5, ease }}
+            transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
           >
             <Link href={`/blog/${lead.slug}`} className={styles.leadStory}>
               {lead.coverImage && lead.coverAlt ? (
                 <div className={styles.leadMedia}>
-                  <Image
-                    src={lead.coverImage}
-                    alt={lead.coverAlt}
-                    fill
-                    sizes="(max-width: 900px) 100vw, 760px"
-                    className={styles.image}
-                  />
+                  <MediaReveal>
+                    <Image
+                      src={lead.coverImage}
+                      alt={lead.coverAlt}
+                      fill
+                      sizes="(max-width: 900px) 100vw, 760px"
+                      className={styles.image}
+                    />
+                  </MediaReveal>
                   <span className={styles.leadNumber} aria-hidden="true">01</span>
                 </div>
               ) : null}
@@ -97,10 +102,10 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
             <motion.li
               className={styles.dispatchItem}
               key={post.slug}
-              initial={{ opacity: 0, y: 16 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.42, delay: index * 0.07, ease }}
+              transition={{ duration: reduceMotion ? 0 : 0.42, delay: reduceMotion ? 0 : index * 0.07, ease }}
             >
               <Link href={`/blog/${post.slug}`} className={styles.dispatch}>
                 <span className={styles.dispatchNumber} aria-hidden="true">

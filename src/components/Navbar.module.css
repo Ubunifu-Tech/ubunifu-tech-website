@@ -50,14 +50,14 @@
   color: var(--text-primary);
 }
 
-.linkActive::after {
-  content: '';
+.activeIndicator {
   position: absolute;
   right: 0;
   bottom: -10px;
   left: 0;
   height: 1px;
   background: var(--brand-deep);
+  pointer-events: none;
 }
 
 .badge,

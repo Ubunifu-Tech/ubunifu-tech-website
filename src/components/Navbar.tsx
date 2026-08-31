@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion, useReducedMotion } from 'framer-motion';
 import { navLinks } from '@/content/site';
 import { BrandLockup } from './BrandMark';
 import styles from './Navbar.module.css';
@@ -11,6 +12,7 @@ export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -54,17 +56,33 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <div className={styles.links}>
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`${styles.link} ${isActive(link.href) ? styles.linkActive : ''}`}
-                aria-current={isActive(link.href) ? 'page' : undefined}
-              >
-                {link.label}
-                {link.badge && <span className={styles.badge}>{link.badge}</span>}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`${styles.link} ${active ? styles.linkActive : ''}`}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <span className={styles.linkLabel}>{link.label}</span>
+                  {link.badge && <span className={styles.badge}>{link.badge}</span>}
+                  {active && (
+                    <motion.span
+                      className={styles.activeIndicator}
+                      layoutId="primary-navigation-indicator"
+                      transition={
+                        reduceMotion
+                          ? { duration: 0 }
+                          : { type: 'spring', stiffness: 430, damping: 38, mass: 0.55 }
+                      }
+                      aria-hidden="true"
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           <div className={styles.actions}>

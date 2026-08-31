@@ -2,10 +2,12 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { ArrowLeft, ArrowUpRight, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, ArrowRight } from 'lucide-react';
 import { projects, getProjectBySlug } from '@/content/portfolio';
 import { testimonials } from '@/content/testimonials';
 import { CtaBand } from '@/components/CtaBand';
+import { MediaReveal } from '@/components/MediaReveal';
+import { ScrollReveal } from '@/components/ScrollReveal';
 import { Testimonial } from '@/components/Testimonial';
 import styles from './CaseStudy.module.css';
 
@@ -90,81 +92,93 @@ export default async function CaseStudyPage({
 
       {/* Hero */}
       <header className={styles.hero}>
-        <div className="container">
+        <div className={styles.heroEdge} aria-hidden="true"><span /><span /></div>
+        <div className={`container ${styles.heroInner}`}>
           <Link href="/work" className={styles.backLink}>
             <ArrowLeft size={16} />
             All work
           </Link>
 
-          <span className={styles.category}>{project.category}</span>
+          <div className={styles.heroTopline}>
+            <span className={styles.category}>{project.category}</span>
+            <span>{project.domain}</span>
+          </div>
           <h1 className={styles.title}>{project.title}</h1>
 
-          <div className={styles.heroBody}>
-            {project.overview.map((paragraph) => (
-              <p key={paragraph} className={styles.lead}>
-                {paragraph}
-              </p>
-            ))}
+          <div className={styles.heroSupport}>
+            <div className={styles.heroBody}>
+              {project.overview.map((paragraph) => (
+                <p key={paragraph} className={styles.lead}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.visitBtn}
+            >
+              Visit {project.domain}
+              <ArrowUpRight size={16} />
+            </a>
           </div>
 
-          <a
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.visitBtn}
-          >
-            Visit {project.domain}
-            <ArrowUpRight size={16} />
-          </a>
+          <figure className={styles.shotFrame}>
+            <div className={styles.shotTopline}>
+              <span>Live system</span>
+              <span>{project.domain}</span>
+            </div>
+            <div className={styles.shotViewport}>
+              <MediaReveal>
+                <Image
+                  src={project.primary.src}
+                  alt={project.primary.alt}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 1440px"
+                  className={styles.shotImg}
+                  priority
+                />
+              </MediaReveal>
+            </div>
+            {project.primary.caption && (
+              <figcaption className={styles.caption}>
+                {project.primary.caption}
+              </figcaption>
+            )}
+          </figure>
         </div>
       </header>
-
-      {/* Primary screenshot */}
-      <section className="container">
-        <figure className={styles.shotFrame}>
-          <div className={styles.browserBar}>
-            <span className={styles.dot} style={{ background: '#FF6B2C' }} />
-            <span className={styles.dot} style={{ background: '#6D3FE8' }} />
-            <span className={styles.dot} style={{ background: '#2E5BFF' }} />
-            <div className={styles.urlBar}>
-              <span aria-hidden="true">🔒</span>
-              {project.domain}
-            </div>
-          </div>
-          <div className={styles.shotViewport}>
-            <Image
-              src={project.primary.src}
-              alt={project.primary.alt}
-              fill
-              sizes="(max-width: 1024px) 100vw, 960px"
-              className={styles.shotImg}
-              priority
-            />
-          </div>
-          {project.primary.caption && (
-            <figcaption className={styles.caption}>
-              {project.primary.caption}
-            </figcaption>
-          )}
-        </figure>
-      </section>
 
       {/* What we built */}
       <section className={`section ${styles.highlightsSection}`}>
         <div className="container">
-          <span className="eyebrow">What we built</span>
-          <h2 className={styles.sectionHeading}>Inside the build</h2>
-          <div className={styles.highlightsGrid}>
-            {project.highlights.map((highlight) => (
-              <div key={highlight.title} className={styles.highlightCard}>
-                <div className={styles.highlightIcon} aria-hidden="true">
-                  <Check size={16} strokeWidth={3} />
-                </div>
-                <h3 className={styles.highlightTitle}>{highlight.title}</h3>
-                <p className={styles.highlightBody}>{highlight.body}</p>
-              </div>
-            ))}
-          </div>
+          <ScrollReveal className={styles.sectionIntro}>
+            <div>
+              <span className="eyebrow">What we built</span>
+              <h2 className={styles.sectionHeading}>Inside the build</h2>
+            </div>
+            <p>
+              The work is documented as connected decisions—not a list of
+              features detached from the operating problem.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal>
+            <ol className={styles.highlightsGrid}>
+              {project.highlights.map((highlight, index) => (
+                <li key={highlight.title} className={styles.highlightCard}>
+                  <span className={styles.highlightIndex} aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 className={styles.highlightTitle}>{highlight.title}</h3>
+                    <p className={styles.highlightBody}>{highlight.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -176,13 +190,15 @@ export default async function CaseStudyPage({
               {project.gallery.map((shot) => (
                 <figure key={shot.src} className={styles.galleryItem}>
                   <div className={styles.galleryViewport}>
-                    <Image
-                      src={shot.src}
-                      alt={shot.alt}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className={styles.shotImg}
-                    />
+                    <MediaReveal>
+                      <Image
+                        src={shot.src}
+                        alt={shot.alt}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className={styles.shotImg}
+                      />
+                    </MediaReveal>
                   </div>
                   {shot.caption && (
                     <figcaption className={styles.caption}>{shot.caption}</figcaption>
@@ -197,11 +213,17 @@ export default async function CaseStudyPage({
       {/* Stack */}
       <section className={`section ${styles.stackSection}`}>
         <div className="container">
-          <span className="eyebrow">The stack</span>
-          <h2 className={styles.sectionHeading}>Built with</h2>
+          <div className={styles.sectionIntro}>
+            <div>
+              <span className="eyebrow">The stack</span>
+              <h2 className={styles.sectionHeading}>Built with</h2>
+            </div>
+            <p>Chosen for the work, maintained as one practical system.</p>
+          </div>
           <ul className={styles.techList}>
-            {project.tech.map((tech) => (
+            {project.tech.map((tech, index) => (
               <li key={tech} className={styles.techTag}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
                 {tech}
               </li>
             ))}
@@ -223,13 +245,15 @@ export default async function CaseStudyPage({
                 <span className={styles.nextCategory}>{nextProject.category}</span>
               </div>
               <div className={styles.nextThumb}>
-                <Image
-                  src={nextProject.primary.src}
-                  alt={nextProject.primary.alt}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 320px"
-                  className={styles.nextThumbImg}
-                />
+                <MediaReveal>
+                  <Image
+                    src={nextProject.primary.src}
+                    alt={nextProject.primary.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 360px"
+                    className={styles.nextThumbImg}
+                  />
+                </MediaReveal>
               </div>
               <span className={styles.nextArrow} aria-hidden="true">
                 <ArrowRight size={20} />

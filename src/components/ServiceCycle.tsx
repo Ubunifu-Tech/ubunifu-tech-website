@@ -24,15 +24,15 @@ const ease = [0.16, 1, 0.3, 1] as const;
 const panelVariants = {
   enter: (direction: number) => ({
     opacity: 0,
-    y: direction > 0 ? 14 : -14,
+    x: direction > 0 ? 12 : -12,
   }),
   center: {
     opacity: 1,
-    y: 0,
+    x: 0,
   },
   exit: (direction: number) => ({
     opacity: 0,
-    y: direction > 0 ? -8 : 8,
+    x: direction > 0 ? -8 : 8,
   }),
 };
 
@@ -179,6 +179,18 @@ export const ServiceCycle: React.FC = () => {
               onClick={() => selectService(index)}
               onKeyDown={(event) => handleTabKey(event, index)}
             >
+              {active && (
+                <motion.span
+                  className={styles.activeMarker}
+                  layoutId="service-cycle-active-marker"
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { type: 'spring', stiffness: 420, damping: 40, mass: 0.58 }
+                  }
+                  aria-hidden="true"
+                />
+              )}
               <span className={styles.tabIndex}>{String(index + 1).padStart(2, '0')}</span>
               <span className={styles.tabIcon} aria-hidden="true"><Icon size={18} /></span>
               <span className={styles.tabLabel}>{service.title}</span>
@@ -226,44 +238,61 @@ export const ServiceCycle: React.FC = () => {
           </div>
         </div>
 
-        <AnimatePresence mode="wait" initial={false} custom={direction}>
-          <motion.div
-            id="service-cycle-panel"
-            key={activeService.key}
-            role="tabpanel"
-            aria-labelledby={`service-cycle-tab-${activeIndex}`}
-            className={styles.panelContent}
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.span
+            key={`sequence-${activeIndex}`}
+            className={styles.panelSequence}
             custom={direction}
-            variants={panelVariants}
-            initial={reduceMotion ? false : 'enter'}
-            animate="center"
-            exit={reduceMotion ? undefined : 'exit'}
-            transition={{ duration: reduceMotion ? 0 : 0.4, ease }}
+            initial={reduceMotion ? false : { opacity: 0, x: direction > 0 ? 24 : -24 }}
+            animate={{ opacity: 0.055, x: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, x: direction > 0 ? -16 : 16 }}
+            transition={{ duration: reduceMotion ? 0 : 0.44, ease }}
+            aria-hidden="true"
           >
-            <div className={styles.panelIcon} aria-hidden="true"><ActiveIcon size={28} /></div>
-            <p className={styles.panelEyebrow}>{activeService.summary}</p>
-            <h3 className={styles.panelTitle}>{activeService.title}</h3>
-            <p className={styles.panelDescription}>{activeService.description}</p>
-
-            <ul className={styles.outcomes} aria-label={`${activeService.title} includes`}>
-              {activeService.items.slice(0, 3).map((item, index) => (
-                <motion.li
-                  key={item}
-                  initial={reduceMotion ? false : { opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.32, delay: reduceMotion ? 0 : 0.12 + index * 0.045, ease }}
-                >
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  {item}
-                </motion.li>
-              ))}
-            </ul>
-
-            <Link href={`#${activeService.key}`} className={styles.panelLink}>
-              Explore this capability <ArrowDownRight size={18} aria-hidden="true" />
-            </Link>
-          </motion.div>
+            {String(activeIndex + 1).padStart(2, '0')}
+          </motion.span>
         </AnimatePresence>
+
+        <div className={styles.panelViewport}>
+          <AnimatePresence mode="sync" initial={false} custom={direction}>
+            <motion.div
+              id="service-cycle-panel"
+              key={activeService.key}
+              role="tabpanel"
+              aria-labelledby={`service-cycle-tab-${activeIndex}`}
+              className={styles.panelContent}
+              custom={direction}
+              variants={panelVariants}
+              initial={reduceMotion ? false : 'enter'}
+              animate="center"
+              exit={reduceMotion ? undefined : 'exit'}
+              transition={{ duration: reduceMotion ? 0 : 0.36, ease }}
+            >
+              <div className={styles.panelIcon} aria-hidden="true"><ActiveIcon size={28} /></div>
+              <p className={styles.panelEyebrow}>{activeService.summary}</p>
+              <h3 className={styles.panelTitle}>{activeService.title}</h3>
+              <p className={styles.panelDescription}>{activeService.description}</p>
+
+              <ul className={styles.outcomes} aria-label={`${activeService.title} includes`}>
+                {activeService.items.slice(0, 3).map((item, index) => (
+                  <motion.li
+                    key={item}
+                    initial={reduceMotion ? false : { opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.32, delay: reduceMotion ? 0 : 0.1 + index * 0.045, ease }}
+                  >
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    {item}
+                  </motion.li>
+                ))}
+              </ul>
+
+              <Link href={`#${activeService.key}`} className={styles.panelLink}>
+                Explore this capability <ArrowDownRight size={18} aria-hidden="true" />
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className={styles.mobileList} aria-label="Consulting capabilities">

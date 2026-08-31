@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import styles from './Contact.module.css';
 
@@ -31,6 +31,7 @@ const SUBJECT_OPTIONS = [
 ] as const;
 
 export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }) => {
+  const reduceMotion = useReducedMotion();
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -95,12 +96,21 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
           {/* Left: info */}
           <motion.div
             className={styles.info}
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            {!hideIntro && (
+            {hideIntro ? (
+              <>
+                <span className="eyebrow">What happens next</span>
+                <h2 className={styles.heading}>A direct conversation with the people doing the work.</h2>
+                <p className={styles.text}>
+                  We read every brief ourselves. If we are a useful fit, the
+                  first response will focus the problem before proposing a path.
+                </p>
+              </>
+            ) : (
               <>
                 <span className="eyebrow">Contact</span>
                 <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
@@ -113,15 +123,15 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
 
             <ol className={styles.nextSteps}>
               <li className={styles.step}>
-                <span className={styles.stepNum}>1</span>
+                <span className={styles.stepNum}>01</span>
                 <span className={styles.stepText}>You tell us what you need.</span>
               </li>
               <li className={styles.step}>
-                <span className={styles.stepNum}>2</span>
+                <span className={styles.stepNum}>02</span>
                 <span className={styles.stepText}>We review the context and whether we can help.</span>
               </li>
               <li className={styles.step}>
-                <span className={styles.stepNum}>3</span>
+                <span className={styles.stepNum}>03</span>
                 <span className={styles.stepText}>If useful, we suggest a short call. No obligation.</span>
               </li>
             </ol>
@@ -161,11 +171,16 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
           <motion.form
             className={styles.form}
             onSubmit={handleSubmit}
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.12, ease: [0.16, 1, 0.3, 1] }}
           >
+            <div className={styles.formHeader}>
+              <span>Project brief</span>
+              <span>Usually replies within two working days</span>
+            </div>
+
             <div className={styles.honeypot} aria-hidden="true">
               <label htmlFor="company_url">Company website (leave this empty)</label>
               <input

@@ -10,6 +10,15 @@ Entries before #31 are retained as implementation history. Where an older entry 
 
 ## Shipped (latest pass)
 
+### 38. Structural motion and proof-led consulting pages — 30 August 2026
+
+- Extended the existing Framer Motion system with a moving active-navigation rule, subtle scroll depth for full-bleed hero artwork, branded media shutters, and reduced-motion-safe editorial reveals. No new colours or animation dependency were introduced.
+- Rebuilt the Services capability cycle around a shared moving selection marker, stable crossfading panel geometry, restrained directional movement, and a large editorial sequence number while preserving its pause, keyboard, mobile, visibility, and reduced-motion behaviour.
+- Turned the homepage methodology strip into a scroll-led ruled timeline: each stage draws its line, number, and copy together instead of arriving as another generic fade-up block.
+- Reimagined both case studies as proof-led consulting narratives. The real system screen now lives inside the full-width hero; fake browser chrome, rounded feature cards, technology pills, and the rounded next-project card were replaced with open evidence, decision, stack, gallery, and continuation registers.
+- Reworked Contact into a ruled project brief with a sticky consulting statement, an open response sequence, a contact register, and unboxed fields. The secure submission behaviour, validation, honeypot, privacy warning, and status messaging remain unchanged.
+- Reframed the homepage testimonial as attributable client evidence: organisation first, a concise verified pull quote, direct organisation and case-study links, and no synthetic gradient avatar.
+
 ### 37. Full-bleed heroes and open editorial layouts — 24 August 2026
 
 - Moved homepage and shared page-header artwork out of document flow and into full-bleed background layers. Existing deep navy now provides the legibility scrim, while page-specific secondary imagery can form a restrained background collage instead of a floating screenshot card.

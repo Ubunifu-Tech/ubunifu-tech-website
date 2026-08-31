@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { motion, useReducedMotion } from 'framer-motion';
 import { testimonials } from '@/content/testimonials';
 import styles from './Testimonial.module.css';
 
@@ -18,73 +19,62 @@ type Props = {
 };
 
 export const Testimonial: React.FC<Props> = ({ project, hideHeader = false }) => {
+  const reduceMotion = useReducedMotion();
   const testimonial = project
     ? testimonials.find((t) => t.project === project)
     : testimonials[0];
 
   if (!testimonial) return null;
 
-  const initials = testimonial.authorName
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-
   return (
     <section className={`section ${styles.section}`}>
       <div className="container">
         <motion.div
           className={styles.layout}
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.55, ease }}
+          transition={{ duration: reduceMotion ? 0 : 0.55, ease }}
         >
           {!hideHeader && (
             <div className={styles.head}>
               <span className="eyebrow">In their words</span>
               <h2 className={styles.heading}>What clients say after we ship</h2>
-              <p className={styles.note}>Feedback lightly edited for length and clarity.</p>
+              <p className={styles.note}>Client statement · edited for length and clarity</p>
             </div>
           )}
 
           <figure className={styles.card}>
-            {/* Decorative quote mark */}
-            <span className={styles.quoteMark} aria-hidden="true">
-              &ldquo;
-            </span>
+            <p className={styles.evidenceLabel}>01 / Client evidence</p>
 
             <blockquote className={styles.quote}>
-              {testimonial.quote}
+              &ldquo;{testimonial.pullQuote}&rdquo;
             </blockquote>
 
             <figcaption className={styles.attribution}>
-              <div className={styles.avatar} aria-hidden="true">
-                {initials}
-              </div>
               <div className={styles.attributionText}>
-                <p className={styles.authorName}>{testimonial.authorName}</p>
+                <p className={styles.organization}>{testimonial.organization}</p>
                 <p className={styles.authorMeta}>
-                  {testimonial.authorRole}
-                  {testimonial.organization ? (
-                    <>
-                      {', '}
-                      {testimonial.organizationUrl ? (
-                        <a
-                          href={testimonial.organizationUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.orgLink}
-                        >
-                          {testimonial.organization}
-                        </a>
-                      ) : (
-                        testimonial.organization
-                      )}
-                    </>
-                  ) : null}
+                  <span className={styles.authorName}>{testimonial.authorName}</span>
+                  {' · '}{testimonial.authorRole}
                 </p>
+              </div>
+              <div className={styles.evidenceLinks}>
+                {testimonial.organizationUrl && (
+                  <a
+                    href={testimonial.organizationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.orgLink}
+                  >
+                    Visit organisation <span aria-hidden="true">↗</span>
+                  </a>
+                )}
+                {testimonial.project && project !== testimonial.project && (
+                  <Link href={`/work/${testimonial.project}`} className={styles.orgLink}>
+                    Read the case study <span aria-hidden="true">→</span>
+                  </Link>
+                )}
               </div>
             </figcaption>
           </figure>

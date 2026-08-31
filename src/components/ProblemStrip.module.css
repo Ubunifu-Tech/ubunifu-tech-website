@@ -88,11 +88,19 @@
 }
 
 .stage {
+  position: relative;
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
   gap: 1.4rem;
   padding: 1.65rem 0 2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.stageRule {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, var(--brand) 0 18%, rgba(255, 255, 255, 0.18) 18% 100%);
+  transform-origin: left center;
 }
 
 .stage:last-child {

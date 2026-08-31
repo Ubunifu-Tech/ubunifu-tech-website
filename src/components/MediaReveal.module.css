@@ -1,0 +1,15 @@
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  transform-origin: center;
+}
+
+.shutter {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--brand) 0 7px, var(--text-primary) 7px 100%);
+  transform-origin: right center;
+  pointer-events: none;
+}

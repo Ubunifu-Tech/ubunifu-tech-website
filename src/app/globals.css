@@ -82,6 +82,7 @@
 }
 
 html {
+  position: relative;
   scroll-behavior: smooth;
   /* Keep in-page anchor targets (e.g. /build#hosting) clear of the fixed navbar. */
   scroll-padding-top: calc(var(--nav-height) + 1rem);

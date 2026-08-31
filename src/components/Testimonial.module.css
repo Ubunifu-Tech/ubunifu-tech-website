@@ -34,7 +34,7 @@
   font-size: 0.82rem;
 }
 
-/* ── Card ─────────────────────────────────────── */
+/* ── Client evidence ──────────────────────────── */
 
 .card {
   position: relative;
@@ -43,27 +43,14 @@
   border-left: 1px solid var(--border-hover);
 }
 
-/* Subtle brand glow on the corner */
-.card::before {
-  display: none;
-}
-
-.card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.quoteMark {
-  position: absolute;
-  top: -1.25rem;
-  left: 1rem;
-  font-family: var(--font-heading);
-  font-size: 7rem;
-  line-height: 1;
-  color: var(--brand);
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: 0;
+.evidenceLabel {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .quote {
@@ -79,27 +66,20 @@
 /* ── Attribution ──────────────────────────────── */
 
 .attribution {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  display: grid;
+  align-items: start;
+  gap: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, var(--brand), var(--primary));
-  color: #fff;
+.organization {
+  margin: 0 0 0.25rem;
+  color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 700;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(255, 107, 44, 0.25);
+  font-size: 1.08rem;
+  font-weight: 750;
 }
 
 .attributionText {
@@ -110,11 +90,8 @@
 }
 
 .authorName {
-  font-family: var(--font-heading);
-  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0;
 }
 
 .authorMeta {
@@ -124,16 +101,26 @@
 }
 
 .orgLink {
-  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--brand-deep);
+  font-size: 0.82rem;
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.2s ease, gap 0.25s var(--ease-out-expo);
 }
 
 .orgLink:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  gap: 0.55rem;
+  color: var(--text-primary);
+}
+
+.evidenceLinks {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.65rem;
+  flex-direction: column;
 }
 
 /* ── Responsive ───────────────────────────────── */
@@ -154,21 +141,17 @@
     border-left: 0;
   }
 
-  .quoteMark {
-    font-size: 4.5rem;
-    top: 1rem;
-    left: 0;
+  .attribution {
+    grid-template-columns: 1fr;
+  }
+
+  .evidenceLinks {
+    align-items: flex-start;
   }
 }
 
 @media (max-width: 480px) {
-  .attribution {
-    gap: 0.75rem;
-  }
-
-  .avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 0.875rem;
+  .quote {
+    font-size: 1.35rem;
   }
 }

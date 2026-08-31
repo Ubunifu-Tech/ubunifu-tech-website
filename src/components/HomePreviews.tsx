@@ -3,11 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { services } from '@/content/services';
 import { sectors } from '@/content/sectors';
 import { products } from '@/content/products';
 import { projects } from '@/content/portfolio';
+import { MediaReveal } from './MediaReveal';
 import styles from './HomePreviews.module.css';
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -162,15 +163,17 @@ export const SectorsStrip: React.FC = () => {
 /* ── Work preview ─────────────────────────────── */
 
 export const WorkPreview: React.FC = () => {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section className={styles.section}>
       <div className="container">
         <motion.div
           className={styles.head}
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease }}
+          transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
           <span className="eyebrow">Selected work</span>
           <h2 className={styles.heading}>Systems running in the real world</h2>
@@ -184,23 +187,25 @@ export const WorkPreview: React.FC = () => {
           {projects.map((project, index) => (
             <motion.div
               key={project.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.45, delay: index * 0.08, ease }}
+              transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : index * 0.08, ease }}
             >
               <Link href={`/work/${project.slug}`} className={styles.workCard}>
                 <span className={styles.workIndex} aria-hidden="true">
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <div className={styles.workThumb}>
-                  <Image
-                    src={project.primary.src}
-                    alt={project.primary.alt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 560px"
-                    className={styles.workThumbImg}
-                  />
+                  <MediaReveal>
+                    <Image
+                      src={project.primary.src}
+                      alt={project.primary.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 560px"
+                      className={styles.workThumbImg}
+                    />
+                  </MediaReveal>
                 </div>
                 <div className={styles.workMeta}>
                   <span className={styles.workCat}>{project.category}</span>
@@ -232,16 +237,17 @@ export const WorkPreview: React.FC = () => {
 
 export const ProductsProof: React.FC = () => {
   const suite = products.filter((p) => p.status === 'live' || p.status === 'soon');
+  const reduceMotion = useReducedMotion();
 
   return (
     <section className={`${styles.section} ${styles.altBg}`}>
       <div className="container">
         <motion.div
           className={styles.head}
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, ease }}
+          transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
           <span className="eyebrow">Product studio</span>
           <h2 className={styles.heading}>Products shaped by the same work</h2>
@@ -263,23 +269,25 @@ export const ProductsProof: React.FC = () => {
               target={isExternal ? '_blank' : undefined}
               rel={isExternal ? 'noopener noreferrer' : undefined}
               className={styles.proofCard}
-              initial={{ opacity: 0, y: 20 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.45, delay: index * 0.08, ease }}
+              transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : index * 0.08, ease }}
             >
               <span className={styles.proofIndex} aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
               </span>
               {product.primary ? (
                 <div className={styles.proofThumb}>
-                  <Image
-                    src={product.primary.src}
-                    alt={product.primary.alt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 560px"
-                    className={styles.proofThumbImg}
-                  />
+                  <MediaReveal>
+                    <Image
+                      src={product.primary.src}
+                      alt={product.primary.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 560px"
+                      className={styles.proofThumbImg}
+                    />
+                  </MediaReveal>
                   <span className={styles.proofBadge}>
                     <span className={styles.proofDot} />
                     Live

@@ -3,19 +3,27 @@
 }
 
 .layout {
-  max-width: 880px;
+  display: grid;
+  max-width: 1320px;
   margin: 0 auto;
+  padding: clamp(2.5rem, 5vw, 4.5rem) 0;
+  border-top: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
+  grid-template-columns: minmax(240px, 0.55fr) minmax(0, 1.45fr);
+  gap: clamp(2rem, 6vw, 6rem);
 }
 
 .head {
-  margin-bottom: 2.5rem;
-  text-align: center;
+  margin: 0;
+  text-align: left;
 }
 
 .heading {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  max-width: 14ch;
+  font-size: clamp(2rem, 3.8vw, 3.4rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
+  line-height: 1.04;
   color: var(--text-primary);
   margin-top: 0.5rem;
 }
@@ -31,38 +39,13 @@
 .card {
   position: relative;
   margin: 0;
-  padding: 3rem 3.25rem 2.5rem;
-  background: linear-gradient(
-    135deg,
-    var(--surface) 0%,
-    var(--surface-2) 100%
-  );
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow:
-    0 1px 2px rgba(27, 14, 71, 0.04),
-    0 24px 60px -28px rgba(109, 63, 232, 0.18);
-  overflow: hidden;
+  padding: 0 0 0 clamp(2.5rem, 5vw, 5rem);
+  border-left: 1px solid var(--border-hover);
 }
 
 /* Subtle brand glow on the corner */
 .card::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: radial-gradient(
-      ellipse 60% 80% at 0% 0%,
-      var(--primary-glow) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 100% 100%,
-      var(--brand-dim) 0%,
-      transparent 60%
-    );
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.7;
+  display: none;
 }
 
 .card > * {
@@ -72,10 +55,10 @@
 
 .quoteMark {
   position: absolute;
-  top: 0.5rem;
-  left: 1.5rem;
+  top: -1.25rem;
+  left: 1rem;
   font-family: var(--font-heading);
-  font-size: 6rem;
+  font-size: 7rem;
   line-height: 1;
   color: var(--brand);
   opacity: 0.18;
@@ -86,10 +69,10 @@
 .quote {
   margin: 0 0 2rem;
   font-family: var(--font-heading);
-  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  font-size: clamp(1.45rem, 2.7vw, 2.5rem);
   font-weight: 500;
-  line-height: 1.55;
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 
@@ -156,15 +139,25 @@
 /* ── Responsive ───────────────────────────────── */
 
 @media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .heading {
+    max-width: 18ch;
+  }
+
   .card {
-    padding: 2.25rem 1.75rem 1.75rem;
-    border-radius: 16px;
+    padding: 2.5rem 0 0;
+    border-top: 1px solid var(--border-hover);
+    border-left: 0;
   }
 
   .quoteMark {
     font-size: 4.5rem;
-    top: 0.25rem;
-    left: 1rem;
+    top: 1rem;
+    left: 0;
   }
 }
 

@@ -29,6 +29,15 @@ export const Hero: React.FC = () => {
     <section className={styles.hero} aria-labelledby="home-hero-title">
       <div className={styles.backdrop} aria-hidden="true">
         <Topography className={styles.topo} />
+        <HeroArtwork
+          primary={{
+            src: '/editorial/home-system-hero.webp',
+            alt: 'Tactile system landscape showing scattered business inputs converging into one coherent modular operating system',
+          }}
+          mode="background"
+          className={styles.artwork}
+          preload
+        />
         <div className="grain" />
       </div>
 
@@ -56,20 +65,9 @@ export const Hero: React.FC = () => {
           custom={0.12}
           variants={fadeUp}
         >
-          <span>Build the system</span>
-          <span>your business</span>
+          Build the system your business{' '}
           <span className={styles.titleAccent}>actually needs.</span>
         </motion.h1>
-
-        <HeroArtwork
-          primary={{
-            src: '/editorial/home-system-hero.webp',
-            alt: 'Tactile system landscape showing scattered business inputs converging into one coherent modular operating system',
-          }}
-          caption="From a real problem to a system you can run"
-          mode="panorama"
-          preload
-        />
 
         <div className={styles.supportRow}>
           <motion.p
@@ -99,6 +97,10 @@ export const Hero: React.FC = () => {
             </Link>
           </motion.div>
         </div>
+
+        <p className={styles.artNote} aria-hidden="true">
+          01 / From a real problem to a system you can run
+        </p>
       </div>
 
       <motion.div

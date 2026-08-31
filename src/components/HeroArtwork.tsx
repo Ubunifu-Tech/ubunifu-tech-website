@@ -19,8 +19,9 @@ export type HeroArtworkConfig = {
 };
 
 type HeroArtworkProps = HeroArtworkConfig & {
-  mode?: 'standard' | 'panorama';
+  mode?: 'standard' | 'panorama' | 'background';
   preload?: boolean;
+  className?: string;
 };
 
 const focusClass = {
@@ -37,18 +38,21 @@ export const HeroArtwork: React.FC<HeroArtworkProps> = ({
   kind = 'editorial',
   mode = 'standard',
   preload = false,
+  className,
 }) => {
   const reduceMotion = useReducedMotion();
   const isPanorama = mode === 'panorama';
+  const isBackground = mode === 'background';
 
   return (
     <motion.figure
-      className={`${styles.figure} ${styles[kind]} ${isPanorama ? styles.panorama : ''}`}
+      className={`${styles.figure} ${styles[kind]} ${isPanorama ? styles.panorama : ''} ${isBackground ? styles.background : ''} ${className ?? ''}`}
+      aria-hidden={isBackground || undefined}
       initial={
         reduceMotion
           ? false
-          : isPanorama
-            ? { opacity: 0 }
+          : isPanorama || isBackground
+            ? { opacity: 0, scale: isBackground ? 1.015 : 1 }
             : { opacity: 0, y: 16, scale: 0.99 }
       }
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -61,12 +65,14 @@ export const HeroArtwork: React.FC<HeroArtworkProps> = ({
       <div className={styles.primary}>
         <Image
           src={primary.src}
-          alt={primary.alt}
+          alt={isBackground ? '' : primary.alt}
           fill
           preload={preload}
           draggable={false}
           sizes={
-            isPanorama
+            isBackground
+              ? '100vw'
+              : isPanorama
               ? '(max-width: 660px) 100vw, 1200px'
               : '(max-width: 840px) 100vw, 1280px'
           }
@@ -79,16 +85,16 @@ export const HeroArtwork: React.FC<HeroArtworkProps> = ({
         <div className={styles.secondary}>
           <Image
             src={secondary.src}
-            alt={secondary.alt}
+            alt={isBackground ? '' : secondary.alt}
             fill
             draggable={false}
-            sizes="(max-width: 840px) 44vw, 460px"
+            sizes={isBackground ? '(max-width: 660px) 100vw, 44vw' : '(max-width: 840px) 44vw, 460px'}
             className={`${styles.image} ${focusClass[secondary.focus ?? 'center']}`}
           />
         </div>
       )}
 
-      {caption && (
+      {caption && !isBackground && (
         <figcaption className={styles.caption}>
           <span aria-hidden="true" />
           {caption}

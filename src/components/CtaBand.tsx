@@ -3,17 +3,19 @@ import { site } from '@/content/site';
 import { Topography } from './Topography';
 import styles from './CtaBand.module.css';
 
-// Closing call-to-action. Its own section (a contained card), kept separate
-// from the footer on purpose.
+// Full-width closing call-to-action, kept separate from the footer.
 export const CtaBand: React.FC = () => {
   return (
     <section className={styles.section}>
-      <div className="container">
-        <div className={styles.panel}>
-          <div className={styles.aurora} aria-hidden="true" />
-          <Topography className={styles.topo} />
-          <div className={styles.content}>
+      <div className={styles.panel}>
+        <div className={styles.aurora} aria-hidden="true" />
+        <Topography className={styles.topo} />
+        <div className={`container ${styles.content}`}>
+          <div className={styles.statement}>
+            <span className={styles.kicker}>Next conversation</span>
             <h2 className={styles.heading}>Got something to build?</h2>
+          </div>
+          <div className={styles.details}>
             <p className={styles.text}>
               A custom platform, a tricky data problem, or just a question about
               one of our products. Tell us what you&apos;re working on; your note

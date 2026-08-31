@@ -20,25 +20,21 @@
 
 .grid {
   display: grid;
+  border-top: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: 0;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  padding: 2rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  background: transparent;
 }
 
-.card:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 14px 32px rgba(109, 63, 232, 0.10);
-  transform: translateY(-3px);
+.card + .card {
+  border-left: 1px solid var(--border-hover);
 }
 
 .top {
@@ -107,13 +103,15 @@
 }
 
 .skill {
-  padding: 0.3rem 0.7rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: 100px;
+}
+
+.skill + .skill::before {
+  margin-right: 0.5rem;
+  color: var(--brand);
+  content: '/';
 }
 
 .links {
@@ -151,5 +149,10 @@
 
   .card {
     padding: 1.5rem;
+  }
+
+  .card + .card {
+    border-top: 1px solid var(--border-hover);
+    border-left: 0;
   }
 }

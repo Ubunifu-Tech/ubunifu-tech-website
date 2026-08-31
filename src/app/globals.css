@@ -63,7 +63,7 @@
   --clay-dim: rgba(194, 105, 59, 0.10);
 
   /* Layout */
-  --container-width: 1280px;
+  --container-width: 1440px;
   --nav-height: 72px;
 
   /* Transitions */
@@ -121,8 +121,9 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.1;
   color: var(--text-primary);
   letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: normal;
+  text-wrap: balance;
+  word-break: normal;
 }
 
 /* Code blocks scroll internally on narrow screens */
@@ -174,7 +175,7 @@ a {
   width: 100%;
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 clamp(1.25rem, 3vw, 3rem);
 }
 
 .section {
@@ -191,18 +192,25 @@ a {
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  gap: 0.7rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: var(--text-primary);
-  padding: 0.4rem 1rem;
-  background: var(--brand-dim);
-  border: 1px solid var(--brand-border);
-  border-radius: 100px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   width: fit-content;
+}
+
+.eyebrow::before {
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+  content: '';
 }
 
 /* ── Type hierarchy ───────────────────────────────

@@ -37,13 +37,17 @@
 
 .cycleIntro {
   display: grid;
+  grid-template-areas:
+    'label lead'
+    'title lead';
   align-items: end;
   gap: 0.75rem 2rem;
   margin-bottom: clamp(2.5rem, 5vw, 4rem);
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.58fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
 }
 
 .cycleEyebrow {
+  grid-area: label;
   color: var(--brand);
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -54,7 +58,8 @@
 }
 
 .cycleHeading {
-  max-width: 15ch;
+  max-width: 20ch;
+  grid-area: title;
   color: #fff;
   font-size: clamp(2.25rem, 5vw, 4.8rem);
   font-weight: 700;
@@ -66,6 +71,8 @@
 }
 
 .cycleLead {
+  grid-area: lead;
+  align-self: end;
   max-width: 52ch;
   color: rgba(255, 255, 255, 0.7);
   font-size: clamp(0.98rem, 1.4vw, 1.12rem);
@@ -107,36 +114,33 @@
 
 .processGrid {
   display: grid;
+  border-top: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 0;
+}
+
+.processGrid > div + div {
+  border-left: 1px solid var(--border-hover);
 }
 
 .processCard {
-  padding: 2rem;
-  background: #FFFFFF;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
+  height: 100%;
+  padding: clamp(2rem, 3vw, 3rem);
+  background: transparent;
 }
 
 .processStep {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--brand), var(--primary));
-  color: #fff;
-  font-family: var(--font-heading);
-  font-size: 1rem;
+  margin-bottom: 2.75rem;
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 700;
-  margin-bottom: 1.25rem;
-  box-shadow: 0 4px 12px rgba(255, 107, 44, 0.28);
+  letter-spacing: 0.1em;
 }
 
 .processTitle {
-  font-size: 1.0625rem;
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
   font-weight: 700;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
@@ -159,16 +163,31 @@
   .processGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .processGrid > div:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .processGrid > div:nth-child(n + 3) {
+    border-top: 1px solid var(--border-hover);
+  }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .cycleIntro {
+    grid-template-areas:
+      'label'
+      'title'
+      'lead';
     grid-template-columns: 1fr;
   }
 
   .cycleLead {
     margin-top: 0.75rem;
   }
+}
+
+@media (max-width: 768px) {
 
   .servicesGrid {
     grid-template-columns: 1fr;
@@ -176,6 +195,12 @@
 
   .processGrid {
     grid-template-columns: 1fr;
+  }
+
+  .processGrid > div + div,
+  .processGrid > div:nth-child(n + 3) {
+    border-top: 1px solid var(--border-hover);
+    border-left: 0;
   }
 
   .servicesSection,

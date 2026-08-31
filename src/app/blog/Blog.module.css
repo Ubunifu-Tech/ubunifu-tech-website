@@ -173,10 +173,9 @@
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 0.22rem 0.62rem;
-  border: 1px solid var(--brand-border);
-  border-radius: 100px;
-  background: var(--brand-dim);
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--brand-deep);
   font-size: 0.66rem;
   font-weight: 750;
@@ -206,12 +205,13 @@
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(330px, 0.8fr);
   min-height: 450px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
+  padding: clamp(2rem, 4vw, 3.75rem) 0;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  background: var(--surface);
-  box-shadow: 0 18px 48px rgba(31, 26, 54, 0.07);
+  border-top: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
+  background: transparent;
+  gap: clamp(2rem, 5vw, 5rem);
   text-decoration: none;
   transition:
     border-color 0.3s ease,
@@ -220,9 +220,7 @@
 }
 
 .featured:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 28px 68px rgba(31, 26, 54, 0.13);
-  transform: translateY(-4px);
+  border-color: var(--border-active);
 }
 
 .featured:focus-visible,
@@ -262,7 +260,7 @@
   left: 1.25rem;
   padding: 0.42rem 0.72rem;
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 100px;
+  border-radius: 2px;
   background: rgba(31, 26, 54, 0.78);
   box-shadow: 0 8px 22px rgba(31, 26, 54, 0.18);
   color: #fff;
@@ -277,7 +275,7 @@
 .featuredBody {
   display: flex;
   flex-direction: column;
-  padding: clamp(2rem, 4vw, 3.25rem);
+  padding: clamp(1rem, 3vw, 2.5rem) 0;
 }
 
 .featuredTitle {
@@ -315,8 +313,9 @@
 
 .grid {
   display: grid;
+  border-bottom: 1px solid var(--border-hover);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: 0;
 }
 
 .grid > div {
@@ -328,11 +327,10 @@
   height: 100%;
   min-height: 100%;
   flex-direction: column;
+  padding: clamp(2rem, 4vw, 3.5rem);
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--surface);
-  box-shadow: 0 8px 24px rgba(31, 26, 54, 0.05);
+  border-bottom: 1px solid var(--border-hover);
+  background: transparent;
   text-decoration: none;
   transition:
     border-color 0.3s ease,
@@ -341,9 +339,11 @@
 }
 
 .card:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 20px 45px rgba(31, 26, 54, 0.1);
-  transform: translateY(-4px);
+  border-color: var(--border-active);
+}
+
+.grid > div:nth-child(odd) {
+  border-right: 1px solid var(--border-hover);
 }
 
 .cardVisual {
@@ -375,7 +375,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 1.6rem;
+  padding: 1.6rem 0 0;
 }
 
 .cardTop {
@@ -469,6 +469,10 @@
   .grid {
     grid-template-columns: 1fr;
   }
+
+  .grid > div:nth-child(odd) {
+    border-right: 0;
+  }
 }
 
 @media (max-width: 560px) {
@@ -495,12 +499,8 @@
     flex-shrink: 0;
   }
 
-  .featured {
-    border-radius: 18px;
-  }
-
   .featuredBody {
-    padding: 1.6rem;
+    padding: 1.6rem 0 0;
   }
 
   .featuredFooter,

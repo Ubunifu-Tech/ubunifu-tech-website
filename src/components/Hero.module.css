@@ -17,6 +17,10 @@
   pointer-events: none;
 }
 
+.artwork {
+  --art-opacity: 0.9;
+}
+
 .topo {
   position: absolute;
   top: 46%;
@@ -24,7 +28,8 @@
   width: min(82vw, 1200px);
   height: 130%;
   color: var(--primary);
-  opacity: 0.055;
+  z-index: 1;
+  opacity: 0.04;
   transform: translate(-50%, -50%);
 }
 
@@ -54,7 +59,7 @@
   width: 100%;
   max-width: 1720px;
   margin: 0 auto;
-  padding: clamp(2rem, 4vh, 3.75rem) clamp(1.5rem, 5.4vw, 6.5rem) clamp(2rem, 4vh, 3.75rem);
+  padding: clamp(3rem, 6vh, 5.5rem) clamp(1.5rem, 4.5vw, 5.5rem) clamp(2.5rem, 5vh, 4.5rem);
   flex: 1;
   flex-direction: column;
   justify-content: center;
@@ -66,8 +71,8 @@
   justify-content: center;
   gap: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-hover);
-  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.8);
   font-family: var(--font-mono);
   font-size: clamp(0.67rem, 0.8vw, 0.78rem);
   font-weight: 700;
@@ -78,25 +83,22 @@
 }
 
 .title {
-  max-width: 16ch;
-  margin: clamp(1.5rem, 3vh, 2.5rem) auto clamp(1.5rem, 3vh, 2.5rem);
-  color: var(--text-primary);
-  font-size: clamp(3.15rem, 6.35vw, 6.9rem);
+  width: min(100%, 1480px);
+  max-width: none;
+  margin: clamp(2rem, 4vh, 3.25rem) auto clamp(1.75rem, 3.5vh, 2.75rem);
+  color: #fff;
+  font-size: clamp(3.6rem, 7.25vw, 8.15rem);
   font-weight: 700;
   letter-spacing: -0.065em;
-  line-height: 0.91;
+  line-height: 0.9;
   overflow-wrap: normal;
   text-align: center;
   text-wrap: balance;
   word-break: normal;
 }
 
-.title span {
-  display: block;
-}
-
 .titleAccent {
-  color: var(--brand-deep);
+  color: var(--brand);
 }
 
 .supportRow {
@@ -104,17 +106,28 @@
   width: min(100%, 920px);
   align-items: center;
   gap: clamp(1.75rem, 3.5vh, 2.75rem);
-  margin: clamp(1.5rem, 3vh, 2.25rem) auto 0;
+  margin: clamp(1.75rem, 3.5vh, 2.75rem) auto 0;
   padding-top: clamp(1.5rem, 3vh, 2.25rem);
-  border-top: 1px solid var(--border-hover);
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
   flex-direction: column;
   text-align: center;
+}
+
+.artNote {
+  align-self: flex-end;
+  margin-top: clamp(1.5rem, 3vh, 2.25rem);
+  color: rgba(255, 255, 255, 0.66);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .subtitle {
   max-width: 760px;
   margin: 0 auto;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.78);
   font-size: clamp(1.03rem, 1.35vw, 1.24rem);
   line-height: 1.65;
 }
@@ -144,8 +157,8 @@
 }
 
 .btnPrimary {
-  border-color: var(--brand-deep);
-  background: var(--brand-deep);
+  border-color: var(--brand);
+  background: var(--brand);
   color: #fff;
 }
 
@@ -156,14 +169,15 @@
 }
 
 .btnSecondary {
-  border-color: var(--border-active);
+  border-color: rgba(255, 255, 255, 0.48);
   background: transparent;
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .btnSecondary:hover {
-  border-color: var(--primary-deep);
-  color: var(--primary-deep);
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .credentialRail {
@@ -239,8 +253,9 @@
   }
 
   .title {
-    max-width: 15ch;
-    font-size: clamp(3.15rem, 10vw, 6.5rem);
+    width: min(100%, 1100px);
+    max-width: none;
+    font-size: clamp(3.15rem, 9.6vw, 6.5rem);
   }
 
   .supportRow {
@@ -286,9 +301,14 @@
 
   .title {
     margin-top: 2rem;
-    font-size: clamp(2.8rem, 14.4vw, 4.8rem);
+    font-size: clamp(2.85rem, 13.2vw, 4.8rem);
     letter-spacing: -0.058em;
     line-height: 0.93;
+  }
+
+  .artNote {
+    align-self: flex-start;
+    line-height: 1.5;
   }
 
   .actions {

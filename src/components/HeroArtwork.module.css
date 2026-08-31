@@ -119,6 +119,88 @@
   left: auto;
 }
 
+.background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  --art-opacity: 0.82;
+}
+
+.background .primary {
+  inset: 0;
+  z-index: 0;
+  border: 0;
+}
+
+.background .primary::before {
+  display: none;
+}
+
+.background .image {
+  opacity: var(--art-opacity);
+  object-position: center 68%;
+}
+
+.background .secondary {
+  inset: 0 0 0 58%;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  border: 0;
+  box-shadow: none;
+  opacity: 0.76;
+  clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.background .focusTop {
+  object-position: center top;
+}
+
+.background .focusLeft {
+  object-position: left center;
+}
+
+.background .focusRight {
+  object-position: right center;
+}
+
+.background::after {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(31, 26, 54, 0.76) 0%,
+      rgba(31, 26, 54, 0.66) 48%,
+      rgba(31, 26, 54, 0.78) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgba(31, 26, 54, 0.36),
+      transparent 28%,
+      transparent 72%,
+      rgba(31, 26, 54, 0.36)
+    );
+  content: '';
+}
+
+.background .imageVeil {
+  display: none;
+}
+
+.proof.background::after {
+  background: linear-gradient(
+    to bottom,
+    rgba(31, 26, 54, 0.82),
+    rgba(31, 26, 54, 0.72) 50%,
+    rgba(31, 26, 54, 0.84)
+  );
+}
+
 @media (max-width: 840px) {
   .figure {
     height: clamp(250px, 52vw, 390px);
@@ -136,6 +218,11 @@
 
   .panorama {
     height: clamp(170px, 31vw, 240px);
+  }
+
+  .background {
+    inset: 0;
+    height: auto;
   }
 }
 
@@ -174,6 +261,37 @@
     right: 0.75rem;
     left: 0.75rem;
     justify-content: center;
+  }
+
+  .background {
+    inset: 0;
+    height: auto;
+    margin: 0;
+  }
+
+  .background .primary {
+    inset: 0;
+  }
+
+  .background .image {
+    object-position: center 72%;
+  }
+
+  .background .secondary {
+    inset: 58% 0 0;
+    width: auto;
+    height: auto;
+    opacity: 0.5;
+    clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .background::after {
+    background: linear-gradient(
+      to bottom,
+      rgba(31, 26, 54, 0.8),
+      rgba(31, 26, 54, 0.7) 52%,
+      rgba(31, 26, 54, 0.84)
+    );
   }
 }
 

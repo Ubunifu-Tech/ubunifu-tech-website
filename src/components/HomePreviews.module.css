@@ -11,21 +11,33 @@
 
 .head {
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(280px, 0.55fr);
+  grid-template-areas:
+    'label copy'
+    'title copy';
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   align-items: end;
   gap: 2rem;
   margin-bottom: 2.75rem;
 }
 
+.head :global(.eyebrow) {
+  grid-area: label;
+}
+
 .heading {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  max-width: 18ch;
+  grid-area: title;
+  font-size: clamp(2.2rem, 4.5vw, 4.6rem);
   font-weight: 800;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.045em;
+  line-height: 1;
   color: var(--text-primary);
   margin: 0.5rem 0 0.75rem;
 }
 
 .sub {
+  grid-area: copy;
+  align-self: end;
   font-size: clamp(1rem, 1.5vw, 1.15rem);
   color: var(--text-secondary);
   line-height: 1.7;
@@ -242,27 +254,41 @@
 /* ── Products-as-proof grid ───────────────────── */
 
 .proofGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  border-top: 1px solid var(--border-hover);
 }
 
 .proofCard {
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  overflow: hidden;
+  display: grid;
+  min-height: 190px;
+  padding: 1.75rem 0;
+  align-items: center;
+  border-bottom: 1px solid var(--border-hover);
+  background: transparent;
+  grid-template-columns: 72px minmax(200px, 280px) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
   text-decoration: none;
-  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  transition: color 0.25s ease, background 0.25s ease;
 }
 
 .proofCard:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 18px 40px rgba(109, 63, 232, 0.12);
-  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.proofCard:focus-visible,
+.workCard:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+}
+
+.proofIndex,
+.workIndex {
+  align-self: start;
+  padding-top: 0.15rem;
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .proofThumb {
@@ -270,7 +296,6 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -289,7 +314,6 @@
   position: absolute;
   inset: 12%;
   border: 1px solid var(--primary-border);
-  border-radius: 50%;
   opacity: 0.6;
 }
 
@@ -319,15 +343,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0.3rem 0.7rem;
+  padding: 0.3rem 0;
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--primary);
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid var(--primary-border);
-  border-radius: 100px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
+  border-bottom: 1px solid currentColor;
 }
 
 .proofDot {
@@ -341,12 +362,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  padding: 1.5rem 1.75rem 1.75rem;
+  padding: 0;
 }
 
 .proofName {
   font-family: var(--font-heading);
-  font-size: 1.3rem;
+  font-size: clamp(1.55rem, 2.5vw, 2.25rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -361,36 +382,37 @@
 /* ── Work grid ────────────────────────────────── */
 
 .workGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 1.5rem;
+  border-top: 1px solid var(--border-hover);
 }
 
 .workCard {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  overflow: hidden;
+  display: grid;
+  padding: clamp(2rem, 4vw, 3.75rem) 0;
+  align-items: center;
+  border-bottom: 1px solid var(--border-hover);
+  background: transparent;
+  grid-template-areas: 'index media copy';
+  grid-template-columns: 72px minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
   text-decoration: none;
-  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  transition: background 0.25s ease;
 }
 
-.workCard:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 18px 40px rgba(109, 63, 232, 0.12);
-  transform: translateY(-4px);
+.workGrid > div:nth-child(even) .workCard {
+  grid-template-areas: 'index copy media';
+  grid-template-columns: 72px minmax(320px, 0.8fr) minmax(0, 1.2fr);
+}
+
+.workCard .workIndex {
+  grid-area: index;
 }
 
 .workThumb {
   position: relative;
+  grid-area: media;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
   background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -408,7 +430,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  padding: 1.5rem 1.75rem 1.75rem;
+  grid-area: copy;
+  padding: 0;
   flex: 1;
 }
 
@@ -422,7 +445,7 @@
 
 .workTitle {
   font-family: var(--font-heading);
-  font-size: 1.4rem;
+  font-size: clamp(1.75rem, 3.2vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -445,11 +468,13 @@
 .workCap {
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.2rem 0.6rem;
   color: var(--text-secondary);
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: 100px;
+}
+
+.workCap + .workCap::before {
+  margin-right: 0.4rem;
+  color: var(--brand);
+  content: '/';
 }
 
 .workLink {
@@ -515,9 +540,6 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .proofGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 900px) {
@@ -535,6 +557,10 @@
   }
 
   .head {
+    grid-template-areas:
+      'label'
+      'title'
+      'copy';
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
@@ -545,10 +571,32 @@
 }
 
 @media (max-width: 680px) {
-  .serviceGrid,
-  .workGrid,
-  .proofGrid {
+  .serviceGrid {
     grid-template-columns: 1fr;
+  }
+
+  .workCard,
+  .workGrid > div:nth-child(even) .workCard {
+    grid-template-areas:
+      'index copy'
+      'media media';
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 1.25rem 0.75rem;
+  }
+
+  .proofCard {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 1rem 0.75rem;
+  }
+
+  .proofThumb {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .proofMeta {
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .sectorGrid {

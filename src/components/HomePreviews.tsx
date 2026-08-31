@@ -190,6 +190,9 @@ export const WorkPreview: React.FC = () => {
               transition={{ duration: 0.45, delay: index * 0.08, ease }}
             >
               <Link href={`/work/${project.slug}`} className={styles.workCard}>
+                <span className={styles.workIndex} aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <div className={styles.workThumb}>
                   <Image
                     src={project.primary.src}
@@ -265,6 +268,9 @@ export const ProductsProof: React.FC = () => {
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.45, delay: index * 0.08, ease }}
             >
+              <span className={styles.proofIndex} aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
               {product.primary ? (
                 <div className={styles.proofThumb}>
                   <Image

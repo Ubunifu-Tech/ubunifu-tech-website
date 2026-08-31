@@ -1,15 +1,21 @@
 .section {
-  padding: 96px 0;
-  background: var(--background);
+  padding: 0;
+  background: var(--text-primary);
 }
 
 .panel {
   position: relative;
   overflow: hidden;
-  border-radius: 24px;
-  padding: 4.5rem 2rem;
+  padding: clamp(5rem, 9vw, 8rem) 0;
   background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-deep) 100%);
-  box-shadow: 0 40px 80px -36px rgba(27, 14, 71, 0.5);
+}
+
+.panel::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: clamp(7px, 0.7vw, 11px);
+  background: linear-gradient(to bottom, var(--brand) 0 58%, var(--primary) 58%);
+  content: '';
 }
 
 .aurora {
@@ -36,16 +42,35 @@
 .content {
   position: relative;
   z-index: 1;
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
+  display: grid;
+  align-items: end;
+  text-align: left;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  gap: clamp(3rem, 8vw, 8rem);
+}
+
+.kicker {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--brand);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.statement,
+.details {
+  position: relative;
 }
 
 .heading {
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  max-width: 12ch;
+  font-size: clamp(3rem, 6vw, 6rem);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: 1rem;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
   color: #ffffff;
 }
 
@@ -59,7 +84,7 @@
 .actions {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -108,12 +133,13 @@
 }
 
 @media (max-width: 768px) {
-  .section {
-    padding: 64px 0;
+  .panel {
+    padding: 4.5rem 0;
   }
 
-  .panel {
-    padding: 3rem 1.5rem;
+  .content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 
   .actions {

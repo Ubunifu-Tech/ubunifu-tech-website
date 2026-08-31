@@ -35,6 +35,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <header className={`${styles.header} ${artwork ? styles.withArtwork : ''}`}>
       <div className={styles.backdrop} aria-hidden="true">
+        {artwork && (
+          <HeroArtwork
+            {...artwork}
+            mode="background"
+            className={styles.artwork}
+            preload
+          />
+        )}
         <Topography className={styles.topo} />
         <div className="grain" />
       </div>
@@ -87,7 +95,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </div>
 
-        {artwork && <HeroArtwork {...artwork} preload />}
+        {artwork?.caption && (
+          <motion.p
+            className={styles.artLabel}
+            initial={reduceMotion ? false : 'hidden'}
+            animate="visible"
+            custom={0.42}
+            variants={fade}
+          >
+            {artwork.caption}
+          </motion.p>
+        )}
       </div>
     </header>
   );

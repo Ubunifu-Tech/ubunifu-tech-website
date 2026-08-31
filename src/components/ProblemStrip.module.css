@@ -21,15 +21,15 @@
 .inner {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: clamp(3rem, 8vw, 7rem);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(3rem, 6vw, 5rem);
   align-items: start;
 }
 
 .intro {
   position: sticky;
   top: calc(var(--nav-height) + 2rem);
-  max-width: 520px;
+  max-width: 680px;
 }
 
 .kicker {
@@ -53,7 +53,7 @@
 }
 
 .heading {
-  max-width: 13ch;
+  max-width: 18ch;
   margin-bottom: 1.35rem;
   color: #fff;
   font-size: clamp(2.15rem, 4vw, 3.6rem);

@@ -10,6 +10,14 @@ Entries before #31 are retained as implementation history. Where an older entry 
 
 ## Shipped (latest pass)
 
+### 37. Full-bleed heroes and open editorial layouts — 24 August 2026
+
+- Moved homepage and shared page-header artwork out of document flow and into full-bleed background layers. Existing deep navy now provides the legibility scrim, while page-specific secondary imagery can form a restrained background collage instead of a floating screenshot card.
+- Widened the homepage and page-title measures, removed the homepage's forced three-line stack, and stopped global heading styles from breaking words arbitrarily.
+- Fixed two genuine grid auto-placement bugs that were pushing homepage and Services headings into narrow right-hand columns. Section introductions now use explicit label/title/copy areas and stack earlier at compact widths.
+- Replaced the site's heaviest runs of rounded cards with open editorial systems: ruled project case-study rows, product dossiers, a product register, a lead-story Journal layout, an open pull quote, capability directories, methodology ledgers, and a full-width closing statement.
+- Removed pill treatment from general section eyebrows and most descriptive tags while preserving contained surfaces where they serve a functional purpose, such as forms, controls, and browser proof frames.
+
 ### 36. Art-directed hero system — 23 August 2026
 
 - Added an original panoramic homepage artwork: scattered business inputs becoming one coherent operating system, photographed in the established paper-and-ceramic editorial language and restricted to Ubunifu's existing navy, orange, purple, blue, clay, and off-white palette.

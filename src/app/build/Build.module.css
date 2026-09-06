@@ -13,7 +13,7 @@
   gap: 1.25rem;
   padding: 0.85rem 1.25rem;
   border: 1px solid var(--brand-deep);
-  border-radius: 5px;
+  border-radius: var(--control-radius);
   background: var(--cta);
   color: #fff;
   font-size: 0.88rem;
@@ -28,59 +28,9 @@
   color: #fff;
 }
 
-/* ── Services ────────────────────────────────── */
-
-.cycleSection {
-  padding: clamp(5.5rem, 9vw, 8rem) 0;
-  background: var(--text-primary);
-}
-
-.cycleIntro {
-  display: grid;
-  grid-template-areas:
-    'label lead'
-    'title lead';
-  align-items: end;
-  gap: 0.75rem 2rem;
-  margin-bottom: clamp(2.5rem, 5vw, 4rem);
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-}
-
-.cycleEyebrow {
-  grid-area: label;
-  color: var(--brand);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-.cycleHeading {
-  max-width: 20ch;
-  grid-area: title;
-  color: #fff;
-  font-size: clamp(2.25rem, 5vw, 4.8rem);
-  font-weight: 700;
-  letter-spacing: -0.052em;
-  line-height: 0.98;
-  overflow-wrap: normal;
-  text-wrap: balance;
-  word-break: normal;
-}
-
-.cycleLead {
-  grid-area: lead;
-  align-self: end;
-  max-width: 52ch;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: clamp(0.98rem, 1.4vw, 1.12rem);
-  line-height: 1.7;
-}
-
-.servicesSection {
-  padding: 100px 0;
+.heroBtn:focus-visible {
+  outline: 3px solid var(--text-inverse);
+  outline-offset: 4px;
 }
 
 .sectionHeading {
@@ -89,18 +39,6 @@
   letter-spacing: -0.02em;
   margin-bottom: 2.5rem;
   color: var(--text-primary);
-}
-
-.servicesSub {
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
-  color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 560px;
-  margin: -1.75rem 0 1.5rem;
-}
-
-.spotlights {
-  margin-top: 1rem;
 }
 
 /* ── Process ─────────────────────────────────── */
@@ -173,20 +111,6 @@
   }
 }
 
-@media (max-width: 1024px) {
-  .cycleIntro {
-    grid-template-areas:
-      'label'
-      'title'
-      'lead';
-    grid-template-columns: 1fr;
-  }
-
-  .cycleLead {
-    margin-top: 0.75rem;
-  }
-}
-
 @media (max-width: 768px) {
 
   .servicesGrid {
@@ -203,12 +127,10 @@
     border-left: 0;
   }
 
-  .servicesSection,
   .processSection {
     padding: 80px 0;
   }
 
-  .serviceCard,
   .processCard {
     padding: 1.5rem;
   }
@@ -216,11 +138,6 @@
 }
 
 @media (max-width: 480px) {
-  .cycleSection {
-    padding: 4.5rem 0;
-  }
-
-  .servicesSection,
   .processSection {
     padding: 64px 0;
   }

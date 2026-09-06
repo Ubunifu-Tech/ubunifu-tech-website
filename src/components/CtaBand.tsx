@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { site } from '@/content/site';
 import { Topography } from './Topography';
 import styles from './CtaBand.module.css';
@@ -13,7 +14,7 @@ export const CtaBand: React.FC = () => {
         <div className={`container ${styles.content}`}>
           <div className={styles.statement}>
             <span className={styles.kicker}>Next conversation</span>
-            <h2 className={styles.heading}>Got something to build?</h2>
+            <h2 className={styles.heading}>Bring us the problem.</h2>
           </div>
           <div className={styles.details}>
             <p className={styles.text}>
@@ -22,14 +23,15 @@ export const CtaBand: React.FC = () => {
               goes directly to the Ubunifu team.
             </p>
             <div className={styles.actions}>
-              <a href={site.urls.contact} className={styles.btn}>
+              <Link href={site.urls.contact} className={styles.btn}>
                 Get in touch
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
               <a href={site.urls.insight} target="_blank" rel="noopener noreferrer" className={styles.btnSecondary}>
-                Try Insight free
+                Open Insight <span aria-hidden="true">↗</span>
+                <span className="srOnly"> (opens in a new tab)</span>
               </a>
             </div>
           </div>

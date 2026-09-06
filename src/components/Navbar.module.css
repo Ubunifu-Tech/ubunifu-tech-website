@@ -86,7 +86,7 @@
   align-items: center;
   padding: 0.62rem 1.15rem;
   border: 1px solid var(--brand-deep);
-  border-radius: 5px;
+  border-radius: var(--control-radius);
   background: var(--brand-deep);
   color: #fff;
   font-size: 0.875rem;
@@ -189,10 +189,20 @@
   width: min(320px, calc(100% - 3rem));
   margin-top: 0.5rem;
   padding: 0.9rem 1.5rem;
-  border-radius: 5px;
+  border-radius: var(--control-radius);
   background: var(--brand-deep);
   color: #fff;
   font-weight: 700;
+}
+
+.logo:focus-visible,
+.link:focus-visible,
+.cta:focus-visible,
+.hamburger:focus-visible,
+.mobileLink:focus-visible,
+.mobileCta:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
 }
 
 @media (max-width: 900px) {
@@ -208,11 +218,11 @@
 
 @media (max-width: 600px) {
   .navbar {
-    height: 64px;
+    height: var(--nav-height);
   }
 
   .shell {
-    height: 64px;
+    height: var(--nav-height);
   }
 }
 

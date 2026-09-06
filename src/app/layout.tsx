@@ -23,12 +23,11 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ubunifu Technologies · Consulting + Products',
+    default: 'Ubunifu Technologies · Technology consulting and products',
     template: '%s | Ubunifu Technologies',
   },
-  description: 'Ubunifu Technologies is an Arusha-based consulting company and product studio. We work across strategy, brand, software, data, AI, hosting, and support.',
+  description: 'Ubunifu Technologies is an Arusha-based technology consultancy that also builds and operates products. We work across strategy, brand, software, data, AI, hosting, and support.',
   keywords: [
-    'SaaS Tanzania',
     'software Africa',
     'AI platform Tanzania',
     'Ubunifu Insight',
@@ -54,8 +53,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies · Consulting + Products',
-    description: 'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
+    title: 'Ubunifu Technologies · Technology consulting and products',
+    description: 'An Arusha-based technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
     images: [
       {
         url: '/og.png',
@@ -67,8 +66,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ubunifu Technologies · Consulting + Products',
-    description: 'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
+    title: 'Ubunifu Technologies · Technology consulting and products',
+    description: 'An Arusha-based technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
     images: ['/og.png'],
   },
   robots: {
@@ -93,7 +92,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ubunifu Technologies',
-    description: 'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
+    description: 'An Arusha-based technology consultancy that also builds and operates products, working across brand, software, data, and AI.',
     url: 'https://ubunifutech.com',
     logo: 'https://ubunifutech.com/logo-v2.png',
     contactPoint: {

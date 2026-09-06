@@ -352,7 +352,7 @@
   margin-top: auto;
   color: var(--brand-deep);
   font-size: 0.9rem;
-  font-weight: 750;
+  font-weight: 700;
   transition: gap 0.28s var(--ease-out-expo), color 0.2s ease;
 }
 

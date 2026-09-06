@@ -5,6 +5,7 @@
 // and layered shadows so it reads as a 3D object sitting in the page hero.
 
 import React, { useEffect, useRef } from 'react';
+import { brandColors, brandMarkPaths } from '@/lib/brand';
 import styles from './ServiceConstellation.module.css';
 
 type Node = {
@@ -263,11 +264,11 @@ export const ServiceConstellation: React.FC = () => {
       ctx.lineWidth = 10;
       ctx.lineCap = 'square';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#FF6B2C';
-      ctx.stroke(new Path2D('M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5'));
-      ctx.strokeStyle = '#6D3FE8';
-      ctx.stroke(new Path2D('M43 13v23c0 11 6 18 14 18'));
-      ctx.stroke(new Path2D('M29 16 57 10'));
+      ctx.strokeStyle = brandColors.orange;
+      ctx.stroke(new Path2D(brandMarkPaths.u));
+      ctx.strokeStyle = brandColors.violet;
+      ctx.stroke(new Path2D(brandMarkPaths.tStem));
+      ctx.stroke(new Path2D(brandMarkPaths.tCrown));
       ctx.restore();
 
       ctx.fillStyle = '#1F1A36';

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Topography } from './Topography';
 import { HeroArtwork } from './HeroArtwork';
+import { SystemsField } from './SystemsField';
 import styles from './Hero.module.css';
 
 const fadeUp = {
@@ -38,6 +39,7 @@ export const Hero: React.FC = () => {
           className={styles.artwork}
           preload
         />
+        <SystemsField className={styles.systemsField} />
         <div className="grain" />
       </div>
 
@@ -54,7 +56,7 @@ export const Hero: React.FC = () => {
           custom={0.04}
           variants={fadeUp}
         >
-          <p>Technology consulting · Arusha, Tanzania · East Africa</p>
+          <p>Ubunifu Technologies · Arusha, Tanzania</p>
         </motion.div>
 
         <motion.h1
@@ -65,7 +67,7 @@ export const Hero: React.FC = () => {
           custom={0.12}
           variants={fadeUp}
         >
-          Build the system your business{' '}
+          Build the system your organisation{' '}
           <span className={styles.titleAccent}>actually needs.</span>
         </motion.h1>
 
@@ -77,9 +79,9 @@ export const Hero: React.FC = () => {
             custom={0.24}
             variants={fadeUp}
           >
-            Ubunifu Technologies brings strategy, brand, software, data, and AI
-            into one practical partnership—from the first question to a system
-            your organisation can run and improve.
+            We help Tanzanian organisations make technology decisions, then
+            advise, design, build, host, and support the result. We also build
+            and operate software products of our own.
           </motion.p>
 
           <motion.div
@@ -90,16 +92,16 @@ export const Hero: React.FC = () => {
             variants={fadeUp}
           >
             <Link href="/contact" className={styles.btnPrimary}>
-              Bring us a problem <span aria-hidden="true">→</span>
+              Discuss a problem <span aria-hidden="true">→</span>
             </Link>
             <Link href="/work" className={styles.btnSecondary}>
-              See selected work <span aria-hidden="true">↗</span>
+              See selected work <span aria-hidden="true">→</span>
             </Link>
           </motion.div>
         </div>
 
-        <p className={styles.artNote} aria-hidden="true">
-          01 / From a real problem to a system you can run
+        <p className={styles.artNote}>
+          Conceptual illustration · Inputs assemble into one coherent working system
         </p>
       </div>
 
@@ -119,7 +121,7 @@ export const Hero: React.FC = () => {
           ))}
         </ul>
         <Link href="/build" className={styles.approachLink}>
-          Our capabilities <span aria-hidden="true">↗</span>
+          Our capabilities <span aria-hidden="true">→</span>
         </Link>
       </motion.div>
     </section>

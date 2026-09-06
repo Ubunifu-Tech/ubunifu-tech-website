@@ -1,6 +1,6 @@
 # Ubunifu Technologies Website
 
-Official website for **Ubunifu Technologies** — an Arusha-based consulting company and product studio.
+Official website for **Ubunifu Technologies** — an Arusha-based technology consultancy that also builds and operates products.
 
 **Consulting + products, built in Tanzania.**
 
@@ -18,8 +18,8 @@ For the full positioning, voice, and messaging, see [`POSITIONING.md`](POSITIONI
 ### What we offer
 
 **Consulting services** (`/build`) — six connected capabilities:
-Digital Presence & Web · Hosting, Domains & Email · Branding & Graphic Design ·
-Data Analytics & BI · Intelligent Automation & AI · Digital Strategy & Consulting.
+Websites & Custom Platforms · Hosting, Domains & Email · Brand Identity & Design ·
+Data & Business Intelligence · AI & Automation · Technology Strategy & Advisory.
 
 **Products** (`/products`) — software built and operated by Ubunifu:
 - **Ubunifu Insight** — *available* · document AI with cited answers, extraction, templates, and multilingual agents (`insight.ubunifutech.com`)
@@ -29,9 +29,9 @@ Data Analytics & BI · Intelligent Automation & AI · Digital Strategy & Consult
 **Work** (`/work`) — named client case studies for Safari King Africa and Usambara
 Destination. Product availability does not imply customer counts or adoption claims.
 
-**Industries** (`/industries`) — equipped to serve eight sectors. Tourism & Hospitality is
-*proven* through the named work above. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture,
-Education, and Government are potential capability fits, not claimed client experience.
+**Industries** (`/industries`) — Tourism & Hospitality is *proven* through the named work
+above. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture, Education, and Government are
+presented as potential workflow fits, not claimed client experience.
 
 ---
 
@@ -121,9 +121,8 @@ npm start
 ubunifu-tech-website/
 ├── public/
 │   ├── brand/              # Canonical Ubunifu Ligature SVG marks and lockups
-│   ├── editorial/          # Tactile editorial concept images
-│   ├── work/               # Real client and product screenshots
-│   ├── logo-v2.png         # Social/avatar raster of the Ligature
+│   ├── editorial/          # Tactile conceptual art for services, work, and products
+│   ├── logo-v2.png         # Navy social/avatar tile with the Ligature
 │   └── og.png              # Default social preview
 ├── _posts/                  # Blog posts in Markdown
 ├── src/
@@ -148,7 +147,7 @@ ubunifu-tech-website/
 │   ├── content/             # Editable page data — no JSX logic (see below)
 │   └── lib/                 # Blog, email, metadata, and social-image helpers
 ├── .env.example             # Safe server-environment template
-├── BRANDING.md              # Ligature, palette, type, and editorial image system
+├── BRANDING.md              # Ligature mark, palette, type, and editorial image system
 ├── POSITIONING.md           # Company model, offers, claim boundaries, voice
 ├── WEBSITE_CONTENT.md       # "Site as built" reference / page map
 ├── PROJECT_ROADMAP.md       # Development roadmap
@@ -168,9 +167,10 @@ don't touch component code: `site.ts` (company info, nav, footer), `services.tsx
 
 Light, warm, modern: a soft lavender background (`#F4F2FB`), a warm-orange primary
 (`#FF6B2C`), and a deep-purple accent (`#6D3FE8`) on deep-navy text (`#1F1A36`). The
-canonical logo is the **Ubunifu Ligature**: a custom interlocking U/T glyph with an orange U,
-a purple T, and a rising angled T crown. Its full lockup spells **Ubunifu Technologies** on one
-baseline. The master mark uses two solid colors; orange-to-purple gradients are a separate
+canonical logo is the original **Ubunifu Ligature**: an open-stroke orange U and violet T
+interlocked as one forward-moving glyph. Dark navy anchors the wordmark and broader system.
+Its full lockup spells **Ubunifu Technologies** at one size on one baseline. The mark uses two
+solid identity colors; orange-to-purple gradients are a separate
 device for large paths, headlines, and atmospheres. The company tagline remains supporting copy,
 never part of the navigation or logo lockup.
 
@@ -178,7 +178,7 @@ Design tokens are the single source of truth — every color, font, and spacing 
 [`src/app/globals.css`](src/app/globals.css). See [`BRANDING.md`](BRANDING.md) for the full
 system, [`public/brand/`](public/brand/) for canonical SVG assets, and
 [`/brand`](https://ubunifutech.com/brand) for the shareable brand kit and downloads.
-`public/logo-v2.png` is the social avatar and `public/og.png` is the default social preview.
+`public/logo-v2.png` is the social avatar. `public/og.png` remains campaign media rather than a canonical logo master.
 
 ---
 

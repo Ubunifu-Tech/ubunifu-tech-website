@@ -34,6 +34,8 @@ export default function CareersPage() {
     <>
       <main className={styles.main}>
         <PageHeader
+          variant="human"
+          register={['Craft', 'Judgment', 'Collaboration']}
           eyebrow="Careers"
           title="Work at Ubunifu"
           lead="We grow deliberately and publish confirmed opportunities with their specific requirements and application process on this page."
@@ -42,7 +44,7 @@ export default function CareersPage() {
               src: '/editorial/brand-system-art.webp',
               alt: 'Tactile system showing one clear idea applied consistently across many touchpoints',
             },
-            caption: 'Craft · Judgment · Close collaboration',
+            caption: 'Conceptual illustration · Craft, judgment, and close collaboration',
           }}
         />
         <div className="container">

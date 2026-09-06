@@ -12,6 +12,8 @@ interface PageHeaderProps {
   lead?: string;
   children?: React.ReactNode;
   artwork?: HeroArtworkConfig;
+  variant?: 'standard' | 'field' | 'proof' | 'human' | 'contact';
+  register?: ReadonlyArray<string>;
 }
 
 const fade = {
@@ -29,11 +31,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   lead,
   children,
   artwork,
+  variant = 'standard',
+  register,
 }) => {
   const reduceMotion = useReducedMotion();
+  const variantClass = variant === 'standard' ? '' : styles[variant];
 
   return (
-    <header className={`${styles.header} ${artwork ? styles.withArtwork : ''}`}>
+    <header className={`${styles.header} ${artwork ? styles.withArtwork : ''} ${variantClass}`}>
       <div className={styles.backdrop} aria-hidden="true">
         {artwork && (
           <HeroArtwork
@@ -105,6 +110,24 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           >
             {artwork.caption}
           </motion.p>
+        )}
+
+        {register && register.length > 0 && (
+          <motion.ul
+            className={styles.register}
+            initial={reduceMotion ? false : 'hidden'}
+            animate="visible"
+            custom={0.48}
+            variants={fade}
+            aria-label={`${eyebrow} overview`}
+          >
+            {register.map((item, index) => (
+              <li key={item}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                {item}
+              </li>
+            ))}
+          </motion.ul>
         )}
       </div>
     </header>

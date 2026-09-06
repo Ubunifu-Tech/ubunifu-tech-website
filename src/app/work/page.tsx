@@ -16,21 +16,21 @@ export default function WorkPage() {
     <>
       <main>
         <PageHeader
+          variant="proof"
+          register={['Situation', 'Delivered system', 'Live work']}
           eyebrow="Our work"
-          title="Systems running in the real world."
-          lead="Client work, shown honestly: the situation, the system we delivered, and the evidence we can stand behind."
+          title="Client systems built around the work behind the screen."
+          lead="See what each client needed, what we delivered, and the workflow the system now supports."
           artwork={{
             primary: {
-              src: '/work/safari-king-admin.png',
-              alt: 'Safari King operations dashboard built by Ubunifu',
-              focus: 'top',
+              src: '/editorial/safari-operations-system-v2.webp',
+              alt: 'Editorial illustration of a safari enquiry becoming a connected operating workflow',
             },
             secondary: {
-              src: '/work/usambara-hero.png',
-              alt: 'Usambara Destination website built by Ubunifu',
-              focus: 'top',
+              src: '/editorial/usambara-enquiry-journey-v2.webp',
+              alt: 'Editorial illustration of destination discovery becoming a structured trip enquiry',
             },
-            caption: 'Live client systems · Tanzania',
+            caption: 'Conceptual illustration · Two delivered client workflows',
             kind: 'proof',
           }}
         />

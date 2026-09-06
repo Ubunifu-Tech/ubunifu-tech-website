@@ -31,8 +31,8 @@ export const sectors: ReadonlyArray<Sector> = [
     icon: Plane,
     proven: true,
     summary:
-      'Booking and enquiry platforms, marketing sites, and the systems behind them, for safari operators, tour companies, and hotels.',
-    offerings: ['Booking & enquiry systems', 'Marketing sites', 'Itinerary tools', 'Reviews & CRM'],
+      'Booking and enquiry platforms, marketing sites, and the systems behind them for safari operators and tour businesses.',
+    offerings: ['Booking & enquiry systems', 'Marketing sites', 'Itinerary tools', 'Customer records & follow-up'],
   },
   {
     key: 'sme',

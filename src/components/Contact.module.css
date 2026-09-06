@@ -23,7 +23,7 @@
   margin: 0.7rem 0 1rem;
   color: var(--text-primary);
   font-size: clamp(2.25rem, 4.6vw, 4.6rem);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.05em;
   line-height: 0.98;
 }
@@ -197,6 +197,11 @@
   box-shadow: none;
 }
 
+.input:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 select.input {
   appearance: auto;
   -webkit-appearance: menulist;
@@ -227,7 +232,7 @@ select.input {
   margin-top: 0.5rem;
   padding: 0.8rem 1.25rem;
   border: 1px solid var(--brand-deep);
-  border-radius: 4px;
+  border-radius: var(--control-radius);
   background: var(--cta);
   color: #fff;
   cursor: pointer;
@@ -243,7 +248,7 @@ select.input {
 }
 
 .submitBtn:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
 

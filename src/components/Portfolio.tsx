@@ -3,138 +3,111 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ExternalLink, ArrowRight } from 'lucide-react';
 import { projects } from '@/content/portfolio';
+import { MediaReveal } from './MediaReveal';
 import styles from './Portfolio.module.css';
 
-// Tech chips shown on the card; the full stack lives on the case study page.
-const CARD_TECH_LIMIT = 6;
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export const Portfolio: React.FC<{ hideHeader?: boolean }> = ({
   hideHeader = false,
 }) => {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section id="portfolio" className={`section ${styles.portfolio}`}>
       <div className="container">
         {!hideHeader && (
           <motion.div
             className={styles.header}
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
           >
             <span className="eyebrow">Selected work</span>
-            <h2 className={styles.heading}>What we&apos;ve shipped for clients</h2>
+            <h2 className={styles.heading}>What the delivered work supports</h2>
             <p className={styles.subheading}>
-              Real platforms running in production for Tanzanian businesses. Built by the
-              same team that ships our own products.
+              Client systems described through the situation, the intervention,
+              and the work people can do with them now.
             </p>
           </motion.div>
         )}
 
-        <div className={styles.grid}>
+        <div className={styles.projects}>
           {projects.map((project, index) => {
             const caseStudyHref = `/work/${project.slug}`;
-            const extraTech = Math.max(0, project.tech.length - CARD_TECH_LIMIT);
 
             return (
               <motion.article
                 key={project.title}
-                className={styles.card}
-                initial={{ opacity: 0, y: 24 }}
+                className={`${styles.project} ${index === 0 ? styles.featured : styles.supporting}`}
+                initial={reduceMotion ? false : { opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: reduceMotion ? 0 : 0.58, delay: reduceMotion ? 0 : index * 0.08, ease }}
               >
-                {/* Browser-framed screenshot links to the case study */}
                 <Link
                   href={caseStudyHref}
-                  className={styles.browser}
+                  className={styles.visual}
                   aria-label={`${project.title} case study`}
                 >
-                  <div className={styles.browserBar}>
-                    <span className={styles.dot} style={{ background: '#FF6B2C' }} />
-                    <span className={styles.dot} style={{ background: '#6D3FE8' }} />
-                    <span className={styles.dot} style={{ background: '#2E5BFF' }} />
-                    <div className={styles.urlBar}>
-                      <span className={styles.urlLock} aria-hidden="true">🔒</span>
-                      <span className={styles.urlText}>{project.domain}</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.viewport}>
+                  <MediaReveal>
                     <Image
-                      src={project.primary.src}
-                      alt={project.primary.alt}
+                      src={project.artwork.src}
+                      alt={project.artwork.alt}
                       fill
-                      sizes="(max-width: 900px) 100vw, 50vw"
-                      className={styles.screenshot}
+                      sizes={index === 0 ? '(max-width: 1480px) calc(100vw - 2.5rem), 1440px' : '(max-width: 900px) calc(100vw - 2.5rem), 58vw'}
+                      className={styles.artwork}
                       priority={index === 0}
                     />
-                  </div>
+                  </MediaReveal>
+                  <span className={styles.visualShade} aria-hidden="true" />
+                  <span className={styles.projectIndex} aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className={styles.visualCaption}>{project.artwork.caption}</span>
                 </Link>
 
-                {/* Content */}
                 <div className={styles.content}>
-                  <div className={styles.contentTop}>
-                    <span className={styles.category}>{project.category}</span>
+                  <div className={styles.topline}>
+                    <span>{project.category}</span>
+                    <span>{project.domain}</span>
+                  </div>
+
+                  <h2 className={styles.title}>
+                    <Link href={caseStudyHref}>{project.title}</Link>
+                  </h2>
+                  <p className={styles.description}>{project.description}</p>
+
+                  <div className={styles.supports}>
+                    <p>What the work supports</p>
+                    <ul>
+                      {project.capabilities.map((capability, capabilityIndex) => (
+                        <li key={capability}>
+                          <span>{String(capabilityIndex + 1).padStart(2, '0')}</span>
+                          {capability}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className={styles.actions}>
+                    <Link href={caseStudyHref} className={styles.caseStudyLink}>
+                      Read the case study <ArrowRight size={16} aria-hidden="true" />
+                    </Link>
                     <a
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={styles.visitBtn}
-                      aria-label={`Visit ${project.title} live site`}
+                      className={styles.visitLink}
                     >
-                      Visit
-                      <ExternalLink size={14} />
+                      Visit live site <ExternalLink size={14} aria-hidden="true" />
+                      <span className="srOnly"> (opens in a new tab)</span>
                     </a>
                   </div>
-
-                  <h3 className={styles.title}>
-                    <Link href={caseStudyHref} className={styles.titleLink}>
-                      {project.title}
-                    </Link>
-                  </h3>
-                  <p className={styles.description}>{project.description}</p>
-
-                  <ul className={styles.capabilities}>
-                    {project.capabilities.map((capability) => (
-                      <li key={capability} className={styles.capability}>
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        {capability}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className={styles.techStack}>
-                    {project.tech.slice(0, CARD_TECH_LIMIT).map((tech) => (
-                      <span key={tech} className={styles.techTag}>
-                        {tech}
-                      </span>
-                    ))}
-                    {extraTech > 0 && (
-                      <span className={styles.techMore}>+{extraTech} more</span>
-                    )}
-                  </div>
-
-                  <Link href={caseStudyHref} className={styles.caseStudyLink}>
-                    View case study
-                    <ArrowRight size={15} />
-                  </Link>
                 </div>
               </motion.article>
             );

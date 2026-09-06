@@ -1,7 +1,7 @@
 # Ubunifu — Product Brand-Adoption Prompts
 
 Ready-to-paste prompts for bringing each **Ubunifu Technologies product** under the company
-brand (the warm-orange + purple system defined in this repo's
+brand (the orange-and-violet Ligature identity, anchored by ink navy, defined in this repo's
 [`src/app/globals.css`](src/app/globals.css), [`BRANDING.md`](BRANDING.md), the live `/brand`
 page, and the canonical masters in [`public/brand/`](public/brand/)).
 
@@ -27,35 +27,35 @@ any new product you build.
 
 | Role | Hex | Notes |
 |---|---|---|
-| Brand — Warm Orange | `#FF6B2C` | Ligature U, large accents, paths |
+| Identity — Signal Orange | `#FF6B2C` | Ligature U, large accents, paths |
 | Orange hover | `#E8581E` | |
-| **Orange deep** | `#C44615` | **The accessible variant — use for anything with white text** |
-| Accent — Purple | `#6D3FE8` | Second accent |
+| **Orange deep** | `#BF4314` | **The accessible variant — use for anything with white text** |
+| Identity — Digital Violet | `#6D3FE8` | Ligature T and interaction |
 | Purple deep | `#3D1FA0` | Pressed / strong |
-| Decorative blue | `#2E5BFF` | Soft background glows only — never text |
+| Data blue | `#2E5BFF` | Data and infrastructure visualisation only — never general decoration or text |
 | Text navy | `#1F1A36` | Headings & body (marketing) |
 | Text secondary | `#5A5170` | |
 | Text tertiary | `#6B6385` | (AA-safe; darkened from the old `#8B82A0`) |
 
 Signature gradient: `linear-gradient(135deg, #FF6B2C, #6D3FE8)`. It is a separate large-scale
 device for paths, progress treatments, headlines, and atmospheric backgrounds. It is **not**
-the logo fill and must never replace the Ligature's two solid colors.
+the logo fill and must never replace the Ligature’s two solid strokes.
 
 **Type:** Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small
 UPPERCASE labels. **No serif anywhere.**
 
-**Logo:** the canonical **Ubunifu Ligature**: a custom interlocking U/T glyph in two crisp
-solid-color paths, with an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) whose crown rises
-at an angle. The horizontal lockup spells **“Ubunifu Technologies”** on one readable baseline.
+**Logo:** the canonical **Ubunifu Ligature**: an open-stroke orange U (`#FF6B2C`) and violet T
+(`#6D3FE8`) interlocked as one glyph. The horizontal lockup spells **“Ubunifu Technologies”**
+at one readable size on one baseline.
 Use the supplied masters in [`public/brand/`](public/brand/): `ubunifu-mark.svg`,
-`ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and
+`ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`, `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and
 `ubunifu-lockup-white.svg`. Do not redraw, gradient-fill, recolor, box in, or substitute another
 mark for the Ligature. The tagline **"Consulting + products, built in Tanzania."** is supporting
 copy, never part of the navigation, mark, or lockup.
 
 **The accessibility bar (the #1 rule, learned the hard way):** bright `#FF6B2C` on white is only
-**2.84:1 — it fails WCAG AA for text.** So white text/icons sit on **`#C44615`** (≈4.9:1) or
-darker; orange-as-text on light uses `#C44615`/navy/purple. Bright `#FF6B2C` is reserved for
+**2.84:1 — it fails WCAG AA for text.** So white text/icons sit on **`#BF4314`** (≈5.2:1) or
+darker; orange-as-text on light uses `#BF4314`/navy/purple. Bright `#FF6B2C` is reserved for
 **large decorative fills** (the logo, accent shapes, icon tiles, borders). Every text/background
 pair clears **≥ 4.5:1** (≥ 3:1 for large text & UI) — in **both** light and dark mode.
 
@@ -83,29 +83,30 @@ adopt only the shared layer). When in doubt, ask before discarding an existing d
 You are working in the **Sifa** repo. Sifa is a **Ubunifu Technologies product** — a
 business-management platform for Tanzanian businesses (live). Its UI currently uses a
 **teal + amber** theme that predates the company brand. Your job: re-theme it to the Ubunifu
-brand (warm orange + purple) — cleanly, accessibly, and with **zero regressions**. The app lives
-in the `frontend/` subfolder.
+brand (orange + violet, anchored by ink navy) — cleanly, accessibly, and with **zero
+regressions**. The app lives in the `frontend/` subfolder.
 
 ## The Ubunifu brand (the shared foundation to adopt)
-- Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
-- Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
-  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Identity — Signal Orange `#FF6B2C` (hover `#E8581E`, DEEP `#BF4314` for anything with white text).
+- Identity — Digital Violet `#6D3FE8` (deep `#3D1FA0`).
+- Canonical mark — the **Ubunifu Ligature**, an open-stroke orange U (`#FF6B2C`) and violet T
+  (`#6D3FE8`) interlocked as one glyph.
 - Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
-  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
-  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`,
+  `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not
+  redraw them.
 - Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
   progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
-- Decorative blue `#2E5BFF` — soft glows only, never text.
+- Data blue `#2E5BFF` — data and infrastructure visualisation only, never general decoration or text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small labels.
-- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Full lockup: “Ubunifu Technologies” at one readable size on one baseline.
 - Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
   inside the navigation, mark, or lockup.
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA — in BOTH light AND dark mode (Sifa has dark mode via next-themes).
    Bright `#FF6B2C` on white is 2.84:1 → FAILS for text. White text/icons (buttons, badges,
-   CTAs) → use `#C44615` (≈4.9:1) or darker. Orange-as-text on light → `#C44615`/navy/purple,
+   CTAs) → use `#BF4314` (≈5.2:1) or darker. Orange-as-text on light → `#BF4314`/navy/purple,
    never bright `#FF6B2C`. Bright orange is fine for large decorative fills (logo, icon tiles,
    borders). Every text/bg pair ≥ 4.5:1 (≥ 3:1 large/UI).
 2. KEEP FUNCTIONAL/SEMANTIC COLOURS MEANINGFUL — success=green, danger=red, info=blue,
@@ -133,7 +134,7 @@ in the `frontend/` subfolder.
 
 ## What to change
 1. `globals.css` (the main job): repoint `--primary` teal → orange (`#FF6B2C` base; use
-   `#C44615`-class deep orange wherever white text sits on it). Repoint `--accent` amber →
+   `#BF4314`-class deep orange wherever white text sits on it). Repoint `--accent` amber →
    purple `#6D3FE8`. Update BOTH `:root` and `.dark`. Keep semantics per Rule 2 (warning stays
    amber, decoupled from accent).
 2. Add web fonts: Poppins (headings, 600/700/800) + Inter (body) via `next/font/google` in
@@ -141,7 +142,8 @@ in the `frontend/` subfolder.
 3. Replace the teal square + "S" identity with the canonical Ubunifu Ligature assets. Copy the exact
    relevant masters from the company website repo's `public/brand/` into Sifa's public assets:
    use `ubunifu-mark.svg` for compact light-surface signatures, `ubunifu-mark-white.svg` where a
-   reversed mark is required, and `ubunifu-lockup.svg` where the full “Ubunifu Technologies” name is useful.
+   reversed mark is required, and `ubunifu-lockup.svg` where the full “Ubunifu Technologies”
+   name is useful.
    Keep "Sifa" as adjacent product text, not inside or substituted for the Ligature. Update existing
    asset references, `manifest.json` `theme_color`, and `layout.tsx` `themeColor`; do not recreate
    the SVG or turn the Ligature into a gradient.
@@ -169,32 +171,33 @@ in the `frontend/` subfolder.
 
 You are working in the **Insight** repo. Ubunifu Insight is a **Ubunifu Technologies product** —
 a document-AI platform (live). Its UI uses a **teal** theme (OKLch tokens) that predates the
-company brand. Re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, accessibly, and
-with **zero regressions**. The app lives in the `frontend/` subfolder.
+company brand. Re-theme it to the Ubunifu brand (orange + violet, anchored by ink navy) —
+cleanly, accessibly, and with **zero regressions**. The app lives in the `frontend/` subfolder.
 
 ## The Ubunifu brand (the shared foundation to adopt)
-- Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
-- Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
-  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Identity — Signal Orange `#FF6B2C` (hover `#E8581E`, DEEP `#BF4314` for anything with white text).
+- Identity — Digital Violet `#6D3FE8` (deep `#3D1FA0`).
+- Canonical mark — the **Ubunifu Ligature**, an open-stroke orange U (`#FF6B2C`) and violet T
+  (`#6D3FE8`) interlocked as one glyph.
 - Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
-  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
-  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`,
+  `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not
+  redraw them.
 - Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
   progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
-- Decorative blue `#2E5BFF` — soft glows only, never text.
+- Data blue `#2E5BFF` — data and infrastructure visualisation only, never general decoration or text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small labels.
   No serif in the house system.
-- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Full lockup: “Ubunifu Technologies” at one readable size on one baseline.
 - Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
   inside the navigation, mark, or lockup.
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA. Bright `#FF6B2C` on white is 2.84:1 → FAILS for text. White
-   text/icons → `#C44615` or darker. Orange-as-text on light → `#C44615`/navy/purple. Bright
+   text/icons → `#BF4314` or darker. Orange-as-text on light → `#BF4314`/navy/purple. Bright
    orange only for large decorative fills. Every text/bg pair ≥ 4.5:1 (≥ 3:1 large/UI).
    ⚠️ COMPATIBILITY: Insight's tokens are authored in OKLch — express the brand colours in OKLch
-   too (convert `#FF6B2C`, `#6D3FE8`, `#C44615`, etc.) so you stay in the existing system. Get
+   too (convert `#FF6B2C`, `#6D3FE8`, `#BF4314`, etc.) so you stay in the existing system. Get
    BOTH the `:root` and the `.dark` token sets right (there's no visible toggle yet, but the
    `.dark` values must still be brand-correct and AA-compliant).
 2. KEEP FUNCTIONAL/SEMANTIC COLOURS MEANINGFUL — success=green, danger=red, info=blue,
@@ -259,29 +262,30 @@ with **zero regressions**. The app lives in the `frontend/` subfolder.
 You are working in the **Rafiki** repo. Rafiki ("Ubunifu Rafiki") is a **Ubunifu Technologies
 product** — embeddable widgets for Tanzanian businesses (contact forms, booking systems, blog
 tools). Its UI currently uses an **emerald-green** theme that predates the company brand. Your
-job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, accessibly, and with
-**zero regressions**. The app lives in the `frontend/` subfolder.
+job: re-theme it to the Ubunifu brand (orange + violet, anchored by ink navy) — cleanly,
+accessibly, and with **zero regressions**. The app lives in the `frontend/` subfolder.
 
 ## The Ubunifu brand (the shared foundation to adopt)
-- Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
-- Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
-  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Identity — Signal Orange `#FF6B2C` (hover `#E8581E`, DEEP `#BF4314` for anything with white text).
+- Identity — Digital Violet `#6D3FE8` (deep `#3D1FA0`).
+- Canonical mark — the **Ubunifu Ligature**, an open-stroke orange U (`#FF6B2C`) and violet T
+  (`#6D3FE8`) interlocked as one glyph.
 - Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
-  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
-  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`,
+  `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not
+  redraw them.
 - Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
   progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
-- Decorative blue `#2E5BFF` — soft glows only, never text.
+- Data blue `#2E5BFF` — data and infrastructure visualisation only, never general decoration or text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small labels.
-- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Full lockup: “Ubunifu Technologies” at one readable size on one baseline.
 - Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
   inside the navigation, mark, or lockup.
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA — this is the #1 requirement. Bright `#FF6B2C` on white is 2.84:1 →
    FAILS for text. Any element with white text/icons (buttons, badges, primary CTAs) must use
-   `#C44615` (≈4.9:1) or darker — never bright `#FF6B2C`. Orange-as-text on light → `#C44615`,
+   `#BF4314` (≈5.2:1) or darker — never bright `#FF6B2C`. Orange-as-text on light → `#BF4314`,
    navy, or purple. Bright orange is correct for large decorative fills (logo, accent shapes,
    icon tiles, borders, hover backgrounds). Every text/bg pair ≥ 4.5:1 (≥ 3:1 large text & UI/
    focus rings). There is NO dark mode today — do NOT add one (out of scope); nail light mode.
@@ -314,11 +318,11 @@ job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, access
 
 ## What to change
 1. `frontend/src/app/globals.css` (the main job): repoint the brand ramp from emerald to Ubunifu
-   orange (`#FF6B2C` base; build the 50→900 ramp around it, with `#C44615`-and-darker at the high
+   orange (`#FF6B2C` base; build the 50→900 ramp around it, with `#BF4314`-and-darker at the high
    end for white-text use). Set `--color-accent` to purple `#6D3FE8`. Keep the slate neutral base
    (clean app canvas — do NOT force lavender). Update semantics per Rule 2.
 2. `frontend/src/components/ui/Button.tsx`: the primary/brand variant must resolve to a
-   `#C44615`-class deep orange for its white-text default state (hover may go deeper/brighter but
+   `#BF4314`-class deep orange for its white-text default state (hover may go deeper/brighter but
    keep ≥ 4.5:1). Check every variant's text contrast.
 3. `frontend/src/components/ui/Badge.tsx`: keep semantic variants mapped to real meanings
    (success=green, etc.); only brand/neutral variants move to orange.
@@ -326,8 +330,9 @@ job: re-theme it to the Ubunifu brand (warm orange + purple) — cleanly, access
    canonical Ubunifu Ligature. Copy the exact `ubunifu-mark.svg` master from the company website
    repo's `public/brand/` and adapt the icon delivery mechanism without redrawing its paths;
    use `ubunifu-mark-white.svg` only when a dark icon surface requires the reversed version.
-   Copy `ubunifu-lockup.svg` only where the full “Ubunifu Technologies” name is needed, with “Rafiki” adjacent
-   as product text. Do not alter the interlocking U/T artwork or turn it into a gradient.
+   Copy `ubunifu-lockup.svg` only where the full “Ubunifu Technologies” name is needed, with
+   “Rafiki” adjacent as product text. Do not alter the open-stroke U/T Ligature artwork or turn
+   it into a gradient.
 5. Per-client default colour: change the default `primary_color` fallback from emerald to the
    brand. IMPORTANT: clients can still pick their own colour — do not hardcode-override their
    choices. For the widget's own white-on-colour buttons, default to the accessible deep orange
@@ -370,18 +375,20 @@ toward the Ubunifu purple family — while keeping Fanisi unmistakably Fanisi. T
 with product latitude."
 
 ## The Ubunifu house foundation
-- Brand orange `#FF6B2C` (hover `#E8581E`, deep `#C44615` for white-text use).
+- Signal Orange `#FF6B2C` (hover `#E8581E`, deep `#BF4314` for white-text use).
 - Purple `#6D3FE8` (deep `#3D1FA0`) — the HOUSE purple.
-- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
-  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Canonical mark — the **Ubunifu Ligature**, an open-stroke orange U (`#FF6B2C`) and violet T
+  (`#6D3FE8`) interlocked as one glyph.
 - Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
-  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
-  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`,
+  `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not
+  redraw them.
 - Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
   progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
 - Type to adopt: Poppins headings (600/700/800) + Inter body (400–700).
-- Logo system: use the supplied Ubunifu Ligature or full “Ubunifu Technologies” horizontal lockup as the secondary co-brand
-  signature you ADD alongside Fanisi's own "F" mark, never replacing it or merging the marks.
+- Logo system: use the supplied Ubunifu Ligature or full “Ubunifu Technologies” horizontal
+  lockup as the secondary co-brand signature you ADD alongside Fanisi's own "F" mark, never
+  replacing it or merging the marks.
 - Tagline (Ubunifu's): "Consulting + products, built in Tanzania." It remains supporting copy,
   never part of the navigation, either mark, or either lockup.
 
@@ -497,7 +504,7 @@ Report, quoting real file paths + values:
 
 ## STEP 1 — Choose the approach (state your choice + the evidence)
 - ADOPT (default): the product has only a default/undeliberate theme → re-theme it to the Ubunifu
-  orange/purple foundation below.
+  orange-and-violet Ligature foundation below, anchored by ink navy.
 - RECONCILE / CO-BRAND: the product already has a DELIBERATE, DOCUMENTED brand (its own named
   palette, a custom logo with rationale, a branding doc) → KEEP its product identity and adopt
   ONLY the shared layer (type, a "by Ubunifu" co-brand lockup, token + contrast standards),
@@ -506,19 +513,20 @@ Report, quoting real file paths + values:
   than a Ubunifu product — STOP and ask the owner before changing any brand identity.
 
 ## The Ubunifu brand (the shared foundation)
-- Brand — Warm Orange `#FF6B2C` (hover `#E8581E`, DEEP `#C44615` for anything with white text).
-- Accent — Purple `#6D3FE8` (deep `#3D1FA0`).
-- Canonical mark — the **Ubunifu Ligature**, an interlocking U/T glyph in two SOLID colours:
-  an orange U (`#FF6B2C`) and a purple T (`#6D3FE8`) with a rising angled crown.
+- Identity — Signal Orange `#FF6B2C` (hover `#E8581E`, DEEP `#BF4314` for anything with white text).
+- Identity — Digital Violet `#6D3FE8` (deep `#3D1FA0`).
+- Canonical mark — the **Ubunifu Ligature**, an open-stroke orange U (`#FF6B2C`) and violet T
+  (`#6D3FE8`) interlocked as one glyph.
 - Canonical masters — copy the appropriate supplied files from the Ubunifu website repo's
-  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-navy.svg`,
-  `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not redraw them.
+  `public/brand/`: `ubunifu-mark.svg`, `ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`,
+  `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and `ubunifu-lockup-white.svg`. Do not
+  redraw them.
 - Signature gradient `linear-gradient(135deg, #FF6B2C, #6D3FE8)` — a SEPARATE large path,
   progress, headline, or atmospheric device; never apply it to the Ligature or lockup.
-- Decorative blue `#2E5BFF` — soft glows only, never text.
+- Data blue `#2E5BFF` — data and infrastructure visualisation only, never general decoration or text.
 - Type: Poppins headings (600/700/800) + Inter body (400–700) + a monospace for small UPPERCASE
   labels. No serif in the house system.
-- Full lockup: “Ubunifu Technologies” on one readable baseline.
+- Full lockup: “Ubunifu Technologies” at one readable size on one baseline.
 - Tagline: "Consulting + products, built in Tanzania." Use it as supporting copy only, never
   inside the navigation, mark, or lockup.
 - Keep a clean neutral app canvas (white/near-white) — do NOT force the marketing site's lavender
@@ -526,8 +534,8 @@ Report, quoting real file paths + values:
 
 ## NON-NEGOTIABLE RULES
 1. PROPER CONTRAST — WCAG AA — this is the #1 requirement. Bright `#FF6B2C` on white is 2.84:1 →
-   FAILS for text. White text/icons (buttons, badges, CTAs) → use `#C44615` (≈4.9:1) or darker.
-   Orange-as-text on light → `#C44615`/navy/purple, never bright `#FF6B2C`. Bright orange is for
+   FAILS for text. White text/icons (buttons, badges, CTAs) → use `#BF4314` (≈5.2:1) or darker.
+   Orange-as-text on light → `#BF4314`/navy/purple, never bright `#FF6B2C`. Bright orange is for
    LARGE decorative fills only (logo, accent shapes, icon tiles, borders). Every text/bg pair
    ≥ 4.5:1 (≥ 3:1 large text, UI, focus rings) — in BOTH light AND dark mode if dark mode exists.
 2. KEEP FUNCTIONAL/SEMANTIC COLOURS MEANINGFUL — success=green, danger/destructive=red,
@@ -571,6 +579,7 @@ Report, quoting real file paths + values:
 The canonical brand source is this repo: [`BRANDING.md`](BRANDING.md), the supplied vector
 masters in [`public/brand/`](public/brand/), the live `/brand` page, and the implemented tokens in
 [`src/app/globals.css`](src/app/globals.css). If the brand changes there, update the hex values,
-type, Ligature rules, asset list, full-name lockup, and tagline guidance in every prompt above to match. Each prompt is
-deliberately self-contained (the brand spec is repeated in every block) so it can be pasted
+type, Ligature rules, asset list, full-name lockup, and tagline guidance in every prompt above
+to match. Each prompt is deliberately self-contained (the brand spec is repeated in every block)
+so it can be pasted
 standalone — that's by design, not duplication to "fix."

@@ -61,18 +61,20 @@
   background: var(--cta);
   color: #fff;
   font-size: 0.9375rem;
-  font-weight: 600;
-  border-radius: 10px;
+  font-weight: 700;
+  border-radius: var(--control-radius);
   text-decoration: none;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 14px var(--cta-shadow);
+  transition: background 0.2s ease;
 }
 
 .contactBtn:hover {
   background: var(--cta-hover);
   color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px var(--cta-shadow);
+}
+
+.contactBtn:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .futureSection {

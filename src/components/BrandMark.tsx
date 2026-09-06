@@ -1,22 +1,27 @@
 import React, { useId } from 'react';
+import { brandMarkPaths } from '@/lib/brand';
 import styles from './BrandMark.module.css';
 
 type BrandMarkProps = {
   className?: string;
   title?: string;
+  variant?: 'default' | 'inverse' | 'mono';
 };
 
 /**
- * The Ubunifu Ligature: an orange U and a purple T meet as one engineered
- * glyph. The rising T crown gives the mark forward motion while the shared
- * lower junction keeps the two initials visibly connected.
+ * The Ubunifu Ligature: an orange U and a violet T meet as one engineered
+ * glyph. The angled T crown gives the original mark its forward motion.
  */
-export const BrandMark: React.FC<BrandMarkProps> = ({ className = '', title }) => {
+export const BrandMark: React.FC<BrandMarkProps> = ({
+  className = '',
+  title,
+  variant = 'default',
+}) => {
   const titleId = useId();
 
   return (
     <svg
-      className={`${styles.mark} ${className}`}
+      className={`${styles.mark} ${styles[variant]} ${className}`}
       viewBox="0 0 64 64"
       role={title ? 'img' : undefined}
       aria-labelledby={title ? titleId : undefined}
@@ -24,30 +29,9 @@ export const BrandMark: React.FC<BrandMarkProps> = ({ className = '', title }) =
       focusable="false"
     >
       {title && <title id={titleId}>{title}</title>}
-      <path
-        d="M11 17v18c0 13 8 20 20 20 7 0 11-2 13-5"
-        fill="none"
-        stroke="var(--brand)"
-        strokeWidth="10"
-        strokeLinecap="square"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M43 13v23c0 11 6 18 14 18"
-        fill="none"
-        stroke="var(--primary)"
-        strokeWidth="10"
-        strokeLinecap="square"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M29 16 57 10"
-        fill="none"
-        stroke="var(--primary)"
-        strokeWidth="10"
-        strokeLinecap="square"
-        strokeLinejoin="round"
-      />
+      <path className={styles.u} d={brandMarkPaths.u} />
+      <path className={styles.t} d={brandMarkPaths.tStem} />
+      <path className={styles.t} d={brandMarkPaths.tCrown} />
     </svg>
   );
 };
@@ -64,10 +48,10 @@ export const BrandLockup: React.FC<BrandLockupProps> = ({
   <span
     className={`${styles.lockup} ${inverse ? styles.inverse : ''} ${className}`}
   >
-    <BrandMark className={styles.lockupMark} />
+    <BrandMark className={styles.lockupMark} variant={inverse ? 'inverse' : 'default'} />
     <span className={styles.wordmark}>
       <span className={styles.name}>Ubunifu</span>
-      <span className={styles.descriptor}>Technologies</span>
+      <span className={styles.technology}>Technologies</span>
     </span>
   </span>
 );

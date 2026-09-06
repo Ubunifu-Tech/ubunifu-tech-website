@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -13,6 +13,8 @@ export const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -25,18 +27,63 @@ export const Navbar: React.FC = () => {
     if (!isMobileMenuOpen) return;
 
     const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const menuNode = menuRef.current;
+    const focusable = () => [
+      menuButtonRef.current,
+      ...Array.from(
+        menuNode?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [],
+      ),
+    ].filter((item): item is HTMLElement => Boolean(item));
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsMobileMenuOpen(false);
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        window.requestAnimationFrame(() => menuButtonRef.current?.focus());
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKeyDown);
+    const focusFrame = window.requestAnimationFrame(() => {
+      menuNode?.querySelector<HTMLElement>('a[href]')?.focus();
+    });
 
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
+      if (previousFocus && menuNode?.contains(document.activeElement)) previousFocus.focus();
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 901px)');
+    const closeAtDesktop = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) setIsMobileMenuOpen(false);
+    };
+
+    closeAtDesktop(desktop);
+    desktop.addEventListener('change', closeAtDesktop);
+    return () => desktop.removeEventListener('change', closeAtDesktop);
+  }, []);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -66,7 +113,7 @@ export const Navbar: React.FC = () => {
                   className={`${styles.link} ${active ? styles.linkActive : ''}`}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <span className={styles.linkLabel}>{link.label}</span>
+                  <span>{link.label}</span>
                   {link.badge && <span className={styles.badge}>{link.badge}</span>}
                   {active && (
                     <motion.span
@@ -90,6 +137,7 @@ export const Navbar: React.FC = () => {
               Start a project
             </Link>
             <button
+              ref={menuButtonRef}
               className={`${styles.hamburger} ${isMobileMenuOpen ? styles.active : ''}`}
               onClick={toggleMobileMenu}
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -104,7 +152,15 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      <div id="mobile-navigation" className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}>
+      <div
+        ref={menuRef}
+        id="mobile-navigation"
+        className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}
+        role={isMobileMenuOpen ? 'dialog' : undefined}
+        aria-modal={isMobileMenuOpen || undefined}
+        aria-label={isMobileMenuOpen ? 'Mobile navigation' : undefined}
+        aria-hidden={!isMobileMenuOpen}
+      >
         <div className={styles.mobileLinks}>
           {navLinks.map((link) => (
             <Link

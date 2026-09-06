@@ -2,16 +2,11 @@
 // Add, remove, or reorder products by editing this list. Components iterate
 // over it and don't care about specific products.
 //
-// `primary` is an optional screenshot of the live product. Only include real
-// screenshots. If the product isn't live or we don't have a screenshot, leave
-// `primary` undefined and the card renders a branded placeholder panel.
+// Product visuals are kept separate from this factual content. Marketing pages
+// use one clearly labelled conceptual illustration for the product family;
+// names, statuses, capabilities, and live links remain accessible HTML.
 
 export type ProductStatus = 'live' | 'soon' | 'available';
-
-export type ProductScreenshot = {
-  src: string;
-  alt: string;
-};
 
 export type Product = {
   name: string;
@@ -22,7 +17,6 @@ export type Product = {
   url: string | null;
   domain: string;
   cta: string;
-  primary?: ProductScreenshot;
 };
 
 export const products: ReadonlyArray<Product> = [
@@ -41,11 +35,7 @@ export const products: ReadonlyArray<Product> = [
     status: 'live',
     url: 'https://insight.ubunifutech.com',
     domain: 'insight.ubunifutech.com',
-    cta: 'Try Insight',
-    primary: {
-      src: '/work/insight-generator.png',
-      alt: 'Insight Document Generator template gallery, including a Tanzania Tax Invoice template alongside NDAs, SOWs, lesson plans and offer letters',
-    },
+    cta: 'Open Insight',
   },
   {
     name: 'Ubunifu Sifa',
@@ -62,11 +52,7 @@ export const products: ReadonlyArray<Product> = [
     status: 'live',
     url: 'https://sifa.ubunifutech.com',
     domain: 'sifa.ubunifutech.com',
-    cta: 'Start free',
-    primary: {
-      src: '/work/sifa-dashboard.png',
-      alt: 'Sifa Intelligence Dashboard for Mama Amina Duka, showing daily sales, low-stock alerts, outstanding credit and credit aging buckets in TZS',
-    },
+    cta: 'Visit Sifa',
   },
   {
     name: 'Ubunifu Rafiki',

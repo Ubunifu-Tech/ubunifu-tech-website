@@ -94,6 +94,21 @@
   text-shadow: 0 1px 12px rgba(31, 26, 54, 0.72);
 }
 
+.artDisclosure {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+  padding: 0.4rem 0.55rem;
+  background: rgba(31, 26, 54, 0.88);
+  color: var(--text-inverse);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
 .leadBody {
   display: flex;
   flex: 1;
@@ -159,7 +174,7 @@
   color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: clamp(1.75rem, 3.4vw, 3.3rem);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.06;
 }

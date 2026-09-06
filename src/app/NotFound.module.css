@@ -95,18 +95,15 @@
   background: var(--cta);
   color: #fff;
   font-size: 0.9375rem;
-  font-weight: 600;
-  border-radius: 11px;
+  font-weight: 700;
+  border-radius: var(--control-radius);
   text-decoration: none;
-  box-shadow: 0 6px 18px var(--cta-shadow);
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .btnPrimary:hover {
   background: var(--cta-hover);
   color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 26px var(--cta-shadow);
 }
 
 .btnSecondary {
@@ -116,15 +113,20 @@
   background: #fff;
   color: var(--text-primary);
   font-size: 0.9375rem;
-  font-weight: 600;
-  border-radius: 11px;
+  font-weight: 700;
+  border-radius: var(--control-radius);
   border: 1px solid var(--border-hover);
   text-decoration: none;
-  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .btnSecondary:hover {
   border-color: var(--primary);
   color: var(--primary);
-  transform: translateY(-2px);
+}
+
+.btnPrimary:focus-visible,
+.btnSecondary:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }

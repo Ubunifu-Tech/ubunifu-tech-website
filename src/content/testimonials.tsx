@@ -1,6 +1,6 @@
-// Testimonials from real clients. Quotes are rewritten for length and
-// rhythm but the meaning is preserved. Never invent a sentiment that
-// wasn't actually expressed.
+// Testimonials from real clients. Feedback is paraphrased for length and
+// clarity while preserving the meaning. Never present a paraphrase as a
+// verbatim quotation or invent a sentiment that wasn't actually expressed.
 //
 // `quote` is the longer body (3–5 sentences). `pullQuote` is a tight
 // one-line excerpt suitable for hero placement. `project` is an optional

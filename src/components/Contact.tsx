@@ -177,8 +177,8 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.12, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className={styles.formHeader}>
-              <span>Project brief</span>
-              <span>Usually replies within two working days</span>
+              <span>Start with the problem</span>
+              <span>Direct to the Ubunifu Technologies team</span>
             </div>
 
             <div className={styles.honeypot} aria-hidden="true">

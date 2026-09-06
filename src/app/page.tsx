@@ -1,4 +1,6 @@
 import { Hero } from '@/components/Hero';
+import { EngagementPaths } from '@/components/EngagementPaths';
+import { CapabilitiesIndex } from '@/components/CapabilitiesIndex';
 import { ProblemStrip } from '@/components/ProblemStrip';
 import {
   WorkPreview,
@@ -13,7 +15,7 @@ import { pageMetadata } from '@/lib/metadata';
 export const metadata = pageMetadata({
   title: 'Consulting + products, built in Tanzania',
   description:
-    'Ubunifu is an Arusha-based consulting company and product studio. We advise, design, build, host, and operate web, data, AI, brand, and software systems.',
+    'Ubunifu Technologies is an Arusha-based technology consultancy that also builds and operates products across web, data, AI, brand, hosting, and software.',
   path: '/',
 });
 
@@ -23,10 +25,12 @@ export default function Home() {
   return (
     <main>
       <Hero />
-      <ProblemStrip />
+      <EngagementPaths />
+      <CapabilitiesIndex />
       <WorkPreview />
       <Testimonial />
       <ProductsProof />
+      <ProblemStrip />
       <Insights posts={latestPosts} />
       <CtaBand />
     </main>

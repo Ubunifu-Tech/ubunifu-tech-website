@@ -40,7 +40,7 @@
 .journalLink:focus-visible,
 .backLink:focus-visible {
   border-radius: 4px;
-  outline: 3px solid var(--primary-dim);
+  outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
 
@@ -53,7 +53,7 @@
   background: var(--brand-dim);
   color: var(--brand-deep);
   font-size: 0.68rem;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: 0.075em;
   text-transform: uppercase;
 }
@@ -112,23 +112,47 @@
   max-height: 680px;
   margin: 0;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 24px;
+  border-top: 1px solid var(--border-active);
+  border-bottom: 1px solid var(--border-active);
   background: var(--surface-3);
-  box-shadow: 0 24px 70px rgba(31, 26, 54, 0.13);
+}
+
+.cover::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 2;
+  width: clamp(6px, 0.65vw, 10px);
+  background: linear-gradient(to bottom, var(--brand) 0 58%, var(--primary) 58%);
+  pointer-events: none;
+  content: '';
 }
 
 .cover::after {
   position: absolute;
   inset: 0;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: inherit;
   pointer-events: none;
   content: '';
 }
 
 .coverImage {
   object-fit: cover;
+}
+
+.coverCaption {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  padding: 0.5rem 0.65rem;
+  background: rgba(31, 26, 54, 0.88);
+  color: var(--text-inverse-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .articleContainer {
@@ -157,7 +181,7 @@
   margin-bottom: 1.15rem;
   color: var(--text-primary);
   font-size: clamp(1.65rem, 3.5vw, 2.15rem);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.18;
 }
@@ -366,7 +390,7 @@
   }
 
   .cover {
-    border-radius: 18px;
+    border-radius: 0;
   }
 
   .articleContainer {
@@ -396,7 +420,7 @@
   }
 
   .cover {
-    border-radius: 14px;
+    border-radius: 0;
   }
 
   .content {

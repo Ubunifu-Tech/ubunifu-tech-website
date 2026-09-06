@@ -98,6 +98,18 @@
   object-position: top center;
 }
 
+.proof .focusCenter {
+  object-position: center;
+}
+
+.proof .focusLeft {
+  object-position: left center;
+}
+
+.proof .focusRight {
+  object-position: right center;
+}
+
 .panorama {
   height: clamp(170px, 20vw, 255px);
   margin-top: 0;

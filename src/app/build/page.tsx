@@ -1,68 +1,12 @@
+import Link from 'next/link';
 import { WorkPreview } from '@/components/HomePreviews';
 import { CtaBand } from '@/components/CtaBand';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { PageHeader } from '@/components/PageHeader';
-import { ServiceCycle } from '@/components/ServiceCycle';
-import { Spotlight } from '@/components/Spotlight';
-import { services, type Service } from '@/content/services';
+import { CapabilityJourney } from '@/components/CapabilityJourney';
 import styles from './Build.module.css';
 import { pageMetadata } from '@/lib/metadata';
-
-// Real proof (or a branded panel) for each service spotlight.
-function spotlightMedia(service: Service) {
-  switch (service.key) {
-    case 'web':
-      return {
-        image: {
-          src: '/work/usambara-hero.png',
-          alt: 'Usambara Destination website built by Ubunifu',
-          domain: 'usambaradestination.com',
-        },
-        overlap: { title: 'Live site', sub: 'Clear, accessible, enquiry-focused' },
-      };
-    case 'data':
-      return {
-        image: {
-          src: '/work/sifa-dashboard.png',
-          alt: 'Sifa intelligence dashboard with sales, stock and credit aging',
-        },
-        overlap: { title: 'Real dashboards', sub: 'Sales, stock and credit aging' },
-      };
-    case 'ai':
-      return {
-        image: {
-          src: '/work/insight-tutor.png',
-          alt: 'Ubunifu Insight tutor answering a question in Swahili',
-        },
-        overlap: { title: 'Answers in Swahili', sub: 'Grounded, with citations' },
-      };
-    case 'hosting':
-      return {
-        image: {
-          src: '/editorial/hosting-system-art.webp',
-          alt: 'Tactile connected system representing hosting, domains, professional email, backups, and security',
-        },
-        overlap: { title: 'One cared-for system', sub: 'Hosting, domains, email & backups' },
-      };
-    case 'branding':
-      return {
-        image: {
-          src: '/editorial/brand-system-art.webp',
-          alt: 'Tactile brand system translating one visual identity across coordinated print and digital touchpoints',
-        },
-        overlap: { title: 'Built to stay consistent', sub: 'One identity across every touchpoint' },
-      };
-    default:
-      return {
-        image: {
-          src: '/editorial/software-tanzania-learning.webp',
-          alt: 'Tactile workbench where research cards, modular pieces, and revision loops lead to one working assembly',
-        },
-        overlap: { title: 'Plan, build, support', sub: 'Roadmaps, training and advisory' },
-      };
-  }
-}
 
 export const metadata = pageMetadata({
   title: 'Services',
@@ -98,9 +42,11 @@ export default function BuildPage() {
     <>
       <main className={styles.main}>
         <PageHeader
+          variant="field"
+          register={['Advise', 'Design', 'Engineer', 'Support']}
           eyebrow="Consulting services"
-          title="From strategy to systems built to keep evolving."
-          lead="We advise, design, and build, then operate when the engagement calls for it. Bring us one focused problem or a connected set of systems. The same senior team stays close through delivery."
+          title="Advice, design, engineering, and support around the problem at hand."
+          lead="Start with one defined need or a connected piece of work. We scope honestly, combine only the capabilities the outcome requires, and agree what happens after launch."
           artwork={{
             primary: {
               src: '/editorial/software-tanzania-learning.webp',
@@ -110,66 +56,22 @@ export default function BuildPage() {
               src: '/editorial/hosting-system-art.webp',
               alt: 'Tactile connected infrastructure system for hosting, domains, email, backups, and security',
             },
-            caption: 'Strategy → design → build → operate',
+            caption: 'Conceptual illustration · Strategy to design, build, and operation',
           }}
         >
-          <a href="/contact" className={styles.heroBtn}>
+          <Link href="/contact" className={styles.heroBtn}>
             Start a project <span aria-hidden="true">→</span>
-          </a>
+          </Link>
         </PageHeader>
 
-        <section className={styles.cycleSection} aria-labelledby="capability-cycle-title">
-          <div className="container">
-            <ScrollReveal className={styles.cycleIntro}>
-              <span className={styles.cycleEyebrow}>Connected capabilities</span>
-              <h2 id="capability-cycle-title" className={styles.cycleHeading}>
-                Six disciplines. One accountable team.
-              </h2>
-              <p className={styles.cycleLead}>
-                Choose any starting point. The sequence shows how each capability
-                connects to the wider system—and where we can go deeper together.
-              </p>
-            </ScrollReveal>
-            <ServiceCycle />
-          </div>
-        </section>
-
-        {/* Services — spotlight rows */}
-        <section className={styles.servicesSection}>
-          <div className="container">
-            <ScrollReveal>
-              <span className="eyebrow">Capability detail</span>
-              <h2 className={styles.sectionHeading}>Go deeper into each discipline</h2>
-              <p className={styles.servicesSub}>
-                Use one service or combine several around the outcome. We will
-                tell you when a simpler answer is enough.
-              </p>
-            </ScrollReveal>
-
-            <div className={styles.spotlights}>
-              {services.map((service, index) => (
-                <Spotlight
-                  key={service.key}
-                  id={service.key}
-                  index={index + 1}
-                  eyebrow={service.summary}
-                  title={service.title}
-                  body={service.description}
-                  items={service.items}
-                  reversed={index % 2 === 1}
-                  {...spotlightMedia(service)}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
+        <CapabilityJourney />
 
         {/* Process */}
         <section className={styles.processSection}>
           <div className="container">
             <ScrollReveal>
               <span className="eyebrow">How it works</span>
-              <h2 className={styles.sectionHeading}>A delivery loop, not a handoff</h2>
+              <h2 className={styles.sectionHeading}>Four phases, with ownership clear at each one.</h2>
               <BuildCards className={styles.processGrid}>
                 {process.map((item) => (
                   <div key={item.step} className={styles.processCard}>

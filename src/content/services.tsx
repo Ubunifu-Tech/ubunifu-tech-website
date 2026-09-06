@@ -16,8 +16,10 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+export type ServiceKey = 'web' | 'hosting' | 'branding' | 'data' | 'ai' | 'strategy';
+
 export type Service = {
-  key: string;
+  key: ServiceKey;
   icon: LucideIcon;
   title: string;
   summary: string;
@@ -29,10 +31,10 @@ export const services: ReadonlyArray<Service> = [
   {
     key: 'web',
     icon: Code2,
-    title: 'Digital Presence & Web',
-    summary: 'Websites and web apps that work.',
+    title: 'Websites & Custom Platforms',
+    summary: 'Public experiences and operational tools.',
     description:
-      'Professional, fast, mobile-first websites and web applications, from informational sites to e-commerce and full custom platforms. Built to engage your audience and run reliably.',
+      'We design and build mobile-first public websites, e-commerce, and custom web platforms, including content management, enquiry paths, and internal workflows. Performance, accessibility, and maintainable ownership are part of the build.',
     items: [
       'Websites & web applications',
       'E-commerce',
@@ -45,7 +47,7 @@ export const services: ReadonlyArray<Service> = [
     key: 'hosting',
     icon: Server,
     title: 'Hosting, Domains & Email',
-    summary: 'Keep your business online.',
+    summary: 'Infrastructure with clear ownership.',
     description:
       'The infrastructure behind your website and apps, looked after as one system: managed hosting, domain registration and DNS, professional email, backups, certificates, and clear renewal ownership. The goal is fewer preventable outages and no ambiguity about who is watching what.',
     items: [
@@ -59,8 +61,8 @@ export const services: ReadonlyArray<Service> = [
   {
     key: 'branding',
     icon: Palette,
-    title: 'Branding & Graphic Design',
-    summary: 'A look that earns trust.',
+    title: 'Brand Identity & Design',
+    summary: 'One identity carried through daily materials.',
     description:
       'A cohesive visual identity and the design work that carries it day to day: logo, brand identity and style guide, plus the banners, flyers, social posts, business cards and marketing collateral your business runs on, all in one consistent look.',
     items: [
@@ -75,10 +77,10 @@ export const services: ReadonlyArray<Service> = [
   {
     key: 'data',
     icon: BarChart3,
-    title: 'Data Analytics & BI',
-    summary: 'Turn your data into decisions.',
+    title: 'Data & Business Intelligence',
+    summary: 'Reporting people can trust and act on.',
     description:
-      'We help you turn raw data into decisions: cleaned and organised, the KPIs that matter surfaced, and the dashboards and pipelines that keep them live and trustworthy.',
+      'We organise the data you already rely on, define the measures that matter, and build dashboards and pipelines that keep reporting current and traceable.',
     items: [
       'Analysis & reporting',
       'Dashboards & visualisation',
@@ -90,10 +92,10 @@ export const services: ReadonlyArray<Service> = [
   {
     key: 'ai',
     icon: Sparkles,
-    title: 'Intelligent Automation & AI',
-    summary: 'AI that earns its place.',
+    title: 'AI & Automation',
+    summary: 'Automation grounded in the work and source material.',
     description:
-      'We help you harness AI where it actually pays off: grounded assistants, predictive models, and automation for the repetitive work. Practical and responsible, deployed only where it solves a real problem, like the assistant we built into Safari King.',
+      'We build grounded assistants, predictive models, and automation for repetitive work when the use case justifies them. The system has to fit the workflow, source material, review process, and risk.',
     items: [
       'Custom AI / ML projects',
       'Grounded AI assistants',
@@ -105,8 +107,8 @@ export const services: ReadonlyArray<Service> = [
   {
     key: 'strategy',
     icon: Compass,
-    title: 'Digital Strategy & Consulting',
-    summary: 'A plan, and the skills to run it.',
+    title: 'Technology Strategy & Advisory',
+    summary: 'A clear technology decision and a workable path.',
     description:
       'We help you plan the digital side and build the capability to run it: transformation roadmaps, maturity assessment, training for your team, and ongoing advisory when the engagement calls for it.',
     items: [

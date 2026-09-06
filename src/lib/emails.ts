@@ -41,9 +41,9 @@ function header(): string {
     <td bgcolor="#1F1A36" style="background-color:#1F1A36;padding:26px 32px;">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td width="46" height="46" style="width:46px;height:46px;vertical-align:middle;"><img src="${SITE}/logo-v2.png" width="46" height="46" alt="Ubunifu Technologies" style="display:block;width:46px;height:46px;border:0;border-radius:10px;background:#FFFFFF;" /></td>
+          <td width="46" height="46" style="width:46px;height:46px;vertical-align:middle;"><img src="${SITE}/logo-v2.png" width="46" height="46" alt="" style="display:block;width:46px;height:46px;border:0;border-radius:9px;background:#1F1A36;" /></td>
           <td style="padding-left:13px;vertical-align:middle;">
-            <div style="color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:17px;line-height:1.15;">Ubunifu <span style="font-size:14px;font-weight:600;">Technologies</span></div>
+            <div style="color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:17px;line-height:1.15;">Ubunifu <span style="font-weight:600;">Technologies</span></div>
           </td>
         </tr>
       </table>
@@ -110,7 +110,7 @@ ${preheader(preview)}
 }
 
 function button(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;padding:13px 26px;background:#C44615;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;text-decoration:none;border-radius:10px;">${label}</a>`;
+  return `<a href="${href}" style="display:inline-block;padding:13px 26px;background:#BF4314;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;text-decoration:none;border-radius:4px;">${label}</a>`;
 }
 
 function buttonGhost(href: string, label: string): string {

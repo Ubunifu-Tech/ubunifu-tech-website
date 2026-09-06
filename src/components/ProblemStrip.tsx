@@ -38,7 +38,7 @@ const stages = [
   },
   {
     number: '02',
-    title: 'Design',
+    title: 'Shape',
     body: 'We shape the strategy, experience, brand, and system as one connected piece of work.',
   },
   {
@@ -48,8 +48,8 @@ const stages = [
   },
   {
     number: '04',
-    title: 'Run',
-    body: 'We host, support, measure, and improve what we launch. Delivery is not the finish line.',
+    title: 'Operate',
+    body: 'When ongoing support is agreed, we can host, monitor, and improve what we launch.',
   },
 ] as const;
 
@@ -75,7 +75,7 @@ export const ProblemStrip: React.FC = () => {
           people doing the work present from the first call onward.
         </p>
         <Link href="/build" className={styles.link}>
-          See how we engage <span aria-hidden="true">↗</span>
+          See how we engage <span aria-hidden="true">→</span>
         </Link>
         </motion.div>
 

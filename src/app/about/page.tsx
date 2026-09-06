@@ -11,7 +11,7 @@ import styles from './About.module.css';
 export const metadata = pageMetadata({
   title: 'About',
   description:
-    'Ubunifu is an Arusha-based consulting company and product studio. We build digital systems for clients and software products of our own.',
+    'Ubunifu Technologies is an Arusha-based technology consultancy. We build digital systems for clients and operate software products of our own.',
   path: '/about',
 });
 
@@ -20,6 +20,8 @@ export default function AboutPage() {
     <>
       <main>
         <PageHeader
+          variant="human"
+          register={['Small team', 'Senior involvement', 'Arusha']}
           eyebrow="About Ubunifu"
           title="Built in Arusha. Close to the work."
           lead="We are a small, senior team combining consulting and product building. The same people who help frame the problem stay present through design, engineering, launch, and any support we agree together."
@@ -28,14 +30,14 @@ export default function AboutPage() {
               src: '/editorial/software-tanzania-learning.webp',
               alt: 'Tactile workbench where research, modular decisions, and revision loops become a working assembly',
             },
-            caption: 'Built in Arusha · Learning by building',
+            caption: 'Conceptual illustration · Built in Arusha through learning by building',
           }}
         />
 
         <section className={`section ${styles.storySection}`}>
           <div className="container">
             <div className={styles.storyGrid}>
-              <ScrollReveal className={styles.storyText}>
+              <ScrollReveal>
                 <span className="eyebrow">Why we exist</span>
                 <h2 className={styles.storyHeading}>
                   A consultancy that learns by building products.
@@ -46,7 +48,7 @@ export default function AboutPage() {
               </ScrollReveal>
 
               <ScrollReveal className={styles.storyMedia} delay={120}>
-                <div className={styles.storyImageWrap}>
+                <figure className={styles.storyImageWrap}>
                   <Image
                     src="/editorial/build-or-buy.webp"
                     alt="Tactile editorial composition showing two equally valid paths from one problem: modular tools and a custom-built system"
@@ -54,9 +56,12 @@ export default function AboutPage() {
                     sizes="(max-width: 900px) 100vw, 560px"
                     className={styles.storyImg}
                   />
-                </div>
+                  <figcaption className={styles.storyCaption}>
+                    Conceptual illustration · Two practical routes from one operating problem
+                  </figcaption>
+                </figure>
                 <div className={styles.storyCard}>
-                  <p className={styles.storyQuote}>One studio. Two ways to help.</p>
+                  <p className={styles.storyQuote}>Tailored systems. Operated products.</p>
                   <p className={styles.storyCardSub}>
                     Commission a system, or use one we already operate.
                   </p>

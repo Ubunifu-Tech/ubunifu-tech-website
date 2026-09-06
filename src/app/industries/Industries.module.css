@@ -1,6 +1,135 @@
-.spotlightSection {
+.provenSection {
+  padding: clamp(5.5rem, 9vw, 9rem) 0;
   background: var(--background);
-  padding-top: 1rem;
+}
+
+.provenIntro {
+  display: grid;
+  align-items: end;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.provenTitle {
+  max-width: 12ch;
+  margin-top: 0.7rem;
+  color: var(--text-primary);
+  font-size: clamp(2.6rem, 5.8vw, 6rem);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.provenIntro > p {
+  max-width: 52ch;
+  justify-self: end;
+  color: var(--text-secondary);
+  font-size: clamp(1rem, 1.4vw, 1.16rem);
+  line-height: 1.72;
+}
+
+.provenMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  min-height: 360px;
+  overflow: hidden;
+  background: var(--text-primary);
+}
+
+.provenImage {
+  object-fit: cover;
+  object-position: center;
+}
+
+.provenRail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 3;
+  width: clamp(7px, 0.7vw, 11px);
+  background: linear-gradient(to bottom, var(--brand) 0 58%, var(--primary) 58% 100%);
+}
+
+.provenCaption {
+  position: absolute;
+  right: 1.4rem;
+  bottom: 1.25rem;
+  left: 1.75rem;
+  z-index: 3;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.52);
+  background: rgba(31, 26, 54, 0.88);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 12px rgba(31, 26, 54, 0.7);
+}
+
+.provenRegister {
+  display: grid;
+  min-height: 112px;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border-active);
+  grid-template-columns: 170px minmax(0, 1fr) auto;
+}
+
+.provenRegister > p,
+.provenLink {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.provenRegister ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.provenRegister li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-left: 1px solid var(--border-hover);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.provenRegister li:nth-child(n + 3) {
+  border-top: 1px solid var(--border-hover);
+}
+
+.provenRegister li span {
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+}
+
+.provenLink {
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding-left: clamp(1rem, 2.2vw, 2rem);
+  border-left: 1px solid var(--border-hover);
+  color: var(--brand-deep);
+  transition: gap 0.28s var(--ease-out-expo), color 0.2s ease;
+}
+
+.provenLink:hover {
+  gap: 1.7rem;
+  color: var(--text-primary);
 }
 
 .gridSection {
@@ -10,163 +139,164 @@
 
 .sectionIntro {
   display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-  align-items: center;
-  gap: clamp(2rem, 5vw, 4.5rem);
-  margin-bottom: 2.75rem;
+  align-items: stretch;
+  gap: clamp(2.5rem, 6vw, 6rem);
+  margin-bottom: clamp(3.5rem, 7vw, 6.5rem);
+  grid-template-columns: minmax(280px, 0.76fr) minmax(0, 1.24fr);
 }
 
 .introCopy {
+  align-self: end;
   max-width: 640px;
 }
 
 .heading {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  max-width: 15ch;
+  margin: 0.65rem 0 1.1rem;
   color: var(--text-primary);
-  margin: 0.5rem 0 0.75rem;
+  font-size: clamp(2.3rem, 4.6vw, 4.65rem);
+  font-weight: 700;
+  letter-spacing: -0.052em;
+  line-height: 0.98;
 }
 
 .sub {
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  max-width: 600px;
   color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 620px;
+  font-size: clamp(1rem, 1.35vw, 1.12rem);
+  line-height: 1.72;
 }
 
 .introVisual {
   position: relative;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 360px;
-  padding: clamp(2rem, 5vw, 3.5rem);
+  min-height: 380px;
+  padding: clamp(2.5rem, 5vw, 5rem);
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 0;
   background:
     radial-gradient(circle at 86% 12%, var(--primary-dim), transparent 38%),
     radial-gradient(circle at 12% 88%, var(--brand-dim), transparent 40%),
     var(--text-primary);
-  box-shadow: none;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.introVisual::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  content: '';
+  mask-image: linear-gradient(to bottom, transparent, #000);
+}
+
+.introBadge,
+.introStatement,
+.introFoot {
+  position: relative;
 }
 
 .introBadge {
-  position: relative;
   width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.42rem 0.8rem;
+  margin-bottom: auto;
+  color: var(--brand);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 100px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .introStatement {
-  max-width: 18ch;
-  margin-top: 1.5rem;
+  max-width: 20ch;
   color: #fff;
   font-family: var(--font-heading);
-  font-size: clamp(1.55rem, 3vw, 2.35rem);
+  font-size: clamp(1.7rem, 3.1vw, 3rem);
   font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.13;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
 }
 
 .introFoot {
-  max-width: 50ch;
-  margin-top: 1.2rem;
-  color: rgba(255, 255, 255, 0.62);
+  max-width: 54ch;
+  margin-top: 1.25rem;
+  color: rgba(255, 255, 255, 0.64);
   font-size: 0.9rem;
   line-height: 1.65;
 }
 
 .grid {
-  display: grid;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
-  grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 0;
+  border-top: 1px solid var(--border-active);
 }
 
 .card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: clamp(2rem, 4vw, 3.5rem);
-  border-bottom: 1px solid var(--border-hover);
+  display: grid;
+  min-height: 190px;
+  align-items: start;
+  gap: 1rem clamp(1.5rem, 4vw, 4.5rem);
+  padding: clamp(2rem, 4vw, 3.75rem) 0;
+  border-bottom: 1px solid var(--border-active);
   background: transparent;
+  grid-template-columns: 50px minmax(180px, 0.62fr) minmax(260px, 1fr) minmax(220px, 0.72fr);
 }
 
-.card:nth-child(odd) {
-  border-right: 1px solid var(--border-hover);
-}
-
-.cardIcon {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: auto;
-  height: auto;
-  margin-bottom: 2rem;
-  background: transparent;
+.cardIndex {
+  padding-top: 0.35rem;
   color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .cardTitle {
-  font-size: clamp(1.45rem, 2.6vw, 2.35rem);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  max-width: 14ch;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  font-size: clamp(1.55rem, 2.5vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
 }
 
 .cardSummary {
-  font-size: 0.9rem;
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.68;
 }
 
 .chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem 0.7rem;
-  margin-top: auto;
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border-hover);
+  list-style: none;
 }
 
 .chip {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border-hover);
+  color: var(--text-primary);
   font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 650;
 }
 
-.chip + .chip::before {
-  margin-right: 0.7rem;
-  color: var(--brand);
-  content: '/';
+.chip::before {
+  margin-right: 0.6rem;
+  color: var(--brand-deep);
+  content: '↳';
 }
 
 .note {
-  margin-top: 2.5rem;
-  font-size: 1rem;
+  margin-top: 2.75rem;
   color: var(--text-secondary);
+  font-size: 1rem;
 }
 
 .noteLink {
   color: var(--brand-deep);
   font-weight: 700;
-  text-decoration: none;
 }
 
 .noteLink:hover {
@@ -175,29 +305,89 @@
   text-underline-offset: 3px;
 }
 
-@media (max-width: 1024px) {
-  .sectionIntro {
+@media (max-width: 1040px) {
+  .sectionIntro,
+  .provenIntro {
     grid-template-columns: 1fr;
   }
 
-  .introVisual {
-    min-height: auto;
-    aspect-ratio: 16 / 10;
+  .provenIntro > p {
+    justify-self: start;
   }
 
+  .card {
+    grid-template-columns: 42px minmax(180px, 0.7fr) minmax(0, 1.3fr);
+  }
+
+  .chips {
+    grid-column: 2 / 4;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chip:nth-child(even) {
+    padding-left: 1rem;
+    border-left: 1px solid var(--border-hover);
+  }
 }
 
-@media (max-width: 600px) {
-  .grid {
+@media (max-width: 760px) {
+  .provenMedia {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+
+  .provenRegister {
+    padding: 1.5rem 0;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .provenRegister ul {
+    border-top: 1px solid var(--border-hover);
+  }
+
+  .provenRegister li:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .provenLink {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .card {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .cardSummary,
+  .chips {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 520px) {
+  .provenSection {
+    padding: 4.5rem 0;
+  }
+
+  .provenRegister ul,
+  .chips {
     grid-template-columns: 1fr;
   }
 
-  .card:nth-child(odd) {
-    border-right: 0;
+  .provenRegister li,
+  .provenRegister li:nth-child(even),
+  .chip:nth-child(even) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .provenRegister li + li {
+    border-top: 1px solid var(--border-hover);
   }
 
   .introVisual {
-    border-radius: 0;
-    aspect-ratio: 4 / 3;
+    min-height: 420px;
+    padding: 2rem;
   }
 }

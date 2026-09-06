@@ -81,6 +81,10 @@
   font-weight: 700;
 }
 
+.link:focus-visible {
+  outline-color: var(--text-inverse);
+}
+
 .stages {
   margin: 0;
   padding: 0;

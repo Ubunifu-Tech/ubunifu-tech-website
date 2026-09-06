@@ -15,22 +15,17 @@ export default function ProductsPage() {
     <>
       <main>
         <PageHeader
+          variant="proof"
+          register={['Workflow', 'Product', 'Current status']}
           eyebrow="Our products"
           title="Software we build and operate ourselves."
           lead="Insight and Sifa are live products. Rafiki is in development. Each is designed around a specific workflow we understand from the work."
           artwork={{
             primary: {
-              src: '/work/insight-tutor.png',
-              alt: 'Ubunifu Insight tutoring interface answering in context',
-              focus: 'top',
+              src: '/editorial/ubunifu-product-family-v2.webp',
+              alt: 'Three connected tactile instruments representing the workflows behind Ubunifu Insight, Sifa, and Rafiki',
             },
-            secondary: {
-              src: '/work/sifa-dashboard.png',
-              alt: 'Ubunifu Sifa business intelligence dashboard',
-              focus: 'top',
-            },
-            caption: 'Products we build and operate',
-            kind: 'proof',
+            caption: 'Conceptual illustration · The Ubunifu product family',
           }}
         />
 

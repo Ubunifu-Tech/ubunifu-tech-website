@@ -73,6 +73,7 @@ function FeaturedCard({ post }: { post: PostMeta }) {
         />
         <span className={styles.featuredShade} aria-hidden="true" />
         <span className={styles.featuredKicker}>Latest story</span>
+        <span className={styles.artDisclosure}>Conceptual illustration</span>
       </div>
 
       <div className={styles.featuredBody}>
@@ -106,6 +107,7 @@ function PostCard({ post, index }: { post: PostMeta; index: number }) {
           className={styles.cardImage}
         />
         <span className={styles.cardIndex}>{num(index)}</span>
+        <span className={styles.artDisclosure}>Conceptual illustration</span>
       </div>
 
       <div className={styles.cardBody}>
@@ -150,7 +152,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
     <>
       <div className={styles.filterBar}>
         <fieldset className={styles.filters}>
-          <legend className={styles.filterLegend}>Filter journal articles by topic</legend>
+          <legend className={styles.filterLegend}>Filter insights by topic</legend>
           {available.map((filter) => (
             <button
               key={filter}

@@ -37,7 +37,7 @@ export const objectives: ReadonlyArray<Objective> = [
   {
     icon: Accessibility,
     title: 'Make it accessible',
-    body: 'Digital transformation that organisations of every size can actually reach, not only those who can afford a foreign vendor.',
+    body: 'Practical technology work sized for Tanzanian organisations, with clear trade-offs and a path their teams can own.',
   },
   {
     icon: MapPin,
@@ -64,11 +64,11 @@ export type ApproachStep = {
 export const approach: ReadonlyArray<ApproachStep> = [
   {
     title: 'Listen first',
-    body: 'We start from your reality — your workflows, your market, your constraints — not a template.',
+    body: 'We start from your workflows, market, constraints, and the people who will use or run the result.',
   },
   {
     title: 'Scope honestly',
-    body: 'A clear plan: timeline, deliverables, and pricing you can trust. We tell you what is realistic.',
+    body: 'We make the timeline, deliverables, pricing, dependencies, and open decisions explicit before delivery begins.',
   },
   {
     title: 'Build iteratively',

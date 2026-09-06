@@ -1,8 +1,8 @@
 # Ubunifu Technologies — Project Roadmap
 
-This roadmap starts from the site as it is now: a Next.js website for an Arusha-based consulting company and product studio. [`POSITIONING.md`](POSITIONING.md) owns company claims, [`WEBSITE_CONTENT.md`](WEBSITE_CONTENT.md) maps the implemented site, and [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) records completed redesign work.
+This roadmap starts from the site as it is now: a Next.js website for an Arusha-based technology consultancy that also builds and operates products. [`POSITIONING.md`](POSITIONING.md) owns company claims, [`WEBSITE_CONTENT.md`](WEBSITE_CONTENT.md) maps the implemented site, and [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) records completed redesign work.
 
-Last refreshed: 23 August 2026.
+Last refreshed: 5 September 2026.
 
 ## Current baseline
 
@@ -15,15 +15,16 @@ Last refreshed: 23 August 2026.
 
 ### Homepage and public proof
 
-- [x] Homepage sequence: full-width consulting hero, four grounded differentiators, named client work, attributed testimonial, product family, latest Journal articles, and closing contact band.
-- [x] Safari King Africa and Usambara Destination have dedicated client case studies with real screenshots and documented functionality.
+- [x] Homepage sequence: full-width consulting hero, two engagement paths, scannable capabilities, named client work, attributed testimonial, product family, delivery method, latest Journal articles, and closing contact band.
+- [x] Safari King Africa and Usambara Destination have dedicated client case studies with conceptual workflow art, documented functionality, and direct links to the live work.
 - [x] Insight and Sifa are presented as available products; Rafiki is clearly marked as in development.
 - [x] Product availability is kept separate from customer-count, adoption, revenue, conversion, and performance claims.
 
 ### Brand, content, and platform
 
-- [x] The solid two-color Ubunifu Ligature is implemented across the site: an interlocking orange U and purple T with a rising angled crown, paired with the full “Ubunifu Technologies” wordmark on one baseline; canonical SVG assets live in `public/brand/` and a public `/brand` kit.
+- [x] The original Ubunifu Ligature is implemented across the site: an orange U and violet T interlock as one mark, with dark navy anchoring the full “Ubunifu Technologies” wordmark and wider system; canonical SVG assets live in `public/brand/` and a public `/brand` kit.
 - [x] Poppins, Inter, the canonical palette, reduced-motion behavior, and the tactile editorial-cover system are documented in `BRANDING.md`.
+- [x] Navy, orange, purple, and blue have distinct roles; inverse treatments, shared control geometry, responsive navigation height, footer gutters, and conceptual-art disclosures now follow one system.
 - [x] Journal articles are Markdown files in `_posts/`, with validated frontmatter, route-level metadata, and editorial cover images.
 - [x] The contact route uses strict validation, a honeypot, streaming body limits, bounded Vercel-aware throttling, Resend delivery, and best-effort acknowledgements.
 - [x] Contact and careers privacy language, security headers, sitemap coverage, metadata, and the branded 404 are implemented.
@@ -35,7 +36,7 @@ Last refreshed: 23 August 2026.
 - [ ] Recheck volatile product copy against the current Insight and Sifa interfaces before each release.
 - [ ] Replace broad case-study outcome language with measured results only when analytics or operational records support it and the client approves publication.
 - [ ] Add client testimonials only with clear attribution and retained source approval.
-- [ ] Add more real product and client screenshots when they demonstrate a verified workflow rather than decorative sample metrics.
+- [ ] Add approved client evidence only when it is sanitised, meaningfully demonstrates a workflow, and is stronger than the live-site link already provided.
 
 ### 2. Production operations
 
@@ -43,6 +44,10 @@ Last refreshed: 23 August 2026.
 - [ ] Add a distributed edge or WAF rate limit for `/api/contact`; the in-process throttle is only a bounded fallback and is not shared across instances.
 - [ ] Add privacy-respecting analytics only with a defined measurement purpose and corresponding privacy-notice update.
 - [ ] Document product-specific privacy, security, support, and status information on the product surfaces that own those facts.
+
+### 3. Brand delivery
+
+- [ ] Refresh social-preview messaging around the approved Ubunifu Ligature when a social-card pass is explicitly commissioned; existing preview files remain campaign media rather than logo masters.
 
 ### 3. Content workflow
 

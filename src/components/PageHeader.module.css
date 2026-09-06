@@ -142,6 +142,11 @@
   gap: 0.75rem;
 }
 
+.withArtwork .actions a:focus-visible,
+.withArtwork .actions button:focus-visible {
+  outline-color: var(--text-inverse);
+}
+
 .withArtwork .topline {
   border-bottom-color: rgba(255, 255, 255, 0.24);
   color: rgba(255, 255, 255, 0.78);
@@ -163,8 +168,192 @@
   color: rgba(255, 255, 255, 0.66);
 }
 
+.register {
+  display: grid;
+  width: 100%;
+  margin: clamp(1.5rem, 3vh, 2.5rem) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
+  list-style: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.register li {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.register li + li {
+  border-left: 1px solid var(--border-hover);
+}
+
+.register span {
+  color: var(--brand-deep);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.07em;
+}
+
+.withArtwork .register {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.withArtwork .register li {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.withArtwork .register li + li {
+  border-left-color: rgba(255, 255, 255, 0.22);
+}
+
+.withArtwork .register span {
+  color: var(--brand);
+}
+
+/* Build and Industries use a broad spatial statement. */
+.field.withArtwork {
+  min-height: clamp(680px, 84svh, 900px);
+}
+
+.field .title {
+  font-size: clamp(3.35rem, 6.5vw, 7.35rem);
+}
+
+.field .artwork {
+  --art-opacity: 0.78;
+}
+
+/* Work and Products behave like evidence covers: image first, copy anchored. */
+.proof.withArtwork {
+  min-height: clamp(720px, 88svh, 960px);
+}
+
+.proof .inner {
+  justify-content: flex-start;
+}
+
+.proof .title {
+  margin-top: auto;
+  margin-bottom: clamp(1.5rem, 3vh, 2.5rem);
+  font-size: clamp(3.5rem, 7vw, 7.8rem);
+}
+
+.proof .supportRow {
+  width: 100%;
+  max-width: none;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.proof .lead {
+  max-width: 720px;
+  margin-left: 0;
+}
+
+.proof .artLabel {
+  margin-top: 1.25rem;
+}
+
+.proof .artwork {
+  --art-opacity: 0.84;
+}
+
+/* About and Careers have a calmer, more human pace. */
+.human.withArtwork {
+  min-height: clamp(600px, 72svh, 780px);
+}
+
+.human .title {
+  width: min(100%, 1180px);
+  font-size: clamp(3.15rem, 5.7vw, 6.25rem);
+}
+
+.human .lead {
+  max-width: 760px;
+  font-size: clamp(1.08rem, 1.5vw, 1.28rem);
+}
+
+.human .topline {
+  width: min(100%, 1100px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.human .supportRow {
+  max-width: 860px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.human .register {
+  width: min(100%, 980px);
+  align-self: center;
+  border-bottom: 0;
+}
+
+.human .artwork {
+  --art-opacity: 0.68;
+}
+
+/* Contact is intentionally direct and typographic. */
+.contact.withArtwork {
+  min-height: clamp(650px, 80svh, 850px);
+}
+
+.contact .title {
+  width: min(100%, 1540px);
+  font-size: clamp(3.8rem, 7.8vw, 8.7rem);
+}
+
+.contact .topline {
+  align-items: center;
+  justify-content: center;
+  border-bottom: 0;
+}
+
+.contact .topline span:last-child {
+  display: none;
+}
+
+.contact .supportRow {
+  max-width: 780px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.contact .register {
+  width: min(100%, 980px);
+  align-self: center;
+  margin-top: clamp(2.5rem, 5vh, 4rem);
+  border-bottom: 0;
+}
+
+.contact .artLabel {
+  align-self: center;
+  text-align: center;
+}
+
+.contact .artwork {
+  --art-opacity: 0.58;
+}
+
 @media (max-width: 840px) {
   .header {
+    min-height: auto;
+  }
+
+  .field.withArtwork,
+  .proof.withArtwork,
+  .human.withArtwork,
+  .contact.withArtwork {
     min-height: auto;
   }
 
@@ -175,6 +364,15 @@
   .title {
     width: min(100%, 1040px);
     max-width: none;
+    font-size: clamp(3rem, 9.5vw, 5.5rem);
+  }
+
+  .field .title,
+  .proof .title,
+  .human .title,
+  .contact .title {
+    width: min(100%, 1040px);
+    margin-top: clamp(2.25rem, 4.5vh, 3.75rem);
     font-size: clamp(3rem, 9.5vw, 5.5rem);
   }
 
@@ -189,13 +387,20 @@
 
 @media (max-width: 660px) {
   .header {
-    margin-top: 64px;
+    margin-top: var(--nav-height);
   }
 
   .inner {
     min-height: auto;
     padding-top: 2.75rem;
     padding-bottom: 3rem;
+  }
+
+  .field.withArtwork,
+  .proof.withArtwork,
+  .human.withArtwork,
+  .contact.withArtwork {
+    min-height: auto;
   }
 
   .topline {
@@ -215,9 +420,51 @@
     letter-spacing: -0.052em;
   }
 
+  .field .title,
+  .proof .title,
+  .human .title,
+  .contact .title {
+    margin-top: 2rem;
+    margin-bottom: 2.25rem;
+    font-size: clamp(2.7rem, 13vw, 4.35rem);
+  }
+
   .artLabel {
     align-self: flex-start;
     line-height: 1.5;
+  }
+
+  .register {
+    grid-auto-flow: row;
+    grid-auto-rows: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .register li {
+    min-height: 46px;
+    padding-right: 0.65rem;
+    padding-left: 0.65rem;
+  }
+
+  .register li + li {
+    border-left: 0;
+  }
+
+  .register li:nth-child(even) {
+    border-left: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .register li:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .proof .supportRow {
+    text-align: center;
+  }
+
+  .proof .lead {
+    margin-right: auto;
+    margin-left: auto;
   }
 }
 

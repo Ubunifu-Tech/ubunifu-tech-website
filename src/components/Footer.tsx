@@ -36,7 +36,8 @@ export const Footer: React.FC = () => {
                       rel="noopener noreferrer"
                       className={styles.colLink}
                     >
-                      {link.label}
+                      {link.label} <span aria-hidden="true">↗</span>
+                      <span className="srOnly"> (opens in a new tab)</span>
                     </a>
                   );
                 }

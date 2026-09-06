@@ -12,8 +12,8 @@ export type Value = {
 export const values: ReadonlyArray<Value> = [
   {
     icon: Globe,
-    title: 'Built for Tanzania, not adapted',
-    body: 'We start from the workflows, connectivity, languages, and payment realities that exist here, and build around them, rather than retrofitting tools made for somewhere else.',
+    title: 'Start from Tanzanian realities',
+    body: 'We build around the workflows, connectivity, languages, and payment realities that exist here.',
   },
   {
     icon: Wrench,
@@ -22,12 +22,12 @@ export const values: ReadonlyArray<Value> = [
   },
   {
     icon: Zap,
-    title: 'Pragmatic, not flashy',
-    body: 'We ship what solves the problem, not what looks impressive in a demo. AI and automation go in only where they genuinely earn their place.',
+    title: 'Use technology deliberately',
+    body: 'Every technical choice has to solve a real part of the problem. AI and automation are included only when the workflow and value justify them.',
   },
   {
     icon: Users,
-    title: 'One team, no handoffs',
-    body: 'You work directly with the people who do the work. No account managers, no telephone game, just clear and honest communication.',
+    title: 'Work with the people doing the work',
+    body: 'The senior people framing the problem stay present through design, engineering, review, and the agreed handover or support period.',
   },
 ];

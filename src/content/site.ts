@@ -5,7 +5,7 @@ export const site = {
   name: 'Ubunifu Technologies',
   tagline: 'Consulting + products, built in Tanzania.',
   shortDescription:
-    'An Arusha-based consulting company and product studio working across brand, software, data, and AI.',
+    'An Arusha-based technology consultancy that also builds and operates products across brand, software, data, and AI.',
   location: 'Arusha, Tanzania',
 
   contact: {
@@ -79,7 +79,7 @@ export const footerColumns: ReadonlyArray<{
       { label: 'Industries', href: '/industries' },
       { label: 'Our Work', href: '/work' },
       { label: 'About', href: '/about' },
-      { label: 'Blog', href: '/blog' },
+      { label: 'Insights', href: '/blog' },
       { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
     ],

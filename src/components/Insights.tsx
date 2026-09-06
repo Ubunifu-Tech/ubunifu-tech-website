@@ -58,7 +58,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
             <h2 className={styles.heading}>Notes from the work</h2>
           </div>
           <Link href="/blog" className={styles.headLink}>
-            Read the blog <Arrow />
+            Explore insights <Arrow />
           </Link>
         </motion.div>
 
@@ -82,6 +82,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
                       className={styles.image}
                     />
                   </MediaReveal>
+                  <span className={styles.artDisclosure}>Conceptual illustration</span>
                   <span className={styles.leadNumber} aria-hidden="true">01</span>
                 </div>
               ) : null}

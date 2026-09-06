@@ -6,7 +6,7 @@ Last updated: 23 August 2026.
 
 ## Core position
 
-**Ubunifu Technologies is an Arusha-based consulting company and product studio.** We advise, design, build, host, and operate brand, web, software, data, and AI systems for Tanzanian organisations, while building software products of our own.
+**Ubunifu Technologies is an Arusha-based technology consultancy that also builds and operates products.** We advise, design, build, host, and operate brand, web, software, data, and AI systems for Tanzanian organisations, while building software products of our own.
 
 Canonical tagline:
 
@@ -39,7 +39,7 @@ To partner with Tanzanian organisations and deliver digital systems that are tec
 ### Proven
 
 - **Named client work:** Safari King Africa and Usambara Destination have published case studies on `/work`. Describe only the functionality documented there.
-- **Product capability:** Ubunifu Insight and Ubunifu Sifa are available at their published domains. Product descriptions must match current interfaces, screenshots, and tested behavior.
+- **Product capability:** Ubunifu Insight and Ubunifu Sifa are available at their published domains. Product descriptions must match current interfaces and verified behavior; conceptual artwork must never be treated as interface evidence.
 - **Team capability:** The team’s documented disciplines cover data, software, AI, systems, hosting, support, brand, and design.
 
 ### Capability, not proof of sector experience
@@ -187,7 +187,7 @@ Public pricing is not promised. Quotes should state scope, deliverables, assumpt
 | [`BRANDING.md`](BRANDING.md) | Logo, color, typography, editorial imagery, and visual rules |
 | [`src/content/site.ts`](src/content/site.ts) | Current company details, navigation, and footer links |
 | [`src/content/services.tsx`](src/content/services.tsx) | Service-page titles, summaries, and lists |
-| [`src/content/products.tsx`](src/content/products.tsx) | Current product status, descriptions, links, and screenshots |
+| [`src/content/products.tsx`](src/content/products.tsx) | Current product status, descriptions, capabilities, and links |
 | [`src/content/sectors.tsx`](src/content/sectors.tsx) | Proven flags, sector summaries, and claim boundaries |
 | [`src/content/portfolio.tsx`](src/content/portfolio.tsx) | Named client case-study evidence |
 

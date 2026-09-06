@@ -2,11 +2,11 @@
 
 This is the concise source of truth for Ubunifu’s visual identity. Keep it aligned with the implemented tokens in [`src/app/globals.css`](src/app/globals.css), the logo component in [`src/components/BrandMark.tsx`](src/components/BrandMark.tsx), and the live brand kit at [`/brand`](https://ubunifutech.com/brand).
 
-Last updated: 23 August 2026.
+Last updated: 5 September 2026.
 
 ## Brand idea
 
-Ubunifu is an Arusha-based consulting company and product studio. The identity should feel technically credible, practical, warm, and built close to the work.
+Ubunifu Technologies is an Arusha-based technology consultancy that also builds and operates products. The identity should feel technically credible, practical, warm, and built close to the work.
 
 The canonical tagline is:
 
@@ -16,16 +16,17 @@ Use the tagline as supporting copy, never inside the navigation or logo lockup.
 
 ## The Ubunifu Ligature
 
-The canonical mark is the **Ubunifu Ligature**: an interlocking U/T glyph built specifically for **Ubunifu Technologies**. The orange U supplies an open, grounded base; the purple T crosses and continues through it, with a rising angled crown that gives the symbol momentum. Together the two letters read as one connected piece of craft rather than a generic technology icon.
+The canonical mark is the original **Ubunifu Ligature**: a custom orange U and violet T that interlock as one engineered glyph. The open strokes keep the symbol energetic and recognizable, while the angled T crown introduces forward motion. Ink Navy anchors the wordmark, typography, rules, and dark fields around it.
 
-The full horizontal lockup always spells **Ubunifu Technologies** on one baseline. Neither word is a descriptor or optional subline: both carry the company name at a clear, readable scale.
+The full horizontal lockup always spells **Ubunifu Technologies** on one baseline. Neither word is a descriptor or optional subline: both use the same size and cap height, with only a subtle weight change.
 
-The master mark uses two crisp solid colors:
+The master identity uses three crisp solid colors:
 
-- Orange U: `#FF6B2C`
-- Purple T: `#6D3FE8`
+- Signal Orange U: `#FF6B2C`
+- Digital Violet T: `#6D3FE8`
+- Ink Navy wordmark and structure: `#1F1A36`
 
-The orange-to-purple gradient is a separate signature device for large headlines, paths, progress treatments, and atmospheric backgrounds. Do not apply a gradient to the master Ligature.
+The orange-to-violet gradient is a separate signature device for large paths, progress treatments, and atmospheric backgrounds. Do not apply a gradient to the master Ligature.
 
 ### Canonical assets
 
@@ -33,23 +34,23 @@ Downloadable vector masters live in [`public/brand/`](public/brand/):
 
 | Asset | Use |
 |---|---|
-| [`ubunifu-mark.svg`](public/brand/ubunifu-mark.svg) | Default two-color Ligature on light backgrounds |
+| [`ubunifu-mark.svg`](public/brand/ubunifu-mark.svg) | Default orange-and-violet Ligature on light backgrounds |
 | [`ubunifu-lockup.svg`](public/brand/ubunifu-lockup.svg) | Full-color “Ubunifu Technologies” horizontal lockup on light backgrounds |
+| [`ubunifu-mark-inverse.svg`](public/brand/ubunifu-mark-inverse.svg) | Orange-and-violet Ligature prepared for dark backgrounds |
 | [`ubunifu-mark-navy.svg`](public/brand/ubunifu-mark-navy.svg) | Single-color mark where a restrained treatment is needed |
-| [`ubunifu-mark-white.svg`](public/brand/ubunifu-mark-white.svg) | Reversed mark on dark backgrounds |
-| [`ubunifu-lockup-white.svg`](public/brand/ubunifu-lockup-white.svg) | Reversed horizontal lockup on dark backgrounds |
+| [`ubunifu-mark-white.svg`](public/brand/ubunifu-mark-white.svg) | Single-colour white mark for purple or image fields |
+| [`ubunifu-lockup-white.svg`](public/brand/ubunifu-lockup-white.svg) | Full-color Ligature with a white wordmark on dark backgrounds |
 
 Raster delivery assets:
 
-- [`public/logo-v2.png`](public/logo-v2.png) — 512 × 512 social avatar
-- [`public/og.png`](public/og.png) — 1672 × 941 default social preview; a dimensional campaign rendering, not a replacement logo master
+- [`public/logo-v2.png`](public/logo-v2.png) — 512 × 512 navy avatar tile with the orange-and-violet Ligature
 
-The [`/brand`](https://ubunifutech.com/brand) page is the shareable reference and download surface. The five SVG files are the canonical logo masters; raster artwork is derived delivery media.
+The [`/brand`](https://ubunifutech.com/brand) page is the shareable reference and download surface. The six SVG files are the canonical logo masters; raster artwork is derived delivery media. Social-preview artwork is a separate campaign asset and must use the same master geometry when it is next deliberately refreshed.
 
 ### Logo rules
 
-- Preserve the Ligature’s interlocking U/T geometry, rising angled T crown, rounded joins, and clear silhouette.
-- Use the default mark on light surfaces and the white or navy alternatives when contrast requires them.
+- Preserve the Ligature’s open U/T geometry, square stroke ends, angled crown, and interlock.
+- Use orange-and-violet on light surfaces and at display size on navy. Use all-white where a dark or image field needs maximum clarity, all-navy on orange, and the navy master for one-colour applications.
 - Keep generous clear space around the mark; do not crowd it with copy or other symbols.
 - Do not stretch, rotate, crop, outline, shadow, box in, recolor, or redraw the mark.
 - Do not add a tagline inside the navigation or lockup, or use the Ligature as a decorative letter inside another word.
@@ -70,21 +71,21 @@ Use CSS tokens in product code. Hex values are for exported assets and external 
 | Tertiary text | `--text-tertiary` | `#6B6385` | Labels and helper text |
 | Brand orange | `--brand` | `#FF6B2C` | Ligature U, large accents, paths |
 | Orange hover | `--brand-hover` | `#E8581E` | Decorative interaction state |
-| Deep orange | `--brand-deep` | `#C44615` | Accessible orange button fill |
-| Purple | `--primary` | `#6D3FE8` | Ligature T, links, secondary accent |
+| Deep orange | `--brand-deep` | `#BF4314` | Accessible orange button fill and small text |
+| Purple | `--primary` | `#6D3FE8` | Ligature T, links, intelligence, interaction |
 | Purple hover | `--primary-hover` | `#5A2DD0` | Purple interaction state |
 | Deep purple | `--primary-deep` | `#3D1FA0` | Strong text and pressed states |
-| Blue | `--accent` | `#2E5BFF` | Rare decorative emphasis |
+| Data blue | `--accent` | `#2E5BFF` | Data and infrastructure illustration only |
 | Clay | `--clay` | `#C2693B` | Restrained editorial warmth |
 
-Orange and purple are the identity pair. Navy carries the message. Blue and clay are supporting notes, never competing primaries.
+Orange and violet form the Ligature; navy anchors the company name and the wider system. These three are the core identity. Blue is reserved for data and infrastructure illustration, while clay is a controlled editorial note. Neither is a fourth primary.
 The interactive aliases deliberately use `--cta: var(--brand-deep)` and `--cta-hover: var(--text-primary)` so white CTA text retains contrast.
 
 ### Contrast rules
 
 - Use navy, secondary, tertiary, purple, or deep purple for normal text on light surfaces.
-- Bright orange `#FF6B2C` is for the Ligature and large decoration, not small text or essential control boundaries on light backgrounds.
-- For white text on an orange CTA, use deep orange `#C44615`, not bright orange.
+- Bright orange `#FF6B2C` is for the Ligature U and large decoration, not small text or essential control boundaries on light backgrounds.
+- For white text on an orange CTA, use deep orange `#BF4314`, not bright orange. It clears AA on both white and the lavender page canvas.
 - Clay is decorative on light surfaces; do not use it for normal-size body text.
 - Body text and interactive text must meet WCAG AA contrast: at least `4.5:1` for normal text and `3:1` for large text. Essential non-text controls and focus indicators need at least `3:1` against adjacent colors.
 - Never communicate status, errors, or selection through color alone. Pair color with text, shape, iconography, or another visible state.
@@ -119,11 +120,23 @@ Editorial imagery explains an idea instead of decorating a page. It should feel 
 
 ### Composition and delivery
 
-- Standard editorial canvas: **1672 × 941, 16:9**.
+- Standard editorial source canvas: **16:9 or 3:2 landscape**, chosen for the placement.
 - Keep the focal idea inside a centered safe area so the image can crop to 4:3 and square without losing meaning.
 - Store editorial concepts in [`public/editorial/`](public/editorial/). Prefer WebP at runtime when a paired WebP exists; retain PNG only when it is the required source or delivery format.
-- Store real client and product evidence in [`public/work/`](public/work/). Do not present a generated concept image as proof of shipped work.
+- Keep product names, statuses, client domains, capabilities, and destination links in accessible HTML rather than baking them into imagery.
+- Label generated client and product art as a conceptual illustration. The live product or client-site link remains the source of truth for the delivered interface.
+- Do not publish raw interface captures that expose personal names, account data, saved prompts, or operational context. Any future evidence image requires sanitisation and publication approval.
 - Write alt text for the idea and meaningful objects, not for every decorative texture or the generation style.
+
+## Motion and dimensional systems
+
+Motion should explain a relationship or a change in state: inputs gathering into a working system, an active capability following the reader, a rule establishing sequence, or evidence moving into focus. It is not a decorative layer added to every component.
+
+- Use the existing Framer Motion dependency for orchestration, shared-layout transitions, masks, and restrained scroll-linked depth.
+- The homepage `SystemsField` is the reference dimensional expression: Canvas 2D, fewer than 40 moving inputs, device-pixel-ratio capped at 1.5, paused when off-screen or when the document is hidden, and static when reduced motion is requested.
+- Keep content in accessible HTML. Canvas and ambient motion remain decorative and `aria-hidden`.
+- Prefer one memorable system simulation to multiple unrelated effects. Avoid generic WebGL orbs, autoplay video, cursor followers, and motion that makes a visitor wait for information.
+- Use the established orange, purple, blue, navy, white, and clay palette; motion does not introduce additional colours.
 
 ## Voice and usage
 

@@ -121,20 +121,21 @@ export default async function CaseStudyPage({
               className={styles.visitBtn}
             >
               Visit {project.domain}
-              <ArrowUpRight size={16} />
+              <ArrowUpRight size={16} aria-hidden="true" />
+              <span className="srOnly"> (opens in a new tab)</span>
             </a>
           </div>
 
           <figure className={styles.shotFrame}>
             <div className={styles.shotTopline}>
-              <span>Live system</span>
+              <span>Conceptual illustration</span>
               <span>{project.domain}</span>
             </div>
             <div className={styles.shotViewport}>
               <MediaReveal>
                 <Image
-                  src={project.primary.src}
-                  alt={project.primary.alt}
+                  src={project.artwork.src}
+                  alt={project.artwork.alt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 1440px"
                   className={styles.shotImg}
@@ -142,11 +143,9 @@ export default async function CaseStudyPage({
                 />
               </MediaReveal>
             </div>
-            {project.primary.caption && (
-              <figcaption className={styles.caption}>
-                {project.primary.caption}
-              </figcaption>
-            )}
+            <figcaption className={styles.caption}>
+              {project.artwork.caption}. Visit the live site to experience the delivered work.
+            </figcaption>
           </figure>
         </div>
       </header>
@@ -181,34 +180,6 @@ export default async function CaseStudyPage({
           </ScrollReveal>
         </div>
       </section>
-
-      {/* Gallery */}
-      {project.gallery && project.gallery.length > 0 && (
-        <section className={`section ${styles.gallerySection}`}>
-          <div className="container">
-            <div className={styles.gallery}>
-              {project.gallery.map((shot) => (
-                <figure key={shot.src} className={styles.galleryItem}>
-                  <div className={styles.galleryViewport}>
-                    <MediaReveal>
-                      <Image
-                        src={shot.src}
-                        alt={shot.alt}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className={styles.shotImg}
-                      />
-                    </MediaReveal>
-                  </div>
-                  {shot.caption && (
-                    <figcaption className={styles.caption}>{shot.caption}</figcaption>
-                  )}
-                </figure>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Stack */}
       <section className={`section ${styles.stackSection}`}>
@@ -247,13 +218,14 @@ export default async function CaseStudyPage({
               <div className={styles.nextThumb}>
                 <MediaReveal>
                   <Image
-                    src={nextProject.primary.src}
-                    alt={nextProject.primary.alt}
+                    src={nextProject.artwork.src}
+                    alt={nextProject.artwork.alt}
                     fill
                     sizes="(max-width: 768px) 100vw, 360px"
                     className={styles.nextThumbImg}
                   />
                 </MediaReveal>
+                <span className={styles.nextArtLabel}>Conceptual illustration</span>
               </div>
               <span className={styles.nextArrow} aria-hidden="true">
                 <ArrowRight size={20} />

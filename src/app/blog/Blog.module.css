@@ -130,7 +130,7 @@
 }
 
 .filter:focus-visible {
-  outline: 3px solid var(--primary-dim);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -178,7 +178,7 @@
   background: transparent;
   color: var(--brand-deep);
   font-size: 0.66rem;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: 0.075em;
   text-transform: uppercase;
 }
@@ -195,7 +195,7 @@
   gap: 0.42rem;
   color: var(--brand-deep);
   font-size: 0.8rem;
-  font-weight: 750;
+  font-weight: 700;
   transition: gap 0.2s ease;
 }
 
@@ -270,6 +270,22 @@
   letter-spacing: 0.11em;
   text-transform: uppercase;
   backdrop-filter: blur(8px);
+}
+
+.artDisclosure {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 1rem;
+  z-index: 2;
+  padding: 0.4rem 0.55rem;
+  background: rgba(31, 26, 54, 0.84);
+  color: var(--text-inverse-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .featuredBody {
@@ -390,7 +406,7 @@
   margin-bottom: 0.75rem;
   color: var(--text-primary);
   font-size: clamp(1.2rem, 2vw, 1.42rem);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.22;
 }

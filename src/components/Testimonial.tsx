@@ -38,18 +38,16 @@ export const Testimonial: React.FC<Props> = ({ project, hideHeader = false }) =>
         >
           {!hideHeader && (
             <div className={styles.head}>
-              <span className="eyebrow">In their words</span>
+              <span className="eyebrow">Client perspective</span>
               <h2 className={styles.heading}>What clients say after we ship</h2>
-              <p className={styles.note}>Client statement · edited for length and clarity</p>
+              <p className={styles.note}>Paraphrased client feedback · edited for length and clarity</p>
             </div>
           )}
 
           <figure className={styles.card}>
             <p className={styles.evidenceLabel}>01 / Client evidence</p>
 
-            <blockquote className={styles.quote}>
-              &ldquo;{testimonial.pullQuote}&rdquo;
-            </blockquote>
+            <p className={styles.quote}>{testimonial.pullQuote}</p>
 
             <figcaption className={styles.attribution}>
               <div className={styles.attributionText}>
@@ -68,6 +66,7 @@ export const Testimonial: React.FC<Props> = ({ project, hideHeader = false }) =>
                     className={styles.orgLink}
                   >
                     Visit organisation <span aria-hidden="true">↗</span>
+                    <span className="srOnly"> (opens in a new tab)</span>
                   </a>
                 )}
                 {testimonial.project && project !== testimonial.project && (

@@ -14,15 +14,17 @@ export default function ContactPage() {
     <>
       <main>
         <PageHeader
+          variant="contact"
+          register={['Project work', 'Existing systems', 'Product questions']}
           eyebrow="Contact"
-          title="Let's build something."
-          lead="Whether you're starting a custom project or have a question about one of our products, write to us. Your note goes directly to the Ubunifu team, not a chatbot."
+          title="Tell us what needs to work better."
+          lead="Bring us a project, an existing system, or a question about one of our products. Your message goes directly to the Ubunifu Technologies team."
           artwork={{
             primary: {
               src: '/editorial/home-system-hero.webp',
               alt: 'Tactile system landscape connecting business inputs into one coherent operating system',
             },
-            caption: 'Bring us the problem · We will help shape the path',
+            caption: 'Conceptual illustration · From a problem to a shaped path',
           }}
         />
         <Contact hideIntro />

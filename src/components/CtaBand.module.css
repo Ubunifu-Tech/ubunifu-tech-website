@@ -91,45 +91,49 @@
 
 .btn {
   display: inline-flex;
+  min-height: 48px;
   align-items: center;
   gap: 8px;
   padding: 0.875rem 2rem;
   background: var(--cta);
   color: #fff;
   font-size: 0.9375rem;
-  font-weight: 600;
-  border-radius: 12px;
+  font-weight: 700;
+  border-radius: var(--control-radius);
   text-decoration: none;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 8px 24px rgba(255, 107, 44, 0.35);
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .btn:hover {
-  background: var(--primary-deep);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(255, 107, 44, 0.4);
+  background: var(--surface);
+  color: var(--text-primary);
 }
 
 .btnSecondary {
   display: inline-flex;
+  min-height: 48px;
   align-items: center;
   padding: 0.875rem 2rem;
   background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
   font-size: 0.9375rem;
-  font-weight: 600;
-  border-radius: 12px;
+  font-weight: 700;
+  border-radius: var(--control-radius);
   border: 1px solid rgba(255, 255, 255, 0.18);
   text-decoration: none;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .btnSecondary:hover {
   border-color: rgba(255, 255, 255, 0.4);
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  transform: translateY(-2px);
+}
+
+.btn:focus-visible,
+.btnSecondary:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
 }
 
 @media (max-width: 768px) {

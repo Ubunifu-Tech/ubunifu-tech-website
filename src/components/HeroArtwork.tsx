@@ -50,6 +50,7 @@ export const HeroArtwork: React.FC<HeroArtworkProps> = ({
   const reduceMotion = useReducedMotion();
   const isPanorama = mode === 'panorama';
   const isBackground = mode === 'background';
+  const kindClass = kind === 'proof' ? styles.proof : '';
   const { scrollYProgress } = useScroll({
     target: figureRef,
     offset: ['start start', 'end start'],
@@ -73,7 +74,7 @@ export const HeroArtwork: React.FC<HeroArtworkProps> = ({
   return (
     <motion.figure
       ref={figureRef}
-      className={`${styles.figure} ${styles[kind]} ${isPanorama ? styles.panorama : ''} ${isBackground ? styles.background : ''} ${className ?? ''}`}
+      className={`${styles.figure} ${kindClass} ${isPanorama ? styles.panorama : ''} ${isBackground ? styles.background : ''} ${className ?? ''}`}
       aria-hidden={isBackground || undefined}
       initial={
         reduceMotion

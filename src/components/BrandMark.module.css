@@ -5,6 +5,31 @@
   overflow: visible;
 }
 
+.default {
+  color: inherit;
+}
+
+.u,
+.t {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: square;
+  stroke-linejoin: round;
+}
+
+.u {
+  stroke: var(--brand);
+}
+
+.t {
+  stroke: var(--primary);
+}
+
+.mono .u,
+.mono .t {
+  stroke: currentColor;
+}
+
 .lockup {
   display: inline-flex;
   align-items: center;
@@ -21,32 +46,29 @@
 .wordmark {
   display: flex;
   align-items: baseline;
-  gap: 0.36rem;
+  gap: 0.32rem;
   line-height: 1;
 }
 
-.name {
+.name,
+.technology {
   color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
 }
 
-.descriptor {
-  color: var(--text-primary);
-  font-family: var(--font-heading);
-  font-size: 0.82rem;
+.name {
+  font-weight: 700;
+}
+
+.technology {
   font-weight: 600;
-  letter-spacing: -0.025em;
 }
 
-.inverse .name {
-  color: var(--surface);
-}
-
-.inverse .descriptor {
-  color: var(--surface);
+.lockup.inverse .name,
+.lockup.inverse .technology {
+  color: var(--text-inverse);
 }
 
 @media (max-width: 420px) {
@@ -59,11 +81,8 @@
     height: 34px;
   }
 
-  .name {
+  .name,
+  .technology {
     font-size: 0.92rem;
-  }
-
-  .descriptor {
-    font-size: 0.74rem;
   }
 }

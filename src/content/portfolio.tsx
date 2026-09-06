@@ -2,16 +2,17 @@
 // study pages (/work/[slug]).
 //
 // Everything here is grounded in the actual project codebases. No invented
-// metrics, no imagined briefs. `capabilities` are short chips for the card;
-// `highlights` are the detailed "what we built" breakdown for the case study
-// page; `overview` is the factual intro. If we don't know something (e.g. a
-// launch metric), we leave it out rather than guess.
+// metrics, no imagined briefs. `artwork` is explicitly conceptual and carries
+// the story on marketing surfaces; the live-site link remains the source of
+// truth for the delivered experience. `capabilities` are short chips for the
+// card; `highlights` are the detailed "what we built" breakdown for the case
+// study page; `overview` is the factual intro. If we don't know something
+// (e.g. a launch metric), we leave it out rather than guess.
 
-export type ProjectScreenshot = {
+export type ProjectArtwork = {
   src: string;
   alt: string;
-  // Optional caption shown beneath the image on the case study page.
-  caption?: string;
+  caption: string;
 };
 
 export type ProjectHighlight = {
@@ -26,10 +27,7 @@ export type Project = {
   description: string;
   domain: string;
   link: string;
-  // Primary screenshot for the card hero + case study hero.
-  primary: ProjectScreenshot;
-  // Supporting screenshots shown in the case study gallery.
-  gallery?: ProjectScreenshot[];
+  artwork: ProjectArtwork;
   // Short chips for the Portfolio card.
   capabilities: string[];
   // Detailed feature breakdown for the case study page.
@@ -48,32 +46,12 @@ export const projects: ReadonlyArray<Project> = [
       'A public booking experience and custom operations platform for a private-guided safari operator, bringing enquiries, customer records, content, and assisted drafting into one system.',
     domain: 'safarikingafrica.com',
     link: 'https://www.safarikingafrica.com/',
-    primary: {
-      src: '/work/safari-king-admin.png',
-      alt: 'Safari King admin dashboard with revenue pipeline, bookings trend chart, status mix and circuit demand breakdown',
+    artwork: {
+      src: '/editorial/safari-operations-system-v2.webp',
+      alt: 'Editorial still life representing a safari enquiry moving through traveller records, itinerary planning, content, and follow-up',
       caption:
-        'The admin dashboard: pipeline, bookings trend, status mix and circuit demand at a glance.',
+        'Conceptual illustration · Safari enquiry to operating workflow',
     },
-    gallery: [
-      {
-        src: '/work/safari-king-assistant.png',
-        alt: 'Safari King in-app assistant with prompt starters for social posts and campaign research',
-        caption:
-          'The in-app assistant supports itinerary, article, email and campaign drafting.',
-      },
-      {
-        src: '/work/safari-king-preferences.png',
-        alt: 'Safari preferences form showing circuit selection and every Tanzanian national park grouped by region',
-        caption:
-          'The booking flow captures circuit, parks, accommodation tier and trip details before a single email is exchanged.',
-      },
-      {
-        src: '/work/safari-king-hero.png',
-        alt: 'Safari King Africa public homepage hero with wildlife photography and primary booking call-to-action',
-        caption:
-          'The public site connects destination discovery to a structured trip enquiry.',
-      },
-    ],
     capabilities: [
       'Public booking site',
       'Custom admin CRM',
@@ -134,20 +112,12 @@ export const projects: ReadonlyArray<Project> = [
       'An accessible eco-tourism site for an operator in the Usambara Mountains, built on Node and Express with a working enquiry flow and search fundamentals.',
     domain: 'usambaradestination.com',
     link: 'https://www.usambaradestination.com/',
-    primary: {
-      src: '/work/usambara-hero.png',
-      alt: 'Usambara Destination homepage hero "Karibu Tanzania" over a wildlife photograph with destination categories',
+    artwork: {
+      src: '/editorial/usambara-enquiry-journey-v2.webp',
+      alt: 'Editorial still life representing Usambara destination discovery, mountain routes, community and ecology touchpoints, and a structured trip enquiry',
       caption:
-        'The homepage leads with destinations and a clear route into trip planning.',
+        'Conceptual illustration · Discovery to structured enquiry',
     },
-    gallery: [
-      {
-        src: '/work/usambara-contact.png',
-        alt: 'Usambara Destination contact page with a full-trip-context enquiry form and quick-connect cards',
-        caption:
-          'The enquiry form captures full trip context and triggers a two-email workflow: one to the operator, one back to the visitor.',
-      },
-    ],
     capabilities: [
       'Multi-page marketing site',
       'Enquiry form + email workflow',

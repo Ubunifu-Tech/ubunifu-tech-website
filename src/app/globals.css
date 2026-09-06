@@ -6,10 +6,10 @@
   --surface-2: #FAF8FE;
   --surface-3: #F0EDF9;
 
-  /* Brand — Warm Orange (primary identity, like Intercept) */
+  /* Identity — Signal Orange (Ligature U and large gestures) */
   --brand: #FF6B2C;
   --brand-hover: #E8581E;
-  --brand-deep: #C44615;
+  --brand-deep: #BF4314;
   --brand-dim: rgba(255, 107, 44, 0.10);
   --brand-border: rgba(255, 107, 44, 0.22);
   --brand-shadow: rgba(255, 107, 44, 0.30);
@@ -21,7 +21,7 @@
   --cta-border: var(--brand-border);
   --cta-shadow: var(--brand-shadow);
 
-  /* Accent — Deep Purple (used sparingly for eyebrows, gradients, hover) */
+  /* Identity — Digital Violet (Ligature T and interaction) */
   --primary: #6D3FE8;
   --primary-hover: #5A2DD0;
   --primary-deep: #3D1FA0;
@@ -30,22 +30,26 @@
   --primary-glow: rgba(109, 63, 232, 0.12);
   --primary-shadow: rgba(109, 63, 232, 0.28);
 
-  /* Accent 2 — Blue */
+  /* Supporting data blue — data and infrastructure illustration only */
   --accent: #2E5BFF;
   --accent-hover: #1F47E0;
   --accent-dim: rgba(46, 91, 255, 0.10);
   --accent-border: rgba(46, 91, 255, 0.22);
   --accent-shadow: rgba(46, 91, 255, 0.25);
 
-  /* Text — Deep navy with a faint purple undertone */
+  /* Ink Navy — wordmark, message, and structural foundation */
   --text-primary: #1F1A36;
   --text-secondary: #5A5170;
   --text-tertiary: #6B6385; /* darkened from #8B82A0 to meet WCAG AA on light backgrounds */
+  --text-inverse: #FFFFFF;
+  --text-inverse-secondary: rgba(255, 255, 255, 0.72);
+  --text-inverse-tertiary: rgba(255, 255, 255, 0.60);
 
   /* Borders */
   --border: rgba(31, 26, 54, 0.08);
   --border-hover: rgba(31, 26, 54, 0.16);
   --border-active: rgba(31, 26, 54, 0.24);
+  --border-inverse: rgba(255, 255, 255, 0.18);
 
   /* Glass / Cards */
   --glass-bg: rgba(255, 255, 255, 0.65);
@@ -65,6 +69,8 @@
   /* Layout */
   --container-width: 1440px;
   --nav-height: 72px;
+  --section-space: clamp(5rem, 8vw, 7.5rem);
+  --control-radius: 4px;
 
   /* Transitions */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -142,6 +148,11 @@ a {
   overflow-wrap: anywhere;
 }
 
+:where(a, button):focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+}
+
 /* Skip-to-content link — off-screen until keyboard focus. */
 .skip-link {
   position: fixed;
@@ -170,6 +181,17 @@ a {
   outline: none;
 }
 
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ── Layout Utilities ─────────────────────────── */
 
 .container {
@@ -180,7 +202,7 @@ a {
 }
 
 .section {
-  padding: 120px 0;
+  padding: var(--section-space) 0;
   position: relative;
 }
 
@@ -199,7 +221,7 @@ a {
   background: transparent;
   color: var(--brand-deep);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -335,7 +357,7 @@ a {
   align-items: center;
   gap: 0.6rem;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -379,6 +401,12 @@ a {
 
   .section {
     padding: 80px 0;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --nav-height: 64px;
   }
 }
 

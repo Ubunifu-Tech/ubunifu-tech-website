@@ -2,11 +2,11 @@
 
 This is the maintenance map for `ubunifutech.com`: current routes, rendered narratives, content sources, and operational behavior. Use [`POSITIONING.md`](POSITIONING.md) for company claims and voice, [`BRANDING.md`](BRANDING.md) for the visual system, and [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) for change history.
 
-Last refreshed: 23 August 2026.
+Last refreshed: 5 September 2026.
 
 ## Company frame
 
-- **Category:** Arusha-based consulting company + product studio
+- **Category:** Arusha-based technology consultancy that also builds and operates products
 - **Tagline:** Consulting + products, built in Tanzania.
 - **Location:** Arusha, Tanzania
 - **Contact:** `info@ubunifutech.com` · `+255 748 548 816`
@@ -15,7 +15,7 @@ Company details, primary navigation, footer columns, and product/service URLs ar
 
 ## Navigation and shared chrome
 
-The full **Ubunifu Technologies** lockup links home. Its custom Ubunifu Ligature is an interlocking orange U and purple T with a rising angled T crown; the name sits on one readable baseline. Primary navigation is:
+The full **Ubunifu Technologies** lockup links home. Its original Ubunifu Ligature interlocks an orange U and violet T, while dark navy anchors the wordmark; both words sit at one readable size on one baseline. Primary navigation is:
 
 > Services · Work · Products · Insights · About
 
@@ -48,15 +48,17 @@ The full **Ubunifu Technologies** lockup links home. Its custom Ubunifu Ligature
 
 The homepage tells one story: Ubunifu can build a specific system with a client or offer a product it already operates.
 
-1. **Hero** — “Build the system your business actually needs.” A near-viewport, full-width editorial marquee leads with the consulting proposition; a dark credential rail states the delivery model and Arusha grounding without product-dashboard UI.
-2. **ProblemStrip** — four grounded differentiators from `src/content/pillars.tsx`.
-3. **WorkPreview** — Safari King Africa and Usambara Destination, drawn from the client portfolio.
-4. **Testimonial** — sourced from `src/content/testimonials.tsx`, reinforcing the client work before products are introduced.
-5. **ProductsProof** — Insight and Sifa as live products; Rafiki as in development.
-6. **Insights** — the three newest journal posts from `getAllPosts()`.
-7. **CtaBand** — closes the page with a route to Contact.
+1. **Hero** — “Build the system your organisation actually needs.” A near-viewport editorial marquee combines the centred proposition with the interactive, reduced-motion-safe `SystemsField` assembly.
+2. **EngagementPaths** — explains the two truthful ways to work with Ubunifu: a tailored consulting engagement or a product the company already operates.
+3. **CapabilitiesIndex** — keeps all six consulting disciplines visible in one open, linked register.
+4. **WorkPreview** — Safari King Africa and Usambara Destination, drawn from the client portfolio.
+5. **Testimonial** — sourced from `src/content/testimonials.tsx`, reinforcing the client work before products are introduced.
+6. **ProductsProof** — Insight and Sifa as live products; Rafiki as in development.
+7. **ProblemStrip** — the Understand → Shape → Build → Operate engagement sequence.
+8. **Insights** — the three newest journal posts from `getAllPosts()`.
+9. **CtaBand** — closes the page with a route to Contact.
 
-The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `Hero`, `ProblemStrip`, `WorkPreview`, `Testimonial`, `ProductsProof`, and `Insights` own the corresponding presentation.
+The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). Each named component owns its corresponding presentation; `ProblemStrip` contains its four current stages directly and does not read `src/content/pillars.tsx`.
 
 ## Consulting, work, products, and sectors
 
@@ -64,14 +66,14 @@ The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `Hero`, `Proble
 
 Six service records in [`src/content/services.tsx`](src/content/services.tsx):
 
-1. Digital Presence & Web
+1. Websites & Custom Platforms
 2. Hosting, Domains & Email
-3. Branding & Graphic Design
-4. Data Analytics & BI
-5. Intelligent Automation & AI
-6. Digital Strategy & Consulting
+3. Brand Identity & Design
+4. Data & Business Intelligence
+5. AI & Automation
+6. Technology Strategy & Advisory
 
-The page uses the same full-width editorial header system as the other principal routes, followed by anchor chips, alternating capability spotlights, the Understand → Shape → Build → Operate process, and a selected-work preview. Real screenshots are used where evidence exists; other services receive branded panels.
+The page uses the spatial page-header composition followed by `CapabilityJourney`: a sticky evidence stage, direct anchor index, and six complete scroll-led chapters. On compact layouts, each chapter carries its own static visual. The Understand → Shape → Build → Operate process and selected-work preview follow. No capability is hidden behind autoplay.
 
 ### Work (`/work`)
 
@@ -80,7 +82,7 @@ The page uses the same full-width editorial header system as the other principal
 - **Safari King Africa** — booking platform + operations system
 - **Usambara Destination** — eco-tourism site + enquiry engine
 
-Each record supplies the listing card, `/work/[slug]` case study, screenshots, factual overview, capabilities, highlights, and technology list. The Work page does not double as the product index.
+Each record supplies the Work narrative, `/work/[slug]` case study, conceptual artwork, factual overview, capabilities, highlights, technology list, and live-site link. The listing foregrounds the workflow and outcome of the engagement; the artwork is explicitly conceptual and implementation stacks remain secondary on the case-study pages.
 
 ### Products (`/products`)
 
@@ -96,7 +98,7 @@ Custom consulting belongs under `/build`; it is not a fourth product. Product av
 
 ### Industries (`/industries`)
 
-[`src/content/sectors.tsx`](src/content/sectors.tsx) carries a `proven` flag plus summaries and possible offerings. Tourism & Hospitality is the only proven sector and links to named work. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture, Education, and Government are framed as potential capability fits, with specialist and regulatory caveats where needed.
+[`src/content/sectors.tsx`](src/content/sectors.tsx) carries a `proven` flag plus summaries and possible offerings. Tourism & Hospitality is the only proven sector and opens as cinematic named evidence. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture, Education, and Government follow in an open ledger as potential workflow fits, with specialist and regulatory caveats where needed.
 
 ## About and careers
 
@@ -135,17 +137,18 @@ If no cover pair is supplied, the fallback is `/editorial/build-or-buy.webp` wit
 
 ## Brand kit and assets
 
-`/brand` is a public footer route and sitemap entry, not a primary-navigation item. It previews the two-color Ubunifu Ligature, its full “Ubunifu Technologies” one-line lockup, primary and reversed treatments, canonical colors, typography, voice, and basic usage rules.
+`/brand` is a public footer route and sitemap entry, not a primary-navigation item. It previews the orange-and-violet Ubunifu Ligature with its dark-navy foundation, full “Ubunifu Technologies” one-line lockup, primary and reversed treatments, canonical color roles, typography, voice, and basic usage rules.
 
 Canonical downloads live in [`public/brand/`](public/brand/):
 
 - `ubunifu-mark.svg`
 - `ubunifu-lockup.svg`
+- `ubunifu-mark-inverse.svg`
 - `ubunifu-mark-navy.svg`
 - `ubunifu-mark-white.svg`
 - `ubunifu-lockup-white.svg`
 
-`public/logo-v2.png` is the 512 × 512 social avatar, and `public/og.png` is the default 1672 × 941 social preview. Use `public/work/` for real client/product evidence and `public/editorial/` for conceptual imagery. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
+`public/logo-v2.png` is the 512 × 512 social avatar. `public/og.png` remains the current campaign social preview rather than a canonical logo master; refresh it only as a deliberate social-card pass. Use `public/editorial/` for conceptual imagery. Product and project visuals must stay clearly labelled as conceptual; live links and factual HTML carry the evidence. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
 
 ## Contact and privacy behavior
 
@@ -170,7 +173,7 @@ The form warns against sending passwords or sensitive records and links to `/pri
 | `src/content/site.ts` | Company facts, primary nav, footer, product/service URLs |
 | `src/content/services.tsx` | Six consulting capabilities |
 | `src/content/portfolio.tsx` | Client listing and case-study evidence |
-| `src/content/products.tsx` | Product status, descriptions, links, screenshots |
+| `src/content/products.tsx` | Product status, descriptions, capabilities, and links |
 | `src/content/sectors.tsx` | Proven sector flag, potential fits, caveats |
 | `src/content/pillars.tsx` | Homepage differentiators |
 | `src/content/about.tsx` | Studio story and approach |
@@ -185,6 +188,5 @@ The form warns against sending passwords or sensitive records and links to `/pri
 | `src/components/BrandMark.tsx` | Runtime Ubunifu Ligature mark and full-name lockups |
 | `public/brand/` | Canonical vector logo assets |
 | `public/editorial/` | Conceptual editorial imagery |
-| `public/work/` | Real client and product screenshots |
 
 When facts change, edit the owning source first. Keep this map descriptive; do not use it to introduce claims that are absent from the rendered site or content records.

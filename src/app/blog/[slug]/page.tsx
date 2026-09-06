@@ -140,7 +140,7 @@ export default async function BlogPostPage({
     },
     isPartOf: {
       '@type': 'Blog',
-      name: 'The Ubunifu Journal',
+      name: 'Ubunifu Insights',
       url: `${SITE_URL}/blog`,
     },
     mainEntityOfPage: {
@@ -162,7 +162,7 @@ export default async function BlogPostPage({
           <div className={styles.header}>
             <div className={styles.headerTopline}>
               <Link href="/blog" className={styles.journalLink}>
-                <span aria-hidden="true">←</span> The journal
+                <span aria-hidden="true">←</span> All insights
               </Link>
               {post.tags[0] ? <span className={styles.category}>{post.tags[0]}</span> : null}
             </div>
@@ -190,6 +190,7 @@ export default async function BlogPostPage({
               sizes="(max-width: 1280px) 100vw, 1200px"
               className={styles.coverImage}
             />
+            <figcaption className={styles.coverCaption}>Conceptual illustration</figcaption>
           </figure>
         </header>
 

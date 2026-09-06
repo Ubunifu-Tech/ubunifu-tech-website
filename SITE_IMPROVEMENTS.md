@@ -2,13 +2,49 @@
 
 Single source of truth for the site redesign / quality pass. Maintained as work progresses. Anything we can ship with current materials goes under **Shipped** with a brief note. Anything that needs new content, real data, or further design work goes under **Deferred** with a clear owner and unblock condition.
 
-**Rule we follow:** never invent metrics, testimonials, client logos, or capabilities. If a claim isn't backed by something true (a shipping product, a real screenshot, a verifiable fact), it doesn't go on the site. Where the strongest version of a claim isn't yet provable, we ship a weaker truthful version and flag the better version under Deferred.
+**Rule we follow:** never invent metrics, testimonials, client logos, or capabilities. Conceptual artwork may explain a workflow, but it is never presented as a product interface or proof of delivery. Claims must be backed by a shipping product, a live client link, approved source material, or another verifiable fact. Where the strongest version of a claim isn't yet provable, we ship a weaker truthful version and flag the better version under Deferred.
 
-Entries before #31 are retained as implementation history. Where an older entry describes retired navigation, layouts, claims, or brand assets, #31 and the current source files take precedence.
+Entries before #42 are retained as implementation history. Where an older entry describes retired navigation, layouts, claims, imagery, or brand assets, #42, #41, #40, and the current source files take precedence.
 
 ---
 
 ## Shipped (latest pass)
+
+### 42. Restored original three-colour identity — 5 September 2026
+
+- Restored the owner-preferred **Ubunifu Ligature**: the original open-stroke orange U and violet T with its angled crown. The runtime mark, favicons, downloadable SVGs, avatar, email asset, and dormant canvas renderer now share that geometry.
+- Kept Ink Navy `#1F1A36` as the wordmark, typography, structural, and dark-field foundation. Orange and violet are equal logo colours; deep orange remains the accessible CTA/text variant, while data blue stays limited to data and infrastructure illustration.
+- Preserved the stronger full-name lockup, embedded export fonts, responsive navigation, accessibility work, editorial layouts, conceptual-art disclosures, and control system introduced in #41. This restores the preferred symbol without rolling back the broader redesign.
+
+### 41. Unified identity and interface system — 5 September 2026 (identity superseded by #42)
+
+- At this stage, replaced the stroked orange/purple monogram with a filled navy U/T concept called the **Ubunifu Join**. That symbol was retired and the original Ligature restored in #42; the remaining interface improvements in this entry still apply.
+- Restored equal visual importance to the full **Ubunifu Technologies** name. Both words use one readable size and baseline in the navigation, footer, exports, and email lockup.
+- Kept the existing palette but established clear roles: navy for structure and message, orange for identity and action, purple for intelligence and secondary interaction, and blue for data/infrastructure illustration. Deep orange moved from `#C44615` to `#BF4314` so small text clears AA on the lavender canvas while white CTA text remains comfortably legible.
+- Added shared inverse text/border, control-radius, section-spacing, and responsive navigation-height tokens. Fixed the footer gutter drift, dark-logo contrast, unsupported font weights, and the 601–660px fixed-navigation overlap.
+- Rebuilt `/brand` as an open editorial specimen sheet rather than a rounded-card catalogue. Download rows, logo matrices, colour roles, type specimens, and usage rules now use the same ruled layout language as the commercial pages.
+- Standardised conceptual-art disclosure, internal/external arrow meaning, key artwork crops, primary action geometry, and article-cover treatment. The persistent WhatsApp action now uses the brand system, has no pulse, and reads from the central contact configuration.
+- Preserved the existing social-preview artwork and metadata; it is not a canonical logo master. Any future social-preview refresh remains a separately approved pass and must use the restored Ligature from #42.
+
+### 40. Editorial project and product storytelling — 5 September 2026
+
+- Replaced raw interface and sample-site screenshots across the homepage, Work listing, Products, Services journey, Industries proof, and case-study covers with three original conceptual illustrations: Safari operations, Usambara discovery to enquiry, and the connected Ubunifu product family.
+- Kept product names, current status, delivered capabilities, client domains, case-study links, and live-site links as accessible HTML. Every synthetic visual is described or visibly captioned as conceptual rather than presented as a literal interface.
+- Rebuilt the Products catalogue as an open editorial ledger with semantic product headings, status, workflow description, capability register, and direct destination link. The homepage now uses one product-family panorama rather than three mismatched screenshot cards.
+- Removed the raw screenshots from `public/` after confirming no runtime references remained. Several included personal names or saved-work context and did not belong at durable public asset URLs; the deletions remain recoverable from repository history.
+- Preserved the existing palette and generated no logos, pseudo-interface text, fake dashboards, fake metrics, people, flags, or extra colours. The three compressed WebP assets total less than 500 KB.
+- Fixed the Services journey column geometry so its conceptual stage remains present through the complete desktop narrative instead of ending after the first chapters.
+
+### 39. Systems-led art direction and consulting narrative — 5 September 2026
+
+- Reordered the homepage into a clearer consulting argument: proposition, two ways to work with Ubunifu Technologies, immediately scannable capabilities, named client evidence, owned products, delivery method, and field notes.
+- Added a lightweight, code-native 2.5D “systems field” behind the centred homepage hero. Scattered signals resolve into six connected modules using only the existing orange, purple, blue, navy, and white palette. It caps device pixel ratio, pauses off-screen and in background tabs, avoids React work inside animation frames, and renders a static assembled state for reduced-motion users.
+- Replaced the Services autoplay cycle and the six repeated feature rows with one user-led capability journey: a sticky evidence stage, a scroll-synchronised index, direct anchor navigation, complete visible service chapters, and a static mobile composition. No service information waits behind a carousel.
+- Introduced page-header compositions for spatial, proof, human, and direct-contact pages while keeping the titles wide and centred. Each route now carries a concise, truthful register suited to its job instead of repeating one identical hero silhouette.
+- Rebuilt the Work listing as two differently scaled evidence narratives. Real screenshots, supported workflows, and case-study routes now lead; fake browser chrome and prominent technology tags no longer frame the consulting proof.
+- Reworked Industries around one cinematic, named tourism proof followed by an open sector ledger. The copy now distinguishes proven work, transferable workflow patterns, and domain responsibility without presenting prospective sectors as client experience.
+- Tightened product and company language: service names are more concrete, unverified “free” CTAs are gone, and “technology consultancy that also builds and operates products” replaces startup/SaaS shorthand in primary metadata.
+- Added no colours, animation packages, video payloads, or WebGL dependencies. Framer Motion orchestrates restrained transitions around the existing design tokens and real screenshots.
 
 ### 38. Structural motion and proof-led consulting pages — 30 August 2026
 

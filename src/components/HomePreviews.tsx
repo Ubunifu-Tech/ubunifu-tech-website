@@ -20,6 +20,13 @@ const Arrow: React.FC = () => (
   </svg>
 );
 
+const ArrowOut: React.FC = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 17 17 7" />
+    <path d="M7 7h10v10" />
+  </svg>
+);
+
 /* ── Services preview ─────────────────────────── */
 
 export const ServicesPreview: React.FC = () => {
@@ -56,6 +63,7 @@ export const ServicesPreview: React.FC = () => {
               sizes="(max-width: 900px) 100vw, 560px"
               className={styles.serviceFeatureImg}
             />
+            <span className={styles.editorialLabel}>Conceptual illustration</span>
           </div>
           <div className={styles.serviceFeatureCopy}>
             <p className={styles.serviceFeatureLabel}>One team, the whole digital side</p>
@@ -176,10 +184,10 @@ export const WorkPreview: React.FC = () => {
           transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
           <span className="eyebrow">Selected work</span>
-          <h2 className={styles.heading}>Systems running in the real world</h2>
+          <h2 className={styles.heading}>The work behind the websites</h2>
           <p className={styles.sub}>
-            Two Tanzanian tourism businesses. Two very different operating
-            systems. Both shaped around what happens after a visitor clicks.
+            Two Tanzanian tourism businesses. Each project began with the work
+            behind the website: enquiries, records, decisions, and follow-up.
           </p>
         </motion.div>
 
@@ -199,17 +207,18 @@ export const WorkPreview: React.FC = () => {
                 <div className={styles.workThumb}>
                   <MediaReveal>
                     <Image
-                      src={project.primary.src}
-                      alt={project.primary.alt}
+                      src={project.artwork.src}
+                      alt={project.artwork.alt}
                       fill
                       sizes="(max-width: 768px) 100vw, 560px"
                       className={styles.workThumbImg}
                     />
                   </MediaReveal>
+                  <span className={styles.editorialLabel}>{project.artwork.caption}</span>
                 </div>
                 <div className={styles.workMeta}>
                   <span className={styles.workCat}>{project.category}</span>
-                  <span className={styles.workTitle}>{project.title}</span>
+                  <h3 className={styles.workTitle}>{project.title}</h3>
                   <p className={styles.workDesc}>{project.description}</p>
                   <div className={styles.workCaps}>
                     {project.capabilities.slice(0, 3).map((cap) => (
@@ -249,7 +258,7 @@ export const ProductsProof: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
-          <span className="eyebrow">Product studio</span>
+          <span className="eyebrow">Ubunifu products</span>
           <h2 className={styles.heading}>Products shaped by the same work</h2>
           <p className={styles.sub}>
             Insight and Sifa are live. Rafiki is the next product in the family.
@@ -257,57 +266,63 @@ export const ProductsProof: React.FC = () => {
           </p>
         </motion.div>
 
-        <div className={styles.proofGrid}>
-          {suite.map((product, index) => {
-            const isExternal = Boolean(product.url?.startsWith('http'));
-            const href = product.url ?? '/products';
+        <div className={styles.productProofLayout}>
+          <motion.figure
+            className={styles.productProofVisual}
+            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: reduceMotion ? 0 : 0.55, ease }}
+          >
+            <MediaReveal>
+              <Image
+                src="/editorial/ubunifu-product-family-v2.webp"
+                alt="Three connected tactile instruments representing Insight for documents and knowledge, Sifa for business operations, and Rafiki for embeddable tools"
+                fill
+                sizes="(max-width: 900px) 100vw, 58vw"
+                className={styles.productProofImage}
+              />
+            </MediaReveal>
+            <span className={styles.productProofShade} aria-hidden="true" />
+            <figcaption>Conceptual illustration · Three products, three defined workflows</figcaption>
+            <span className={styles.productProofRail} aria-hidden="true" />
+          </motion.figure>
 
-            return (
-            <motion.a
-              key={product.name}
-              href={href}
-              target={isExternal ? '_blank' : undefined}
-              rel={isExternal ? 'noopener noreferrer' : undefined}
-              className={styles.proofCard}
-              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : index * 0.08, ease }}
-            >
-              <span className={styles.proofIndex} aria-hidden="true">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              {product.primary ? (
-                <div className={styles.proofThumb}>
-                  <MediaReveal>
-                    <Image
-                      src={product.primary.src}
-                      alt={product.primary.alt}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 560px"
-                      className={styles.proofThumbImg}
-                    />
-                  </MediaReveal>
-                  <span className={styles.proofBadge}>
-                    <span className={styles.proofDot} />
-                    Live
+          <div className={styles.proofGrid}>
+            {suite.map((product, index) => {
+              const isExternal = Boolean(product.url?.startsWith('http'));
+              const href = product.url ?? '/products';
+              const status = product.status === 'live' ? 'Live' : 'In development';
+
+              return (
+                <motion.a
+                  key={product.name}
+                  href={href}
+                  target={isExternal ? '_blank' : undefined}
+                  rel={isExternal ? 'noopener noreferrer' : undefined}
+                  className={styles.proofCard}
+                  initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: reduceMotion ? 0 : 0.45, delay: reduceMotion ? 0 : index * 0.08, ease }}
+                >
+                  <span className={styles.proofIndex} aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
                   </span>
-                </div>
-              ) : (
-                <div className={`${styles.proofThumb} ${styles.proofPlaceholder}`}>
-                  <span className={styles.proofPlaceholderName}>Rafiki</span>
-                  <span className={styles.proofBadge}>In development</span>
-                </div>
-              )}
-              <div className={styles.proofMeta}>
-                <span className={styles.proofName}>{product.name}</span>
-                <p className={styles.proofTagline}>{product.tagline}</p>
-                <span className={styles.workLink}>
-                  {product.status === 'live' ? `Visit ${product.domain}` : 'Preview the product family'} <Arrow />
-                </span>
-              </div>
-            </motion.a>
-          )})}
+                  <div className={styles.proofMeta}>
+                    <span className={styles.proofStatus}>{status}</span>
+                    <h3 className={styles.proofName}>{product.name}</h3>
+                    <span className={styles.proofTagline}>{product.tagline}</span>
+                  </div>
+                  <span className={styles.proofAction}>
+                    {product.status === 'live' ? `Visit ${product.domain}` : 'See the product family'}
+                    {isExternal ? <ArrowOut /> : <Arrow />}
+                    {isExternal && <span className="srOnly"> (opens in a new tab)</span>}
+                  </span>
+                </motion.a>
+              );
+            })}
+          </div>
         </div>
         <Link href="/products" className={styles.link}>
           Explore all products <Arrow />

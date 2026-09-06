@@ -91,7 +91,7 @@ export const Team: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.link}
-                        aria-label={`${member.name} on ${linkLabel[link.type]}`}
+                        aria-label={`${member.name} on ${linkLabel[link.type]} (opens in a new tab)`}
                       >
                         <Icon size={17} />
                       </a>

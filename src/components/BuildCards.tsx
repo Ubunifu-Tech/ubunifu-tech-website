@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MotionCard } from './MotionCard';
+import { ScrollReveal } from './ScrollReveal';
 
 interface BuildCardsProps {
   children: React.ReactNode[];
@@ -12,9 +12,9 @@ export const BuildCards: React.FC<BuildCardsProps> = ({ children, className }) =
   return (
     <div className={className}>
       {React.Children.map(children, (child, index) => (
-        <MotionCard key={index} index={index}>
+        <ScrollReveal key={index} delay={index * 75}>
           {child}
-        </MotionCard>
+        </ScrollReveal>
       ))}
     </div>
   );

@@ -4,26 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { products } from '@/content/products';
 import { projects } from '@/content/portfolio';
 import { MediaReveal } from './MediaReveal';
 import styles from './HomePreviews.module.css';
 
 const ease = [0.16, 1, 0.3, 1] as const;
-
-const Arrow: React.FC = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 12h14" />
-    <path d="M12 5l7 7-7 7" />
-  </svg>
-);
-
-const ArrowOut: React.FC = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M7 17 17 7" />
-    <path d="M7 7h10v10" />
-  </svg>
-);
 
 /* ── Work preview ─────────────────────────────── */
 
@@ -77,7 +64,7 @@ export const WorkPreview: React.FC = () => {
                     ))}
                   </div>
                   <span className={styles.workLink}>
-                    View case study <Arrow />
+                    View case study <ArrowRight size={15} strokeWidth={2.5} />
                   </span>
                 </div>
               </Link>
@@ -86,7 +73,7 @@ export const WorkPreview: React.FC = () => {
         </div>
 
         <Link href="/work" className={styles.link}>
-          See all work <Arrow />
+          See all work <ArrowRight size={15} strokeWidth={2.5} />
         </Link>
       </div>
     </section>
@@ -141,7 +128,7 @@ export const ProductsProof: React.FC = () => {
                   </div>
                   <span className={styles.proofAction}>
                     {product.status === 'live' ? `Visit ${product.domain}` : 'View product details'}
-                    {isExternal ? <ArrowOut /> : <Arrow />}
+                    {isExternal ? <ArrowUpRight size={15} strokeWidth={2.5} /> : <ArrowRight size={15} strokeWidth={2.5} />}
                     {isExternal && <span className="srOnly"> (opens in a new tab)</span>}
                   </span>
                 </motion.a>
@@ -150,7 +137,7 @@ export const ProductsProof: React.FC = () => {
           </div>
         </div>
         <Link href="/products" className={styles.link}>
-          Explore all products <Arrow />
+          Explore all products <ArrowRight size={15} strokeWidth={2.5} />
         </Link>
       </div>
     </section>

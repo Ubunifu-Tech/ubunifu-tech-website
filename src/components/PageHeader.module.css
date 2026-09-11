@@ -17,18 +17,6 @@
   padding-top: var(--nav-height);
 }
 
-.backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.artwork {
-  --art-opacity: 0.72;
-}
-
 .inner {
   position: relative;
   z-index: 1;
@@ -95,16 +83,6 @@
   line-height: 1.68;
 }
 
-.artLabel {
-  align-self: flex-end;
-  margin-top: clamp(2rem, 4vh, 3rem);
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.5;
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -133,10 +111,6 @@
 
 .withArtwork .lead {
   color: rgba(255, 255, 255, 0.78);
-}
-
-.withArtwork .artLabel {
-  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Build and Industries use a broad spatial statement. */
@@ -196,11 +170,6 @@
     margin-top: var(--space-6);
     margin-bottom: 2.25rem;
     font-size: var(--font-size-display);
-  }
-
-  .artLabel {
-    align-self: flex-start;
-    line-height: 1.5;
   }
 
 }
@@ -296,8 +265,7 @@
 .topline,
 .title,
 .lead,
-.actions,
-.artLabel {
+.actions {
   animation: pageHeaderRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -315,8 +283,4 @@
 
 .actions {
   animation-delay: 0.35s;
-}
-
-.artLabel {
-  animation-delay: 0.42s;
 }

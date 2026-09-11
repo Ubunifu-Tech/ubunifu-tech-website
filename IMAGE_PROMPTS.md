@@ -967,3 +967,111 @@ overlaid on this image, so it can carry full detail edge to edge.
 FORMAT: 1600 x 900 pixels. Deep navy #1F1A36 background, full bleed to all four edges.
 No border, no frame, no vignette.
 ```
+
+---
+
+## Why the current art is being replaced
+
+Measured, not a taste judgement. The home hero is a 3:2 image cropped into a 2.4:1 frame
+with `object-position: center 58%`. On that crop, **74.6% of pixels sit within 2 L\* of
+flat navy before any overlay is applied**. The detail is in the bottom corners; the middle
+and top are empty sky — which is exactly where the headline sits.
+
+Three faults, all fixed in the prompt rather than the CSS:
+
+- **No focal subject.** Landscapes with scattered props read as wallpaper.
+- **Detail in the wrong third.** Nothing was composed for text overlay.
+- **Nothing technological.** Acacias say Tanzania. They do not say *systems*. Both are needed.
+
+---
+
+
+## Icons — do not generate as images
+
+The icon system is already the healthiest part of the design: Lucide, 33 icons, one grid,
+one stroke weight. Raster icons cannot inherit `currentColor`, will not stay crisp at
+24px, cannot be recoloured per theme, and drift in optical weight.
+
+If you want something ownable, scope it to **six custom SVGs for the six service pillars**,
+drawn to Lucide's grid. Ask for SVG source, not a picture:
+
+```
+Produce six icons as raw inline SVG code — not images, not a description.
+
+Constraints, applied identically to all six:
+- viewBox="0 0 24 24", fill="none", stroke="currentColor"
+- stroke-width="1.75", stroke-linecap="round", stroke-linejoin="round"
+- Geometry snapped to a 24px grid; keep a 2px clear margin on all sides
+- Maximum 5 path or shape elements per icon; no fills, no gradients, no text
+- Match the visual weight and optical density of the Lucide icon set
+
+The six, each reduced to one structural idea rather than a literal picture:
+1. Websites & Custom Platforms — layered planes in a browser frame
+2. Hosting, Domains & Email — a slotted tower with one signal arc
+3. Brand Identity & Design — three overlapping plates with a registration mark
+4. Data & Business Intelligence — records resolving into a single trend rule
+5. AI & Automation — several inputs converging through one node to one output
+6. Technology Strategy & Advisory — branching routes with one marked and chosen
+
+Return six code blocks, each with a comment naming the icon. No commentary.
+```
+
+---
+
+
+## People
+
+Worth being deliberate here, because this is where competitors beat us and where
+generated imagery is most likely to backfire.
+
+**Kiliweb's warmth comes from real photographs of real Tanzanian people.** That is
+their strongest asset and it is not something a generated image can substitute for.
+
+### Rule 1 — do not generate photorealistic people
+
+No AI-generated faces presented as staff, founders, clients or customers. It is the
+same credibility failure as the anonymous paraphrased testimonial already flagged in
+the review: a prospect who senses it, or reverse-image-searches it, stops trusting
+everything else on the page. A consultancy selling judgement cannot afford that.
+
+### Rule 2 — the two real photographs are worth more than twenty generated ones
+
+`src/content/team.tsx` already has an optional `photo` field on both founders, wired
+and rendering — and **neither is set**, so the About page shows initials. Two honest
+headshots is the single highest-value people asset available, and it costs a phone
+camera and good window light. Save as `public/team/richard.webp` and
+`public/team/happygod.webp`, then set `photo` on each member.
+
+### Rule 3 — illustrated figures are fine, and useful
+
+Figures drawn in the house style read as diagram, not as a claim about real people.
+Use them where a human is part of the *mechanism* — a person reviewing AI output, a
+shopkeeper at a counter. Add this block after the style block. It deliberately
+**overrides** the `people, faces, hands` exclusion in the style block, so paste both
+and let this one win:
+
+```
+FIGURES: This overrides the "no people, faces, hands" exclusion above.
+ Any person in this image is a simplified geometric figure, built from the
+same vocabulary as everything else: flat shapes, consistent stroke weight, no
+outlines around the body. NO facial features at all — no eyes, nose, mouth or
+expression. The head is a plain rounded form. Skin is rendered as a flat mid-tone
+that sits in the palette, never as a rendered skin colour. Posture carries the
+meaning: leaning in, reaching, seated at work. Figures are never the focal point —
+they are shown at the scale of the equipment they are using, as part of the system
+rather than in front of it. No crowds, no groups posed at a camera, no handshakes,
+no pointing at charts, no headsets.
+```
+
+### Where figures earn their place
+
+| File | Subject |
+| --- | --- |
+| `grounded-ai-review.webp` | A seated figure at a simple desk, turned toward a warm bone panel that shows three ruled rows, one marked with a small orange check and one with a violet query mark. The figure's hand rests near the panel — the judgement is theirs. Behind the panel, a routed orange line runs back to a slate document stack. The read is: the machine proposed, the person decided. |
+| `product-sifa-v1.webp` (variant) | A figure standing behind the slab counter, one hand on a receipt roll, the other on the open ledger. Stock crates to one side, the ledger lit. The figure is the same height as the counter equipment and set back from it. Shopkeeping as a working system. |
+| `hero-careers-v1.webp` (variant) | At the occupied workstation, one seated figure leaning slightly into the work, lit by the warm bone lamp. The second workstation stays empty and unlit. Reads as an invitation without writing one. |
+| `tanzania-planning-workshop.webp` | Three figures seated around an isometric table with a large planning sheet between them, all leaning toward it rather than toward each other. Routed orange lines on the sheet resolve into one marked route. Nobody presents; everyone works. |
+
+Keep the count low. Two or three illustrations with figures across the whole site is
+plenty — the moment figures appear everywhere, the set stops reading as engineering
+diagrams and starts reading as stock illustration.

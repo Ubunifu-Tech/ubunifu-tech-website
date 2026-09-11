@@ -7,21 +7,10 @@ import { CtaBand } from '@/components/CtaBand';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { getProjectDiagram } from '@/content/project-visuals';
 import { getAllPosts, getPostBySlug, resolveBlogCover } from '@/lib/blog';
+import { formatDateLong } from '@/lib/date';
 import styles from './BlogSlug.module.css';
 
 const SITE_URL = 'https://ubunifutech.com';
-const longDate = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
-
-function formatDate(date: string): string {
-  const parsed = new Date(`${date}T00:00:00.000Z`);
-  return Number.isNaN(parsed.getTime()) ? date : longDate.format(parsed);
-}
-
 function absoluteUrl(pathname: string): string {
   return new URL(pathname, SITE_URL).toString();
 }
@@ -175,7 +164,7 @@ export default async function BlogPostPage({
               <span className={styles.author}>By {post.author}</span>
               <span className={styles.metaDot} aria-hidden="true" />
               <time className={styles.date} dateTime={post.date}>
-                {formatDate(post.date)}
+                {formatDateLong(post.date)}
               </time>
               <span className={styles.metaDot} aria-hidden="true" />
               <span>{post.readingTime} min read</span>

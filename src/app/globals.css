@@ -283,58 +283,15 @@ a {
   position: relative;
 }
 
-.section-alt {
-  background-color: var(--surface);
-}
+/* Display,
 
-/* ── Eyebrow Label ────────────────────────────── */
+heading,
 
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--brand-deep);
-  font-family: var(--font-body);
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-medium);
-  margin-bottom: 1.25rem;
-  width: fit-content;
-}
-
-
-/* Display, heading, body: hierarchy comes from space and placement,
- * not extra sizes or blanket bolding. Preserve semantic heading levels. */
-
-.sectionHeading {
+body: hierarchy comes from space and placement {
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
   margin-bottom: 1rem;
   color: var(--text-primary);
-}
-
-.sectionSubtext {
-  font-size: var(--font-size-body);
-  color: var(--text-secondary);
-  max-width: 600px;
-  line-height: 1.7;
-}
-
-/* ── Glass Card Base ──────────────────────────── */
-
-.glassCard {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
-}
-
-.glassCard:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
-  box-shadow: 0 12px 32px rgba(109, 63, 232, 0.08);
 }
 
 /* ── Selection ────────────────────────────────── */
@@ -365,14 +322,21 @@ a {
 
 /* ── Signature graphics ───────────────────────────
  *
- * A small, reusable visual language used across the site:
- * for tactile depth, drifting aurora glows, a blueprint grid, and a
+ * A small,
+
+reusable visual language used across the site:
+ * for tactile depth,
+
+drifting aurora glows,
+
+a blueprint grid,
+
+and a
  * monospace "spec-sheet" label. Drop these in as aria-hidden overlays
  * inside a position:relative container.
  */
 
-/* Blueprint grid — quiet engineering substrate, fades at the edges. */
-.blueprint {
+/* Blueprint grid — quiet engineering substrate {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -384,8 +348,7 @@ a {
   -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 8%, transparent 75%);
 }
 
-/* Drifting aurora glow — soft brand-coloured light, not a flat fill. */
-.aurora {
+/* Drifting aurora glow — soft brand-coloured light {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
@@ -394,13 +357,7 @@ a {
   animation: auroraDrift 26s ease-in-out infinite;
 }
 
-@keyframes auroraDrift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(5%, -4%, 0) scale(1.12); }
-}
-
-/* Secondary label, without ornamental rules. */
-.specLabel {
+/* Secondary label {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -423,10 +380,6 @@ a {
     animation-iteration-count: 1 !important;
     transition-delay: 0s !important;
     transition-duration: 0.01ms !important;
-  }
-
-  .aurora {
-    animation: none;
   }
 }
 

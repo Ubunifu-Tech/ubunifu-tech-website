@@ -3,9 +3,6 @@
 
 export const site = {
   name: 'Ubunifu Technologies',
-  tagline: 'Consulting + products, built in Tanzania.',
-  shortDescription:
-    'A Tanzanian technology consultancy that also builds and operates products across brand, software, data, and AI.',
   location: 'Tanzania',
 
   contact: {
@@ -15,17 +12,10 @@ export const site = {
     whatsapp: '255748548816', // wa.me format (no +)
   },
 
+  // Only `contact` is read (CtaBand). Nav and footer URLs live in navLinks and
+  // footerColumns below; product URLs live in content/products.tsx.
   urls: {
-    home: 'https://ubunifutech.com',
-    insight: 'https://insight.ubunifutech.com',
-    sifa: 'https://sifa.ubunifutech.com',
-    products: '/products',
-    services: '/build',
-    work: '/work',
-    about: '/about',
     contact: '/contact',
-    blog: '/blog',
-    careers: '/careers',
   },
 } as const;
 

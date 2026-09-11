@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { motion, useReducedMotion } from 'framer-motion';
 import { MediaReveal } from './MediaReveal';
+import { formatDateShort } from '@/lib/date';
 import styles from './Insights.module.css';
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -18,17 +19,6 @@ type InsightPost = {
   coverImage?: string;
   coverAlt?: string;
 };
-
-function formatDate(date: string): string {
-  const d = new Date(`${date}T00:00:00.000Z`);
-  if (Number.isNaN(d.getTime())) return date;
-  return d.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
 
 const Arrow: React.FC = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -85,7 +75,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
               ) : null}
               <div className={styles.leadBody}>
                 <div className={styles.meta}>
-                  <time dateTime={lead.date}>{formatDate(lead.date)}</time>
+                  <time dateTime={lead.date}>{formatDateShort(lead.date)}</time>
                   {lead.tags[0] && <span className={styles.tag}>{lead.tags[0]}</span>}
                 </div>
                 <h3 className={styles.leadTitle}>{lead.title}</h3>
@@ -108,7 +98,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
               <Link href={`/blog/${post.slug}`} className={styles.dispatch}>
                 <div className={styles.dispatchCopy}>
                   <div className={styles.meta}>
-                    <time dateTime={post.date}>{formatDate(post.date)}</time>
+                    <time dateTime={post.date}>{formatDateShort(post.date)}</time>
                     {post.tags[0] && <span className={styles.tag}>{post.tags[0]}</span>}
                   </div>
                   <h3 className={styles.title}>{post.title}</h3>

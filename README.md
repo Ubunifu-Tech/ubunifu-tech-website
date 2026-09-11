@@ -42,7 +42,8 @@ presented as potential workflow fits, not claimed client experience.
 - **Styling:** CSS Modules + design tokens in [`src/app/globals.css`](src/app/globals.css)
 - **Fonts:** Poppins (headings) · Inter (body) — via `next/font`
 - **Animation:** Framer Motion · Lenis smooth scroll (reduced-motion gated)
-- **Icons:** `lucide-react` (UI) · `react-icons` (tech logos)
+- **Shaders:** `@paper-design/shaders-react` — ambient WebGL layer, dynamically imported and device-gated
+- **Icons:** `lucide-react`
 - **Content:** Markdown blog (`gray-matter` + `react-markdown`)
 - **Email:** Resend (contact form), with honeypot + bounded rate-limit protection
 

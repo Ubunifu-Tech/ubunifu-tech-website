@@ -5,6 +5,7 @@ import { EditorialVisual } from '@/components/EditorialVisual';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { BlogPostMeta } from '@/lib/blog';
+import { formatDateShort } from '@/lib/date';
 import styles from '../app/blog/Blog.module.css';
 
 export type PostMeta = Omit<BlogPostMeta, 'coverImage' | 'coverAlt'> & {
@@ -15,18 +16,6 @@ export type PostMeta = Omit<BlogPostMeta, 'coverImage' | 'coverAlt'> & {
 // A post matches a topic when its frontmatter tags include the same label.
 const FILTERS = ['All', 'Product', 'Consulting', 'AI', 'Tanzania'] as const;
 const ease = [0.16, 1, 0.3, 1] as const;
-const shortDate = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
-
-function formatDate(date: string): string {
-  const parsed = new Date(`${date}T00:00:00.000Z`);
-  return Number.isNaN(parsed.getTime()) ? date : shortDate.format(parsed);
-}
-
 function Arrow() {
   return (
     <svg
@@ -73,7 +62,7 @@ function FeaturedCard({ post }: { post: PostMeta }) {
         <div className={styles.metaRow}>
           <span className={styles.category}>{post.tags[0] ?? 'Field notes'}</span>
           <span className={styles.metaDot} aria-hidden="true" />
-          <time dateTime={post.date}>{formatDate(post.date)}</time>
+          <time dateTime={post.date}>{formatDateShort(post.date)}</time>
           <span className={styles.metaDot} aria-hidden="true" />
           <span>{post.readingTime} min read</span>
         </div>
@@ -105,7 +94,7 @@ function PostCard({ post }: { post: PostMeta }) {
         <div className={styles.cardTop}>
           <span className={styles.category}>{post.tags[0] ?? 'Field notes'}</span>
           <span className={styles.metaSmall}>
-            <time dateTime={post.date}>{formatDate(post.date)}</time>
+            <time dateTime={post.date}>{formatDateShort(post.date)}</time>
           </span>
         </div>
         <h3 className={styles.cardTitle}>{post.title}</h3>

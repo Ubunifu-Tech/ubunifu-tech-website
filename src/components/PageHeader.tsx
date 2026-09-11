@@ -1,5 +1,4 @@
 import React from 'react';
-import { HeroArtwork, type HeroArtworkConfig } from './HeroArtwork';
 import { HeroBackdrop } from './HeroBackdrop';
 import type { HeroScene } from '@/content/hero-scenes';
 import styles from './PageHeader.module.css';
@@ -9,8 +8,7 @@ interface PageHeaderProps {
   title: React.ReactNode;
   lead?: string;
   children?: React.ReactNode;
-  artwork?: HeroArtworkConfig;
-  scene?: HeroScene;
+  scene: HeroScene;
   compact?: boolean;
   /** Ambient light layer. On by default wherever a scene backdrop is used. */
   ambient?: boolean;
@@ -27,26 +25,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   lead,
   children,
-  artwork,
   scene,
   compact = false,
   ambient = true,
 }) => {
   return (
-    <header className={`${styles.header} ${artwork || scene ? styles.withArtwork : ''} ${scene ? styles.scene : ''} ${compact ? styles.compact : ''}`}>
-      {scene && <HeroBackdrop scene={scene} ambient={ambient} />}
-      {!scene && (
-        <div className={styles.backdrop} aria-hidden="true">
-          {artwork && (
-            <HeroArtwork
-              {...artwork}
-              mode="background"
-              className={styles.artwork}
-              preload
-            />
-          )}
-        </div>
-      )}
+    <header className={`${styles.header} ${styles.withArtwork} ${styles.scene} ${compact ? styles.compact : ''}`}>
+      <HeroBackdrop scene={scene} ambient={ambient} />
       <div className={styles.inner}>
         <div className={styles.topline}>
           <span>{eyebrow}</span>
@@ -59,10 +44,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
           {children && <div className={styles.actions}>{children}</div>}
         </div>
-
-        {!scene && artwork?.caption && (
-          <p className={styles.artLabel}>{artwork.caption}</p>
-        )}
       </div>
     </header>
   );

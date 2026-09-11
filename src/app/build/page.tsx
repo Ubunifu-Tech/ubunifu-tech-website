@@ -5,6 +5,7 @@ import { ScrollReveal } from '@/components/ScrollReveal';
 import { BuildCards } from '@/components/BuildCards';
 import { PageHeader } from '@/components/PageHeader';
 import { CapabilityJourney } from '@/components/CapabilityJourney';
+import { CapabilityMap } from '@/components/CapabilityMap';
 import styles from './Build.module.css';
 import { cta } from '@/content/site';
 import { pageMetadata } from '@/lib/metadata';
@@ -53,6 +54,9 @@ export default function BuildPage() {
             {cta.primary} <span aria-hidden="true">→</span>
           </Link>
         </PageHeader>
+
+        {/* Overview and jump links first; the six chapters follow. */}
+        <CapabilityMap />
 
         <CapabilityJourney />
 

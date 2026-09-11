@@ -59,6 +59,9 @@ export const EngagementPaths: React.FC = () => {
               <i aria-hidden="true" />
               <span>Working system</span>
             </div>
+            <p className={styles.bestWhen}>
+              Best when the work is <strong>specific to how your organisation runs</strong>.
+            </p>
             <Link href="/build" className={styles.link}>
               Explore our services <PathArrow />
             </Link>
@@ -80,6 +83,9 @@ export const EngagementPaths: React.FC = () => {
               software and now run it ourselves. You use what exists, with the
               maintenance and hosting already handled, rather than commissioning
               a build.
+            </p>
+            <p className={styles.bestWhen}>
+              Best when the workflow is <strong>one many businesses already share</strong>.
             </p>
             <Link href="/products" className={styles.link}>
               See our products <PathArrow />

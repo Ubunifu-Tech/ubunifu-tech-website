@@ -1,0 +1,197 @@
+.section {
+  padding: var(--section-space) 0;
+  background: var(--surface-2);
+}
+
+.intro {
+  max-width: 62ch;
+  margin-bottom: var(--space-7);
+}
+
+.heading {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
+}
+
+.headingAccent {
+  color: var(--brand-deep);
+}
+
+.lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.7;
+}
+
+/* The one dark surface on this page: it names what the six capabilities are
+   collectively for, so the groups beneath it read as parts of one thing. */
+.banner {
+  margin-bottom: var(--space-7);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(140deg, #241a4d 0%, #171232 62%, #14102a 100%);
+}
+
+.bannerLabel {
+  margin: 0 0 var(--space-2);
+  color: var(--text-inverse-tertiary);
+  font-size: var(--font-size-small);
+}
+
+.bannerText {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--text-inverse);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.35;
+}
+
+.groups {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Each layer gets its own rule colour, so the four read as distinct routes
+   rather than as one undifferentiated wall of cards. */
+.group {
+  --rule: var(--text-primary);
+}
+
+.group[data-hue='brand'] {
+  --rule: var(--brand-deep);
+}
+
+.group[data-hue='primary'] {
+  --rule: var(--primary);
+}
+
+.group[data-hue='accent'] {
+  --rule: var(--accent);
+}
+
+.groupTitle {
+  margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.2;
+}
+
+.groupNote {
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--rule);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  transition:
+    border-color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.card:hover,
+.card:focus-visible {
+  border-color: var(--rule);
+  transform: translateY(-2px);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* Regular weight, not medium: check-typography.mjs locks body-size text to the
+   regular weight site-wide. The title separates from the summary beneath it by
+   ink and size instead — primary against secondary, body against small. */
+.cardTitle {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body);
+  line-height: 1.25;
+}
+
+/* The ringed arrow from the reference, drawn rather than iconised so it takes
+   the group's rule colour. */
+.cardArrow {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  color: var(--rule);
+  font-size: var(--font-size-small);
+  transition: background var(--transition-fast);
+}
+
+.card:hover .cardArrow,
+.card:focus-visible .cardArrow {
+  background: var(--surface-2);
+}
+
+.cardSummary {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.55;
+}
+
+@media (max-width: 1080px) {
+  .groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardArrow {
+    transition: none;
+  }
+
+  .card:hover,
+  .card:focus-visible {
+    transform: none;
+  }
+}

@@ -85,7 +85,9 @@
 }
 
 .path h3 {
-  max-width: 13ch;
+  /* 13ch could not fit "organisation-specific" on one line, so the heading fell
+     into four lines broken mid-word. */
+  max-width: 22ch;
   margin-bottom: var(--space-5);
   color: var(--text-primary);
   font-size: var(--font-size-heading);
@@ -104,7 +106,6 @@
 .sequence {
   display: grid;
   align-items: center;
-  margin-top: auto;
   margin-bottom: 2.25rem;
   grid-template-columns: auto minmax(20px, 1fr) auto minmax(20px, 1fr) auto;
   gap: var(--space-3);
@@ -130,6 +131,30 @@
   background: var(--brand);
   content: '';
   transform: translateY(-50%);
+}
+
+/* The choosing aid. The section's lead promises that which path fits comes down
+   to one distinction; this is where that distinction is actually made, on each
+   card, instead of being left for the reader to infer.
+
+   margin-top:auto sits here rather than on .sequence so both cards align: the
+   tailored path has a sequence strip and the products path does not, and
+   without this the two footers fell at different heights. */
+.bestWhen {
+  margin-top: auto;
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-active);
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+/* One emphasised phrase — the actual differentiator, and the only bold in the
+   card. */
+.bestWhen strong {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-emphasis);
 }
 
 .link {

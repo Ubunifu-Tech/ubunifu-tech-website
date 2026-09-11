@@ -92,7 +92,10 @@
   /* No blend mode: behind the content there is nothing to blend with except the
      page's own white, so the field simply paints itself. */
   mix-blend-mode: normal;
-  opacity: 0.5;
+  /* A contrast budget as much as a design value — see the palette note in
+     PageAtmosphere. Above 0.3 the accent and tertiary text tokens fall under
+     4.5:1 against the ground this field creates. */
+  opacity: 0.3;
 }
 
 /* A tall panel that IS the visual, not a layer behind one: no mask, and the

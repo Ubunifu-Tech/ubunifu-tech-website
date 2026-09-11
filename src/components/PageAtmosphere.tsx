@@ -19,8 +19,20 @@ import { AmbientShader } from './AmbientShader';
  * resolution; and it only tracks a real pointer, so phones do no work for it.
  */
 
-/** White does nothing under multiply; the violets are the only ink here. */
-const HAZE = ['#FFFFFF', '#F0EAFD', '#C4AEF3', '#FFFFFF', '#DACEF9'] as const;
+/**
+ * Mostly white, and the violets are deliberately pale.
+ *
+ * The deepest stop here sets the darkest ground any text on the site can end up
+ * sitting on, so it is a contrast budget, not a colour choice. Measured against
+ * every text token: the previous #C4AEF3 at 0.5 opacity put --brand-deep at
+ * 3.80:1 and --text-tertiary at 3.83:1, both under the 4.5:1 floor for normal
+ * text. #D9CCF8 at 0.3 puts the worst token at 4.65:1.
+ *
+ * The binding constraint is that --brand-deep is 5.21:1 on plain white and
+ * --text-tertiary 5.25:1, so neither has much headroom to spend before the
+ * field tints the ground underneath them.
+ */
+const HAZE = ['#FFFFFF', '#F3EEFE', '#D9CCF8', '#FFFFFF', '#E6DEFB'] as const;
 
 export function PageAtmosphere() {
   return (

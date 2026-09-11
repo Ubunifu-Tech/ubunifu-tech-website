@@ -70,8 +70,13 @@
        title    card and item headings (h3)
        heading  section headings (h2)
        display  page headings (h1) */
-  --font-size-caption: 0.8125rem;
-  --font-size-small: 0.875rem;
+  /* The two smallest steps were the only fixed sizes on the scale: every step
+     from lead upward already grows with the viewport, so on a wide display the
+     small print stayed at 13 and 14px while the headings around it grew. Both
+     now gain a point by 1280px. They are floored at their old values, so nothing
+     gets smaller on a phone than it was. */
+  --font-size-caption: clamp(0.8125rem, 0.78rem + 0.14vw, 0.875rem);
+  --font-size-small: clamp(0.875rem, 0.85rem + 0.12vw, 0.9375rem);
   --font-size-body: 1rem;
   --font-size-lead: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
   --font-size-title: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);

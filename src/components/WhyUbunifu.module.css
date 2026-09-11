@@ -1,66 +1,184 @@
 .section {
   padding: var(--section-space) 0;
-  /* White, against the --surface-2 of the capabilities list below it. */
+  /* White, against the --surface-2 of the capabilities section below it. */
   background: var(--background);
 }
 
-.heading {
-  margin-bottom: var(--space-7);
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
+/* Statement and proof share one band. The section below this one also splits in
+   two, but it splits into a heavy violet block and a ruled list; this is white
+   type throughout, so the two read as different sections rather than as one
+   repeated template. */
+.layout {
+  display: grid;
+  align-items: start;
+  column-gap: clamp(var(--space-6), 5vw, var(--space-9));
+  row-gap: var(--space-7);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
 }
 
-.grid {
+/* ── The statement ────────────────────────────────
+   One sentence carries the whole philosophy. It is set at heading size but at
+   REGULAR weight: the old four headings were medium at title size, which is
+   what made them feel heavier than the ideas needed. Size does the work here,
+   weight stays out of it. */
+
+.statement {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.38;
+}
+
+/* Reveals evidence rather than navigating, so it carries the button role. The
+   link to go and check that evidence lives in the panel it opens. */
+.clause {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--border-active);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
+}
+
+/* Orange stays the accent, but as a state on live type rather than as a row of
+   small glyphs. The section below owns violet; this one does not touch it.
+
+   Driven ONLY by the active class, never by :hover or :focus-visible. Those
+   pseudo-classes track the cursor and the focus ring independently of the panel,
+   so a clause could still be focused while the pointer left the sentence and
+   reset the panel — colouring both of them and telling the reader that two
+   principles were showing at once. One source of truth, one orange. */
+.clauseActive {
+  color: var(--brand-deep);
+  text-decoration-color: var(--brand-deep);
+}
+
+.clause:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+}
+
+/* ── The proof ────────────────────────────────────
+   Stacked in a single cell so the tallest state reserves the height once and
+   nothing below this section can be pushed around by a hover. */
+
+.proof {
   display: grid;
-  gap: var(--space-7) var(--space-6);
+  padding-top: var(--space-4);
+  /* Sits level with the first line of the statement, so the two columns read as
+     one band rather than as two stacked things that happen to be side by side. */
+  border-top: 1px solid var(--border);
+}
+
+.proof > * {
+  grid-area: 1 / 1;
+}
+
+.proofList {
+  display: grid;
   margin: 0;
   padding: 0;
   list-style: none;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.pillar {
+.proofItem {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-3);
+  grid-area: 1 / 1;
+  /* visibility, not display: it keeps the hidden states out of the
+     accessibility tree and out of the tab order while still letting them
+     contribute their height to the reserved cell. */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
-/* Bare mark, not a filled chip. A tinted rounded badge behind every icon is the
-   pattern this brand deliberately avoids. */
-.icon {
-  display: inline-flex;
-  color: var(--brand-deep);
+.proofItemActive {
+  visibility: visible;
+  opacity: 1;
 }
 
-.label {
+/* The sentence already says which principle is active on a pointer device. */
+.proofClause {
+  display: none;
   margin: 0;
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-medium);
-  text-wrap: balance;
 }
 
-.body {
-  max-width: 34ch;
+.proofBody {
   margin: 0;
   color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.6;
+}
+
+/* The evidence is the payload, so it gets primary ink while the explanation
+   above it stays secondary. */
+.proofEvidence {
+  margin: 0;
+  color: var(--text-primary);
   font-size: var(--font-size-body);
   line-height: 1.65;
 }
 
-@media (max-width: 960px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.proofLink {
+  color: var(--brand-deep);
+  font-size: var(--font-size-small);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (max-width: 560px) {
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-6);
+/* Touch has no hover, so nothing may sit behind one. The proofs un-stack and
+   all four show at once, each labelled with the principle it belongs to, and
+   the sentence stops advertising a reveal it cannot perform. */
+@media (hover: none) {
+  .proof > * {
+    grid-area: auto;
   }
 
-  .body {
-    max-width: none;
+  .proofList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+  }
+
+  .proofItem {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .proofClause {
+    display: block;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: var(--font-size-title);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.2;
+  }
+
+  .clause {
+    text-decoration: none;
+    cursor: auto;
+  }
+
+  .clause:hover,
+  .clauseActive {
+    color: inherit;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clause,
+  .proofItem {
+    transition: none;
   }
 }

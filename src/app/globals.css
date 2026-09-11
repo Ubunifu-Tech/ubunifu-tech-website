@@ -151,6 +151,24 @@ html {
   background-color: var(--background);
 }
 
+/* Section grounds, kept separate from the raw colours so a page can opt out of
+   opacity in one place. A page running the ambient violet field marks its <main>
+   with data-atmosphere: the field sits at z-index -1, so any opaque section
+   above it hides it completely, and these two are every section ground on the
+   site. Dark sections are untouched — they set their own colour and are meant to
+   cover the field. */
+:root {
+  --section-ground: var(--background);
+  --section-ground-2: var(--surface-2);
+}
+
+[data-atmosphere] {
+  --section-ground: transparent;
+  /* Keeps the tonal step against the plain sections, just softened enough to
+     let the field through. */
+  --section-ground-2: color-mix(in srgb, var(--surface-2) 55%, transparent);
+}
+
 /* Deliberately transparent. A background here is an ordinary element background
    box, and it paints above any z-index:-1 layer — which is exactly how the
    page-level ambient field ends up invisible. html's colour already reaches the

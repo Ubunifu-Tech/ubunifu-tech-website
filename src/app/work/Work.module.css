@@ -57,7 +57,7 @@
 .coda {
   padding: clamp(var(--space-7), 5vw, 4.5rem) 0;
   border-top: 1px solid var(--border-hover);
-  background: var(--surface-2);
+  background: var(--section-ground-2);
 }
 
 .codaText {

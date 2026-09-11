@@ -6,7 +6,7 @@
   min-height: 76vh;
   padding: calc(var(--nav-height) + 80px) 0 100px;
   overflow: hidden;
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 .backdrop {

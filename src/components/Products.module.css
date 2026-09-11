@@ -1,5 +1,5 @@
 .section {
-  background: var(--surface-2);
+  background: var(--section-ground-2);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }

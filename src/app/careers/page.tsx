@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { PageHeader } from '@/components/PageHeader';
 import styles from './Careers.module.css';
 import { pageMetadata } from '@/lib/metadata';
@@ -12,8 +13,10 @@ export const metadata = pageMetadata({
 export default function CareersPage() {
   return (
     <>
-      <main className={styles.main}>
+      <PageAtmosphere />
+      <main data-atmosphere className={styles.main}>
         <PageHeader
+          ambient={false}
           scene="careers"
           compact
           eyebrow="Careers"

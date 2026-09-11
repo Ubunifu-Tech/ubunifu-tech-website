@@ -1,6 +1,6 @@
 .section {
   padding: var(--section-space) 0;
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 .intro {

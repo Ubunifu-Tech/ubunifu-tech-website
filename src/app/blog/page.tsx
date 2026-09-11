@@ -1,4 +1,5 @@
 import { CtaBand } from '@/components/CtaBand';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { PageHeader } from '@/components/PageHeader';
 import { getAllPosts, resolveBlogCover } from '@/lib/blog';
 import { BlogIndex, type PostMeta } from '@/components/BlogIndex';
@@ -34,8 +35,10 @@ export default function BlogPage() {
 
   return (
     <>
-      <main className={styles.main}>
+      <PageAtmosphere />
+      <main data-atmosphere className={styles.main}>
         <PageHeader
+          ambient={false}
           scene="journal"
           compact
           eyebrow="Insights"

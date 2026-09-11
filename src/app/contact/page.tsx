@@ -1,4 +1,5 @@
 import { PageHeader } from '@/components/PageHeader';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { Contact } from '@/components/Contact';
 import { pageMetadata } from '@/lib/metadata';
 
@@ -12,8 +13,10 @@ export const metadata = pageMetadata({
 export default function ContactPage() {
   return (
     <>
-      <main>
+      <PageAtmosphere />
+      <main data-atmosphere>
         <PageHeader
+          ambient={false}
           scene="contact"
           compact
           eyebrow="Contact"

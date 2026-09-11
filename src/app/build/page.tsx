@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { WorkPreview } from '@/components/HomePreviews';
 import { CtaBand } from '@/components/CtaBand';
 import { ScrollReveal } from '@/components/ScrollReveal';
@@ -45,8 +46,10 @@ const process = [
 export default function BuildPage() {
   return (
     <>
-      <main className={styles.main}>
+      <PageAtmosphere />
+      <main data-atmosphere className={styles.main}>
         <PageHeader
+          ambient={false}
           scene="services"
           compact
           eyebrow="Services"

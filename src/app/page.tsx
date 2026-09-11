@@ -1,4 +1,5 @@
 import { Hero } from '@/components/Hero';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { CapabilitiesIndex } from '@/components/CapabilitiesIndex';
 import { WhyUbunifu } from '@/components/WhyUbunifu';
 import { EngagementPaths } from '@/components/EngagementPaths';
@@ -27,16 +28,19 @@ export default function Home() {
   const latestPosts = lead ? [lead, ...candidates.filter((post) => post.slug !== lead.slug)] : candidates;
 
   return (
-    <main>
-      <Hero />
-      <WhyUbunifu />
-      <CapabilitiesIndex />
-      <EngagementPaths />
-      <WorkPreview />
-      <Testimonial />
-      <ProductsProof />
-      <Insights posts={latestPosts} />
-      <CtaBand />
-    </main>
+    <>
+      <PageAtmosphere />
+      <main data-atmosphere>
+        <Hero />
+        <WhyUbunifu />
+        <CapabilitiesIndex />
+        <EngagementPaths />
+        <WorkPreview />
+        <Testimonial />
+        <ProductsProof />
+        <Insights posts={latestPosts} />
+        <CtaBand />
+      </main>
+    </>
   );
 }

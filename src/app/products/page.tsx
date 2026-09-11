@@ -1,4 +1,5 @@
 import { CtaBand } from '@/components/CtaBand';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { PageHeader } from '@/components/PageHeader';
 import { Products } from '@/components/Products';
 import { pageMetadata } from '@/lib/metadata';
@@ -13,8 +14,10 @@ export const metadata = pageMetadata({
 export default function ProductsPage() {
   return (
     <>
-      <main>
+      <PageAtmosphere />
+      <main data-atmosphere>
         <PageHeader
+          ambient={false}
           scene="products"
           compact
           eyebrow="Our products"

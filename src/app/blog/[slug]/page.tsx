@@ -1,4 +1,5 @@
 import { EditorialVisual } from '@/components/EditorialVisual';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -140,71 +141,74 @@ export default async function BlogPostPage({
   };
 
   return (
-    <main className={styles.main}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
-      />
-      <ReadingProgress />
+    <>
+      <PageAtmosphere />
+      <main data-atmosphere className={styles.main}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+        />
+        <ReadingProgress />
 
-      <article>
-        <header className={`container ${styles.articleHero}`}>
-          <div className={styles.header}>
-            <div className={styles.headerTopline}>
-              <Link href="/blog" className={styles.journalLink}>
-                <span aria-hidden="true">←</span> All insights
+        <article>
+          <header className={`container ${styles.articleHero}`}>
+            <div className={styles.header}>
+              <div className={styles.headerTopline}>
+                <Link href="/blog" className={styles.journalLink}>
+                  <span aria-hidden="true">←</span> All insights
+                </Link>
+                {post.tags[0] ? <span className={styles.category}>{post.tags[0]}</span> : null}
+              </div>
+
+              <h1 className={styles.title}>{post.title}</h1>
+              <p className={styles.dek}>{post.excerpt}</p>
+
+              <div className={styles.meta}>
+                <span className={styles.author}>By {post.author}</span>
+                <span className={styles.metaDot} aria-hidden="true" />
+                <time className={styles.date} dateTime={post.date}>
+                  {formatDateLong(post.date)}
+                </time>
+                <span className={styles.metaDot} aria-hidden="true" />
+                <span>{post.readingTime} min read</span>
+              </div>
+            </div>
+
+            <figure className={styles.cover}>
+              <EditorialVisual
+                src={cover.image}
+                alt={cover.alt}
+                fill
+                priority
+                sizes="(max-width: 1280px) 100vw, 1200px"
+                className={styles.coverImage}
+              />
+              {!getProjectDiagram(cover.image) && (
+                <figcaption className={styles.coverCaption}>Conceptual illustration</figcaption>
+              )}
+            </figure>
+          </header>
+
+          <div className={`container ${styles.articleContainer}`}>
+            <div className={styles.content}>
+              <ReactMarkdown>{post.content}</ReactMarkdown>
+            </div>
+
+            <footer className={styles.articleFooter}>
+              <div className={styles.tagList} aria-label="Article topics">
+                {post.tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+              <Link href="/blog" className={styles.backLink}>
+                <span aria-hidden="true">←</span> Back to all articles
               </Link>
-              {post.tags[0] ? <span className={styles.category}>{post.tags[0]}</span> : null}
-            </div>
-
-            <h1 className={styles.title}>{post.title}</h1>
-            <p className={styles.dek}>{post.excerpt}</p>
-
-            <div className={styles.meta}>
-              <span className={styles.author}>By {post.author}</span>
-              <span className={styles.metaDot} aria-hidden="true" />
-              <time className={styles.date} dateTime={post.date}>
-                {formatDateLong(post.date)}
-              </time>
-              <span className={styles.metaDot} aria-hidden="true" />
-              <span>{post.readingTime} min read</span>
-            </div>
+            </footer>
           </div>
+        </article>
 
-          <figure className={styles.cover}>
-            <EditorialVisual
-              src={cover.image}
-              alt={cover.alt}
-              fill
-              priority
-              sizes="(max-width: 1280px) 100vw, 1200px"
-              className={styles.coverImage}
-            />
-            {!getProjectDiagram(cover.image) && (
-              <figcaption className={styles.coverCaption}>Conceptual illustration</figcaption>
-            )}
-          </figure>
-        </header>
-
-        <div className={`container ${styles.articleContainer}`}>
-          <div className={styles.content}>
-            <ReactMarkdown>{post.content}</ReactMarkdown>
-          </div>
-
-          <footer className={styles.articleFooter}>
-            <div className={styles.tagList} aria-label="Article topics">
-              {post.tags.map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
-            </div>
-            <Link href="/blog" className={styles.backLink}>
-              <span aria-hidden="true">←</span> Back to all articles
-            </Link>
-          </footer>
-        </div>
-      </article>
-
-      <CtaBand />
-    </main>
+        <CtaBand />
+      </main>
+    </>
   );
 }

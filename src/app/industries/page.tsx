@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { ScrollReveal } from '@/components/ScrollReveal';
@@ -23,8 +24,10 @@ export default function IndustriesPage() {
 
   return (
     <>
-      <main>
+      <PageAtmosphere />
+      <main data-atmosphere>
         <PageHeader
+          ambient={false}
           scene="industries"
           compact
           eyebrow="Industries"

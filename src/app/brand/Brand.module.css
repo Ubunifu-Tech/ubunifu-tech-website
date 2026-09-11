@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   padding-bottom: clamp(5rem, 9vw, 8rem);
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 /* ── Editorial masthead ─────────────────────── */

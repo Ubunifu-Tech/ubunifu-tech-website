@@ -1,4 +1,5 @@
 import { ArrowUpRight } from 'lucide-react';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { WorkRegister } from '@/components/WorkRegister';
@@ -17,8 +18,10 @@ export const metadata = pageMetadata({
 export default function WorkPage() {
   return (
     <>
-      <main>
+      <PageAtmosphere />
+      <main data-atmosphere>
         <PageHeader
+          ambient={false}
           scene="work"
           compact
           eyebrow="Our work"

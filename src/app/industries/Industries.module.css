@@ -1,10 +1,10 @@
 .provenSection {
   padding: clamp(5.5rem, 9vw, 9rem) 0;
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 .gridSection {
-  background: var(--surface-2);
+  background: var(--section-ground-2);
   border-top: 1px solid var(--border);
 }
 

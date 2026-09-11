@@ -1,7 +1,7 @@
 .section {
   padding: var(--section-space) 0;
   /* White, against the --surface-2 of the capabilities section below it. */
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 .intro {

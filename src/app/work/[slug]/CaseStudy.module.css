@@ -101,7 +101,7 @@
 /* ── Next project ────────────────────────────── */
 
 .nextSection {
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 .nextCard {
@@ -309,7 +309,7 @@
 .plateSection {
   padding: clamp(var(--space-7), 5vw, 4.5rem) 0;
   border-bottom: 1px solid var(--border-hover);
-  background: var(--background);
+  background: var(--section-ground);
 }
 
 .plateFigure {

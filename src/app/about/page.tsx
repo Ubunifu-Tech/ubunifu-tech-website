@@ -24,7 +24,7 @@ export default function AboutPage() {
       {/* Trialling the page-wide violet haze here first. Fixed and
           non-interactive, so its position in the tree does not matter. */}
       <PageAtmosphere />
-      <main>
+      <main data-atmosphere>
         {/* The page haze is this page's ambient field, so the header does not
             run a second one: two placements meant two live WebGL contexts and
             two effects layered over the same hero. */}

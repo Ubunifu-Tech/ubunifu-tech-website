@@ -30,8 +30,8 @@ export const EngagementPaths: React.FC = () => {
             Commission a tailored system, or use software we already operate.
           </h2>
           <p className={styles.lead}>
-            Commission a system shaped around your organisation, or use software
-            we already operate for a repeatable workflow.
+            Which one fits usually comes down to whether the work is specific to
+            how your organisation runs, or a workflow that many businesses share.
           </p>
         </motion.div>
 
@@ -76,15 +76,11 @@ export const EngagementPaths: React.FC = () => {
             </div>
             <h3>Use software we build and operate.</h3>
             <p className={styles.pathBody}>
-              Insight supports work with documents and knowledge. Sifa supports
-              business operations and records. Rafiki is in
-              development.
+              Some problems are common enough that we have already built the
+              software and now run it ourselves. You use what exists, with the
+              maintenance and hosting already handled, rather than commissioning
+              a build.
             </p>
-            <ul className={styles.productRegister} aria-label="Ubunifu product status">
-              <li><span>Insight</span><em>Live</em></li>
-              <li><span>Sifa</span><em>Live</em></li>
-              <li><span>Rafiki</span><em>In development</em></li>
-            </ul>
             <Link href="/products" className={styles.link}>
               See our products <PathArrow />
             </Link>

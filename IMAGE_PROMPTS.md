@@ -665,48 +665,11 @@ FORMAT: 1600 x 1200 pixels. Deep navy #1F1A36 background, full bleed to all four
 No border, no frame, no vignette.
 ```
 
-### 15. Technology Strategy and Advisory
+### Technology Strategy and Advisory — do not generate
 
-**Save as:** `public/editorial/service-strategy-v1.webp`
-
-```
-Create a flat editorial vector illustration. Not photorealistic. Not a 3D render. No
-perspective depth-of-field, no glossy or reflective surfaces, no bevels, no extruded
-plastic look. Flat shapes with simple isometric geometry only.
-
-Use ONLY these six colours and no others:
-  #1F1A36  deep ink navy - the background, edge to edge
-  #FF6B2C  signal orange - ONE focal accent, used sparingly
-  #6D3FE8  digital violet - a rare secondary accent
-  #3A3357  cool slate - mid-tone structure
-  #4A4368  lighter slate - mid-tone structure
-  #EDE7DD  warm bone - highlights, paper and lit surfaces only
-
-Build everything from crisp rectangles, circles and straight routed lines with clean
-right-angle turns. Keep one consistent thin line weight throughout. Leave generous
-empty space. Use isometric projection or straight-on elevation, never dramatic
-perspective. Light comes from a single soft source at the upper right, casting long
-soft shadows. One or two focal elements carry a wide low-intensity glow; nothing else
-does. Add very fine film grain across the whole frame at about 3% strength.
-
-The mood is engineered, calm and deliberate - infrastructure that works, drawn by
-someone who respects it. Not futuristic, not playful, not corporate stock.
-
-Do NOT include any of the following: text, letters, numerals, logos, watermarks, user
-interface panels or screenshots, glassmorphism, 3D bevels, chrome or metallic
-gradients, lens flare, drop shadows on every object, people, faces, hands, brains,
-glowing humanoid AI figures, circuit board traces, binary digits, neon cyberpunk,
-holograms, rainbow or multi-stop gradients, vignettes, borders or frames.
-
-SUBJECT: A deliberate route chosen from several possible ones. An isometric planning sheet laid flat in warm bone, carrying a faint slate grid and contour rules. An open drafting compass stands over it with one leg planted at a marked origin point. Across the sheet, four or five candidate routes are drawn faintly in slate outline — wandering, branching, some doubling back, one stopping dead. Over them, ONE route is drawn confidently in solid orange: fewer turns, clean right angles, passing through three small marked waypoint nodes and arriving at a single squared destination block in warm bone, lit and raised slightly off the sheet.
-
-COMPOSITION: one clear scene with a single focal element, not a collection of
-scattered icons. Centre the subject with generous air around it. Nothing will be
-overlaid on this image, so it can carry full detail edge to edge.
-
-FORMAT: 1600 x 1200 pixels. Deep navy #1F1A36 background, full bleed to all four edges.
-No border, no frame, no vignette.
-```
+Drawn in code as the `strategy` case in `src/components/SystemDiagram.tsx`, so it
+stays crisp, themeable and ~2 KB. `scripts/check-project-visuals.mjs` asserts it
+renders on `/build`. Branding is the only service that still uses a raster.
 
 ## ARTICLE COVERS
 

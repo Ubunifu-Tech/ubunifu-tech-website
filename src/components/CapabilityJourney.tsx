@@ -30,9 +30,8 @@ const media: Partial<Record<ServiceKey, ServiceVisual>> = {
     description: 'Source documents pass through an AI assistant, with a person reviewing its output.',
   },
   strategy: {
-    kind: 'image',
-    src: '/editorial/service-strategy-v1.webp',
-    description: 'A drafting compass traces a deliberate route across planning sheets.',
+    kind: 'strategy',
+    description: 'Several candidate routes across a planning sheet, with one chosen route arriving at a destination.',
   },
 };
 

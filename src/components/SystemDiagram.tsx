@@ -3,7 +3,7 @@ import type { ProjectDiagramKind } from '@/content/project-visuals';
 import { IsoBox, IsoPlane, IsoTray } from './iso';
 import styles from './SystemDiagram.module.css';
 
-export type SystemDiagramKind = ProjectDiagramKind | 'web' | 'hosting' | 'data' | 'ai';
+export type SystemDiagramKind = ProjectDiagramKind | 'web' | 'hosting' | 'data' | 'ai' | 'strategy';
 
 /**
  * Text-free system diagrams, with descriptions supplied outside the artwork.
@@ -146,6 +146,32 @@ function Composition({ kind }: { kind: SystemDiagramKind }) {
           <IsoPlane className={styles.lit} cx={520} cy={214} w={62} h={31} />
           <line className={`${styles.bar} ${styles.barAccent}`} x1={496} y1={210} x2={534} y2={229} />
           <line className={styles.bar} x1={508} y1={196} x2={530} y2={207} />
+        </>
+      );
+
+    /* Several routes were possible; one was chosen. The alternatives stay on the
+       sheet, faint and stopping short, because the point of an advisory
+       engagement is the options that were ruled out. */
+    case 'strategy':
+      return (
+        <>
+          <IsoPlane className={styles.sheet} cx={320} cy={232} w={268} h={134} />
+
+          <g className={styles.routes}>
+            {/* Candidates: wandering, and each stops without arriving. */}
+            <path className={styles.candidate} d="M132 232 H196 V296 H300 V262 H352" />
+            <path className={styles.candidate} d="M132 232 H232 V320 H372" />
+            <path className={styles.candidate} d="M132 232 H172 V172 H244 V128 H316" />
+            {/* The chosen route: fewer turns, and it arrives. */}
+            <path className={`${styles.route} ${styles.live}`} d="M132 232 H216 V190 H336 V152 H444" />
+          </g>
+
+          <circle className={styles.node} cx={132} cy={232} r={9} />
+          <circle className={styles.waypoint} cx={216} cy={190} r={6} />
+          <circle className={styles.waypoint} cx={336} cy={152} r={6} />
+
+          <IsoBox className={styles.solid} cx={492} cy={140} w={54} h={27} d={30} />
+          <IsoPlane className={styles.lit} cx={492} cy={126} w={54} h={27} />
         </>
       );
   }

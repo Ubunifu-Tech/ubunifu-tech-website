@@ -37,7 +37,8 @@ for (const [route, scene] of Object.entries(routes)) {
 }
 
 const services = readFileSync('.next/server/app/build.html', 'utf8');
-for (const subject of ['branding', 'strategy']) {
+// Only branding still ships a raster; strategy is drawn by SystemDiagram.
+for (const subject of ['branding']) {
   const filename = `service-${subject}-v1.webp`;
   if (!services.includes(filename)) failures.push(`Services: missing ${subject} illustration`);
   if (statSync(join('public/editorial', filename)).size > 350_000) failures.push(`Services: ${subject} exceeds image budget`);

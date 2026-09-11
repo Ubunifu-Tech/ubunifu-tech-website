@@ -112,3 +112,28 @@
     animation: none;
   }
 }
+
+/* ── Strategy ─────────────────────────────────────
+   The planning sheet the routes are drawn on. Deliberately not the lit element:
+   every diagram gets exactly one, and here it is the destination. */
+.sheet {
+  fill: rgba(58, 51, 87, 0.34);
+  stroke: rgba(237, 231, 221, 0.10);
+}
+
+/* Options that were considered and ruled out. Faint, dashed and unarriving —
+   no cross, no red mark; they simply stop. */
+.candidate {
+  fill: none;
+  stroke: rgba(237, 231, 221, 0.16);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.waypoint {
+  fill: var(--text-primary);
+  stroke: var(--brand);
+  stroke-width: 2;
+}

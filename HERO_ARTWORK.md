@@ -20,7 +20,7 @@ The site uses optimized WebP copies at up to 1600px wide, quality 82. Only the c
 - [brand-hero](public/editorial/hero-brand-v1.webp)
 - [privacy-hero](public/editorial/hero-privacy-v1.webp)
 - [branding-service](public/editorial/service-branding-v1.webp)
-- [strategy-service](public/editorial/service-strategy-v1.webp)
+- strategy-service — **retired.** Replaced by the drawn `strategy` diagram in `SystemDiagram.tsx`; the raster was deleted.
 
 ## Exact generation prompts
 

@@ -35,7 +35,9 @@ export const Products: React.FC<{ hideHeader?: boolean }> = ({
             viewport={{ once: true }}
             transition={{ duration: reduceMotion ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h2 id="products-title" className={styles.heading}>Software products</h2>
+            <h2 id="products-title" className={styles.heading}>
+              Software <span className={styles.headingAccent}>products</span>
+            </h2>
             <p className={styles.subheading}>
               Two live products for defined workflows, plus consulting when the
               problem needs a system shaped around your organisation.

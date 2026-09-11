@@ -8,6 +8,11 @@
   margin-bottom: var(--space-3);
   color: var(--text-primary);
 }
+/* One accented word, the site-wide heading treatment. */
+.headingAccent {
+  color: var(--brand-deep);
+}
+
 
 .grid {
   display: grid;

@@ -64,7 +64,7 @@ export const CapabilitiesIndex: React.FC = () => {
       <div className={`container ${styles.layout}`}>
         <div className={styles.intro}>
           <h2 id="capabilities-index-title" className={styles.heading}>
-            What we do
+            What we <span className={styles.headingAccent}>do</span>
           </h2>
           <p className={styles.lead}>
             We design, build, and maintain the technology your business uses.

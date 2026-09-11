@@ -29,7 +29,9 @@ export const Team: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h2 className={styles.heading}>Our team</h2>
+          <h2 className={styles.heading}>
+            Our <span className={styles.headingAccent}>team</span>
+          </h2>
         </motion.div>
 
         <div className={styles.grid}>

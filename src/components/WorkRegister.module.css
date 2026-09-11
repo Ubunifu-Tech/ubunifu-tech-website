@@ -125,15 +125,6 @@
   color: var(--text-primary);
 }
 
-.startLink {
-  color: var(--brand-deep);
-  font-size: var(--font-size-body);
-}
-
-.startLink:hover {
-  color: var(--brand-hover);
-}
-
 .figure {
   margin: 0;
 }

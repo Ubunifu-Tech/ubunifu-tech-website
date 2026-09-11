@@ -5,49 +5,84 @@
   padding-top: clamp(var(--space-7), 5vw, 4.5rem);
 }
 
+/* Two address plates rather than two table rows. This is the page's promise —
+   "go and look" — so it gets the weight, and it carries the same hue rule and
+   ringed arrow the rest of the site uses. */
 .dispatchList {
+  display: grid;
+  gap: var(--space-5);
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--border-active);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dispatchList > li:nth-child(odd) {
+  --rule: var(--brand-deep);
+}
+
+.dispatchList > li:nth-child(even) {
+  --rule: var(--primary);
 }
 
 .dispatchRow {
   display: flex;
-  align-items: center;
-  gap: clamp(var(--space-4), 3vw, var(--space-7));
-  min-height: 96px;
-  padding: var(--space-4) var(--space-4) var(--space-4) 0;
-  border-bottom: 1px solid var(--border-active);
-  transition: background var(--transition-fast), padding-left var(--transition-fast);
+  height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  transition:
+    border-color var(--transition-base),
+    transform var(--transition-base);
 }
 
-.dispatchRow:hover {
-  padding-left: var(--space-4);
-  background: var(--brand-dim);
+.dispatchRow:hover,
+.dispatchRow:focus-visible {
+  border-color: var(--rule);
+  transform: translateY(-2px);
 }
 
 .dispatchDomain {
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--font-size-heading);
+  font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .dispatchCategory {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
 }
 
 .dispatchArrow {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: var(--brand-deep);
-  transition: transform var(--transition-fast);
+  display: flex;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  color: var(--rule);
+  transition: background var(--transition-fast);
 }
 
 .dispatchRow:hover .dispatchArrow {
-  transform: translateX(6px);
+  background: var(--surface-2);
+}
+
+@media (max-width: 720px) {
+  .dispatchList {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .register {

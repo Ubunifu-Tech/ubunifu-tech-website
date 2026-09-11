@@ -26,7 +26,7 @@ export default function WorkPage() {
           compact
           eyebrow="Our work"
           title="Our work is live. Go and look."
-          lead="Safari King Africa runs its bookings, customer records and publishing on a platform we built. Usambara Destination runs its trip enquiries on one we built. Both links open the running sites."
+          lead="Two systems we built, both running today. Every link on this page opens the real thing."
         />
 
         {/* Dispatch strip: the two addresses, above the fold, each a whole link.
@@ -69,13 +69,9 @@ export default function WorkPage() {
         <section className={styles.coda}>
           <div className="container">
             <p className={styles.codaText}>
-              We build at two depths. Usambara Destination is a site that carries someone
-              from browsing to a well-formed enquiry and hands it to the operator’s own
-              inbox. Safari King Africa is that plus the system behind it — customer
-              records, roles, an audit trail, assisted drafting with human review. Both
-              are live above. We have not measured booking volumes or staff hours on
-              either, so we do not quote them; what we publish instead is what each system
-              does and the address where you can check it.
+              We have not measured booking volumes or staff hours on either system, so we
+              do not quote them. What we publish is what each system does, and the address
+              where you can go and check it.
             </p>
           </div>
         </section>

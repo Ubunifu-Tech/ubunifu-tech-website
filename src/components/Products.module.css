@@ -24,6 +24,11 @@
   font-weight: var(--font-weight-medium);
   line-height: 1.18;
 }
+/* One accented word, the site-wide heading treatment. */
+.headingAccent {
+  color: var(--brand-deep);
+}
+
 
 .subheading {
   max-width: 640px;

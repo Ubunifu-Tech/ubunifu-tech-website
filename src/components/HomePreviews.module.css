@@ -27,6 +27,11 @@
   color: var(--text-primary);
   margin: var(--space-2) 0 var(--space-3);
 }
+/* One accented word, the site-wide heading treatment. */
+.headingAccent {
+  color: var(--brand-deep);
+}
+
 
 .sub {
   grid-area: copy;

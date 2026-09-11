@@ -44,6 +44,11 @@
   font-size: var(--font-size-lead);
   line-height: 1.72;
 }
+/* One accented word, the site-wide heading treatment. */
+.headingAccent {
+  color: var(--brand-deep);
+}
+
 
 /* ── The panel ────────────────────────────────────
    The one strong anchor. Purple lives here and nowhere else in the section. */

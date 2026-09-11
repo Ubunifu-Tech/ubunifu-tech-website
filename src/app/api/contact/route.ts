@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
           to: email,
           replyTo: 'info@ubunifutech.com',
           subject: 'Thanks for reaching out | Ubunifu Technologies',
-          html: acknowledgementEmail({ name, subject }),
+          html: acknowledgementEmail({ name, subject, message }),
         },
         { idempotencyKey: `contact-ack-${submissionId}` },
       );

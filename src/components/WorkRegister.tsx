@@ -67,9 +67,6 @@ export function WorkRegister() {
               <Link href={`/work/${project.slug}`} className={styles.caseLink}>
                 Read the case study <span aria-hidden="true">→</span>
               </Link>
-              <Link href="/contact" className={styles.startLink}>
-                Start something like this <span aria-hidden="true">→</span>
-              </Link>
             </div>
           </ScrollReveal>
 

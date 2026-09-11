@@ -27,7 +27,9 @@ export const WorkPreview: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
-          <h2 className={styles.heading}>Selected work</h2>
+          <h2 className={styles.heading}>
+            Selected <span className={styles.headingAccent}>work</span>
+          </h2>
           <p className={styles.sub}>
             Websites and booking systems for two Tanzanian tourism businesses.
           </p>
@@ -96,7 +98,9 @@ export const ProductsProof: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
-          <h2 className={styles.heading}>Our products</h2>
+          <h2 className={styles.heading}>
+            Our <span className={styles.headingAccent}>products</span>
+          </h2>
           <p className={styles.sub}>
             Software we build, operate, and continue to improve.
           </p>

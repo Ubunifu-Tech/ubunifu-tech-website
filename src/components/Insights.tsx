@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { EditorialVisual } from '@/components/EditorialVisual';
 import { motion, useReducedMotion } from 'framer-motion';
 import { MediaReveal } from './MediaReveal';
 import styles from './Insights.module.css';
@@ -54,11 +54,10 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
           transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
           <div>
-            <span className="eyebrow">Latest thinking</span>
-            <h2 className={styles.heading}>Notes from the work</h2>
+            <h2 className={styles.heading}>Articles</h2>
           </div>
           <Link href="/blog" className={styles.headLink}>
-            Explore insights <Arrow />
+            All articles <Arrow />
           </Link>
         </motion.div>
 
@@ -74,7 +73,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
               {lead.coverImage && lead.coverAlt ? (
                 <div className={styles.leadMedia}>
                   <MediaReveal>
-                    <Image
+                    <EditorialVisual
                       src={lead.coverImage}
                       alt={lead.coverAlt}
                       fill
@@ -82,8 +81,6 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
                       className={styles.image}
                     />
                   </MediaReveal>
-                  <span className={styles.artDisclosure}>Conceptual illustration</span>
-                  <span className={styles.leadNumber} aria-hidden="true">01</span>
                 </div>
               ) : null}
               <div className={styles.leadBody}>
@@ -98,7 +95,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
             </Link>
           </motion.div>
 
-          <ol className={styles.dispatches}>
+          <ul className={styles.dispatches}>
           {dispatches.map((post, index) => (
             <motion.li
               className={styles.dispatchItem}
@@ -109,9 +106,6 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
               transition={{ duration: reduceMotion ? 0 : 0.42, delay: reduceMotion ? 0 : index * 0.07, ease }}
             >
               <Link href={`/blog/${post.slug}`} className={styles.dispatch}>
-                <span className={styles.dispatchNumber} aria-hidden="true">
-                  {String(index + 2).padStart(2, '0')}
-                </span>
                 <div className={styles.dispatchCopy}>
                   <div className={styles.meta}>
                     <time dateTime={post.date}>{formatDate(post.date)}</time>
@@ -124,7 +118,7 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
               </Link>
             </motion.li>
           ))}
-          </ol>
+          </ul>
         </div>
       </div>
     </section>

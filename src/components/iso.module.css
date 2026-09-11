@@ -1,0 +1,27 @@
+/* Faces read their fill from the consumer's palette, set once on a wrapper. */
+
+.top {
+  fill: var(--iso-top);
+}
+
+.front {
+  fill: var(--iso-front);
+}
+
+.side {
+  fill: var(--iso-side);
+}
+
+/* The recess of an open tray. Needs its own tone plus a hairline, or it reads as
+   a solid box lid rather than an opening. */
+.floor {
+  fill: var(--iso-recess, var(--iso-side));
+  stroke: var(--iso-edge);
+  stroke-width: 1;
+}
+
+.plane {
+  fill: var(--iso-plane);
+  stroke: var(--iso-edge);
+  stroke-width: 1;
+}

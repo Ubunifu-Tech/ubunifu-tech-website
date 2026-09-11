@@ -1,10 +1,6 @@
 // The six service pillars. Source of truth for the Services page and the
 // homepage services section. Icons are lucide-react. Keep descriptions
 // specific and grounded (see POSITIONING.md).
-//
-// The count is spelled out in two headings ("Six ways we help you grow" on the
-// homepage and /build) and the /build hero lead — update those if you add or
-// remove a pillar.
 
 import {
   Code2,
@@ -32,9 +28,9 @@ export const services: ReadonlyArray<Service> = [
     key: 'web',
     icon: Code2,
     title: 'Websites & Custom Platforms',
-    summary: 'Public experiences and operational tools.',
+    summary: 'Websites, online shops, and business applications.',
     description:
-      'We design and build mobile-first public websites, e-commerce, and custom web platforms, including content management, enquiry paths, and internal workflows. Performance, accessibility, and maintainable ownership are part of the build.',
+      'We build websites, online shops, and custom applications that work across desktop and mobile. Your team can manage the content, with performance, accessibility, and search visibility considered from the start.',
     items: [
       'Websites & web applications',
       'E-commerce',
@@ -47,9 +43,9 @@ export const services: ReadonlyArray<Service> = [
     key: 'hosting',
     icon: Server,
     title: 'Hosting, Domains & Email',
-    summary: 'Infrastructure with clear ownership.',
+    summary: 'Hosting, renewals, backups, and support.',
     description:
-      'The infrastructure behind your website and apps, looked after as one system: managed hosting, domain registration and DNS, professional email, backups, certificates, and clear renewal ownership. The goal is fewer preventable outages and no ambiguity about who is watching what.',
+      'Keep your website, domain, and business email running with clear responsibility for maintenance, renewals, and recovery. We agree what is managed, who has access, and what happens when something needs attention.',
     items: [
       'Website & app hosting',
       'Domain registration & DNS',
@@ -62,9 +58,9 @@ export const services: ReadonlyArray<Service> = [
     key: 'branding',
     icon: Palette,
     title: 'Brand Identity & Design',
-    summary: 'One identity carried through daily materials.',
+    summary: 'Logos, brand guidelines, and marketing materials.',
     description:
-      'A cohesive visual identity and the design work that carries it day to day: logo, brand identity and style guide, plus the banners, flyers, social posts, business cards and marketing collateral your business runs on, all in one consistent look.',
+      'We design logos, visual identities, and marketing materials, with guidelines your team can use across print and digital.',
     items: [
       'Logo design & brand identity',
       'Banners, flyers & posters',
@@ -78,9 +74,9 @@ export const services: ReadonlyArray<Service> = [
     key: 'data',
     icon: BarChart3,
     title: 'Data & Business Intelligence',
-    summary: 'Reporting people can trust and act on.',
+    summary: 'Connected data, dashboards, and reports.',
     description:
-      'We organise the data you already rely on, define the measures that matter, and build dashboards and pipelines that keep reporting current and traceable.',
+      'We bring your records into reports and dashboards, and automate the updates so your team can use current information.',
     items: [
       'Analysis & reporting',
       'Dashboards & visualisation',
@@ -93,24 +89,24 @@ export const services: ReadonlyArray<Service> = [
     key: 'ai',
     icon: Sparkles,
     title: 'AI & Automation',
-    summary: 'Automation grounded in the work and source material.',
+    summary: 'Document assistants and task automation.',
     description:
-      'We build grounded assistants, predictive models, and automation for repetitive work when the use case justifies them. The system has to fit the workflow, source material, review process, and risk.',
+      'We build assistants that use your documents, predictive models, and tools for repetitive tasks. We agree how outputs will be checked and where human review is needed.',
     items: [
       'Custom AI / ML projects',
       'Grounded AI assistants',
       'Process automation',
       'Predictive analytics',
-      'Responsible, value-first AI',
+      'Human review and output checks',
     ],
   },
   {
     key: 'strategy',
     icon: Compass,
     title: 'Technology Strategy & Advisory',
-    summary: 'A clear technology decision and a workable path.',
+    summary: 'System assessments, upgrade plans, and training.',
     description:
-      'We help you plan the digital side and build the capability to run it: transformation roadmaps, maturity assessment, training for your team, and ongoing advisory when the engagement calls for it.',
+      'We assess your current systems, compare options, and plan upgrades. We also train your team and provide ongoing technical advice.',
     items: [
       'Transformation roadmaps',
       'Digital maturity assessment',

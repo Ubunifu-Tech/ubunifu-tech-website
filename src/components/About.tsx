@@ -7,14 +7,12 @@ import styles from './About.module.css';
 
 type AboutProps = {
   hideHeader?: boolean;
-  eyebrow?: string;
   heading?: string;
   intro?: string;
 };
 
 export const About: React.FC<AboutProps> = ({
   hideHeader = false,
-  eyebrow = 'What we believe',
   heading = 'What we stand for',
   intro = 'A few principles that shape every project we take on.',
 }) => {
@@ -28,7 +26,6 @@ export const About: React.FC<AboutProps> = ({
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="eyebrow">{eyebrow}</span>
             <h2 className={styles.heading}>{heading}</h2>
             <p className={styles.intro}>{intro}</p>
           </motion.div>

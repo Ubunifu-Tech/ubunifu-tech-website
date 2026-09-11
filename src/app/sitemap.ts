@@ -4,7 +4,7 @@ import { projects } from '@/content/portfolio';
 
 const BASE_URL = 'https://ubunifutech.com';
 
-// Generates /sitemap.xml at build time. Includes all static routes plus a
+// Generates /sitemap.xml at build time. Includes all public static routes plus a
 // dynamic entry per published blog post. `lastModified` for blog posts uses
 // the front-matter `date` so search engines see fresh content when we
 // publish a new post.
@@ -59,11 +59,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${BASE_URL}/privacy`,
       changeFrequency: 'yearly',
       priority: 0.3,
-    },
-    {
-      url: `${BASE_URL}/brand`,
-      changeFrequency: 'yearly',
-      priority: 0.4,
     },
   ];
 

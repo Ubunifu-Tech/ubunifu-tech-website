@@ -1,0 +1,180 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 34rem) minmax(0, 1fr);
+  column-gap: clamp(var(--space-6), 5vw, 5rem);
+  align-items: start;
+  padding: clamp(3.5rem, 7vw, 7rem) 0;
+  border-top: 1px solid var(--border-active);
+}
+
+.entry:last-child {
+  border-bottom: 1px solid var(--border-active);
+}
+
+/* Alternate the read column so the page does not become two identical rows. */
+.entry:nth-child(even) {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 34rem);
+}
+
+.entry:nth-child(even) .figure {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.read {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+.titleLink {
+  color: var(--text-primary);
+}
+
+.titleLink:hover {
+  color: var(--brand-deep);
+}
+
+/* The descriptions are already standfirst length, and reading them at body size
+   is what made them look like card boilerplate. */
+.description {
+  max-width: 42ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.6;
+}
+
+.contents {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-hover);
+}
+
+.contentsLabel {
+  /* Sentence case on purpose. Uppercasing this turns it into the eyebrow
+     micro-label the brand deliberately removed; check-typography blocks the
+     tracking but nothing blocks text-transform, so it is a judgement call. */
+  margin: 0 0 var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+}
+
+.contentsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contentsLink {
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.contentsLink:hover {
+  color: var(--brand-deep);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: clamp(var(--space-5), 3vw, var(--space-7));
+  padding-top: var(--space-2);
+}
+
+/* The live site is the primary action: it is the proof, and it is checkable. */
+.liveLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--brand-border);
+  color: var(--brand-deep);
+  font-size: var(--font-size-body);
+  /* Regular weight: check-typography.mjs requires it at body size. The rule and
+     the brand colour carry the emphasis instead. */
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.liveLink:hover {
+  border-bottom-color: var(--brand-deep);
+}
+
+.caseLink {
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.caseLink:hover {
+  color: var(--text-primary);
+}
+
+.startLink {
+  color: var(--brand-deep);
+  font-size: var(--font-size-body);
+}
+
+.startLink:hover {
+  color: var(--brand-hover);
+}
+
+.figure {
+  margin: 0;
+}
+
+/* Positioned ancestor with an explicit ratio: MediaReveal inside is inset:0, and
+   8/5 is the diagram's own viewBox so the drawing fills the frame. */
+.plate {
+  position: relative;
+  aspect-ratio: 8 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.plateArt {
+  object-fit: cover;
+}
+
+.caption {
+  max-width: 46ch;
+  padding-top: var(--space-3);
+  /* First use of --clay in the codebase. Hairline only: #C2693B measures 3.90:1
+     on white, below AA, so it must never colour type. */
+  border-top: 1px solid var(--clay);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .entry,
+  .entry:nth-child(even) {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-6);
+  }
+
+  .entry:nth-child(even) .figure {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .description {
+    font-size: var(--font-size-body);
+  }
+}

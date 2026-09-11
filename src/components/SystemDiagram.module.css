@@ -1,0 +1,114 @@
+.frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  /* Dark ground, matching the hero and the CTA band. The previous pale panel is
+     what made these read as clip art dropped onto the page. */
+  background: var(--text-primary);
+  pointer-events: none;
+  user-select: none;
+
+  /* Palette for the shared isometric primitives. */
+  --iso-top: #4A4368;
+  --iso-front: #342E52;
+  --iso-side: #272144;
+  --iso-plane: #3A3357;
+  --iso-recess: #1B1633;
+  --iso-edge: rgba(237, 231, 221, 0.16);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 1000px;
+}
+
+/* ── Surfaces ─────────────────────────────────── */
+
+.layer {
+  fill: #3E3760;
+  stroke: rgba(237, 231, 221, 0.16);
+}
+
+/* The one lit surface per diagram: the thing the flow resolves into. */
+.lit {
+  fill: #EDE7DD;
+  stroke: none;
+}
+
+.plinth {
+  fill: rgba(58, 51, 87, 0.42);
+  stroke: rgba(237, 231, 221, 0.10);
+}
+
+.solid {
+  fill: none;
+}
+
+/* ── Routing ──────────────────────────────────── */
+
+.routes {
+  fill: none;
+}
+
+.route {
+  fill: none;
+  stroke: rgba(255, 107, 44, 0.34);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* One live run per diagram, to say the system is running rather than drawn. */
+.live {
+  stroke: var(--brand);
+  stroke-dasharray: 5 9;
+  animation: diagramFlow 2.8s linear infinite;
+}
+
+@keyframes diagramFlow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.node {
+  fill: #3A3357;
+  stroke: rgba(255, 107, 44, 0.55);
+  stroke-width: 2;
+}
+
+.accentNode {
+  fill: var(--brand);
+}
+
+.ring {
+  fill: none;
+  stroke: rgba(255, 107, 44, 0.34);
+  stroke-width: 2;
+}
+
+.slot {
+  stroke: rgba(237, 231, 221, 0.30);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.bar {
+  stroke: rgba(31, 26, 54, 0.42);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.barAccent {
+  stroke: var(--brand-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live {
+    animation: none;
+  }
+}

@@ -5,7 +5,7 @@ import styles from './BrandMark.module.css';
 type BrandMarkProps = {
   className?: string;
   title?: string;
-  variant?: 'default' | 'inverse' | 'mono';
+  variant?: 'default' | 'inverse';
 };
 
 /**

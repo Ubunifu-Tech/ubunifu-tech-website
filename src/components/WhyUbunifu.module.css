@@ -1,0 +1,66 @@
+.section {
+  padding: var(--section-space) 0;
+  /* White, against the --surface-2 of the capabilities list below it. */
+  background: var(--background);
+}
+
+.heading {
+  margin-bottom: var(--space-7);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-7) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Bare mark, not a filled chip. A tinted rounded badge behind every icon is the
+   pattern this brand deliberately avoids. */
+.icon {
+  display: inline-flex;
+  color: var(--brand-deep);
+}
+
+.label {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  text-wrap: balance;
+}
+
+.body {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.65;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+
+  .body {
+    max-width: none;
+  }
+}

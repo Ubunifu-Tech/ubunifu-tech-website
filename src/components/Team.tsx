@@ -29,12 +29,7 @@ export const Team: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="eyebrow">The team</span>
-          <h2 className={styles.heading}>Who you work with</h2>
-          <p className={styles.intro}>
-            We&apos;re small on purpose. You work directly with the people who
-            build the thing. No account managers, no handoffs, no telephone game.
-          </p>
+          <h2 className={styles.heading}>Our team</h2>
         </motion.div>
 
         <div className={styles.grid}>

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
-import { navLinks } from '@/content/site';
+import { navLinks, cta } from '@/content/site';
 import { BrandLockup } from './BrandMark';
 import styles from './Navbar.module.css';
 
@@ -75,7 +75,7 @@ export const Navbar: React.FC = () => {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    const desktop = window.matchMedia('(min-width: 901px)');
+    const desktop = window.matchMedia('(min-width: 1051px)');
     const closeAtDesktop = (event: MediaQueryListEvent | MediaQueryList) => {
       if (event.matches) setIsMobileMenuOpen(false);
     };
@@ -134,7 +134,7 @@ export const Navbar: React.FC = () => {
 
           <div className={styles.actions}>
             <Link href="/contact" className={styles.cta}>
-              Start a project
+              {cta.primary}
             </Link>
             <button
               ref={menuButtonRef}
@@ -155,6 +155,7 @@ export const Navbar: React.FC = () => {
       <div
         ref={menuRef}
         id="mobile-navigation"
+        data-lenis-prevent
         className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.open : ''}`}
         role={isMobileMenuOpen ? 'dialog' : undefined}
         aria-modal={isMobileMenuOpen || undefined}
@@ -175,7 +176,7 @@ export const Navbar: React.FC = () => {
             </Link>
           ))}
           <Link href="/contact" className={styles.mobileCta} onClick={closeMobileMenu}>
-            Start a project
+            {cta.primary}
           </Link>
         </div>
       </div>

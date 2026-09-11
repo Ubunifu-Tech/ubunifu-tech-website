@@ -2,14 +2,36 @@
 // study pages (/work/[slug]).
 //
 // Everything here is grounded in the actual project codebases. No invented
-// metrics, no imagined briefs. `artwork` is explicitly conceptual and carries
-// the story on marketing surfaces; the live-site link remains the source of
+// metrics, no imagined briefs. `artwork.src` identifies the retained asset;
+// EditorialVisual replaces its in-page use with an icon-based workflow diagram.
+// The live-site link remains the source of
 // truth for the delivered experience. `capabilities` are short chips for the
 // card; `highlights` are the detailed "what we built" breakdown for the case
 // study page; `overview` is the factual intro. If we don't know something
 // (e.g. a launch metric), we leave it out rather than guess.
+//
+// `pullQuote` must appear word for word in the `overview` above it.
+// `entries[]` paths live on client-controlled sites — re-verify them with
+// `npm run check:live-links` before they ship.
+
+import { projectDiagrams } from './project-visuals';
 
 export type ProjectArtwork = {
+  src: string;
+  alt: string;
+};
+
+/** A named page on the live client site, or a part of the system that is not reachable. */
+export type LiveEntry = {
+  path: string;
+  label: string;
+  note: string;
+  /** Omit for a normal linked row. `false` renders the row with no link and no arrow. */
+  reachable?: false;
+};
+
+/** A real screenshot. Additive only — never replaces the system diagram. */
+export type ProjectShot = {
   src: string;
   alt: string;
   caption: string;
@@ -35,6 +57,19 @@ export type Project = {
   // Factual intro paragraphs for the case study page.
   overview: string[];
   tech: string[];
+  // Heading for the case study's article section, in the project's own terms.
+  sectionHeading: string;
+  // Standfirst beneath it. Says how this system is shaped, not what it achieved.
+  sectionStandfirst: string;
+  // Pulled into the margin of the case study. MUST appear word for word in
+  // `overview` above it, so the margin can never drift from the body.
+  pullQuote: string;
+  furtherReading?: ReadonlyArray<{ href: string; title: string }>;
+  // Live-page ledger. Paths are on client-controlled sites: re-verify with
+  // `npm run check:live-links` before shipping any entry.
+  entries?: ReadonlyArray<LiveEntry>;
+  // Declared now, populated when real captures exist. Renders below the diagram.
+  shots?: ReadonlyArray<ProjectShot>;
 };
 
 export const projects: ReadonlyArray<Project> = [
@@ -47,10 +82,8 @@ export const projects: ReadonlyArray<Project> = [
     domain: 'safarikingafrica.com',
     link: 'https://www.safarikingafrica.com/',
     artwork: {
-      src: '/editorial/safari-operations-system-v2.webp',
-      alt: 'Editorial still life representing a safari enquiry moving through traveller records, itinerary planning, content, and follow-up',
-      caption:
-        'Conceptual illustration · Safari enquiry to operating workflow',
+      src: '/editorial/safari-field-v3.webp',
+      alt: projectDiagrams['/editorial/safari-field-v3.webp'].description,
     },
     capabilities: [
       'Public booking site',
@@ -70,20 +103,16 @@ export const projects: ReadonlyArray<Project> = [
         body: 'A multi-step inquiry flow captures trip basics, safari preferences and guest details. The team proposes an itinerary and shares it with the customer through a secure tokenised link, with no account required on the traveller’s side.',
       },
       {
-        title: 'A real CRM behind the site',
+        title: 'Customer records',
         body: 'Customer records carry full timelines, internal notes and booking history. Contact inquiries have status tracking and assisted replies, helping the team keep each enquiry visible and move it forward deliberately.',
       },
       {
-        title: 'Secure by default',
+        title: 'Admin access and audit logs',
         body: 'Two-factor (OTP) admin authentication, administrative audit logging, soft deletes for recoverable data, and a whitelist-based admin model provide practical safeguards without open sign-up.',
       },
       {
         title: 'Content and search built in',
         body: 'A rich-text article editor, dynamic sitemap, Schema.org structured data, and maintained redirects give the team a practical publishing workflow while protecting established URLs.',
-      },
-      {
-        title: 'A platform, not a brochure',
-        body: 'The public destination catalogue, administrative workflows, API routes and connected data models are designed as one maintainable system rather than a collection of disconnected pages.',
       },
     ],
     overview: [
@@ -103,6 +132,17 @@ export const projects: ReadonlyArray<Project> = [
       'Tailwind CSS',
       'Tiptap',
     ],
+    sectionHeading: 'How the system works',
+    sectionStandfirst:
+      'Two sides of one system. A public site that structures a first enquiry, and an admin platform where that enquiry becomes a customer record, a proposed itinerary and a reply — a loop that returns to the traveller as a shareable link.',
+    pullQuote:
+      'We built a connected public website and operating platform rather than treating the project as a brochure site.',
+    furtherReading: [
+      {
+        href: '/blog/safari-king-website-operating-system',
+        title: 'Behind the Build: Safari King Africa’s Website and Operations Platform',
+      },
+    ],
   },
   {
     slug: 'usambara-destination',
@@ -113,10 +153,8 @@ export const projects: ReadonlyArray<Project> = [
     domain: 'usambaradestination.com',
     link: 'https://www.usambaradestination.com/',
     artwork: {
-      src: '/editorial/usambara-enquiry-journey-v2.webp',
-      alt: 'Editorial still life representing Usambara destination discovery, mountain routes, community and ecology touchpoints, and a structured trip enquiry',
-      caption:
-        'Conceptual illustration · Discovery to structured enquiry',
+      src: '/editorial/usambara-landscape-v3.webp',
+      alt: projectDiagrams['/editorial/usambara-landscape-v3.webp'].description,
     },
     capabilities: [
       'Multi-page marketing site',
@@ -128,15 +166,15 @@ export const projects: ReadonlyArray<Project> = [
     ],
     highlights: [
       {
-        title: 'Not a static template',
-        body: 'The site runs on a lightweight Node.js and Express server with Helmet security headers, HTTP compression and per-IP rate limiting. A real application, built for speed and resilience.',
+        title: 'Hosting and server features',
+        body: 'The site runs on a Node.js and Express server with Helmet security headers, HTTP compression and per-IP rate limiting.',
       },
       {
-        title: 'An enquiry form that does the operator’s prep',
+        title: 'Trip enquiries',
         body: 'The contact form captures trip context (dates, party size and interests) and triggers a two-email flow: a structured notification to the operator and a confirmation to the visitor. Browser draft saving reduces the risk of losing a half-finished enquiry.',
       },
       {
-        title: 'Search foundations as a feature',
+        title: 'Search and sharing',
         body: 'TravelAgency, FAQ, ContactPage, Blog and ImageGallery structured data; a sitemap and robots.txt; canonical URLs; OpenGraph and Twitter cards; and lazy-loaded imagery throughout.',
       },
       {
@@ -160,6 +198,11 @@ export const projects: ReadonlyArray<Project> = [
       'Vanilla JS',
       'HTML5 / CSS3',
     ],
+    sectionHeading: 'How the site works',
+    sectionStandfirst:
+      'One path, built so it stays usable with a mouse, a keyboard or a screen reader — and one enquiry that splits in two on the way out, a brief for the operator and a confirmation for the visitor.',
+    pullQuote:
+      'We built the website to help someone move from curiosity to a structured trip enquiry.',
   },
 ];
 

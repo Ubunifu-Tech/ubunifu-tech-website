@@ -5,7 +5,7 @@
 // `quote` is the longer body (3–5 sentences). `pullQuote` is a tight
 // one-line excerpt suitable for hero placement. `project` is an optional
 // slug-style link back to the corresponding portfolio project, when
-// applicable, so we can wire the testimonial into the Portfolio card.
+// applicable, so we can wire the testimonial into the work register.
 
 export type Testimonial = {
   quote: string;

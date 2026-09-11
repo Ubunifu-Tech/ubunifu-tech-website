@@ -1,5 +1,5 @@
 .section {
-  padding: 104px 0;
+  padding: var(--section-space) 0;
   background: var(--background);
 }
 
@@ -11,308 +11,46 @@
 
 .head {
   display: grid;
-  grid-template-areas:
-    'label copy'
-    'title copy';
+  grid-template-areas: 'title copy';
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   align-items: end;
-  gap: 2rem;
+  gap: var(--space-6);
   margin-bottom: 2.75rem;
 }
 
-.head :global(.eyebrow) {
-  grid-area: label;
-}
-
 .heading {
-  max-width: 18ch;
+  max-width: none;
   grid-area: title;
-  font-size: clamp(2.2rem, 4.5vw, 4.6rem);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  line-height: 1;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
   color: var(--text-primary);
-  margin: 0.5rem 0 0.75rem;
+  margin: var(--space-2) 0 var(--space-3);
 }
 
 .sub {
   grid-area: copy;
   align-self: end;
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.7;
   max-width: 620px;
   justify-self: end;
 }
 
-.serviceFeature {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  align-items: center;
-  gap: clamp(1.5rem, 4vw, 3rem);
-  margin-bottom: 1.75rem;
-  padding: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: 0 20px 60px -40px rgba(27, 14, 71, 0.28);
-}
-
-.serviceFeatureMedia {
-  position: relative;
-  min-height: 310px;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--surface-2);
-}
-
-.serviceFeatureImg {
-  object-fit: cover;
-  object-position: center;
-}
-
-.serviceFeatureCopy {
-  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 2rem);
-}
-
-.serviceFeatureLabel {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--brand-deep);
-  margin-bottom: 0.9rem;
-}
-
-.serviceFeatureTitle {
-  font-family: var(--font-heading);
-  font-size: clamp(1.45rem, 2.4vw, 2.05rem);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: 0;
-  color: var(--text-primary);
-  max-width: 18ch;
-  margin-bottom: 1rem;
-}
-
-.serviceFeatureText {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 48ch;
-}
-
 /* ── Services grid ────────────────────────────── */
 
-.serviceGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-}
-
-.serviceCard {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 1.75rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.serviceCard:hover {
-  border-color: var(--primary-border);
-  box-shadow: 0 16px 36px rgba(109, 63, 232, 0.1);
-  transform: translateY(-3px);
-}
-
-.serviceIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 1.25rem;
-  border-radius: 13px;
-  background: var(--primary-dim);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-.serviceCard:hover .serviceIcon {
-  background: var(--primary);
-  color: #fff;
-}
-
-.serviceTitle {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text-primary);
-  margin-bottom: 0.4rem;
-}
-
-.serviceSummary {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
 /* Trailing CTA — full-width banner below the 2×3 grid */
-.serviceCta {
-  grid-column: 1 / -1;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem 2rem;
-  padding: 1.6rem 2.25rem;
-  background: linear-gradient(135deg, var(--brand), var(--primary));
-  border: none;
-}
-
-.serviceCtaText {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.3;
-  color: #fff;
-  max-width: 36ch;
-}
 
 /* Solid white pill with brand-coloured text: ~6:1 contrast at any point on
    the orange→purple gradient, and reads as a clear primary action. */
-.serviceCtaLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-  padding: 0.6rem 1.2rem;
-  color: var(--primary);
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-decoration: none;
-  background: #fff;
-  border-radius: 100px;
-  transition: gap 0.2s ease, background 0.2s ease;
-}
-
-.serviceCta:hover .serviceCtaLink {
-  gap: 0.7rem;
-  background: rgba(255, 255, 255, 0.92);
-}
 
 /* ── Sectors grid ─────────────────────────────── */
-
-.sectorGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.sectorTile {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 1.1rem 1.25rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgba(27, 14, 71, 0.04);
-  transition: border-color 0.3s ease, transform 0.3s ease;
-}
-
-.sectorTile:hover {
-  border-color: var(--brand-border);
-  transform: translateY(-2px);
-}
-
-.sectorIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: 11px;
-  background: var(--brand-dim);
-  color: var(--brand);
-}
-
-.sectorLabel {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.25;
-}
 
 /* ── Products-as-proof grid ───────────────────── */
 
 .productProofLayout {
-  display: grid;
-  align-items: start;
-  grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
-  gap: clamp(2.5rem, 6vw, 6rem);
-}
-
-.productProofVisual {
-  position: sticky;
-  top: calc(var(--nav-height) + 1.5rem);
   width: 100%;
-  aspect-ratio: 3 / 2;
-  margin: 0;
-  overflow: hidden;
-  background: var(--text-primary);
-}
-
-.productProofImage {
-  object-fit: cover;
-  object-position: center;
-  transition: transform 0.8s var(--ease-out-expo);
-}
-
-.productProofVisual:hover .productProofImage {
-  transform: scale(1.02);
-}
-
-.productProofShade {
-  position: absolute;
-  inset: 48% 0 0;
-  z-index: 2;
-  background: linear-gradient(to top, rgba(31, 26, 54, 0.86), transparent);
-  pointer-events: none;
-}
-
-.productProofVisual figcaption {
-  position: absolute;
-  right: 1.25rem;
-  bottom: 1.1rem;
-  left: 1.25rem;
-  z-index: 3;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.38);
-  color: rgba(255, 255, 255, 0.84);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.075em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.productProofRail {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 4;
-  width: clamp(7px, 0.7vw, 10px);
-  height: 100%;
-  background: linear-gradient(to bottom, var(--brand) 58%, var(--primary) 58%);
 }
 
 .proofGrid {
@@ -321,22 +59,19 @@
 
 .proofCard {
   display: grid;
-  min-height: 172px;
-  padding: 1.5rem 0;
+  padding: var(--space-5) 0;
   align-items: start;
   border-bottom: 1px solid var(--border-hover);
   background: transparent;
-  grid-template-columns: 48px minmax(0, 1fr);
-  grid-template-areas:
-    'index meta'
-    'index action';
-  gap: 0.8rem 1.2rem;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
+  grid-template-areas: 'meta action';
+  gap: var(--space-3) 1.2rem;
   text-decoration: none;
   transition: color 0.25s ease, background 0.25s ease;
 }
 
 .proofCard:hover {
-  background: rgba(109, 63, 232, 0.035);
+  background: var(--surface-3);
 }
 
 .proofCard:focus-visible,
@@ -345,44 +80,30 @@
   outline-offset: 4px;
 }
 
-.proofIndex,
-.workIndex {
-  align-self: start;
-  padding-top: 0.15rem;
-  color: var(--brand-deep);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
 .proofMeta {
   display: flex;
   flex-direction: column;
   grid-area: meta;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .proofStatus {
   color: var(--primary-deep);
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.075em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
 }
 
 .proofName {
   font-family: var(--font-heading);
-  font-size: clamp(1.65rem, 2.8vw, 2.65rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
   color: var(--text-primary);
 }
 
 .proofTagline {
-  font-size: 0.92rem;
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.55;
 }
@@ -392,18 +113,18 @@
   align-items: center;
   align-self: end;
   width: fit-content;
-  gap: 0.45rem;
+  gap: var(--space-2);
   grid-area: action;
-  padding-bottom: 0.25rem;
+  padding-bottom: var(--space-1);
   border-bottom: 1px solid currentColor;
   color: var(--brand-deep);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   transition: gap 0.25s var(--ease-out-expo), color 0.2s ease;
 }
 
 .proofCard:hover .proofAction {
-  gap: 0.75rem;
+  gap: var(--space-3);
   color: var(--text-primary);
 }
 
@@ -419,20 +140,16 @@
   align-items: center;
   border-bottom: 1px solid var(--border-hover);
   background: transparent;
-  grid-template-areas: 'index media copy';
-  grid-template-columns: 72px minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  grid-template-areas: 'media copy';
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
   gap: clamp(1.5rem, 4vw, 4rem);
   text-decoration: none;
   transition: background 0.25s ease;
 }
 
 .workGrid > div:nth-child(even) .workCard {
-  grid-template-areas: 'index copy media';
-  grid-template-columns: 72px minmax(320px, 0.8fr) minmax(0, 1.2fr);
-}
-
-.workCard .workIndex {
-  grid-area: index;
+  grid-template-areas: 'copy media';
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
 }
 
 .workThumb {
@@ -454,68 +171,50 @@
   transform: scale(1.03);
 }
 
-.editorialLabel {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 3;
-  padding: 0.45rem 0.65rem;
-  background: rgba(31, 26, 54, 0.84);
-  color: rgba(255, 255, 255, 0.9);
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.075em;
-  text-transform: uppercase;
-}
-
 .workMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
   grid-area: copy;
   padding: 0;
   flex: 1;
 }
 
 .workCat {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   color: var(--primary);
 }
 
 .workTitle {
   font-family: var(--font-heading);
-  font-size: clamp(1.75rem, 3.2vw, 3rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 
 .workDesc {
-  font-size: 0.92rem;
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-top: 0.1rem;
+  margin-top: var(--space-1);
 }
 
 .workCaps {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .workCap {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   color: var(--text-secondary);
 }
 
 .workCap + .workCap::before {
-  margin-right: 0.4rem;
+  margin-right: var(--space-2);
   color: var(--brand);
   content: '/';
 }
@@ -523,89 +222,50 @@
 .workLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
   margin-top: auto;
-  padding-top: 1.1rem;
+  padding-top: var(--space-4);
   color: var(--brand-deep);
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   transition: gap 0.2s ease;
 }
 
 .workCard:hover .workLink {
-  gap: 0.65rem;
+  gap: var(--space-3);
 }
 
 /* ── About preview ────────────────────────────── */
-
-.aboutInner {
-  max-width: 640px;
-}
-
-.aboutText {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  line-height: 1.75;
-  margin: 0.5rem 0 1.5rem;
-}
 
 /* ── Link ─────────────────────────────────────── */
 
 .link {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: var(--space-2);
   margin-top: 2.5rem;
   color: var(--brand-deep);
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   text-decoration: none;
   transition: gap 0.2s ease, color 0.2s ease;
 }
 
-.aboutInner .link {
-  margin-top: 0;
-}
-
 .link:hover {
-  gap: 0.7rem;
+  gap: var(--space-3);
   color: var(--text-primary);
 }
 
 /* ── Responsive ───────────────────────────────── */
 
-@media (max-width: 1024px) {
-  .serviceGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .sectorGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-}
-
 @media (max-width: 900px) {
-  .section {
-    padding: 80px 0;
-  }
-
-  .serviceFeature {
-    grid-template-columns: 1fr;
-  }
-
-  .serviceFeatureMedia {
-    min-height: auto;
-    aspect-ratio: 16 / 10;
-  }
 
   .head {
     grid-template-areas:
-      'label'
       'title'
       'copy';
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .sub {
@@ -615,30 +275,23 @@
   .productProofLayout {
     grid-template-columns: 1fr;
   }
-
-  .productProofVisual {
-    position: relative;
-    top: auto;
-  }
 }
 
 @media (max-width: 680px) {
-  .serviceGrid {
-    grid-template-columns: 1fr;
-  }
 
   .workCard,
   .workGrid > div:nth-child(even) .workCard {
     grid-template-areas:
-      'index copy'
-      'media media';
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 1.25rem 0.75rem;
+      'media'
+      'copy';
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem var(--space-3);
   }
 
   .proofCard {
-    grid-template-columns: 44px minmax(0, 1fr);
-    gap: 1rem 0.75rem;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'meta' 'action';
+    gap: var(--space-4) var(--space-3);
   }
 
   .proofMeta {
@@ -648,28 +301,9 @@
   .proofAction {
     grid-area: action;
   }
-
-  .sectorGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .serviceFeature {
-    padding: 0.75rem;
-  }
-
-  .serviceFeatureMedia {
-    border-radius: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .section {
-    padding: 64px 0;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .productProofVisual:hover .productProofImage,
   .workCard:hover .workThumbImg {
     transform: none;
   }

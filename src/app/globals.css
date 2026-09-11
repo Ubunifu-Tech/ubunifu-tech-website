@@ -1,10 +1,10 @@
 :root {
   /* ── Light Theme Foundation ────────────────────── */
-  --background: #F4F2FB;
+  --background: #FFFFFF;
   --foreground: #1F1A36;
   --surface: #FFFFFF;
-  --surface-2: #FAF8FE;
-  --surface-3: #F0EDF9;
+  --surface-2: color-mix(in srgb, var(--text-primary) 3%, white);
+  --surface-3: color-mix(in srgb, var(--text-primary) 6%, white);
 
   /* Identity — Signal Orange (Ligature U and large gestures) */
   --brand: #FF6B2C;
@@ -39,8 +39,8 @@
 
   /* Ink Navy — wordmark, message, and structural foundation */
   --text-primary: #1F1A36;
-  --text-secondary: #5A5170;
-  --text-tertiary: #6B6385; /* darkened from #8B82A0 to meet WCAG AA on light backgrounds */
+  --text-secondary: color-mix(in srgb, var(--text-primary) 75%, white);
+  --text-tertiary: color-mix(in srgb, var(--text-primary) 65%, white);
   --text-inverse: #FFFFFF;
   --text-inverse-secondary: rgba(255, 255, 255, 0.72);
   --text-inverse-tertiary: rgba(255, 255, 255, 0.60);
@@ -61,16 +61,69 @@
   --font-heading: var(--font-poppins), 'Poppins', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+  /* Seven shared steps. Responsive values change here, never per component.
+     Each step has ONE job, so a component picks a role rather than a number:
+       caption  meta, timestamps, figure captions, form hints
+       small    secondary copy, footer links, chips, labels
+       body     running copy
+       lead     intro paragraphs, hero subtitles, pull quotes
+       title    card and item headings (h3)
+       heading  section headings (h2)
+       display  page headings (h1) */
+  --font-size-caption: 0.8125rem;
+  --font-size-small: 0.875rem;
+  --font-size-body: 1rem;
+  --font-size-lead: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+  --font-size-title: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+  --font-size-heading: clamp(1.5rem, 2.2vw, 2.25rem);
+  --font-size-display: clamp(2.5rem, 5.6vw, 5.5rem);
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-emphasis: 600;
+  /* Optical tracking. Only the display step gets it: at 40-88px the default
+     spacing reads loose. Small text stays at `normal` — tracked-out micro-labels
+     are the pattern we are deliberately avoiding. */
+  --tracking-display: -0.02em;
 
   /* Warm-earth accent — a restrained savanna/clay note for editorial moments */
   --clay: #C2693B;
   --clay-dim: rgba(194, 105, 59, 0.10);
 
+  /* Spacing ramp. Every gap, pad and margin should land on one of these.
+     4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 80 / 96px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  /* Section-scale steps. The ramp stopped at 64px, so every large value in the
+     codebase had nowhere to land. */
+  --space-9: 5rem;
+  --space-10: 6rem;
+
+  /* Radius ramp. Four steps, not twelve ad-hoc values. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 100px;
+
+  /* Elevation ramp. Three steps: resting, lifted, floating. */
+  --shadow-1: 0 1px 2px rgba(31, 26, 54, 0.06), 0 2px 8px rgba(31, 26, 54, 0.04);
+  --shadow-2: 0 8px 24px -12px rgba(31, 26, 54, 0.22);
+  --shadow-3: 0 24px 50px -24px rgba(27, 14, 71, 0.32);
+
   /* Layout */
   --container-width: 1440px;
+  /* Wide measure for full-bleed heroes. Shares --container-gutter with the
+     standard container so the text edge does not shift between sections. */
+  --container-wide: 1720px;
+  --container-gutter: clamp(1.25rem, 3vw, 3rem);
   --nav-height: 72px;
   --section-space: clamp(5rem, 8vw, 7.5rem);
-  --control-radius: 4px;
+  --control-radius: var(--radius-md);
 
   /* Transitions */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -97,10 +150,13 @@ html {
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
+  /* Clip horizontal artwork without creating a non-scrolling ancestor for sticky panels. */
+  overflow-x: clip;
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -125,13 +181,34 @@ p, li, blockquote, dd, dt, figcaption {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  line-height: 1.1;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
   color: var(--text-primary);
-  letter-spacing: -0.03em;
   overflow-wrap: normal;
   text-wrap: balance;
   word-break: normal;
 }
+
+h1 {
+  font-size: var(--font-size-display);
+  letter-spacing: var(--tracking-display);
+}
+h2 { font-size: var(--font-size-heading); }
+h3 { font-size: var(--font-size-title); }
+h4 { font-size: var(--font-size-body); }
+h5, h6 {
+  font-size: var(--font-size-small);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  font-weight: inherit;
+}
+
+small { font-size: var(--font-size-small); }
+strong, b { font-weight: var(--font-weight-emphasis); }
+th { font-weight: var(--font-weight-medium); }
 
 /* Code blocks scroll internally on narrow screens */
 pre, code {
@@ -161,13 +238,13 @@ a {
   z-index: 2000;
   transform: translateY(-160%);
   padding: 0.65rem 1.1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--text-primary);
   color: #fff;
   font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(31, 26, 54, 0.25);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  box-shadow: var(--shadow-2);
   transition: transform var(--transition-fast);
 }
 
@@ -198,7 +275,7 @@ a {
   width: 100%;
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: 0 clamp(1.25rem, 3vw, 3rem);
+  padding: 0 var(--container-gutter);
 }
 
 .section {
@@ -220,45 +297,26 @@ a {
   border: 0;
   background: transparent;
   color: var(--brand-deep);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
   margin-bottom: 1.25rem;
   width: fit-content;
 }
 
-.eyebrow::before {
-  width: 1.75rem;
-  height: 1px;
-  background: currentColor;
-  content: '';
-}
 
-/* ── Type hierarchy ───────────────────────────────
- *
- * Three heading tiers, used consistently across the site:
- *   1. Hero title        — clamp(2.6rem, 6.5vw, 5.25rem)  (home hero only)
- *   2. Page title        — clamp(2.25rem, 5vw, 3.5rem)    (PageHeader, blog, contact)
- *   3. Section heading    — clamp(1.9rem, 3.6vw, 2.6rem)  (h2 inside a page)
- *   4. Card title         — ~1.3rem–1.4rem                 (h3 inside a card)
- *
- * Eyebrows: `.specLabel` (mono) marks an editorial / page-level identity
- * (hero studio line, blog "journal"); `.eyebrow` (pill) marks an in-page
- * section or a standard page header. Don't mix the two within one tier.
- */
+/* Display, heading, body: hierarchy comes from space and placement,
+ * not extra sizes or blanket bolding. Preserve semantic heading levels. */
 
 .sectionHeading {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
   margin-bottom: 1rem;
   color: var(--text-primary);
 }
 
 .sectionSubtext {
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   max-width: 600px;
   line-height: 1.7;
@@ -269,7 +327,7 @@ a {
 .glassCard {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base);
 }
 
@@ -298,7 +356,7 @@ a {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(109, 63, 232, 0.18);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -307,21 +365,11 @@ a {
 
 /* ── Signature graphics ───────────────────────────
  *
- * A small, reusable visual language used across the site: a grain layer
+ * A small, reusable visual language used across the site:
  * for tactile depth, drifting aurora glows, a blueprint grid, and a
  * monospace "spec-sheet" label. Drop these in as aria-hidden overlays
  * inside a position:relative container.
  */
-
-/* Tactile film grain — sits over gradients so they never look flat-CSS. */
-.grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
 
 /* Blueprint grid — quiet engineering substrate, fades at the edges. */
 .blueprint {
@@ -351,25 +399,15 @@ a {
   50% { transform: translate3d(5%, -4%, 0) scale(1.12); }
 }
 
-/* Monospace technical label — the "spec sheet" device. */
+/* Secondary label, without ornamental rules. */
 .specLabel {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   color: var(--text-tertiary);
-}
-
-.specLabel::before {
-  content: '';
-  width: 1.75rem;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.5;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -389,6 +427,21 @@ a {
 
   .aurora {
     animation: none;
+  }
+}
+
+/* ── No-JS safety net ─────────────────────────────
+   Scroll-reveal wrappers server-render their hidden state as an inline
+   style (opacity:0 + translate). Framer Motion animates that away on
+   intersection, so where scripting is unavailable that content would stay
+   invisible permanently. Reveal it instead. Inline styles only lose to
+   !important, hence the override. */
+
+@media (scripting: none) {
+  [style*="opacity:0"],
+  [style*="opacity: 0"] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

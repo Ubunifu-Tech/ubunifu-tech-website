@@ -192,3 +192,10 @@ Public pricing is not promised. Quotes should state scope, deliverables, assumpt
 | [`src/content/portfolio.tsx`](src/content/portfolio.tsx) | Named client case-study evidence |
 
 When the position changes, update this file first, then reconcile the relevant content source. When a product or client fact changes, update its content source and then revise this document if the strategic statement also changed.
+
+## Describing scope without price or metrics
+
+The approved framing is **two depths**: a marketing-and-enquiry site (Usambara
+Destination) versus a database-backed system with records, roles and an audit trail
+(Safari King Africa). It lets a prospect self-select without quoting a price band or a
+metric we have not measured. Used in the /work coda.

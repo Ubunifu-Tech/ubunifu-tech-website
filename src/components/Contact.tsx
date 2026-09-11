@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { ContactSubjectSelect } from './ContactSubjectSelect';
 import styles from './Contact.module.css';
 
 type FormStatus = 'idle' | 'sending' | 'success' | 'error';
@@ -42,14 +44,19 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const submissionId = useRef<string | null>(null);
+  const subjectRef = useRef<HTMLButtonElement | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const updateField = (name: string, value: string) => {
     submissionId.current = null;
     if (status === 'error') {
       setStatus('idle');
       setErrorMsg('');
     }
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    updateField(e.target.name, e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +65,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
     if (!form.subject) {
       setStatus('error');
       setErrorMsg('Please choose a subject for your message.');
+      subjectRef.current?.focus();
       return;
     }
 
@@ -101,40 +109,11 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             viewport={{ once: true }}
             transition={{ duration: reduceMotion ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            {hideIntro ? (
-              <>
-                <span className="eyebrow">What happens next</span>
-                <h2 className={styles.heading}>A direct conversation with the people doing the work.</h2>
-                <p className={styles.text}>
-                  We read every brief ourselves. If we are a useful fit, the
-                  first response will focus the problem before proposing a path.
-                </p>
-              </>
-            ) : (
-              <>
-                <span className="eyebrow">Contact</span>
-                <h2 className={styles.heading}>Tell us what you&apos;re building</h2>
-                <p className={styles.text}>
-                  Trying one of our products, or starting a custom build? Write to
-                  us. The team reviews enquiries directly.
-                </p>
-              </>
-            )}
-
-            <ol className={styles.nextSteps}>
-              <li className={styles.step}>
-                <span className={styles.stepNum}>01</span>
-                <span className={styles.stepText}>You tell us what you need.</span>
-              </li>
-              <li className={styles.step}>
-                <span className={styles.stepNum}>02</span>
-                <span className={styles.stepText}>We review the context and whether we can help.</span>
-              </li>
-              <li className={styles.step}>
-                <span className={styles.stepNum}>03</span>
-                <span className={styles.stepText}>If useful, we suggest a short call. No obligation.</span>
-              </li>
-            </ol>
+            <h2 className={styles.heading}>{hideIntro ? 'Write to us' : 'Tell us about your project.'}</h2>
+            <p className={styles.text}>
+              We’ll review your message and get back to you.
+              You can also reach us by email or phone.
+            </p>
 
             <div className={styles.methods}>
               <div className={styles.method}>
@@ -161,7 +140,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 <div className={styles.methodIcon}><MapPin size={18} /></div>
                 <div>
                   <p className={styles.methodLabel}>Location</p>
-                  <span className={styles.methodText}>Arusha, Tanzania</span>
+                  <span className={styles.methodText}>Tanzania</span>
                 </div>
               </div>
             </div>
@@ -176,11 +155,6 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             viewport={{ once: true }}
             transition={{ duration: reduceMotion ? 0 : 0.5, delay: reduceMotion ? 0 : 0.12, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className={styles.formHeader}>
-              <span>Start with the problem</span>
-              <span>Direct to the Ubunifu Technologies team</span>
-            </div>
-
             <div className={styles.honeypot} aria-hidden="true">
               <label htmlFor="company_url">Company website (leave this empty)</label>
               <input
@@ -229,20 +203,14 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             </div>
 
             <div className={styles.field}>
-              <label htmlFor="subject" className={styles.label}>What can we help with?</label>
-              <select
-                id="subject"
-                name="subject"
+              <label id="subject-label" htmlFor="subject" className={styles.label}>What can we help with?</label>
+              <ContactSubjectSelect
                 value={form.subject}
-                onChange={handleChange}
-                required
-                className={styles.input}
-              >
-                <option value="" disabled>Select an enquiry type</option>
-                {SUBJECT_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+                options={SUBJECT_OPTIONS}
+                onChange={(value) => updateField('subject', value)}
+                buttonRef={subjectRef}
+                invalid={status === 'error' && !form.subject}
+              />
             </div>
 
             <div className={styles.field}>
@@ -255,7 +223,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 required
                 minLength={20}
                 maxLength={5000}
-                placeholder="What needs to work better, and what would a useful outcome look like?"
+                placeholder="Tell us about your project or question."
                 rows={5}
                 className={`${styles.input} ${styles.textarea}`}
               />
@@ -269,7 +237,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             )}
 
             {status === 'error' && (
-              <div className={styles.statusError} role="alert">
+              <div id="contact-error" className={styles.statusError} role="alert">
                 <AlertCircle size={18} />
                 {errorMsg}
               </div>
@@ -295,7 +263,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             <p className={styles.privacyNote}>
               Please do not send passwords or sensitive records. By submitting,
               you agree that we may use this information to respond to your enquiry.{' '}
-              <a href="/privacy">Privacy details</a>
+              <Link href="/privacy">Privacy details</Link>
             </p>
           </motion.form>
         </div>

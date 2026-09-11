@@ -5,7 +5,7 @@ import { pageMetadata } from '@/lib/metadata';
 export const metadata = pageMetadata({
   title: 'Contact',
   description:
-    'Start a project with Ubunifu Technologies, ask about a product, or talk through a problem with our team in Arusha, Tanzania.',
+    'Start a project with Ubunifu Technologies, ask about a product, or talk through a problem with our team in Tanzania.',
   path: '/contact',
 });
 
@@ -14,18 +14,11 @@ export default function ContactPage() {
     <>
       <main>
         <PageHeader
-          variant="contact"
-          register={['Project work', 'Existing systems', 'Product questions']}
+          scene="contact"
+          compact
           eyebrow="Contact"
-          title="Tell us what needs to work better."
-          lead="Bring us a project, an existing system, or a question about one of our products. Your message goes directly to the Ubunifu Technologies team."
-          artwork={{
-            primary: {
-              src: '/editorial/home-system-hero.webp',
-              alt: 'Tactile system landscape connecting business inputs into one coherent operating system',
-            },
-            caption: 'Conceptual illustration · From a problem to a shaped path',
-          }}
+          title="Tell us about your project."
+          lead="Ask about our services, get help with a product, or discuss a project with our team."
         />
         <Contact hideIntro />
       </main>

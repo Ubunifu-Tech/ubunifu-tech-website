@@ -2,7 +2,7 @@
 
 This is the concise source of truth for Ubunifu’s visual identity. Keep it aligned with the implemented tokens in [`src/app/globals.css`](src/app/globals.css), the logo component in [`src/components/BrandMark.tsx`](src/components/BrandMark.tsx), and the live brand kit at [`/brand`](https://ubunifutech.com/brand).
 
-Last updated: 5 September 2026.
+Last updated: 8 September 2026.
 
 ## Brand idea
 
@@ -62,13 +62,13 @@ Use CSS tokens in product code. Hex values are for exported assets and external 
 
 | Role | Token | Hex | Primary use |
 |---|---|---|---|
-| Page background | `--background` | `#F4F2FB` | Default soft-lavender canvas |
+| Page background | `--background` | `#FFFFFF` | White canvas |
 | Surface | `--surface` | `#FFFFFF` | Cards, forms, navigation |
-| Alternate surface | `--surface-2` | `#FAF8FE` | Section contrast |
-| Subtle surface | `--surface-3` | `#F0EDF9` | Panels and quiet dividers |
+| Alternate surface | `--surface-2` | 3% navy mixed with white | Neutral section contrast |
+| Subtle surface | `--surface-3` | 6% navy mixed with white | Quiet grouping and hover states |
 | Primary text | `--text-primary` | `#1F1A36` | Headings and body copy |
-| Secondary text | `--text-secondary` | `#5A5170` | Supporting copy |
-| Tertiary text | `--text-tertiary` | `#6B6385` | Labels and helper text |
+| Secondary text | `--text-secondary` | 75% navy mixed with white | Supporting copy |
+| Tertiary text | `--text-tertiary` | 65% navy mixed with white | Labels and helper text |
 | Brand orange | `--brand` | `#FF6B2C` | Ligature U, large accents, paths |
 | Orange hover | `--brand-hover` | `#E8581E` | Decorative interaction state |
 | Deep orange | `--brand-deep` | `#BF4314` | Accessible orange button fill and small text |
@@ -79,6 +79,7 @@ Use CSS tokens in product code. Hex values are for exported assets and external 
 | Clay | `--clay` | `#C2693B` | Restrained editorial warmth |
 
 Orange and violet form the Ligature; navy anchors the company name and the wider system. These three are the core identity. Blue is reserved for data and infrastructure illustration, while clay is a controlled editorial note. Neither is a fourth primary.
+White and navy-derived neutrals now cover the large reading surfaces. Violet stays in the original logo and selective interactions; avoid violet page washes, ambient glows, and large purple gradients. Do not reintroduce the old lavender canvas.
 The interactive aliases deliberately use `--cta: var(--brand-deep)` and `--cta-hover: var(--text-primary)` so white CTA text retains contrast.
 
 ### Contrast rules
@@ -97,25 +98,35 @@ Fonts are loaded through `next/font` in [`src/app/layout.tsx`](src/app/layout.ts
 
 | Role | Family | Weights | Guidance |
 |---|---|---|---|
-| Display and headings | Poppins | 600, 700, 800 | Compact, confident, tight tracking |
-| Body and interface | Inter | 400–700 | Clear, neutral, generous line height |
-| Labels and kickers | System monospace | 500–700 | Uppercase, short, widely tracked |
+| Display and headings | Poppins | 500 | Calm, open line height, restrained tracking |
+| Body, labels, and interface | Inter | 400 | Regular weight and normal tracking, including controls |
+| Code | System monospace | 400 | Body size, reserved for actual code |
+| Original wordmark | Poppins | 600, 700 | Preserve the established lockup weights |
 
-Use Poppins for hierarchy, not paragraphs. Use Inter for all sustained reading and controls. Monospace is a small editorial device for labels and process language, not a body face. There is no serif in the core system.
+Use Poppins for headings, Inter for reading and controls, and monospace only for code. Labels use sentence case and normal letter spacing. There is no serif in the core system.
+
+The live site has exactly three shared text-size roles, defined once in `src/app/globals.css`:
+
+| Role | Token | Size | Use |
+|---|---|---|---|
+| Display | `--font-size-display` | `clamp(2.5rem, 5.6vw, 5.5rem)` | Page titles |
+| Heading | `--font-size-heading` | `clamp(1.5rem, 2.2vw, 2.25rem)` | Section and feature headings |
+| Body | `--font-size-body` | `1rem` | Paragraphs, labels, captions, navigation, controls, small subheadings |
+
+Do not add component-specific size overrides at breakpoints. Build hierarchy with whitespace, alignment, colour, and regular/medium weights (400/500). Body-size text stays regular, including controls, table headings, and semantic emphasis; the original logo retains its own weights. Keep semantic HTML without making every emphasized phrase visually bold. Adjust narrow layouts to fit readable text instead of shrinking labels. Social-card artwork is a separate image composition. `npm run check:typography` checks size tokens, regular body weights, and normal tracking.
 
 ## Editorial image system
 
-Editorial imagery explains an idea instead of decorating a page. It should feel like a premium adult learning object: precise, tactile, calm, and recognizably part of Ubunifu.
+Editorial imagery explains the subject beside it. Choose a recognisable scene, object, or diagram before choosing a style. A smaller number of specific images is stronger than repeating a generic technology metaphor.
 
 ### Visual language
 
-- Start with one clear conceptual metaphor or part-to-whole relationship.
-- Prefer top-down or carefully staged compositions with strong geometry and generous breathing room.
-- Use matte paper, unglazed ceramic, textile, subtle topographic embossing, and restrained real-world texture.
-- Light with a warm directional source and soft, controlled shadows. Keep depth of field restrained enough that the idea remains legible.
-- Use one orange-to-purple path or progression when connection, reasoning, or the delivery loop is part of the story.
-- Keep the image inside the canonical palette above. Natural materials may use closely controlled clay and warm neutral values.
-- Avoid generic technology stock imagery, glowing screens, fake dashboards, fake metrics, logos, watermarks, cartoon styling, decorative pseudo-text, flags, and stereotyped regional patterns.
+- Prefer flat editorial illustrations, real brand assets, legible HTML diagrams, and natural-looking scenes. 3D is not the default and needs a clear explanatory reason.
+- Hosting imagery should show infrastructure, domains, or email; data imagery should show records and charts; AI imagery should show reasoning, source material, or review. Do not reuse unrelated learning or landscape art for those subjects.
+- Landscapes should evoke the relevant place rather than a fantasy terrain model. Usambara is represented by forested highlands, cultivated slopes, and a walking trail—not snow peaks, funnels, or abstract machinery.
+- Keep illustrations inside the orange, violet, navy, and white palette. Photographic scenes may retain natural skin tones and material colours; clothing and stationery accents can carry the brand without recolouring people or their surroundings.
+- People may represent contemporary Tanzanian working life without stereotyped dress or staged corporate gestures. Generated people are fictional and must not be described as staff, clients, or testimonial subjects.
+- Avoid glowing processors, glass machinery, fake dashboards, fake metrics, watermarks, decorative pseudo-text, and ornamental networks. One clear subject is enough.
 - Do not put readable copy inside generated images. Titles and captions belong in accessible HTML.
 
 ### Composition and delivery
@@ -124,7 +135,13 @@ Editorial imagery explains an idea instead of decorating a page. It should feel 
 - Keep the focal idea inside a centered safe area so the image can crop to 4:3 and square without losing meaning.
 - Store editorial concepts in [`public/editorial/`](public/editorial/). Prefer WebP at runtime when a paired WebP exists; retain PNG only when it is the required source or delivery format.
 - Keep product names, statuses, client domains, capabilities, and destination links in accessible HTML rather than baking them into imagery.
-- Label generated client and product art as a conceptual illustration. The live product or client-site link remains the source of truth for the delivered interface.
+- Products use individual wordless editorial illustrations in open image-and-text rows: documents for Insight, stock and sales records for Sifa, and website modules for Rafiki. These are explanatory paper metaphors, not screenshots. Keep the homepage preview text-led rather than repeating the full collection. Exact prompts and asset paths are in [PRODUCT_ARTWORK.md](PRODUCT_ARTWORK.md).
+- Client project visuals are text-free SVG relationship diagrams, not generated landscape scenes. Safari King shows an operations hub; Usambara shows enquiry-to-email branching. `EditorialVisual` selects the project, and `SystemDiagram` supplies the shared vector system across previews, work pages, and related article views. Descriptions remain available to screen readers; visible project names and explanations stay outside the artwork. The legacy rasters remain only for existing social metadata and recoverability.
+- The same SVG system covers web, hosting, data, and AI services. Use trusted Lucide symbols, consistent navy strokes, one orange focal subject, and only connections that explain the service. No visible words, fake interface text, arbitrary numbers, decorative nodes, gradients, or looping animation. Branding and strategy use their dedicated light editorial illustrations. Whole SVG compositions scale proportionally rather than stretching or cropping.
+- Main page heroes use the distinct generated backgrounds in [HERO_ARTWORK.md](HERO_ARTWORK.md), with broad centered HTML copy over navy. These are decorative editorial illustrations, not office photographs, client evidence, or product interfaces. Preserve the original logo and avoid embedded words. Keep the image behind the heading, rather than adding a second image panel below it. Use one optimized image per hero; no autoplay, parallax listeners, or duplicate layers are needed.
+- Do not use photorealistic synthetic people as implied team/client evidence. The planning and business scenes are retained unused; their removal must not be replaced by hiding a necessary disclosure on a misleading photograph.
+- Give each image one primary subject. Reuse is appropriate for a link into the same project or article; do not repeat the same image as both a decorative page hero and a section below it. The homepage selects an editorial lead whose cover is different from its project artwork.
+- Preserve original assets in version history or as unreferenced files until a separate cleanup. New artwork uses new paths; see `EDITORIAL_ASSETS.md` for subjects, usage, and generation prompts.
 - Do not publish raw interface captures that expose personal names, account data, saved prompts, or operational context. Any future evidence image requires sanitisation and publication approval.
 - Write alt text for the idea and meaningful objects, not for every decorative texture or the generation style.
 
@@ -133,13 +150,16 @@ Editorial imagery explains an idea instead of decorating a page. It should feel 
 Motion should explain a relationship or a change in state: inputs gathering into a working system, an active capability following the reader, a rule establishing sequence, or evidence moving into focus. It is not a decorative layer added to every component.
 
 - Use the existing Framer Motion dependency for orchestration, shared-layout transitions, masks, and restrained scroll-linked depth.
-- The homepage `SystemsField` is the reference dimensional expression: Canvas 2D, fewer than 40 moving inputs, device-pixel-ratio capped at 1.5, paused when off-screen or when the document is hidden, and static when reduced motion is requested.
+- The homepage has a navy editorial-image hero without the four-stage diagram, location strapline, or replay control. `SystemsField` is retained unused, not rendered. All main page hero images use the static `HeroBackdrop`; existing text and preview transitions remain restrained and respect reduced motion. Services uses in-flow illustrations and ordinary anchor targets.
+- Shader decision: no WebGL layer for this diagram. HTML/SVG already expresses the relationships; shaders would add GPU, context, and fallback responsibilities without a clearer message. Consider one only for a specific material/light effect that cannot be expressed simply. References: [MDN WebGL best practices](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices), [Motion SVG animation](https://motion.dev/docs/react-svg-animation).
 - Keep content in accessible HTML. Canvas and ambient motion remain decorative and `aria-hidden`.
-- Prefer one memorable system simulation to multiple unrelated effects. Avoid generic WebGL orbs, autoplay video, cursor followers, and motion that makes a visitor wait for information.
+- Add a simulation only when it explains something visitors need to understand. Avoid generic WebGL orbs, autoplay video, cursor followers, and motion that makes a visitor wait for information.
 - Use the established orange, purple, blue, navy, white, and clay palette; motion does not introduce additional colours.
 
 ## Voice and usage
 
 The visual system and writing voice should agree: confident, warm, specific, and honest. Favor concrete outcomes over adjectives. Do not invent customer counts, ratings, performance metrics, sector experience, or product usage.
+
+Remove repeated positioning, arbitrary counters, dashed eyebrow ornaments, multicolour side rails, and copy that describes how carefully the copy was written. Retain meaningful dates, product statuses, input labels, focus indicators, and qualifications that prevent a misleading claim. Use open sections and spacing; a border or container should clarify grouping or interaction, not act as a default decoration.
 
 For company positioning and claim boundaries, use [`POSITIONING.md`](POSITIONING.md). For implementation details, use the live tokens and components; if the implementation and this guide diverge, resolve both rather than creating a third variant.

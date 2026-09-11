@@ -4,8 +4,8 @@ date: "2026-01-05"
 author: "Ubunifu Technologies"
 excerpt: "Why pay-as-you-go credits fit Insight’s document workflows, where the model helps, and what usage pricing must do to remain understandable and predictable."
 tags: ["Product", "Pricing", "Insight"]
-coverImage: "/editorial/data-to-decisions.webp"
-coverAlt: "Abstract data stream passing through a glowing processor into organised charts and decision panels"
+coverImage: "/editorial/usage-based-pricing.webp"
+coverAlt: "A usage meter connected to an itemised receipt, illustrating charges based on measured use"
 ---
 
 Ubunifu Insight uses pay-as-you-go credits. Customers pay for activity in the product rather than choosing a recurring seat plan as the only way to begin.
@@ -30,8 +30,6 @@ A usage model can cost less for occasional work and more for sustained, high-vol
 
 That is why “pay only when you use it” is incomplete as a pricing explanation. A customer also needs to understand what counts as usage, how credits are consumed, and what a typical task might require. Without that information, a flexible price can become difficult to budget.
 
-We should judge the model by the complete experience, not the slogan attached to it.
-
 ## Predictability is a product requirement
 
 Good usage pricing needs controls that make cost visible before it becomes a surprise. The product and its pricing material should make it possible to answer practical questions:
@@ -49,8 +47,6 @@ These are standards for the model, not a claim that every desired control is fin
 A subscription can be easier to understand when use is frequent and stable. A fixed recurring amount supports budgeting, and a plan can bundle support, storage, collaboration, or service levels in a way that individual actions do not capture well.
 
 For some customers, a subscription or committed-usage plan may eventually be the clearer option. Usage-based and subscription pricing can also coexist. The right structure depends on observed use, support costs, and what customers are actually trying to budget.
-
-We would rather preserve that possibility than present one billing model as morally better than another.
 
 ## Pricing does not create value by itself
 
@@ -70,5 +66,3 @@ Before choosing a plan or a competing tool, estimate the work rather than only t
 - collaboration and support included;
 - limits that affect the workflow; and
 - the cost of a high-volume month, not only an average one.
-
-We chose pay-as-you-go credits for Insight because they fit the variable document workflows the product is designed to handle. The model earns trust only if its units remain clear, its costs remain visible, and we keep checking the choice against how customers actually use the product.

@@ -4,11 +4,92 @@ Single source of truth for the site redesign / quality pass. Maintained as work 
 
 **Rule we follow:** never invent metrics, testimonials, client logos, or capabilities. Conceptual artwork may explain a workflow, but it is never presented as a product interface or proof of delivery. Claims must be backed by a shipping product, a live client link, approved source material, or another verifiable fact. Where the strongest version of a claim isn't yet provable, we ship a weaker truthful version and flag the better version under Deferred.
 
-Entries before #42 are retained as implementation history. Where an older entry describes retired navigation, layouts, claims, imagery, or brand assets, #42, #41, #40, and the current source files take precedence.
+Earlier entries are retained as implementation history. Where an older entry describes retired navigation, typography, layouts, claims, imagery, or brand assets, the latest applicable entry and the current source files take precedence.
 
 ---
 
 ## Shipped (latest pass)
+
+### 53. Individual product illustrations — 9 September 2026
+
+- Added three distinct, wordless product illustrations: source documents for Insight, stock and sales records for Sifa, and modular website tools for Rafiki. Exact prompts, built-in generation mode, original paths and runtime assets are in `PRODUCT_ARTWORK.md`. Original PNGs remain untouched; optimized WebP copies are 39–91 kB each.
+- Replaced the cramped four-column product register with open image-and-text rows that stack on smaller screens. Images retain their full composition, descriptive alt text, reserved aspect ratio and lazy loading. Stable product IDs bind each illustration to its product. Existing reduced-motion-aware row transitions remain; no new animation or package dependency.
+- Kept product names, features, availability and links unchanged. Rafiki still says “In development” and “Coming soon” without a live-product link. The homepage preview stays text-led to avoid unnecessary repetition. No fake screenshots, image text, generated people, new UI colours or added claims.
+- Validation: lint, TypeScript, three-size typography, whitespace checks and production build pass. Rendered checks verify all three product illustrations, source-size budgets, lazy loading, accessible descriptions, protected external links and Rafiki’s status, alongside the existing hero and SVG checks. No browser visual QA, contact submission, hosting change, push or publication was performed.
+
+### 52. Generated hero collection and remaining service illustrations — 9 September 2026
+
+- Generated and visually inspected thirteen new assets: eleven distinct main-page hero backgrounds plus branding and strategy service illustrations. Exact prompts, provenance and saved paths are in `HERO_ARTWORK.md`. Original PNGs and earlier assets remain untouched; no new logo, generated words, fictional staff, client screenshots, or metrics were introduced.
+- Added the static `HeroBackdrop` with one responsive, preloaded image per page, centered HTML headings, navy contrast treatment, and no scroll or animation runtime. Main page heroes cover Home, Services, Work, Products, About, Industries, Contact, Articles, Careers, Brand and Privacy. Individual article covers and case-study diagrams are preserved.
+- Unified Articles and Brand with the shared full-width header, removing duplicate navbar offsets and keeping their content below. The brand header now identifies the usable logo files and guidelines plainly. The light contact form and dropdown remain unchanged.
+- All six service sections now have a visual: the four existing semantic SVGs and two lightweight generated illustrations. No additional sections or service-copy claims. WebP source files are 38–145 kB each; below-the-fold service images lazy-load.
+- Validation: lint, TypeScript, three-size typography, whitespace checks and production build pass. Rendered checks verify eleven distinct hero backgrounds, two service images, image budgets, single page headings, and the seventeen existing wordless SVG instances across eight routes. All eleven main local routes return HTTP 200. No browser visual QA, contact submission, hosting change, push or publication was performed.
+
+### 51. Contact dropdown surface — 8 September 2026
+
+- Matched the enquiry dropdown to the light contact form: white menu, navy option text, neutral selected/active rows, a lighter shadow, and a light scrollbar track. The active row retains a clearly contrasting neutral outline; the selected checkmark, keyboard focus, forced-colours support, and reduced-motion behaviour remain. Styling only; selection, validation, and submission code are unchanged.
+
+### 50. Text-free SVG system — 8 September 2026
+
+- Removed visible labels from both project diagrams across work previews, case studies, industry references, and related articles. Project copy and live links remain outside the artwork; each meaningful diagram retains a single screen-reader description.
+- Introduced a shared SVG composition system using trusted Lucide icons, consistent stroke weights, navy and restrained orange. Six distinct arrangements explain the two project systems plus responsive websites, hosting/domains/email, reporting, and grounded AI with human review. No new raster generation, fake screens, metrics, ornamental nodes, or animation runtime.
+- Replaced four service raster illustrations in their existing sections. Branding and strategy remain text-led. Removed the label-specific diagram stylesheet and extra thumbnail height that was needed for the deleted labels; proportional SVGs fit the existing responsive media frames.
+- Extended rendered-source checks to reject visible wording inside diagrams, verify proportional SVGs and accessible semantics, and require all four service compositions. Original assets, social metadata, logo, palette, contact handling, and hosting are unchanged.
+- Validation: lint, TypeScript, typography, whitespace checks, and the production build pass. The rendered-source check verifies 17 wordless SVG instances across eight routes; six local routes return HTTP 200. Explicit icon dimensions protect nested SVGs from the global responsive-media rule. No browser visual QA or publishing was performed.
+
+### 49. Neutral surfaces and project system diagrams — 8 September 2026
+
+- Replaced lavender page surfaces with white and navy-derived neutral tints. Removed large purple gradients from contact CTAs, blog/work backgrounds, and mobile navigation. Original orange/violet/navy logo colours remain unchanged.
+- Removed the homepage four-stage assembly and its replay control, its reserved spacing, the global footer tagline, and repeated location phrasing. Factual location details remain in About and Contact.
+- Replaced in-page Safari King and Usambara landscapes with one shared icon/diagram renderer: operations with enquiries, customer records, and reviewed drafts; and a trip enquiry branching into operator notification and visitor confirmation. Applies to work previews, case studies, Industries, and related article views. No generated replacement images, simulated interface, or fabricated metrics.
+- Preserved existing social metadata and legacy files. Added a post-build check for the diagrams, absent legacy in-page images, and retired homepage labels across eight routes. No contact/API or hosting changes.
+- Reserved readable diagram height in short thumbnails, allowed label wrapping, and retained accessible descriptions. Code checks, production build, eight rendered-route checks, and six local HTTP checks pass. No browser visual QA was performed; the existing local preview remains the review surface.
+
+### 48. Removal-first language and design pass — 8 September 2026
+
+- Removed the synthetic planning photograph together with its disclaimer, the Services brand specimen, the priority matrix, and the sticky/cycling showcase. Services now uses native in-flow sections, four subject-specific illustrations, and text-led branding/advisory sections.
+- Removed decorative counters, duplicated introductions, coloured edge rails, the WhatsApp/dropdown orange strips, speculative career areas, and blog passages about editorial honesty. Preserved meaningful product statuses, dates, qualifications, real team details, live project links, and paraphrased-testimonial attribution.
+- Kept the original logo and palette. Body-size text and controls are regular 400, headings are medium 500, and tracking is normal. Expanded the typography guard to check body weights and tracking. Removed unused preview exports and their orphaned CSS.
+- Opened value, team, and process sections and removed number-column gaps in service, product, work, industry, and article layouts. The hero retains its finite SVG/CSS assembly; its desktop connections now follow a clockwise sequence, without crosshair guides or the disconnected signal path.
+- Reviewed shader techniques and retained SVG for this explanatory diagram. No new WebGL dependency, backend change, live contact submission, or hosting migration.
+- Validation: lint, TypeScript, the stricter typography guard, whitespace checks, and production build pass. Ten main local routes return HTTP 200. No browser visual/interaction QA was performed in this pass; local preview remains available for review.
+
+### 47. Balanced, three-size typography — 8 September 2026
+
+- Consolidated live-site typography into display, heading, and body tokens. All 356 CSS size declarations now use those roles or inheritance, including labels, captions, forms, articles, and mobile variants. The brand page documents the same system.
+- Loaded real Poppins 400/500 weights, moved headings and controls to medium 500, kept reading text regular 400, and reserved 600 for semantic emphasis. The logo keeps its original 600/700 weights and geometry. Opened tight line heights and tracking without changing the palette.
+- Adjusted navigation breakpoints and scrolling, caption widths, service-example flow, and hero diagram columns for the larger labels. The narrowest hero uses a two-column assembly line.
+- Added a dependency-free typography guard to `npm run check` to prevent new one-off text sizes or heavy weights from creeping back in. Social-image compositions remain separate from live-site typography.
+
+### 46. Homepage system-assembly hero — 8 September 2026
+
+- Replaced the homepage business-scene backdrop with a navy architecture field that assembles a brief, application layers, data workflow, and domain/hosting/email hierarchy. The existing wide centred headline, brand identity, and destination links remain intact.
+- Reworked the unused `SystemsField` canvas into lightweight HTML/SVG/CSS diagrams. Orange signals and violet routes animate for 4.4 seconds once, then settle; the optional replay control does not restart the headline or CTAs. No particles, 3D, video, or permanent animation loop.
+- Added offscreen/hidden-tab pausing, a static reduced-motion treatment, and a compact assembly line on narrower screens. The earlier generated homepage scene is retained, not deleted.
+
+### 45. Branded contact enquiry dropdown — 8 September 2026
+
+- Replaced the operating-system select menu with an Ink Navy popup, Digital Violet active state, and Signal Orange selection marker, using existing brand tokens only.
+- Added arrow-key navigation, Home/End, typeahead, Enter/Space selection, Escape cancellation, normal Tab exit, and labelled combobox/listbox semantics. Empty-subject validation focuses the control and associates the error message.
+- Popup placement follows available viewport space, supports nested scrolling independently of Lenis, and respects reduced motion. Subject values, the contact API, honeypot, and submission idempotency are unchanged.
+
+### 44. Subject-specific imagery and a tighter editorial structure — 8 September 2026
+
+- Replaced the ambiguous 3D Usambara and safari workflow compositions with quieter, subject-specific travel illustrations. Project images are reused only to identify the same case study or its related article; the Work masthead no longer repeats both images above the listing.
+- Gave web, hosting, data, and AI their own flat illustrations: responsive layouts; server/domain/email; records and reporting; and source material, reasoning, and review. Branding shows Ubunifu's actual canonical lockup, colours, and type. Strategy uses an accessible impact-versus-effort table instead of another generated scene.
+- Removed the large overlaid Services sequence numbers, dark illustration veils, and repeated decorative rails. The sticky artwork and direct navigation remain, with in-flow examples at widths up to 980px or heights up to 700px. Native mobile examples expand with their text, and enlarged desktop examples can scroll inside the illustration frame.
+- Replaced the home and Services hero imagery with two different, explicitly labelled AI-generated Tanzanian working-life scenes. They are illustrative, not photographs of staff, clients, or the Ubunifu office. Removed the homepage's extra SystemsField canvas and contour/grain overlays.
+- Removed repeated homepage positioning and process sections; the detailed delivery process stays on Services. Product introductions now use an open text-led register without the abstract 3D product-family machinery. About, Work, Products, Industries, Careers, and Contact have compact mastheads; About no longer repeats the delivery process and Industries no longer repeats its domain-fit caveat in a decorative panel.
+- Removed duplicated blog-index framing and the unrelated Insight promotion from every closing contact CTA. Article covers now have distinct paths; the homepage selects a lead story whose cover is not already used in selected work. Usage pricing gets its own metering illustration.
+- Preserved the orange/violet/navy tokens, canonical logo, factual product/service scope, navigation, project links, contact behavior, and reduced-motion support. Added no libraries, fabricated proof, or backend changes. New assets are optimized WebP; previous files remain recoverable and unmodified. `EDITORIAL_ASSETS.md` records the exact prompts and permitted reuse.
+- Validation: lint, TypeScript, and production build pass. Checked Services and the homepage at 390px mobile width, the sticky panel at 1280 × 720, and the native examples at the regular 1117 × 986 preview size; no horizontal overflow in those checks. Mobile menu opens, closes on navigation, and restores scrolling. All referenced editorial files exist and the seven blog covers have distinct paths. Nine new assets total 730,978 bytes; no contact submissions or external product mutations were made during QA.
+
+### 43. Services scroll layout and clearer delivery outcomes — 8 September 2026
+
+- Reproduced the empty left column: `overflow-x: hidden` on the page body made it a scroll container, so the sticky artwork scrolled out of view. Changed horizontal containment to `overflow-x: clip` so the panel follows the document scroll while artwork remains contained.
+- Sized the complete artwork and capability index to the available viewport, removed the percentage minimum height from its column, and kept the per-chapter artwork layout for screens at or below 980px wide or 600px high. Reduced excessive chapter spacing and increased the small navigation and caption type.
+- Removed dimming from service descriptions and made artwork crossfade concurrently so the outgoing image no longer disappears before the next transition starts. Reduced-motion handling remains in place.
+- Reviewed [Bay6](https://www.bay6.ai/) and [Forge6](https://www.bay6.ai/forge6) for inspiration. Applied shorter Services headlines, explicit outputs for Understand → Shape → Build → Operate, and a more concrete prompt for the first conversation. Kept Ubunifu's existing artwork, orange/violet/navy identity, open layouts, and supported service scope.
 
 ### 42. Restored original three-colour identity — 5 September 2026
 

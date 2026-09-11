@@ -121,7 +121,7 @@ npm start
 ubunifu-tech-website/
 ├── public/
 │   ├── brand/              # Canonical Ubunifu Ligature SVG marks and lockups
-│   ├── editorial/          # Tactile conceptual art for services, work, and products
+│   ├── editorial/          # Subject-specific illustrations and labelled synthetic scenes
 │   ├── logo-v2.png         # Navy social/avatar tile with the Ligature
 │   └── og.png              # Default social preview
 ├── _posts/                  # Blog posts in Markdown

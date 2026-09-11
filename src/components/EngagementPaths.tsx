@@ -26,7 +26,6 @@ export const EngagementPaths: React.FC = () => {
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: reduceMotion ? 0 : 0.58, ease }}
         >
-          <p className={styles.eyebrow}>How to work with us</p>
           <h2 id="engagement-paths-title" className={styles.heading}>
             Commission a tailored system, or use software we already operate.
           </h2>
@@ -45,7 +44,6 @@ export const EngagementPaths: React.FC = () => {
             transition={{ duration: reduceMotion ? 0 : 0.62, ease }}
           >
             <div className={styles.pathTopline}>
-              <span className={styles.index}>01</span>
               <span>Tailored consulting</span>
             </div>
             <h3>Solve an organisation-specific problem.</h3>
@@ -74,7 +72,6 @@ export const EngagementPaths: React.FC = () => {
             transition={{ duration: reduceMotion ? 0 : 0.62, delay: reduceMotion ? 0 : 0.08, ease }}
           >
             <div className={styles.pathTopline}>
-              <span className={styles.index}>02</span>
               <span>Ubunifu products</span>
             </div>
             <h3>Use software we build and operate.</h3>

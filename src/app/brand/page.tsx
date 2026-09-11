@@ -1,13 +1,20 @@
 import { BrandLockup, BrandMark } from '@/components/BrandMark';
+import { PageHeader } from '@/components/PageHeader';
 import { brandColors } from '@/lib/brand';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './Brand.module.css';
 
-export const metadata = pageMetadata({
-  title: 'Brand kit',
-  description: 'Ubunifu Technologies logo assets, colours, typography, visual language, and usage rules.',
-  path: '/brand',
-});
+// Internal reference, not part of the public site: no navigation links to it and
+// no sitemap entry. noindex so it stays out of search results if the URL is
+// shared or discovered. The page itself remains reachable by address.
+export const metadata = {
+  ...pageMetadata({
+    title: 'Brand kit',
+    description: 'Ubunifu Technologies logo assets, colours, typography, visual language, and usage rules.',
+    path: '/brand',
+  }),
+  robots: { index: false, follow: false },
+};
 
 type Swatch = { name: string; hex: string; rgb: string; token: string; usage: string };
 
@@ -33,18 +40,18 @@ const GROUPS: { title: string; colors: Swatch[] }[] = [
   {
     title: 'Foundation',
     colors: [
-      { name: 'Lavender (Background)', hex: '#F4F2FB', rgb: '244, 242, 251', token: '--background', usage: 'Page background' },
+      { name: 'White (Background)', hex: '#FFFFFF', rgb: '255, 255, 255', token: '--background', usage: 'Page background' },
       { name: 'White (Surface)', hex: '#FFFFFF', rgb: '255, 255, 255', token: '--surface', usage: 'Cards, forms, navbar' },
-      { name: 'Surface 2', hex: '#FAF8FE', rgb: '250, 248, 254', token: '--surface-2', usage: 'Alternate section background' },
-      { name: 'Surface 3', hex: '#F0EDF9', rgb: '240, 237, 249', token: '--surface-3', usage: 'Subtle panels and dividers' },
+      { name: 'Surface 2', hex: '#F8F8F9', rgb: '248, 248, 249', token: '--surface-2', usage: '3% navy on white; alternate sections' },
+      { name: 'Surface 3', hex: '#F2F1F3', rgb: '242, 241, 243', token: '--surface-3', usage: '6% navy on white; subtle grouping' },
     ],
   },
   {
     title: 'Text',
     colors: [
       { name: 'Navy (Text)', hex: '#1F1A36', rgb: '31, 26, 54', token: '--text-primary', usage: 'Headings & body copy' },
-      { name: 'Secondary', hex: '#5A5170', rgb: '90, 81, 112', token: '--text-secondary', usage: 'Subheads, paragraph copy' },
-      { name: 'Tertiary', hex: '#6B6385', rgb: '107, 99, 133', token: '--text-tertiary', usage: 'Labels, captions, helper text' },
+      { name: 'Secondary', hex: '#575368', rgb: '87, 83, 104', token: '--text-secondary', usage: '75% navy on white; paragraph copy' },
+      { name: 'Tertiary', hex: '#6D6A7C', rgb: '109, 106, 124', token: '--text-tertiary', usage: '65% navy on white; supporting text' },
     ],
   },
 ];
@@ -52,22 +59,14 @@ const GROUPS: { title: string; colors: Swatch[] }[] = [
 export default function BrandKit() {
   return (
     <main className={styles.page}>
+      <PageHeader
+        scene="brand"
+        compact
+        eyebrow="Brand kit"
+        title="Logo files and brand guidelines."
+        lead="The Ubunifu Technologies logo, colours, typography and guidance for using them."
+      />
       <div className="container">
-        <header className={styles.header}>
-          <div className={styles.headerTop}>
-            <BrandLockup />
-            <span>Identity system · 2026</span>
-          </div>
-          <h1 className={styles.title}>One name. One visual language.</h1>
-          <div className={styles.headerCopy}>
-            <p className={styles.tagline}>Consulting + products, built in Tanzania.</p>
-            <p className={styles.intro}>
-              A practical reference for the Ubunifu Technologies identity: mark,
-              lockups, colour roles, typography, editorial imagery, and voice.
-            </p>
-          </div>
-        </header>
-
         <section className={styles.section}>
           <h2 className={styles.h2}>Logo</h2>
           <div className={styles.logoRow}>
@@ -145,19 +144,24 @@ export default function BrandKit() {
             <div className={styles.typeCard}>
               <p className={styles.typeAa} style={{ fontFamily: 'var(--font-heading)' }}>Aa</p>
               <p className={styles.typeName}>Poppins</p>
-              <p className={styles.typeUse}>Headings &amp; logo — weights 600 / 700 / 800</p>
+              <p className={styles.typeUse}>Headings — medium 500. The original logo keeps its 600 / 700 weights.</p>
             </div>
             <div className={styles.typeCard}>
               <p className={styles.typeAa} style={{ fontFamily: 'var(--font-body)' }}>Aa</p>
               <p className={styles.typeName}>Inter</p>
-              <p className={styles.typeUse}>Body &amp; UI — weights 400 – 700</p>
+              <p className={styles.typeUse}>Body, labels, and controls — regular 400, with normal letter spacing.</p>
             </div>
             <div className={styles.typeCard}>
-              <p className={styles.typeAa} style={{ fontFamily: 'var(--font-mono)', fontSize: '2.6rem' }}>Aa</p>
+              <p className={styles.typeAa} style={{ fontFamily: 'var(--font-mono)' }}>Aa</p>
               <p className={styles.typeName}>Monospace</p>
-              <p className={styles.typeUse}>Labels &amp; kickers — UPPERCASE, wide tracking</p>
+              <p className={styles.typeUse}>Code only — regular weight, at the same body size.</p>
             </div>
           </div>
+          <p className={styles.note}>
+            Three sizes throughout: display for page titles, heading for sections,
+            and body for text, labels, and controls. Display and heading sizes adapt
+            to the viewport; body text remains 1rem. Spacing creates the hierarchy.
+          </p>
         </section>
 
         <section className={styles.section}>

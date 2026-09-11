@@ -1,10 +1,11 @@
-import Image from 'next/image';
+import { EditorialVisual } from '@/components/EditorialVisual';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown';
 import { CtaBand } from '@/components/CtaBand';
 import { ReadingProgress } from '@/components/ReadingProgress';
+import { getProjectDiagram } from '@/content/project-visuals';
 import { getAllPosts, getPostBySlug, resolveBlogCover } from '@/lib/blog';
 import styles from './BlogSlug.module.css';
 
@@ -182,7 +183,7 @@ export default async function BlogPostPage({
           </div>
 
           <figure className={styles.cover}>
-            <Image
+            <EditorialVisual
               src={cover.image}
               alt={cover.alt}
               fill
@@ -190,7 +191,9 @@ export default async function BlogPostPage({
               sizes="(max-width: 1280px) 100vw, 1200px"
               className={styles.coverImage}
             />
-            <figcaption className={styles.coverCaption}>Conceptual illustration</figcaption>
+            {!getProjectDiagram(cover.image) && (
+              <figcaption className={styles.coverCaption}>Conceptual illustration</figcaption>
+            )}
           </figure>
         </header>
 

@@ -66,7 +66,7 @@ function footer(): string {
             <a href="mailto:${EMAIL}" style="${link}">${EMAIL}</a><br/>
             <a href="tel:${PHONE_TEL}" style="${link}">${PHONE_DISPLAY}</a> ·
             <a href="${WHATSAPP}" style="${link}">WhatsApp</a><br/>
-            Arusha, Tanzania
+            Tanzania
           </td>
           <td align="right" style="vertical-align:top;color:#F4F2FB;font-size:13px;line-height:1.9;">
             <a href="${SITE}" style="${link}">Website</a><br/>

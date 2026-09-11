@@ -5,8 +5,8 @@ export const site = {
   name: 'Ubunifu Technologies',
   tagline: 'Consulting + products, built in Tanzania.',
   shortDescription:
-    'An Arusha-based technology consultancy that also builds and operates products across brand, software, data, and AI.',
-  location: 'Arusha, Tanzania',
+    'A Tanzanian technology consultancy that also builds and operates products across brand, software, data, and AI.',
+  location: 'Tanzania',
 
   contact: {
     email: 'info@ubunifutech.com',
@@ -27,6 +27,15 @@ export const site = {
     blog: '/blog',
     careers: '/careers',
   },
+} as const;
+
+// Calls to action - one wording per action, site-wide. Import these instead of
+// typing a button label, so the primary conversion path cannot drift again.
+export const cta = {
+  /** Anything that sends someone to /contact. */
+  primary: 'Start a project',
+  /** Anything that sends someone to /work. */
+  secondary: 'See our work',
 } as const;
 
 // Navigation links - order = display order.

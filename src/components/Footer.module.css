@@ -22,7 +22,7 @@
 .top {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .brand {
@@ -31,35 +31,27 @@
   gap: 10px;
 }
 
-.tagline {
-  font-size: 0.875rem;
-  color: var(--text-inverse-tertiary);
-  margin-left: 0.5rem;
-}
-
 .middle {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
+  gap: var(--space-6);
 }
 
 .col {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: var(--space-2);
 }
 
 .colLabel {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
   color: #ffffff;
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--space-1);
 }
 
 .colLink {
-  font-size: 0.875rem;
+  font-size: var(--font-size-small);
   color: var(--text-inverse-tertiary);
   text-decoration: none;
   transition: color 0.2s ease;
@@ -70,27 +62,26 @@
 }
 
 .colLinkDisabled {
-  font-size: 0.875rem;
+  font-size: var(--font-size-small);
   color: rgba(255, 255, 255, 0.4);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .soon {
-  font-size: 0.6rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.1rem 0.375rem;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  padding: var(--space-1) var(--space-1);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   color: rgba(255, 255, 255, 0.7);
 }
 
 .location {
-  font-size: 0.875rem;
+  font-size: var(--font-size-small);
   color: var(--text-inverse-tertiary);
 }
 
@@ -98,21 +89,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1.5rem;
+  padding-top: var(--space-5);
 }
 
 .copy {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-caption);
   color: var(--text-inverse-tertiary);
 }
 
 .legalLinks {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   color: var(--text-inverse-tertiary);
-  font-size: 0.8125rem;
+  font-size: var(--font-size-caption);
 }
 
 .legalLinks a:hover {
@@ -130,11 +121,7 @@
   .top {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.25rem;
-  }
-
-  .tagline {
-    margin-left: 0;
+    gap: var(--space-1);
   }
 
   .middle {

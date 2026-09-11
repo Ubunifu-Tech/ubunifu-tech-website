@@ -5,8 +5,8 @@
 }
 
 .openSection {
-  margin-top: 4rem;
-  margin-bottom: 5rem;
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-9);
 }
 
 .noRoles {
@@ -17,29 +17,29 @@
 }
 
 .noRolesTitle {
-  font-size: 1.375rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-3);
   color: var(--text-primary);
 }
 
 .noRolesText {
-  font-size: 1rem;
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.7;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .privacyNote {
   margin-bottom: 1.75rem;
   color: var(--text-tertiary);
-  font-size: 0.875rem;
+  font-size: var(--font-size-caption);
   line-height: 1.65;
 }
 
 .privacyNote a {
   color: var(--primary-deep);
-  font-weight: 700;
+  font-weight: var(--font-weight-regular);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -47,7 +47,7 @@
 .emailLink {
   color: var(--primary);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--font-weight-regular);
 }
 
 .emailLink:hover {
@@ -57,11 +57,11 @@
 .contactBtn {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
+  padding: var(--space-3) var(--space-5);
   background: var(--cta);
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   border-radius: var(--control-radius);
   text-decoration: none;
   transition: background 0.2s ease;
@@ -77,68 +77,9 @@
   outline-offset: 3px;
 }
 
-.futureSection {
-  border-top: 1px solid var(--border);
-  padding-top: 3rem;
-}
-
-.futureHeading {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-  color: var(--text-primary);
-}
-
-.futureIntro {
-  max-width: 720px;
-  margin-bottom: 2rem;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.rolesGrid {
-  display: grid;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0;
-}
-
-.roleCard {
-  padding: clamp(1.75rem, 3vw, 2.75rem);
-  border-bottom: 1px solid var(--border-hover);
-  background: transparent;
-}
-
-.roleCard:nth-child(odd) {
-  border-right: 1px solid var(--border-hover);
-}
-
-.roleTitle {
-  font-size: clamp(1.2rem, 2vw, 1.65rem);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  color: var(--text-primary);
-}
-
-.roleDesc {
-  font-size: 0.9375rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0;
-}
-
 @media (max-width: 768px) {
-  .rolesGrid {
-    grid-template-columns: 1fr;
-  }
 
   .noRoles {
     padding: 0 0 0 1.25rem;
-  }
-
-  .roleCard:nth-child(odd) {
-    border-right: 0;
   }
 }

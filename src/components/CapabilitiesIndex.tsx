@@ -21,18 +21,15 @@ export const CapabilitiesIndex: React.FC = () => {
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: reduceMotion ? 0 : 0.55, ease }}
         >
-          <p className={styles.eyebrow}>Consulting capabilities</p>
           <h2 id="capabilities-index-title" className={styles.heading}>
-            Start with the need. Bring in only the disciplines it requires.
+            What we do
           </h2>
           <p className={styles.lead}>
-            A project may begin with a website, a reporting gap, a brand that no
-            longer fits, or a workflow held together by manual steps. We scope
-            the useful combination from there.
+            We design, build, and maintain the technology your business uses.
           </p>
         </motion.div>
 
-        <ol className={styles.list}>
+        <ul className={styles.list}>
           {services.map((service, index) => (
             <motion.li
               key={service.key}
@@ -42,14 +39,13 @@ export const CapabilitiesIndex: React.FC = () => {
               transition={{ duration: reduceMotion ? 0 : 0.46, delay: reduceMotion ? 0 : index * 0.035, ease }}
             >
               <Link href={`/build#${service.key}`} className={styles.item}>
-                <span className={styles.number}>{String(index + 1).padStart(2, '0')}</span>
                 <span className={styles.itemTitle}>{service.title}</span>
                 <span className={styles.summary}>{service.summary}</span>
                 <span className={styles.arrow} aria-hidden="true">→</span>
               </Link>
             </motion.li>
           ))}
-        </ol>
+        </ul>
       </div>
     </section>
   );

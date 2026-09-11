@@ -3,44 +3,31 @@
 }
 
 .heading {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  margin-bottom: 0.75rem;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-3);
   color: var(--text-primary);
-}
-
-.intro {
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
-  color: var(--text-secondary);
-  max-width: 640px;
-  line-height: 1.7;
-  margin-bottom: 3rem;
 }
 
 .grid {
   display: grid;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
   grid-template-columns: repeat(2, 1fr);
-  gap: 0;
+  gap: clamp(2rem, 5vw, 5rem);
+  margin-top: 2.5rem;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  padding: clamp(2rem, 4vw, 3.5rem);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--border-hover);
   background: transparent;
-}
-
-.card + .card {
-  border-left: 1px solid var(--border-hover);
 }
 
 .top {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   margin-bottom: 1.25rem;
 }
 
@@ -51,14 +38,15 @@
   width: 72px;
   height: 72px;
   flex-shrink: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--brand), var(--primary));
-  color: #fff;
+  border-radius: var(--radius-lg);
+  /* Flat surface with a hairline, not an orange-to-violet gradient chip: the
+     initials are a placeholder for a photo, not a decorative badge. */
+  border: 1px solid var(--border-hover);
+  background: var(--surface-3);
+  color: var(--text-secondary);
   font-family: var(--font-heading);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  box-shadow: 0 6px 16px rgba(255, 107, 44, 0.24);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
 }
 
 .photoWrap {
@@ -66,57 +54,57 @@
   width: 72px;
   height: 72px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
 .photo {
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
 }
 
 .name {
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--space-1);
 }
 
 .role {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
   color: var(--brand-deep);
   margin: 0;
 }
 
 .bio {
-  font-size: 1rem;
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.7;
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--space-5);
 }
 
 .skills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin-top: auto;
 }
 
 .skill {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   color: var(--text-secondary);
 }
 
 .skill + .skill::before {
-  margin-right: 0.5rem;
+  margin-right: var(--space-2);
   color: var(--brand);
   content: '/';
 }
 
 .links {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
@@ -128,7 +116,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -148,7 +136,7 @@
   }
 
   .card {
-    padding: 1.5rem;
+    padding: var(--space-5) 0;
   }
 
   .card + .card {

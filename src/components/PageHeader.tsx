@@ -1,9 +1,7 @@
-'use client';
-
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { Topography } from './Topography';
 import { HeroArtwork, type HeroArtworkConfig } from './HeroArtwork';
+import { HeroBackdrop } from './HeroBackdrop';
+import type { HeroScene } from '@/content/hero-scenes';
 import styles from './PageHeader.module.css';
 
 interface PageHeaderProps {
@@ -12,122 +10,58 @@ interface PageHeaderProps {
   lead?: string;
   children?: React.ReactNode;
   artwork?: HeroArtworkConfig;
-  variant?: 'standard' | 'field' | 'proof' | 'human' | 'contact';
-  register?: ReadonlyArray<string>;
+  scene?: HeroScene;
+  compact?: boolean;
+  /** Ambient light layer. On by default wherever a scene backdrop is used. */
+  ambient?: boolean;
 }
 
-const fade = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (delay: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as const },
-  }),
-};
-
+/**
+ * Page header. The entrance is a CSS animation, not Framer Motion: this block
+ * holds every page's <h1> above the fold, so it must be painted and readable
+ * before (and without) hydration. `animation-fill-mode: both` supplies the
+ * from-state, and the global prefers-reduced-motion reset neutralises it.
+ */
 export const PageHeader: React.FC<PageHeaderProps> = ({
   eyebrow,
   title,
   lead,
   children,
   artwork,
-  variant = 'standard',
-  register,
+  scene,
+  compact = false,
+  ambient = true,
 }) => {
-  const reduceMotion = useReducedMotion();
-  const variantClass = variant === 'standard' ? '' : styles[variant];
-
   return (
-    <header className={`${styles.header} ${artwork ? styles.withArtwork : ''} ${variantClass}`}>
-      <div className={styles.backdrop} aria-hidden="true">
-        {artwork && (
-          <HeroArtwork
-            {...artwork}
-            mode="background"
-            className={styles.artwork}
-            preload
-          />
-        )}
-        <Topography className={styles.topo} />
-        <div className="grain" />
-      </div>
-      <div className={styles.brandEdge} aria-hidden="true"><span /><span /></div>
-      <div className={styles.inner}>
-        <motion.div
-          className={styles.topline}
-          initial={reduceMotion ? false : 'hidden'}
-          animate="visible"
-          custom={0.05}
-          variants={fade}
-        >
-          <span>{eyebrow}</span>
-          <span>Ubunifu Technologies</span>
-        </motion.div>
-
-        <motion.h1
-          className={styles.title}
-          initial={reduceMotion ? false : 'hidden'}
-          animate="visible"
-          custom={0.15}
-          variants={fade}
-        >
-          {title}
-        </motion.h1>
-
-        <div className={styles.supportRow}>
-          {lead && (
-            <motion.p
-              className={styles.lead}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="visible"
-              custom={0.25}
-              variants={fade}
-            >
-              {lead}
-            </motion.p>
-          )}
-
-          {children && (
-            <motion.div
-              className={styles.actions}
-              initial={reduceMotion ? false : 'hidden'}
-              animate="visible"
-              custom={0.35}
-              variants={fade}
-            >
-              {children}
-            </motion.div>
+    <header className={`${styles.header} ${artwork || scene ? styles.withArtwork : ''} ${scene ? styles.scene : ''} ${compact ? styles.compact : ''}`}>
+      {scene && <HeroBackdrop scene={scene} ambient={ambient} />}
+      {!scene && (
+        <div className={styles.backdrop} aria-hidden="true">
+          {artwork && (
+            <HeroArtwork
+              {...artwork}
+              mode="background"
+              className={styles.artwork}
+              preload
+            />
           )}
         </div>
+      )}
+      <div className={styles.inner}>
+        <div className={styles.topline}>
+          <span>{eyebrow}</span>
+        </div>
 
-        {artwork?.caption && (
-          <motion.p
-            className={styles.artLabel}
-            initial={reduceMotion ? false : 'hidden'}
-            animate="visible"
-            custom={0.42}
-            variants={fade}
-          >
-            {artwork.caption}
-          </motion.p>
-        )}
+        <h1 className={styles.title}>{title}</h1>
 
-        {register && register.length > 0 && (
-          <motion.ul
-            className={styles.register}
-            initial={reduceMotion ? false : 'hidden'}
-            animate="visible"
-            custom={0.48}
-            variants={fade}
-            aria-label={`${eyebrow} overview`}
-          >
-            {register.map((item, index) => (
-              <li key={item}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                {item}
-              </li>
-            ))}
-          </motion.ul>
+        <div className={styles.supportRow}>
+          {lead && <p className={styles.lead}>{lead}</p>}
+
+          {children && <div className={styles.actions}>{children}</div>}
+        </div>
+
+        {!scene && artwork?.caption && (
+          <p className={styles.artLabel}>{artwork.caption}</p>
         )}
       </div>
     </header>

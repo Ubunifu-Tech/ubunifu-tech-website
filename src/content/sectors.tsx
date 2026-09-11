@@ -39,7 +39,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'SMEs & Retail',
     icon: Store,
     summary:
-      'Potential use cases include a professional presence, e-commerce, and tools for sales, stock, customers, and credit workflows.',
+      'Stock, sales and customer credit held in one place instead of three notebooks — the day-to-day operating problem Ubunifu Sifa was built for.',
     offerings: ['Websites & e-commerce', 'POS & inventory', 'Credit & customers', 'Sales analytics'],
   },
   {
@@ -47,7 +47,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Finance',
     icon: Landmark,
     summary:
-      'Potential use cases include analytics, reporting, and customer tools. Regulated work would be scoped with the required domain and compliance specialists.',
+      'Reporting, customer portals and analytics on top of the data a lender or insurer already holds. Regulated work is scoped with the required domain and compliance specialists.',
     offerings: ['Data analytics', 'Customer portals', 'Reporting', 'Workflow design'],
   },
   {
@@ -55,7 +55,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'NGOs & Non-profits',
     icon: HeartHandshake,
     summary:
-      'Potential use cases include impact dashboards, process automation, data organisation, and communication platforms.',
+      'Programme data lifted out of spreadsheets into dashboards a funder can read, with the collection and reporting workflow built around it.',
     offerings: ['Impact dashboards', 'Process automation', 'Data management', 'Websites'],
   },
   {
@@ -63,7 +63,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Healthcare',
     icon: Stethoscope,
     summary:
-      'Potential use cases include public websites, reporting, and non-clinical administration. Patient or clinical systems require specialist privacy and health partners.',
+      'Public websites, reporting dashboards and admin workflows for health organisations. Patient and clinical systems are scoped with specialist privacy and health partners.',
     offerings: ['Public websites', 'Reporting dashboards', 'Admin workflows', 'Data planning'],
   },
   {
@@ -71,7 +71,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Agriculture',
     icon: Sprout,
     summary:
-      'Potential use cases include market-linkage platforms, farm records, supply-chain tools, and operational analytics.',
+      'Market platforms, farm records and supply-chain tracking designed to keep working on an intermittent connection.',
     offerings: ['Market platforms', 'Farm management', 'Supply chain', 'Yield analytics'],
   },
   {
@@ -79,7 +79,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Education',
     icon: GraduationCap,
     summary:
-      'Potential use cases include e-learning, student administration, and digital resources, informed by the Swahili-language tutor in Insight.',
+      'Our Insight product includes a tutor that teaches in Swahili.',
     offerings: ['E-learning', 'Student management', 'Swahili AI tutoring', 'Websites'],
   },
   {
@@ -87,7 +87,7 @@ export const sectors: ReadonlyArray<Sector> = [
     label: 'Government',
     icon: Building2,
     summary:
-      'Potential use cases include public information sites, service portals, data systems, and process design, with procurement and governance requirements scoped explicitly.',
+      'Citizen portals, internal data systems and process automation for public bodies. Procurement and governance requirements are agreed before work begins.',
     offerings: ['Citizen portals', 'Data systems', 'Process automation', 'AI assistants'],
   },
 ];

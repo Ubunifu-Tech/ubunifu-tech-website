@@ -1,6 +1,7 @@
-// "Why Ubunifu" differentiators — the strip beneath the hero. Each is a real,
-// defensible reason to work with us (see POSITIONING.md). Shape is kept as
-// { icon, label, body } so the ProblemStrip component renders unchanged.
+// "Why Ubunifu" differentiators. Each is a real, defensible reason to work with
+// us (see POSITIONING.md). Rendered by WhyUbunifu.tsx directly beneath the home
+// hero. Two of the four make checkable claims — named client platforms, and the
+// assistant in a client booking platform — so keep them true or cut them.
 
 import { Globe, Wrench, BadgeCheck, Cpu, type LucideIcon } from 'lucide-react';
 

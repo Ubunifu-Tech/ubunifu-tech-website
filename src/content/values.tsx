@@ -27,7 +27,7 @@ export const values: ReadonlyArray<Value> = [
   },
   {
     icon: Users,
-    title: 'Work with the people doing the work',
-    body: 'The senior people framing the problem stay present through design, engineering, review, and the agreed handover or support period.',
+    title: 'Review the work together',
+    body: 'Your team reviews working versions throughout the project, so we can address questions and make changes before launch.',
   },
 ];

@@ -12,7 +12,6 @@ export const Footer: React.FC = () => {
           <div className={styles.brand}>
             <BrandLockup inverse />
           </div>
-          <p className={styles.tagline}>{site.tagline}</p>
         </div>
 
         <div className={styles.middle}>
@@ -62,7 +61,6 @@ export const Footer: React.FC = () => {
           <p className={styles.copy}>&copy; {new Date().getFullYear()} {site.name}. All rights reserved.</p>
           <div className={styles.legalLinks}>
             <Link href="/privacy">Privacy</Link>
-            <Link href="/brand">Brand kit</Link>
           </div>
         </div>
       </div>

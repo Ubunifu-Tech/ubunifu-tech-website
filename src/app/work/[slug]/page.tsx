@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import { EditorialVisual } from '@/components/EditorialVisual';
 import type { Metadata } from 'next';
 import { ArrowLeft, ArrowUpRight, ArrowRight } from 'lucide-react';
 import { projects, getProjectBySlug } from '@/content/portfolio';
@@ -9,6 +9,8 @@ import { CtaBand } from '@/components/CtaBand';
 import { MediaReveal } from '@/components/MediaReveal';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { Testimonial } from '@/components/Testimonial';
+import { AmbientShader } from '@/components/AmbientShader';
+import { sectionId } from '@/lib/slug';
 import styles from './CaseStudy.module.css';
 
 export function generateStaticParams() {
@@ -90,115 +92,123 @@ export default async function CaseStudyPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Hero */}
+      {/* Masthead. The only dark surface on the site that lacked the ambient
+          layer; it self-gates off under reduced motion and on weak hardware, so
+          this block must read complete without it. */}
       <header className={styles.hero}>
-        <div className={styles.heroEdge} aria-hidden="true"><span /><span /></div>
+        <AmbientShader placement="edges" />
         <div className={`container ${styles.heroInner}`}>
           <Link href="/work" className={styles.backLink}>
             <ArrowLeft size={16} />
             All work
           </Link>
 
-          <div className={styles.heroTopline}>
-            <span className={styles.category}>{project.category}</span>
-            <span>{project.domain}</span>
-          </div>
-          <h1 className={styles.title}>{project.title}</h1>
-
-          <div className={styles.heroSupport}>
-            <div className={styles.heroBody}>
-              {project.overview.map((paragraph) => (
-                <p key={paragraph} className={styles.lead}>
-                  {paragraph}
-                </p>
-              ))}
+          <div className={styles.masthead}>
+            <div className={styles.mastheadRail}>
+              <span className={styles.category}>{project.category}</span>
+              <span className={styles.domain}>{project.domain}</span>
             </div>
 
-            <a
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.visitBtn}
-            >
-              Visit {project.domain}
-              <ArrowUpRight size={16} aria-hidden="true" />
-              <span className="srOnly"> (opens in a new tab)</span>
-            </a>
-          </div>
-
-          <figure className={styles.shotFrame}>
-            <div className={styles.shotTopline}>
-              <span>Conceptual illustration</span>
-              <span>{project.domain}</span>
+            <div className={styles.mastheadMeasure}>
+              <h1 className={styles.title}>{project.title}</h1>
+              <p className={styles.standfirst}>{project.overview[0]}</p>
+              {project.overview[1] && (
+                <p className={styles.mastheadFoot}>{project.overview[1]}</p>
+              )}
             </div>
-            <div className={styles.shotViewport}>
+
+            <div className={styles.mastheadMargin}>
+              <a
+                href={project.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.visitBtn}
+              >
+                Visit {project.domain}
+                <ArrowUpRight size={16} aria-hidden="true" />
+                <span className="srOnly"> (opens in a new tab)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* The plate sits on light ground: the diagram draws its own dark field, so
+          on the dark masthead it had no edge at all. */}
+      <section className={styles.plateSection}>
+        <div className={`container ${styles.spine}`}>
+          <figure className={styles.plateFigure}>
+            <figcaption className={styles.plateCaption}>
+              <span>{project.artwork.alt}</span>
+              <span className={styles.plateNote}>
+                Diagram of the system, not a capture of the interface.
+              </span>
+            </figcaption>
+            <div className={styles.plateViewport}>
               <MediaReveal>
-                <Image
+                <EditorialVisual
                   src={project.artwork.src}
-                  alt={project.artwork.alt}
+                  alt=""
                   fill
-                  sizes="(max-width: 1024px) 100vw, 1440px"
-                  className={styles.shotImg}
+                  sizes="(max-width: 1024px) 100vw, 1056px"
+                  className={styles.plateArt}
                   priority
                 />
               </MediaReveal>
             </div>
-            <figcaption className={styles.caption}>
-              {project.artwork.caption}. Visit the live site to experience the delivered work.
-            </figcaption>
           </figure>
-        </div>
-      </header>
-
-      {/* What we built */}
-      <section className={`section ${styles.highlightsSection}`}>
-        <div className="container">
-          <ScrollReveal className={styles.sectionIntro}>
-            <div>
-              <span className="eyebrow">What we built</span>
-              <h2 className={styles.sectionHeading}>Inside the build</h2>
-            </div>
-            <p>
-              The work is documented as connected decisions—not a list of
-              features detached from the operating problem.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal>
-            <ol className={styles.highlightsGrid}>
-              {project.highlights.map((highlight, index) => (
-                <li key={highlight.title} className={styles.highlightCard}>
-                  <span className={styles.highlightIndex} aria-hidden="true">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div>
-                    <h3 className={styles.highlightTitle}>{highlight.title}</h3>
-                    <p className={styles.highlightBody}>{highlight.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </ScrollReveal>
         </div>
       </section>
 
-      {/* Stack */}
-      <section className={`section ${styles.stackSection}`}>
-        <div className="container">
-          <div className={styles.sectionIntro}>
-            <div>
-              <span className="eyebrow">The stack</span>
-              <h2 className={styles.sectionHeading}>Built with</h2>
-            </div>
-            <p>Chosen for the work, maintained as one practical system.</p>
+      {/* Article. Exactly three direct grid children, so the layout never depends
+          on how many highlights a project happens to have. */}
+      <section className={styles.articleSection}>
+        <div className={`container ${styles.spine}`}>
+          <div className={styles.rail}>
+            <p className={styles.railLabel}>Built with</p>
+            <ul className={styles.colophon}>
+              {project.tech.map((tech) => (
+                <li key={tech}>{tech}</li>
+              ))}
+            </ul>
+            <ul className={styles.scope}>
+              {project.capabilities.map((capability) => (
+                <li key={capability}>{capability}</li>
+              ))}
+            </ul>
           </div>
-          <ul className={styles.techList}>
-            {project.tech.map((tech, index) => (
-              <li key={tech} className={styles.techTag}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                {tech}
-              </li>
+
+          <div className={styles.measure}>
+            <ScrollReveal>
+              <h2 className={styles.sectionHeading}>{project.sectionHeading}</h2>
+              <p className={styles.sectionStandfirst}>{project.sectionStandfirst}</p>
+            </ScrollReveal>
+
+            {project.highlights.map((highlight) => (
+              <section
+                key={highlight.title}
+                id={sectionId(highlight.title)}
+                className={styles.highlight}
+              >
+                <h3 className={styles.highlightTitle}>{highlight.title}</h3>
+                <p className={styles.highlightBody}>{highlight.body}</p>
+              </section>
             ))}
-          </ul>
+
+            {project.furtherReading?.length ? (
+              <p className={styles.further}>
+                {project.furtherReading.map((item) => (
+                  <Link key={item.href} href={item.href} className={styles.furtherLink}>
+                    {item.title} <span aria-hidden="true">→</span>
+                  </Link>
+                ))}
+              </p>
+            ) : null}
+          </div>
+
+          <aside className={styles.margin}>
+            <p className={styles.pullQuote}>{project.pullQuote}</p>
+          </aside>
         </div>
       </section>
 
@@ -217,7 +227,7 @@ export default async function CaseStudyPage({
               </div>
               <div className={styles.nextThumb}>
                 <MediaReveal>
-                  <Image
+                  <EditorialVisual
                     src={nextProject.artwork.src}
                     alt={nextProject.artwork.alt}
                     fill
@@ -225,7 +235,6 @@ export default async function CaseStudyPage({
                     className={styles.nextThumbImg}
                   />
                 </MediaReveal>
-                <span className={styles.nextArtLabel}>Conceptual illustration</span>
               </div>
               <span className={styles.nextArrow} aria-hidden="true">
                 <ArrowRight size={20} />

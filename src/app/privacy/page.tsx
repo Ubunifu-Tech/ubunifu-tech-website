@@ -12,6 +12,8 @@ export default function PrivacyPage() {
   return (
     <main>
       <PageHeader
+        scene="privacy"
+        compact
         eyebrow="Privacy"
         title="Your message is for the conversation you asked us to have."
         lead="This notice explains the limited information this website collects, including contact messages and general careers enquiries, and how we use it."

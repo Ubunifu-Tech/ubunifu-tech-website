@@ -38,15 +38,12 @@ export const Testimonial: React.FC<Props> = ({ project, hideHeader = false }) =>
         >
           {!hideHeader && (
             <div className={styles.head}>
-              <span className="eyebrow">Client perspective</span>
-              <h2 className={styles.heading}>What clients say after we ship</h2>
+              <h2 className={styles.heading}>Client feedback</h2>
               <p className={styles.note}>Paraphrased client feedback · edited for length and clarity</p>
             </div>
           )}
 
           <figure className={styles.card}>
-            <p className={styles.evidenceLabel}>01 / Client evidence</p>
-
             <p className={styles.quote}>{testimonial.pullQuote}</p>
 
             <figcaption className={styles.attribution}>

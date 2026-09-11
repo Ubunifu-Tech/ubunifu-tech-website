@@ -5,40 +5,8 @@
   margin-top: var(--nav-height);
   overflow: hidden;
   padding: clamp(3rem, 6vw, 5rem) 0 0;
-  background:
-    radial-gradient(circle at 50% 2%, rgba(109, 63, 232, 0.16), transparent 38%),
-    var(--text-primary);
+  background: var(--text-primary);
   color: #fff;
-}
-
-.hero::before {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 84px 84px;
-  content: '';
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 72%);
-  mask-image: linear-gradient(to bottom, #000, transparent 72%);
-  pointer-events: none;
-}
-
-.heroEdge {
-  position: absolute;
-  inset: 0 0 0 auto;
-  z-index: 3;
-  display: grid;
-  width: clamp(7px, 0.72vw, 12px);
-  grid-template-rows: 58% 42%;
-}
-
-.heroEdge span:first-child {
-  background: var(--brand);
-}
-
-.heroEdge span:last-child {
-  background: var(--primary);
 }
 
 .heroInner {
@@ -49,32 +17,17 @@
 .backLink {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: var(--space-2);
   margin-bottom: clamp(2rem, 4vw, 3.5rem);
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.82rem;
-  font-weight: 650;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   transition: color 0.2s ease, gap 0.25s var(--ease-out-expo);
 }
 
 .backLink:hover {
-  gap: 0.7rem;
+  gap: var(--space-3);
   color: #fff;
-}
-
-.heroTopline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 0 0 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-  color: rgba(255, 255, 255, 0.62);
-  font-family: var(--font-mono);
-  font-size: clamp(0.65rem, 0.8vw, 0.75rem);
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
 }
 
 .category {
@@ -85,39 +38,13 @@
   width: min(100%, 1450px);
   margin: clamp(2.5rem, 5vw, 4.75rem) auto;
   color: #fff;
-  font-size: clamp(3.5rem, 8vw, 8.6rem);
-  font-weight: 700;
-  letter-spacing: -0.065em;
-  line-height: 0.88;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
   overflow-wrap: normal;
   text-align: center;
   text-wrap: balance;
   word-break: normal;
-}
-
-.heroSupport {
-  display: grid;
-  width: min(100%, 1080px);
-  margin: 0 auto;
-  padding-top: clamp(1.5rem, 3vw, 2.5rem);
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: clamp(2rem, 6vw, 6rem);
-  align-items: end;
-}
-
-.heroBody {
-  max-width: 760px;
-}
-
-.lead {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: clamp(1rem, 1.5vw, 1.16rem);
-  line-height: 1.75;
-}
-
-.lead + .lead {
-  margin-top: 1rem;
 }
 
 .visitBtn {
@@ -125,14 +52,14 @@
   min-height: 48px;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.8rem 1rem;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--brand);
   border-radius: var(--control-radius);
   background: var(--brand-deep);
   color: #fff;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   text-decoration: none;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -148,192 +75,27 @@
   outline-color: var(--text-inverse);
 }
 
-/* ── Conceptual project cover ────────────────── */
-
-.shotFrame {
-  margin: clamp(3.5rem, 7vw, 6.5rem) 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-bottom: 0;
-  background: var(--surface);
-}
-
-.shotTopline {
-  display: flex;
-  min-height: 54px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0 1.1rem;
-  border-bottom: 1px solid var(--border-hover);
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.shotTopline span:first-child {
-  color: var(--brand-deep);
-}
-
-.shotViewport {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.shotImg {
-  object-fit: cover;
-  object-position: center;
-}
-
-.caption {
-  padding: 1rem 0 0;
-  color: var(--text-tertiary);
-  font-size: 0.8rem;
-  line-height: 1.6;
-  text-align: left;
-}
-
-.hero .caption {
-  padding: 0.9rem 1.1rem;
-  border-top: 1px solid var(--border-hover);
-}
-
-/* ── Editorial section system ────────────────── */
-
-.highlightsSection {
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
-}
-
-.sectionIntro {
-  display: grid;
-  align-items: end;
-  gap: 2rem;
-  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border-hover);
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-}
-
 .sectionHeading {
-  max-width: 14ch;
-  margin-top: 0.65rem;
+  max-width: none;
+  margin-top: var(--space-3);
   color: var(--text-primary);
-  font-size: clamp(2.5rem, 5vw, 5.2rem);
-  font-weight: 700;
-  letter-spacing: -0.05em;
-  line-height: 0.96;
-}
-
-.sectionIntro > p {
-  max-width: 54ch;
-  justify-self: end;
-  color: var(--text-secondary);
-  font-size: clamp(0.98rem, 1.35vw, 1.1rem);
-  line-height: 1.7;
-}
-
-.highlightsGrid {
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--border-hover);
-  list-style: none;
-}
-
-.highlightCard {
-  display: grid;
-  min-height: 150px;
-  align-items: start;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  padding: clamp(1.75rem, 3.5vw, 3rem) 0;
-  border-bottom: 1px solid var(--border-hover);
-  grid-template-columns: 64px minmax(0, 1fr);
-}
-
-.highlightCard > div {
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  grid-template-columns: minmax(200px, 0.65fr) minmax(0, 1.35fr);
-}
-
-.highlightIndex {
-  color: var(--brand-deep);
-  font-family: var(--font-mono);
-  font-size: 0.67rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
 }
 
 .highlightTitle {
   color: var(--text-primary);
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
   line-height: 1.18;
 }
 
 .highlightBody {
   max-width: 68ch;
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: var(--font-size-body);
   line-height: 1.72;
-}
-
-/* ── Stack register ──────────────────────────── */
-
-.stackSection {
-  background: var(--text-primary);
-  color: #fff;
-}
-
-.stackSection .sectionIntro {
-  border-top-color: rgba(255, 255, 255, 0.2);
-}
-
-.stackSection .sectionHeading {
-  color: #fff;
-}
-
-.stackSection .sectionIntro > p {
-  color: rgba(255, 255, 255, 0.64);
-}
-
-.techList {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
-  list-style: none;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.techTag {
-  display: flex;
-  min-height: 72px;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem 1rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
-  font-size: 0.92rem;
-  font-weight: 650;
-}
-
-.techTag:not(:nth-child(3n + 1)) {
-  padding-left: 1.25rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.techTag span {
-  color: var(--brand);
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.06em;
 }
 
 /* ── Next project ────────────────────────────── */
@@ -357,37 +119,34 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: var(--space-1);
 }
 
 .nextLabel {
   color: var(--brand-deep);
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
 }
 
 .nextTitle {
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 4vw, 4rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
 }
 
 .nextCategory {
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
 }
 
 .nextThumb {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 8 / 5;
   overflow: hidden;
   border-top: 1px solid var(--border-hover);
   border-bottom: 1px solid var(--border-hover);
@@ -398,21 +157,6 @@
   object-fit: cover;
   object-position: center;
   transition: transform 0.6s var(--ease-out-expo);
-}
-
-.nextArtLabel {
-  position: absolute;
-  right: 0.6rem;
-  bottom: 0.6rem;
-  z-index: 2;
-  padding: 0.35rem 0.5rem;
-  background: rgba(31, 26, 54, 0.88);
-  color: var(--text-inverse);
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .nextCard:hover .nextThumbImg {
@@ -439,36 +183,8 @@
 /* ── Responsive ──────────────────────────────── */
 
 @media (max-width: 900px) {
-  .heroSupport,
-  .sectionIntro {
-    grid-template-columns: 1fr;
-  }
-
   .visitBtn {
     width: fit-content;
-  }
-
-  .sectionIntro > p {
-    justify-self: start;
-  }
-
-  .highlightCard > div {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .techList {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .techTag:not(:nth-child(3n + 1)) {
-    padding-left: 0;
-    border-left: 0;
-  }
-
-  .techTag:nth-child(even) {
-    padding-left: 1.25rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.18);
   }
 
   .nextCard {
@@ -479,45 +195,12 @@
 @media (max-width: 680px) {
   .hero {
     margin-top: var(--nav-height);
-    padding-top: 2rem;
-  }
-
-  .heroTopline {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.4rem;
+    padding-top: var(--space-6);
   }
 
   .title {
-    margin: 2.5rem auto 3rem;
-    font-size: clamp(3.2rem, 17vw, 5.8rem);
-  }
-
-  .heroSupport {
-    gap: 1.5rem;
-  }
-
-  .shotFrame {
-    width: calc(100% + 2.5rem);
-    margin-left: -1.25rem;
-  }
-
-  .shotViewport {
-    aspect-ratio: 4 / 3;
-  }
-
-  .highlightCard {
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-
-  .techList {
-    grid-template-columns: 1fr;
-  }
-
-  .techTag:nth-child(even) {
-    padding-left: 0;
-    border-left: 0;
+    margin: 2.5rem auto var(--space-7);
+    font-size: var(--font-size-display);
   }
 
   .nextCard {
@@ -527,13 +210,6 @@
   .nextThumb {
     grid-column: 1 / -1;
     grid-row: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .shotFrame {
-    width: calc(100% + 2rem);
-    margin-left: -1rem;
   }
 }
 
@@ -547,5 +223,292 @@
   .nextCard:hover .nextThumbImg,
   .nextCard:hover .nextArrow {
     transform: none;
+  }
+}
+
+/* ── The spine ────────────────────────────────────
+   Three columns: a rail for apparatus, a measure for the argument, a margin for
+   the quote. At the 1440 container (1344 content, 64px gaps) this resolves to
+   224 / 640 / 352 and sums exactly. */
+
+.spine {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) minmax(0, 40rem) minmax(0, 1fr);
+  column-gap: clamp(var(--space-6), 4vw, 4rem);
+}
+
+/* ── Masthead ─────────────────────────────────── */
+
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) minmax(0, 40rem) minmax(0, 1fr);
+  column-gap: clamp(var(--space-6), 4vw, 4rem);
+  align-items: start;
+  margin-top: clamp(var(--space-6), 5vh, var(--space-8));
+}
+
+.mastheadRail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.category {
+  color: var(--brand);
+  font-size: var(--font-size-small);
+}
+
+.domain {
+  color: var(--text-inverse-tertiary);
+  font-size: var(--font-size-small);
+}
+
+.mastheadMeasure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.title {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--text-inverse);
+  font-size: var(--font-size-display);
+  /* The token exists precisely for this size and was not applied here. */
+  letter-spacing: var(--tracking-display);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.standfirst {
+  max-width: 42ch;
+  margin: 0;
+  color: var(--text-inverse-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.6;
+}
+
+.mastheadFoot {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--text-inverse-tertiary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+.mastheadMargin {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: var(--space-2);
+}
+
+/* ── Diagram plate ────────────────────────────── */
+
+.plateSection {
+  padding: clamp(var(--space-7), 5vw, 4.5rem) 0;
+  border-bottom: 1px solid var(--border-hover);
+  background: var(--background);
+}
+
+.plateFigure {
+  display: contents;
+  margin: 0;
+}
+
+.plateCaption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  grid-column: 1;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+/* A consultancy that labels its own diagram as a diagram is the one you believe
+   about everything else. */
+.plateNote {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--clay);
+  color: var(--text-secondary);
+}
+
+.plateViewport {
+  position: relative;
+  grid-column: 2 / -1;
+  aspect-ratio: 8 / 5;
+  overflow: hidden;
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-md);
+}
+
+.plateArt {
+  object-fit: cover;
+}
+
+/* ── Article ──────────────────────────────────── */
+
+.articleSection {
+  padding: clamp(var(--space-8), 7vw, 6rem) 0;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.railLabel {
+  /* Sentence case deliberately: uppercasing turns this into the eyebrow
+     micro-label the brand removed. check-typography blocks the tracking, not
+     the transform, so this is a judgement the comment records. */
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+}
+
+/* A running line, not a grid of chips: eleven items in a three-column grid
+   stranded the last one on a fourth row and gave "Prisma" 72px of height. */
+.colophon {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.8;
+}
+
+.colophon li {
+  display: inline;
+}
+
+.colophon li + li::before {
+  content: ' · ';
+  color: var(--text-tertiary);
+}
+
+.scope {
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-hover);
+  list-style: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.9;
+}
+
+.measure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.sectionHeading {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+.sectionStandfirst {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.6;
+}
+
+.highlight {
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-hover);
+  /* Linked from the /work contents list; clear the fixed navbar. */
+  scroll-margin-top: calc(var(--nav-height) + var(--space-5));
+}
+
+.highlight:last-of-type {
+  border-bottom: 0;
+}
+
+/* One step below the h2 above it. Previously both were --font-size-heading,
+   which is why the article read as two levels instead of three. */
+.highlightTitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.highlightBody {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+.further {
+  margin: 0;
+}
+
+.furtherLink {
+  color: var(--brand-deep);
+  font-size: var(--font-size-title);
+}
+
+.furtherLink:hover {
+  color: var(--brand-hover);
+}
+
+/* ── Margin ───────────────────────────────────── */
+
+.margin {
+  align-self: start;
+}
+
+/* Verbatim from `overview`, so it can never drift from the body. No quotation
+   marks, no accent bar, no tint, no icon. */
+.pullQuote {
+  max-width: 30ch;
+  margin: 0;
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--clay);
+  border-bottom: 1px solid var(--clay);
+  color: var(--text-primary);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.45;
+}
+
+/* Sticky only where there is genuinely room for it. */
+@media (min-width: 1200px) and (min-height: 820px) {
+  .rail,
+  .margin {
+    position: sticky;
+    top: calc(var(--nav-height) + var(--space-6));
+    align-self: start;
+  }
+}
+
+@media (max-width: 1100px) {
+  .spine,
+  .masthead {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-6);
+  }
+
+  .plateCaption,
+  .plateViewport {
+    grid-column: 1;
+  }
+
+  .plateFigure {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-4);
+  }
+
+  .title {
+    max-width: none;
   }
 }

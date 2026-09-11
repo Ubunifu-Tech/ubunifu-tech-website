@@ -60,7 +60,7 @@
   width: min(40%, 480px);
   height: 48%;
   border: 8px solid var(--surface);
-  box-shadow: 0 24px 48px -28px rgba(31, 26, 54, 0.34);
+  box-shadow: var(--shadow-3);
 }
 
 .caption {
@@ -71,16 +71,14 @@
   display: inline-flex;
   min-height: 38px;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.55rem 0.8rem;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   background: var(--text-primary);
   color: #fff;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   line-height: 1.35;
-  text-transform: uppercase;
 }
 
 .caption span {
@@ -241,7 +239,7 @@
 @media (max-width: 660px) {
   .figure {
     height: min(82vw, 390px);
-    margin-top: 2rem;
+    margin-top: var(--space-6);
   }
 
   .primary {

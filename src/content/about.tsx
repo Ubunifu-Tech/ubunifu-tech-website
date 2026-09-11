@@ -23,8 +23,8 @@ export const visionMission = {
 };
 
 export const story: ReadonlyArray<string> = [
-  'The gap we keep encountering is rarely a total lack of technology. It is a patchwork of tools, spreadsheets, messages, and manual work that does not quite match the workflow or the support reality around it.',
-  'We started Ubunifu to work inside that gap. Consulting lets us understand specific organisations. Building products forces us to make those lessons reusable, dependable, and simple enough to operate. Each side makes the other sharper.',
+  'Our client work includes websites, booking systems, and business software. We help teams organise their information, reduce manual tasks, and manage the systems they use.',
+  'Alongside client projects, we develop and operate our own products, including Ubunifu Insight and Ubunifu Sifa. That work gives us day-to-day experience of maintaining software after launch.',
 ];
 
 export type Objective = {
@@ -37,22 +37,22 @@ export const objectives: ReadonlyArray<Objective> = [
   {
     icon: Accessibility,
     title: 'Make it accessible',
-    body: 'Practical technology work sized for Tanzanian organisations, with clear trade-offs and a path their teams can own.',
+    body: 'Agree a scope and budget that suit the organisation, and make sure its team can use the result.',
   },
   {
     icon: MapPin,
-    title: 'Start from here',
-    body: 'Build around the workflows, languages, connectivity, and payment realities that exist in Tanzania, rather than retrofitting tools from elsewhere.',
+    title: 'Understand the local context',
+    body: 'Account for the languages, connectivity, payment methods, and working practices of the people using the system.',
   },
   {
     icon: Cpu,
-    title: 'Bring capability in-market',
-    body: 'Put cloud, data, and modern AI to work locally, so this expertise lives in Tanzania and serves Tanzanian organisations.',
+    title: 'Share technical knowledge',
+    body: 'Explain the options and train the people who will manage the system, so decisions do not depend on us alone.',
   },
   {
     icon: HeartHandshake,
     title: 'Build for the long term',
-    body: 'Plan ownership beyond launch. When support is part of the engagement, we maintain and improve what we build while helping your team grow its own digital confidence.',
+    body: 'Document the system, agree who owns it, and plan for maintenance. Ongoing support is included where agreed in the project scope.',
   },
 ];
 

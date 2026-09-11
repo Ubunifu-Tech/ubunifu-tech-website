@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Topography } from '@/components/Topography';
+import { cta } from '@/content/site';
 import styles from './NotFound.module.css';
 
 export const metadata = {
@@ -27,10 +28,10 @@ export default function NotFound() {
               Back home
             </Link>
             <Link href="/work" className={styles.btnSecondary}>
-              See our work
+              {cta.secondary}
             </Link>
             <Link href="/contact" className={styles.btnSecondary}>
-              Contact us
+              {cta.primary}
             </Link>
           </div>
         </div>

@@ -3,12 +3,14 @@
 // over it and don't care about specific products.
 //
 // Product visuals are kept separate from this factual content. Marketing pages
-// use one clearly labelled conceptual illustration for the product family;
-// names, statuses, capabilities, and live links remain accessible HTML.
+// use open product rows; names, statuses, capabilities,
+// and live links remain accessible HTML rather than simulated interfaces.
 
 export type ProductStatus = 'live' | 'soon' | 'available';
+export type ProductId = 'insight' | 'sifa' | 'rafiki';
 
 export type Product = {
+  id: ProductId;
   name: string;
   tagline: string;
   description: string;
@@ -21,12 +23,13 @@ export type Product = {
 
 export const products: ReadonlyArray<Product> = [
   {
+    id: 'insight',
     name: 'Ubunifu Insight',
-    tagline: 'Document AI, built for here',
+    tagline: 'Ask questions about your documents',
     description:
       'Upload your contracts, reports, lesson plans, or tax invoices, then ask questions, extract structured data, or generate new documents from your own templates. It includes specialised AI agents, including an Education Tutor that teaches in Swahili.',
     features: [
-      'RAG chat with citations',
+      'Document answers with source references',
       'Data extraction from PDFs',
       'Tanzania-localised templates',
       'Multilingual AI agents',
@@ -38,27 +41,29 @@ export const products: ReadonlyArray<Product> = [
     cta: 'Open Insight',
   },
   {
+    id: 'sifa',
     name: 'Ubunifu Sifa',
     tagline: 'Run your shop, restaurant, or distributor',
     description:
-      'Sales, inventory, suppliers, customers, and credit management in one app. Selling on credit is a core workflow, with aging buckets that make outstanding balances easier to review. Records are native to TZS.',
+      'Manage sales, stock, suppliers, customers, and unpaid balances in Tanzanian shillings.',
     features: [
       'Sales & POS',
       'Inventory with low-stock alerts',
-      'Credit ledger with aging buckets',
+      'Customer balances grouped by age',
       'Supplier & customer management',
-      'TZS-native records',
+      'Records in Tanzanian shillings',
     ],
     status: 'live',
     url: 'https://sifa.ubunifutech.com',
     domain: 'sifa.ubunifutech.com',
-    cta: 'Visit Sifa',
+    cta: 'Open Sifa',
   },
   {
+    id: 'rafiki',
     name: 'Ubunifu Rafiki',
     tagline: 'Embeddable tools for your website',
     description:
-      'Drop-in widgets for the basics: contact forms, booking systems, and blog tools. For when you have a site already and just need the working parts.',
+      'We’re developing contact forms, booking widgets, and blog tools for existing websites.',
     features: ['Contact forms', 'Booking widgets', 'Blog tools'],
     status: 'soon',
     url: null,

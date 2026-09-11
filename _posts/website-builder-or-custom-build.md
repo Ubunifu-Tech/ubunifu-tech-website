@@ -30,7 +30,7 @@ For a hosted builder, include the plan required for the actual features, not onl
 
 For a custom build, include more than the initial project fee. Hosting may be modest for a small site, but maintenance is real work. Budget for security updates, monitoring, backups, content changes, vendor services, and future development. Confirm whether ongoing support is included or quoted separately.
 
-There is no defensible universal figure for either route. Vendor prices change, custom scope varies, and traffic is only one cost driver. We previously used simple monthly hosting comparisons to make this argument; without a current, like-for-like specification, those numbers create more certainty than the evidence supports.
+Compare quotes using the same features, traffic assumptions, and support period.
 
 Use a period long enough to include setup and operation, then document the assumptions behind the estimate.
 

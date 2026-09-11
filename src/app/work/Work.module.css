@@ -1,0 +1,85 @@
+/* Each section sets its own top padding rather than inheriting --section-space at
+   both sides of a seam, which doubled the gap between every block on this page. */
+
+.dispatch {
+  padding-top: clamp(var(--space-7), 5vw, 4.5rem);
+}
+
+.dispatchList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-active);
+}
+
+.dispatchRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-4), 3vw, var(--space-7));
+  min-height: 96px;
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
+  border-bottom: 1px solid var(--border-active);
+  transition: background var(--transition-fast), padding-left var(--transition-fast);
+}
+
+.dispatchRow:hover {
+  padding-left: var(--space-4);
+  background: var(--brand-dim);
+}
+
+.dispatchDomain {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+.dispatchCategory {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+}
+
+.dispatchArrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--brand-deep);
+  transition: transform var(--transition-fast);
+}
+
+.dispatchRow:hover .dispatchArrow {
+  transform: translateX(6px);
+}
+
+.register {
+  padding-top: clamp(var(--space-7), 5vw, 4.5rem);
+}
+
+.coda {
+  padding: clamp(var(--space-7), 5vw, 4.5rem) 0;
+  border-top: 1px solid var(--border-hover);
+  background: var(--surface-2);
+}
+
+.codaText {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-lead);
+  line-height: 1.65;
+}
+
+@media (max-width: 680px) {
+  .dispatchRow {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .dispatchArrow {
+    margin-left: 0;
+  }
+
+  .codaText {
+    font-size: var(--font-size-body);
+  }
+}

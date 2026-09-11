@@ -1,0 +1,135 @@
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Structure ────────────────────────────────────
+   Three tones do all the work: a lit top face, a mid side face, a dark side face.
+   Everything reads as one material lit from the upper right. */
+
+.faceTop {
+  fill: #4A4368;
+}
+
+.faceFront {
+  fill: #342E52;
+}
+
+.faceSide {
+  fill: #272144;
+}
+
+.plane {
+  fill: #3A3357;
+  stroke: rgba(237, 231, 221, 0.14);
+  stroke-width: 1;
+}
+
+.plinth {
+  fill: rgba(58, 51, 87, 0.42);
+  stroke: rgba(237, 231, 221, 0.10);
+}
+
+.layer {
+  fill: #3E3760;
+  stroke: rgba(237, 231, 221, 0.16);
+}
+
+/* The one lit surface in the frame. */
+.layerLit {
+  fill: #EDE7DD;
+  stroke: none;
+}
+
+.panel {
+  fill: #2E2850;
+  stroke: rgba(237, 231, 221, 0.22);
+}
+
+.slot {
+  stroke: rgba(237, 231, 221, 0.30);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.bar {
+  stroke: rgba(237, 231, 221, 0.55);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.barAccent {
+  stroke: var(--brand);
+}
+
+/* ── Inputs ───────────────────────────────────────
+   Deliberately flat and dim: these sit under the headline, so they must read as
+   texture rather than as anything worth looking at. */
+
+.inputs .plane,
+.inputs .faceTop,
+.inputs .faceFront,
+.inputs .faceSide {
+  fill: #2A2545;
+  stroke: rgba(237, 231, 221, 0.08);
+}
+
+.inputNode {
+  fill: #3A3357;
+  stroke: rgba(255, 107, 44, 0.45);
+  stroke-width: 1.5;
+}
+
+/* ── Routing ──────────────────────────────────────
+   Orthogonal runs with a slow travelling dash: the only motion in the drawing,
+   and the thing that says the system is live rather than a diagram of one. */
+
+.route {
+  fill: none;
+  stroke: rgba(255, 107, 44, 0.34);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.routeAccent {
+  stroke: var(--brand);
+  stroke-width: 2;
+  stroke-dasharray: 5 9;
+  animation: routeFlow 2.8s linear infinite;
+}
+
+@keyframes routeFlow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.node {
+  fill: var(--brand);
+}
+
+.nodeRing {
+  fill: none;
+  stroke: rgba(255, 107, 44, 0.34);
+  stroke-width: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .routeAccent {
+    animation: none;
+  }
+}
+
+/* Below the split the copy goes full width, and the cover-crop would slice the
+   assembly into unreadable fragments. Drop the drawing entirely rather than ship
+   an accidental-looking crop: the phone hero becomes type over the ambient light,
+   which is a deliberate treatment rather than a degraded one. */
+@media (max-width: 860px) {
+  .svg {
+    display: none;
+  }
+}

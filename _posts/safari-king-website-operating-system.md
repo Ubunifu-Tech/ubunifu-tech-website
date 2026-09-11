@@ -4,15 +4,15 @@ date: "2026-05-28"
 author: "Ubunifu Technologies"
 excerpt: "A factual look at the connected public site, booking flow, CRM, content tools, and AI-assisted admin platform built for Safari King Africa."
 tags: ["Case Study", "Custom Software", "Tourism"]
-coverImage: "/editorial/tourism-systems.webp"
-coverAlt: "Top-down arrangement of a laptop, itinerary cards, and an orange workflow line connecting a tourism operations system"
+coverImage: "/editorial/safari-field-v3.webp"
+coverAlt: "An illustrated safari vehicle following an earth track across open Tanzanian savannah"
 ---
 
 Safari King Africa’s public website and admin platform are two sides of one system. The public side helps a traveller understand the operator’s destinations and begin an enquiry. The private side gives the team a structured place to develop that enquiry, manage the customer relationship, publish content, and communicate.
 
 That connection is the important part of the build. A polished tourism site can explain an offer well, but the work does not stop when someone submits a form. Trip preferences have to become an itinerary, conversations need context, and the team needs to know which enquiries are waiting for action.
 
-This is a description of what we shipped. We do not yet have verified conversion, booking-volume, or time-saved figures to publish, so we have not attached an invented result to the project.
+We haven’t yet measured changes in bookings or staff time.
 
 ## The public site structures the first enquiry
 
@@ -22,7 +22,7 @@ The purpose is not to make a form long for its own sake. It is to collect enough
 
 That shared structure matters later. The preferences gathered on the public side can remain connected to the booking record instead of being copied from an email into a separate tool.
 
-## An itinerary is a product surface
+## Sharing itineraries
 
 After an enquiry is received, the team can develop a proposed itinerary and share it through a tokenised private link. The traveller does not need to create an account to view it.
 
@@ -57,9 +57,3 @@ Each capability could be assembled from separate services: a site builder, a for
 Safari King’s build takes a different route. The public enquiry and the admin record share one data model. The itinerary link belongs to the booking workflow. Content and communication tools sit in the same controlled environment. Custom software made that specific connection possible; it was not chosen merely to make the public pages look different.
 
 The trade-off is responsibility. A custom platform has to be maintained, secured, and changed deliberately. It is worthwhile when the connected workflow is valuable enough to justify that work.
-
-## The result we can stand behind
-
-The delivered result is a public tourism site plus an operations platform with booking intake, itinerary sharing, customer records, status tracking, content management, email tooling, and an AI drafting assistant.
-
-Calling it a website would leave out most of the system. Calling it an “operating system” may sound memorable, but the more useful description is also the plainest: software shaped around the way this operator presents trips and manages the work that follows an enquiry.

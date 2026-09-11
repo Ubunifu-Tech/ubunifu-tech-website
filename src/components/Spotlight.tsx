@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+import { EditorialVisual } from './EditorialVisual';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
 import { Topography } from './Topography';
@@ -39,6 +39,8 @@ type SpotlightProps = {
   /** Fallback branded panel when there's no image. */
   panelIcon?: LucideIcon;
   panelChips?: string[];
+  /** Heading level for the title, so callers keep a correct document outline. */
+  headingLevel?: 2 | 3;
 };
 
 const Check: React.FC = () => (
@@ -68,7 +70,10 @@ export const Spotlight: React.FC<SpotlightProps> = ({
   overlap,
   panelIcon: PanelIcon,
   panelChips,
+  headingLevel = 3,
 }) => {
+  const Title = headingLevel === 2 ? 'h2' : 'h3';
+
   return (
     <div id={id} className={`${styles.row} ${reversed ? styles.reversed : ''}`}>
       <ScrollReveal className={styles.text}>
@@ -78,7 +83,9 @@ export const Spotlight: React.FC<SpotlightProps> = ({
           )}
           <div>
             {eyebrow && <span className={styles.eyebrow}>{eyebrow}</span>}
-            <h3 className={styles.title}>{title}</h3>
+            <Title id={id ? `${id}-title` : undefined} className={styles.title}>
+              {title}
+            </Title>
           </div>
         </div>
 
@@ -114,7 +121,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({
               </div>
             )}
             <div className={styles.shotWrap}>
-              <Image
+              <EditorialVisual
                 src={image.src}
                 alt={image.alt}
                 fill

@@ -2,7 +2,7 @@
 
 This is the maintenance map for `ubunifutech.com`: current routes, rendered narratives, content sources, and operational behavior. Use [`POSITIONING.md`](POSITIONING.md) for company claims and voice, [`BRANDING.md`](BRANDING.md) for the visual system, and [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) for change history.
 
-Last refreshed: 5 September 2026.
+Last refreshed: 8 September 2026.
 
 ## Company frame
 
@@ -21,7 +21,9 @@ The full **Ubunifu Technologies** lockup links home. Its original Ubunifu Ligatu
 
 “Start a project” links to `/contact` as the desktop and mobile CTA. The positioning line “Consulting + products, built in Tanzania.” is supporting copy and never appears inside the navigation or logo lockup. The footer adds product links, all service anchors, Industries, Careers, Contact, Privacy, and the Brand kit.
 
-[`src/app/layout.tsx`](src/app/layout.tsx) renders the skip link, Navbar, page content, Footer, and WhatsApp button. Lenis smooth scrolling is disabled for reduced-motion users. Most marketing pages render their own closing `CtaBand`; Contact, Privacy, Brand, and the 404 do not.
+[`src/app/layout.tsx`](src/app/layout.tsx) renders the skip link, Navbar, page content, Footer, and WhatsApp button. Lenis smooth scrolling is disabled for reduced-motion users. Most marketing pages render their own closing `CtaBand`; Contact, Careers, Privacy, Brand, and the 404 do not.
+
+Typography uses three shared sizes only: display, heading, and 1rem body. Poppins headings use medium 500; Inter body text, labels, and controls use regular 400. Tracking is normal outside the original logo, which preserves its established weights. Labels and captions have no extra microtext tiers. The navigation switches to its scrollable mobile layout at 1050px. See `BRANDING.md`; `npm run check:typography` prevents drift.
 
 ## Route map
 
@@ -34,7 +36,7 @@ The full **Ubunifu Technologies** lockup links home. Its original Ubunifu Ligatu
 | `/products` | Insight, Sifa, and Rafiki product family | `src/app/products/page.tsx` |
 | `/blog` | “The journal” index | `src/app/blog/page.tsx` |
 | `/blog/[slug]` | Markdown journal article | `src/app/blog/[slug]/page.tsx` |
-| `/about` | Studio story, principles, approach, and team | `src/app/about/page.tsx` |
+| `/about` | Studio story, principles, and team | `src/app/about/page.tsx` |
 | `/industries` | Proven tourism work and potential sector fits | `src/app/industries/page.tsx` |
 | `/contact` | Project, product, support, partnership, and general enquiries | `src/app/contact/page.tsx` |
 | `/careers` | No-current-vacancies notice and informal enquiry guidance | `src/app/careers/page.tsx` |
@@ -48,17 +50,15 @@ The full **Ubunifu Technologies** lockup links home. Its original Ubunifu Ligatu
 
 The homepage tells one story: Ubunifu can build a specific system with a client or offer a product it already operates.
 
-1. **Hero** — “Build the system your organisation actually needs.” A near-viewport editorial marquee combines the centred proposition with the interactive, reduced-motion-safe `SystemsField` assembly.
-2. **EngagementPaths** — explains the two truthful ways to work with Ubunifu: a tailored consulting engagement or a product the company already operates.
-3. **CapabilitiesIndex** — keeps all six consulting disciplines visible in one open, linked register.
-4. **WorkPreview** — Safari King Africa and Usambara Destination, drawn from the client portfolio.
-5. **Testimonial** — sourced from `src/content/testimonials.tsx`, reinforcing the client work before products are introduced.
-6. **ProductsProof** — Insight and Sifa as live products; Rafiki as in development.
-7. **ProblemStrip** — the Understand → Shape → Build → Operate engagement sequence.
-8. **Insights** — the three newest journal posts from `getAllPosts()`.
-9. **CtaBand** — closes the page with a route to Contact.
+1. **Hero** — “Build the system your organisation needs.” A broad, centred heading, short description, and two links over a navy editorial background. The four-stage system diagram, replay control, and repeated location strapline remain removed. The static backdrop has no animation runtime or scroll listeners.
+2. **CapabilitiesIndex** — all six consulting disciplines in one open, linked register.
+3. **WorkPreview** — Safari King Africa and Usambara Destination, with native icon diagrams of the delivered operations and enquiry systems.
+4. **Testimonial** — sourced from `src/content/testimonials.tsx`, reinforcing the client work before products are introduced.
+5. **ProductsProof** — a text-led register of Insight, Sifa, and Rafiki, with status stated once per product.
+6. **Insights** — the three newest journal posts; the visual lead avoids repeating a cover already used in selected work.
+7. **CtaBand** — one closing contact action.
 
-The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). Each named component owns its corresponding presentation; `ProblemStrip` contains its four current stages directly and does not read `src/content/pillars.tsx`.
+The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `EngagementPaths` and `ProblemStrip` are no longer mounted on the homepage; the detailed delivery process lives on Services.
 
 ## Consulting, work, products, and sectors
 
@@ -73,7 +73,7 @@ Six service records in [`src/content/services.tsx`](src/content/services.tsx):
 5. AI & Automation
 6. Technology Strategy & Advisory
 
-The page uses the spatial page-header composition followed by `CapabilityJourney`: a sticky evidence stage, direct anchor index, and six complete scroll-led chapters. On compact layouts, each chapter carries its own static visual. The Understand → Shape → Build → Operate process and selected-work preview follow. No capability is hidden behind autoplay.
+The page opens with “Technology for your business.” over its dedicated editorial background. `CapabilityJourney` renders six ordinary in-flow sections with stable anchors. Web, hosting, data, and AI use text-free `SystemDiagram` SVG compositions: responsive devices, domain-linked hosting/email, records feeding reporting, and document-grounded AI with human review. Branding and strategy have dedicated generated illustrations of identity materials and planning tools. The fictional planning photograph, brand specimen, priority matrix, sticky stage, and counters remain removed. The Understand → Shape → Build → Operate process describes delivery, followed by selected work. No service requires autoplay, a cycle, or a special scrolling layout to read.
 
 ### Work (`/work`)
 
@@ -82,7 +82,7 @@ The page uses the spatial page-header composition followed by `CapabilityJourney
 - **Safari King Africa** — booking platform + operations system
 - **Usambara Destination** — eco-tourism site + enquiry engine
 
-Each record supplies the Work narrative, `/work/[slug]` case study, conceptual artwork, factual overview, capabilities, highlights, technology list, and live-site link. The listing foregrounds the workflow and outcome of the engagement; the artwork is explicitly conceptual and implementation stacks remain secondary on the case-study pages.
+Each record supplies the Work narrative, `/work/[slug]` case study, visual identifier, factual overview, capabilities, highlights, technology list, and live-site link. `EditorialVisual` renders text-free SVG diagrams: an operations hub for Safari King and enquiry-to-email branching for Usambara. Each has one accessible description, with no visible labels inside the artwork. The same renderer covers related article views and next-project links, so the retired landscapes cannot reappear as in-page images. Existing social images remain unchanged. Run `npm run check:project-visuals` after the build to verify project and service SVGs across eight rendered routes.
 
 ### Products (`/products`)
 
@@ -94,7 +94,7 @@ Each record supplies the Work narrative, `/work/[slug]` case study, conceptual a
 | Ubunifu Sifa | `live` | Business operations and credit-ledger workflows; links to `sifa.ubunifutech.com` |
 | Ubunifu Rafiki | `soon` | Embeddable website tools; shown as in development |
 
-Custom consulting belongs under `/build`; it is not a fourth product. Product availability is not evidence of customer counts or usage.
+Custom consulting belongs under `/build`; it is not a fourth product. Product availability is not evidence of customer counts or usage. The product page pairs its editorial hero with open image-and-text rows: source documents for Insight, stock and sales records for Sifa, and website modules for Rafiki. `src/content/product-artwork.ts` maps the individual illustrations by stable product ID. Names, features, live links and Rafiki’s in-development status remain in HTML. The homepage product preview stays text-led, and the ambiguous 3D product-family illustration remains unused. Exact prompts and saved paths are in [PRODUCT_ARTWORK.md](PRODUCT_ARTWORK.md).
 
 ### Industries (`/industries`)
 
@@ -102,9 +102,9 @@ Custom consulting belongs under `/build`; it is not a fourth product. Product av
 
 ## About and careers
 
-[`src/content/about.tsx`](src/content/about.tsx) owns the studio story and four-step approach. [`src/content/values.tsx`](src/content/values.tsx) owns operating principles, and [`src/content/team.tsx`](src/content/team.tsx) owns team bios and links. `/about` combines those sources with a tactile editorial image from `public/editorial/`.
+[`src/content/about.tsx`](src/content/about.tsx) owns the studio story. [`src/content/values.tsx`](src/content/values.tsx) owns operating principles, and [`src/content/team.tsx`](src/content/team.tsx) owns team bios and links. `/about` uses those sources without generic hero/story images or a second delivery-process section. About, Work, Products, Industries, Careers, and Contact use compact mastheads so their primary content appears sooner.
 
-`/careers` currently advertises no jobs, internships, or contracts. Its capability areas are illustrative, not promised vacancies. Informal introductions are not applications and link to `/privacy` for data-handling guidance.
+`/careers` currently advertises no jobs, internships, or contracts. The speculative capability-area listing is removed. Informal introductions link to `/privacy` for data-handling guidance; there is no unrelated project-sales CTA.
 
 ## Journal and cover images
 
@@ -133,7 +133,7 @@ Rules enforced by `src/lib/blog.ts`:
 - duplicate or empty tags are rejected;
 - posts sort by newest date, then slug; reading time is estimated from Markdown at roughly 200 words per minute.
 
-If no cover pair is supplied, the fallback is `/editorial/build-or-buy.webp` with its default alt text. The resolved cover appears in the Journal grid, article hero, Open Graph/Twitter metadata, and `BlogPosting` JSON-LD. Store journal concepts in [`public/editorial/`](public/editorial/); current covers use the 1672 × 941 editorial format documented in [`BRANDING.md`](BRANDING.md).
+If no cover pair is supplied, the fallback is `/editorial/build-or-buy.webp` with its default alt text. The resolved cover appears in the Journal grid, article hero, Open Graph/Twitter metadata, and `BlogPosting` JSON-LD. Store journal concepts in [`public/editorial/`](public/editorial/); use 16:9 or 3:2 sources with crop-safe compositions. The seven current articles have distinct cover paths. See [`EDITORIAL_ASSETS.md`](EDITORIAL_ASSETS.md) for new asset roles, provenance, and exact generation prompts.
 
 ## Brand kit and assets
 
@@ -148,7 +148,7 @@ Canonical downloads live in [`public/brand/`](public/brand/):
 - `ubunifu-mark-white.svg`
 - `ubunifu-lockup-white.svg`
 
-`public/logo-v2.png` is the 512 × 512 social avatar. `public/og.png` remains the current campaign social preview rather than a canonical logo master; refresh it only as a deliberate social-card pass. Use `public/editorial/` for conceptual imagery. Product and project visuals must stay clearly labelled as conceptual; live links and factual HTML carry the evidence. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
+`public/logo-v2.png` is the 512 × 512 social avatar. `public/og.png` remains the current campaign social preview rather than a canonical logo master; refresh it only as a deliberate social-card pass. Use `public/editorial/` for conceptual imagery. Product and project artwork must remain plainly illustrative, never presented as interfaces or customer proof; live links and factual HTML carry the evidence. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
 
 ## Contact and privacy behavior
 

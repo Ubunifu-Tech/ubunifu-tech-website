@@ -1,4 +1,5 @@
 import { CtaBand } from '@/components/CtaBand';
+import { PageHeader } from '@/components/PageHeader';
 import { getAllPosts, resolveBlogCover } from '@/lib/blog';
 import { BlogIndex, type PostMeta } from '@/components/BlogIndex';
 import styles from './Blog.module.css';
@@ -34,28 +35,14 @@ export default function BlogPage() {
   return (
     <>
       <main className={styles.main}>
+        <PageHeader
+          scene="journal"
+          compact
+          eyebrow="Insights"
+          title="Articles"
+          lead="Product decisions and lessons from building software in Tanzania."
+        />
         <div className={`container ${styles.journal}`}>
-          <header className={styles.header}>
-            <div className={styles.headerCopy}>
-              <span className="specLabel">Insights</span>
-              <h1 className={styles.heading}>Notes from the workshop</h1>
-              <p className={styles.subheading}>
-                We write when we have something worth saying: about building
-                software in Tanzania, the decisions behind our products, and what
-                the work actually teaches us. No content calendar, no filler.
-              </p>
-            </div>
-            <aside className={styles.headerNote} aria-label="About Ubunifu Insights">
-              <span className={styles.headerNoteLabel}>
-                {String(posts.length).padStart(2, '0')} published notes
-              </span>
-              <p>
-                Product decisions, delivery lessons, and observations from
-                building digital systems in context.
-              </p>
-            </aside>
-          </header>
-
           {posts.length === 0 ? (
             <p className={styles.empty}>Nothing published yet. Check back soon.</p>
           ) : (

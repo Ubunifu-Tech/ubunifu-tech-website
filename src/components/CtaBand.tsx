@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { site } from '@/content/site';
-import { Topography } from './Topography';
+import { site, cta } from '@/content/site';
+import { AmbientShader } from './AmbientShader';
 import styles from './CtaBand.module.css';
 
 // Full-width closing call-to-action, kept separate from the footer.
@@ -9,30 +9,22 @@ export const CtaBand: React.FC = () => {
   return (
     <section className={styles.section}>
       <div className={styles.panel}>
-        <div className={styles.aurora} aria-hidden="true" />
-        <Topography className={styles.topo} />
+        <AmbientShader placement="panel" />
         <div className={`container ${styles.content}`}>
           <div className={styles.statement}>
-            <span className={styles.kicker}>Next conversation</span>
-            <h2 className={styles.heading}>Bring us the problem.</h2>
+            <h2 className={styles.heading}>Have a project in mind?</h2>
           </div>
           <div className={styles.details}>
             <p className={styles.text}>
-              A custom platform, a tricky data problem, or just a question about
-              one of our products. Tell us what you&apos;re working on; your note
-              goes directly to the Ubunifu team.
+              Tell us what you need. We can discuss the scope, timing, and budget.
             </p>
             <div className={styles.actions}>
               <Link href={site.urls.contact} className={styles.btn}>
-                Get in touch
+                {cta.primary}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
                 </svg>
               </Link>
-              <a href={site.urls.insight} target="_blank" rel="noopener noreferrer" className={styles.btnSecondary}>
-                Open Insight <span aria-hidden="true">↗</span>
-                <span className="srOnly"> (opens in a new tab)</span>
-              </a>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Image from 'next/image';
+import { EditorialVisual } from '@/components/EditorialVisual';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { BlogPostMeta } from '@/lib/blog';
@@ -25,10 +25,6 @@ const shortDate = new Intl.DateTimeFormat('en-GB', {
 function formatDate(date: string): string {
   const parsed = new Date(`${date}T00:00:00.000Z`);
   return Number.isNaN(parsed.getTime()) ? date : shortDate.format(parsed);
-}
-
-function num(value: number): string {
-  return String(value).padStart(2, '0');
 }
 
 function Arrow() {
@@ -63,7 +59,7 @@ function FeaturedCard({ post }: { post: PostMeta }) {
   return (
     <Link href={`/blog/${post.slug}`} className={styles.featured}>
       <div className={styles.featuredVisual}>
-        <Image
+        <EditorialVisual
           src={post.coverImage}
           alt={post.coverAlt}
           fill
@@ -71,9 +67,6 @@ function FeaturedCard({ post }: { post: PostMeta }) {
           sizes="(max-width: 860px) 100vw, (max-width: 1280px) 52vw, 650px"
           className={styles.featuredImage}
         />
-        <span className={styles.featuredShade} aria-hidden="true" />
-        <span className={styles.featuredKicker}>Latest story</span>
-        <span className={styles.artDisclosure}>Conceptual illustration</span>
       </div>
 
       <div className={styles.featuredBody}>
@@ -95,19 +88,17 @@ function FeaturedCard({ post }: { post: PostMeta }) {
   );
 }
 
-function PostCard({ post, index }: { post: PostMeta; index: number }) {
+function PostCard({ post }: { post: PostMeta }) {
   return (
     <Link href={`/blog/${post.slug}`} className={styles.card}>
       <div className={styles.cardVisual}>
-        <Image
+        <EditorialVisual
           src={post.coverImage}
           alt={post.coverAlt}
           fill
           sizes="(max-width: 760px) 100vw, (max-width: 1120px) 50vw, 390px"
           className={styles.cardImage}
         />
-        <span className={styles.cardIndex}>{num(index)}</span>
-        <span className={styles.artDisclosure}>Conceptual illustration</span>
       </div>
 
       <div className={styles.cardBody}>
@@ -174,7 +165,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
 
       <motion.div layout={!reduceMotion} className={styles.grid}>
         <AnimatePresence mode="popLayout" initial={false}>
-          {grid.map((post, index) => (
+          {grid.map((post) => (
             <motion.div
               layout={!reduceMotion}
               key={post.slug}
@@ -183,7 +174,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
               exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
               transition={{ duration: reduceMotion ? 0 : 0.32, ease }}
             >
-              <PostCard post={post} index={isAll ? index + 2 : index + 1} />
+              <PostCard post={post} />
             </motion.div>
           ))}
         </AnimatePresence>

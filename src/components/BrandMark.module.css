@@ -25,15 +25,10 @@
   stroke: var(--primary);
 }
 
-.mono .u,
-.mono .t {
-  stroke: currentColor;
-}
-
 .lockup {
   display: inline-flex;
   align-items: center;
-  gap: 0.78rem;
+  gap: var(--space-3);
   min-width: max-content;
 }
 
@@ -46,15 +41,15 @@
 .wordmark {
   display: flex;
   align-items: baseline;
-  gap: 0.32rem;
+  gap: var(--space-1);
   line-height: 1;
 }
 
 .name,
 .technology {
-  color: var(--text-primary);
+  color: inherit;
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: var(--font-size-body);
   letter-spacing: -0.03em;
 }
 
@@ -66,14 +61,13 @@
   font-weight: 600;
 }
 
-.lockup.inverse .name,
-.lockup.inverse .technology {
+.lockup.inverse {
   color: var(--text-inverse);
 }
 
 @media (max-width: 420px) {
   .lockup {
-    gap: 0.58rem;
+    gap: var(--space-2);
   }
 
   .lockupMark {
@@ -83,6 +77,6 @@
 
   .name,
   .technology {
-    font-size: 0.92rem;
+    font-size: var(--font-size-body);
   }
 }

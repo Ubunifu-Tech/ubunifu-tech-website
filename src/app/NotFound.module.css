@@ -54,27 +54,25 @@
 
 .code {
   font-family: var(--font-mono);
-  font-size: clamp(4rem, 14vw, 8rem);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.04em;
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
   background: linear-gradient(135deg, var(--brand), var(--primary));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .title {
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .lead {
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.7;
   max-width: 48ch;
@@ -85,17 +83,17 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.875rem;
+  gap: var(--space-3);
 }
 
 .btnPrimary {
   display: inline-flex;
   align-items: center;
-  padding: 0.8rem 1.6rem;
+  padding: var(--space-3) var(--space-5);
   background: var(--cta);
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   border-radius: var(--control-radius);
   text-decoration: none;
   transition: background 0.2s ease;
@@ -109,11 +107,11 @@
 .btnSecondary {
   display: inline-flex;
   align-items: center;
-  padding: 0.8rem 1.6rem;
+  padding: var(--space-3) var(--space-5);
   background: #fff;
   color: var(--text-primary);
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   border-radius: var(--control-radius);
   border: 1px solid var(--border-hover);
   text-decoration: none;

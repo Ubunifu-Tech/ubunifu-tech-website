@@ -1,7 +1,6 @@
 /* ── Build Page ───────────────────────────────── */
 
 .main {
-  min-height: 100vh;
   background: var(--background);
 }
 
@@ -11,13 +10,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 0.85rem 1.25rem;
+  padding: var(--space-3) 1.25rem;
   border: 1px solid var(--brand-deep);
   border-radius: var(--control-radius);
   background: var(--cta);
   color: #fff;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   text-decoration: none;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
@@ -34,9 +33,8 @@
 }
 
 .sectionHeading {
-  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
   margin-bottom: 2.5rem;
   color: var(--text-primary);
 }
@@ -44,7 +42,7 @@
 /* ── Process ─────────────────────────────────── */
 
 .processSection {
-  padding: 100px 0;
+  padding: var(--section-space) 0;
   background: var(--surface-2);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -52,51 +50,55 @@
 
 .processGrid {
   display: grid;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
   grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-}
-
-.processGrid > div + div {
-  border-left: 1px solid var(--border-hover);
+  gap: var(--space-6);
 }
 
 .processCard {
+  display: flex;
   height: 100%;
-  padding: clamp(2rem, 3vw, 3rem);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--border-hover);
   background: transparent;
-}
-
-.processStep {
-  margin-bottom: 2.75rem;
-  color: var(--brand-deep);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  flex-direction: column;
 }
 
 .processTitle {
-  font-size: clamp(1.35rem, 2.2vw, 2rem);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-2);
   color: var(--text-primary);
 }
 
 .processDescription {
-  font-size: 0.9375rem;
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.7;
   margin: 0;
 }
 
+.processOutput {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-6);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+}
+
+.processOutput span {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-hover);
+  color: var(--brand-deep);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+}
+
 /* ── Responsive ──────────────────────────────── */
 
 @media (max-width: 1024px) {
-  .servicesGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 
   .processGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -107,15 +109,11 @@
   }
 
   .processGrid > div:nth-child(n + 3) {
-    border-top: 1px solid var(--border-hover);
+    border-top: 0;
   }
 }
 
 @media (max-width: 768px) {
-
-  .servicesGrid {
-    grid-template-columns: 1fr;
-  }
 
   .processGrid {
     grid-template-columns: 1fr;
@@ -123,24 +121,18 @@
 
   .processGrid > div + div,
   .processGrid > div:nth-child(n + 3) {
-    border-top: 1px solid var(--border-hover);
+    border-top: 0;
     border-left: 0;
   }
 
-  .processSection {
-    padding: 80px 0;
-  }
 
   .processCard {
-    padding: 1.5rem;
+    padding: var(--space-5) 0;
   }
 
 }
 
 @media (max-width: 480px) {
-  .processSection {
-    padding: 64px 0;
-  }
 
   .heroBtn {
     width: 100%;

@@ -2,18 +2,31 @@
   padding: var(--section-space) 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  /* The wash is anchored where the panel sits and reaches under the list, so the
+     panel reads as the dense core of a field that pervades the whole section
+     rather than a tile dropped onto neutral grey. */
+  background:
+    radial-gradient(62% 72% at 16% 68%, rgba(109, 63, 232, 0.22), transparent 72%),
+    var(--surface-2);
+
+  /* Both columns rule off in the same family as the field. */
+  --rule: rgba(109, 63, 232, 0.22);
 }
 
+/* Intro spans both columns; panel and list sit side by side beneath it. */
 .layout {
   display: grid;
-  align-items: start;
-  grid-template-columns: 1fr;
-  gap: var(--space-7);
+  column-gap: clamp(var(--space-5), 3vw, var(--space-7));
+  row-gap: var(--space-7);
+  grid-template-columns: minmax(0, 27rem) minmax(0, 1fr);
+  grid-template-areas:
+    'intro intro'
+    'panel list';
 }
 
 .intro {
   max-width: 70ch;
+  grid-area: intro;
 }
 
 .heading {
@@ -32,29 +45,92 @@
   line-height: 1.72;
 }
 
+/* ── The panel ────────────────────────────────────
+   The one strong anchor. Purple lives here and nowhere else in the section. */
+
+.panel {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  min-height: 26rem;
+  padding: var(--space-6);
+  /* Deliberately no radius and no shadow. A rounded, floating card is what made
+     this read as a separate object parked beside the list; flush, it occupies
+     the same ruled band — its top and bottom edges continue the list's own
+     rules — so the two columns read as one structure.
+
+     The gradient is the ground the shader sits on, and it carries the panel on
+     its own before the shader mounts and wherever the shader is gated off. */
+  background: linear-gradient(160deg, #241a4d 0%, #171232 62%, #14102a 100%);
+  grid-area: panel;
+  isolation: isolate;
+}
+
+.panelBody {
+  position: relative;
+  z-index: 1;
+}
+
+.panelTitle {
+  margin: 0 0 var(--space-4);
+  color: var(--text-inverse);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.panelItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-inverse-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.panelHint {
+  max-width: 26ch;
+  margin: 0;
+  color: var(--text-inverse-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+/* Touch has no hover to offer, so the hint would be asking for an interaction
+   the device cannot perform. The panel rests on its title alone there. */
+@media (hover: none) {
+  .panelHint {
+    display: none;
+  }
+}
+
+/* ── The list ─────────────────────────────────────
+   Hairline rows, not cards: six equal boxes would compete with the panel for
+   the single anchor the section is built around. */
+
 .list {
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--border-active);
+  border-top: 1px solid var(--rule);
   list-style: none;
+  grid-area: list;
 }
 
 .item {
   position: relative;
   display: grid;
   align-items: center;
-  gap: 1rem clamp(1.25rem, 3vw, 3rem);
-  /* Let the content set the height. This was min-height: 120px on rows whose
-     content is about 50px tall, which is what made the section read as empty. */
+  gap: var(--space-4) clamp(var(--space-5), 3vw, var(--space-7));
   padding: var(--space-5) 0;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border-active);
+  border-bottom: 1px solid var(--rule);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;
-}
-
-.item > span {
-  position: relative;
-  z-index: 1;
+  transition: padding-left var(--transition-base), background var(--transition-fast);
 }
 
 .itemTitle {
@@ -63,7 +139,6 @@
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
   line-height: 1.18;
-  transition: transform 0.4s var(--ease-out-expo);
 }
 
 .summary {
@@ -72,43 +147,47 @@
   line-height: 1.55;
 }
 
+/* Orange stays a small accent here — one arrow — while purple owns the panel. */
 .arrow {
   color: var(--brand-deep);
   font-size: var(--font-size-body);
-  transition: transform 0.35s var(--ease-out-expo);
+  transition: transform var(--transition-base);
 }
 
-.item:hover .itemTitle,
-.item:focus-visible .itemTitle {
-  transform: translateX(6px);
+.item:hover,
+.item:focus-visible,
+.itemActive {
+  padding-left: var(--space-4);
+  background: var(--primary-dim);
 }
 
 .item:hover .arrow,
-.item:focus-visible .arrow {
-  transform: translate(3px, -3px);
+.item:focus-visible .arrow,
+.itemActive .arrow {
+  transform: translateX(4px);
 }
 
 .item:focus-visible {
   outline: 3px solid var(--primary);
-  outline-offset: 4px;
+  outline-offset: -3px;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1080px) {
+  /* Visual stacks above the services, per the brief. */
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'intro'
+      'panel'
+      'list';
   }
 
-  .intro {
-    position: static;
-  }
-
-  .heading {
-    max-width: 20ch;
+  .panel {
+    min-height: 15rem;
   }
 }
 
 @media (max-width: 680px) {
-
   .item {
     grid-template-columns: minmax(0, 1fr) 24px;
   }
@@ -120,5 +199,12 @@
   .arrow {
     grid-column: 2;
     grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .arrow {
+    transition: none;
   }
 }

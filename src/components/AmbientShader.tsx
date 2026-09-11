@@ -59,9 +59,29 @@ const COLORS = ['#14102A', '#FF6B2C', '#C2693B', '#2A1F5C', '#1F1A36'];
 /** How far the field slides toward the pointer, in shader offset units. */
 const REACH = 0.5;
 
-type Placement = 'left' | 'edges' | 'panel';
+type Placement = 'left' | 'edges' | 'panel' | 'panelTall';
 
-export function AmbientShader({ placement = 'left' }: { placement?: Placement }) {
+/**
+ * Optional per-instance character. Defaults reproduce the navy/orange ambient
+ * layer exactly, so the three existing placements are untouched.
+ */
+export type ShaderCharacter = {
+  colors?: readonly string[];
+  distortion?: number;
+  swirl?: number;
+  speed?: number;
+};
+
+export function AmbientShader({
+  placement = 'left',
+  character,
+  interactive = true,
+}: {
+  placement?: Placement;
+  character?: ShaderCharacter;
+  /** Pointer tracking. Off where the field should be driven by something else. */
+  interactive?: boolean;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   // Starts false so the server render and the first client paint agree — no canvas,
   // no hydration mismatch. It only turns on once the gates pass.
@@ -120,6 +140,7 @@ export function AmbientShader({ placement = 'left' }: { placement?: Placement })
     if (!active) return;
     // A coarse pointer has no hover position to follow, so touch devices skip the
     // listener and the easing loop entirely and just get the ambient drift.
+    if (!interactive) return;
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
     window.addEventListener('pointermove', onPointerMove, { passive: true });
@@ -156,7 +177,7 @@ export function AmbientShader({ placement = 'left' }: { placement?: Placement })
       window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerleave', onLeave);
     };
-  }, [active, onPointerMove]);
+  }, [active, interactive, onPointerMove]);
 
   return (
     <div
@@ -167,15 +188,15 @@ export function AmbientShader({ placement = 'left' }: { placement?: Placement })
       {active && (
         <MeshGradient
           className={styles.shader}
-          colors={COLORS}
+          colors={[...(character?.colors ?? COLORS)]}
           /* The field slides toward the cursor and the vortex tightens slightly
              as it moves away from centre — two small responses rather than one
              obvious one, so it reads as the light noticing you. */
           offsetX={pointer.x * REACH}
           offsetY={pointer.y * REACH * 0.6}
-          swirl={0.3 + Math.min(Math.hypot(pointer.x, pointer.y), 1) * 0.18}
-          distortion={0.85}
-          speed={0.1}
+          swirl={(character?.swirl ?? 0.3) + Math.min(Math.hypot(pointer.x, pointer.y), 1) * 0.18}
+          distortion={character?.distortion ?? 0.85}
+          speed={character?.speed ?? 0.1}
           /* Matches the film grain specified in IMAGE_PROMPTS.md, so the shader
              and the illustrations share a surface. */
           grainOverlay={0.04}

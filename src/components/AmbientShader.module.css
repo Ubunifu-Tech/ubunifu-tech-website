@@ -61,7 +61,7 @@
 @media (max-width: 860px) {
   /* On a phone the copy is full width, so a one-sided mask reads as arbitrary.
      Fade from the top instead and pull the whole layer back. */
-  .host {
+  .host:not(.panelTall) {
     -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%);
     mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%);
   }
@@ -69,4 +69,16 @@
   .shader {
     opacity: 0.36;
   }
+}
+
+/* A tall panel that IS the visual, not a layer behind one: no mask, and the
+   field carries the full frame. Used by the capabilities section. */
+.panelTall {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.panelTall .shader {
+  mix-blend-mode: normal;
+  opacity: 1;
 }

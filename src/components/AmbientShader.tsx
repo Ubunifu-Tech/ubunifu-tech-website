@@ -59,7 +59,7 @@ const COLORS = ['#14102A', '#FF6B2C', '#C2693B', '#2A1F5C', '#1F1A36'];
 /** How far the field slides toward the pointer, in shader offset units. */
 const REACH = 0.5;
 
-type Placement = 'left' | 'edges' | 'panel' | 'panelTall';
+type Placement = 'left' | 'edges' | 'panel' | 'panelTall' | 'page';
 
 /**
  * Optional per-instance character. Defaults reproduce the navy/orange ambient

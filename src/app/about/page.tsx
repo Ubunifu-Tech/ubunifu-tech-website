@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { About } from '@/components/About';
+import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { Team } from '@/components/Team';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { story, visionMission, objectives, approach } from '@/content/about';
@@ -20,8 +21,15 @@ export default function AboutPage() {
 
   return (
     <>
+      {/* Trialling the page-wide violet haze here first. Fixed and
+          non-interactive, so its position in the tree does not matter. */}
+      <PageAtmosphere />
       <main>
+        {/* The page haze is this page's ambient field, so the header does not
+            run a second one: two placements meant two live WebGL contexts and
+            two effects layered over the same hero. */}
         <PageHeader
+          ambient={false}
           scene="about"
           compact
           eyebrow="About Ubunifu"

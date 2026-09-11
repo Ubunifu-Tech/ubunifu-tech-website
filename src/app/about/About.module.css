@@ -25,9 +25,12 @@
 
 /* ── Vision & Mission ─────────────────────────── */
 
+/* Translucent, not opaque: this page runs the ambient violet field behind its
+   content, and an opaque section would hide it completely. The tonal step
+   against the white sections is preserved, just softened. */
 .vmSection {
   position: relative;
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
@@ -82,7 +85,7 @@
 /* ── Story + image ────────────────────────────── */
 
 .storySection {
-  background: var(--background);
+  background: transparent;
 }
 
 .storyGrid {
@@ -113,7 +116,7 @@
 /* ── Objectives ───────────────────────────────── */
 
 .objSection {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 55%, transparent);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -178,7 +181,7 @@
 /* ── Approach ─────────────────────────────────── */
 
 .approachSection {
-  background: var(--background);
+  background: transparent;
 }
 
 .approachGrid {

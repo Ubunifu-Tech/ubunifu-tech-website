@@ -61,7 +61,7 @@
 @media (max-width: 860px) {
   /* On a phone the copy is full width, so a one-sided mask reads as arbitrary.
      Fade from the top instead and pull the whole layer back. */
-  .host:not(.panelTall) {
+  .host:not(.panelTall):not(.page) {
     -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%);
     mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%);
   }
@@ -69,6 +69,30 @@
   .shader {
     opacity: 0.36;
   }
+}
+
+/* Page atmosphere: a fixed, non-interactive haze over the whole viewport.
+
+   z-index: -1 is the whole point. An earlier version laid this over the page as
+   a multiply tint, which did put violet on every light surface — and on the text
+   as well, costing contrast on a page of body copy. Behind the content it cannot
+   touch a single glyph: text, rules and icons all paint above it at exactly the
+   contrast they had before.
+
+   The trade is that a section with an opaque background hides the field, so a
+   page opting into this has to let its light sections go transparent or
+   translucent. Dark sections keep their own ground and simply cover it, which is
+   what you want — the header and CTA band are already doing a job. */
+.page {
+  position: fixed;
+  z-index: -1;
+}
+
+.page .shader {
+  /* No blend mode: behind the content there is nothing to blend with except the
+     page's own white, so the field simply paints itself. */
+  mix-blend-mode: normal;
+  opacity: 0.5;
 }
 
 /* A tall panel that IS the visual, not a layer behind one: no mask, and the

@@ -23,16 +23,17 @@ import { AmbientShader } from './AmbientShader';
  * Mostly white, and the violets are deliberately pale.
  *
  * The deepest stop here sets the darkest ground any text on the site can end up
- * sitting on, so it is a contrast budget, not a colour choice. Measured against
- * every text token: the previous #C4AEF3 at 0.5 opacity put --brand-deep at
- * 3.80:1 and --text-tertiary at 3.83:1, both under the 4.5:1 floor for normal
- * text. #D9CCF8 at 0.3 puts the worst token at 4.65:1.
+ * sitting on, so it is a contrast budget, not a colour choice. It was briefly
+ * paler than this: at the original #C4AEF3 / 0.5, --brand-deep measured 3.80:1
+ * and --text-tertiary 3.83:1, both under the 4.5:1 floor.
  *
- * The binding constraint is that --brand-deep is 5.21:1 on plain white and
- * --text-tertiary 5.25:1, so neither has much headroom to spend before the
- * field tints the ground underneath them.
+ * The fix was to give those two tokens headroom rather than to keep bleaching
+ * the field — --brand-deep is now #A63A11 and --text-tertiary 68% ink — which
+ * buys back most of the density. At 0.36 opacity the worst token measures
+ * 4.63:1, so this palette and that opacity are a matched pair: raising either
+ * one without re-measuring will quietly push accent text under AA.
  */
-const HAZE = ['#FFFFFF', '#F3EEFE', '#D9CCF8', '#FFFFFF', '#E6DEFB'] as const;
+const HAZE = ['#FFFFFF', '#F0EAFD', '#C4AEF3', '#FFFFFF', '#DACEF9'] as const;
 
 export function PageAtmosphere() {
   return (

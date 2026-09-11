@@ -58,7 +58,7 @@ The homepage tells one story: Ubunifu can build a specific system with a client 
 6. **Insights** — the three newest journal posts; the visual lead avoids repeating a cover already used in selected work.
 7. **CtaBand** — one closing contact action.
 
-The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `EngagementPaths` and `ProblemStrip` are no longer mounted on the homepage; the detailed delivery process lives on Services.
+The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `EngagementPaths` is mounted on the homepage, between the capabilities index and the work preview. `ProblemStrip` no longer exists; its copy now lives in `pillars.tsx` and renders as `WhyUbunifu`. The detailed delivery process lives on Services.
 
 ## Consulting, work, products, and sectors
 

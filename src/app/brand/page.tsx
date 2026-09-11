@@ -179,7 +179,7 @@ export default function BrandKit() {
               <ul className={styles.ruleList}>
                 <li>Navy carries the wordmark, typography, and structural surfaces.</li>
                 <li>Bright orange belongs to the Ligature U and large accents.</li>
-                <li>Deep orange (#BF4314) sits behind white CTA text.</li>
+                <li>Deep orange (#A63A11) sits behind white CTA text.</li>
                 <li>Navy (#1F1A36) for headings &amp; body.</li>
                 <li>Violet belongs to the Ligature T, links, intelligence, and motion.</li>
                 <li>Generous space, open rules, and few enclosed cards.</li>

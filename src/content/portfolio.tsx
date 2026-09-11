@@ -21,22 +21,6 @@ export type ProjectArtwork = {
   alt: string;
 };
 
-/** A named page on the live client site, or a part of the system that is not reachable. */
-export type LiveEntry = {
-  path: string;
-  label: string;
-  note: string;
-  /** Omit for a normal linked row. `false` renders the row with no link and no arrow. */
-  reachable?: false;
-};
-
-/** A real screenshot. Additive only — never replaces the system diagram. */
-export type ProjectShot = {
-  src: string;
-  alt: string;
-  caption: string;
-};
-
 export type ProjectHighlight = {
   title: string;
   body: string;
@@ -65,11 +49,6 @@ export type Project = {
   // `overview` above it, so the margin can never drift from the body.
   pullQuote: string;
   furtherReading?: ReadonlyArray<{ href: string; title: string }>;
-  // Live-page ledger. Paths are on client-controlled sites: re-verify with
-  // `npm run check:live-links` before shipping any entry.
-  entries?: ReadonlyArray<LiveEntry>;
-  // Declared now, populated when real captures exist. Renders below the diagram.
-  shots?: ReadonlyArray<ProjectShot>;
 };
 
 export const projects: ReadonlyArray<Project> = [

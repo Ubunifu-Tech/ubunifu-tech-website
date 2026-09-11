@@ -5,7 +5,9 @@
 export const brandColors = {
   ink: '#1F1A36',
   orange: '#FF6B2C',
-  orangeDeep: '#BF4314',
+  /* Kept in step with --brand-deep in globals.css, which was darkened so the
+     reading orange keeps AA contrast over the ambient field. */
+  orangeDeep: '#A63A11',
   violet: '#6D3FE8',
   white: '#FFFFFF',
   canvas: '#F4F2FB',

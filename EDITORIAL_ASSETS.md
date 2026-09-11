@@ -175,8 +175,8 @@ Avoid: wildlife collage, additional animals or vehicles, snow, fantasy geography
 **1. Screenshots are additive, never substitutive.** `scripts/check-project-visuals.mjs`
 requires `data-project-diagram="operations"` on `/work` and `/work/safari-king`, and
 `"enquiry"` on `/work` and `/work/usambara-destination`. Deleting a diagram to make room
-for a capture fails the build. Real captures go in `Project.shots[]` and render *below*
-the diagram plate; `public/work/` is the drop. `EditorialVisual` falls through to
+for a capture fails the build. Real captures belong below the diagram plate, added additively rather than
+replacing it; `public/work/` is the drop. `EditorialVisual` falls through to
 `next/image` for any src outside the two-entry `projectDiagrams` map, so
 `/work/safari-king-admin.png` is already legal.
 
@@ -185,7 +185,9 @@ rejects any text node inside a diagram, and `check-typography.mjs` blocks inline
 `fontSize` in `.tsx` — so labels drawn into the SVG could never reach the seven-step
 type scale anyway. Labels belong in the `figcaption`.
 
-**3. `entries[]` live on client-controlled sites.** Re-verify with `npm run
-check:live-links` before shipping any row. That checker must use GET, not HEAD —
-usambaradestination.com answers HEAD with 405/404 and GET with 200. It is deliberately
-not in `npm run check` or `next build`: a client's outage must never block a deploy.
+**3. If a live-page ledger is ever built, check links with GET, not HEAD.**
+usambaradestination.com answers HEAD with 405/404 and GET with 200, so a HEAD-based
+checker would report a healthy client site as broken. Keep any such checker out of
+`npm run check` and `next build` too: a client's outage must never block a deploy.
+(The `entries[]` and `shots[]` scaffolding for this was removed — it carried no data
+and nothing rendered it. Recover it from git history rather than rewriting it.)

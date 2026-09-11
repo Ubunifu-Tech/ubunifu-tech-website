@@ -9,7 +9,13 @@
   /* Identity — Signal Orange (Ligature U and large gestures) */
   --brand: #FF6B2C;
   --brand-hover: #E8581E;
-  --brand-deep: #BF4314;
+  /* Darkened from #BF4314. This is the orange used for text — links, arrows,
+     accented words — and at #BF4314 it was only 5.21:1 on plain white, too
+     little headroom to survive the ambient violet field tinting the ground
+     beneath it. At #A63A11 it is 6.49:1 on white and still clears AA over the
+     densest part of the field. --brand stays the bright orange for buttons and
+     the logo; this is its reading weight. */
+  --brand-deep: #A63A11;
   --brand-dim: rgba(255, 107, 44, 0.10);
   --brand-border: rgba(255, 107, 44, 0.22);
   --brand-shadow: rgba(255, 107, 44, 0.30);
@@ -40,7 +46,10 @@
   /* Ink Navy — wordmark, message, and structural foundation */
   --text-primary: #1F1A36;
   --text-secondary: color-mix(in srgb, var(--text-primary) 75%, white);
-  --text-tertiary: color-mix(in srgb, var(--text-primary) 65%, white);
+  /* 68%, not 65%: the extra ink is what keeps it above 4.5:1 once the ambient
+     field tints the ground. Deliberately not pushed further — --text-secondary
+     is 75%, and past about 70% the two tiers stop being distinguishable. */
+  --text-tertiary: color-mix(in srgb, var(--text-primary) 68%, white);
   --text-inverse: #FFFFFF;
   --text-inverse-secondary: rgba(255, 255, 255, 0.72);
   --text-inverse-tertiary: rgba(255, 255, 255, 0.60);

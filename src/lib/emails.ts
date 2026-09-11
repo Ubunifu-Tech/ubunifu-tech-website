@@ -109,8 +109,11 @@ ${preheader(preview)}
 </body></html>`;
 }
 
+/* Email cannot read CSS custom properties, so brand colours are literals here.
+   They mirror globals.css: #A63A11 is --brand-deep, #1F1A36 --text-primary,
+   #6D3FE8 --primary, #3D1FA0 --primary-deep. Change them together. */
 function button(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;padding:13px 26px;background:#BF4314;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;text-decoration:none;border-radius:4px;">${label}</a>`;
+  return `<a href="${href}" style="display:inline-block;padding:13px 26px;background:#A63A11;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;text-decoration:none;border-radius:4px;">${label}</a>`;
 }
 
 function buttonGhost(href: string, label: string): string {

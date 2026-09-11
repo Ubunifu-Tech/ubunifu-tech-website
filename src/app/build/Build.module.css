@@ -48,25 +48,70 @@
   border-bottom: 1px solid var(--border);
 }
 
+.processIntro {
+  max-width: 60ch;
+  margin-bottom: var(--space-7);
+}
+
+.headingAccent {
+  color: var(--brand-deep);
+}
+
+.processLead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.7;
+}
+
 .processGrid {
+  position: relative;
   display: grid;
+  padding-top: var(--space-6);
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-6);
 }
 
+/* One continuous track with a node per stage. These are four steps in an order,
+   and a separate rule per card — broken by the grid gap — read as four parallel
+   options instead of a sequence. */
+.processGrid::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--brand-border);
+  content: '';
+}
+
 .processCard {
-  display: flex;
+  position: relative;
+  display: grid;
   height: 100%;
-  padding: var(--space-6) 0;
-  border-top: 1px solid var(--border-hover);
+  padding: 0;
   background: transparent;
-  flex-direction: column;
+  /* auto / 1fr / auto puts every stage's deliverable on the same baseline. With
+     the description sized by content the four hairlines landed at four
+     different heights, which made the row look broken rather than aligned. */
+  grid-template-rows: auto 1fr auto;
+}
+
+.processCard::before {
+  position: absolute;
+  top: calc(-1 * var(--space-6) - 3px);
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-deep);
+  content: '';
 }
 
 .processTitle {
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   color: var(--text-primary);
 }
 
@@ -74,62 +119,54 @@
   font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.7;
-  margin: 0;
+  margin: 0 0 var(--space-5);
 }
 
+/* Matches the "Best when ..." footer on the home page's engagement paths: a
+   hairline, then the one phrase that is the point of the card. */
 .processOutput {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: auto;
-  padding-top: var(--space-6);
-  color: var(--text-primary);
+  margin: 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-hover);
+  color: var(--text-secondary);
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-.processOutput span {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-hover);
+.processOutput strong {
   color: var(--brand-deep);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-emphasis);
 }
 
 /* ── Responsive ──────────────────────────────── */
 
 @media (max-width: 1024px) {
-
   .processGrid {
+    padding-top: 0;
+    gap: var(--space-7) var(--space-6);
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .processGrid > div:nth-child(odd) {
-    border-left: 0;
+  /* The track only ever reaches the first row once the grid wraps, so each card
+     carries its own rule and node again. */
+  .processGrid::before {
+    display: none;
   }
 
-  .processGrid > div:nth-child(n + 3) {
-    border-top: 0;
+  .processCard {
+    padding-top: var(--space-5);
+    border-top: 2px solid var(--brand-border);
+  }
+
+  .processCard::before {
+    top: -3px;
   }
 }
 
 @media (max-width: 768px) {
-
   .processGrid {
     grid-template-columns: 1fr;
   }
-
-  .processGrid > div + div,
-  .processGrid > div:nth-child(n + 3) {
-    border-top: 0;
-    border-left: 0;
-  }
-
-
-  .processCard {
-    padding: var(--space-5) 0;
-  }
-
 }
 
 @media (max-width: 480px) {

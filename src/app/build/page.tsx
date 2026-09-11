@@ -16,26 +16,29 @@ export const metadata = pageMetadata({
   path: '/build',
 });
 
+// Four stages in an order, each ending in something the client can hold us to.
+// `output` is written as a lower-case fragment because it is rendered inside the
+// sentence "You get <output>." — keep it a noun phrase, not a sentence.
 const process = [
   {
     title: 'Understand',
     description: 'We discuss what you need, how your team works, and the constraints to account for.',
-    output: 'A shared brief and priorities',
+    output: 'a shared brief and priorities',
   },
   {
     title: 'Shape',
     description: 'We agree what to build, the budget, the timeline, and what each side will provide.',
-    output: 'An agreed scope and delivery plan',
+    output: 'an agreed scope and delivery plan',
   },
   {
     title: 'Build',
     description: 'We build in stages, test the system, and review working versions with your team.',
-    output: 'Usable deliverables, reviewed together',
+    output: 'usable deliverables, reviewed together',
   },
   {
     title: 'Operate',
     description: 'We document the handover and provide hosting and ongoing support where agreed.',
-    output: 'Clear ownership and agreed support',
+    output: 'clear ownership and agreed support',
   },
 ];
 
@@ -63,18 +66,30 @@ export default function BuildPage() {
         {/* Process */}
         <section className={styles.processSection}>
           <div className="container">
-            <ScrollReveal>
-              <h2 className={styles.sectionHeading}>How projects run</h2>
-              <BuildCards className={styles.processGrid}>
-                {process.map((item) => (
-                  <div key={item.title} className={styles.processCard}>
-                    <h3 className={styles.processTitle}>{item.title}</h3>
-                    <p className={styles.processDescription}>{item.description}</p>
-                    <p className={styles.processOutput}>{item.output}</p>
-                  </div>
-                ))}
-              </BuildCards>
+            <ScrollReveal className={styles.processIntro}>
+              <h2 className={styles.sectionHeading}>
+                What happens <span className={styles.headingAccent}>after you say yes</span>?
+              </h2>
+              <p className={styles.processLead}>
+                Four stages, each ending in something you can hold us to.
+              </p>
             </ScrollReveal>
+
+            <BuildCards className={styles.processGrid}>
+              {process.map((item) => (
+                <div key={item.title} className={styles.processCard}>
+                  <h3 className={styles.processTitle}>{item.title}</h3>
+                  <p className={styles.processDescription}>{item.description}</p>
+                  {/* The stage's deliverable. Previously styled via a
+                      `.processOutput span` rule that matched nothing, because
+                      the markup here has never had a span — so the rule and the
+                      accent the design intended were invisible. */}
+                  <p className={styles.processOutput}>
+                    You get <strong>{item.output}</strong>.
+                  </p>
+                </div>
+              ))}
+            </BuildCards>
           </div>
         </section>
 

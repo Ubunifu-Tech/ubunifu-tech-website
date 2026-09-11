@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { About } from '@/components/About';
@@ -49,7 +50,7 @@ export default function AboutPage() {
           <div className="container">
             <ScrollReveal>
               <h2 id="about-vm-title" className={styles.sectionHeading}>
-                Where we are going
+                Where we are <span className={styles.headingAccent}>going</span>
               </h2>
             </ScrollReveal>
             <div className={styles.vmGrid}>
@@ -70,8 +71,11 @@ export default function AboutPage() {
           <div className="container">
             <ScrollReveal>
               <h2 id="about-objectives-title" className={styles.sectionHeading}>
-                What we hold ourselves to
+                What we <span className={styles.headingAccent}>hold ourselves to</span>
               </h2>
+              <p className={styles.sectionLead}>
+                Four commitments that shape how we scope a project, build it, and hand it over.
+              </p>
             </ScrollReveal>
             <div className={styles.objGrid}>
               {objectives.map(({ icon: Icon, title, body }, i) => (
@@ -91,8 +95,15 @@ export default function AboutPage() {
           <div className="container">
             <ScrollReveal>
               <h2 id="about-approach-title" className={styles.sectionHeading}>
-                How a project runs
+                How a project <span className={styles.headingAccent}>runs</span>
               </h2>
+              {/* These are the same four stages the services page sets out in
+                  detail. Linking rather than restating keeps one of them the
+                  summary and the other the reference. */}
+              <p className={styles.sectionLead}>
+                The same four stages on every project.{' '}
+                <Link href="/build">See what each stage delivers →</Link>
+              </p>
             </ScrollReveal>
             <ol className={styles.approachGrid}>
               {approach.map(({ title, body }) => (

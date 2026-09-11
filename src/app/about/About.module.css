@@ -3,8 +3,24 @@
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
-  margin: var(--space-2) 0 2.5rem;
+  margin: var(--space-2) 0 var(--space-4);
   max-width: 30ch;
+}
+
+.headingAccent {
+  color: var(--brand-deep);
+}
+
+.sectionLead {
+  max-width: 62ch;
+  margin: 0 0 var(--space-7);
+  color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.7;
+}
+
+.sectionLead a {
+  color: var(--brand-deep);
 }
 
 /* ── Vision & Mission ─────────────────────────── */
@@ -104,23 +120,34 @@
 
 .objGrid {
   display: grid;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
+  gap: var(--space-6);
   grid-template-columns: repeat(4, 1fr);
   grid-auto-rows: 1fr;
-  gap: 0;
 }
 
+/* A hue per commitment. The page runs three four-item grids back to back, and
+   with all three in the same grey they read as one repeated block; giving this
+   one colour is what separates it from the values grid further down. */
 .objCard {
   display: flex;
-  flex-direction: column;
   height: 100%;
-  padding: 1.75rem;
+  padding-top: var(--space-5);
+  border-top: 2px solid var(--rule);
   background: transparent;
+  flex-direction: column;
+  --rule: var(--text-primary);
 }
 
-.objCard + .objCard {
-  border-left: 1px solid var(--border-hover);
+.objCard:nth-child(1) {
+  --rule: var(--brand-deep);
+}
+
+.objCard:nth-child(2) {
+  --rule: var(--primary);
+}
+
+.objCard:nth-child(3) {
+  --rule: var(--accent);
 }
 
 .objIcon {
@@ -131,7 +158,8 @@
   height: auto;
   margin-bottom: var(--space-4);
   background: transparent;
-  color: var(--brand-deep);
+  /* Follows its card's rule rather than being orange four times over. */
+  color: var(--rule);
 }
 
 .objTitle {
@@ -154,9 +182,25 @@
 }
 
 .approachGrid {
+  position: relative;
   display: grid;
+  padding-top: var(--space-6);
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-5);
+}
+
+/* One continuous track with a node per stage, the same device the services
+   page uses for the same four stages. Previously only the first step's rule was
+   coloured and the other three were grey, which read as one highlighted item
+   rather than as a sequence. */
+.approachGrid::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--brand-border);
+  content: '';
 }
 
 .approachStep {
@@ -164,16 +208,18 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding-top: var(--space-4);
-  border-top: 2px solid var(--border-hover);
   text-align: left;
 }
 
-/* The step marker used to be a numbered circle on an orange-to-violet
-   gradient, with a matching gradient connector. Both were decoration rather
-   than information, so the sequence is carried by the rule above each step. */
-.approachStep:first-child {
-  border-top-color: var(--brand);
+.approachStep::before {
+  position: absolute;
+  top: calc(-1 * var(--space-6) - 3px);
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-deep);
+  content: '';
 }
 
 .approachTitle {
@@ -198,17 +244,24 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .objCard:nth-child(odd) {
-    border-left: 0;
+  .approachGrid {
+    padding-top: 0;
+    gap: var(--space-7) var(--space-5);
   }
 
-  .objCard:nth-child(n + 3) {
-    border-top: 1px solid var(--border-hover);
-  }
-
-  /* Connectors only make sense in the single 4-across row. */
-  .approachStep::after {
+  /* The track only ever reaches the first row once the grid wraps, so each step
+     carries its own rule and node instead. */
+  .approachGrid::before {
     display: none;
+  }
+
+  .approachStep {
+    padding-top: var(--space-5);
+    border-top: 2px solid var(--brand-border);
+  }
+
+  .approachStep::before {
+    top: -3px;
   }
 }
 
@@ -232,12 +285,6 @@
   .objGrid,
   .approachGrid {
     grid-template-columns: 1fr;
-  }
-
-  .objCard + .objCard,
-  .objCard:nth-child(n + 3) {
-    border-top: 1px solid var(--border-hover);
-    border-left: 0;
   }
 
   .vmCard {

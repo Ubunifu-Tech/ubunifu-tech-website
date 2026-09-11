@@ -25,6 +25,10 @@
   line-height: 1.18;
 }
 
+.headingAccent {
+  color: var(--brand-deep);
+}
+
 .sub {
   max-width: 600px;
   color: var(--text-secondary);
@@ -32,23 +36,44 @@
   line-height: 1.72;
 }
 
+/* Seven sectors used to run as seven full-width two-column rows, which made the
+   page very long and gave every sector the same weight and the same grey. As a
+   grid they are scannable, and a hue per card breaks up the repetition. */
 .grid {
-  border-top: 1px solid var(--border-active);
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .card {
-  display: grid;
-  align-items: start;
-  gap: 1rem clamp(1.5rem, 4vw, 4.5rem);
-  padding: clamp(2rem, 4vw, 3.75rem) 0;
-  border-bottom: 1px solid var(--border-active);
-  background: transparent;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: flex;
+  height: 100%;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  flex-direction: column;
+  gap: var(--space-4);
+  transition: border-color var(--transition-base);
+  --rule: var(--text-primary);
+}
+
+.card:nth-child(4n + 1) {
+  --rule: var(--brand-deep);
+}
+
+.card:nth-child(4n + 2) {
+  --rule: var(--primary);
+}
+
+.card:nth-child(4n + 3) {
+  --rule: var(--accent);
 }
 
 .cardTitle {
   max-width: none;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
   color: var(--text-primary);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
@@ -56,25 +81,42 @@
 }
 
 .cardSummary {
+  margin: 0;
   color: var(--text-secondary);
   font-size: var(--font-size-body);
   line-height: 1.68;
 }
 
 .chips {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--border-hover);
+  margin-top: auto;
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--border);
   list-style: none;
 }
 
+/* Dotted in the card's own hue, matching the evidence points on the home page
+   rather than the ruled rows these used to be. */
 .chip {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border-hover);
+  position: relative;
+  padding-left: var(--space-4);
   color: var(--text-primary);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.chip::before {
+  position: absolute;
+  top: 0.52em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rule);
+  content: '';
 }
 
 .note {
@@ -95,25 +137,18 @@
 }
 
 @media (max-width: 1040px) {
-  .sectionIntro,
-  .card {
+  .sectionIntro {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .chips {
-    grid-template-columns: 1fr;
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 760px) {
-
-  .card {
-    grid-template-columns: 1fr;
-  }
-
-  .cardSummary,
-  .chips {
-    grid-column: 1;
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

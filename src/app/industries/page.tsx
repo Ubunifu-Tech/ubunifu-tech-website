@@ -54,7 +54,9 @@ export default function IndustriesPage() {
           <div className="container">
             <div className={styles.sectionIntro}>
               <ScrollReveal className={styles.introCopy}>
-                <h2 id="potential-sectors-title" className={styles.heading}>Other industries</h2>
+                <h2 id="potential-sectors-title" className={styles.heading}>
+                  Other <span className={styles.headingAccent}>industries</span>
+                </h2>
                 <p className={styles.sub}>
                   Outside tourism, these are examples of projects we can discuss,
                   not a list of past clients.

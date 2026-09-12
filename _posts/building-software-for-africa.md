@@ -1,6 +1,6 @@
 ---
 title: "What We’re Learning Building Software in Tanzania"
-date: "2026-01-06"
+date: "2026-07-05"
 author: "Ubunifu Technologies"
 excerpt: "Lessons from building Insight and Sifa in Tanzania: start with real workflows, make local context structural, and be precise about what the product can do."
 tags: ["Company", "Product", "Tanzania"]
@@ -8,38 +8,38 @@ coverImage: "/editorial/software-tanzania-learning.webp"
 coverAlt: "Tactile paper workbench where blank research cards, modular pieces, and revision loops lead to one assembled outcome"
 ---
 
-Building software in Tanzania does not produce one neat rulebook. It does change which questions deserve to come first.
+Building from Tanzania has changed the order in which we ask questions. It has not handed us a rulebook.
 
-At Ubunifu Technologies, we build from Tanzania. Our two live products are Insight, a document AI workspace, and Sifa, business software for shops, restaurants, and distributors. They solve different problems, but the work has pushed us toward the same discipline: define the real workflow before choosing the feature set.
+We run two products. Insight is a document AI workspace. Sifa is business software for shops, restaurants, and distributors. They solve unrelated problems, and both pushed us toward the same habit: work out the actual task before choosing the feature set.
 
-These are working lessons, not claims about every business in Tanzania or across Africa. A retail counter, a school, a tour operator, and a law office do not share one universal “local context.” Useful software starts by getting more specific.
+What follows applies to those two products. A retail counter, a school, a tour operator, and a law office share a country and not much else.
 
-## Start with the workflow, not the category
+## Start with the task, not the category
 
-“Build software for small businesses” is too broad to guide a product decision. A better starting point is a task someone must complete and the information that task depends on.
+"Software for small businesses" is too broad to decide anything. Start instead with one task somebody has to finish, and the information that task depends on.
 
-For Sifa, one such task is reviewing money owed by customers after goods have been sold on credit. That is why the product includes a credit ledger and aging buckets alongside sales, stock, suppliers, and customer records. Credit is part of the operating model, not a note added after the sale.
+For Sifa, one of those tasks is working out who still owes money after goods have gone out on credit. That is why the product carries a credit ledger and aging buckets next to sales, stock, suppliers, and customer records. Credit belongs to the operating model. It is part of the sale, not a correction applied afterwards.
 
-For Insight, the starting tasks include asking questions about documents, extracting structured information from PDFs, and generating documents from templates. The product also includes specialised agents, including an Education Tutor that teaches in Swahili, and Tanzania-localised templates such as a tax invoice.
+Insight starts from different tasks: asking questions of a document, pulling structured data out of PDFs, generating new documents from a template. It also runs specialised agents, among them an Education Tutor that teaches in Swahili, and templates localised for Tanzania such as a tax invoice.
 
-## Local context has to change the product
+## Local context has to reach the data model
 
-Localisation is often treated as a final layer: change the currency symbol, translate a menu, and ship. That can make a product look familiar without making it fit the work.
+Localisation often arrives last. Swap the currency symbol, translate the menu, ship. The product ends up looking familiar without fitting the work any better.
 
-In Sifa, Tanzanian shillings are native to the records, and selling on credit is represented directly in the product. In Insight, Swahili is part of an agent’s teaching interaction rather than only a language option in the navigation. Those choices affect data, interface hierarchy, examples, and testing.
+Sifa keeps its records in Tanzanian shillings natively, and selling on credit is represented in the product itself. In Insight, Swahili lives inside the Tutor's teaching interaction rather than sitting in the navigation as a language toggle. Both choices reach into the data, the interface hierarchy, the examples, and the tests.
 
-This is a useful test for any “built for here” claim: if removing the local context would leave the product unchanged, the claim is probably doing more work than the design.
+There is a test in that. Take the local context out of a product that claims to be built for a place. If nothing changes, the claim was doing more work than the design.
 
-## Pricing is part of product design
+## Pricing is part of the product
 
-Insight uses pay-as-you-go credits. That model suits document work that may arrive in batches rather than at a perfectly steady rate. It also gives a team a way to begin without first choosing a recurring plan.
+Insight sells pay-as-you-go credits. Document work often arrives in batches rather than at a steady rate, and credits let a team start without first committing to a monthly plan.
 
-Usage-based pricing is not automatically more affordable, and it is not right for every product. A subscription can be easier to budget when usage is regular. A usage model needs clear units and visible costs so customers can estimate what a task will require. The broader lesson is to choose pricing around the way the product is used, then explain the trade-off plainly.
+Usage pricing is not automatically the cheaper option, and it suits some products badly. A subscription is easier to budget when the work is regular. A usage model owes the customer clear units and visible costs, so they can estimate what a job will take before running it. The model that fits is the one that matches how the product gets used.
 
-## Products and client work sharpen each other
+## The two kinds of work sharpen each other
 
-Our client platforms force us to study a specific operation in depth. Our own products force us to maintain a shared system over time. Both kinds of work reward the same habits: listen before scoping, make important states visible, plan for support, and separate a demonstrated outcome from an assumption.
+Client platforms make us study one operation closely. Our own products make us live with a system for a long time. Both reward the same habits: listen before scoping, keep important states visible, plan for support, and keep a demonstrated result separate from an assumption.
 
-## What we are still learning
+## What we still do not know
 
-The next questions are operational. Which workflows are used most often? Where do people stop or ask for help? Which parts need to work better on lower-cost devices or inconsistent connections? What does a team need before it will trust a new system with important records?
+Most of our open questions are operational. Which workflows actually get used, and how often. Where people stall or go looking for help. What still needs to work better on cheaper devices and thinner connections. And the slow one: what a team needs to see before it trusts new software with records that matter.

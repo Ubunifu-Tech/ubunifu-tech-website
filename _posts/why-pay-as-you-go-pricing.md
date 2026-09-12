@@ -1,6 +1,6 @@
 ---
 title: "Why Insight Uses Usage-Based Pricing"
-date: "2026-01-05"
+date: "2026-06-24"
 author: "Ubunifu Technologies"
 excerpt: "Why pay-as-you-go credits fit Insight’s document workflows, where the model helps, and what usage pricing must do to remain understandable and predictable."
 tags: ["Product", "Pricing", "Insight"]
@@ -8,61 +8,50 @@ coverImage: "/editorial/usage-based-pricing.webp"
 coverAlt: "A usage meter connected to an itemised receipt, illustrating charges based on measured use"
 ---
 
-Ubunifu Insight uses pay-as-you-go credits. Customers pay for activity in the product rather than choosing a recurring seat plan as the only way to begin.
+Ubunifu Insight sells credits. Customers pay for what they do in the product instead of taking a seat plan as the only way in.
 
-That choice follows the shape of the work Insight handles. A team may need to analyse a group of documents, extract data from PDFs, generate documents from templates, or use a specialised agent for a particular task. The volume can change from one period to the next.
+That follows the shape of the work. A team might analyse a batch of contracts, pull data out of PDFs, generate documents from a template, or hand a job to a specialised agent. The volume moves around from one month to the next.
 
-Usage pricing is not a universal argument against subscriptions. It is one way to align a price with an uneven workload, and it brings its own design obligations.
+None of which is an argument against subscriptions. Usage pricing is one way to line a price up with uneven work, and it brings obligations of its own.
 
-## Document work often arrives in batches
+## Document work arrives in batches
 
-Many software subscriptions assume continuing access is the main unit of value. That makes sense for a tool used by the same people throughout each working day.
+Most software subscriptions assume continuing access is the thing being bought. For a tool somebody keeps open all day, that holds.
 
-Document tasks can be more episodic. A set of contracts arrives. A report has to be reviewed. Information needs to be extracted for a deadline. A template is used to generate several documents, followed by a quieter period.
+Document work is lumpier. A set of contracts lands. A report needs reviewing before a deadline. A template produces a run of documents, and then it goes quiet for three weeks.
 
-In that pattern, a seat can be a poor description of what the customer is buying. Usage is closer to the work performed. It also lets a new customer try a bounded task without first estimating how many months the tool will remain active.
+Against that pattern, a seat describes the purchase badly. Usage sits closer to the work performed, and it lets someone try a bounded task without first guessing how many months they will keep the tool.
 
-This is the rationale for Insight’s credit model. It is a product-fit decision, not a claim that every Tanzanian business has the same cash flow or usage pattern.
+That is the reasoning behind the credit model — a fit for this product's workload, not a theory about how every Tanzanian business manages cash.
 
 ## Paying for usage is not automatically cheaper
 
-A usage model can cost less for occasional work and more for sustained, high-volume work. The result depends on the actual unit price and the customer’s behaviour.
+For occasional work it usually costs less. For heavy, sustained work it can cost more. Which one applies comes down to the unit price and what the customer actually does.
 
-That is why “pay only when you use it” is incomplete as a pricing explanation. A customer also needs to understand what counts as usage, how credits are consumed, and what a typical task might require. Without that information, a flexible price can become difficult to budget.
+Which is why "pay only when you use it" is an incomplete explanation. A customer also needs to know what counts as usage, how a credit gets consumed, and roughly what a typical job costs. Without that, a flexible price is just an unpredictable one.
 
 ## Predictability is a product requirement
 
-Good usage pricing needs controls that make cost visible before it becomes a surprise. The product and its pricing material should make it possible to answer practical questions:
+Usage pricing has to make cost visible before it turns into a surprise. The product and its pricing pages should be able to answer plain questions: what consumes credits, whether the balance and recent consumption are visible, whether a bigger job shows its likely cost before it runs, what happens when the balance runs low, and whether a team can forecast a recurring workflow from past use.
 
-- What action consumes credits?
-- Can the customer see the balance and recent consumption?
-- Is the likely cost clear before a larger action runs?
-- What happens when the balance is too low?
-- Can a team estimate a recurring workflow from past use?
-
-These are standards for the model, not a claim that every desired control is finished. Pricing should be tested and improved like any other part of the interface.
+Those are the standards we hold the model to, and pricing gets the same testing and revision as any other part of the interface.
 
 ## Subscriptions still solve a real problem
 
-A subscription can be easier to understand when use is frequent and stable. A fixed recurring amount supports budgeting, and a plan can bundle support, storage, collaboration, or service levels in a way that individual actions do not capture well.
+When use is frequent and steady, a subscription is easier to understand and easier to budget. A plan can also bundle support, storage, collaboration, or service levels in a way that per-action charges capture poorly.
 
-For some customers, a subscription or committed-usage plan may eventually be the clearer option. Usage-based and subscription pricing can also coexist. The right structure depends on observed use, support costs, and what customers are actually trying to budget.
+Some customers will be better served by a subscription or a committed-usage plan, and the two models can sit side by side. The right structure depends on observed use, what support costs, and what the customer is actually trying to budget for.
 
-## Pricing does not create value by itself
+## What pricing does not reach
 
-Removing a recurring commitment may lower the barrier to trying a product. It does not make the product useful. Insight still has to answer questions with appropriate grounding, extract data accurately enough for review, produce useful documents, protect customer information, and explain the limits of its AI output.
+Dropping the recurring commitment may lower the barrier to trying Insight. It leaves the product itself untouched. The product still has to answer questions with proper grounding, extract data accurately enough to be reviewed, produce documents worth keeping, protect customer information, and be clear about where its AI output stops being reliable.
 
-Pricing also does not solve procurement rules, connectivity, training, or trust. Those concerns have to be addressed through the product and the way it is supported.
+Pricing will not solve procurement rules, connectivity, training, or trust either. Those get answered by the product and the way it is supported.
 
-The honest promise of usage pricing is narrower: cost can follow activity more closely than a fixed seat fee. Whether that is better for a particular customer should be checked against real expected use.
+Usage pricing does one thing: cost tracks activity more closely than a fixed seat fee does.
 
 ## How to compare the options
 
-Before choosing a plan or a competing tool, estimate the work rather than only the number of users. List the document types, likely volume, frequency, and actions required. Then compare:
+Estimate the work before counting the users. Write down the document types, the likely volume, how often it happens, and which actions are involved.
 
-- the expected usage cost;
-- any recurring platform or storage charges;
-- minimum commitments;
-- collaboration and support included;
-- limits that affect the workflow; and
-- the cost of a high-volume month, not only an average one.
+Then compare like with like: expected usage cost, any recurring platform or storage charges, minimum commitments, what support and collaboration are included, limits that would get in the way of the workflow — and the cost of a heavy month, not just an average one.

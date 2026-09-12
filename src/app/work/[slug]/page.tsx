@@ -174,6 +174,10 @@ export default async function CaseStudyPage({
                   <li key={tech}>{tech}</li>
                 ))}
               </ul>
+
+              {/* Its own label. These are deliverables, not technologies, and
+                  under the "Built with" heading they read as a stack. */}
+              <p className={styles.railLabel}>What we delivered</p>
               <ul className={styles.scope}>
                 {project.capabilities.map((capability) => (
                   <li key={capability}>{capability}</li>
@@ -187,25 +191,30 @@ export default async function CaseStudyPage({
                 <p className={styles.sectionStandfirst}>{project.sectionStandfirst}</p>
               </ScrollReveal>
 
-              {project.highlights.map((highlight) => (
+              {project.highlights.map((highlight, i) => (
                 <section
                   key={highlight.title}
                   id={sectionId(highlight.title)}
                   className={styles.highlight}
+                  data-mark={i % 4}
                 >
-                  <h3 className={styles.highlightTitle}>{highlight.title}</h3>
+                  <h3 className={styles.highlightTitle}>
+                    <span className={styles.highlightMark} aria-hidden="true" />
+                    {highlight.title}
+                  </h3>
                   <p className={styles.highlightBody}>{highlight.body}</p>
                 </section>
               ))}
 
               {project.furtherReading?.length ? (
-                <p className={styles.further}>
+                <div className={styles.further}>
+                  <p className={styles.furtherLabel}>Written up in more detail</p>
                   {project.furtherReading.map((item) => (
                     <Link key={item.href} href={item.href} className={styles.furtherLink}>
                       {item.title} <span aria-hidden="true">→</span>
                     </Link>
                   ))}
-                </p>
+                </div>
               ) : null}
             </div>
 

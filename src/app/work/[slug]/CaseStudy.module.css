@@ -354,10 +354,16 @@
   padding: clamp(var(--space-8), 7vw, 6rem) 0;
 }
 
+/* Two labelled groups. The gap is small so each label stays attached to its own
+   list; the groups are separated by the label's own top margin instead. */
 .rail {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-3);
+}
+
+.rail .railLabel + ul {
+  margin-bottom: var(--space-4);
 }
 
 .railLabel {
@@ -392,8 +398,6 @@
 
 .scope {
   margin: 0;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-hover);
   list-style: none;
   color: var(--text-secondary);
   font-size: var(--font-size-small);
@@ -423,6 +427,7 @@
 .highlight {
   padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--border-hover);
+  --mark-colour: var(--text-primary);
   /* Linked from the /work contents list; clear the fixed navbar. */
   scroll-margin-top: calc(var(--nav-height) + var(--space-5));
 }
@@ -431,9 +436,47 @@
   border-bottom: 0;
 }
 
+.highlight[data-mark='0'] {
+  --mark-colour: var(--brand-deep);
+}
+
+.highlight[data-mark='1'] {
+  --mark-colour: var(--primary);
+}
+
+.highlight[data-mark='2'] {
+  --mark-colour: var(--accent);
+}
+
+/* A mark in the margin, hanging outside the measure so the text edge stays
+   straight. It gives the article a vertical rhythm; without it the highlights
+   were an undifferentiated run of heading-then-paragraph. */
+.highlightMark {
+  position: absolute;
+  top: 0.62em;
+  left: calc(-1 * var(--space-5));
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mark-colour);
+}
+
+/* Once the article loses its margins the mark has nowhere to hang: measured at
+   375px it sat at left:-8px, outside the viewport, clipped away by the page's
+   overflow-x:clip and invisible. Inline instead, on the same baseline. */
+@media (max-width: 1024px) {
+  .highlightMark {
+    position: static;
+    display: inline-block;
+    margin-right: var(--space-3);
+    vertical-align: middle;
+  }
+}
+
 /* One step below the h2 above it. Previously both were --font-size-heading,
    which is why the article read as two levels instead of three. */
 .highlightTitle {
+  position: relative;
   margin: 0 0 var(--space-3);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
@@ -448,7 +491,19 @@
 }
 
 .further {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
   margin: 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-hover);
+}
+
+.furtherLabel {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
 }
 
 .furtherLink {

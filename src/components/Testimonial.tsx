@@ -39,9 +39,9 @@ type Props = {
  * document outline without printing a small label above a quote that speaks
  * perfectly well for itself.
  *
- * The paraphrase disclosure stays. content/testimonials.tsx is explicit that
- * this text is edited for length and must never be presented as a verbatim
- * quotation, so the note is a correctness requirement, not decoration.
+ * There is no on-page paraphrase disclosure: removed at the owner's request.
+ * content/testimonials.tsx still records that this copy is edited for length, so
+ * the wording shown here should be one the client has agreed to.
  */
 export const Testimonial: React.FC<Props> = ({ project }) => {
   const reduceMotion = useReducedMotion();
@@ -97,10 +97,6 @@ export const Testimonial: React.FC<Props> = ({ project }) => {
               )}
             </div>
           </figcaption>
-
-          <p className={styles.note}>
-            Paraphrased and edited for length — not a verbatim quotation.
-          </p>
         </motion.figure>
       </div>
     </section>

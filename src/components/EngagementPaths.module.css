@@ -4,154 +4,101 @@
 }
 
 .intro {
-  display: grid;
-  margin-bottom: clamp(2.75rem, 5vw, 4.75rem);
-  grid-template-areas:
-    'label lead'
-    'title lead';
-  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
-  gap: 0.8rem clamp(2rem, 5vw, 5rem);
-  align-items: end;
+  max-width: 60ch;
+  margin-bottom: var(--space-7);
 }
 
 .heading {
-  grid-area: title;
-  max-width: 20ch;
+  margin: 0 0 var(--space-4);
   color: var(--text-primary);
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
   line-height: 1.18;
+  text-wrap: balance;
+}
+
+.headingAccent {
+  color: var(--brand-deep);
 }
 
 .lead {
-  grid-area: lead;
-  max-width: 49ch;
-  justify-self: end;
+  margin: 0;
+  max-width: 52ch;
   color: var(--text-secondary);
-  font-size: var(--font-size-body);
-  line-height: 1.72;
+  font-size: var(--font-size-lead);
+  line-height: 1.7;
 }
+
+/* ── The two answers ──────────────────────────────
+   Symmetrical on purpose: same shape, same footer, so the eye compares them
+   rather than reading the first as the offer and the second as a footnote. */
 
 .paths {
   display: grid;
-  border-top: 1px solid var(--border-active);
-  border-bottom: 1px solid var(--border-active);
+  gap: var(--space-5);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Hue is what tells the two apart — orange for work we take on, violet for
+   software we already operate — replacing the labels that used to say it. */
 .path {
-  position: relative;
   display: flex;
-  /* Grid stretch already matches the two cards; 570px just added dead space. */
-  padding: clamp(2rem, 4.2vw, 4.5rem);
-  overflow: hidden;
+  height: 100%;
   flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(var(--space-6), 3vw, var(--space-7));
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  transition:
+    border-color var(--transition-base),
+    transform var(--transition-base);
+  --rule: var(--brand-deep);
 }
 
-.path + .path {
-  border-left: 1px solid var(--border-active);
+.path[data-path='products'] {
+  --rule: var(--primary);
 }
 
-.path::after {
-  position: absolute;
-  inset: auto 0 0;
-  height: 5px;
-  background: var(--brand);
-  content: '';
-  transform: scaleX(0.15);
-  transform-origin: left;
-  transition: transform 0.65s var(--ease-out-expo);
+.path:hover,
+.path:focus-within {
+  border-color: var(--rule);
+  transform: translateY(-2px);
 }
 
-.products::after {
-  background: var(--primary);
-}
-
-.path:hover::after,
-.path:focus-within::after {
-  transform: scaleX(1);
-}
-
-.pathTopline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: clamp(3rem, 7vw, 6rem);
-  color: var(--text-tertiary);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-}
-
-.path h3 {
-  /* 13ch could not fit "organisation-specific" on one line, so the heading fell
-     into four lines broken mid-word. */
-  max-width: 22ch;
-  margin-bottom: var(--space-5);
+.pathTitle {
+  max-width: 20ch;
+  margin: 0 0 var(--space-4);
   color: var(--text-primary);
-  font-size: var(--font-size-heading);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
-  line-height: 1.18;
+  line-height: 1.25;
+  text-wrap: balance;
 }
 
 .pathBody {
-  max-width: 57ch;
-  margin-bottom: 2.2rem;
-  color: var(--text-secondary);
-  font-size: var(--font-size-body);
-  line-height: 1.72;
-}
-
-.sequence {
-  display: grid;
-  align-items: center;
-  margin-bottom: 2.25rem;
-  grid-template-columns: auto minmax(20px, 1fr) auto minmax(20px, 1fr) auto;
-  gap: var(--space-3);
-  color: var(--text-primary);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-}
-
-.sequence i {
-  position: relative;
-  height: 1px;
-  overflow: visible;
-  background: var(--brand-border);
-}
-
-.sequence i::after {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--brand);
-  content: '';
-  transform: translateY(-50%);
-}
-
-/* The choosing aid. The section's lead promises that which path fits comes down
-   to one distinction; this is where that distinction is actually made, on each
-   card, instead of being left for the reader to infer.
-
-   margin-top:auto sits here rather than on .sequence so both cards align: the
-   tailored path has a sequence strip and the products path does not, and
-   without this the two footers fell at different heights. */
-.bestWhen {
-  margin-top: auto;
-  margin-bottom: var(--space-5);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border-active);
+  max-width: 52ch;
+  margin: 0 0 var(--space-6);
   color: var(--text-secondary);
   font-size: var(--font-size-body);
   line-height: 1.7;
 }
 
-/* One emphasised phrase — the actual differentiator, and the only bold in the
-   card. */
+/* The line that actually decides it. margin-top:auto pins it to the foot so both
+   cards' footers sit on one line however unevenly the copy above them falls. */
+.bestWhen {
+  width: 100%;
+  margin: auto 0 var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+/* One emphasised phrase — the differentiator, and the only bold in the card. */
 .bestWhen strong {
   color: var(--text-primary);
   font-weight: var(--font-weight-emphasis);
@@ -161,21 +108,14 @@
   display: inline-flex;
   width: fit-content;
   align-items: center;
-  gap: var(--space-3);
-  padding-bottom: var(--space-1);
-  border-bottom: 1px solid currentColor;
-  color: var(--brand-deep);
+  gap: var(--space-2);
+  color: var(--rule);
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  transition: gap 0.28s var(--ease-out-expo), color 0.2s ease;
-}
-
-.products .link {
-  color: var(--primary-deep);
+  transition: gap var(--transition-base), color var(--transition-fast);
 }
 
 .link:hover {
-  gap: var(--space-4);
+  gap: var(--space-3);
   color: var(--text-primary);
 }
 
@@ -185,59 +125,19 @@
 }
 
 @media (max-width: 860px) {
-  .intro {
-    grid-template-areas: 'label' 'title' 'lead';
-    grid-template-columns: 1fr;
-  }
-
-  .lead {
-    margin-top: var(--space-3);
-    justify-self: start;
-  }
-
   .paths {
-    grid-template-columns: 1fr;
-  }
-
-  .path {
-  }
-
-  .path + .path {
-    border-top: 1px solid var(--border-active);
-    border-left: 0;
-  }
-
-  .pathTopline {
-    margin-bottom: var(--space-7);
-  }
-
-  .sequence {
-    margin-top: 2.5rem;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media (max-width: 520px) {
-
-  .path {
-    padding: var(--space-6) 0;
+@media (prefers-reduced-motion: reduce) {
+  .path,
+  .link {
+    transition: none;
   }
 
-  .sequence {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-  }
-
-  .sequence i {
-    width: 1px;
-    height: 18px;
-    margin-left: var(--space-1);
-  }
-
-  .sequence i::after {
-    top: auto;
-    right: auto;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+  .path:hover,
+  .path:focus-within {
+    transform: none;
   }
 }

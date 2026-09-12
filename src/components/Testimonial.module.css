@@ -85,12 +85,6 @@
   outline-offset: 4px;
 }
 
-.note {
-  margin: var(--space-5) 0 0;
-  color: var(--text-inverse-tertiary);
-  font-size: var(--font-size-caption);
-}
-
 @media (max-width: 640px) {
   .foot {
     align-items: flex-start;

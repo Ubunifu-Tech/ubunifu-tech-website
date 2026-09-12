@@ -153,11 +153,13 @@ export default async function BlogPostPage({
         <article>
           <header className={`container ${styles.articleHero}`}>
             <div className={styles.header}>
+              {/* No category pill. It was a tinted eyebrow micro-label — the
+                  pattern this brand removes everywhere else — and the same tags
+                  are already listed in the article footer. */}
               <div className={styles.headerTopline}>
                 <Link href="/blog" className={styles.journalLink}>
                   <span aria-hidden="true">←</span> All insights
                 </Link>
-                {post.tags[0] ? <span className={styles.category}>{post.tags[0]}</span> : null}
               </div>
 
               <h1 className={styles.title}>{post.title}</h1>

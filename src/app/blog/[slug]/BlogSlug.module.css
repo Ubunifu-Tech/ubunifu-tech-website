@@ -44,18 +44,6 @@
   outline-offset: 3px;
 }
 
-.category {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--brand-border);
-  border-radius: var(--radius-pill);
-  background: var(--brand-dim);
-  color: var(--brand-deep);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-}
-
 .title {
   max-width: 900px;
   margin: 0 auto var(--space-5);
@@ -112,16 +100,6 @@
   border-top: 1px solid var(--border-active);
   border-bottom: 1px solid var(--border-active);
   background: var(--surface-3);
-}
-
-.cover::before {
-  position: absolute;
-  inset: 0 auto 0 0;
-  z-index: 2;
-  width: clamp(6px, 0.65vw, 10px);
-  background: linear-gradient(to bottom, var(--brand) 0 58%, var(--primary) 58%);
-  pointer-events: none;
-  content: '';
 }
 
 .cover::after {
@@ -250,21 +228,26 @@
 }
 
 .content hr {
-  width: 5rem;
-  height: 2px;
-  margin: 3.25rem auto;
+  width: 100%;
+  height: 1px;
+  margin: var(--space-8) 0;
   border: 0;
-  background: linear-gradient(90deg, var(--brand), var(--primary));
+  background: var(--border-active);
 }
 
+/* Ruled above and below rather than barred down the side. The coloured left
+   edge was the same card-left-bar device removed from the covers, and a tinted
+   panel made every quote look like a callout box. */
 .content blockquote {
-  margin: var(--space-6) 0;
-  padding: var(--space-5) var(--space-5);
-  border-left: 3px solid var(--brand);
-  border-radius: 0 12px 12px 0;
-  background: var(--surface-2);
+  margin: var(--space-7) 0;
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--border-active);
+  border-bottom: 1px solid var(--border-active);
   color: var(--text-primary);
-  font-size: var(--font-size-body);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
 }
 
 .content blockquote p:last-child {

@@ -16,6 +16,10 @@
   padding: clamp(2.25rem, 5vw, 4.5rem) clamp(2rem, 5vw, 5rem) clamp(2.25rem, 5vw, 4.5rem) 0;
 }
 
+.headingAccent {
+  color: var(--brand-deep);
+}
+
 .heading {
   max-width: none;
   margin: var(--space-3) 0 var(--space-4);
@@ -32,8 +36,6 @@
   font-size: var(--font-size-body);
   line-height: 1.72;
 }
-
-/* ── What happens next ───────────────────────── */
 
 /* ── Contact register ────────────────────────── */
 
@@ -53,11 +55,30 @@
   grid-template-columns: 28px minmax(0, 1fr);
 }
 
+/* A hue per channel, the same four-step cycle the commitments on /about and the
+   sector cards on /industries use — so the column reads as a set of routes
+   rather than a stack of grey rows. */
+.method[data-hue='brand'] {
+  --mark: var(--brand-deep);
+}
+
+.method[data-hue='primary'] {
+  --mark: var(--primary);
+}
+
+.method[data-hue='accent'] {
+  --mark: var(--accent);
+}
+
+.method[data-hue='ink'] {
+  --mark: var(--text-primary);
+}
+
 .methodIcon {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  color: var(--primary);
+  color: var(--mark);
 }
 
 .methodLabel {
@@ -77,7 +98,7 @@
 }
 
 .methodLink:hover {
-  color: var(--primary);
+  color: var(--mark);
 }
 
 .methodText {

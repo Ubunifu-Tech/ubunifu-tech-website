@@ -77,32 +77,38 @@ function FeaturedCard({ post }: { post: PostMeta }) {
   );
 }
 
-function PostCard({ post }: { post: PostMeta }) {
+/**
+ * A row, not a card. The lead above already spends a full-width frame on one
+ * cover; repeating that shape six more times gave every remaining article the
+ * same weight as the one before it and turned the archive into a wall of
+ * pictures. A compact thumbnail beside the copy keeps the covers, scales past
+ * seven posts, and reads as an archive rather than a gallery.
+ */
+function PostRow({ post }: { post: PostMeta }) {
   return (
-    <Link href={`/blog/${post.slug}`} className={styles.card}>
-      <div className={styles.cardVisual}>
+    <Link href={`/blog/${post.slug}`} className={styles.row}>
+      <div className={styles.rowVisual}>
         <EditorialVisual
           src={post.coverImage}
           alt={post.coverAlt}
           fill
-          sizes="(max-width: 760px) 100vw, (max-width: 1120px) 50vw, 390px"
+          sizes="(max-width: 760px) 100vw, 220px"
           className={styles.cardImage}
         />
       </div>
 
-      <div className={styles.cardBody}>
-        <div className={styles.cardTop}>
+      <div className={styles.rowBody}>
+        <div className={styles.rowTop}>
           <span className={styles.category}>{post.tags[0] ?? 'Field notes'}</span>
           <span className={styles.metaSmall}>
             <time dateTime={post.date}>{formatDateShort(post.date)}</time>
+            {' · '}
+            {post.readingTime} min read
           </span>
         </div>
-        <h3 className={styles.cardTitle}>{post.title}</h3>
+        <h3 className={styles.rowTitle}>{post.title}</h3>
         <p className={styles.excerpt}>{post.excerpt}</p>
-        <div className={styles.cardFooter}>
-          <span className={styles.metaSmall}>{post.readingTime} min read</span>
-          <ReadMore />
-        </div>
+        <ReadMore />
       </div>
     </Link>
   );
@@ -163,7 +169,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
               exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
               transition={{ duration: reduceMotion ? 0 : 0.32, ease }}
             >
-              <PostCard post={post} />
+              <PostRow post={post} />
             </motion.div>
           ))}
         </AnimatePresence>

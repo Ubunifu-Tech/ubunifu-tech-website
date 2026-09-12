@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, MessageCircle, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { site } from '@/content/site';
 import { ContactSubjectSelect } from './ContactSubjectSelect';
 import styles from './Contact.module.css';
 
@@ -109,38 +110,76 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             viewport={{ once: true }}
             transition={{ duration: reduceMotion ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h2 className={styles.heading}>{hideIntro ? 'Write to us' : 'Tell us about your project.'}</h2>
+            <h2 className={styles.heading}>
+              {hideIntro ? (
+                <>
+                  Write to <span className={styles.headingAccent}>us</span>
+                </>
+              ) : (
+                <>
+                  Tell us about your <span className={styles.headingAccent}>project</span>.
+                </>
+              )}
+            </h2>
+            {/* Says the same thing the acknowledgement email says, so the promise
+                a sender reads here is the one they get back in writing. */}
             <p className={styles.text}>
-              We’ll review your message and get back to you.
-              You can also reach us by email or phone.
+              We read everything that comes in and reply to you directly. If email is slow
+              for you, WhatsApp reaches us just as well.
             </p>
 
+            {/* Values come from content/site.ts, which is the single source of
+                truth for them — they used to be typed into this component. */}
             <div className={styles.methods}>
-              <div className={styles.method}>
-                <div className={styles.methodIcon}><Mail size={18} /></div>
+              <div className={styles.method} data-hue="brand">
+                <span className={styles.methodIcon} aria-hidden="true">
+                  <Mail size={18} />
+                </span>
                 <div>
                   <p className={styles.methodLabel}>Email</p>
-                  <a href="mailto:info@ubunifutech.com" className={styles.methodLink}>
-                    info@ubunifutech.com
+                  <a href={`mailto:${site.contact.email}`} className={styles.methodLink}>
+                    {site.contact.email}
                   </a>
                 </div>
               </div>
 
-              <div className={styles.method}>
-                <div className={styles.methodIcon}><Phone size={18} /></div>
+              <div className={styles.method} data-hue="primary">
+                <span className={styles.methodIcon} aria-hidden="true">
+                  <MessageCircle size={18} />
+                </span>
                 <div>
-                  <p className={styles.methodLabel}>Phone / WhatsApp</p>
-                  <a href="tel:+255748548816" className={styles.methodLink}>
-                    +255 748 548 816
+                  <p className={styles.methodLabel}>WhatsApp</p>
+                  <a
+                    href={`https://wa.me/${site.contact.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.methodLink}
+                  >
+                    Message us
+                    <span className="srOnly"> on WhatsApp (opens in a new tab)</span>
                   </a>
                 </div>
               </div>
 
-              <div className={styles.method}>
-                <div className={styles.methodIcon}><MapPin size={18} /></div>
+              <div className={styles.method} data-hue="accent">
+                <span className={styles.methodIcon} aria-hidden="true">
+                  <Phone size={18} />
+                </span>
+                <div>
+                  <p className={styles.methodLabel}>Phone</p>
+                  <a href={`tel:${site.contact.phoneTel}`} className={styles.methodLink}>
+                    {site.contact.phone}
+                  </a>
+                </div>
+              </div>
+
+              <div className={styles.method} data-hue="ink">
+                <span className={styles.methodIcon} aria-hidden="true">
+                  <MapPin size={18} />
+                </span>
                 <div>
                   <p className={styles.methodLabel}>Location</p>
-                  <span className={styles.methodText}>Tanzania</span>
+                  <span className={styles.methodText}>{site.location}</span>
                 </div>
               </div>
             </div>

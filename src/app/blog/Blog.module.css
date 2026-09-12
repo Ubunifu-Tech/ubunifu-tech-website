@@ -162,8 +162,7 @@
   border-color: var(--border-active);
 }
 
-.featured:focus-visible,
-.card:focus-visible {
+.featured:focus-visible {
   outline: 3px solid var(--primary);
   outline-offset: 4px;
 }
@@ -183,8 +182,7 @@
   transition: transform 0.7s var(--ease-out-expo);
 }
 
-.featured:hover .featuredImage,
-.card:hover .cardImage {
+.featured:hover .featuredImage {
   transform: scale(1.025);
 }
 
@@ -220,102 +218,76 @@
 }
 
 .featured:hover .readMore,
-.card:hover .readMore {
+.row:hover .readMore {
   gap: var(--space-3);
 }
 
-/* ── Story grid ───────────────────────────────── */
+/* ── Story index ──────────────────────────────── */
+/* Rows, not a second card grid. The featured post above already spends a
+   full-width frame on a cover; six more of those made the archive a wall of
+   pictures in which no article outranked another. */
 
 .grid {
   display: grid;
-  border-bottom: 1px solid var(--border-hover);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
+  border-top: 1px solid var(--border-active);
 }
 
-.grid > div {
-  height: 100%;
+.row {
+  display: grid;
+  align-items: start;
+  gap: var(--space-4) clamp(var(--space-5), 3vw, var(--space-7));
+  padding: var(--space-6) 0;
+  border-bottom: 1px solid var(--border-active);
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  transition: padding-left var(--transition-base), background var(--transition-fast);
 }
 
-.card {
-  display: flex;
-  height: 100%;
-  min-height: 100%;
-  flex-direction: column;
-  padding: clamp(2rem, 4vw, 3.5rem);
-  overflow: hidden;
-  border-bottom: 1px solid var(--border-hover);
-  background: transparent;
-  text-decoration: none;
-  transition:
-    border-color 0.3s ease,
-    box-shadow 0.3s ease,
-    transform 0.3s var(--ease-out-expo);
+.row:hover {
+  padding-left: var(--space-4);
+  background: var(--brand-dim);
 }
 
-.card:hover {
-  border-color: var(--border-active);
+.row:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: -3px;
 }
 
-.grid > div:nth-child(odd) {
-  border-right: 1px solid var(--border-hover);
-}
-
-.cardVisual {
+.rowVisual {
   position: relative;
-  aspect-ratio: 16 / 9;
   overflow: hidden;
+  border-radius: var(--radius-md);
+  aspect-ratio: 16 / 10;
   background: var(--surface-3);
 }
 
-.cardBody {
+.rowBody {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  padding: var(--space-5) 0 0;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
-.cardTop {
+.rowTop {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
-.cardTitle {
-  margin-bottom: var(--space-3);
+.rowTitle {
+  margin: 0;
+  max-width: 40ch;
   color: var(--text-primary);
+  font-family: var(--font-heading);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
-  line-height: 1.22;
+  line-height: 1.25;
+  text-wrap: balance;
 }
 
-.excerpt {
-  display: -webkit-box;
-  flex-grow: 1;
-  margin-bottom: var(--space-5);
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-size: var(--font-size-body);
-  line-height: 1.68;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-
-.cardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-top: auto;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-}
-
-.metaSmall {
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
+.row:hover .cardImage {
+  transform: scale(1.03);
 }
 
 /* ── Responsive ───────────────────────────────── */
@@ -344,12 +316,13 @@
     aspect-ratio: 16 / 9;
   }
 
-  .grid {
-    grid-template-columns: 1fr;
+  /* Thumbnail above the copy once there is no room beside it. */
+  .row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .grid > div:nth-child(odd) {
-    border-right: 0;
+  .rowVisual {
+    max-width: 320px;
   }
 }
 
@@ -381,19 +354,22 @@
     padding: var(--space-5) 0 0;
   }
 
-  .featuredFooter,
-  .cardFooter {
+  .featuredFooter {
     align-items: flex-start;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .featured,
-  .card,
+  .row,
   .featuredImage,
   .cardImage,
   .filter,
   .readMore {
     transition-duration: 0.01ms;
+  }
+
+  .row:hover .cardImage {
+    transform: none;
   }
 }

@@ -2,9 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { EditorialVisual } from '@/components/EditorialVisual';
 import { motion, useReducedMotion } from 'framer-motion';
-import { MediaReveal } from './MediaReveal';
 import { formatDateShort } from '@/lib/date';
 import styles from './Insights.module.css';
 
@@ -21,20 +19,45 @@ type InsightPost = {
 };
 
 const Arrow: React.FC = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M5 12h14" />
+    <path d="M12 5l7 7-7 7" />
   </svg>
 );
 
+/**
+ * A ruled index, deliberately without pictures.
+ *
+ * This is the last section before the CTA band, and by the time a reader reaches
+ * it they have already passed the work plates, a dark quote and two tinted
+ * product panels. Another set of image cards here would be the fourth picture
+ * block in a row and the page would end on noise. Set as a dated index it reads
+ * as a decrescendo — quiet, typographic, and obviously a different kind of thing
+ * from everything above it.
+ *
+ * The covers are not lost: /blog leads with them, which is where someone
+ * browsing articles actually goes.
+ *
+ * The date sits in its own column so the three rows scan as a list of dispatches
+ * rather than three paragraphs that happen to be stacked.
+ */
 export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
   const reduceMotion = useReducedMotion();
 
   if (!posts.length) return null;
 
-  const [lead, ...dispatches] = posts;
-
   return (
-    <section className={styles.section}>
+    <section className={styles.section} aria-labelledby="insights-title">
       <div className="container">
         <motion.div
           className={styles.head}
@@ -43,73 +66,43 @@ export const Insights: React.FC<{ posts: InsightPost[] }> = ({ posts }) => {
           viewport={{ once: true }}
           transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
         >
-          <div>
-            <h2 className={styles.heading}>Articles</h2>
-          </div>
+          <h2 id="insights-title" className={styles.heading}>
+            Recent <span className={styles.headingAccent}>writing</span>
+          </h2>
           <Link href="/blog" className={styles.headLink}>
             All articles <Arrow />
           </Link>
         </motion.div>
 
-        <div className={styles.editorialGrid}>
-          <motion.div
-            className={styles.leadWrap}
-            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: reduceMotion ? 0 : 0.5, ease }}
-          >
-            <Link href={`/blog/${lead.slug}`} className={styles.leadStory}>
-              {lead.coverImage && lead.coverAlt ? (
-                <div className={styles.leadMedia}>
-                  <MediaReveal>
-                    <EditorialVisual
-                      src={lead.coverImage}
-                      alt={lead.coverAlt}
-                      fill
-                      sizes="(max-width: 900px) 100vw, 760px"
-                      className={styles.image}
-                    />
-                  </MediaReveal>
-                </div>
-              ) : null}
-              <div className={styles.leadBody}>
-                <div className={styles.meta}>
-                  <time dateTime={lead.date}>{formatDateShort(lead.date)}</time>
-                  {lead.tags[0] && <span className={styles.tag}>{lead.tags[0]}</span>}
-                </div>
-                <h3 className={styles.leadTitle}>{lead.title}</h3>
-                <p className={styles.excerpt}>{lead.excerpt}</p>
-                <span className={styles.readMore}>Read article <Arrow /></span>
-              </div>
-            </Link>
-          </motion.div>
-
-          <ul className={styles.dispatches}>
-          {dispatches.map((post, index) => (
+        <ul className={styles.index}>
+          {posts.map((post, i) => (
             <motion.li
-              className={styles.dispatchItem}
               key={post.slug}
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: reduceMotion ? 0 : 0.42, delay: reduceMotion ? 0 : index * 0.07, ease }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.42,
+                delay: reduceMotion ? 0 : i * 0.06,
+                ease,
+              }}
             >
-              <Link href={`/blog/${post.slug}`} className={styles.dispatch}>
-                <div className={styles.dispatchCopy}>
-                  <div className={styles.meta}>
-                    <time dateTime={post.date}>{formatDateShort(post.date)}</time>
-                    {post.tags[0] && <span className={styles.tag}>{post.tags[0]}</span>}
-                  </div>
+              <Link href={`/blog/${post.slug}`} className={styles.entry}>
+                <div className={styles.stamp}>
+                  <time dateTime={post.date}>{formatDateShort(post.date)}</time>
+                  {post.tags[0] && <span className={styles.tag}>{post.tags[0]}</span>}
+                </div>
+                <div className={styles.read}>
                   <h3 className={styles.title}>{post.title}</h3>
                   <p className={styles.excerpt}>{post.excerpt}</p>
-                  <span className={styles.readMore}>Read article <Arrow /></span>
                 </div>
+                <span className={styles.arrow} aria-hidden="true">
+                  <Arrow />
+                </span>
               </Link>
             </motion.li>
           ))}
-          </ul>
-        </div>
+        </ul>
       </div>
     </section>
   );

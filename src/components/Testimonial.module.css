@@ -1,144 +1,104 @@
+/* The one dark section that is not the page header or the CTA band. Deliberately
+   NOT var(--section-ground): this section is meant to cover the ambient field
+   and break the run of pale sections around it, which is what makes the only
+   client proof on the site impossible to scroll past. */
 .section {
-  background: var(--section-ground);
-}
+  padding: var(--section-space) 0;
+  /* Violet bloom at the quote's shoulder, over the same deep ground the
+     capabilities panel and the /build banner use.
 
-.layout {
-  display: grid;
-  max-width: var(--container-width);
-  margin: 0 auto;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
-  grid-template-columns: minmax(240px, 0.55fr) minmax(0, 1.45fr);
-  gap: clamp(2rem, 6vw, 6rem);
+     0.22 is a contrast ceiling, not a taste call. The bloom reaches the links at
+     the foot of the card, and --brand on the brightest point of the bloom
+     measures 4.61:1 here; at the 0.34 this started on it was 4.08:1, under the
+     floor. Raising it darkens nothing and quietly breaks the links. */
+  background:
+    radial-gradient(80% 120% at 12% 0%, rgba(109, 63, 232, 0.22), transparent 62%),
+    linear-gradient(150deg, #241a4d 0%, #1b1438 55%, #14102a 100%);
 }
-
-.head {
-  margin: 0;
-  text-align: left;
-}
-
-.heading {
-  max-width: 14ch;
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.18;
-  color: var(--text-primary);
-  margin-top: var(--space-2);
-}
-
-.note {
-  margin-top: var(--space-3);
-  color: var(--text-tertiary);
-  font-size: var(--font-size-body);
-}
-
-/* ── Client evidence ──────────────────────────── */
 
 .card {
-  position: relative;
+  max-width: 46rem;
   margin: 0;
-  padding: 0 0 0 clamp(2.5rem, 5vw, 5rem);
-  border-left: 1px solid var(--border-hover);
 }
 
+/* The quote IS the section, so it is set at heading size rather than body. Regular
+   weight: at this size, medium reads as shouting. */
 .quote {
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-7);
+  color: var(--text-inverse);
   font-family: var(--font-heading);
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-regular);
-  line-height: 1.35;
-  color: var(--text-primary);
+  line-height: 1.32;
+  text-wrap: pretty;
 }
 
-/* ── Attribution ──────────────────────────────── */
-
-.attribution {
-  display: grid;
-  align-items: start;
+.foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: var(--space-5);
   padding-top: var(--space-5);
-  border-top: 1px solid var(--border);
-  grid-template-columns: minmax(0, 1fr) auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  flex-wrap: wrap;
 }
 
-.organization {
-  margin: 0 0 var(--space-1);
-  color: var(--text-primary);
-  font-family: var(--font-heading);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-}
-
-.attributionText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+.who {
   min-width: 0;
 }
 
-.authorName {
-  font-weight: var(--font-weight-regular);
-  color: var(--text-primary);
+.org {
+  margin: 0 0 var(--space-1);
+  color: var(--text-inverse);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
 }
 
-.authorMeta {
-  font-size: var(--font-size-body);
-  color: var(--text-secondary);
+.author {
   margin: 0;
-}
-
-.orgLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--brand-deep);
+  color: var(--text-inverse-secondary);
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  text-decoration: none;
-  transition: color 0.2s ease, gap 0.25s var(--ease-out-expo);
 }
 
-.orgLink:hover {
-  gap: var(--space-2);
-  color: var(--text-primary);
-}
-
-.evidenceLinks {
+.links {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-3);
-  flex-direction: column;
+  gap: var(--space-5);
+  flex-wrap: wrap;
 }
 
-/* ── Responsive ───────────────────────────────── */
+/* --brand, not --brand-deep: the deep orange is tuned for reading on white and
+   is far too dark to sit on this ground. */
+.link {
+  color: var(--brand);
+  font-size: var(--font-size-body);
+  transition: color var(--transition-fast);
+}
 
-@media (max-width: 768px) {
-  .layout {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-  }
+.link:hover {
+  color: var(--text-inverse);
+}
 
-  .heading {
-    max-width: 18ch;
-  }
+.link:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 4px;
+}
 
-  .card {
-    padding: 2.5rem 0 0;
-    border-top: 1px solid var(--border-hover);
-    border-left: 0;
-  }
+.note {
+  margin: var(--space-5) 0 0;
+  color: var(--text-inverse-tertiary);
+  font-size: var(--font-size-caption);
+}
 
-  .attribution {
-    grid-template-columns: 1fr;
-  }
-
-  .evidenceLinks {
+@media (max-width: 640px) {
+  .foot {
     align-items: flex-start;
+    flex-direction: column;
   }
-}
 
-@media (max-width: 480px) {
-  .quote {
-    font-size: var(--font-size-heading);
+  .links {
+    gap: var(--space-4);
+    flex-direction: column;
   }
 }

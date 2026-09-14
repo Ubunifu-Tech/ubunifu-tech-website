@@ -1,286 +1,161 @@
 .header {
   position: relative;
-  isolation: isolate;
-  display: flex;
-  min-height: clamp(500px, 66svh, 720px);
   margin-top: var(--nav-height);
-  /* .withArtwork overrides this to 0 so dark headers run under the navbar. */
   overflow: hidden;
-  border-bottom: 1px solid var(--border-hover);
-  background: var(--surface);
+  border-bottom: 1px solid rgba(109, 63, 232, 0.16);
+  background: #ffffff;
 }
 
-.withArtwork {
-  min-height: clamp(620px, 78svh, 820px);
-  background: var(--text-primary);
-  margin-top: 0;
-  padding-top: var(--nav-height);
+.header::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 100%;
+  background: #f8f5ff;
+  clip-path: polygon(58% 0, 100% 0, 100% 100%, 72% 100%);
+  content: '';
+  pointer-events: none;
 }
 
 .inner {
   position: relative;
   z-index: 1;
-  display: flex;
-  width: 100%;
-  max-width: var(--container-wide);
+  display: grid;
+  width: min(100%, 1440px);
+  min-height: 600px;
+  align-items: center;
+  gap: 4rem;
   margin: 0 auto;
-  padding: clamp(3rem, 7vh, 6.5rem) var(--container-gutter);
-  flex-direction: column;
-  justify-content: center;
+  padding: 4.5rem var(--container-gutter);
+  grid-template-columns: minmax(0, 0.9fr) minmax(30rem, 1.1fr);
 }
 
-.topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-6);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border-hover);
-  color: var(--text-secondary);
+.copy {
+  max-width: 46rem;
+  animation: pageHeaderRise 600ms var(--ease-out-expo) both;
+}
+
+.eyebrow {
+  margin: 0 0 1.5rem;
+  color: var(--primary-deep);
   font-family: var(--font-body);
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
   line-height: 1.4;
 }
 
-.topline span:last-child {
-  text-align: right;
-}
-
 .title {
-  width: min(100%, 1450px);
-  max-width: none;
-  margin: clamp(2.25rem, 4.5vh, 3.75rem) auto clamp(2.25rem, 4.5vh, 3.75rem);
-  color: var(--text-primary);
+  max-width: 13ch;
+  margin: 0;
+  color: #2e2935;
   font-size: var(--font-size-display);
-  letter-spacing: var(--tracking-display);
   font-weight: var(--font-weight-medium);
-  line-height: 1.18;
-  overflow-wrap: normal;
-  text-align: center;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.08;
+  text-align: left;
   text-wrap: balance;
-  word-break: normal;
-}
-
-.supportRow {
-  display: flex;
-  width: min(100%, 920px);
-  align-items: center;
-  gap: clamp(1.5rem, 3vh, 2.25rem);
-  margin: 0 auto;
-  padding-top: clamp(1.5rem, 3vh, 2.25rem);
-  border-top: 1px solid var(--border-hover);
-  flex-direction: column;
-  text-align: center;
 }
 
 .lead {
-  max-width: 840px;
-  margin: 0 auto;
-  color: var(--text-secondary);
+  max-width: 42rem;
+  margin: 1.75rem 0 0;
+  color: #675f75;
   font-size: var(--font-size-lead);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.68;
+  line-height: 1.7;
 }
 
 .actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
+  gap: 0.75rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
 }
 
-.withArtwork .actions a:focus-visible,
-.withArtwork .actions button:focus-visible {
-  outline-color: var(--text-inverse);
+.visual {
+  width: 100%;
+  animation: visualArrive 760ms 80ms var(--ease-out-expo) both;
 }
-
-.withArtwork .topline {
-  border-bottom-color: rgba(255, 255, 255, 0.24);
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.withArtwork .title {
-  color: #fff;
-}
-
-.withArtwork .supportRow {
-  border-top-color: rgba(255, 255, 255, 0.24);
-}
-
-.withArtwork .lead {
-  color: rgba(255, 255, 255, 0.78);
-}
-
-/* Build and Industries use a broad spatial statement. */
-
-/* Work and Products behave like evidence covers: image first, copy anchored. */
-
-/* About and Careers have a calmer, more human pace. */
-
-/* Contact is intentionally direct and typographic. */
-
-@media (max-width: 840px) {
-  .header {
-    min-height: auto;
-  }
-
-  .inner {
-    min-height: clamp(520px, 72svh, 680px);
-  }
-
-  .title {
-    width: min(100%, 1040px);
-    max-width: none;
-    font-size: var(--font-size-display);
-  }
-
-  .supportRow {
-    align-items: center;
-  }
-
-  .actions {
-    justify-content: center;
-  }
-}
-
-@media (max-width: 660px) {
-  .header {
-    margin-top: var(--nav-height);
-  }
-
-  .inner {
-    min-height: auto;
-    padding-top: 2.75rem;
-    padding-bottom: var(--space-7);
-  }
-
-  .topline {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
-
-  .topline span:last-child {
-    text-align: left;
-  }
-
-  .title {
-    margin-top: var(--space-6);
-    margin-bottom: 2.25rem;
-    font-size: var(--font-size-display);
-  }
-
-}
-
-/* Supporting pages get to their content without another full-screen art panel. */
-.compact {
-  min-height: 0;
-}
-
-.compact .inner {
-  min-height: 0;
-  padding-top: clamp(2rem, 4vw, 4rem);
-  padding-bottom: clamp(2rem, 4vw, 4rem);
-}
-
-.compact .title {
-  margin-top: var(--space-6);
-  margin-bottom: var(--space-5);
-  font-size: var(--font-size-display);
-  line-height: 1.18;
-}
-
-.compact .supportRow {
-  padding-top: 0;
-  border-top: 0;
-}
-
-/* Generated covers share the same wide type and quiet, centered composition. */
-.scene,
-.scene.compact {
-  min-height: clamp(420px, 62svh, 640px);
-}
-
-.scene .inner {
-  padding-top: clamp(3rem, 6vw, 5rem);
-  padding-bottom: clamp(3rem, 6vw, 5rem);
-}
-
-.scene .topline {
-  justify-content: center;
-  border: 0;
-  padding: 0;
-  color: var(--text-inverse);
-}
-
-.scene .supportRow {
-  padding-top: 0;
-  border: 0;
-}
-
-.scene .lead {
-  color: var(--text-inverse);
-}
-
-@media (max-width: 660px) {
-  .scene,
-  .scene.compact {
-    min-height: 0;
-  }
-
-  .scene .inner {
-    padding-top: var(--space-7);
-    padding-bottom: var(--space-7);
-  }
-
-  .scene .topline {
-    align-items: center;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .header * {
-    scroll-behavior: auto;
-  }
-}
-
-/* ── Entrance ─────────────────────────────────────
-   CSS, not Framer Motion, so the H1 is present and readable in the
-   server-rendered paint. `both` supplies the from-state; the global
-   prefers-reduced-motion reset in globals.css collapses the duration. */
 
 @keyframes pageHeaderRise {
   from {
     opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: translateY(18px);
   }
 }
 
-.topline,
-.title,
-.lead,
-.actions {
-  animation: pageHeaderRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+@keyframes visualArrive {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.985);
+  }
 }
 
-.topline {
-  animation-delay: 0.05s;
+@media (max-width: 1120px) {
+  .inner {
+    min-height: 550px;
+    gap: 2.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(25rem, 0.95fr);
+  }
+
 }
 
-.title {
-  animation-delay: 0.15s;
+@media (max-width: 860px) {
+  .header::before {
+    top: auto;
+    height: 46%;
+    clip-path: none;
+  }
+
+  .inner {
+    min-height: 0;
+    gap: 2.5rem;
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .copy {
+    max-width: 48rem;
+  }
+
+  .title {
+    max-width: 15ch;
+  }
+
+  .visual {
+    width: min(100%, 46rem);
+    margin: 0 auto;
+  }
 }
 
-.lead {
-  animation-delay: 0.25s;
+@media (max-width: 560px) {
+  .inner {
+    padding-top: 2.75rem;
+    padding-bottom: 2.75rem;
+  }
+
+  .eyebrow {
+    margin-bottom: 1rem;
+  }
+
+  .title {
+    max-width: 12ch;
+    line-height: 1.1;
+  }
+
+  .lead {
+    margin-top: 1.4rem;
+  }
+
+  .actions,
+  .actions > * {
+    width: 100%;
+  }
 }
 
-.actions {
-  animation-delay: 0.35s;
+@media (prefers-reduced-motion: reduce) {
+  .copy,
+  .visual {
+    animation: none;
+  }
 }

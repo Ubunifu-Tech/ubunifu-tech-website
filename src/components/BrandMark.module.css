@@ -36,6 +36,8 @@
   width: 38px;
   height: 38px;
   flex: 0 0 auto;
+  transform-origin: center;
+  transition: transform 220ms var(--ease-out-expo);
 }
 
 .wordmark {
@@ -47,21 +49,49 @@
 
 .name,
 .technology {
-  color: inherit;
   font-family: var(--font-heading);
   font-size: var(--font-size-body);
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .name {
+  color: var(--brand-wordmark);
   font-weight: 700;
+  transition: color 180ms ease;
 }
 
 .technology {
+  color: var(--primary);
   font-weight: 600;
+  transition: color 180ms ease;
+}
+
+.lockup:hover .lockupMark {
+  transform: translateY(-1px) rotate(-2deg);
+}
+
+.lockup:hover .name {
+  color: var(--brand-deep);
+}
+
+.lockup:hover .technology {
+  color: var(--primary-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lockupMark,
+  .name,
+  .technology {
+    transition: none;
+  }
 }
 
 .lockup.inverse {
+  color: var(--text-inverse);
+}
+
+.lockup.inverse .name,
+.lockup.inverse .technology {
   color: var(--text-inverse);
 }
 

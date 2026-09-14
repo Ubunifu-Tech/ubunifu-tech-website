@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import { services, type ServiceKey } from '@/content/services';
 import { ScrollReveal } from './ScrollReveal';
 import styles from './CapabilityMap.module.css';
@@ -93,7 +94,7 @@ export function CapabilityMap() {
                         <span className={styles.cardHead}>
                           <span className={styles.cardTitle}>{service.title}</span>
                           <span className={styles.cardArrow} aria-hidden="true">
-                            →
+                            <ArrowRight size={14} strokeWidth={2.2} />
                           </span>
                         </span>
                         <span className={styles.cardSummary}>{service.summary}</span>

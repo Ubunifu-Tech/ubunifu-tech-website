@@ -12,8 +12,8 @@ import styles from './iso.module.css';
  *   --iso-plane  flat planes with no depth
  *   --iso-edge   hairline on flat planes
  *
- * Used by HeroSystem (the home hero) and SystemDiagram (the project and service
- * diagrams) so both speak the same geometric language.
+ * Used by the shared page, story, project, and service diagrams so every
+ * illustration speaks the same geometric language.
  */
 
 /** Default half-width and half-height of the isometric unit. */

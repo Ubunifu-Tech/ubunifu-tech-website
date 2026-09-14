@@ -10,7 +10,6 @@ import { CtaBand } from '@/components/CtaBand';
 import { MediaReveal } from '@/components/MediaReveal';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { Testimonial } from '@/components/Testimonial';
-import { AmbientShader } from '@/components/AmbientShader';
 import { sectionId } from '@/lib/slug';
 import styles from './CaseStudy.module.css';
 
@@ -95,11 +94,7 @@ export default async function CaseStudyPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
 
-        {/* Masthead. The only dark surface on the site that lacked the ambient
-            layer; it self-gates off under reduced motion and on weak hardware, so
-            this block must read complete without it. */}
         <header className={styles.hero}>
-          <AmbientShader placement="edges" />
           <div className={`container ${styles.heroInner}`}>
             <Link href="/work" className={styles.backLink}>
               <ArrowLeft size={16} />
@@ -136,8 +131,6 @@ export default async function CaseStudyPage({
           </div>
         </header>
 
-        {/* The plate sits on light ground: the diagram draws its own dark field, so
-            on the dark masthead it had no edge at all. */}
         <section className={styles.plateSection}>
           <div className={`container ${styles.spine}`}>
             <figure className={styles.plateFigure}>
@@ -211,7 +204,7 @@ export default async function CaseStudyPage({
                   <p className={styles.furtherLabel}>Written up in more detail</p>
                   {project.furtherReading.map((item) => (
                     <Link key={item.href} href={item.href} className={styles.furtherLink}>
-                      {item.title} <span aria-hidden="true">→</span>
+                      {item.title} <ArrowRight size={17} strokeWidth={2} aria-hidden="true" />
                     </Link>
                   ))}
                 </div>

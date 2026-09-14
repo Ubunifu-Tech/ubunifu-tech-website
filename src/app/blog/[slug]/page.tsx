@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ReactMarkdown from 'react-markdown';
+import { ArrowLeft } from 'lucide-react';
 import { CtaBand } from '@/components/CtaBand';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { getProjectDiagram } from '@/content/project-visuals';
@@ -158,7 +159,8 @@ export default async function BlogPostPage({
                   are already listed in the article footer. */}
               <div className={styles.headerTopline}>
                 <Link href="/blog" className={styles.journalLink}>
-                  <span aria-hidden="true">←</span> All insights
+                  <ArrowLeft size={17} strokeWidth={1.8} aria-hidden="true" />
+                  All insights
                 </Link>
               </div>
 
@@ -203,7 +205,8 @@ export default async function BlogPostPage({
                 ))}
               </div>
               <Link href="/blog" className={styles.backLink}>
-                <span aria-hidden="true">←</span> Back to all articles
+                <ArrowLeft size={17} strokeWidth={1.8} aria-hidden="true" />
+                Back to all articles
               </Link>
             </footer>
           </div>

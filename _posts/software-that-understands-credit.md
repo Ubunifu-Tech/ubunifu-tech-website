@@ -8,11 +8,11 @@ coverImage: "/editorial/credit-ledger.webp"
 coverAlt: "Open paper ledger beside linked trays and counters on a shop worktop with stocked shelves in the background"
 ---
 
-In plenty of retail relationships the sale carries on after the goods leave the counter. A known customer pays later, sometimes in parts. The *deni* — the money owed — has to stay visible until it is settled.
+In plenty of retail relationships the sale carries on after the goods leave the counter. A known customer pays later, sometimes in parts. The *deni*, the money owed, has to stay visible until it is settled.
 
 How that works varies enormously. Some shops refuse credit outright. Others weigh the customer, the amount, and the relationship every time.
 
-Where a business does extend credit, software that records only completed cash sales leaves a real part of the operation somewhere else — usually a notebook.
+Where a business does extend credit, software that records only completed cash sales leaves a real part of the operation somewhere else, usually a notebook.
 
 ## Credit changes the state of a sale
 
@@ -46,6 +46,6 @@ The notebook deserves more respect than it usually gets, too. It normally contai
 
 "Built for Tanzania" is the kind of line anyone can write. In Sifa we want it checkable in the product: records native to TZS, sales and inventory workflows that match the counter, and credit that is visible instead of hidden in a workaround.
 
-Real use will teach us the rest — how different businesses set their aging periods, how they handle partial payments, how responsibility gets divided between staff.
+Real use will teach us the rest: how different businesses set their aging periods, how they handle partial payments, how responsibility gets divided between staff.
 
 Deni is an open obligation. In Sifa it sits in the workflow rather than at the edge of the system.

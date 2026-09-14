@@ -3,7 +3,7 @@ import type { ProjectDiagramKind } from '@/content/project-visuals';
 import { IsoBox, IsoPlane, IsoTray } from './iso';
 import styles from './SystemDiagram.module.css';
 
-export type SystemDiagramKind = ProjectDiagramKind | 'web' | 'hosting' | 'data' | 'ai' | 'strategy';
+export type SystemDiagramKind = ProjectDiagramKind | 'web' | 'hosting' | 'branding' | 'data' | 'ai' | 'strategy';
 
 /**
  * Text-free system diagrams, with descriptions supplied outside the artwork.
@@ -108,6 +108,24 @@ function Composition({ kind }: { kind: SystemDiagramKind }) {
           <line className={styles.slot} x1={444} y1={148} x2={472} y2={162} />
           <line className={styles.slot} x1={444} y1={166} x2={472} y2={180} />
           <IsoBox className={styles.solid} cx={472} cy={272} w={52} h={26} d={24} />
+        </>
+      );
+
+    /* Identity elements resolving into one consistent set of surfaces. */
+    case 'branding':
+      return (
+        <>
+          <g className={styles.routes}>
+            <path className={styles.route} d="M142 154 H246 V214 H300" />
+            <path className={styles.route} d="M142 274 H246 V214 H300" />
+            <path className={`${styles.route} ${styles.live}`} d="M378 214 H488" />
+          </g>
+          <IsoPlane className={styles.layer} cx={108} cy={154} w={44} h={22} />
+          <IsoPlane className={styles.lit} cx={108} cy={274} w={44} h={22} />
+          <IsoBox className={styles.solid} cx={340} cy={196} w={48} h={24} d={44} />
+          <IsoPlane className={styles.layer} cx={532} cy={168} w={58} h={29} />
+          <IsoPlane className={styles.lit} cx={532} cy={250} w={58} h={29} />
+          <circle className={styles.accentNode} cx={488} cy={214} r={10} />
         </>
       );
 

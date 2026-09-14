@@ -46,9 +46,31 @@
   transition: color 0.2s ease;
 }
 
+.link::after {
+  position: absolute;
+  right: 0;
+  bottom: -10px;
+  left: 0;
+  height: 1px;
+  background: var(--brand);
+  content: '';
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 180ms ease;
+}
+
 .link:hover,
 .linkActive {
-  color: var(--text-primary);
+  color: var(--primary-deep);
+}
+
+.link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.linkActive::after {
+  transform: scaleX(0);
 }
 
 .activeIndicator {
@@ -83,20 +105,34 @@
 .cta {
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--brand-deep);
+  border: 1px solid var(--primary);
   border-radius: var(--control-radius);
-  background: var(--brand-deep);
+  background: var(--primary);
   color: #fff;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cta svg,
+.mobileCta svg {
+  transition: transform 180ms ease;
+}
+
+.cta:hover svg,
+.mobileCta:hover svg {
+  transform: translateX(3px);
 }
 
 .cta:hover {
-  border-color: var(--text-primary);
-  background: var(--text-primary);
+  border-color: var(--primary-deep);
+  background: var(--primary-deep);
+  box-shadow: 0 8px 20px rgba(61, 31, 160, 0.18);
   color: #fff;
+  transform: translateY(-2px);
 }
 
 .hamburger {
@@ -165,6 +201,23 @@
   transition-delay: 0s;
 }
 
+.mobileClose {
+  position: fixed;
+  top: calc((var(--nav-height) - 44px) / 2);
+  right: var(--container-gutter);
+  z-index: 1204;
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
 .mobileLinks {
   display: flex;
   flex-direction: column;
@@ -190,12 +243,14 @@
 
 .mobileCta {
   display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
   justify-content: center;
   width: min(320px, calc(100% - 3rem));
   margin-top: var(--space-2);
   padding: var(--space-4) var(--space-5);
   border-radius: var(--control-radius);
-  background: var(--brand-deep);
+  background: var(--primary);
   color: #fff;
   font-weight: var(--font-weight-regular);
 }
@@ -204,6 +259,7 @@
 .link:focus-visible,
 .cta:focus-visible,
 .hamburger:focus-visible,
+.mobileClose:focus-visible,
 .mobileLink:focus-visible,
 .mobileCta:focus-visible {
   outline: 3px solid var(--primary);
@@ -235,37 +291,14 @@
   .navbar,
   .mobileMenu,
   .bar,
+  .link,
+  .link::after,
   .cta {
     transition-duration: 0.01ms;
   }
-}
 
-/* ── Transparent over a dark hero ─────────────────
-   Pages that render a HeroBackdrop expose [data-hero-art], so the bar can go
-   transparent at scroll-top and pick up the hero's own ground instead of
-   butting against it with a hard white seam. Driven entirely by :has(), so
-   there is no extra client state and nothing to flash on hydration. Once
-   .scrolled is set the opaque treatment above takes over again. */
-
-body:has([data-hero-art]) .navbar:not(.scrolled):not(:has(.mobileMenu.open)) {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
-
-body:has([data-hero-art]) .navbar:not(.scrolled):not(:has(.mobileMenu.open)) .logo {
-  color: var(--text-inverse);
-}
-
-body:has([data-hero-art]) .navbar:not(.scrolled):not(:has(.mobileMenu.open)) .link {
-  color: var(--text-inverse-secondary);
-}
-
-body:has([data-hero-art]) .navbar:not(.scrolled):not(:has(.mobileMenu.open)) .link:hover,
-body:has([data-hero-art]) .navbar:not(.scrolled):not(:has(.mobileMenu.open)) .linkActive {
-  color: var(--text-inverse);
-}
-
-body:has([data-hero-art]) .navbar:not(.scrolled):not(:has(.mobileMenu.open)) .bar {
-  background: var(--text-inverse);
+  .cta svg,
+  .mobileCta svg {
+    transition: none;
+  }
 }

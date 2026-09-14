@@ -1,19 +1,8 @@
-/* The one dark section that is not the page header or the CTA band. Deliberately
-   NOT var(--section-ground): this section is meant to cover the ambient field
-   and break the run of pale sections around it, which is what makes the only
-   client proof on the site impossible to scroll past. */
 .section {
   padding: var(--section-space) 0;
-  /* Violet bloom at the quote's shoulder, over the same deep ground the
-     capabilities panel and the /build banner use.
-
-     0.22 is a contrast ceiling, not a taste call. The bloom reaches the links at
-     the foot of the card, and --brand on the brightest point of the bloom
-     measures 4.61:1 here; at the 0.34 this started on it was 4.08:1, under the
-     floor. Raising it darkens nothing and quietly breaks the links. */
-  background:
-    radial-gradient(80% 120% at 12% 0%, rgba(109, 63, 232, 0.22), transparent 62%),
-    linear-gradient(150deg, #241a4d 0%, #1b1438 55%, #14102a 100%);
+  border-top: 1px solid rgba(109, 63, 232, 0.14);
+  border-bottom: 1px solid rgba(109, 63, 232, 0.14);
+  background: #f6f2ff;
 }
 
 .card {
@@ -25,7 +14,7 @@
    weight: at this size, medium reads as shouting. */
 .quote {
   margin: 0 0 var(--space-7);
-  color: var(--text-inverse);
+  color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-regular);
@@ -39,7 +28,7 @@
   justify-content: space-between;
   gap: var(--space-5);
   padding-top: var(--space-5);
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(109, 63, 232, 0.2);
   flex-wrap: wrap;
 }
 
@@ -49,7 +38,7 @@
 
 .org {
   margin: 0 0 var(--space-1);
-  color: var(--text-inverse);
+  color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
@@ -58,7 +47,7 @@
 
 .author {
   margin: 0;
-  color: var(--text-inverse-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-body);
 }
 
@@ -68,16 +57,17 @@
   flex-wrap: wrap;
 }
 
-/* --brand, not --brand-deep: the deep orange is tuned for reading on white and
-   is far too dark to sit on this ground. */
 .link {
-  color: var(--brand);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary);
   font-size: var(--font-size-body);
   transition: color var(--transition-fast);
 }
 
 .link:hover {
-  color: var(--text-inverse);
+  color: var(--primary-deep);
 }
 
 .link:focus-visible {

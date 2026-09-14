@@ -22,7 +22,7 @@ Document work is lumpier. A set of contracts lands. A report needs reviewing bef
 
 Against that pattern, a seat describes the purchase badly. Usage sits closer to the work performed, and it lets someone try a bounded task without first guessing how many months they will keep the tool.
 
-That is the reasoning behind the credit model — a fit for this product's workload, not a theory about how every Tanzanian business manages cash.
+That is the reasoning behind the credit model, a fit for this product's workload, not a theory about how every Tanzanian business manages cash.
 
 ## Paying for usage is not automatically cheaper
 
@@ -54,4 +54,4 @@ Usage pricing does one thing: cost tracks activity more closely than a fixed sea
 
 Estimate the work before counting the users. Write down the document types, the likely volume, how often it happens, and which actions are involved.
 
-Then compare like with like: expected usage cost, any recurring platform or storage charges, minimum commitments, what support and collaboration are included, limits that would get in the way of the workflow — and the cost of a heavy month, not just an average one.
+Then compare like with like: expected usage cost, any recurring platform or storage charges, minimum commitments, what support and collaboration are included, limits that would get in the way of the workflow, and the cost of a heavy month, not just an average one.

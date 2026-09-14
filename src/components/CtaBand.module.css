@@ -1,13 +1,14 @@
 .section {
   padding: 0;
-  background: var(--text-primary);
+  border-top: 1px solid rgba(109, 63, 232, 0.16);
+  background: #ffffff;
 }
 
 .panel {
   position: relative;
   overflow: hidden;
-  padding: clamp(5rem, 9vw, 8rem) 0;
-  background: var(--text-primary);
+  padding: 6.5rem 0;
+  background: #f8f5ff;
 }
 
 .content {
@@ -15,9 +16,9 @@
   z-index: 1;
   display: grid;
   align-items: end;
+  gap: 6rem;
   text-align: left;
-  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
-  gap: clamp(3rem, 8vw, 8rem);
+  grid-template-columns: minmax(0, 1.15fr) minmax(22rem, 0.85fr);
 }
 
 .statement,
@@ -26,50 +27,56 @@
 }
 
 .heading {
-  max-width: none;
+  max-width: 12ch;
+  color: #2e2935;
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
-  line-height: 1.18;
-  color: #ffffff;
+  letter-spacing: normal;
+  line-height: 1.12;
 }
 
 .text {
-  font-size: var(--font-size-body);
-  color: rgba(255, 255, 255, 0.66);
+  max-width: 35rem;
+  margin-bottom: 1.75rem;
+  color: #675f75;
+  font-size: var(--font-size-lead);
   line-height: 1.7;
-  margin-bottom: var(--space-6);
 }
 
 .actions {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: var(--space-4);
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .btn {
   display: inline-flex;
-  min-height: 48px;
+  min-height: 50px;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  background: var(--cta);
-  color: #fff;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid #6d3fe8;
+  border-radius: 8px;
+  background: #6d3fe8;
+  color: #ffffff;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  border-radius: var(--control-radius);
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .btn:hover {
-  background: var(--surface);
-  color: var(--text-primary);
+  border-color: #3d1fa0;
+  background: #3d1fa0;
+  color: #ffffff;
+  transform: translateY(-2px);
 }
 
 .btn:focus-visible {
-  outline: 3px solid var(--brand);
+  outline: 3px solid #ff6b2c;
   outline-offset: 3px;
 }
 
@@ -79,16 +86,23 @@
   }
 
   .content {
-    grid-template-columns: 1fr;
-    gap: var(--space-6);
+    gap: 2rem;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .actions {
+    align-items: stretch;
     flex-direction: column;
   }
 
   .btn {
     width: 100%;
-    justify-content: center;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
   }
 }

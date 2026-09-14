@@ -133,7 +133,7 @@
 
 .dot:nth-child(1) { background: var(--brand); }
 .dot:nth-child(2) { background: var(--primary); }
-.dot:nth-child(3) { background: var(--accent); }
+.dot:nth-child(3) { background: var(--brand); }
 
 .url {
   margin-left: 10px;

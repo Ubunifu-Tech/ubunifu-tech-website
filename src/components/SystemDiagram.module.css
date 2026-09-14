@@ -4,19 +4,38 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  /* Dark ground, matching the hero and the CTA band. The previous pale panel is
-     what made these read as clip art dropped onto the page. */
-  background: var(--text-primary);
+  border: 1px solid rgba(109, 63, 232, 0.16);
+  border-radius: 8px;
+  background: var(--diagram-background);
   pointer-events: none;
   user-select: none;
 
-  /* Palette for the shared isometric primitives. */
-  --iso-top: #4A4368;
-  --iso-front: #342E52;
-  --iso-side: #272144;
-  --iso-plane: #3A3357;
-  --iso-recess: #1B1633;
-  --iso-edge: rgba(237, 231, 221, 0.16);
+  --diagram-background: #f8f5ff;
+  --diagram-layer: #cfc1f3;
+  --diagram-layer-edge: rgba(109, 63, 232, 0.36);
+  --diagram-lit: #ffffff;
+  --diagram-lit-edge: rgba(109, 63, 232, 0.5);
+  --diagram-plinth: rgba(109, 63, 232, 0.12);
+  --diagram-plinth-edge: rgba(109, 63, 232, 0.24);
+  --diagram-route: rgba(109, 63, 232, 0.38);
+  --diagram-live: #ff6b2c;
+  --diagram-node: #ffffff;
+  --diagram-node-edge: rgba(109, 63, 232, 0.62);
+  --diagram-accent: #ff6b2c;
+  --diagram-ring: rgba(255, 107, 44, 0.34);
+  --diagram-slot: rgba(255, 255, 255, 0.72);
+  --diagram-bar: rgba(61, 31, 160, 0.38);
+  --diagram-bar-accent: #ff6b2c;
+  --diagram-sheet: #f0ebfc;
+  --diagram-sheet-edge: rgba(109, 63, 232, 0.18);
+  --diagram-candidate: rgba(109, 63, 232, 0.18);
+  --diagram-waypoint: #ffffff;
+  --iso-top: #fff4ee;
+  --iso-front: #6d3fe8;
+  --iso-side: #4d2cb9;
+  --iso-plane: #dacff8;
+  --iso-recess: #3d1fa0;
+  --iso-edge: rgba(109, 63, 232, 0.28);
 }
 
 .canvas {
@@ -29,19 +48,19 @@
 /* ── Surfaces ─────────────────────────────────── */
 
 .layer {
-  fill: #3E3760;
-  stroke: rgba(237, 231, 221, 0.16);
+  fill: var(--diagram-layer);
+  stroke: var(--diagram-layer-edge);
 }
 
 /* The one lit surface per diagram: the thing the flow resolves into. */
 .lit {
-  fill: #EDE7DD;
-  stroke: none;
+  fill: var(--diagram-lit);
+  stroke: var(--diagram-lit-edge);
 }
 
 .plinth {
-  fill: rgba(58, 51, 87, 0.42);
-  stroke: rgba(237, 231, 221, 0.10);
+  fill: var(--diagram-plinth);
+  stroke: var(--diagram-plinth-edge);
 }
 
 .solid {
@@ -56,7 +75,7 @@
 
 .route {
   fill: none;
-  stroke: rgba(255, 107, 44, 0.34);
+  stroke: var(--diagram-route);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -64,7 +83,7 @@
 
 /* One live run per diagram, to say the system is running rather than drawn. */
 .live {
-  stroke: var(--brand);
+  stroke: var(--diagram-live);
   stroke-dasharray: 5 9;
   animation: diagramFlow 2.8s linear infinite;
 }
@@ -76,35 +95,35 @@
 }
 
 .node {
-  fill: #3A3357;
-  stroke: rgba(255, 107, 44, 0.55);
+  fill: var(--diagram-node);
+  stroke: var(--diagram-node-edge);
   stroke-width: 2;
 }
 
 .accentNode {
-  fill: var(--brand);
+  fill: var(--diagram-accent);
 }
 
 .ring {
   fill: none;
-  stroke: rgba(255, 107, 44, 0.34);
+  stroke: var(--diagram-ring);
   stroke-width: 2;
 }
 
 .slot {
-  stroke: rgba(237, 231, 221, 0.30);
+  stroke: var(--diagram-slot);
   stroke-width: 2.5;
   stroke-linecap: round;
 }
 
 .bar {
-  stroke: rgba(31, 26, 54, 0.42);
+  stroke: var(--diagram-bar);
   stroke-width: 4;
   stroke-linecap: round;
 }
 
 .barAccent {
-  stroke: var(--brand-deep);
+  stroke: var(--diagram-bar-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -117,15 +136,15 @@
    The planning sheet the routes are drawn on. Deliberately not the lit element:
    every diagram gets exactly one, and here it is the destination. */
 .sheet {
-  fill: rgba(58, 51, 87, 0.34);
-  stroke: rgba(237, 231, 221, 0.10);
+  fill: var(--diagram-sheet);
+  stroke: var(--diagram-sheet-edge);
 }
 
 /* Options that were considered and ruled out. Faint, dashed and unarriving —
    no cross, no red mark; they simply stop. */
 .candidate {
   fill: none;
-  stroke: rgba(237, 231, 221, 0.16);
+  stroke: var(--diagram-candidate);
   stroke-width: 1.5;
   stroke-dasharray: 4 6;
   stroke-linecap: round;
@@ -133,7 +152,7 @@
 }
 
 .waypoint {
-  fill: var(--text-primary);
-  stroke: var(--brand);
+  fill: var(--diagram-waypoint);
+  stroke: var(--diagram-live);
   stroke-width: 2;
 }

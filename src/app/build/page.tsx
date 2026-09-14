@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { WorkPreview } from '@/components/HomePreviews';
 import { CtaBand } from '@/components/CtaBand';
@@ -49,15 +50,13 @@ export default function BuildPage() {
       <PageAtmosphere />
       <main data-atmosphere className={styles.main}>
         <PageHeader
-          ambient={false}
           scene="services"
-          compact
           eyebrow="Services"
           title="Technology for your business."
           lead="Websites, software, data, AI, branding, and hosting for businesses in Tanzania."
         >
           <Link href="/contact" className={styles.heroBtn}>
-            {cta.primary} <span aria-hidden="true">→</span>
+            {cta.primary} <ArrowRight size={17} strokeWidth={1.8} aria-hidden="true" />
           </Link>
         </PageHeader>
 

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { testimonials } from '@/content/testimonials';
 import styles from './Testimonial.module.css';
 
@@ -26,14 +27,8 @@ type Props = {
 };
 
 /**
- * The only third-party proof on the site, so it is the only section that gets a
- * dark ground of its own.
- *
- * It used to be a pale two-column block with hairline rules, sitting among other
- * pale sections — the one thing a stranger should stop on read as the quietest
- * thing on the page. Inverted, it becomes the third dark moment in the page's
- * rhythm, after the header and before the CTA band, and the quote is the section
- * rather than a column inside it.
+ * The only third-party proof on the site, presented as a full-width light band
+ * so the quote remains the section rather than a column inside a card.
  *
  * The naming is deliberate: a visually-hidden h2 keeps "Client feedback" in the
  * document outline without printing a small label above a quote that speaks
@@ -86,13 +81,13 @@ export const Testimonial: React.FC<Props> = ({ project }) => {
                   className={styles.link}
                 >
                   {displayHost(testimonial.organizationUrl)}
-                  <span aria-hidden="true"> ↗</span>
+                  <ArrowUpRight size={15} strokeWidth={2} aria-hidden="true" />
                   <span className="srOnly"> (opens in a new tab)</span>
                 </a>
               )}
               {testimonial.project && project !== testimonial.project && (
                 <Link href={`/work/${testimonial.project}`} className={styles.link}>
-                  Read the case study <span aria-hidden="true">→</span>
+                  Read the case study <ArrowRight size={15} strokeWidth={2} aria-hidden="true" />
                 </Link>
               )}
             </div>

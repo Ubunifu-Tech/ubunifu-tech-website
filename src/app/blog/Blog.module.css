@@ -79,8 +79,8 @@
 
 .filterActive,
 .filterActive:hover {
-  border-color: var(--text-primary);
-  background: var(--text-primary);
+  border-color: var(--primary);
+  background: var(--primary);
   color: #fff;
 }
 

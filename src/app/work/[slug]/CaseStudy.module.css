@@ -4,9 +4,10 @@
   position: relative;
   margin-top: var(--nav-height);
   overflow: hidden;
-  padding: clamp(3rem, 6vw, 5rem) 0 0;
-  background: var(--text-primary);
-  color: #fff;
+  padding: clamp(3rem, 6vw, 5rem) 0 clamp(4rem, 7vw, 6rem);
+  border-bottom: 1px solid rgba(109, 63, 232, 0.16);
+  background: #f8f5ff;
+  color: #2e2935;
 }
 
 .heroInner {
@@ -19,7 +20,7 @@
   align-items: center;
   gap: var(--space-2);
   margin-bottom: clamp(2rem, 4vw, 3.5rem);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--primary-deep);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
   transition: color 0.2s ease, gap 0.25s var(--ease-out-expo);
@@ -27,24 +28,7 @@
 
 .backLink:hover {
   gap: var(--space-3);
-  color: #fff;
-}
-
-.category {
-  color: var(--brand);
-}
-
-.title {
-  width: min(100%, 1450px);
-  margin: clamp(2.5rem, 5vw, 4.75rem) auto;
-  color: #fff;
-  font-size: var(--font-size-display);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.18;
-  overflow-wrap: normal;
-  text-align: center;
-  text-wrap: balance;
-  word-break: normal;
+  color: var(--text-primary);
 }
 
 .visitBtn {
@@ -54,9 +38,9 @@
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--brand);
+  border: 1px solid var(--primary);
   border-radius: var(--control-radius);
-  background: var(--brand-deep);
+  background: var(--primary);
   color: #fff;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
@@ -65,37 +49,14 @@
 }
 
 .visitBtn:hover {
-  border-color: #fff;
-  background: var(--text-primary);
+  border-color: var(--primary-deep);
+  background: var(--primary-deep);
   color: #fff;
 }
 
 .backLink:focus-visible,
 .visitBtn:focus-visible {
-  outline-color: var(--text-inverse);
-}
-
-.sectionHeading {
-  max-width: none;
-  margin-top: var(--space-3);
-  color: var(--text-primary);
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.18;
-}
-
-.highlightTitle {
-  color: var(--text-primary);
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.18;
-}
-
-.highlightBody {
-  max-width: 68ch;
-  color: var(--text-secondary);
-  font-size: var(--font-size-body);
-  line-height: 1.72;
+  outline-color: var(--brand);
 }
 
 /* ── Next project ────────────────────────────── */
@@ -198,11 +159,6 @@
     padding-top: var(--space-6);
   }
 
-  .title {
-    margin: 2.5rem auto var(--space-7);
-    font-size: var(--font-size-display);
-  }
-
   .nextCard {
     grid-template-columns: 1fr auto;
   }
@@ -255,12 +211,12 @@
 }
 
 .category {
-  color: var(--brand);
+  color: var(--brand-deep);
   font-size: var(--font-size-small);
 }
 
 .domain {
-  color: var(--text-inverse-tertiary);
+  color: var(--text-tertiary);
   font-size: var(--font-size-small);
 }
 
@@ -273,7 +229,7 @@
 .title {
   max-width: 18ch;
   margin: 0;
-  color: var(--text-inverse);
+  color: #2e2935;
   font-size: var(--font-size-display);
   /* The token exists precisely for this size and was not applied here. */
   letter-spacing: var(--tracking-display);
@@ -285,7 +241,7 @@
 .standfirst {
   max-width: 42ch;
   margin: 0;
-  color: var(--text-inverse-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-lead);
   line-height: 1.6;
 }
@@ -293,7 +249,7 @@
 .mastheadFoot {
   max-width: 52ch;
   margin: 0;
-  color: var(--text-inverse-tertiary);
+  color: var(--text-tertiary);
   font-size: var(--font-size-body);
   line-height: 1.7;
 }
@@ -412,8 +368,10 @@
 
 .sectionHeading {
   margin: 0 0 var(--space-4);
+  color: var(--text-primary);
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
+  line-height: 1.18;
 }
 
 .sectionStandfirst {
@@ -445,7 +403,7 @@
 }
 
 .highlight[data-mark='2'] {
-  --mark-colour: var(--accent);
+  --mark-colour: var(--brand);
 }
 
 /* A mark in the margin, hanging outside the measure so the text edge stays
@@ -478,8 +436,10 @@
 .highlightTitle {
   position: relative;
   margin: 0 0 var(--space-3);
+  color: var(--text-primary);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
+  line-height: 1.18;
 }
 
 .highlightBody {
@@ -507,6 +467,9 @@
 }
 
 .furtherLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--brand-deep);
   font-size: var(--font-size-title);
 }

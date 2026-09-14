@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import type { BlogPostMeta } from '@/lib/blog';
 import { formatDateShort } from '@/lib/date';
 import styles from '../app/blog/Blog.module.css';
@@ -16,30 +17,12 @@ export type PostMeta = Omit<BlogPostMeta, 'coverImage' | 'coverAlt'> & {
 // A post matches a topic when its frontmatter tags include the same label.
 const FILTERS = ['All', 'Product', 'Consulting', 'AI', 'Tanzania'] as const;
 const ease = [0.16, 1, 0.3, 1] as const;
-function Arrow() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5l7 7-7 7" />
-    </svg>
-  );
-}
 
 function ReadMore() {
   return (
     <span className={styles.readMore}>
       Read article
-      <Arrow />
+      <ArrowRight size={15} strokeWidth={2.5} aria-hidden="true" />
     </span>
   );
 }

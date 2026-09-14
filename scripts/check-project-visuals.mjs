@@ -44,7 +44,7 @@ for (const [route, kinds] of routes) {
     failures.push('Homepage still contains the retired hero assembly or strapline');
   }
   if (route === 'build') {
-    for (const kind of ['web', 'hosting', 'data', 'ai', 'strategy']) {
+    for (const kind of ['web', 'hosting', 'branding', 'data', 'ai', 'strategy']) {
       if (!html.includes(`data-system-diagram="${kind}"`)) failures.push(`Services: missing ${kind} SVG`);
     }
     for (const [img] of html.matchAll(/<img\b[^>]*>/gi)) {

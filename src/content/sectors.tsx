@@ -21,7 +21,7 @@ export const sectors: ReadonlyArray<Sector> = [
     key: 'sme',
     label: 'SMEs & Retail',
     summary:
-      'Stock, sales and customer credit held in one place instead of three notebooks — the day-to-day operating problem Ubunifu Sifa was built for.',
+      'Stock, sales and customer credit held in one place instead of three notebooks, the day-to-day operating problem Ubunifu Sifa was built for.',
     offerings: ['Websites & e-commerce', 'POS & inventory', 'Credit & customers', 'Sales analytics'],
   },
   {

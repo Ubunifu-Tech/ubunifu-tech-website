@@ -16,9 +16,7 @@ export default function CareersPage() {
       <PageAtmosphere />
       <main data-atmosphere className={styles.main}>
         <PageHeader
-          ambient={false}
           scene="careers"
-          compact
           eyebrow="Careers"
           title="Work at Ubunifu"
           lead="We publish confirmed vacancies and application details here."
@@ -38,7 +36,7 @@ export default function CareersPage() {
                 other sensitive personal information. See our <Link href="/privacy">privacy notice</Link>{' '}
                 for how we handle careers enquiries.
               </p>
-              <Link href="/contact" className={styles.contactBtn}>
+              <Link href="/contact?subject=Careers" className={styles.contactBtn}>
                 General enquiry
               </Link>
             </div>

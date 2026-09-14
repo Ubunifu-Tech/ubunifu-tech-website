@@ -10,5 +10,5 @@
     <path d="M43 13v23c0 11 6 18 14 18" fill="none" stroke="#6D3FE8" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
     <path d="M29 16 57 10" fill="none" stroke="#6D3FE8" stroke-width="10" stroke-linecap="square" stroke-linejoin="round"/>
   </g>
-  <text x="88" y="59" fill="#FFFFFF" font-family="Ubunifu Poppins, sans-serif" font-size="31" letter-spacing="-1"><tspan font-weight="700">Ubunifu</tspan><tspan dx="5" font-weight="600">Technologies</tspan></text>
+  <text x="88" y="59" fill="#FFFFFF" font-family="Ubunifu Poppins, sans-serif" font-size="31" letter-spacing="0"><tspan font-weight="700">Ubunifu</tspan><tspan dx="5" font-weight="600">Technologies</tspan></text>
 </svg>

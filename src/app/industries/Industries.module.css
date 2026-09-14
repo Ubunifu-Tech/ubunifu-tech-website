@@ -68,7 +68,7 @@
 }
 
 .card:nth-child(4n + 3) {
-  --rule: var(--accent);
+  --rule: var(--brand);
 }
 
 .cardTitle {

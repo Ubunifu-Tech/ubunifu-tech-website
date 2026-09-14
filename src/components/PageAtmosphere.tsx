@@ -9,9 +9,8 @@ import { AmbientShader } from './AmbientShader';
  * the page being alive, not as something happening on it.
  *
  * The palette is mostly white on purpose. Under multiply, white is a no-op, so
- * only the violet stops actually tint anything — the result reads as a few soft
- * clouds drifting over the light sections rather than a flat lavender wash, and
- * the dark header and CTA band are left very nearly untouched.
+ * only the violet stops actually tint anything. The result reads as a few soft
+ * clouds drifting over the light sections rather than a flat lavender wash.
  *
  * Everything expensive is already gated in AmbientShader: it never mounts under
  * prefers-reduced-motion, on four cores or fewer, or on 4GB or less; it drops

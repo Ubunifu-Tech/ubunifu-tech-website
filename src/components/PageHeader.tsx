@@ -1,6 +1,5 @@
 import React from 'react';
-import { HeroBackdrop } from './HeroBackdrop';
-import type { HeroScene } from '@/content/hero-scenes';
+import { PageSceneGraphic, type PageScene } from './PageSceneGraphic';
 import styles from './PageHeader.module.css';
 
 interface PageHeaderProps {
@@ -8,10 +7,7 @@ interface PageHeaderProps {
   title: React.ReactNode;
   lead?: string;
   children?: React.ReactNode;
-  scene: HeroScene;
-  compact?: boolean;
-  /** Ambient light layer. On by default wherever a scene backdrop is used. */
-  ambient?: boolean;
+  scene: PageScene;
 }
 
 /**
@@ -26,23 +22,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   lead,
   children,
   scene,
-  compact = false,
-  ambient = true,
 }) => {
   return (
-    <header className={`${styles.header} ${styles.withArtwork} ${styles.scene} ${compact ? styles.compact : ''}`}>
-      <HeroBackdrop scene={scene} ambient={ambient} />
+    <header className={styles.header} data-page-header={scene}>
       <div className={styles.inner}>
-        <div className={styles.topline}>
-          <span>{eyebrow}</span>
-        </div>
-
-        <h1 className={styles.title}>{title}</h1>
-
-        <div className={styles.supportRow}>
+        <div className={styles.copy}>
+          <p className={styles.eyebrow}>{eyebrow}</p>
+          <h1 className={styles.title}>{title}</h1>
           {lead && <p className={styles.lead}>{lead}</p>}
-
           {children && <div className={styles.actions}>{children}</div>}
+        </div>
+        <div className={styles.visual}>
+          <PageSceneGraphic scene={scene} />
         </div>
       </div>
     </header>

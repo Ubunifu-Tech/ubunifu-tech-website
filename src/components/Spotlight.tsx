@@ -1,7 +1,7 @@
 import React from 'react';
 import { EditorialVisual } from './EditorialVisual';
 import Link from 'next/link';
-import type { LucideIcon } from 'lucide-react';
+import { ArrowRight, Check, type LucideIcon } from 'lucide-react';
 import { Topography } from './Topography';
 import { ScrollReveal } from './ScrollReveal';
 import styles from './Spotlight.module.css';
@@ -43,18 +43,6 @@ type SpotlightProps = {
   headingLevel?: 2 | 3;
 };
 
-const Check: React.FC = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-const Arrow: React.FC = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
-  </svg>
-);
-
 export const Spotlight: React.FC<SpotlightProps> = ({
   id,
   index,
@@ -95,7 +83,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({
           <ul className={styles.items}>
             {items.map((item) => (
               <li key={item} className={styles.item}>
-                <span className={styles.check}><Check /></span>
+                <span className={styles.check}><Check size={13} strokeWidth={3} aria-hidden="true" /></span>
                 {item}
               </li>
             ))}
@@ -104,7 +92,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({
 
         {cta && (
           <Link href={cta.href} className={styles.cta}>
-            {cta.label} <Arrow />
+            {cta.label} <ArrowRight size={15} strokeWidth={2.5} aria-hidden="true" />
           </Link>
         )}
       </ScrollReveal>

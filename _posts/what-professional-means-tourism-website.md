@@ -10,7 +10,7 @@ coverAlt: "Top-down tourism operations workbench where itinerary cards and plann
 
 A tourism website puts evidence in front of a traveller, answers the practical questions, and makes the next step obvious. It can also manufacture doubt on its own, through missing details, a broken form, vague copy, or an interface somebody cannot use.
 
-We built two Tanzanian tourism platforms — Safari King Africa and Usambara Destination Eco Tours — and they showed us the problem from two angles. Safari King needed a public booking site wired into a custom operations platform. Usambara needed a focused eco-tourism site with a solid enquiry workflow, accessibility, and search foundations.
+We built two Tanzanian tourism platforms, Safari King Africa and Usambara Destination Eco Tours, and they showed us the problem from two angles. Safari King needed a public booking site wired into a custom operations platform. Usambara needed a focused eco-tourism site with a solid enquiry workflow, accessibility, and search foundations.
 
 What follows comes from the decisions in those two builds.
 
@@ -20,7 +20,7 @@ Travellers arrive with practical uncertainty. Where does this operator actually 
 
 Information architecture should make those easy to answer. Safari King's site covers safari circuits, parks, treks, and coastal destinations. Usambara presents its destinations and programmes, then opens a route into a trip-specific enquiry.
 
-Brand voice and photography still earn their keep — tourism runs on feeling. Atmosphere just should not bury the facts somebody needs to judge the offer. Clear destination pages, visible contact routes, and specific descriptions carry more weight than a promise of an unforgettable experience.
+Brand voice and photography still earn their keep; tourism runs on feeling. Atmosphere just should not bury the facts somebody needs to judge the offer. Clear destination pages, visible contact routes, and specific descriptions carry more weight than a promise of an unforgettable experience.
 
 ## Treat the enquiry form as part of the service
 
@@ -40,7 +40,7 @@ Accessibility belongs in a piece about trust because it decides whether somebody
 
 ## Protect continuity when the site changes
 
-Tourism sites accumulate links — from search results, saved itineraries, articles, other people's websites. Rebuild without accounting for the old addresses and you turn all of them into dead ends.
+Tourism sites accumulate links from search results, saved itineraries, articles, and other people's websites. Rebuild without accounting for the old addresses and you turn all of them into dead ends.
 
 Safari King's platform carries a dynamic sitemap, structured data, and maintained redirects from prior URLs. Usambara has canonical URLs, a sitemap, social-sharing metadata, and structured data for the relevant page types.
 
@@ -62,6 +62,6 @@ Answering any of those needs analytics and operational records, collected and ac
 
 ## The two builds, side by side
 
-Safari King runs the full connected system: public enquiry flow, itinerary sharing, customer records, booking statuses, content and communication tools in one admin environment. Usambara runs a focused site — destinations, a structured enquiry, the two-email workflow, and the accessibility and search work underneath it.
+Safari King runs the full connected system: public enquiry flow, itinerary sharing, customer records, booking statuses, content and communication tools in one admin environment. Usambara runs a focused site: destinations, a structured enquiry, the two-email workflow, and the accessibility and search work underneath it.
 
 Two depths, the same questions asked first.

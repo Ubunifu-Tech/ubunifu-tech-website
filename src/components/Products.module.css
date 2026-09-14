@@ -265,17 +265,28 @@
 .visual {
   position: relative;
   width: 100%;
-  /* Matches the 1600x1200 source. At 3/2 with object-fit: contain the dark
-     illustrations sat in white pillarbox bars. */
   aspect-ratio: 4 / 3;
   grid-area: visual;
   align-self: center;
   overflow: hidden;
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
   background: var(--surface);
+  transition: border-color 220ms ease, box-shadow 220ms ease;
 }
 
 .image {
   object-fit: contain;
+  transition: transform 520ms var(--ease-out-expo);
+}
+
+.product:hover .visual {
+  border-color: rgba(109, 63, 232, 0.32);
+  box-shadow: 0 22px 54px rgba(61, 31, 160, 0.08);
+}
+
+.product:hover .image {
+  transform: translateY(-4px) scale(1.018);
 }
 
 .withArtwork .topline {
@@ -306,5 +317,12 @@
       'body'
       'capabilities'
       'footer';
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visual,
+  .image {
+    transition: none;
   }
 }

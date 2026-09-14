@@ -9,9 +9,9 @@
   justify-content: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--primary);
   border-radius: var(--control-radius);
-  background: var(--text-primary);
+  background: var(--primary);
   box-shadow: var(--shadow-2);
   color: var(--text-inverse);
   font-size: var(--font-size-body);
@@ -21,22 +21,23 @@
 }
 
 .button:hover {
-  border-color: var(--primary);
+  border-color: var(--primary-deep);
   background: var(--primary-deep);
   color: var(--text-inverse);
 }
 
 .button:focus-visible {
-  outline: 3px solid var(--text-inverse);
+  outline: 3px solid var(--brand);
   outline-offset: 2px;
-  box-shadow: 0 0 0 7px var(--primary);
+  box-shadow: 0 0 0 6px #ffffff;
 }
 
 @media (max-width: 480px) {
   .button {
-    right: 1rem;
-    bottom: 1rem;
-    width: 48px;
+    right: 0.5rem;
+    bottom: 0.75rem;
+    width: 44px;
+    min-height: 44px;
     padding: 0;
   }
 

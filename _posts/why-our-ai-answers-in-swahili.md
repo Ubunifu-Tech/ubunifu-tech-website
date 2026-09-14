@@ -26,7 +26,7 @@ Those are problems of interaction and evaluation. Interface localisation does no
 
 ## Familiar examples cut unnecessary decoding
 
-One demonstration in the Tutor explains fractions using a chapati cut into equal parts. The maths is unremarkable — one whole into four equal pieces gives four quarters. The point is that the learner spends their attention on the fraction instead of on an unfamiliar object.
+One demonstration in the Tutor explains fractions using a chapati cut into equal parts. The maths is unremarkable: one whole into four equal pieces gives four quarters. The point is that the learner spends their attention on the fraction instead of on an unfamiliar object.
 
 Local context can slide into decoration, or worse, stereotype. Not every explanation needs a Tanzanian object in it, and no single example stands in for every learner. The example earns its place when it makes the concept more concrete, and fails when it pulls attention away from it.
 

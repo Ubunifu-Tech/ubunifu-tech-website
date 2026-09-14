@@ -21,9 +21,7 @@ export default function WorkPage() {
       <PageAtmosphere />
       <main data-atmosphere>
         <PageHeader
-          ambient={false}
           scene="work"
-          compact
           eyebrow="Our work"
           title="Our work is live. Go and look."
           lead="Two systems we built, both running today. Every link on this page opens the real thing."

@@ -30,7 +30,8 @@ const GROUPS: { title: string; colors: Swatch[] }[] = [
   {
     title: 'Interaction and supporting tones',
     colors: [
-      { name: 'Accessible Orange', hex: brandColors.orangeDeep, rgb: '191, 67, 20', token: '--brand-deep', usage: 'Buttons and small orange text' },
+      { name: 'Wordmark Orange', hex: brandColors.orangeWordmark, rgb: '194, 71, 21', token: '--brand-wordmark', usage: 'Ubunifu wordmark on light surfaces' },
+      { name: 'Accessible Orange', hex: brandColors.orangeDeep, rgb: '166, 58, 17', token: '--brand-deep', usage: 'Buttons and small orange text' },
       { name: 'Orange Hover', hex: '#E8581E', rgb: '232, 88, 30', token: '--brand-hover', usage: 'Decorative orange interaction states' },
       { name: 'Purple Hover', hex: '#5A2DD0', rgb: '90, 45, 208', token: '--primary-hover', usage: 'Purple interaction states' },
       { name: 'Purple Deep', hex: '#3D1FA0', rgb: '61, 31, 160', token: '--primary-deep', usage: 'Deep purple, pressed states' },
@@ -61,7 +62,6 @@ export default function BrandKit() {
     <main className={styles.page}>
       <PageHeader
         scene="brand"
-        compact
         eyebrow="Brand kit"
         title="Logo files and brand guidelines."
         lead="The Ubunifu Technologies logo, colours, typography and guidance for using them."
@@ -72,11 +72,11 @@ export default function BrandKit() {
           <div className={styles.logoRow}>
             <div className={styles.logoCard}>
               <BrandMark className={styles.markLg} title="Ubunifu Technologies Ligature mark" />
-              <p className={styles.logoLabel}>The Ligature — favicon, avatar, product signature</p>
+              <p className={styles.logoLabel}>The Ligature: favicon, avatar, product signature</p>
             </div>
             <div className={styles.logoCard}>
               <BrandLockup />
-              <p className={styles.logoLabel}>Primary lockup — everyday use</p>
+              <p className={styles.logoLabel}>Primary lockup: everyday use</p>
             </div>
             <div className={`${styles.logoCard} ${styles.dark}`}>
               <BrandLockup inverse />
@@ -85,17 +85,27 @@ export default function BrandKit() {
           </div>
           <p className={styles.note}>
             The original orange U and violet T interlock as one engineered glyph. Its angled
-            crown introduces forward motion, while dark navy anchors the wordmark and the wider
-            visual system. The full company name remains equally legible in every lockup.
+            crown introduces forward motion. Ubunifu uses accessible orange and Technologies
+            uses violet, keeping both brand colours present in the full company name.
           </p>
           <div className={styles.assetLinks}>
             <a className={styles.download} href="/brand/ubunifu-mark.svg" download>Primary mark · SVG</a>
             <a className={styles.download} href="/brand/ubunifu-lockup.svg" download>Primary lockup · SVG</a>
+            <a className={styles.download} href="/brand/ubunifu-wordmark.svg" download>Wordmark · SVG</a>
+            <a className={styles.download} href="/brand/ubunifu-lockup-stacked.svg" download>Stacked lockup · SVG</a>
             <a className={styles.download} href="/brand/ubunifu-mark-inverse.svg" download>Reversed mark · SVG</a>
             <a className={styles.download} href="/brand/ubunifu-lockup-white.svg" download>Reversed lockup · SVG</a>
+            <a className={styles.download} href="/brand/ubunifu-wordmark-white.svg" download>Reversed wordmark · SVG</a>
             <a className={styles.download} href="/brand/ubunifu-mark-navy.svg" download>Navy mark · SVG</a>
             <a className={styles.download} href="/brand/ubunifu-mark-white.svg" download>White mark · SVG</a>
-            <a className={styles.download} href="/logo-v2.png" download>Social avatar · PNG</a>
+            <a className={styles.download} href="/brand/ubunifu-watermark.svg" download>Watermark mark · SVG</a>
+            <a className={styles.download} href="/brand/ubunifu-watermark-lockup.svg" download>Watermark lockup · SVG</a>
+            <a className={styles.download} href="/brand/png/ubunifu-mark-1024.png" download>Primary mark · PNG</a>
+            <a className={styles.download} href="/brand/png/ubunifu-lockup-1600.png" download>Primary lockup · PNG</a>
+            <a className={styles.download} href="/brand/png/ubunifu-wordmark-1600.png" download>Wordmark · PNG</a>
+            <a className={styles.download} href="/brand/png/ubunifu-lockup-stacked-1200.png" download>Stacked lockup · PNG</a>
+            <a className={styles.download} href="/brand/png/ubunifu-watermark-1200.png" download>Watermark mark · PNG</a>
+            <a className={styles.download} href="/brand/png/ubunifu-watermark-lockup-1600.png" download>Watermark lockup · PNG</a>
           </div>
         </section>
 
@@ -103,7 +113,7 @@ export default function BrandKit() {
           <h2 className={styles.h2}>Signature path</h2>
           <div className={styles.gradientBlock} />
           <p className={styles.note}>
-            <code>#FF6B2C → #6D3FE8</code> — orange begins the path, purple resolves it.
+            <code>#FF6B2C → #6D3FE8</code>, orange begins the path, purple resolves it.
             The gradient belongs only in large paths and atmospheres. The master mark keeps the
             orange U and violet T as two crisp solids, supported by dark navy.
           </p>
@@ -144,17 +154,17 @@ export default function BrandKit() {
             <div className={styles.typeCard}>
               <p className={styles.typeAa} style={{ fontFamily: 'var(--font-heading)' }}>Aa</p>
               <p className={styles.typeName}>Poppins</p>
-              <p className={styles.typeUse}>Headings — medium 500. The original logo keeps its 600 / 700 weights.</p>
+              <p className={styles.typeUse}>Headings: medium 500. The original logo keeps its 600 / 700 weights.</p>
             </div>
             <div className={styles.typeCard}>
               <p className={styles.typeAa} style={{ fontFamily: 'var(--font-body)' }}>Aa</p>
               <p className={styles.typeName}>Inter</p>
-              <p className={styles.typeUse}>Body, labels, and controls — regular 400, with normal letter spacing.</p>
+              <p className={styles.typeUse}>Body, labels, and controls: regular 400, with normal letter spacing.</p>
             </div>
             <div className={styles.typeCard}>
               <p className={styles.typeAa} style={{ fontFamily: 'var(--font-mono)' }}>Aa</p>
               <p className={styles.typeName}>Monospace</p>
-              <p className={styles.typeUse}>Code only — regular weight, at the same body size.</p>
+              <p className={styles.typeUse}>Code only: regular weight, at the same body size.</p>
             </div>
           </div>
           <p className={styles.note}>
@@ -170,14 +180,14 @@ export default function BrandKit() {
             <div>
               <p className={styles.ruleHead}>Voice</p>
               <p className={styles.ruleText}>
-                Confident, warm, specific — like a person who knows the subject. Not corporate.
+                Confident, warm, specific, like a person who knows the subject. Not corporate.
                 Avoid value-words (innovative, world-class, seamless).
               </p>
             </div>
             <div>
               <p className={styles.ruleHead}>Do</p>
               <ul className={styles.ruleList}>
-                <li>Navy carries the wordmark, typography, and structural surfaces.</li>
+                <li>The wordmark pairs accessible orange for Ubunifu with violet for Technologies.</li>
                 <li>Bright orange belongs to the Ligature U and large accents.</li>
                 <li>Deep orange (#A63A11) sits behind white CTA text.</li>
                 <li>Navy (#1F1A36) for headings &amp; body.</li>

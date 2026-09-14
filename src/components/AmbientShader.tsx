@@ -5,11 +5,9 @@ import dynamic from 'next/dynamic';
 import styles from './AmbientShader.module.css';
 
 /**
- * The WebGL library is fetched only when the gates below actually pass. This file
- * is imported by every page header (via HeroBackdrop) but only the home hero ever
- * mounts the shader, so a static import would put the whole package in all eleven
- * route bundles. Measured at ~77KB gzipped — the package does not tree-shake well
- * at 0.0.80 — which is precisely why the gates run before the import fires.
+ * The WebGL library is fetched only when the gates below actually pass. A static
+ * import would put the whole package in every route bundle, so the performance
+ * gates run before the import fires.
  */
 const MeshGradient = dynamic(
   () => import('@paper-design/shaders-react').then((m) => m.MeshGradient),
@@ -17,13 +15,13 @@ const MeshGradient = dynamic(
 );
 
 /**
- * Ambient light field for dark surfaces, reacting to the pointer.
+ * Ambient light field reacting to the pointer.
  *
  * It composites with `screen`, so it can only ever add light, and a CSS mask keeps it
  * away from whatever the surface actually needs to read. `placement` picks the mask:
- *   left   home hero — light in the copy column, clear of the illustration
- *   edges  page headers — light at the outer edges, quiet behind centred copy
- *   panel  CTA band — light entering from one side of a flat dark panel
+ *   left   light in the copy column, clear of an illustration
+ *   edges  light at the outer edges, quiet behind centred copy
+ *   panel  light entering from one side of a panel
  *
  * Gating, which the package does not provide and which is the part that matters for
  * a mid-range Android audience on metered data:
@@ -32,8 +30,7 @@ const MeshGradient = dynamic(
  *   - resolution capped via maxPixelCount instead of rendering at full DPR
  *   - pointer response only where a real pointer exists, so touch devices do no work
  *
- * In every skip case the page is complete without it: the static illustration and
- * the scrim already carry the hero.
+ * In every skip case the page is complete without it.
  */
 
 /** Any `true` here means we render nothing at all. */
@@ -49,12 +46,9 @@ function shouldSkip() {
 }
 
 /**
- * Deep navy base with the brand orange as the only true light, warmed through clay
- * and cooled through a deep indigo. Clay is what gives the field depth without
- * reaching for a violet, which on a navy ground reads as the generic purple-tech
- * wash rather than as this brand.
+ * Light default used when a placement does not supply a custom character.
  */
-const COLORS = ['#14102A', '#FF6B2C', '#C2693B', '#2A1F5C', '#1F1A36'];
+const COLORS = ['#FFFFFF', '#FFF4EE', '#FF6B2C', '#EDE6FF', '#6D3FE8'];
 
 /** How far the field slides toward the pointer, in shader offset units. */
 const REACH = 0.5;
@@ -62,8 +56,7 @@ const REACH = 0.5;
 type Placement = 'left' | 'edges' | 'panel' | 'panelTall' | 'page';
 
 /**
- * Optional per-instance character. Defaults reproduce the navy/orange ambient
- * layer exactly, so the three existing placements are untouched.
+ * Optional per-instance character. Defaults use the light identity palette.
  */
 export type ShaderCharacter = {
   colors?: readonly string[];

@@ -38,9 +38,7 @@ export default function BlogPage() {
       <PageAtmosphere />
       <main data-atmosphere className={styles.main}>
         <PageHeader
-          ambient={false}
           scene="journal"
-          compact
           eyebrow="Insights"
           title="Articles"
           lead="Product decisions and lessons from building software in Tanzania."

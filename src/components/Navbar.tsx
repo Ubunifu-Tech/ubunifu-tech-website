@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight, X } from 'lucide-react';
 import { navLinks, cta } from '@/content/site';
 import { BrandLockup } from './BrandMark';
 import styles from './Navbar.module.css';
@@ -31,12 +32,9 @@ export const Navbar: React.FC = () => {
       ? document.activeElement
       : null;
     const menuNode = menuRef.current;
-    const focusable = () => [
-      menuButtonRef.current,
-      ...Array.from(
-        menuNode?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [],
-      ),
-    ].filter((item): item is HTMLElement => Boolean(item));
+    const focusable = () => Array.from(
+      menuNode?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [],
+    );
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -135,6 +133,7 @@ export const Navbar: React.FC = () => {
           <div className={styles.actions}>
             <Link href="/contact" className={styles.cta}>
               {cta.primary}
+              <ArrowRight aria-hidden="true" size={17} strokeWidth={1.9} />
             </Link>
             <button
               ref={menuButtonRef}
@@ -162,6 +161,14 @@ export const Navbar: React.FC = () => {
         aria-label={isMobileMenuOpen ? 'Mobile navigation' : undefined}
         aria-hidden={!isMobileMenuOpen}
       >
+        <button
+          type="button"
+          className={styles.mobileClose}
+          onClick={closeMobileMenu}
+          aria-label="Close menu"
+        >
+          <X aria-hidden="true" size={28} strokeWidth={1.8} />
+        </button>
         <div className={styles.mobileLinks}>
           {navLinks.map((link) => (
             <Link
@@ -177,6 +184,7 @@ export const Navbar: React.FC = () => {
           ))}
           <Link href="/contact" className={styles.mobileCta} onClick={closeMobileMenu}>
             {cta.primary}
+            <ArrowRight aria-hidden="true" size={19} strokeWidth={1.9} />
           </Link>
         </div>
       </div>

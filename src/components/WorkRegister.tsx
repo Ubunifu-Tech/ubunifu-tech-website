@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { projects } from '@/content/portfolio';
 import { sectionId } from '@/lib/slug';
 import { EditorialVisual } from './EditorialVisual';
@@ -65,7 +65,7 @@ export function WorkRegister() {
                 <span className="srOnly"> (opens in a new tab)</span>
               </a>
               <Link href={`/work/${project.slug}`} className={styles.caseLink}>
-                Read the case study <span aria-hidden="true">→</span>
+                Read the case study <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
               </Link>
             </div>
           </ScrollReveal>

@@ -1,11 +1,8 @@
-import Image from 'next/image';
 import { services, type ServiceKey } from '@/content/services';
 import { SystemDiagram, type SystemDiagramKind } from './SystemDiagram';
 import styles from './CapabilityJourney.module.css';
 
-type ServiceVisual =
-  | { kind: SystemDiagramKind; description: string }
-  | { kind: 'image'; src: string; description: string };
+type ServiceVisual = { kind: SystemDiagramKind; description: string };
 
 const media: Partial<Record<ServiceKey, ServiceVisual>> = {
   web: {
@@ -17,9 +14,8 @@ const media: Partial<Record<ServiceKey, ServiceVisual>> = {
     description: 'A domain connects website hosting and business email.',
   },
   branding: {
-    kind: 'image',
-    src: '/editorial/service-branding-v1.webp',
-    description: 'Navy, orange and violet colour swatches beside a pencil and blank stationery.',
+    kind: 'branding',
+    description: 'Identity elements resolve into one consistent set of brand surfaces.',
   },
   data: {
     kind: 'data',
@@ -45,17 +41,7 @@ export function CapabilityJourney() {
             <article key={service.key} id={service.key} className={`${styles.chapter} ${!visual ? styles.textOnly : ''}`}>
               {visual && (
                 <div className={styles.media}>
-                  {visual.kind === 'image' ? (
-                    <Image
-                      src={visual.src}
-                      alt={visual.description}
-                      fill
-                      sizes="(max-width: 900px) 94vw, 46vw"
-                      className={styles.image}
-                    />
-                  ) : (
-                    <SystemDiagram kind={visual.kind} description={visual.description} />
-                  )}
+                  <SystemDiagram kind={visual.kind} description={visual.description} />
                 </div>
               )}
               <div className={styles.copy}>

@@ -1,16 +1,18 @@
-/* The footer is one dark, self-contained block (CTA + columns), clearly
-   separated from the light page above. */
-
 .footer {
   position: relative;
-  background: var(--text-primary);
-  color: rgba(255, 255, 255, 0.7);
+  border-top: 1px solid rgba(109, 63, 232, 0.16);
+  background: #f6f2ff;
+  color: #675f75;
 }
 
-/* ── Footer columns ───────────────────────────── */
+.footer::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b2c 0 28%, #6d3fe8 28% 100%);
+  content: '';
+}
 
-/* Scoped under .footer so this padding always beats the global `.container`
-   shorthand (padding: 0 2rem) regardless of stylesheet order. */
 .footer .container {
   display: flex;
   flex-direction: column;
@@ -22,116 +24,170 @@
 .top {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(109, 63, 232, 0.16);
+}
+
+.startProject {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(109, 63, 232, 0.35);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #3d1fa0;
+  font-size: var(--font-size-body);
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease,
+    transform 180ms ease;
+}
+
+.startProject svg,
+.colLink svg {
+  flex: 0 0 auto;
+  transition: transform 180ms ease;
+}
+
+.startProject:hover {
+  border-color: #6d3fe8;
+  background: #6d3fe8;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.startProject:hover svg,
+.colLink:hover svg {
+  transform: translate(2px, -1px);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  color: #2e2935;
 }
 
 .middle {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-6);
+  gap: 2rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .col {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 0.5rem;
 }
 
 .colLabel {
+  margin-bottom: 0.25rem;
+  color: #2e2935;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+}
+
+.colLink,
+.location,
+.colLinkDisabled {
+  color: #675f75;
   font-size: var(--font-size-small);
-  font-weight: var(--font-weight-medium);
-  color: #ffffff;
-  margin-bottom: var(--space-1);
+  text-decoration: none;
 }
 
 .colLink {
-  font-size: var(--font-size-small);
-  color: var(--text-inverse-tertiary);
-  text-decoration: none;
-  transition: color 0.2s ease;
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.35rem;
+  transition: color 180ms ease;
 }
 
 .colLink:hover {
-  color: #ffffff;
+  color: #3d1fa0;
 }
 
 .colLinkDisabled {
-  font-size: var(--font-size-small);
-  color: rgba(255, 255, 255, 0.4);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0.5rem;
 }
 
 .soon {
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba(255, 107, 44, 0.24);
+  border-radius: 6px;
+  background: #fff4ee;
+  color: #a63a11;
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-regular);
-  padding: var(--space-1) var(--space-1);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: var(--radius-pill);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.location {
-  font-size: var(--font-size-small);
-  color: var(--text-inverse-tertiary);
 }
 
 .bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: var(--space-5);
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(109, 63, 232, 0.16);
 }
 
-.copy {
+.copy,
+.legalLinks {
+  color: #675f75;
   font-size: var(--font-size-caption);
-  color: var(--text-inverse-tertiary);
 }
 
 .legalLinks {
   display: flex;
-  gap: var(--space-4);
-  color: var(--text-inverse-tertiary);
-  font-size: var(--font-size-caption);
+  gap: 1rem;
+  margin-right: 9.5rem;
 }
 
 .legalLinks a:hover {
-  color: #fff;
+  color: #3d1fa0;
 }
 
 .footer a:focus-visible {
-  outline: 3px solid var(--text-inverse);
+  outline: 3px solid var(--primary);
   outline-offset: 4px;
 }
 
-/* ── Responsive ───────────────────────────────── */
-
 @media (max-width: 768px) {
   .top {
-    flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-1);
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .startProject {
+    margin-top: 1rem;
   }
 
   .middle {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .legalLinks {
+    margin-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startProject,
+  .startProject svg,
+  .colLink svg {
+    transition: none;
   }
 }
 
 @media (max-width: 480px) {
   .middle {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .bottom {

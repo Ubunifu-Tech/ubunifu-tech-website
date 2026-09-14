@@ -13,7 +13,7 @@ for (const id of ['insight', 'sifa', 'rafiki']) {
   }
   if (!row.includes(`data-product-art="${id}"`)) failures.push(`${id}: missing artwork`);
   const image = row.match(/<img\b[^>]*>/)?.[0] ?? '';
-  const filename = `product-${id}-v1.webp`;
+  const filename = `product-${id}-v2.webp`;
   if (!image.includes(filename)) failures.push(`${id}: wrong illustration`);
   if (!/alt="[^"]+"/.test(image)) failures.push(`${id}: missing image description`);
   if (!image.includes('loading="lazy"')) failures.push(`${id}: below-hero image should lazy-load`);

@@ -1,0 +1,149 @@
+.frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  overflow: hidden;
+  background: #f8f5ff;
+  pointer-events: none;
+  place-items: center;
+  user-select: none;
+  --iso-top: #fff4ee;
+  --iso-front: #6d3fe8;
+  --iso-side: #4d2cb9;
+  --iso-plane: #d9cff7;
+  --iso-recess: #3d1fa0;
+  --iso-edge: rgba(109, 63, 232, 0.3);
+}
+
+.frame[data-story-visual='ledger'],
+.frame[data-story-visual='pricing'] {
+  background: #fff6f1;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.route,
+.liveRoute,
+.detailLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.route {
+  stroke: rgba(109, 63, 232, 0.32);
+  stroke-width: 2;
+}
+
+.liveRoute {
+  stroke: #ff6b2c;
+  stroke-width: 2.4;
+  stroke-dasharray: 7 10;
+  animation: storyRoute 3.2s linear infinite;
+}
+
+.detailLine {
+  stroke: #6d3fe8;
+  stroke-width: 2;
+}
+
+.node {
+  fill: #ffffff;
+  stroke: #6d3fe8;
+  stroke-width: 2;
+}
+
+.signal {
+  fill: #ff6b2c;
+  stroke: #ffffff;
+  stroke-width: 5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: storyPulse 2.8s ease-in-out infinite;
+}
+
+.paperSoft {
+  fill: #d8cdf7;
+  stroke: rgba(109, 63, 232, 0.36);
+}
+
+.paperMid {
+  fill: #e9e2fb;
+  stroke: rgba(109, 63, 232, 0.4);
+}
+
+.paperLit {
+  fill: #ffffff;
+  stroke: rgba(109, 63, 232, 0.5);
+}
+
+.violetBox,
+.orangeBox {
+  fill: none;
+}
+
+.orangeBox {
+  --iso-top: #fff4ee;
+  --iso-front: #ff6b2c;
+  --iso-side: #c54718;
+  --iso-recess: #a63a11;
+  --iso-edge: rgba(255, 107, 44, 0.32);
+}
+
+.panel,
+.ledger,
+.receipt {
+  fill: rgba(255, 255, 255, 0.92);
+  stroke: rgba(109, 63, 232, 0.34);
+  stroke-width: 1.7;
+}
+
+.ledger {
+  fill: #ffffff;
+}
+
+.receipt {
+  fill: #fffdfb;
+  stroke: rgba(255, 107, 44, 0.38);
+}
+
+.standardBlocks rect {
+  fill: #ffffff;
+  stroke: rgba(109, 63, 232, 0.42);
+  stroke-width: 1.7;
+}
+
+.meter rect {
+  fill: #cfc1f3;
+}
+
+.meter rect:nth-child(-n + 4) {
+  fill: #6d3fe8;
+}
+
+@keyframes storyRoute {
+  to {
+    stroke-dashoffset: -34;
+  }
+}
+
+@keyframes storyPulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveRoute,
+  .signal {
+    animation: none;
+  }
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { site, footerColumns } from '@/content/site';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { cta, site, footerColumns } from '@/content/site';
 import { BrandLockup } from './BrandMark';
 import styles from './Footer.module.css';
 
@@ -10,8 +11,12 @@ export const Footer: React.FC = () => {
       <div className={`container ${styles.container}`}>
         <div className={styles.top}>
           <div className={styles.brand}>
-            <BrandLockup inverse />
+            <BrandLockup />
           </div>
+          <Link href="/contact" className={styles.startProject}>
+            {cta.primary}
+            <ArrowRight aria-hidden="true" size={18} strokeWidth={1.8} />
+          </Link>
         </div>
 
         <div className={styles.middle}>
@@ -35,7 +40,8 @@ export const Footer: React.FC = () => {
                       rel="noopener noreferrer"
                       className={styles.colLink}
                     >
-                      {link.label} <span aria-hidden="true">↗</span>
+                      {link.label}
+                      <ArrowUpRight aria-hidden="true" size={15} strokeWidth={1.8} />
                       <span className="srOnly"> (opens in a new tab)</span>
                     </a>
                   );

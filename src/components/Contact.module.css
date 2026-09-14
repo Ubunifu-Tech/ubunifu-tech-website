@@ -4,16 +4,33 @@
 }
 
 .layout {
+  position: relative;
   display: grid;
-  align-items: start;
-  gap: 0;
-  border-top: 1px solid var(--border-hover);
-  border-bottom: 1px solid var(--border-hover);
+  align-items: stretch;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
   grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
 }
 
+.layout::before {
+  position: absolute;
+  z-index: 1;
+  top: -1px;
+  right: -1px;
+  left: -1px;
+  height: 3px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: linear-gradient(90deg, var(--brand) 0 32%, var(--primary) 32% 100%);
+  content: '';
+  pointer-events: none;
+}
+
 .info {
-  padding: clamp(2.25rem, 5vw, 4.5rem) clamp(2rem, 5vw, 5rem) clamp(2.25rem, 5vw, 4.5rem) 0;
+  padding: clamp(2.25rem, 5vw, 4.5rem);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: color-mix(in srgb, var(--primary) 4%, white);
 }
 
 .headingAccent {
@@ -22,7 +39,7 @@
 
 .heading {
   max-width: none;
-  margin: var(--space-3) 0 var(--space-4);
+  margin: 0 0 var(--space-4);
   color: var(--text-primary);
   font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
@@ -31,14 +48,13 @@
 
 .text {
   max-width: 48ch;
-  margin-bottom: 2.5rem;
+  margin-bottom: var(--space-6);
   color: var(--text-secondary);
   font-size: var(--font-size-body);
   line-height: 1.72;
 }
 
-/* ── Contact register ────────────────────────── */
-
+/* Contact routes */
 .methods {
   display: flex;
   border-top: 1px solid var(--border-hover);
@@ -47,17 +63,14 @@
 
 .method {
   display: grid;
-  min-height: 76px;
+  min-height: 82px;
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border-hover);
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 36px minmax(0, 1fr);
 }
 
-/* A hue per channel, the same four-step cycle the commitments on /about and the
-   sector cards on /industries use — so the column reads as a set of routes
-   rather than a stack of grey rows. */
 .method[data-hue='brand'] {
   --mark: var(--brand-deep);
 }
@@ -67,7 +80,7 @@
 }
 
 .method[data-hue='accent'] {
-  --mark: var(--accent);
+  --mark: var(--brand);
 }
 
 .method[data-hue='ink'] {
@@ -76,8 +89,13 @@
 
 .methodIcon {
   display: flex;
+  width: 36px;
+  height: 36px;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--mark) 22%, white);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--mark) 8%, white);
   color: var(--mark);
 }
 
@@ -85,7 +103,7 @@
   margin-bottom: var(--space-1);
   color: var(--text-tertiary);
   font-family: var(--font-body);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-regular);
 }
 
@@ -94,11 +112,19 @@
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
   text-decoration: none;
+  text-underline-offset: 3px;
   transition: color 0.2s ease;
 }
 
 .methodLink:hover {
   color: var(--mark);
+  text-decoration: underline;
+}
+
+.methodLink:focus-visible {
+  border-radius: 2px;
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .methodText {
@@ -106,14 +132,52 @@
   font-size: var(--font-size-body);
 }
 
-/* ── Ruled project brief ─────────────────────── */
-
+/* Project brief form */
 .form {
   position: relative;
   display: flex;
-  padding: clamp(2.25rem, 5vw, 4.5rem) 0 clamp(2.25rem, 5vw, 4.5rem) clamp(2rem, 5vw, 5rem);
+  padding: clamp(2.25rem, 5vw, 4.5rem);
+  border-left: 1px solid var(--border-hover);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: rgba(255, 255, 255, 0.84);
   flex-direction: column;
   gap: var(--space-5);
+}
+
+.formHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border-hover);
+}
+
+.formTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+.requiredNote {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
+.requiredDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px var(--brand-dim);
 }
 
 .formRow {
@@ -124,29 +188,49 @@
 
 .field {
   display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
 }
 
 .label {
   color: var(--text-secondary);
   font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-emphasis);
+  transition: color 0.2s ease;
+}
+
+.field:focus-within .label {
+  color: var(--primary-deep);
+}
+
+.fieldHint {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
 }
 
 .input {
   width: 100%;
-  padding: var(--space-4) 0;
-  border: 0;
-  border-bottom: 1px solid var(--border-hover);
-  border-radius: 0;
+  min-height: 56px;
+  padding: 0.875rem var(--space-4);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--control-radius);
   outline: none;
-  background: transparent;
+  background: var(--surface);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: var(--font-size-body);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  line-height: 1.5;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   -webkit-appearance: none;
 }
 
@@ -154,23 +238,40 @@
   color: var(--text-tertiary);
 }
 
+.input:hover:not(:disabled) {
+  border-color: var(--border-active);
+}
+
 .input:focus {
-  border-bottom-color: var(--primary);
-  background: rgba(255, 255, 255, 0.46);
-  box-shadow: none;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--primary-dim);
 }
 
 .input:focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 3px;
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.input:user-invalid {
+  border-color: #b42318;
+}
+
+.input:user-invalid:focus-visible {
+  outline-color: #b42318;
+}
+
+.input:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 .textarea {
-  min-height: 150px;
+  min-height: 184px;
   resize: vertical;
 }
 
-/* Honeypot — visually hidden, off-screen; only bots fill this */
+/* Honeypot: visually hidden and unreachable by keyboard. */
 .honeypot {
   position: absolute;
   left: -9999px;
@@ -179,60 +280,85 @@
   overflow: hidden;
 }
 
+.formActions {
+  display: grid;
+  align-items: start;
+  gap: var(--space-5);
+  margin-top: var(--space-1);
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
 .submitBtn {
   display: inline-flex;
   width: fit-content;
-  min-width: 180px;
-  min-height: 48px;
+  min-width: 184px;
+  min-height: 50px;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  padding: var(--space-3) 1.25rem;
-  border: 1px solid var(--brand-deep);
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid var(--primary);
   border-radius: var(--control-radius);
-  background: var(--cta);
+  background: var(--primary);
   color: #fff;
   cursor: pointer;
   font-family: var(--font-body);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.submitBtn svg {
+  transition: transform 180ms ease;
 }
 
 .submitBtn:hover:not(:disabled) {
-  border-color: var(--text-primary);
-  background: var(--cta-hover);
+  border-color: var(--primary-deep);
+  background: var(--primary-deep);
+  box-shadow: 0 8px 20px rgba(61, 31, 160, 0.18);
+  transform: translateY(-2px);
+}
+
+.submitBtn:hover:not(:disabled) svg {
+  transform: translate(2px, -1px);
 }
 
 .submitBtn:focus-visible {
-  outline: 3px solid var(--primary);
+  outline: 3px solid var(--brand);
   outline-offset: 3px;
 }
 
 .submitBtn:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
+  cursor: wait;
+  opacity: 0.72;
 }
 
 .privacyNote {
-  max-width: 72ch;
+  max-width: 64ch;
+  margin: 0;
   color: var(--text-tertiary);
-  font-size: var(--font-size-body);
-  line-height: 1.6;
+  font-size: var(--font-size-small);
+  line-height: 1.65;
 }
 
 .privacyNote a {
   color: var(--primary-deep);
   font-weight: var(--font-weight-regular);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
+}
+
+.privacyNote a:focus-visible {
+  border-radius: 2px;
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
@@ -245,21 +371,30 @@
 .statusSuccess,
 .statusError {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) 0;
-  border-top: 1px solid currentColor;
-  border-bottom: 1px solid currentColor;
-  font-size: var(--font-size-body);
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-regular);
+  line-height: 1.55;
+}
+
+.statusSuccess svg,
+.statusError svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
 }
 
 .statusSuccess {
-  color: var(--primary);
+  background: var(--primary-dim);
+  color: var(--primary-deep);
 }
 
 .statusError {
-  color: #b91c1c;
+  background: #fff5f4;
+  color: #b42318;
 }
 
 @media (max-width: 900px) {
@@ -268,20 +403,30 @@
   }
 
   .info {
-    position: static;
-    padding-right: 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
   }
 
   .form {
-    padding-left: 0;
     border-top: 1px solid var(--border-hover);
     border-left: 0;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
   }
 }
 
 @media (max-width: 560px) {
+  .info,
+  .form {
+    padding: var(--space-6);
+  }
 
-  .formRow {
+  .formHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .formRow,
+  .formActions {
     grid-template-columns: 1fr;
   }
 
@@ -293,8 +438,14 @@
 @media (prefers-reduced-motion: reduce) {
   .input,
   .submitBtn,
-  .methodLink {
+  .submitBtn svg,
+  .methodLink,
+  .label {
     transition: none;
+  }
+
+  .submitBtn:hover:not(:disabled) {
+    transform: none;
   }
 
   .spinner {

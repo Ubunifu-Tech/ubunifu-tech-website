@@ -60,7 +60,7 @@ export const metadata: Metadata = {
         url: '/og.png',
         width: 1672,
         height: 941,
-        alt: 'Ubunifu Technologies — consulting and products, built in Tanzania.',
+        alt: 'Ubunifu Technologies, consulting and products, built in Tanzania.',
       },
     ],
   },

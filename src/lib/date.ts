@@ -8,8 +8,8 @@
  * Formatters are built once at module scope rather than per call, matching what
  * two of the three copies already did.
  *
- * Deliberately carries no 'use client' and no 'server-only' directive: it is
- * imported by a client component (Insights) and a server one (the post page).
+ * Deliberately carries no 'use client' and no 'server-only' directive because
+ * it is shared by client-side listings and the server-rendered post page.
  */
 
 const shortDate = new Intl.DateTimeFormat('en-GB', {

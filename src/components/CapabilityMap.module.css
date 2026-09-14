@@ -27,25 +27,24 @@
   line-height: 1.7;
 }
 
-/* The one dark surface on this page: it names what the six capabilities are
-   collectively for, so the groups beneath it read as parts of one thing. */
 .banner {
   margin-bottom: var(--space-7);
   padding: var(--space-6);
+  border: 1px solid var(--primary-border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(140deg, #241a4d 0%, #171232 62%, #14102a 100%);
+  background: #f6f2ff;
 }
 
 .bannerLabel {
   margin: 0 0 var(--space-2);
-  color: var(--text-inverse-tertiary);
+  color: var(--primary-deep);
   font-size: var(--font-size-small);
 }
 
 .bannerText {
   max-width: 58ch;
   margin: 0;
-  color: var(--text-inverse);
+  color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-regular);
@@ -74,7 +73,7 @@
 }
 
 .group[data-hue='accent'] {
-  --rule: var(--accent);
+  --rule: var(--brand);
 }
 
 .groupTitle {

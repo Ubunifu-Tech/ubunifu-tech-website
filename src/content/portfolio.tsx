@@ -113,7 +113,7 @@ export const projects: ReadonlyArray<Project> = [
     ],
     sectionHeading: 'How the system works',
     sectionStandfirst:
-      'Two sides of one system. A public site that structures a first enquiry, and an admin platform where that enquiry becomes a customer record, a proposed itinerary and a reply — a loop that returns to the traveller as a shareable link.',
+      'Two sides of one system. A public site that structures a first enquiry, and an admin platform where that enquiry becomes a customer record, a proposed itinerary and a reply, a loop that returns to the traveller as a shareable link.',
     pullQuote:
       'We built a connected public website and operating platform rather than treating the project as a brochure site.',
     furtherReading: [
@@ -179,7 +179,7 @@ export const projects: ReadonlyArray<Project> = [
     ],
     sectionHeading: 'How the site works',
     sectionStandfirst:
-      'One path, built so it stays usable with a mouse, a keyboard or a screen reader — and one enquiry that splits in two on the way out, a brief for the operator and a confirmation for the visitor.',
+      'One path, built so it stays usable with a mouse, a keyboard or a screen reader, and one enquiry that splits in two on the way out, a brief for the operator and a confirmation for the visitor.',
     pullQuote:
       'We built the website to help someone move from curiosity to a structured trip enquiry.',
   },

@@ -1,4 +1,4 @@
-// The operating philosophy, rendered by WhyUbunifu.tsx beneath the home hero.
+// The operating philosophy rendered on the homepage.
 //
 // These are not four independent features. They are one sequence — how we work
 // before, during, and after a project — and the section's lead sets them as a
@@ -26,8 +26,10 @@
 // in-country hosting, and sector coverage (sectors are focus areas, not existing
 // clients). If a claim is not checkable, leave it out.
 
+export type PillarKey = 'local' | 'shipped' | 'ai' | 'accountable';
+
 export type Pillar = {
-  key: string;
+  key: PillarKey;
   /** Reads as one clause inside the statement sentence. */
   clause: string;
   /** Column heading under the statement. */

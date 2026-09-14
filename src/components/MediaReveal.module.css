@@ -9,7 +9,7 @@
   position: absolute;
   inset: 0;
   z-index: 4;
-  background: var(--text-primary);
+  background: var(--primary);
   transform-origin: right center;
   pointer-events: none;
 }

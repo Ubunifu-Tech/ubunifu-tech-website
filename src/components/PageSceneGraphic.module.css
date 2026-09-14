@@ -1,0 +1,159 @@
+.frame {
+  position: relative;
+  display: grid;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(109, 63, 232, 0.2);
+  border-radius: 8px;
+  aspect-ratio: 16 / 11;
+  background: #f8f5ff;
+  place-items: center;
+  --iso-top: #fff4ee;
+  --iso-front: #6d3fe8;
+  --iso-side: #4d2cb9;
+  --iso-plane: #d9cff7;
+  --iso-recess: #3d1fa0;
+  --iso-edge: rgba(109, 63, 232, 0.32);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cornerGuide,
+.guideRoute,
+.liveRoute,
+.routes path,
+.nodeMark,
+.envelope,
+.lockLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cornerGuide {
+  stroke: rgba(109, 63, 232, 0.16);
+  stroke-width: 2;
+}
+
+.guideRoute,
+.routes path {
+  stroke: rgba(109, 63, 232, 0.34);
+  stroke-width: 2;
+}
+
+.liveRoute,
+.routes .liveRoute {
+  stroke: #ff6b2c;
+  stroke-width: 2.4;
+  stroke-dasharray: 7 10;
+  animation: routeMove 3.2s linear infinite;
+}
+
+.nodePanel {
+  fill: rgba(255, 255, 255, 0.88);
+  stroke: rgba(109, 63, 232, 0.34);
+  stroke-width: 1.5;
+}
+
+.nodeMark {
+  stroke: #6d3fe8;
+  stroke-width: 2;
+}
+
+.basePlane {
+  fill: #e2d9f9;
+  stroke: rgba(109, 63, 232, 0.26);
+}
+
+.softPlane {
+  fill: #cfc1f3;
+  stroke: rgba(109, 63, 232, 0.36);
+}
+
+.litPlane {
+  fill: #ffffff;
+  stroke: rgba(109, 63, 232, 0.46);
+}
+
+.coreBox,
+.orangeBox {
+  fill: none;
+}
+
+.orangeBox {
+  --iso-top: #fff4ee;
+  --iso-front: #ff6b2c;
+  --iso-side: #c54718;
+  --iso-recess: #a63a11;
+  --iso-edge: rgba(255, 107, 44, 0.32);
+}
+
+.node {
+  fill: #ffffff;
+  stroke: #6d3fe8;
+  stroke-width: 2;
+}
+
+.signal {
+  fill: #ff6b2c;
+  stroke: #ffffff;
+  stroke-width: 5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: signalPulse 2.8s ease-in-out infinite;
+}
+
+.ring {
+  fill: none;
+  stroke: rgba(255, 107, 44, 0.42);
+  stroke-width: 2;
+}
+
+.sectorShape {
+  fill: #ffffff;
+  stroke: rgba(109, 63, 232, 0.56);
+  stroke-width: 2;
+}
+
+.envelope {
+  fill: #ffffff;
+  stroke: #6d3fe8;
+  stroke-width: 2.4;
+}
+
+.lockBody {
+  fill: #3d1fa0;
+}
+
+.lockLine {
+  stroke: #ff6b2c;
+  stroke-width: 4;
+}
+
+@keyframes routeMove {
+  to {
+    stroke-dashoffset: -34;
+  }
+}
+
+@keyframes signalPulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveRoute,
+  .routes .liveRoute,
+  .signal {
+    animation: none;
+  }
+}

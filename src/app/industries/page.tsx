@@ -27,9 +27,7 @@ export default function IndustriesPage() {
       <PageAtmosphere />
       <main data-atmosphere>
         <PageHeader
-          ambient={false}
           scene="industries"
-          compact
           eyebrow="Industries"
           title="Tourism and other industries"
           lead="Explore our work for Tanzanian tourism businesses and examples of projects we can discuss in other sectors."

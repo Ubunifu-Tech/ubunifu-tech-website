@@ -11,9 +11,9 @@
   justify-content: space-between;
   gap: 1.25rem;
   padding: var(--space-3) 1.25rem;
-  border: 1px solid var(--brand-deep);
+  border: 1px solid var(--primary);
   border-radius: var(--control-radius);
-  background: var(--cta);
+  background: var(--primary);
   color: #fff;
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-regular);
@@ -22,13 +22,13 @@
 }
 
 .heroBtn:hover {
-  border-color: var(--text-primary);
-  background: var(--cta-hover);
+  border-color: var(--primary-deep);
+  background: var(--primary-deep);
   color: #fff;
 }
 
 .heroBtn:focus-visible {
-  outline: 3px solid var(--text-inverse);
+  outline: 3px solid var(--brand);
   outline-offset: 4px;
 }
 

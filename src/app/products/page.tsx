@@ -17,9 +17,7 @@ export default function ProductsPage() {
       <PageAtmosphere />
       <main data-atmosphere>
         <PageHeader
-          ambient={false}
           scene="products"
-          compact
           eyebrow="Our products"
           title="Software we build and operate ourselves."
           lead="Work with your documents, manage daily business operations, or add useful tools to a website. Explore each product and its current availability below."

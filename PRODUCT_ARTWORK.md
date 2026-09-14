@@ -1,71 +1,52 @@
-# Product artwork — 9 September 2026
+# Product artwork - 14 September 2026
 
-Three product illustrations generated using the built-in `image_gen.imagegen` tool and the imagegen skill. One request per product; no variants or regeneration. All originals were visually inspected and retained. Runtime images are optimized WebP copies at 1536 × 1024, without cropping or generative editing.
+The product page and homepage use three original editorial illustrations generated for the current light Ubunifu Technologies design system. They explain each product's purpose without presenting a fictional product screenshot.
 
-These illustrations explain each product’s purpose, not its released interface. Names, features, availability and live links remain in accessible HTML sourced from `src/content/products.tsx`. Artwork is mapped by stable product ID in `src/content/product-artwork.ts`; the homepage preview stays text-led to avoid unnecessary repetition.
+Runtime artwork is mapped by stable product ID in `src/content/product-artwork.ts`. Product names, capabilities, availability, and links remain accessible HTML sourced from `src/content/products.tsx`.
 
-| Product | Subject | WebP size |
-|---|---|---|
-| Insight | Source documents connected to an extracted answer sheet | 54,842 bytes |
-| Sifa | Stock cartons, receipt and ledger connected by a transaction line | 90,904 bytes |
-| Rafiki | Contact, booking and publishing modules fitting into a website | 38,878 bytes |
+| Product | Runtime asset | Subject | WebP size |
+|---|---|---|---:|
+| Insight | `public/editorial/product-insight-v2.webp` | A professional reviews answers connected back to source documents | 54,314 bytes |
+| Sifa | `public/editorial/product-sifa-v2.webp` | A small-business workflow connects sales, stock, customers, and records | 57,082 bytes |
+| Rafiki | `public/editorial/product-rafiki-v2.webp` | A team assembles contact, booking, and publishing modules into a website | 45,470 bytes |
 
-The collection uses navy and orange with a small violet accent on light paper. Sifa also contains a natural tan carton material; no new UI colour token was introduced. All artwork is wordless, without people, fictional metrics or fake screenshots. Paper texture and soft shadows are part of the illustrations, not a new 3D visual system.
+All three runtime files are 1200 x 900 WebP images on a clean white canvas. They contain no product claims, readable interface copy, logos, watermarks, metrics, or currency amounts. Rafiki includes an outlined, unfilled module to make its in-development status visible rather than implying it is already live.
 
-## Insight
+## Shared visual direction
 
-Runtime asset: [public/editorial/product-insight-v1.webp](public/editorial/product-insight-v1.webp)
+- Polished flat editorial illustration with restrained isometric depth.
+- Substantial human figures performing recognizable work.
+- Vivid violet `#6D3FE8`, deep violet `#3D1FA0`, orange `#FF6B2C`, warm ink `#2E2935`, white, pale violet, and natural skin tones.
+- Rounded geometry, crisp edges, and soft dimensional shading.
+- No cyan, green, yellow, red, or blue accents.
+- No robots, brains, rockets, VR headsets, dark server racks, decorative network fields, or science-fiction imagery.
 
-Original generated output: `/Users/richardpallangyo/.codex/generated_images/01a084ef-3a7b-7811-83ee-37f7d0e974c8/exec-e5e81d6d-d628-454c-bbcb-3a69b5d68310.png`
+## Product subjects
 
-Exact generation prompt:
+### Insight
 
-```text
-Use case: stylized-concept
-Asset type: Light-background website product content illustration to sit beside a product description, NOT a hero background. One standalone 3:2 landscape image, ideally 1536x1024.
-Scene/backdrop: Clean white or very light navy-derived neutral paper background, no scene or setting.
-Style/medium: Cohesive refined flat editorial printmaking and cut-paper illustration. Primarily two-dimensional, confident simple silhouettes, sparse precise geometry, subtle tactile ink grain. Do not use photographic rendering or glossy three-dimensional shading.
-Composition/framing: A centered, clear subject grouping occupies approximately 70 percent of the canvas with generous empty margins on all sides. Immediately legible at a compact website illustration size. No text overlay space is needed.
-Color palette: Deep navy #1F1A36 and warm orange #FF6B2C, white and navy-derived neutral paper. Violet #6D3FE8 allowed only as one tiny accent, never dominant.
-Constraints: Absolutely no words, letters, numbers, pseudo-writing, rows of fake text, labels, logos, watermark, brand marks, currency symbols or fake metrics anywhere. No trees, plants, landscapes, buildings, furniture, people, extra decorative props, fake screenshots, browser controls, UI toolbars, glowing orbs, science-fiction machinery, ornamental connector forests, 3D glass or heavy dimensional rendering. Only the specific subject objects described below.
-Primary request: Explain document-based answers and source references through a physical editorial paper metaphor. Arrange several clearly recognizable blank document sheets, one with a small orange source bookmark, and one separate extracted answer sheet. A single precise narrow paper strip connects the bookmarked source document to the answer sheet, making their relationship clear. The answer sheet remains completely blank except for at most one broad plain geometric rule, and the source sheets have only sparse simple geometric ruling, never fake lines of text. Use the folded corners, overlap and orange bookmark to create a distinctive, calm, readable composition. No chat screenshot, no chat bubbles, no extra icons or props.
-```
+Several source documents pass through a compact analysis module into an answer panel. Reference markers connect answer fragments back to their sources while a professional visibly reviews the result. The scene is limited to capabilities listed in `src/content/products.tsx`: questions about documents, structured extraction, and source references.
 
-## Sifa
+Final corrected generation output:
 
-Runtime asset: [public/editorial/product-sifa-v1.webp](public/editorial/product-sifa-v1.webp)
+`/Users/richardpallangyo/.codex/generated_images/019efd0a-a70c-73c1-9f92-edfad648a5f4/exec-b5967cc7-1cb6-43e4-b881-39afce57d73e.png`
 
-Original generated output: `/Users/richardpallangyo/.codex/generated_images/01a084ef-3a7b-7811-83ee-37f7d0e974c8/exec-2806b136-4dc0-47ed-8ab4-fc52e2112c1e.png`
+### Sifa
 
-Exact generation prompt:
+A small-business operator works at a sales counter beside stock, a supplier delivery, a customer ledger, and an unpaid-balance record. One orange route joins the workflow. The scene contains no invented metrics or currency amounts.
 
-```text
-Use case: stylized-concept
-Asset type: Light-background website product content illustration to sit beside a product description, NOT a hero background. One standalone 3:2 landscape image, ideally 1536x1024.
-Scene/backdrop: Clean white or very light navy-derived neutral paper background, no scene or setting.
-Style/medium: Cohesive refined flat editorial printmaking and cut-paper illustration. Primarily two-dimensional, confident simple silhouettes, sparse precise geometry, subtle tactile ink grain. Do not use photographic rendering or glossy three-dimensional shading.
-Composition/framing: A centered, clear subject grouping occupies approximately 70 percent of the canvas with generous empty margins on all sides. Immediately legible at a compact website illustration size. No text overlay space is needed.
-Color palette: Deep navy #1F1A36 and warm orange #FF6B2C, white and navy-derived neutral paper. Violet #6D3FE8 allowed only as one tiny accent, never dominant.
-Constraints: Absolutely no words, letters, numbers, pseudo-writing, rows of fake text, labels, logos, watermark, brand marks, currency symbols or fake metrics anywhere. No trees, plants, landscapes, buildings, furniture, people, extra decorative props, fake screenshots, browser controls, UI toolbars, glowing orbs, science-fiction machinery, ornamental connector forests, 3D glass or heavy dimensional rendering. Only the specific subject objects described below.
-Primary request: A compact inventory and sales composition consisting only of a small stack of plain product cartons, one simple unlabelled paper receipt and an open unlabelled ledger with a few coarse rows. A single orange transaction line connects these three objects into one coherent composition. Cartons are plain with simple fold seams, no branding or marks. Receipt is a blank narrow paper strip with a simple torn edge, no words, numerals, barcode or faux receipt printing. Ledger has only a few broad ruling lines and empty cells, no writing or numerical data. The graphic should suggest stock, sales and unpaid-account records through these physical objects, not an actual software interface, and never money, currency or metrics.
-```
+Final corrected generation output:
 
-## Rafiki
+`/Users/richardpallangyo/.codex/generated_images/019efd0a-a70c-73c1-9f92-edfad648a5f4/exec-8d7a1342-02a8-443c-b51a-21a5e89eb87e.png`
 
-Runtime asset: [public/editorial/product-rafiki-v1.webp](public/editorial/product-rafiki-v1.webp)
+### Rafiki
 
-Original generated output: `/Users/richardpallangyo/.codex/generated_images/01a084ef-3a7b-7811-83ee-37f7d0e974c8/exec-9d4b10b9-7a91-490b-acef-0b1b02476dab.png`
+A website shell is assembled from contact, booking, and blog modules. One outlined slot remains unfinished. This communicates the product's stated scope and current in-development status without showing a released interface.
 
-Exact generation prompt:
+Final corrected generation output:
 
-```text
-Use case: stylized-concept
-Asset type: Light-background website product content illustration to sit beside a product description, NOT a hero background. One standalone 3:2 landscape image, ideally 1536x1024.
-Scene/backdrop: Clean white or very light navy-derived neutral paper background, no scene or setting.
-Style/medium: Cohesive refined flat editorial printmaking and cut-paper illustration. Primarily two-dimensional, confident simple silhouettes, sparse precise geometry, subtle tactile ink grain. Do not use photographic rendering or glossy three-dimensional shading.
-Composition/framing: A centered, clear subject grouping occupies approximately 70 percent of the canvas with generous empty margins on all sides. Immediately legible at a compact website illustration size. No text overlay space is needed.
-Color palette: Deep navy #1F1A36 and warm orange #FF6B2C, white and navy-derived neutral paper. Violet #6D3FE8 allowed only as one tiny accent, never dominant.
-Constraints: Absolutely no words, letters, numbers, pseudo-writing, rows of fake text, labels, logos, watermark, brand marks, currency symbols or fake metrics anywhere. No trees, plants, landscapes, buildings, furniture, people, extra decorative props, fake screenshots, browser controls, UI toolbars, glowing orbs, science-fiction machinery, ornamental connector forests, 3D glass or heavy dimensional rendering. Only the specific subject objects described below.
-Primary request: An illustrative physical cut-paper metaphor for a modular website being built, not a released product UI. Show one simple blank flat website-shaped paper frame, defined only by a navy rectangular perimeter and a few open rectangular slots, with three small insertable paper modules: a folded-envelope motif for contact, a numberless calendar motif for booking and a blank folded-page motif for a blog. Show one module fitting neatly into one open slot while the other two are positioned closely beside the frame. The calendar may have two binding loops and a very coarse empty square grid, but absolutely no dates, weekdays, letters or numbers. The folded-page motif is blank, not lines of article text. Keep these motifs as simple paper shapes, not app icons on a rendered screen. No browser controls, toolbar, navigation, buttons, device shell, text, fake UI, decorative connectors or extra objects.
-```
+`/Users/richardpallangyo/.codex/generated_images/019efd0a-a70c-73c1-9f92-edfad648a5f4/exec-7d9b58a4-52ae-4332-8a57-ab99df7054c2.png`
 
+## Runtime treatment
+
+The illustrations sit on white visual stages with a one-pixel violet-neutral border. Hover motion is limited to a small lift and scale, and is disabled when reduced motion is requested. The homepage reuses the same files so the product identity does not drift between pages.

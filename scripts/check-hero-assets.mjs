@@ -1,8 +1,7 @@
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const routes = {
-  index: 'home',
   build: 'services',
   work: 'work',
   products: 'products',
@@ -14,39 +13,66 @@ const routes = {
   brand: 'brand',
   privacy: 'privacy',
 };
-/** Routes whose hero is drawn in code rather than served as an image. */
-const drawnRoutes = new Set(['index']);
+
 const failures = [];
+let scenesChecked = 0;
 
-for (const [route, scene] of Object.entries(routes)) {
-  const html = readFileSync(join('.next/server/app', `${route}.html`), 'utf8');
-  const markers = [...html.matchAll(/data-hero-art="([^"]+)"/g)];
-  if (markers.length !== 1 || markers[0][1] !== scene) failures.push(`${route}: expected one ${scene} background`);
-  // The home hero is drawn (HeroSystem.tsx) rather than photographed, so it is
-  // checked for the drawing instead of for a raster file. Every other route still
-  // has to ship its scene image inside the budget.
-  if (drawnRoutes.has(route)) {
-    if (!html.includes('data-hero-drawn')) failures.push(`${route}: expected the drawn hero system`);
-  } else {
-    const filename = `hero-${scene}-v1.webp`;
-    if (!html.includes(filename)) failures.push(`${route}: missing hero image`);
-    const size = statSync(join('public/editorial', filename)).size;
-    if (size > 350_000) failures.push(`${route}: hero exceeds the 350 kB source budget`);
+function readRoute(route) {
+  return readFileSync(join('.next/server/app', `${route}.html`), 'utf8');
+}
+
+for (const [route, expectedScene] of Object.entries(routes)) {
+  const html = readRoute(route);
+  const markers = [...html.matchAll(/data-page-scene="([^"]+)"/g)];
+
+  if (markers.length !== 1 || markers[0][1] !== expectedScene) {
+    failures.push(`${route}: expected one ${expectedScene} page scene`);
   }
-  if ([...html.matchAll(/<h1\b/g)].length !== 1) failures.push(`${route}: expected one visible page heading`);
+
+  for (const [markup, scene, content] of html.matchAll(
+    /<div\b[^>]*\bdata-page-scene="([^"]+)"[^>]*>([\s\S]*?)<\/div>/gi,
+  )) {
+    scenesChecked++;
+    if (/<(?:text|foreignObject|span|p)\b/i.test(content) || content.replace(/<[^>]*>/g, '').trim()) {
+      failures.push(`${route}: ${scene} page scene contains visible wording`);
+    }
+    if (!content.includes('viewBox="0 0 640 440"') || !content.includes('preserveAspectRatio="xMidYMid meet"')) {
+      failures.push(`${route}: ${scene} page scene does not preserve its composition`);
+    }
+    const wrapper = markup.slice(0, markup.indexOf('>'));
+    if (!/role="img"[^>]*aria-label="[^"]+"/.test(wrapper)) {
+      failures.push(`${route}: ${scene} page scene needs an accessible description`);
+    }
+  }
+
+  if ([...html.matchAll(/<h1\b/g)].length !== 1) {
+    failures.push(`${route}: expected one visible page heading`);
+  }
+
+  for (const [img] of html.matchAll(/<img\b[^>]*>/gi)) {
+    if (/hero-[a-z-]+-v1\.webp|service-[a-z-]+-v1\.webp/.test(img)) {
+      failures.push(`${route}: retired raster hero or service art is still rendered`);
+    }
+  }
 }
 
-const services = readFileSync('.next/server/app/build.html', 'utf8');
-// Only branding still ships a raster; strategy is drawn by SystemDiagram.
-for (const subject of ['branding']) {
-  const filename = `service-${subject}-v1.webp`;
-  if (!services.includes(filename)) failures.push(`Services: missing ${subject} illustration`);
-  if (statSync(join('public/editorial', filename)).size > 350_000) failures.push(`Services: ${subject} exceeds image budget`);
+const home = readRoute('index');
+if (!home.includes('data-home-redesign')) failures.push('Homepage: missing the custom light hero');
+if ([...home.matchAll(/<h1\b/g)].length !== 1) failures.push('Homepage: expected one visible page heading');
+if (/data-hero-art|data-hero-drawn/.test(home)) failures.push('Homepage: retired hero markers are still rendered');
+
+const blog = readRoute('blog');
+for (const kind of ['journey', 'learning', 'ledger', 'decision', 'workshop', 'pricing']) {
+  if (!blog.includes(`data-story-visual="${kind}"`)) {
+    failures.push(`Blog: missing ${kind} story visual`);
+  }
 }
+
+if (!scenesChecked) failures.push('No shared page scenes found in rendered routes');
 
 if (failures.length) {
   console.error(failures.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log(`Hero assets check passed: 11 distinct page backgrounds (${drawnRoutes.size} drawn), 2 service illustrations, single page headings and image budgets.`);
+  console.log(`Hero visual check passed: ${scenesChecked} wordless page scenes and six shared blog compositions.`);
 }

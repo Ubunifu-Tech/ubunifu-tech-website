@@ -1,9 +1,10 @@
 # Image prompts
 
-21 complete prompts. Each one is self-contained - paste the whole block into ChatGPT as
-a single message, nothing to assemble. Then export to WebP and save to the exact path
-given. Every path is already wired into the code, so replacing the file is the only
-step; no code changes are needed.
+> Historical prompt archive for the previous visual system. The current light product illustrations and their factual constraints are documented in `PRODUCT_ARTWORK.md`; the current logo files are documented in `public/brand/README.md`.
+
+21 historical prompts. Each one is self-contained, but its visual direction and save
+path may have been superseded by the current light design system. Check the content
+mapping in `src/content` before replacing any runtime asset.
 
     cwebp -q 82 downloaded.png -o public/editorial/<filename>
 

@@ -28,7 +28,7 @@ export function pageMetadata({ title, description, path }: PageMetadataInput): M
           url: `${SITE_URL}/og.png`,
           width: 1672,
           height: 941,
-          alt: 'Ubunifu Technologies — consulting and products, built in Tanzania.',
+          alt: 'Ubunifu Technologies, consulting and products, built in Tanzania.',
         },
       ],
     },

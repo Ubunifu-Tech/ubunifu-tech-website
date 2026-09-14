@@ -10,9 +10,17 @@ type ContactSubjectSelectProps = {
   onChange: (value: string) => void;
   buttonRef: RefObject<HTMLButtonElement | null>;
   invalid: boolean;
+  disabled?: boolean;
 };
 
-export function ContactSubjectSelect({ value, options, onChange, buttonRef, invalid }: ContactSubjectSelectProps) {
+export function ContactSubjectSelect({
+  value,
+  options,
+  onChange,
+  buttonRef,
+  invalid,
+  disabled = false,
+}: ContactSubjectSelectProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [placement, setPlacement] = useState({ above: false, maxHeight: 352 });
@@ -35,6 +43,7 @@ export function ContactSubjectSelect({ value, options, onChange, buttonRef, inva
   }, [buttonRef]);
 
   const showMenu = (index = Math.max(0, options.indexOf(value))) => {
+    if (disabled) return;
     positionMenu();
     setActiveIndex(index);
     setOpen(true);
@@ -49,6 +58,12 @@ export function ContactSubjectSelect({ value, options, onChange, buttonRef, inva
     if (options[index] !== undefined && options[index] !== value) onChange(options[index]);
     closeMenu();
   };
+
+  useEffect(() => {
+    if (!disabled) return;
+    setOpen(false);
+    searchRef.current = { text: '', time: 0 };
+  }, [disabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -87,6 +102,7 @@ export function ContactSubjectSelect({ value, options, onChange, buttonRef, inva
   }, [activeIndex, open, placement.maxHeight, placement.above]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled) return;
     if (event.nativeEvent.isComposing) return;
 
     switch (event.key) {
@@ -165,6 +181,7 @@ export function ContactSubjectSelect({ value, options, onChange, buttonRef, inva
         aria-required="true"
         aria-invalid={invalid || undefined}
         aria-describedby={invalid ? 'contact-error' : undefined}
+        disabled={disabled}
         className={styles.trigger}
         data-placeholder={!value}
         onClick={() => open ? closeMenu() : showMenu()}

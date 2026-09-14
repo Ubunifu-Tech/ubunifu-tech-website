@@ -32,15 +32,9 @@
 .media {
   position: relative;
   width: 100%;
-  /* 8/5 is the SystemDiagram viewBox (640x400), so the drawn diagrams fill the
-     frame instead of letterboxing to ~94%. The two raster illustrations crop
-     gracefully; the diagrams cannot. */
+  /* 8/5 matches the shared SystemDiagram viewBox. */
   aspect-ratio: 8 / 5;
   overflow: hidden;
-}
-
-.image {
-  object-fit: cover;
 }
 
 .copy h2 {

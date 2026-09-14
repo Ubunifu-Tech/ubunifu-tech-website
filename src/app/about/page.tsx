@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { About } from '@/components/About';
@@ -29,9 +30,7 @@ export default function AboutPage() {
             run a second one: two placements meant two live WebGL contexts and
             two effects layered over the same hero. */}
         <PageHeader
-          ambient={false}
           scene="about"
-          compact
           eyebrow="About Ubunifu"
           title="Technology, made in Tanzania."
           lead="We’re a small technology team. You work directly with the people designing and building your project."
@@ -110,7 +109,9 @@ export default function AboutPage() {
                   summary and the other the reference. */}
               <p className={styles.sectionLead}>
                 The same four stages on every project.{' '}
-                <Link href="/build">See what each stage delivers →</Link>
+                <Link href="/build">
+                  See what each stage delivers <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
+                </Link>
               </p>
             </ScrollReveal>
             <ol className={styles.approachGrid}>

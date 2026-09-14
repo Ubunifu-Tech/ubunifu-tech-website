@@ -1,15 +1,5 @@
-import { Hero } from '@/components/Hero';
 import { PageAtmosphere } from '@/components/PageAtmosphere';
-import { CapabilitiesIndex } from '@/components/CapabilitiesIndex';
-import { WhyUbunifu } from '@/components/WhyUbunifu';
-import { EngagementPaths } from '@/components/EngagementPaths';
-import {
-  WorkPreview,
-  ProductsProof,
-} from '@/components/HomePreviews';
-import { Testimonial } from '@/components/Testimonial';
-import { CtaBand } from '@/components/CtaBand';
-import { Insights } from '@/components/Insights';
+import { HomeLanding, type HomeInsight } from '@/components/HomeLanding';
 import { getAllPosts, resolveBlogCover } from '@/lib/blog';
 import { projects } from '@/content/portfolio';
 import { pageMetadata } from '@/lib/metadata';
@@ -25,22 +15,26 @@ export default function Home() {
   const candidates = getAllPosts().slice(0, 3);
   // Keep the latest three stories, but don't repeat the project art just shown above.
   const lead = candidates.find((post) => !projects.some((project) => project.artwork.src === resolveBlogCover(post).image));
-  const latestPosts = lead ? [lead, ...candidates.filter((post) => post.slug !== lead.slug)] : candidates;
+  const latestPosts = (lead
+    ? [lead, ...candidates.filter((post) => post.slug !== lead.slug)]
+    : candidates
+  ).map<HomeInsight>((post) => {
+    const cover = resolveBlogCover(post);
+    return {
+      slug: post.slug,
+      title: post.title,
+      date: post.date,
+      excerpt: post.excerpt,
+      tags: post.tags,
+      image: cover.image,
+      alt: cover.alt,
+    };
+  });
 
   return (
     <>
       <PageAtmosphere />
-      <main data-atmosphere>
-        <Hero />
-        <WhyUbunifu />
-        <CapabilitiesIndex />
-        <EngagementPaths />
-        <WorkPreview />
-        <Testimonial />
-        <ProductsProof />
-        <Insights posts={latestPosts} />
-        <CtaBand />
-      </main>
+      <HomeLanding posts={latestPosts} />
     </>
   );
 }

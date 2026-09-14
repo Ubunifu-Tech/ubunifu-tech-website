@@ -50,7 +50,7 @@ The public site carries a dynamic sitemap, structured data, and maintained redir
 
 ## Why this became a custom platform
 
-Every capability here could be assembled from separate services — a site builder, a form tool, a CRM, an itinerary document, a newsletter product, an AI chat window. For plenty of teams that is the sensible route.
+Every capability here could be assembled from separate services: a site builder, a form tool, a CRM, an itinerary document, a newsletter product, an AI chat window. For plenty of teams that is the sensible route.
 
 Safari King's build went the other way. The public enquiry and the admin record share one data model. The itinerary link belongs to the booking workflow. Content and communication tools sit in the same controlled environment. Custom software is what made that particular connection possible; nobody chose it to make the public pages look different.
 

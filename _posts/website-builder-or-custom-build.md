@@ -18,7 +18,7 @@ Comparing them directly means comparing two prices with different edges.
 
 If you need clear marketing pages, a standard contact form, and an editor for occasional updates, a good builder will cover it with very little setup. Templates and managed hosting are genuine advantages when the workflow is ordinary.
 
-The calculation changes once the public site connects to how the business runs — a specialised booking process, customer records, approval states, private customer links, or content generated from the same data an internal team works in.
+The calculation changes once the public site connects to how the business runs: a specialised booking process, customer records, approval states, private customer links, or content generated from the same data an internal team works in.
 
 Even then, custom software is not automatic. Builders have extensions and integrations. But each extension adds a boundary you have to understand: where the data lives, what happens when it fails, which vendor supports it, and what breaks when pricing or an API changes.
 
@@ -34,7 +34,7 @@ Compare quotes using the same features, the same traffic assumptions, and the sa
 
 ## Include time and internal capacity
 
-A builder is usually faster when the pages and integrations are standard. Choose a template, add content, configure a form, launch — no software project required.
+A builder is usually faster when the pages and integrations are standard. Choose a template, add content, configure a form, launch; no software project required.
 
 Custom work needs scoping, design, implementation, testing, and deployment. It can fit far better, and it asks the client for decisions and feedback along the way. After launch, somebody has to own maintenance and change requests.
 
@@ -52,7 +52,7 @@ A custom codebase with no documentation and no maintenance plan is its own kind 
 
 Safari King Africa is a project where the requirement ran well past publishing pages. The platform connects a public trip-enquiry flow with itinerary sharing, customer records, booking statuses, content management, email tooling, and an AI drafting assistant in the admin area.
 
-Versions of those capabilities could have been assembled from separate products. Building it allowed the enquiry and the internal workflow to share one data model and one controlled admin environment. That connection was the reason — not a belief that templates are inferior.
+Versions of those capabilities could have been assembled from separate products. Building it allowed the enquiry and the internal workflow to share one data model and one controlled admin environment. That connection was the reason, not a belief that templates are inferior.
 
 For a business that needs the public pages and a standard form, the same reasoning points the other way.
 

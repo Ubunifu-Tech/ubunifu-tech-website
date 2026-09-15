@@ -4,9 +4,11 @@ import { CtaBand } from '@/components/CtaBand';
 import { PageHeader } from '@/components/PageHeader';
 import { ScrollReveal } from '@/components/ScrollReveal';
 import { Spotlight } from '@/components/Spotlight';
+import { EditorialPhoto } from '@/components/EditorialPhoto';
 import { sectors } from '@/content/sectors';
 import { cta } from '@/content/site';
 import { projects } from '@/content/portfolio';
+import { editorialPhotography } from '@/content/editorial-photography';
 import styles from './Industries.module.css';
 import { pageMetadata } from '@/lib/metadata';
 
@@ -64,6 +66,12 @@ export default function IndustriesPage() {
                 </p>
               </ScrollReveal>
 
+              <ScrollReveal className={styles.introMedia} delay={100}>
+                <EditorialPhoto
+                  asset={editorialPhotography.industriesTransformationWorkshop}
+                  sizes="(max-width: 760px) 100vw, (max-width: 1280px) 54vw, 670px"
+                />
+              </ScrollReveal>
             </div>
 
             <div className={styles.grid} aria-labelledby="potential-sectors-title">

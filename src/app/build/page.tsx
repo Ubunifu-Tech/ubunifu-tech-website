@@ -8,8 +8,10 @@ import { BuildCards } from '@/components/BuildCards';
 import { PageHeader } from '@/components/PageHeader';
 import { CapabilityJourney } from '@/components/CapabilityJourney';
 import { CapabilityMap } from '@/components/CapabilityMap';
+import { EditorialPhoto } from '@/components/EditorialPhoto';
 import styles from './Build.module.css';
 import { cta } from '@/content/site';
+import { editorialPhotography } from '@/content/editorial-photography';
 import { pageMetadata } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
@@ -68,14 +70,23 @@ export default function BuildPage() {
         {/* Process */}
         <section className={styles.processSection}>
           <div className="container">
-            <ScrollReveal className={styles.processIntro}>
-              <h2 className={styles.sectionHeading}>
-                What happens <span className={styles.headingAccent}>after you say yes</span>?
-              </h2>
-              <p className={styles.processLead}>
-                Four stages, each ending in something you can hold us to.
-              </p>
-            </ScrollReveal>
+            <div className={styles.processLeadGrid}>
+              <ScrollReveal className={styles.processIntro}>
+                <h2 className={styles.sectionHeading}>
+                  What happens <span className={styles.headingAccent}>after you say yes</span>?
+                </h2>
+                <p className={styles.processLead}>
+                  Four stages, each ending in something you can hold us to.
+                </p>
+              </ScrollReveal>
+
+              <ScrollReveal className={styles.processMedia} delay={100}>
+                <EditorialPhoto
+                  asset={editorialPhotography.servicesCodeReview}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 54vw, 670px"
+                />
+              </ScrollReveal>
+            </div>
 
             <BuildCards className={styles.processGrid}>
               {process.map((item) => (

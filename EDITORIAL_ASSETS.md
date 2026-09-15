@@ -33,6 +33,24 @@ They are used on the homepage and products page through
 `src/content/product-artwork.ts`. Their subjects and factual constraints are
 documented in `PRODUCT_ARTWORK.md`.
 
+## Working photography
+
+Three generated editorial photographs introduce a small amount of tangible,
+real-world technology without replacing the site's explanatory SVG system:
+
+| Asset | Placement | Subject |
+| --- | --- | --- |
+| `services-code-review-v1.webp` | Services delivery process | An anonymous development desk with code and a sketched system flow |
+| `about-systems-workshop-v1.webp` | About story | Anonymous participants working through a wordless system map |
+| `industries-transformation-workshop-v1.webp` | Industries examples | A fictional digital-transformation working session with a presentation underway |
+
+All three files are 1536 x 1024 WebP images and are mapped with specific
+alternative text and crop positions in `src/content/editorial-photography.ts`.
+People are anonymous or shown in a candid working context, and screens contain
+no readable content, logos, client identifiers, or product claims. Each appears
+once as editorial context and must not be described as Ubunifu staff or client
+evidence.
+
 ## Journal and project sources
 
 The following assets remain the source media for article metadata, editorial

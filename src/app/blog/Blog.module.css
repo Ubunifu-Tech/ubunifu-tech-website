@@ -5,7 +5,7 @@
   background: var(--section-ground);
 }
 
-.journal {
+div.journal {
   position: relative;
   z-index: 1;
   padding-top: clamp(3rem, 6vw, 5rem);
@@ -26,7 +26,6 @@
   gap: var(--space-5);
   margin-bottom: var(--space-6);
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-hover);
 }
 
 .filters {
@@ -147,7 +146,6 @@
   margin-bottom: 0;
   padding: clamp(2rem, 4vw, 3.75rem) 0;
   overflow: hidden;
-  border-top: 1px solid var(--border-hover);
   border-bottom: 1px solid var(--border-hover);
   background: transparent;
   gap: clamp(2rem, 5vw, 5rem);
@@ -230,6 +228,10 @@
 .grid {
   display: grid;
   border-top: 1px solid var(--border-active);
+}
+
+.featured + .grid {
+  border-top: 0;
 }
 
 .row {

@@ -103,6 +103,10 @@
   margin: var(--space-3) 0 var(--space-5);
 }
 
+.storyMedia {
+  margin-top: var(--space-6);
+}
+
 .storyP {
   font-size: var(--font-size-body);
   color: var(--text-secondary);

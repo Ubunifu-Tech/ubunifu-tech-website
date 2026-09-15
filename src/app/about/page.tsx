@@ -6,7 +6,9 @@ import { About } from '@/components/About';
 import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { Team } from '@/components/Team';
 import { ScrollReveal } from '@/components/ScrollReveal';
+import { EditorialPhoto } from '@/components/EditorialPhoto';
 import { story, visionMission, objectives, approach } from '@/content/about';
+import { editorialPhotography } from '@/content/editorial-photography';
 import { pageMetadata } from '@/lib/metadata';
 import styles from './About.module.css';
 
@@ -39,11 +41,19 @@ export default function AboutPage() {
         <section className={`section ${styles.storySection}`}>
           <div className="container">
             <div className={styles.storyGrid}>
-              <ScrollReveal>
-                <h2 className={styles.storyHeading}>
-                  Client projects and our own products
-                </h2>
-              </ScrollReveal>
+              <div>
+                <ScrollReveal>
+                  <h2 className={styles.storyHeading}>
+                    Client projects and our own products
+                  </h2>
+                </ScrollReveal>
+                <ScrollReveal className={styles.storyMedia} delay={80}>
+                  <EditorialPhoto
+                    asset={editorialPhotography.aboutSystemsWorkshop}
+                    sizes="(max-width: 860px) 100vw, (max-width: 1280px) 46vw, 570px"
+                  />
+                </ScrollReveal>
+              </div>
               <ScrollReveal delay={120}>
                 {story.map((paragraph) => (
                   <p key={paragraph} className={styles.storyP}>{paragraph}</p>

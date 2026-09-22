@@ -14,9 +14,9 @@ export const metadata = { title: 'Sign in' };
  */
 const LINK_PROBLEM: Record<string, string> = {
   expired:
-    'That sign-in link has already been used or has run out. Links work once, so reopening an older email will land you here. Sign in below, or send yourself a new one.',
+    'That link has expired or was already used. Sign in below, or get a new link.',
   missing:
-    'That link was incomplete. An email app probably cut it short. Sign in below, or send yourself a new one.',
+    'That link was incomplete. Sign in below, or get a new link.',
 };
 
 export default async function PortalSignIn({
@@ -35,25 +35,9 @@ export default async function PortalSignIn({
   const problem = error ? LINK_PROBLEM[error] : undefined;
 
   return (
-    <AuthLayout
-      role="Portal"
-      pitch="Your project,"
-      pitchAccent="as it happens."
-      points={[
-        'See exactly where the work has got to, stage by stage.',
-        'Find everything we still need from you, in one list.',
-        'Your invoices and receipts, whenever you need them.',
-      ]}
-      foot="Ubunifu Technologies · Tanzania"
-    >
+    <AuthLayout role="Portal">
       <div className={auth.panel}>
-        <h1 className={auth.heading}>
-          Sign in to your <span className={auth.headingAccent}>portal</span>
-        </h1>
-        <p className={auth.lead}>
-          Progress updates, documents to review, and your invoices.
-        </p>
-
+        <h1 className={auth.heading}>Sign in to your portal</h1>
         {problem ? (
           <p className={auth.notice} role="status">
             {problem}
@@ -64,7 +48,7 @@ export default async function PortalSignIn({
           <SignInForms next={next} />
         </div>
         <p className={auth.foot}>
-          Not sure you have an account? Email info@ubunifutech.com and we will set one up.
+          No account yet? Email info@ubunifutech.com.
         </p>
       </div>
     </AuthLayout>

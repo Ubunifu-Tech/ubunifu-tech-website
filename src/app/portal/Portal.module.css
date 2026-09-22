@@ -424,6 +424,7 @@
   margin: var(--space-5) 0 0;
   padding-top: var(--space-5);
   border-top: 1px solid var(--border);
+  text-align: center;
 }
 
 /* ── What we need from the client ──────────────── */

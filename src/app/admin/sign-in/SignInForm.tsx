@@ -14,7 +14,7 @@ export function SignInForm() {
     <form action={action} className={forms.form}>
       <div className={forms.field}>
         <label htmlFor="email" className={forms.label}>
-          Work email
+          Email
         </label>
         <input
           id="email"
@@ -39,7 +39,7 @@ export function SignInForm() {
         role="status"
         aria-live="polite"
       >
-        {state.message ?? 'Access is by emailed link. The link works once and expires in 20 minutes.'}
+        {state.message ?? 'We will email you a link to sign in.'}
       </p>
     </form>
   );

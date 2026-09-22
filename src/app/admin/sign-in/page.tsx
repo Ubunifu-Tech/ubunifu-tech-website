@@ -13,22 +13,9 @@ export default async function AdminSignIn() {
   }
 
   return (
-    <AuthLayout
-      role="Console"
-      pitch="Every client, every project,"
-      pitchAccent="one record."
-      points={[
-        'Enquiries land here before anyone is emailed, so an outage never loses a lead.',
-        'Projects move through a state machine that records who decided what, and why.',
-        'Every invoice, payment and receipt is numbered, and nothing is ever deleted.',
-      ]}
-      foot="Ubunifu Technologies · Tanzania"
-    >
+    <AuthLayout role="Console">
       <div className={auth.panel}>
-        <h1 className={auth.heading}>
-          Sign in to the <span className={auth.headingAccent}>console</span>
-        </h1>
-        <p className={auth.lead}>For the Ubunifu team.</p>
+        <h1 className={auth.heading}>Sign in</h1>
         <div className={auth.card}>
           <SignInForm />
         </div>

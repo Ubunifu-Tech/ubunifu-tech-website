@@ -1,61 +1,24 @@
 /* Sign-in and account setup, for both the console and the client portal.
- *
- * These are the first screens anyone sees, and for a client they are the first
- * thing they see after agreeing to pay us — so they are built as a proper
- * two-panel entrance rather than a form dropped on a blank page. The left side
- * says where you are and what is behind the door; the right side is the one
- * thing you came to do.
- *
- * On a phone the panel collapses to a header strip, because a full-height
- * marketing panel above a password field is just something to scroll past.
- */
+ * One centred column: the mark, a heading, the form. Nothing to read past on
+ * the way to the field you came to fill in. */
 
 .shell {
-  display: grid;
-  min-height: 100vh;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  background: var(--surface-2);
-}
-
-/* ── The left panel ────────────────────────────── */
-
-.aside {
-  position: relative;
   display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-8);
-  padding: var(--space-8) var(--space-9);
-  background: var(--text-primary);
-  color: var(--text-inverse);
-  overflow: hidden;
-}
-
-/* A single soft violet field, low and off-centre. One gesture, not a pattern —
-   anything busier competes with the form it is meant to frame. */
-.aside::before {
-  content: '';
-  position: absolute;
-  right: -30%;
-  bottom: -35%;
-  width: 90%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--primary) 0%, transparent 68%);
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.asideInner {
-  position: relative;
-  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-4);
+  background: var(--app-bg);
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  color: var(--text-inverse);
+  color: var(--text-primary);
   text-decoration: none;
 }
 
@@ -71,120 +34,69 @@
 }
 
 .brandRole {
-  color: var(--text-inverse-tertiary);
-}
-
-.pitch {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  max-width: 22ch;
-  color: var(--text-inverse);
-  font-family: var(--font-heading);
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.22;
-}
-
-.pitchAccent {
-  color: var(--brand);
-}
-
-.points {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin: var(--space-5) 0 0;
-  padding: 0;
-  list-style: none;
-  max-width: 34ch;
-}
-
-.point {
-  position: relative;
-  padding-left: var(--space-5);
-  color: var(--text-inverse-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.6;
-}
-
-.point::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.6em;
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 50%;
-  background: var(--brand);
-}
-
-.asideFoot {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  color: var(--text-inverse-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.6;
-}
-
-/* ── The form side ─────────────────────────────── */
-
-.main {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-8) var(--container-gutter);
+  color: var(--text-tertiary);
 }
 
 .panel {
   width: 100%;
-  max-width: 26rem;
+  max-width: 24rem;
+  text-align: center;
 }
 
 .wide {
-  max-width: 34rem;
+  max-width: 30rem;
 }
 
 .heading {
-  margin: 0;
+  margin: 0 0 var(--space-5);
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--font-size-heading);
+  font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
-  line-height: 1.18;
+  line-height: 1.25;
 }
 
 .headingAccent {
-  color: var(--brand-deep);
+  color: inherit;
 }
 
 .lead {
-  margin: var(--space-3) 0 var(--space-6);
+  margin: calc(var(--space-4) * -1) 0 var(--space-5);
   color: var(--text-secondary);
-  font-size: var(--font-size-body);
-  line-height: 1.7;
+  font-size: var(--font-size-small);
+  line-height: 1.6;
 }
 
+/* The card holds the form. Fields stay left-aligned for reading; the button
+   runs the full width, so it sits centred under them. */
 .card {
   padding: var(--space-6);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--app-radius-card);
   background: var(--surface);
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--app-shadow-card);
+  text-align: left;
+}
+
+.card button[type='submit'] {
+  width: 100%;
+  justify-content: center;
+}
+
+.card [role='status'] {
+  text-align: center;
 }
 
 .notice {
   margin: 0 0 var(--space-5);
   padding: var(--space-4);
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-md);
-  background: var(--primary-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--app-radius-control);
+  background: var(--accent-dim);
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.6;
+  text-align: left;
 }
 
 .foot {
@@ -195,33 +107,13 @@
   text-align: center;
 }
 
-@media (max-width: 56rem) {
+@media (max-width: 40rem) {
   .shell {
-    grid-template-columns: minmax(0, 1fr);
+    justify-content: flex-start;
+    padding-top: var(--space-7);
   }
 
-  .aside {
-    gap: var(--space-5);
-    padding: var(--space-6) var(--container-gutter);
-  }
-
-  .aside::before {
-    right: -55%;
-    bottom: -140%;
-  }
-
-  .points,
-  .asideFoot {
-    display: none;
-  }
-
-  .pitch {
-    max-width: none;
-    font-size: var(--font-size-title);
-  }
-
-  .main {
-    padding: var(--space-7) var(--container-gutter) var(--space-8);
-    align-items: flex-start;
+  .card {
+    padding: var(--space-5) var(--space-4);
   }
 }

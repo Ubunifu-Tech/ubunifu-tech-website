@@ -45,13 +45,13 @@ export function SignInForms({ next }: { next?: string | null }) {
           role="status"
           aria-live="polite"
         >
-          {linkState.message ?? 'We will email a link that signs you in without a password.'}
+          {linkState.message ?? 'We will email you a link to sign in.'}
         </p>
 
         {linkState.status !== 'sent' && (
           <div className={styles.divider}>
             <button type="button" className={forms.link} onClick={() => setMode('password')}>
-              Sign in with a password instead
+              Use a password instead
             </button>
           </div>
         )}
@@ -106,7 +106,7 @@ export function SignInForms({ next }: { next?: string | null }) {
           a link already proves the same thing a reset email would. */}
       <div className={styles.divider}>
         <button type="button" className={forms.link} onClick={() => setMode('link')}>
-          Forgotten your password? Email me a sign-in link
+          Forgot your password? Email me a link
         </button>
       </div>
     </form>

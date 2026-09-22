@@ -75,8 +75,7 @@ export function ActivateForm({ defaultName }: { defaultName: string }) {
         </div>
 
         <p className={`${forms.hint} ${forms.wide}`}>
-          At least 12 characters. A short phrase you will remember beats a short password with
-          symbols in it.
+          At least 12 characters.
         </p>
       </div>
 
@@ -84,9 +83,6 @@ export function ActivateForm({ defaultName }: { defaultName: string }) {
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Setting up…' : 'Finish setting up'}
         </button>
-        <p className={forms.payoff}>
-          After this you can sign in whenever you like, without waiting for an email.
-        </p>
       </div>
 
       {state.status === 'error' && (

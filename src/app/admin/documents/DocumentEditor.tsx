@@ -2,7 +2,7 @@
 
 import React, { useActionState, useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { draftWithAi, saveVersion, sendForSignature, type DocumentState } from './actions';
+import { askCopilot, saveVersion, sendForSignature, type DocumentState } from './actions';
 import { RichText } from '@/components/console/RichText';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -22,48 +22,96 @@ function Result({ state }: { state: DocumentState }) {
   );
 }
 
+export type CopilotTurn = {
+  id: string;
+  role: string;
+  content: string;
+  toolName: string | null;
+  when: string;
+};
+
 /**
- * The copilot.
+ * The copilot, as a conversation.
  *
- * Deliberately a button beside the editor rather than something that types
- * into it as you go. A draft arrives as a version you read, keep or throw
- * away — it never edits what is already there, and it cannot send anything.
+ * A thread rather than a button, because drafting is back-and-forth: "draft
+ * it", then "make the payment two stages", then "that clause is too long". The
+ * thread is stored, so it survives a reload and can be read afterwards — what
+ * was asked for, and what the model did about it.
+ *
+ * It can write a version and nothing else. It never sends.
  */
-export function DraftWithAi({ documentId }: { documentId: string }) {
-  const [state, action, pending] = useActionState(draftWithAi, INITIAL);
+export function Copilot({
+  documentId,
+  turns,
+}: {
+  documentId: string;
+  turns: CopilotTurn[];
+}) {
+  const [state, action, pending] = useActionState(askCopilot, INITIAL);
+  const [draft, setDraft] = useState('');
 
   return (
-    <form action={action} className={forms.form}>
-      <input type="hidden" name="documentId" value={documentId} />
-      <div className={forms.field}>
-        <label className={forms.label} htmlFor="ai-instruction">
-          Anything it should know <span className={forms.optional}>(optional)</span>
-        </label>
-        <textarea
-          id="ai-instruction"
-          name="instruction"
-          className={`${forms.control} ${forms.textarea}`}
-          maxLength={2000}
-          placeholder="Two-stage payment, and they want the domain in their own name."
-          disabled={pending}
-        />
-        <p className={forms.hint}>
-          It already has the project&rsquo;s fees, plan, dates and everything we have asked them
-          for. This is for what is not written down anywhere.
-        </p>
-      </div>
-      <div className={forms.actions}>
-        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
-          <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-          {pending ? 'Drafting…' : 'Draft it for me'}
-        </button>
-        <p className={forms.payoff}>
-          Arrives as a new version you can edit or discard. It never sends anything, and anything
-          it had to guess is marked TO CONFIRM.
-        </p>
-      </div>
-      <Result state={state} />
-    </form>
+    <>
+      {turns.length > 0 && (
+        <ul className={styles.thread}>
+          {turns.map((turn) => (
+            <li
+              key={turn.id}
+              className={`${styles.message} ${turn.role === 'user' ? '' : styles.fromUs}`}
+            >
+              <p className={styles.messageWho}>
+                {turn.role === 'user' ? 'You' : 'Assistant'} · {turn.when}
+                {turn.toolName === 'save_draft' && ' · wrote a version'}
+              </p>
+              <p className={styles.messageBody}>{turn.content}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form action={action} className={forms.form}>
+        <input type="hidden" name="documentId" value={documentId} />
+        <div className={forms.field}>
+          <label className={forms.label} htmlFor="copilot-message">
+            {turns.length === 0 ? 'Ask for a draft' : 'What next?'}
+          </label>
+          <textarea
+            id="copilot-message"
+            name="message"
+            className={`${forms.control} ${forms.textarea}`}
+            maxLength={4000}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder={
+              turns.length === 0
+                ? 'Draft the agreement. Two-stage payment, and they want the domain in their own name.'
+                : 'Shorten the scope section, and add a line about the review rounds.'
+            }
+            disabled={pending}
+          />
+          <p className={forms.hint}>
+            It already has the project&rsquo;s fees, plan, dates and everything we have asked them
+            for. This is for what is not written down anywhere.
+          </p>
+        </div>
+
+        <div className={forms.actions}>
+          <button
+            type="submit"
+            className={`${forms.button} ${forms.quiet}`}
+            disabled={pending || draft.trim().length < 2}
+          >
+            <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
+            {pending ? 'Thinking…' : 'Send'}
+          </button>
+          <p className={forms.payoff}>
+            When it writes, it saves a new version you can edit or discard. It never sends
+            anything, and anything it had to guess is marked TO CONFIRM.
+          </p>
+        </div>
+        <Result state={state} />
+      </form>
+    </>
   );
 }
 

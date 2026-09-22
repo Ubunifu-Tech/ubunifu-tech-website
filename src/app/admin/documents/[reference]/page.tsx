@@ -9,9 +9,14 @@ import {
   renderMarkdown,
   shortHash,
 } from '@/lib/console/documents';
-import { formatDate, formatShortDate } from '@/lib/console/money';
+import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
-import { DraftWithAi, SendForSignature, VersionEditor } from '../DocumentEditor';
+import {
+  Copilot,
+  SendForSignature,
+  VersionEditor,
+  type CopilotTurn,
+} from '../DocumentEditor';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -104,6 +109,32 @@ export default async function DocumentPage({
   if (!document) notFound();
 
   const activity = await activityFor([document.id]);
+
+  // The drafting thread, if one has been started. Tool turns are folded into
+  // the assistant turn they belong to, so the panel reads as a conversation
+  // rather than as a transcript of the protocol.
+  const conversation = await db.conversation.findFirst({
+    where: { documentId: document.id, kind: 'document_draft' },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      messages: {
+        where: { role: { in: ['user', 'assistant'] } },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, role: true, content: true, toolName: true, createdAt: true },
+      },
+    },
+  });
+
+  const turns: CopilotTurn[] = (conversation?.messages ?? [])
+    .filter((message) => message.content.trim().length > 0 || message.toolName)
+    .map((message) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content.trim() || 'Wrote a new version.',
+      toolName: message.toolName,
+      when: formatRelative(message.createdAt, now),
+    }));
+
   const latest = document.versions[0];
   const signed = document.status === 'signed';
   const live = document.signatureRequests.find((request) =>
@@ -264,10 +295,14 @@ export default async function DocumentPage({
             <>
               <section className={forms.card}>
                 <div className={forms.cardHeader}>
-                  <h2 className={forms.cardTitle}>Ask for a draft</h2>
-                  <span className={forms.cardMeta}>A co-pilot, not an author</span>
+                  <h2 className={forms.cardTitle}>Drafting</h2>
+                  <span className={forms.cardMeta}>
+                    {turns.length === 0
+                      ? 'A co-pilot, not an author'
+                      : `${turns.length} ${turns.length === 1 ? 'message' : 'messages'} so far`}
+                  </span>
                 </div>
-                <DraftWithAi documentId={document.id} />
+                <Copilot documentId={document.id} turns={turns} />
               </section>
 
               <section className={forms.card}>

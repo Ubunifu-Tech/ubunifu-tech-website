@@ -9,14 +9,14 @@ import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { documentToSignEmail } from '@/lib/emails';
-import { getOrg } from '@/lib/console/org';
 import {
   DOCUMENT_KIND_LABEL,
   currentTerms,
   hashDocument,
   nextDocumentReference,
 } from '@/lib/console/documents';
-import { draftDocument } from '@/lib/console/ai';
+import { runTurn } from '@/lib/console/agent';
+import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -145,139 +145,90 @@ export async function saveVersion(
 }
 
 /**
- * Asks the model for a draft, and saves it as an ordinary version.
+ * One turn of the drafting conversation.
  *
- * It lands as a version like any other — editable, superseded by the next save,
- * and marked with its provenance. The model is a co-pilot: it never sends
- * anything and never touches a document that has already gone out.
+ * Not a one-shot any more. The thread lives in the database, so a staff member
+ * can say "make the payment two stages" and be understood, come back tomorrow
+ * and carry on, and read afterwards exactly what was asked for and what the
+ * model did about it. The system prompt and the project brief are cached, so
+ * every turn after the first pays for the new message rather than the whole
+ * context again.
  */
-export async function draftWithAi(
+export async function askCopilot(
   _previous: DocumentState,
   formData: FormData,
 ): Promise<DocumentState> {
   const staff = await requireStaff();
 
   const documentId = String(formData.get('documentId') ?? '');
-  const instruction = String(formData.get('instruction') ?? '').trim().slice(0, 2000);
+  const message = String(formData.get('message') ?? '').trim();
+
+  if (message.length < 2 || message.length > 4000) {
+    return { status: 'error', message: 'Say what you would like.' };
+  }
 
   const document = await db.document.findUnique({
     where: { id: documentId },
-    select: {
-      id: true,
-      kind: true,
-      reference: true,
-      status: true,
-      versions: { orderBy: { version: 'desc' }, take: 1, select: { version: true } },
-      project: {
-        select: {
-          name: true,
-          reference: true,
-          slug: true,
-          serviceLine: true,
-          engagementType: true,
-          summary: true,
-          currency: true,
-          startDate: true,
-          targetDate: true,
-          client: { select: { name: true, legalName: true, country: true } },
-          lineItems: {
-            where: { status: { in: ['planned', 'active'] } },
-            orderBy: { position: 'asc' },
-            select: { label: true, terms: true, amountMinor: true, billingKind: true },
-          },
-          phases: {
-            orderBy: { position: 'asc' },
-            select: {
-              name: true,
-              goal: true,
-              deliverables: { orderBy: { position: 'asc' }, select: { title: true } },
-            },
-          },
-          assetRequests: {
-            orderBy: { position: 'asc' },
-            select: { title: true, detail: true },
-          },
-        },
-      },
-    },
+    select: { id: true, reference: true, status: true },
   });
-
   if (!document) return { status: 'error', message: 'That document no longer exists.' };
   if (document.status === 'signed') {
-    return { status: 'error', message: 'This has been signed and cannot be redrafted.' };
+    return {
+      status: 'error',
+      message: 'This has been signed. A signed document cannot be redrafted — raise a change order.',
+    };
   }
 
-  const [org, terms] = await Promise.all([getOrg(), currentTerms()]);
-  const project = document.project;
-
-  const result = await draftDocument({
-    kind: document.kind,
-    projectName: project.name,
-    projectReference: project.reference,
-    serviceLine: project.serviceLine,
-    engagementType: project.engagementType,
-    summary: project.summary,
-    startDate: project.startDate,
-    targetDate: project.targetDate,
-    clientName: project.client.name,
-    clientLegalName: project.client.legalName,
-    clientCountry: project.client.country,
-    orgLegalName: org.legalName,
-    orgCountry: org.country,
-    currency: project.currency,
-    lines: project.lineItems,
-    phases: project.phases.map((phase) => ({
-      name: phase.name,
-      goal: phase.goal,
-      deliverables: phase.deliverables.map((deliverable) => deliverable.title),
-    })),
-    assets: project.assetRequests,
-    termsTitle: terms?.title ?? null,
-    termsVersion: terms?.version ?? null,
-    instruction,
+  // One thread per document, created on first use.
+  const existing = await db.conversation.findFirst({
+    where: { documentId: document.id, kind: 'document_draft' },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
   });
 
-  if (!result.ok) {
-    await recordAudit({
-      actorType: 'staff',
-      actorId: staff.id,
-      action: 'document.draft_failed',
-      entityType: 'Document',
-      entityId: document.id,
-      summary: result.error,
-    });
-    return { status: 'error', message: result.error };
-  }
+  const conversationId =
+    existing?.id ??
+    (
+      await db.conversation.create({
+        data: {
+          kind: 'document_draft',
+          documentId: document.id,
+          actorType: 'staff',
+          actorId: staff.id,
+          title: `Drafting ${document.reference}`,
+        },
+        select: { id: true },
+      })
+    ).id;
 
-  const version = (document.versions[0]?.version ?? 0) + 1;
-  await db.documentVersion.create({
-    data: {
-      documentId: document.id,
-      version,
-      bodyMarkdown: result.markdown,
-      changeNote: 'Drafted by the assistant',
-      aiAssisted: true,
-      aiModel: result.model,
-      aiPromptSummary: instruction || 'A first draft, nothing specific.',
-      createdById: staff.id,
-    },
+  const brief = await copilotBrief(document.id);
+
+  const result = await runTurn({
+    conversationId,
+    kind: 'document_draft',
+    system: COPILOT_SYSTEM,
+    brief: brief ?? undefined,
+    userMessage: message,
+    tools: [saveDraftTool],
+    context: { documentId: document.id, staffId: staff.id },
+    maxTokens: 32000,
   });
 
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: 'document.drafted_by_ai',
+    action: result.ok ? 'document.copilot_turn' : 'document.copilot_failed',
     entityType: 'Document',
     entityId: document.id,
-    summary: `${document.reference} — version ${version} drafted with ${result.model}`,
-    metadata: { model: result.model, instruction: instruction || null },
+    summary: result.ok
+      ? `${document.reference} — ${result.usedTools.length > 0 ? 'wrote a version' : 'answered'}`
+      : `${document.reference} — ${result.error}`,
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
-  return {
-    status: 'done',
-    message: `Drafted as version ${version}. Read it through — anything marked TO CONFIRM needs you.`,
-  };
+
+  if (!result.ok) return { status: 'error', message: result.error };
+  return { status: 'done', message: result.reply };
 }
 
 /**

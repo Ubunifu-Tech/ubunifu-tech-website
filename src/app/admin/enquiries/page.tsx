@@ -85,8 +85,21 @@ export default async function EnquiriesPage({
       status: true,
       serviceLine: true,
       internalNote: true,
+      source: true,
       createdAt: true,
       client: { select: { name: true, slug: true } },
+      conversations: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: {
+          id: true,
+          messages: {
+            where: { role: { in: ['user', 'assistant'] } },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, role: true, content: true },
+          },
+        },
+      },
     },
   });
 
@@ -170,7 +183,12 @@ export default async function EnquiriesPage({
                           <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
                         </span>
                       </td>
-                      <td className={`${table.td} ${table.nowrap}`}>{enquiry.subject}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {enquiry.subject}
+                        {enquiry.source === 'website_assistant' && (
+                          <span className={table.sub}>via the assistant</span>
+                        )}
+                      </td>
                       <td className={table.td}>
                         <span className={table.clamp}>{enquiry.message}</span>
                       </td>
@@ -239,6 +257,35 @@ export default async function EnquiriesPage({
               </span>
             </div>
             <p className={styles.quote}>{expanded.message}</p>
+
+            {expanded.conversations[0]?.messages.length ? (
+              <>
+                <div className={`${forms.cardHeader} ${styles.spaced}`}>
+                  <h3 className={forms.cardTitle}>What they said in the chat</h3>
+                  <span className={forms.cardMeta}>
+                    The assistant summarised this above; here it is in full
+                  </span>
+                </div>
+                <ul className={styles.thread}>
+                  {expanded.conversations[0].messages
+                    .filter((message) => message.content.trim().length > 0)
+                    .map((message) => (
+                      <li
+                        key={message.id}
+                        className={`${styles.message} ${
+                          message.role === 'assistant' ? styles.fromUs : ''
+                        }`}
+                      >
+                        <p className={styles.messageWho}>
+                          {message.role === 'assistant' ? 'Assistant' : expanded.name}
+                        </p>
+                        <p className={styles.messageBody}>{message.content}</p>
+                      </li>
+                    ))}
+                </ul>
+              </>
+            ) : null}
+
             <div className={styles.rows}>
               <TriageControls
                 id={expanded.id}

@@ -57,6 +57,10 @@ const ACTION_LABEL: Record<string, string> = {
   'invoice.voided': 'Invoice voided',
   'payment.recorded': 'Payment recorded',
   'receipt.sent': 'Receipt sent',
+  'project_update.drafted': 'Update drafted',
+  'project_update.sent': 'Update sent to the client',
+  'project_update.send_failed': 'Update email did not send',
+  'settings.billing_saved': 'Billing details changed',
 };
 
 function auditWhere(key: string): Prisma.AuditEventWhereInput | null {

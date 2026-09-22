@@ -55,6 +55,10 @@ function describeAudit(action: string, summary: string | null): string {
     'invoice.voided': 'Invoice voided',
     'payment.recorded': 'Payment recorded',
     'payment.reversed': 'Payment reversed',
+    'project_update.drafted': 'Update drafted',
+    'project_update.sent': 'Update sent to the client',
+    'project_update.send_failed': 'Update published, but the email did NOT go',
+    'settings.billing_saved': 'Billing details changed',
   };
   const base = said[action] ?? action.replace(/[._]/g, ' ');
   return summary ? `${base} — ${summary}` : base;

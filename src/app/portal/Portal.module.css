@@ -383,3 +383,48 @@
     order: 3;
   }
 }
+
+/* ── Updates ───────────────────────────────────── */
+
+.updateList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.update {
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--border);
+}
+
+.update:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.updateTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.updateBody {
+  margin: var(--space-4) 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.75;
+}
+
+.updateBody p {
+  margin: 0 0 var(--space-4);
+}
+
+.updateBody p:last-child {
+  margin-bottom: 0;
+}

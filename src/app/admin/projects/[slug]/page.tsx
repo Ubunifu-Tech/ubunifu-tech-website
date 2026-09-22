@@ -18,6 +18,7 @@ import { LineItemRow } from './LineItemRow';
 import { DeliverableToggle } from './DeliverableToggle';
 import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
+import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -102,6 +103,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           nextDueAt: true,
         },
       },
+      updates: {
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: {
+          id: true,
+          title: true,
+          bodyMarkdown: true,
+          previewUrl: true,
+          status: true,
+          publishedAt: true,
+          notifiedAt: true,
+          createdAt: true,
+        },
+      },
       invoices: {
         orderBy: { createdAt: 'desc' },
         select: {
@@ -146,6 +161,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   // Fourteen days, unless somebody changes it on the form.
   const defaultDue = new Date(now);
   defaultDue.setDate(defaultDue.getDate() + 14);
+
+  const updates: UpdateRow[] = project.updates.map((update) => ({
+    id: update.id,
+    title: update.title,
+    body: update.bodyMarkdown,
+    previewUrl: update.previewUrl,
+    published: update.status === 'published',
+    when: formatShortDate(update.publishedAt ?? update.createdAt),
+    notified: update.notifiedAt !== null,
+  }));
 
   // Shown before anything is clicked, so the blockers are visible while there
   // is still time to clear them rather than at the moment of refusal.
@@ -357,6 +382,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               </table>
             </div>
           </div>
+
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Tell the client</h2>
+              <span className={forms.cardMeta}>
+                Goes to everyone on this client who can sign in
+              </span>
+            </div>
+            <UpdateComposer projectId={project.id} updates={updates} />
+          </section>
 
           <section className={forms.card}>
             <div className={forms.cardHeader}>

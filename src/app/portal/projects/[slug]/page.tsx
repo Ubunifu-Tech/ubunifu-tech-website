@@ -58,6 +58,17 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
           },
         },
       },
+      updates: {
+        where: { status: 'published' },
+        orderBy: { publishedAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          bodyMarkdown: true,
+          previewUrl: true,
+          publishedAt: true,
+        },
+      },
       assetRequests: {
         where: { status: { in: ['requested', 'blocked'] } },
         orderBy: { position: 'asc' },
@@ -113,6 +124,48 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
             Send these over however suits you — email or WhatsApp is fine. We will tick them off
             here as they arrive.
           </p>
+        </section>
+      )}
+
+      {project.updates.length > 0 && (
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>What we have told you</h2>
+            <span className={forms.cardMeta}>
+              {project.updates.length} update{project.updates.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <ul className={styles.updateList}>
+            {project.updates.map((update) => (
+              <li key={update.id} className={styles.update}>
+                <h3 className={styles.updateTitle}>{update.title}</h3>
+                <p className={styles.projectMeta}>{formatDate(update.publishedAt)}</p>
+                {/* Rendered as plain text on purpose: the body is written by
+                    staff in a textarea, and passing it through a Markdown
+                    renderer would mean deciding what HTML a staff member may
+                    put in front of a client. Paragraphs are enough. */}
+                <div className={styles.updateBody}>
+                  {update.bodyMarkdown
+                    .split(/\n{2,}/)
+                    .map((block) => block.trim())
+                    .filter(Boolean)
+                    .map((block, index) => (
+                      <p key={index}>{block}</p>
+                    ))}
+                </div>
+                {update.previewUrl && (
+                  <a
+                    href={update.previewUrl}
+                    className={forms.link}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Take a look
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

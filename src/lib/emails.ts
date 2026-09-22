@@ -350,3 +350,47 @@ export function receiptEmail(input: {
 
   return shell(`Receipt ${input.number} for ${input.amount}.`, body);
 }
+
+/**
+ * A progress update.
+ *
+ * The update itself is in the body, not behind a link. A client who has to
+ * sign in to find out whether anything happened will stop opening these, and
+ * then the portal stops being read too. The link is for the detail and the
+ * history; the email carries the news.
+ */
+export function projectUpdateEmail(input: {
+  name: string;
+  projectName: string;
+  title: string;
+  body: string;
+  previewUrl: string | null;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  // Written as short paragraphs; kept as short paragraphs.
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 16px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+          block,
+        ).replace(/\n/g, '<br />')}</p>`,
+    )
+    .join('');
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.title)}</h1>
+    <p style="margin:0 0 16px;color:#5A5170;font-size:15px;line-height:1.7;">Hello ${name},</p>
+    ${paragraphs}
+    ${input.previewUrl ? button(input.previewUrl, 'Take a look') : button(input.url, 'Open your portal')}
+    <p style="margin:24px 0 0;color:#8A8399;font-size:13px;line-height:1.7;">
+      Every update is kept in your portal, so you can always go back to one.
+    </p>`;
+
+  return shell(`${input.projectName}: ${input.title}`, body);
+}

@@ -8,6 +8,9 @@ import {
   ProjectStatus,
 } from '@/generated/prisma/client';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { consoleEnv } from '@/lib/console/env';
+import { sendConsoleEmail } from '@/lib/console/mailer';
+import { projectUpdateEmail } from '@/lib/emails';
 import { formatMoney, parseDateInput, parseMoney, toDateInputValue } from '@/lib/console/money';
 import {
   guardsFor,
@@ -377,4 +380,176 @@ export async function setAssetRequestStatus(
 
   revalidatePath(`/admin/projects/${request.project.slug}`);
   return { status: 'done' };
+}
+
+/**
+ * Posts an update to the client.
+ *
+ * Drafted and published in two steps on purpose. An update is the one thing
+ * here written for someone outside the company to read, and there is no way to
+ * unsend an email — so it is saved first, read back on the page as the client
+ * will see it, and sent only when somebody presses send.
+ */
+export async function saveUpdate(
+  _previous: EditState,
+  formData: FormData,
+): Promise<EditState> {
+  const staff = await requireStaff();
+
+  const projectId = String(formData.get('projectId') ?? '');
+  const title = String(formData.get('title') ?? '').trim();
+  const bodyMarkdown = String(formData.get('body') ?? '').trim();
+  const previewUrl = String(formData.get('previewUrl') ?? '').trim();
+
+  if (title.length < 3 || title.length > 160) {
+    return { status: 'error', message: 'Give the update a short title.' };
+  }
+  if (bodyMarkdown.length < 10 || bodyMarkdown.length > 8000) {
+    return { status: 'error', message: 'Write a little more than that.' };
+  }
+  if (previewUrl) {
+    try {
+      const parsed = new URL(previewUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
+    } catch {
+      return { status: 'error', message: 'The link should be a full address, starting with https://' };
+    }
+  }
+
+  const project = await db.project.findFirst({
+    where: { id: projectId, deletedAt: null },
+    select: { id: true, slug: true },
+  });
+  if (!project) return { status: 'error', message: 'That project no longer exists.' };
+
+  const update = await db.projectUpdate.create({
+    data: {
+      projectId: project.id,
+      title,
+      bodyMarkdown,
+      previewUrl: previewUrl || null,
+    },
+    select: { id: true },
+  });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'project_update.drafted',
+    entityType: 'ProjectUpdate',
+    entityId: update.id,
+    summary: title,
+  });
+
+  revalidatePath(`/admin/projects/${project.slug}`);
+  return { status: 'done', message: 'Saved as a draft. Read it back, then send it.' };
+}
+
+/**
+ * Publishes an update and emails the client.
+ *
+ * publishedAt is what the portal filters on, so it is set whether or not the
+ * email leaves — the client can always read it by signing in, and an outage
+ * must not hide an update that has been approved for them to see. The send
+ * outcome is recorded separately, for exactly the same reason.
+ */
+export async function publishUpdate(
+  _previous: EditState,
+  formData: FormData,
+): Promise<EditState> {
+  const staff = await requireStaff();
+  const updateId = String(formData.get('updateId') ?? '');
+
+  const update = await db.projectUpdate.findUnique({
+    where: { id: updateId },
+    select: {
+      id: true,
+      title: true,
+      bodyMarkdown: true,
+      previewUrl: true,
+      status: true,
+      project: {
+        select: {
+          slug: true,
+          name: true,
+          client: {
+            select: {
+              name: true,
+              contacts: {
+                where: { deletedAt: null, canSignIn: true },
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!update) return { status: 'error', message: 'That update no longer exists.' };
+  if (update.status === 'published') {
+    return { status: 'error', message: 'This has already been sent.' };
+  }
+
+  await db.projectUpdate.update({
+    where: { id: update.id },
+    data: { status: 'published', publishedAt: new Date() },
+  });
+
+  const recipients = update.project.client.contacts;
+  let delivered = 0;
+
+  for (const contact of recipients) {
+    const sent = await sendConsoleEmail({
+      to: contact.email,
+      subject: `${update.project.name}: ${update.title}`,
+      html: projectUpdateEmail({
+        name: contact.name,
+        projectName: update.project.name,
+        title: update.title,
+        body: update.bodyMarkdown,
+        previewUrl: update.previewUrl,
+        url: `${consoleEnv.publicOrigin}/portal`,
+      }),
+      template: 'project_update',
+      entityType: 'ProjectUpdate',
+      entityId: update.id,
+    });
+    if (sent.ok) delivered += 1;
+  }
+
+  if (delivered > 0) {
+    await db.projectUpdate.update({
+      where: { id: update.id },
+      data: { notifiedAt: new Date() },
+    });
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: delivered === recipients.length ? 'project_update.sent' : 'project_update.send_failed',
+    entityType: 'ProjectUpdate',
+    entityId: update.id,
+    summary:
+      recipients.length === 0
+        ? `${update.title} — published, but this client has nobody to email`
+        : `${update.title} — emailed ${delivered} of ${recipients.length}`,
+  });
+
+  revalidatePath(`/admin/projects/${update.project.slug}`);
+
+  if (recipients.length === 0) {
+    return {
+      status: 'done',
+      message: 'Published to the portal. Nobody on this client can receive email, so nothing was sent.',
+    };
+  }
+  if (delivered < recipients.length) {
+    return {
+      status: 'error',
+      message: `Published, and it is in their portal — but only ${delivered} of ${recipients.length} emails went out. The rest are in the activity record with the reason.`,
+    };
+  }
+  return { status: 'done', message: `Published and emailed to ${delivered}.` };
 }

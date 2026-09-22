@@ -50,9 +50,18 @@ export async function sendConsoleEmail(options: {
       data: { status: 'failed', error },
     });
 
-    // In development, put the link on the console rather than failing silently.
-    // Without this a missing key makes sign-in look broken rather than
-    // unconfigured, and there is no way in.
+    /**
+     * In development, print the links so there is still a way in — but report
+     * the failure honestly.
+     *
+     * This used to return ok:true while writing the log row as failed, which
+     * put every caller's audit line ("invitation sent") in direct
+     * contradiction with the email log ("failed"). That is the exact fault
+     * this log exists to prevent, and having it in the mailer meant no caller
+     * could get it right no matter how carefully they handled the result.
+     * The caller decides what to show; this function only reports what
+     * happened.
+     */
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
         `\n[mailer] RESEND_API_KEY is not set, so nothing was sent.\n` +
@@ -64,7 +73,10 @@ export async function sendConsoleEmail(options: {
             .join('\n') +
           '\n',
       );
-      return { ok: true };
+      return {
+        ok: false,
+        error: 'email is not configured here, so the link was printed to the server console',
+      };
     }
 
     return { ok: false, error };

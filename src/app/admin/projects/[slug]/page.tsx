@@ -6,6 +6,7 @@ import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
 import { billableLines } from '@/lib/console/billing';
 import { periodLabel } from '@/lib/console/renewals';
+import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import {
   formatMoney,
@@ -90,7 +91,17 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       },
       assetRequests: {
         orderBy: { position: 'asc' },
-        select: { id: true, title: true, detail: true, status: true },
+        select: {
+          id: true,
+          title: true,
+          detail: true,
+          status: true,
+          uploads: {
+            where: { deletedAt: null },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, filename: true, sizeBytes: true, createdAt: true },
+          },
+        },
       },
       lineItems: {
         orderBy: { position: 'asc' },
@@ -516,6 +527,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                     title={request.title}
                     detail={request.detail}
                     status={request.status}
+                    files={request.uploads.map((file) => ({
+                      id: file.id,
+                      filename: file.filename,
+                      size: fileSize(file.sizeBytes),
+                      when: formatRelative(file.createdAt, now),
+                    }))}
                   />
                 ))}
               </div>

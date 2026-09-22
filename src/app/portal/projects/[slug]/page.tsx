@@ -4,6 +4,14 @@ import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { CLIENT_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatDate } from '@/lib/console/money';
+import {
+  ALLOWED_CONTENT_TYPES,
+  ALLOWED_LABEL,
+  MAX_UPLOAD_BYTES,
+  fileSize,
+  uploadsConfigured,
+} from '@/lib/console/uploads';
+import { UploadBox } from './UploadBox';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -70,14 +78,35 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
         },
       },
       assetRequests: {
-        where: { status: { in: ['requested', 'blocked'] } },
+        // 'received' is in here now: a checklist that hides what you already
+        // sent cannot tell you whether it arrived, which is the first thing
+        // anybody wants to know after sending something.
+        where: { status: { in: ['requested', 'blocked', 'received'] } },
         orderBy: { position: 'asc' },
-        select: { id: true, title: true, detail: true, status: true },
+        select: {
+          id: true,
+          title: true,
+          detail: true,
+          status: true,
+          uploads: {
+            where: { deletedAt: null },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, filename: true, sizeBytes: true, createdAt: true },
+          },
+        },
       },
     },
   });
 
   if (!project) notFound();
+
+  const outstanding = project.assetRequests.filter(
+    (request) => request.status !== 'received',
+  ).length;
+  // With no store configured the box is not shown at all, and the old
+  // instruction stands on its own rather than sitting under a button that
+  // would fail.
+  const canUpload = uploadsConfigured();
 
   const total = project.phases.reduce((n, p) => n + p.deliverables.length, 0);
   const done = project.phases.reduce(
@@ -108,8 +137,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
           <div className={forms.cardHeader}>
             <h2 className={forms.cardTitle}>What we still need from you</h2>
             <span className={forms.cardMeta}>
-              {project.assetRequests.length} item
-              {project.assetRequests.length === 1 ? '' : 's'}
+              {outstanding} of {project.assetRequests.length} still to come
             </span>
           </div>
           <ul className={styles.needList}>
@@ -117,12 +145,35 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
               <li key={request.id} className={styles.needItem}>
                 <span className={styles.needTitle}>{request.title}</span>
                 {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
+
+                {request.uploads.length > 0 && (
+                  <ul className={styles.fileList}>
+                    {request.uploads.map((file) => (
+                      <li key={file.id} className={styles.fileRow}>
+                        <a href={`/portal/files/${file.id}`}>{file.filename}</a>
+                        <span className={styles.fileMeta}>
+                          {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {canUpload && (
+                  <UploadBox
+                    assetRequestId={request.id}
+                    accept={ALLOWED_CONTENT_TYPES.join(',')}
+                    maxBytes={MAX_UPLOAD_BYTES}
+                    hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)}.`}
+                  />
+                )}
               </li>
             ))}
           </ul>
           <p className={styles.note}>
-            Send these over however suits you — email or WhatsApp is fine. We will tick them off
-            here as they arrive.
+            {canUpload
+              ? 'Attach them here and they land against the right item. Email or WhatsApp still works if that is easier.'
+              : 'Send these over however suits you — email or WhatsApp is fine. We will tick them off here as they arrive.'}
           </p>
         </section>
       )}

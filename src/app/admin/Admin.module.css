@@ -891,3 +891,18 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Files a client attached to a request, under its title. */
+.rowFiles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.rowFile {
+  color: var(--brand-deep);
+  font-size: var(--font-size-small);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -22,11 +22,32 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-/** Inline emphasis, applied after escaping so the markers cannot inject tags. */
+/**
+ * Inline emphasis, applied after HTML escaping so the markers cannot inject
+ * tags.
+ *
+ * A backslash escapes the character after it, which is what markdown means by
+ * `\*` and what the editor emits when somebody types a literal asterisk. The
+ * escaped characters are lifted out before the emphasis patterns run and put
+ * back afterwards, so `5 \* 3` stays as written instead of half of it being
+ * eaten by an emphasis rule.
+ *
+ * The sentinel is a NUL byte, which cannot appear in a Postgres text column and
+ * so cannot collide with real content.
+ */
 function inline(text: string): string {
-  return escapeHtml(text)
+  const literals: string[] = [];
+
+  const withoutEscapes = escapeHtml(text).replace(/\\([*_\\])/g, (_match, character: string) => {
+    literals.push(character);
+    return `\u0000${literals.length - 1}\u0000`;
+  });
+
+  const emphasised = withoutEscapes
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+
+  return emphasised.replace(/\u0000(\d+)\u0000/g, (_match, index: string) => literals[Number(index)]!);
 }
 
 export function renderMarkdown(source: string): string {

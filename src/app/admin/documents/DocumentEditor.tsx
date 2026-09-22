@@ -3,6 +3,7 @@
 import React, { useActionState, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { draftWithAi, saveVersion, sendForSignature, type DocumentState } from './actions';
+import { RichText } from '@/components/console/RichText';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -93,21 +94,16 @@ export function VersionEditor({
     <form action={action} className={forms.form}>
       <input type="hidden" name="documentId" value={documentId} />
       <div className={forms.field}>
-        <label className={forms.label} htmlFor="doc-body">
-          The document
-        </label>
-        <textarea
-          id="doc-body"
+        <span className={forms.label}>The document</span>
+        <RichText
           name="body"
-          className={`${forms.control} ${forms.editor}`}
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
+          label="The document"
+          initialMarkdown={body}
           disabled={pending}
-          spellCheck
+          minHeight="tall"
+          onMarkdownChange={setDraft}
+          hint="The toolbar is everything this document can contain. There is no code, no quote and no link, because a contract renders from a fixed set of shapes and anything outside it would read differently to the person signing."
         />
-        <p className={forms.hint}>
-          Markdown: ## for a heading, - for a bullet, **bold**. Nothing else renders, on purpose.
-        </p>
       </div>
 
       {hasMarkers && (

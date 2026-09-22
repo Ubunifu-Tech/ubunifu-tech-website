@@ -13,13 +13,15 @@
     "check:hero-assets": "node scripts/check-hero-assets.mjs",
     "check:product-art": "node scripts/check-product-art.mjs",
     "brand:export": "node scripts/export-brand-assets.mjs",
-    "check": "npm run lint && npm run typecheck && npm run check:typography",
+    "check": "npm run lint && npm run typecheck && npm run check:typography && npm run check:editor",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
-    "db:deploy": "node scripts/migrate-deploy.mjs"
+    "db:deploy": "node scripts/migrate-deploy.mjs",
+    "check:editor": "tsx scripts/check-editor-roundtrip.mts",
+    "check:signatures": "tsx scripts/verify-signature-hashes.mts"
   },
   "engines": {
     "node": ">=20.9.0"
@@ -29,6 +31,9 @@
     "@paper-design/shaders-react": "0.0.80",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "@tiptap/pm": "^3.31.3",
+    "@tiptap/react": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
     "framer-motion": "^12.34.2",
     "gray-matter": "^4.0.3",
     "lenis": "^1.3.21",
@@ -42,12 +47,14 @@
     "resend": "^6.10.0"
   },
   "devDependencies": {
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^20",
     "@types/pg": "8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.3.2",
+    "jsdom": "^30.1.1",
     "sharp": "^0.35.3",
     "tsx": "4.20.3",
     "typescript": "5.9.3"

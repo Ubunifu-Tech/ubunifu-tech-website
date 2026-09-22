@@ -12,9 +12,8 @@ import { formatMoney, formatRelative, formatShortDate, toDateInputValue } from '
 import { MoveControls, type StageAction } from './MoveControls';
 import { FeeEditor, type FeeRow } from '@/components/console/FeeEditor';
 import { Tabs } from '@/components/console/Tabs';
-import { Avatar } from '@/components/console/Avatar';
 import { Callout } from '@/components/console/Callout';
-import { DeliverableToggle } from './DeliverableToggle';
+import { LeadSelect, TaskRow } from './TaskRow';
 import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
@@ -72,8 +71,19 @@ export default async function ProjectPage({
       startDate: true,
       targetDate: true,
       launchedAt: true,
-      client: { select: { id: true, name: true, slug: true } },
-      owner: { select: { name: true } },
+      client: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          contacts: {
+            where: { deletedAt: null },
+            orderBy: [{ isPrimary: 'desc' }, { name: 'asc' }],
+            select: { id: true, name: true },
+          },
+        },
+      },
+      ownerId: true,
       phases: {
         orderBy: { position: 'asc' },
         select: {
@@ -83,7 +93,13 @@ export default async function ProjectPage({
           status: true,
           deliverables: {
             orderBy: { position: 'asc' },
-            select: { id: true, title: true, isComplete: true },
+            select: {
+              id: true,
+              title: true,
+              isComplete: true,
+              dueAt: true,
+              assigneeId: true,
+            },
           },
         },
       },
@@ -94,6 +110,7 @@ export default async function ProjectPage({
           title: true,
           detail: true,
           status: true,
+          assigneeId: true,
           uploads: {
             where: { deletedAt: null },
             orderBy: { createdAt: 'asc' },
@@ -244,6 +261,21 @@ export default async function ProjectPage({
     0,
   );
 
+  // Who work can be given to: the active team, plus whoever already holds it.
+  const team = await db.staffUser.findMany({
+    where: { isActive: true },
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true, title: true },
+  });
+  const people = [
+    { value: '', label: 'Nobody yet' },
+    ...team.map((person) => ({ value: person.id, label: person.name, hint: person.title ?? undefined })),
+  ];
+  const theirPeople = [
+    { value: '', label: 'Anyone at the client' },
+    ...project.client.contacts.map((contact) => ({ value: contact.id, label: contact.name })),
+  ];
+
   const href = (key: Tab) => (key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`);
   const percent = totalDeliverables > 0 ? Math.round((doneDeliverables / totalDeliverables) * 100) : 0;
 
@@ -264,7 +296,7 @@ export default async function ProjectPage({
           </p>
         </div>
         <div className={styles.headActions}>
-          {project.owner && <Avatar name={project.owner.name} />}
+          <LeadSelect projectId={project.id} ownerId={project.ownerId ?? ''} people={people} />
           <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
             {STAFF_LABEL[project.status]}
           </span>
@@ -381,6 +413,8 @@ export default async function ProjectPage({
                       title={request.title}
                       detail={request.detail}
                       status={request.status}
+                      assigneeId={request.assigneeId ?? ''}
+                      contacts={theirPeople}
                       files={request.uploads.map((file) => ({
                         id: file.id,
                         filename: file.filename,
@@ -417,17 +451,19 @@ export default async function ProjectPage({
                   </span>
                 </div>
                 {phase.goal && <p className={styles.phaseGoal}>{phase.goal}</p>}
-                <ul className={styles.checkList}>
+                <div className={styles.taskList}>
                   {phase.deliverables.map((deliverable) => (
-                    <li key={deliverable.id}>
-                      <DeliverableToggle
-                        id={deliverable.id}
-                        title={deliverable.title}
-                        complete={deliverable.isComplete}
-                      />
-                    </li>
+                    <TaskRow
+                      key={deliverable.id}
+                      id={deliverable.id}
+                      title={deliverable.title}
+                      complete={deliverable.isComplete}
+                      dueAt={toDateInputValue(deliverable.dueAt)}
+                      assigneeId={deliverable.assigneeId ?? ''}
+                      people={people}
+                    />
                   ))}
-                </ul>
+                </div>
               </div>
             ))
           )}

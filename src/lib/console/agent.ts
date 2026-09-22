@@ -35,11 +35,18 @@ export type AgentTool<Input> = {
    * Validates and runs. Everything the model sends is untrusted input from
    * whoever it was talking to, so this re-checks it rather than trusting the
    * schema to have been honoured.
+   *
+   * `done: false` means the tool refused (a missing email, a short summary):
+   * the model is told why, and the call does not count as having happened.
    */
-  run: (input: unknown, context: Input) => Promise<{ result: string; meta?: Prisma.InputJsonValue }>;
+  run: (
+    input: unknown,
+    context: Input,
+  ) => Promise<{ result: string; meta?: Prisma.InputJsonValue; done?: boolean }>;
 };
 
 export type AgentResult =
+  /** usedTools lists the tools that actually did their job this turn. */
   | { ok: true; reply: string; usedTools: string[] }
   | { ok: false; error: string };
 
@@ -142,6 +149,11 @@ export async function runTurn<Context>(options: {
   system: string;
   /** Per-conversation facts, also stable, cached with the system prompt. */
   brief?: string;
+  /**
+   * Facts about this turn only, such as the page the person is looking at.
+   * Sent after the cached blocks and never stored in the thread.
+   */
+  note?: string;
   userMessage: string;
   tools: AgentTool<Context>[];
   context: Context;
@@ -197,6 +209,9 @@ export async function runTurn<Context>(options: {
     ];
     if (options.brief) {
       system.push({ type: 'text', text: options.brief, cache_control: { type: 'ephemeral' } });
+    }
+    if (options.note) {
+      system.push({ type: 'text', text: options.note });
     }
 
     const toolDefinitions: Anthropic.Tool[] = options.tools.map((tool) => ({
@@ -259,7 +274,7 @@ export async function runTurn<Context>(options: {
       }
 
       const tool = options.tools.find((candidate) => candidate.name === toolUse.name);
-      let outcome: { result: string; meta?: Prisma.InputJsonValue };
+      let outcome: { result: string; meta?: Prisma.InputJsonValue; done?: boolean };
 
       if (!tool) {
         // The model asked for something this surface does not offer. It is told
@@ -269,7 +284,7 @@ export async function runTurn<Context>(options: {
       } else {
         try {
           outcome = await tool.run(toolUse.input, options.context);
-          usedTools.push(tool.name);
+          if (outcome.done !== false) usedTools.push(tool.name);
         } catch (error) {
           console.error(`Tool ${tool.name} failed`, error);
           outcome = { result: 'That did not work. Tell the person, and do not try it again.' };

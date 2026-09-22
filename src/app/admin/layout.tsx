@@ -5,8 +5,9 @@ import { BrandMark } from '@/components/BrandMark';
 import { getStaffActor } from '@/lib/console/auth';
 import { navCounts } from '@/lib/console/counts';
 import { ConsoleNav } from './ConsoleNav';
-import { Avatar } from '@/components/console/Avatar';
-import { SignOutButton } from './SignOutButton';
+import { ProfileMenu, type ProfileLink } from '@/components/console/ProfileMenu';
+import { ROLE_LABEL } from '@/lib/console/people';
+import { MobileNav } from './MobileNav';
 import styles from './Admin.module.css';
 
 /**
@@ -38,6 +39,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const counts = await navCounts();
 
+  const links: ProfileLink[] = [
+    { href: '/profile', label: 'Your profile', icon: 'profile' },
+    { href: '/settings/team', label: 'Team', icon: 'team' },
+    { href: '/settings', label: 'Settings', icon: 'settings' },
+  ];
+
   return (
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
@@ -49,19 +56,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
 
         <ConsoleNav counts={counts} />
-
-        <div className={styles.sidebarFoot}>
-          <p className={styles.who}>
-            <Avatar name={staff.name} size="md" />
-            <span style={{ minWidth: 0 }}>
-              {staff.name}
-              <span className={styles.whoRole}>{staff.email}</span>
-            </span>
-          </p>
-          <SignOutButton action="/sign-out" />
-        </div>
       </aside>
-      {children}
+
+      <div className={styles.work}>
+        <header className={styles.topbar}>
+          <div className={styles.topbarStart}>
+            <MobileNav counts={counts} />
+          </div>
+          <ProfileMenu
+            name={staff.name}
+            email={staff.email}
+            detail={staff.title ?? ROLE_LABEL[staff.role]}
+            links={links}
+            signOutAction="/sign-out"
+          />
+        </header>
+        {children}
+      </div>
     </div>
   );
 }

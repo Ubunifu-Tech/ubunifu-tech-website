@@ -3,7 +3,8 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { TicketKind, type Prisma } from '@/generated/prisma/client';
+import { TicketKind } from '@/generated/prisma/client';
+import { createTicket } from '@/lib/console/ticket-create';
 import { requireClient, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -11,22 +12,6 @@ import { ticketRaisedEmail } from '@/lib/emails';
 import { formText } from '@/lib/console/form';
 
 export type RequestState = { status: 'idle' | 'done' | 'error'; message?: string };
-
-/** TCK-2026-014, on the same rule as every other reference here. */
-async function nextTicketReference(
-  tx: Prisma.TransactionClient,
-  now = new Date(),
-): Promise<string> {
-  const prefix = `TCK-${now.getFullYear()}-`;
-  const latest = await tx.ticket.findFirst({
-    where: { reference: { startsWith: prefix } },
-    orderBy: { reference: 'desc' },
-    select: { reference: true },
-  });
-  const previous = latest ? Number.parseInt(latest.reference.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
-}
 
 /**
  * A client asking us for something.
@@ -75,55 +60,12 @@ export async function raiseRequest(
     }
   }
 
-  const ticket = await db.$transaction(async (tx) => {
-    const reference = await nextTicketReference(tx);
-    return tx.ticket.create({
-      data: {
-        reference,
-        clientId: actor.clientId,
-        projectId: project?.id ?? null,
-        openedById: actor.id,
-        kind: kindRaw as TicketKind,
-        subject,
-        messages: {
-          create: {
-            actorType: 'client_contact',
-            actorId: actor.id,
-            body,
-          },
-        },
-      },
-      select: { id: true, reference: true },
-    });
-  });
-
-  await recordAudit({
-    actorType: 'client_contact',
-    actorId: actor.id,
-    action: 'ticket.raised',
-    entityType: 'Ticket',
-    entityId: ticket.id,
-    summary: `${ticket.reference} — ${subject}`,
-  });
-
-  // Our own alert. The request is already safe; this failing is our problem.
-  await sendConsoleEmail({
-    to: 'info@ubunifutech.com',
-    subject: `[${ticket.reference}] ${subject}`,
-    html: ticketRaisedEmail({
-      reference: ticket.reference,
-      clientName: actor.clientName,
-      from: actor.name,
-      fromEmail: actor.email,
-      kind: kindRaw,
-      subject,
-      body,
-      projectName: project?.name ?? null,
-      url: `${consoleEnv.adminOrigin}/requests/${ticket.reference}`,
-    }),
-    template: 'ticket_raised',
-    entityType: 'Ticket',
-    entityId: ticket.id,
+  const ticket = await createTicket({
+    actor,
+    kind: kindRaw as TicketKind,
+    subject,
+    body,
+    project,
   });
 
   revalidatePath('/portal/requests');

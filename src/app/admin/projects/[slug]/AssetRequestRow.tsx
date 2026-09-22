@@ -3,7 +3,8 @@
 import React, { useActionState } from 'react';
 import { Paperclip } from 'lucide-react';
 import { setAssetRequestStatus, type EditState } from './actions';
-import { Select } from '@/components/console/Select';
+import { assignClientItem, type AssignState } from './assign-actions';
+import { Select, type SelectOption } from '@/components/console/Select';
 import forms from '@/styles/forms.module.css';
 import styles from './AssetRequestRow.module.css';
 
@@ -23,6 +24,8 @@ export function AssetRequestRow({
   detail,
   status,
   files = [],
+  assigneeId = '',
+  contacts = [],
 }: {
   id: string;
   title: string;
@@ -30,12 +33,15 @@ export function AssetRequestRow({
   status: string;
   /** What the client attached. Reached at /files/<id> on this host. */
   files?: { id: string; filename: string; size: string; when: string }[];
+  /** Who at the client is sending it, from their own people. */
+  assigneeId?: string;
+  contacts?: readonly SelectOption[];
 }) {
   const [state, action, pending] = useActionState(setAssetRequestStatus, INITIAL);
+  const [assignState, assign] = useActionState(assignClientItem, { status: 'idle' } as AssignState);
 
   return (
-    <form action={action} className={styles.row}>
-      <input type="hidden" name="assetRequestId" value={id} />
+    <div className={styles.row}>
       <div className={styles.text}>
         <span className={styles.title}>{title}</span>
         {detail && <span className={styles.detail}>{detail}</span>}
@@ -52,13 +58,27 @@ export function AssetRequestRow({
             ))}
           </span>
         )}
-        {state.status === 'error' && (
+        {contacts.length > 1 && (
+          <form action={assign} className={styles.assignee}>
+            <input type="hidden" name="assetRequestId" value={id} />
+            <Select
+              name="assigneeId"
+              aria-label={`Who at the client sends ${title}`}
+              defaultValue={assigneeId}
+              options={contacts}
+              size="sm"
+              autoSubmit
+            />
+          </form>
+        )}
+        {(state.status === 'error' || assignState.status === 'error') && (
           <span className={forms.error} role="alert">
-            {state.message}
+            {state.status === 'error' ? state.message : assignState.message}
           </span>
         )}
       </div>
-      <div className={styles.status}>
+      <form action={action} className={styles.status}>
+        <input type="hidden" name="assetRequestId" value={id} />
         <Select
           name="assetStatus"
           aria-label={`${title} status`}
@@ -68,7 +88,7 @@ export function AssetRequestRow({
           size="sm"
           autoSubmit
         />
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

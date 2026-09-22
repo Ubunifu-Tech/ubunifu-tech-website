@@ -51,7 +51,9 @@ export const consoleEnv = {
   /**
    * Emails allowed to request a staff sign-in link. A staff account alone is
    * not enough: the address has to be on this list too, so a stray row in
-   * StaffUser cannot become console access.
+   * StaffUser cannot become console access. An entry starting with @ allows
+   * a whole domain ("@ubunifutech.com"), which is what lets an owner invite a
+   * colleague from the team page without a redeploy.
    */
   get staffAllowlist(): string[] {
     return optional('CONSOLE_STAFF_EMAILS', 'info@ubunifutech.com')
@@ -86,4 +88,18 @@ export function hostnameOf(host: string | null): string {
 export function isAdminHost(host: string | null): boolean {
   const hostname = hostnameOf(host);
   return hostname !== '' && adminHosts().includes(hostname);
+}
+
+/** Whether an address is on the staff allowlist, by address or by domain. */
+export function isStaffEmailAllowed(email: string): boolean {
+  const address = email.trim().toLowerCase();
+  const domain = address.slice(address.lastIndexOf('@'));
+  return consoleEnv.staffAllowlist.some((entry) =>
+    entry.startsWith('@') ? entry === domain : entry === address,
+  );
+}
+
+/** The allowlisted domains, for telling an owner who they can invite. */
+export function staffDomains(): string[] {
+  return consoleEnv.staffAllowlist.filter((entry) => entry.startsWith('@'));
 }

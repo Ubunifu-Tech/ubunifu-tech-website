@@ -1,0 +1,146 @@
+import { db } from '@/lib/db';
+import { requireStaff } from '@/lib/console/auth';
+import { staffDomains } from '@/lib/console/env';
+import { formatRelative } from '@/lib/console/money';
+import { ROLE_DESCRIPTION, ROLE_LABEL, ROLE_OPTIONS } from '@/lib/console/people';
+import { Avatar } from '@/components/console/Avatar';
+import { SettingsTabs } from '../SettingsTabs';
+import { InviteStaff, RoleControl, RowActions } from './TeamControls';
+import styles from '../../Admin.module.css';
+import team from './Team.module.css';
+import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
+
+export const metadata = { title: 'Team' };
+
+export default async function TeamPage() {
+  const staff = await requireStaff();
+  const isOwner = staff.role === 'owner';
+  const now = new Date();
+
+  const people = await db.staffUser.findMany({
+    orderBy: [{ isActive: 'desc' }, { createdAt: 'asc' }],
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      title: true,
+      role: true,
+      isActive: true,
+      lastSeenAt: true,
+      _count: {
+        select: {
+          ownedProjects: { where: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } } },
+          assignedTasks: { where: { isComplete: false } },
+        },
+      },
+    },
+  });
+
+  const active = people.filter((person) => person.isActive).length;
+
+  return (
+    <main className={styles.page}>
+      <div className={styles.pageHead}>
+        <div className={styles.headText}>
+          <h1 className={styles.heading}>Settings</h1>
+          <p className={styles.lead}>
+            Everyone who can sign in to the console. Projects and tasks can be given to anyone here.
+          </p>
+        </div>
+        {isOwner && <InviteStaff domains={staffDomains()} />}
+      </div>
+
+      <SettingsTabs current="team" role={staff.role} />
+
+      <div className={table.frame}>
+        <div className={table.toolbar}>
+          <div className={table.toolbarText}>
+            <h2 className={table.title}>Team</h2>
+            <span className={table.count}>{active} active</span>
+          </div>
+        </div>
+        <div className={table.scroll}>
+          <table className={table.table}>
+            <thead>
+              <tr>
+                <th className={table.th} scope="col">Person</th>
+                <th className={table.th} scope="col">Role</th>
+                <th className={table.th} scope="col">Working on</th>
+                <th className={table.th} scope="col">Last signed in</th>
+                <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                  <span className="srOnly">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {people.map((person) => {
+                const invited = person.lastSeenAt === null;
+                const you = person.id === staff.id;
+                return (
+                  <tr key={person.id} className={table.tr}>
+                    <td className={`${table.td} ${table.primary}`}>
+                      <span className={team.person}>
+                        <Avatar name={person.name} size="md" />
+                        <span className={team.personText}>
+                          {person.name}
+                          {you ? ' (you)' : ''}
+                          <span className={table.sub}>
+                            {person.title ? `${person.title} · ` : ''}
+                            {person.email}
+                          </span>
+                        </span>
+                      </span>
+                    </td>
+                    <td className={table.td}>
+                      {isOwner && !you && person.isActive ? (
+                        <RoleControl staffId={person.id} role={person.role} />
+                      ) : (
+                        ROLE_LABEL[person.role]
+                      )}
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`}>
+                      {person.isActive ? (
+                        <>
+                          {person._count.ownedProjects} {person._count.ownedProjects === 1 ? 'project' : 'projects'}
+                          <span className={table.sub}>
+                            {person._count.assignedTasks} open {person._count.assignedTasks === 1 ? 'task' : 'tasks'}
+                          </span>
+                        </>
+                      ) : (
+                        <span className={table.muted}>Removed</span>
+                      )}
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`}>
+                      {!person.isActive ? (
+                        <span className={`${forms.badge}`}>Removed</span>
+                      ) : invited ? (
+                        <span className={`${forms.badge} ${forms.badgeWarn}`}>Invited</span>
+                      ) : (
+                        formatRelative(person.lastSeenAt!, now)
+                      )}
+                    </td>
+                    <td className={`${table.td} ${table.actions}`}>
+                      {isOwner && !you && (
+                        <RowActions staffId={person.id} active={person.isActive} invited={invited} />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <dl className={team.roles}>
+        {ROLE_OPTIONS.map((option) => (
+          <div key={option.value}>
+            <dt>{option.label}</dt>
+            <dd>{ROLE_DESCRIPTION[option.value]}</dd>
+          </div>
+        ))}
+      </dl>
+    </main>
+  );
+}

@@ -30,7 +30,7 @@ export function ActivateForm({ defaultName }: { defaultName: string }) {
 
         <div className={forms.field}>
           <label htmlFor="phone" className={forms.label}>
-            Phone or WhatsApp <span className={forms.optional}>(optional)</span>
+            Phone <span className={forms.optional}>(optional)</span>
           </label>
           <input
             id="phone"

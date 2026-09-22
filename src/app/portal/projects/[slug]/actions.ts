@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireClient } from '@/lib/console/auth';
+import { requireClient, recordAudit } from '@/lib/console/auth';
 import { recordAssetUpload } from '@/lib/console/uploads';
 
 export type UploadState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -58,4 +58,50 @@ export async function confirmUpload(
   revalidatePath(`/portal/projects/${assetRequest.project.slug}`);
   revalidatePath(`/admin/projects/${assetRequest.project.slug}`);
   return { status: 'done', message: 'Got it, thank you.' };
+}
+
+export type AssignItemState = { status: 'idle' | 'done' | 'error'; message?: string };
+
+/**
+ * Who on the client's side is sending an item. Both the item and the person
+ * are looked up inside the signed-in contact's own client, so a posted id
+ * from anywhere else matches nothing.
+ */
+export async function assignMyItem(
+  _previous: AssignItemState,
+  formData: FormData,
+): Promise<AssignItemState> {
+  const actor = await requireClient();
+  const item = await db.assetRequest.findFirst({
+    where: {
+      id: String(formData.get('assetRequestId') ?? ''),
+      project: { clientId: actor.clientId, deletedAt: null },
+    },
+    select: { id: true, title: true, assigneeId: true, project: { select: { slug: true } } },
+  });
+  if (!item) return { status: 'error', message: 'That item is not on your projects.' };
+
+  const contactId = String(formData.get('assigneeId') ?? '');
+  const contact = contactId
+    ? await db.clientContact.findFirst({
+        where: { id: contactId, clientId: actor.clientId, deletedAt: null },
+        select: { id: true, name: true },
+      })
+    : null;
+  if (contactId && !contact) return { status: 'error', message: 'Choose someone on your team.' };
+  if ((contact?.id ?? null) === item.assigneeId) return { status: 'done' };
+
+  await db.assetRequest.update({ where: { id: item.id }, data: { assigneeId: contact?.id ?? null } });
+  await recordAudit({
+    actorType: 'client_contact',
+    actorId: actor.id,
+    action: 'asset_request.assigned',
+    entityType: 'AssetRequest',
+    entityId: item.id,
+    summary: `${item.title}: ${contact ? contact.name : 'nobody'}`,
+  });
+
+  revalidatePath(`/portal/projects/${item.project.slug}`);
+  revalidatePath(`/admin/projects/${item.project.slug}`);
+  return { status: 'done' };
 }

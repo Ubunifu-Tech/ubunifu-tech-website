@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
+import { openChat } from './Assistant';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Phone, MapPin, MessageCircle, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { site } from '@/content/site';
@@ -171,8 +172,8 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             {/* Says the same thing the acknowledgement email says, so the promise
                 a sender reads here is the one they get back in writing. */}
             <p className={styles.text}>
-              We read everything that comes in and reply to you directly. If email is slow
-              for you, WhatsApp reaches us just as well.
+              We read everything that comes in and reply to you directly. For a quick
+              question, the chat answers straight away and passes anything bigger to us.
             </p>
 
             {/* Values come from content/site.ts, which is the single source of
@@ -195,16 +196,10 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                   <MessageCircle size={18} />
                 </span>
                 <div>
-                  <p className={styles.methodLabel}>WhatsApp</p>
-                  <a
-                    href={`https://wa.me/${site.contact.whatsapp}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.methodLink}
-                  >
-                    Message us
-                    <span className="srOnly"> on WhatsApp (opens in a new tab)</span>
-                  </a>
+                  <p className={styles.methodLabel}>Chat</p>
+                  <button type="button" onClick={openChat} className={styles.methodButton}>
+                    Chat with us now
+                  </button>
                 </div>
               </div>
 

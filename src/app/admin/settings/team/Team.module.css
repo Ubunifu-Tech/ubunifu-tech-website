@@ -1,0 +1,71 @@
+.inviteForm {
+  width: 100%;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-card);
+}
+
+.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.danger {
+  color: var(--tone-red-fg);
+}
+
+.confirmText {
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.person {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.personText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.roles {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-6) 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.roles div {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-control);
+  background: var(--surface);
+}
+
+.roles dt {
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
+.roles dd {
+  margin: 0.25rem 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}

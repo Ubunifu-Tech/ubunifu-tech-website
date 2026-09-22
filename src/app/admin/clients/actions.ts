@@ -2,37 +2,48 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
-import { consoleEnv } from '@/lib/console/env';
-import { issueMagicToken } from '@/lib/console/magic-link';
-import { sendConsoleEmail } from '@/lib/console/mailer';
-import { clientInviteEmail, clientSignInEmail } from '@/lib/emails';
+import { requireStaff } from '@/lib/console/auth';
+import {
+  addContact,
+  invitePerson,
+  makeMainContact,
+  readContact,
+  removeContact,
+} from '@/lib/console/contacts';
+import { allow } from '@/lib/console/rate-limit';
+import { formText } from '@/lib/console/form';
 
-export type InviteState = { status: 'idle' | 'sent' | 'error'; message?: string };
+export type InviteState = { status: 'idle' | 'sent' | 'done' | 'error'; message?: string };
 
 /**
- * Sends a client their invitation.
- *
- * Staff-only, and requireStaff is called inside the action rather than relied
- * on from the page that rendered the form. A server action is a public endpoint:
- * anyone can post to it, whether or not they ever saw the page.
+ * Staff-only, and requireStaff is called inside each action rather than relied
+ * on from the page that rendered the form. A server action is a public
+ * endpoint: anyone can post to it, whether or not they ever saw the page.
  */
+
+async function clientFor(slugOrId: { id?: string; slug?: string }) {
+  return db.client.findFirst({
+    where: { ...(slugOrId.id ? { id: slugOrId.id } : { slug: slugOrId.slug }), deletedAt: null },
+    select: { id: true, name: true, slug: true },
+  });
+}
+
+/** Sends a client their invitation, or a sign-in link once they have an account. */
 export async function inviteContact(
   _previous: InviteState,
   formData: FormData,
 ): Promise<InviteState> {
   const staff = await requireStaff();
-  const contactId = String(formData.get('contactId') ?? '');
 
   const contact = await db.clientContact.findFirst({
-    where: { id: contactId, deletedAt: null },
+    where: { id: formText(formData, 'contactId'), deletedAt: null },
     select: {
       id: true,
       name: true,
       email: true,
       canSignIn: true,
       activatedAt: true,
-      client: { select: { name: true, deletedAt: true } },
+      client: { select: { name: true, slug: true, deletedAt: true } },
     },
   });
 
@@ -42,61 +53,78 @@ export async function inviteContact(
   if (!contact.canSignIn) {
     return { status: 'error', message: 'Portal access is turned off for this contact.' };
   }
-
-  // The purpose decides how long the link lives, and it has to match what the
-  // email says: an invitation promises two weeks, a sign-in link twenty minutes.
-  const { token } = await issueMagicToken({
-    purpose: contact.activatedAt ? 'sign_in' : 'invite',
-    actorType: 'client_contact',
-    actorId: contact.id,
-  });
-
-  const url = `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`;
-
-  // An activated client gets an ordinary sign-in link, not another "set up your
-  // account" email telling them to do something they have already done.
-  const sent = await sendConsoleEmail({
-    to: contact.email,
-    subject: contact.activatedAt
-      ? 'Sign in to your Ubunifu portal'
-      : 'Your Ubunifu project portal is ready',
-    // Somebody who already has a password was being sent "choose a password
-    // and finish setting up your account" under a subject line saying "sign
-    // in". The body now matches the subject.
-    html: contact.activatedAt
-      ? clientSignInEmail({ name: contact.name, url })
-      : clientInviteEmail({ name: contact.name, clientName: contact.client.name, url }),
-    template: contact.activatedAt ? 'client_sign_in' : 'client_invite',
-    entityType: 'ClientContact',
-    entityId: contact.id,
-  });
-
-  /**
-   * The audit line is derived from what actually happened, not from having
-   * tried. Recording "sent" against a send that failed puts the audit trail in
-   * direct contradiction with the email log, and the audit trail is the one
-   * people believe — so the failure would be invisible until a client said
-   * they never got it.
-   */
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: sent.ok
-      ? contact.activatedAt
-        ? 'client.sign_in.link_sent'
-        : 'client.invite.sent'
-      : 'client.invite.send_failed',
-    entityType: 'ClientContact',
-    entityId: contact.id,
-    summary: sent.ok
-      ? `Sent to ${contact.email}`
-      : `Could not send to ${contact.email}: ${sent.error}`,
-  });
-
-  revalidatePath('/admin/clients');
-
-  if (!sent.ok) {
-    return { status: 'error', message: `The link was created but not sent: ${sent.error}` };
+  if (!(await allow('client-invite', contact.id, { limit: 5, windowMinutes: 60 }))) {
+    return { status: 'error', message: 'Several links went out in the last hour. Try again later.' };
   }
-  return { status: 'sent', message: `Sent to ${contact.email}.` };
+
+  const sent = await invitePerson({
+    contact,
+    clientName: contact.client.name,
+    by: { type: 'staff', id: staff.id, name: staff.name },
+  });
+
+  revalidatePath(`/admin/clients/${contact.client.slug}`);
+  return sent.ok
+    ? { status: 'sent', message: `Sent to ${contact.email}.` }
+    : { status: 'error', message: `It did not send: ${sent.error}` };
+}
+
+export async function addClientContact(
+  _previous: InviteState,
+  formData: FormData,
+): Promise<InviteState> {
+  const staff = await requireStaff();
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const read = readContact(formData);
+  if (!read.ok) return { status: 'error', message: read.message };
+  if (!(await allow('contact-add', staff.id, { limit: 40, windowMinutes: 24 * 60 }))) {
+    return { status: 'error', message: 'That is a lot of new people for one day. Try again tomorrow.' };
+  }
+
+  const result = await addContact({
+    clientId: client.id,
+    clientName: client.name,
+    contact: read.contact,
+    by: { type: 'staff', id: staff.id, name: staff.name },
+    invite: formData.get('invite') === 'on',
+  });
+
+  revalidatePath(`/admin/clients/${client.slug}`);
+  return result.ok ? { status: 'done', message: result.message } : { status: 'error', message: result.message };
+}
+
+export async function setMainContact(
+  _previous: InviteState,
+  formData: FormData,
+): Promise<InviteState> {
+  const staff = await requireStaff();
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const result = await makeMainContact({
+    contactId: formText(formData, 'contactId'),
+    clientId: client.id,
+    by: { type: 'staff', id: staff.id, name: staff.name },
+  });
+  revalidatePath(`/admin/clients/${client.slug}`);
+  return { status: result.ok ? 'done' : 'error', message: result.message };
+}
+
+export async function removeClientContact(
+  _previous: InviteState,
+  formData: FormData,
+): Promise<InviteState> {
+  const staff = await requireStaff();
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const result = await removeContact({
+    contactId: formText(formData, 'contactId'),
+    clientId: client.id,
+    by: { type: 'staff', id: staff.id, name: staff.name },
+  });
+  revalidatePath(`/admin/clients/${client.slug}`);
+  return { status: result.ok ? 'done' : 'error', message: result.message };
 }

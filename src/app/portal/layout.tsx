@@ -2,8 +2,11 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BrandMark } from '@/components/BrandMark';
+import { Assistant } from '@/components/Assistant';
+import { ProfileMenu } from '@/components/console/ProfileMenu';
 import { getClientActor } from '@/lib/console/auth';
-import { PortalNav } from './PortalNav';
+import { db } from '@/lib/db';
+import { PortalNav, type PortalCounts } from './PortalNav';
 import styles from './Portal.module.css';
 
 /**
@@ -11,7 +14,7 @@ import styles from './Portal.module.css';
  *
  * Sits outside the (site) group deliberately: a client opening a signing link
  * or an invoice should land in their portal, not in a marketing page with a
- * "Start a project" button. It is also not indexed — every page behind it is
+ * "Start a project" button. It is also not indexed; every page behind it is
  * somebody's private project.
  *
  * The bar comes from getClientActor rather than requireClient, because the
@@ -23,6 +26,25 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
+/** What is waiting on the client, for the numbers beside each section. */
+async function countsFor(clientId: string): Promise<PortalCounts> {
+  try {
+    const [documents, invoices, requests] = await Promise.all([
+      db.document.count({
+        where: { project: { clientId }, status: { in: ['sent', 'viewed'] } },
+      }),
+      db.invoice.count({
+        where: { clientId, status: { in: ['sent', 'overdue', 'part_paid'] } },
+      }),
+      db.ticket.count({ where: { clientId, status: 'waiting_on_client' } }),
+    ]);
+    return { documents, invoices, requests };
+  } catch {
+    // Numbers are a courtesy. The pages still load and say it themselves.
+    return { documents: 0, invoices: 0, requests: 0 };
+  }
+}
+
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const actor = await getClientActor();
 
@@ -33,6 +55,8 @@ export default async function PortalLayout({ children }: { children: React.React
    */
   if (!actor) return <>{children}</>;
 
+  const counts = actor.isActivated ? await countsFor(actor.clientId) : null;
+
   return (
     <div className={styles.shell}>
       <header className={styles.bar}>
@@ -40,23 +64,26 @@ export default async function PortalLayout({ children }: { children: React.React
           <Link href="/portal" className={styles.brand}>
             <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
             <span className={styles.brandText}>
-              Ubunifu <span className={styles.org}>· {actor.clientName}</span>
+              Ubunifu <span className={styles.org}>{actor.clientName}</span>
             </span>
           </Link>
-          <PortalNav />
+          {counts && <PortalNav counts={counts} />}
           <div className={styles.account}>
-            <span>{actor.name}</span>
-            {/* A plain form, so signing out does not depend on JavaScript —
-                and POST, so an image tag cannot trigger it. */}
-            <form action="/portal/sign-out" method="post">
-              <button type="submit" className={styles.signOut}>
-                Sign out
-              </button>
-            </form>
+            <ProfileMenu
+              name={actor.name}
+              email={actor.email}
+              detail={actor.clientName}
+              links={[
+                { href: '/portal/profile', label: 'Your profile', icon: 'profile' },
+                { href: '/portal/team', label: 'Your team', icon: 'team' },
+              ]}
+              signOutAction="/portal/sign-out"
+            />
           </div>
         </div>
       </header>
       {children}
+      {actor.isActivated && <Assistant variant="portal" />}
     </div>
   );
 }

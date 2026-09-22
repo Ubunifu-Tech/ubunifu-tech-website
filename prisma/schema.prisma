@@ -1332,3 +1332,17 @@ model ConversationMessage {
 
   @@index([conversationId, createdAt])
 }
+
+/// One row per attempt at something worth throttling: a contact form post, a
+/// chat hand-off, a sign-in request, an invitation. Counted in the database
+/// because an in-memory counter on serverless is the limit multiplied by
+/// however many instances are warm. The key is a hash, never a raw address.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  bucket    String
+  keyHash   String
+  createdAt DateTime @default(now())
+
+  @@index([bucket, keyHash, createdAt])
+  @@index([createdAt])
+}

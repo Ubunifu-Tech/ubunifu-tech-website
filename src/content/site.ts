@@ -9,7 +9,6 @@ export const site = {
     email: 'info@ubunifutech.com',
     phone: '+255 748 548 816',
     phoneTel: '+255748548816',
-    whatsapp: '255748548816', // wa.me format (no +)
   },
 
   // Only `contact` is read (CtaBand). Nav and footer URLs live in navLinks and

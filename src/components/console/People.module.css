@@ -1,0 +1,39 @@
+.addClosed {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.addForm {
+  flex-basis: 100%;
+  margin: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: color-mix(in srgb, var(--app-bg) 60%, white);
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  white-space: nowrap;
+}
+
+.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.confirm {
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.danger {
+  color: var(--tone-red-fg);
+}

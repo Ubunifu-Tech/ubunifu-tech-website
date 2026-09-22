@@ -79,7 +79,7 @@ export default async function NewClientPage({
           <p className={styles.lead}>
             {usable
               ? `Turning ${usable.name}'s enquiry into a client. We still need the organisation's name — the enquiry only told us who wrote in.`
-              : 'For work that came in by phone, WhatsApp or a conversation rather than through the website.'}
+              : 'For work that came in by phone or in person rather than through the website.'}
           </p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { ActorType, StaffRole } from '@/generated/prisma/client';
-import { consoleEnv, isAdminHost } from './env';
+import { isAdminHost, isStaffEmailAllowed } from './env';
 import { readSession } from './session';
 
 /**
@@ -20,6 +20,7 @@ export type StaffActor = {
   email: string;
   name: string;
   role: StaffRole;
+  title: string | null;
 };
 
 export type ClientActor = {
@@ -50,14 +51,14 @@ export async function getStaffActor(): Promise<StaffActor | null> {
 
   const staff = await db.staffUser.findUnique({
     where: { id: session.actorId },
-    select: { id: true, email: true, name: true, role: true, isActive: true },
+    select: { id: true, email: true, name: true, role: true, title: true, isActive: true },
   });
 
   if (!staff || !staff.isActive) return null;
 
   // The allowlist is checked on every request, not only at sign-in, so removing
   // an address takes effect immediately rather than when a session expires.
-  if (!consoleEnv.staffAllowlist.includes(staff.email.toLowerCase())) {
+  if (!isStaffEmailAllowed(staff.email)) {
     return null;
   }
 
@@ -66,6 +67,7 @@ export async function getStaffActor(): Promise<StaffActor | null> {
     email: staff.email,
     name: staff.name,
     role: staff.role,
+    title: staff.title,
   };
 }
 

@@ -280,7 +280,7 @@ export function NewClientForm({
 
             <div className={forms.field}>
               <label className={forms.label} htmlFor={field('contactPhone')}>
-                Phone or WhatsApp <span className={forms.optional}>(optional)</span>
+                Phone <span className={forms.optional}>(optional)</span>
               </label>
               <input
                 id={field('contactPhone')}

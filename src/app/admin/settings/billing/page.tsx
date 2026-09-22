@@ -3,6 +3,7 @@ import { formatBps, getOrg, missingForInvoicing } from '@/lib/console/org';
 import { BillingForm } from './BillingForm';
 import styles from '../../Admin.module.css';
 import { Callout } from '@/components/console/Callout';
+import { SettingsTabs } from '../SettingsTabs';
 
 export const metadata = { title: 'Billing details' };
 
@@ -14,7 +15,7 @@ export const metadata = { title: 'Billing details' };
  * bank account hardcoded in a component needs a deploy to change.
  */
 export default async function BillingSettingsPage() {
-  await requireStaffRole('admin');
+  const staff = await requireStaffRole('admin');
   const org = await getOrg();
   const gaps = missingForInvoicing(org);
 
@@ -22,10 +23,12 @@ export default async function BillingSettingsPage() {
     <main className={`${styles.page} ${styles.medium}`}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>Billing details</h1>
-          <p className={styles.lead}>Shown on every invoice, receipt and contract you send.</p>
+          <h1 className={styles.heading}>Settings</h1>
+          <p className={styles.lead}>Billing details are shown on every invoice, receipt and contract you send.</p>
         </div>
       </div>
+
+      <SettingsTabs current="billing" role={staff.role} />
 
       {gaps.length > 0 && (
         <Callout kind="warn" title="Your invoices, receipts and contracts are missing:" items={gaps} />

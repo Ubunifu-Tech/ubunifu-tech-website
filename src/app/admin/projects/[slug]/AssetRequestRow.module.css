@@ -61,3 +61,9 @@
 .status {
   min-width: 0;
 }
+
+.assignee {
+  width: 12rem;
+  max-width: 100%;
+  margin-top: 0.5rem;
+}

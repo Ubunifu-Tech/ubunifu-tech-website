@@ -127,6 +127,31 @@
   outline-offset: 3px;
 }
 
+.methodButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-deep);
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  text-decoration: underline;
+  text-decoration-color: var(--brand-border);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.methodButton:hover {
+  color: var(--text-primary);
+  text-decoration-color: currentColor;
+}
+
+.methodButton:focus-visible {
+  border-radius: 2px;
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 .methodText {
   color: var(--text-secondary);
   font-size: var(--font-size-body);

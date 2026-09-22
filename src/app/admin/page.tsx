@@ -58,6 +58,7 @@ export default async function AdminHome() {
     activity,
     enquiryCount,
     pipelineCount,
+    myTasks,
   ] = await Promise.all([
     db.enquiry.findMany({
       where: { status: 'new' },
@@ -123,6 +124,21 @@ export default async function AdminHome() {
         status: { in: ['lead', 'proposal_draft', 'client_review', 'proposal_sent'] },
       },
     }),
+    db.deliverable.findMany({
+      where: {
+        assigneeId: staff.id,
+        isComplete: false,
+        phase: { project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } } },
+      },
+      orderBy: [{ dueAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
+      take: 8,
+      select: {
+        id: true,
+        title: true,
+        dueAt: true,
+        phase: { select: { project: { select: { name: true, slug: true } } } },
+      },
+    })
   ]);
 
   const owedByCurrency = new Map<string, number>();
@@ -317,6 +333,42 @@ export default async function AdminHome() {
           </div>
         </div>
 
+        <div className={styles.stack}>
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Your tasks</h2>
+            <span className={forms.cardMeta}>{myTasks.length === 0 ? 'Nothing assigned' : `${myTasks.length} open`}</span>
+          </div>
+          {myTasks.length === 0 ? (
+            <p className={styles.note}>
+              Nothing is assigned to you. Tasks are given out on each project&rsquo;s{' '}
+              <Link href="/projects" className={styles.inlineLink}>
+                plan
+              </Link>
+              .
+            </p>
+          ) : (
+            <ul className={styles.glance}>
+              {myTasks.map((task) => {
+                const late = task.dueAt !== null && task.dueAt < now;
+                return (
+                  <li key={task.id}>
+                    <Link href={`/projects/${task.phase.project.slug}?tab=plan`}>
+                      <span className={styles.taskText}>
+                        {task.title}
+                        <span className={styles.taskMeta}>{task.phase.project.name}</span>
+                      </span>
+                      <span className={`${forms.badge} ${late ? forms.badgeBad : ''}`}>
+                        {task.dueAt ? (late ? `Late, ${formatShortDate(task.dueAt)}` : formatShortDate(task.dueAt)) : 'No date'}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
         <section className={forms.card}>
           <div className={forms.cardHeader}>
             <h2 className={forms.cardTitle}>Recent activity</h2>
@@ -326,6 +378,7 @@ export default async function AdminHome() {
           </div>
           <ActivityFeed items={activity} now={now} />
         </section>
+        </div>
       </div>
     </main>
   );

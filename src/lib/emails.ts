@@ -6,7 +6,6 @@ const SITE = 'https://ubunifutech.com';
 const EMAIL = 'info@ubunifutech.com';
 const PHONE_TEL = '+255748548816';
 const PHONE_DISPLAY = '+255 748 548 816';
-const WHATSAPP = 'https://wa.me/255748548816';
 const INSIGHT = 'https://insight.ubunifutech.com';
 const SIFA = 'https://sifa.ubunifutech.com';
 const LOGO = `${SITE}/brand/png/ubunifu-lockup-1600.png`;
@@ -60,7 +59,7 @@ function footer(): string {
             <div style="color:#1F1A36;font-weight:700;font-size:14px;margin-bottom:6px;">Ubunifu Technologies</div>
             <a href="mailto:${EMAIL}" style="${link}">${EMAIL}</a><br/>
             <a href="tel:${PHONE_TEL}" style="${link}">${PHONE_DISPLAY}</a> &nbsp;|&nbsp;
-            <a href="${WHATSAPP}" style="${link}">WhatsApp</a><br/>
+            <a href="${SITE}/contact?chat=open" style="${link}">Chat with us</a><br/>
             Tanzania
           </td>
           <td class="footer-cell footer-links" align="right" style="vertical-align:top;color:#5A5170;font-size:13px;line-height:1.9;">
@@ -125,6 +124,19 @@ function buttonGhost(href: string, label: string): string {
   return `<a href="${href}" style="display:inline-block;padding:12px 23px;background:#F6F2FF;color:#3D1FA0;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;border:1px solid #D8CCF4;">${label}</a>`;
 }
 
+/** Label and value rows, for the facts an email is about. Values are HTML. */
+function facts(rows: [string, string][]): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #EAE5F2;">${rows
+    .map(
+      ([label, value]) => `
+    <tr>
+      <td style="padding:11px 0;border-bottom:1px solid #EAE5F2;color:#6B6385;font-size:13px;width:110px;vertical-align:top;">${label}</td>
+      <td style="padding:11px 0;border-bottom:1px solid #EAE5F2;color:#1F1A36;font-size:14px;">${value}</td>
+    </tr>`,
+    )
+    .join('')}</table>`;
+}
+
 /* ── Notification to the team ─────────────────── */
 
 export function notificationEmail(input: {
@@ -132,6 +144,10 @@ export function notificationEmail(input: {
   email: string;
   subject: string;
   message: string;
+  /** Where the enquiry came from, when it was not the contact form. */
+  via?: string;
+  /** The enquiry in the console, with the whole chat. */
+  consoleUrl?: string;
 }): string {
   const name = escapeHtml(input.name);
   const email = escapeHtml(input.email);
@@ -145,7 +161,9 @@ export function notificationEmail(input: {
     </tr>`;
 
   const body = `
-    <p style="margin:0 0 5px;color:#A63A11;font-size:14px;font-weight:700;">New enquiry</p>
+    <p style="margin:0 0 5px;color:#A63A11;font-size:14px;font-weight:700;">New enquiry${
+      input.via ? ` from ${escapeHtml(input.via)}` : ''
+    }</p>
     <h1 style="margin:0 0 22px;font-size:24px;font-weight:700;color:#1F1A36;">${name} got in touch</h1>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
       ${row('Name', name)}
@@ -154,9 +172,14 @@ export function notificationEmail(input: {
     </table>
     <p style="margin:26px 0 8px;color:#3D1FA0;font-size:14px;font-weight:700;">Message</p>
     <div style="background:#FAF8FF;border:1px solid #DDD4F0;border-radius:8px;padding:18px;color:#1F1A36;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}</div>
-    <div style="margin-top:26px;">${button(`mailto:${email}?subject=${encodeURIComponent(
-      'Re: ' + input.subject,
-    )}`, `Reply to ${name}`)}</div>
+    <div style="margin-top:26px;">${
+      input.consoleUrl
+        ? `${button(input.consoleUrl, 'Read the chat')}&nbsp;&nbsp;${buttonGhost(
+            `mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`,
+            `Reply to ${name}`,
+          )}`
+        : button(`mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`, `Reply to ${name}`)
+    }</div>
     <p style="margin:18px 0 0;color:#6B6385;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
 
   return shell(`New enquiry from ${input.name}: ${input.subject}`, body);
@@ -235,6 +258,78 @@ export function staffSignInEmail(input: { name: string; url: string }): string {
     ${securityNote('20 minutes')}`;
 
   return shell('Your link to sign in to the Ubunifu console.', body);
+}
+
+/** A colleague adding someone to the console. */
+export function staffInviteEmail(input: { name: string; invitedBy: string; url: string }): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const by = escapeHtml(input.invitedBy);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">You are on the team</h1>
+    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. ${by} added you to the Ubunifu console, where we run clients,
+      projects, documents and invoices. Use the button to sign in for the first time.
+    </p>
+    ${button(input.url, 'Open the console')}
+    <p style="margin:22px 0 0;color:#6B6385;font-size:13px;line-height:1.6;">
+      After today, sign in any time with your email address and we will send you a fresh link.
+    </p>
+    ${securityNote('14 days')}`;
+
+  return shell(`${input.invitedBy} added you to the Ubunifu console.`, body);
+}
+
+/** A colleague giving someone a task. */
+export function taskAssignedEmail(input: {
+  name: string;
+  by: string;
+  task: string;
+  project: string;
+  due: string | null;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">A task for you</h1>
+    <p style="margin:0 0 20px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. ${escapeHtml(input.by)} gave you this on <strong style="color:#1F1A36;">${escapeHtml(input.project)}</strong>.
+    </p>
+    ${facts([
+      ['Task', escapeHtml(input.task)],
+      ['Due', input.due ? escapeHtml(input.due) : 'No date yet'],
+    ])}
+    <div style="margin-top:24px;">${button(input.url, 'Open the plan')}</div>`;
+
+  return shell(`${input.by} gave you a task on ${input.project}.`, body);
+}
+
+/** A client adding a colleague to their portal. */
+export function colleagueInviteEmail(input: {
+  name: string;
+  invitedBy: string;
+  clientName: string;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const by = escapeHtml(input.invitedBy);
+  const org = escapeHtml(input.clientName);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Join ${org} on the Ubunifu portal</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. ${by} invited you to the portal where ${org} follows its work with
+      Ubunifu Technologies: project progress, what we need from you, documents to sign,
+      and invoices.
+    </p>
+    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Follow the link to choose a password and finish setting up your account.
+    </p>
+    ${button(input.url, 'Set up your account')}
+    ${securityNote('14 days')}`;
+
+  return shell(`${input.invitedBy} invited you to the ${input.clientName} portal.`, body);
 }
 
 /**

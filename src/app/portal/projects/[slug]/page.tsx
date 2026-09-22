@@ -12,6 +12,8 @@ import {
   uploadsConfigured,
 } from '@/lib/console/uploads';
 import { UploadBox } from './UploadBox';
+import { ItemOwner } from './ItemOwner';
+import { Avatar } from '@/components/console/Avatar';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -52,6 +54,16 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
       summary: true,
       targetDate: true,
       launchedAt: true,
+      owner: { select: { name: true, title: true } },
+      client: {
+        select: {
+          contacts: {
+            where: { deletedAt: null },
+            orderBy: [{ isPrimary: 'desc' }, { name: 'asc' }],
+            select: { id: true, name: true },
+          },
+        },
+      },
       phases: {
         orderBy: { position: 'asc' },
         select: {
@@ -88,6 +100,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
           title: true,
           detail: true,
           status: true,
+          assigneeId: true,
           uploads: {
             where: { deletedAt: null },
             orderBy: { createdAt: 'asc' },
@@ -114,149 +127,232 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
     0,
   );
 
+  // A launch date only counts once the project is actually live.
+  const launched = ['live', 'closed'].includes(project.status) ? project.launchedAt : null;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  const people = [
+    { value: '', label: 'Anyone on the team' },
+    ...project.client.contacts.map((contact) => ({ value: contact.id, label: contact.name })),
+  ];
+
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
+    <main className={styles.page}>
       <div className={styles.pageHead}>
-        <Link href="/portal" className={styles.projectMeta}>
+        <Link href="/portal" className={styles.backLink}>
           ← Your projects
         </Link>
         <h1 className={styles.heading}>{project.name}</h1>
-        <p className={styles.lead}>
-          {project.summary ??
-            `${project.reference}${project.targetDate ? ` · aiming for ${formatDate(project.targetDate)}` : ''}`}
-        </p>
-        <p>
-          <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
-            {CLIENT_LABEL[project.status]}
-          </span>
-        </p>
+        {project.summary && <p className={styles.lead}>{project.summary}</p>}
       </div>
 
-      {project.assetRequests.length > 0 && (
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>What we still need from you</h2>
-            <span className={forms.cardMeta}>
-              {outstanding} of {project.assetRequests.length} still to come
+      <div className={styles.summary}>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryLabel}>Stage</span>
+          <span className={styles.summaryValue}>
+            <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
+              {CLIENT_LABEL[project.status]}
             </span>
-          </div>
-          <ul className={styles.needList}>
-            {project.assetRequests.map((request) => (
-              <li key={request.id} className={styles.needItem}>
-                <span className={styles.needTitle}>{request.title}</span>
-                {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
-
-                {request.uploads.length > 0 && (
-                  <ul className={styles.fileList}>
-                    {request.uploads.map((file) => (
-                      <li key={file.id} className={styles.fileRow}>
-                        <a href={`/portal/files/${file.id}`}>{file.filename}</a>
-                        <span className={styles.fileMeta}>
-                          {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {canUpload && (
-                  <UploadBox
-                    assetRequestId={request.id}
-                    accept={ALLOWED_CONTENT_TYPES.join(',')}
-                    maxBytes={MAX_UPLOAD_BYTES}
-                    hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)}.`}
-                  />
-                )}
-              </li>
-            ))}
-          </ul>
-          <p className={styles.note}>
-            {canUpload
-              ? 'Attach them here and they land against the right item. Email or WhatsApp still works if that is easier.'
-              : 'Send these over however suits you — email or WhatsApp is fine. We will tick them off here as they arrive.'}
-          </p>
-        </section>
-      )}
-
-      {project.updates.length > 0 && (
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>What we have told you</h2>
-            <span className={forms.cardMeta}>
-              {project.updates.length} update{project.updates.length === 1 ? '' : 's'}
-            </span>
-          </div>
-          <ul className={styles.updateList}>
-            {project.updates.map((update) => (
-              <li key={update.id} className={styles.update}>
-                <h3 className={styles.updateTitle}>{update.title}</h3>
-                <p className={styles.projectMeta}>{formatDate(update.publishedAt)}</p>
-                {/* Rendered as plain text on purpose: the body is written by
-                    staff in a textarea, and passing it through a Markdown
-                    renderer would mean deciding what HTML a staff member may
-                    put in front of a client. Paragraphs are enough. */}
-                <div className={styles.updateBody}>
-                  {update.bodyMarkdown
-                    .split(/\n{2,}/)
-                    .map((block) => block.trim())
-                    .filter(Boolean)
-                    .map((block, index) => (
-                      <p key={index}>{block}</p>
-                    ))}
-                </div>
-                {update.previewUrl && (
-                  <a
-                    href={update.previewUrl}
-                    className={forms.link}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    Take a look
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className={forms.card}>
-        <div className={forms.cardHeader}>
-          <h2 className={forms.cardTitle}>Where the work has got to</h2>
-          <span className={forms.cardMeta}>
-            {done} of {total} done
           </span>
         </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryLabel}>Progress</span>
+          <span className={styles.summaryValue}>
+            {total === 0 ? 'Plan coming soon' : `${done} of ${total} done`}
+          </span>
+          <span className={styles.progressBar} aria-hidden="true">
+            <span style={{ width: `${percent}%` }} />
+          </span>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryLabel}>Waiting on you</span>
+          <span className={styles.summaryValue}>
+            {outstanding === 0
+              ? 'Nothing'
+              : `${outstanding} ${outstanding === 1 ? 'item' : 'items'}`}
+          </span>
+        </div>
+        <div className={styles.summaryItem}>
+          <span className={styles.summaryLabel}>
+            {launched ? 'Launched' : 'Aiming for'}
+          </span>
+          <span className={styles.summaryValue}>
+            {launched
+              ? formatDate(launched)
+              : project.targetDate
+                ? formatDate(project.targetDate)
+                : 'To be agreed'}
+          </span>
+        </div>
+        {project.owner && (
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Your contact at Ubunifu</span>
+            <span className={styles.summaryValue}>
+              <Avatar name={project.owner.name} size="sm" />
+              {project.owner.name}
+            </span>
+          </div>
+        )}
+      </div>
 
-        {project.phases.length === 0 ? (
-          <p className={styles.note}>
-            The plan for this project is still being put together. It will appear here.
-          </p>
-        ) : (
-          project.phases.map((phase) => (
-            <div key={phase.id} className={styles.stage}>
-              <div className={styles.stageHead}>
-                <h3 className={styles.stageName}>{phase.name}</h3>
+      <div
+        className={
+          project.assetRequests.length + project.updates.length > 0 ? styles.layout : styles.stack
+        }
+      >
+        <div className={styles.stack}>
+          {project.assetRequests.length > 0 && (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>What we still need from you</h2>
                 <span className={forms.cardMeta}>
-                  {phase.deliverables.filter((d) => d.isComplete).length}/
-                  {phase.deliverables.length}
+                  {outstanding} of {project.assetRequests.length} still to come
                 </span>
               </div>
-              {phase.goal && <p className={styles.projectMeta}>{phase.goal}</p>}
-              <ul className={styles.stageList}>
-                {phase.deliverables.map((deliverable) => (
-                  <li
-                    key={deliverable.id}
-                    className={deliverable.isComplete ? styles.stageDone : styles.stageOpen}
-                  >
-                    {deliverable.title}
+              <ul className={styles.needList}>
+                {project.assetRequests.map((request) => (
+                  <li key={request.id} className={styles.needItem}>
+                    <span className={styles.itemStatus}>
+                      <span className={styles.needTitle}>{request.title}</span>
+                      <span
+                        className={`${forms.badge} ${
+                          request.status === 'received'
+                            ? forms.badgeGood
+                            : request.status === 'blocked'
+                              ? forms.badgeBad
+                              : forms.badgeWarn
+                        }`}
+                      >
+                        {request.status === 'received'
+                          ? 'Received'
+                          : request.status === 'blocked'
+                            ? 'On hold'
+                            : 'Needed'}
+                      </span>
+                    </span>
+                    {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
+
+                    {request.uploads.length > 0 && (
+                      <ul className={styles.fileList}>
+                        {request.uploads.map((file) => (
+                          <li key={file.id} className={styles.fileRow}>
+                            <a href={`/portal/files/${file.id}`}>{file.filename}</a>
+                            <span className={styles.fileMeta}>
+                              {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {request.status !== 'received' && people.length > 2 && (
+                      <ItemOwner
+                        id={request.id}
+                        title={request.title}
+                        assigneeId={request.assigneeId ?? ''}
+                        people={people}
+                      />
+                    )}
+
+                    {canUpload && request.status !== 'received' && (
+                      <UploadBox
+                        assetRequestId={request.id}
+                        accept={ALLOWED_CONTENT_TYPES.join(',')}
+                        maxBytes={MAX_UPLOAD_BYTES}
+                        hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)}.`}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>
-            </div>
-          ))
-        )}
-      </section>
+              <p className={styles.note}>
+                {canUpload
+                  ? 'Attach them here and they land against the right item.'
+                  : 'Send these by email, or ask in Help. We tick them off here as they arrive.'}
+              </p>
+            </section>
+          )}
+
+          {project.updates.length > 0 && (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>What we have told you</h2>
+                <span className={forms.cardMeta}>
+                  {project.updates.length} update{project.updates.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <ul className={styles.updateList}>
+                {project.updates.map((update) => (
+                  <li key={update.id} className={styles.update}>
+                    <h3 className={styles.updateTitle}>{update.title}</h3>
+                    <p className={styles.projectMeta}>{formatDate(update.publishedAt)}</p>
+                    {/* Rendered as plain text on purpose: the body is written by
+                    staff in a textarea, and passing it through a Markdown
+                    renderer would mean deciding what HTML a staff member may
+                    put in front of a client. Paragraphs are enough. */}
+                    <div className={styles.updateBody}>
+                      {update.bodyMarkdown
+                        .split(/\n{2,}/)
+                        .map((block) => block.trim())
+                        .filter(Boolean)
+                        .map((block, index) => (
+                          <p key={index}>{block}</p>
+                        ))}
+                    </div>
+                    {update.previewUrl && (
+                      <a
+                        href={update.previewUrl}
+                        className={forms.link}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Take a look
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Where the work has got to</h2>
+            <span className={forms.cardMeta}>
+              {done} of {total} done
+            </span>
+          </div>
+
+          {project.phases.length === 0 ? (
+            <p className={styles.note}>
+              The plan for this project is still being put together. It will appear here.
+            </p>
+          ) : (
+            project.phases.map((phase) => (
+              <div key={phase.id} className={styles.stage}>
+                <div className={styles.stageHead}>
+                  <h3 className={styles.stageName}>{phase.name}</h3>
+                  <span className={forms.cardMeta}>
+                    {phase.deliverables.filter((d) => d.isComplete).length}/
+                    {phase.deliverables.length}
+                  </span>
+                </div>
+                {phase.goal && <p className={styles.projectMeta}>{phase.goal}</p>}
+                <ul className={styles.stageList}>
+                  {phase.deliverables.map((deliverable) => (
+                    <li
+                      key={deliverable.id}
+                      className={deliverable.isComplete ? styles.stageDone : styles.stageOpen}
+                    >
+                      {deliverable.title}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </section>
+      </div>
     </main>
   );
 }

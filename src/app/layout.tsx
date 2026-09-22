@@ -18,7 +18,7 @@ const poppins = Poppins({
 /**
  * Minimal root: document, fonts and tokens, nothing else.
  *
- * The marketing chrome — navbar, footer, WhatsApp button, smooth scroll — lives
+ * The marketing chrome (navbar, footer, chat, smooth scroll) lives
  * in the (site) group layout instead. The console is served from the same app
  * on a different host, and it must not inherit any of it: those nav links point
  * at marketing routes, which middleware rewrites into /admin/* on the console

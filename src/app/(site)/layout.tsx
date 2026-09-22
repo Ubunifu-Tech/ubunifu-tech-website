@@ -3,7 +3,6 @@ import { SmoothScroll } from '@/components/SmoothScroll';
 import { MotionProvider } from '@/components/MotionProvider';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { Assistant } from '@/components/Assistant';
 import { services } from '@/content/services';
 
@@ -153,9 +152,7 @@ export default function SiteLayout({
             {children}
           </div>
           <Footer />
-          <WhatsAppButton />
-          {/* Bottom-left, opposite the WhatsApp button: two floating buttons
-              on the same corner is how neither gets pressed. */}
+          {/* The chat is how visitors reach us from any page. */}
           <Assistant />
         </SmoothScroll>
       </MotionProvider>

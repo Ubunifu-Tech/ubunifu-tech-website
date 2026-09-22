@@ -3,7 +3,14 @@ import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 import { generateToken } from '@/lib/console/crypto';
 import { MAX_TURNS_PER_CONVERSATION, runTurn } from '@/lib/console/agent';
-import { ASSISTANT_SYSTEM, recordEnquiryTool } from '@/lib/console/assistant';
+import {
+  ASSISTANT_SYSTEM,
+  EMAIL_OK,
+  passToTeam,
+  recordEnquiryTool,
+} from '@/lib/console/assistant';
+import { allow } from '@/lib/console/rate-limit';
+import { siteBrief } from '@/lib/console/site-brief';
 
 /**
  * The website assistant.
@@ -28,6 +35,21 @@ const MAX_MESSAGES_PER_IP_PER_HOUR = 90;
 
 const MAX_MESSAGE_LENGTH = 2000;
 
+/**
+ * Every refusal carries `fallback: true`, which turns the chat window into a
+ * short message form. However the assistant fails, the visitor still has a
+ * way to reach a person without leaving the page.
+ */
+function unavailable(error: string, status: number) {
+  return NextResponse.json({ error, fallback: true }, { status });
+}
+
+/** A site path, and nothing else, so it is safe to show the model. */
+function pagePath(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  return /^\/[A-Za-z0-9/_#-]{0,120}$/.test(value) ? value : null;
+}
+
 function clientIp(request: NextRequest): string | null {
   return (
     request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
@@ -43,13 +65,7 @@ export async function POST(request: NextRequest) {
     // A public endpoint never returns a stack. Whatever broke, the visitor
     // gets a way to reach a person.
     console.error('Assistant failed', error);
-    return NextResponse.json(
-      {
-        error:
-          'The assistant is not available right now. Email info@ubunifutech.com and a person will pick it up.',
-      },
-      { status: 503 },
-    );
+    return unavailable('The assistant is not available right now. Leave us a message instead.', 503);
   }
 }
 
@@ -59,12 +75,14 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ error: 'Expected a JSON request.' }, { status: 415 });
   }
 
-  let payload: { message?: unknown };
+  let payload: { message?: unknown; page?: unknown; handoff?: unknown };
   try {
-    payload = (await request.json()) as { message?: unknown };
+    payload = (await request.json()) as typeof payload;
   } catch {
     return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
   }
+
+  if (payload.handoff !== undefined) return handoff(request, payload.handoff);
 
   const message = typeof payload.message === 'string' ? payload.message.trim() : '';
   if (message.length < 1) {
@@ -72,7 +90,7 @@ async function handle(request: NextRequest) {
   }
   if (message.length > MAX_MESSAGE_LENGTH) {
     return NextResponse.json(
-      { error: 'That is longer than this window can take. Email info@ubunifutech.com instead.' },
+      { error: 'That is longer than this window can take. Try a shorter message.' },
       { status: 413 },
     );
   }
@@ -102,13 +120,7 @@ async function handle(request: NextRequest) {
   ]);
 
   if (byVisitor >= MAX_MESSAGES_PER_HOUR || byAddress >= MAX_MESSAGES_PER_IP_PER_HOUR) {
-    return NextResponse.json(
-      {
-        error:
-          'That is a lot of questions for one hour. Email info@ubunifutech.com and a person will pick it up.',
-      },
-      { status: 429 },
-    );
+    return unavailable('That is a lot of questions for one hour. Leave us a message instead.', 429);
   }
 
   // One open conversation per visitor. A converted one stays open so they can
@@ -132,19 +144,19 @@ async function handle(request: NextRequest) {
   }
 
   if (conversation.messageCount >= MAX_TURNS_PER_CONVERSATION) {
-    return NextResponse.json(
-      {
-        error:
-          'This has gone on long enough that it is better continued by a person. Email info@ubunifutech.com and somebody will pick it up from here.',
-      },
-      { status: 409 },
+    return unavailable(
+      'This is better continued by a person. Leave us a message and somebody will pick it up.',
+      409,
     );
   }
 
+  const page = pagePath(payload.page);
   const result = await runTurn({
     conversationId: conversation.id,
     kind: 'site_visitor',
     system: ASSISTANT_SYSTEM,
+    brief: await siteBrief(),
+    note: page ? `The visitor is on the page ${page}.` : undefined,
     userMessage: message,
     tools: [recordEnquiryTool],
     context: { conversationId: conversation.id, ip },
@@ -154,14 +166,9 @@ async function handle(request: NextRequest) {
 
   const response = result.ok
     ? NextResponse.json({ reply: result.reply, sent: result.usedTools.includes('record_enquiry') })
-    : NextResponse.json(
-        {
-          // What the visitor typed is already saved, so the fallback is a way
-          // to reach a person rather than an apology.
-          error: `${result.error} Email info@ubunifutech.com and a person will pick it up — what you have written here is already with us.`,
-        },
-        { status: 502 },
-      );
+    : // What the visitor typed is saved, and the window offers a message form,
+      // so the answer is a way to reach a person rather than an apology.
+      unavailable(`${result.error} Leave us a message and a person will reply.`, 502);
 
   response.cookies.set(VISITOR_COOKIE, visitorKey, {
     httpOnly: true,
@@ -174,8 +181,77 @@ async function handle(request: NextRequest) {
   return response;
 }
 
+/**
+ * "Talk to a person", straight from the chat window, with no model involved.
+ * It is the way through when the assistant is down, over its limit, or simply
+ * not what somebody wants, and it keeps the chat attached for whoever reads it.
+ */
+async function handoff(request: NextRequest, raw: unknown) {
+  const input = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
+  const text = (value: unknown, max: number) =>
+    typeof value === 'string' ? value.trim().slice(0, max) : '';
+
+  // A field people cannot see. Anything that fills it in is a script, and is
+  // told it worked so it has no reason to try again.
+  if (text(input.website, 200)) return NextResponse.json({ sent: true });
+
+  const name = text(input.name, 120);
+  const email = text(input.email, 254).toLowerCase();
+  const details = text(input.details, 5000);
+
+  if (name.length < 2) return NextResponse.json({ error: 'Add your name.' }, { status: 400 });
+  if (!EMAIL_OK.test(email)) {
+    return NextResponse.json({ error: 'Add an email address we can reply to.' }, { status: 400 });
+  }
+  if (details.length < 10) {
+    return NextResponse.json({ error: 'Say a little about what you need.' }, { status: 400 });
+  }
+
+  const ip = clientIp(request);
+  const [byAddress, byEmail] = await Promise.all([
+    allow('site-handoff:ip', ip, { limit: 5, windowMinutes: 60 }),
+    allow('site-handoff:email', email, { limit: 3, windowMinutes: 60 }),
+  ]);
+  if (!byAddress || !byEmail) {
+    return NextResponse.json(
+      { error: 'We already have your message. Somebody will reply by email.' },
+      { status: 429 },
+    );
+  }
+
+  const jar = await cookies();
+  const visitorKey = jar.get(VISITOR_COOKIE)?.value;
+  const conversation = visitorKey
+    ? await db.conversation.findFirst({
+        where: { visitorKey, kind: 'site_visitor', status: { in: ['open', 'converted'] } },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      })
+    : null;
+
+  await passToTeam({
+    conversationId: conversation?.id ?? null,
+    name,
+    email,
+    subject: details.split('\n')[0].slice(0, 80) || 'A message from the website chat',
+    details,
+    ip,
+  });
+
+  return NextResponse.json({ sent: true });
+}
+
 /** The thread so far, so a refresh does not lose the conversation. */
 export async function GET() {
+  try {
+    return await history();
+  } catch (error) {
+    console.error('Assistant history failed', error);
+    return NextResponse.json({ messages: [] });
+  }
+}
+
+async function history() {
   const jar = await cookies();
   const visitorKey = jar.get(VISITOR_COOKIE)?.value;
   if (!visitorKey) return NextResponse.json({ messages: [] });

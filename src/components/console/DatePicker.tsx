@@ -29,6 +29,8 @@ function format(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+const short = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+
 const display = new Intl.DateTimeFormat('en-GB', {
   weekday: 'short',
   day: 'numeric',
@@ -48,6 +50,7 @@ export function DatePicker({
   id,
   placeholder = 'Pick a date',
   clearable = true,
+  size = 'md',
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
 }: {
@@ -62,6 +65,8 @@ export function DatePicker({
   id?: string;
   placeholder?: string;
   clearable?: boolean;
+  /** Small for a table row: a shorter date and a smaller control. */
+  size?: 'md' | 'sm';
   'aria-label'?: string;
   'aria-labelledby'?: string;
 }) {
@@ -92,7 +97,7 @@ export function DatePicker({
           <button
             type="button"
             id={id}
-            className={styles.trigger}
+            className={size === 'sm' ? `${styles.trigger} ${styles.triggerSmall}` : styles.trigger}
             // aria-invalid is not valid on a button; the form's own error
             // message says what is wrong, and this only draws the red edge.
             data-invalid={invalid || undefined}
@@ -100,7 +105,7 @@ export function DatePicker({
             aria-labelledby={ariaLabelledBy}
           >
             <span className={selected ? undefined : styles.placeholder}>
-              {selected ? display.format(selected) : placeholder}
+              {selected ? (size === 'sm' ? short : display).format(selected) : placeholder}
             </span>
             <CalendarDays size={16} strokeWidth={2} className={styles.triggerIcon} aria-hidden="true" />
           </button>

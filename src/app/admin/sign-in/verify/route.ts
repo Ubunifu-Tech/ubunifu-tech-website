@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { consoleEnv, isAdminHost } from '@/lib/console/env';
+import { consoleEnv, isAdminHost, isStaffEmailAllowed } from '@/lib/console/env';
 import { consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(signIn);
   }
 
-  const claim = await consumeMagicToken(token, 'sign_in');
+  // An invitation is a first sign-in with a longer life, so both are accepted.
+  const claim = await consumeMagicToken(token, ['sign_in', 'invite']);
   if (!claim || claim.actorType !== 'staff') {
     signIn.searchParams.set('error', 'expired');
     return NextResponse.redirect(signIn);
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
   if (
     !staff ||
     !staff.isActive ||
-    !consoleEnv.staffAllowlist.includes(staff.email.toLowerCase())
+    !isStaffEmailAllowed(staff.email)
   ) {
     await recordAudit({
       actorType: 'system',

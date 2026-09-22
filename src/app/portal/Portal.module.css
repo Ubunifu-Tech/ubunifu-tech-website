@@ -14,32 +14,37 @@
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background: var(--surface-2);
+  background: var(--app-bg);
 }
 
 /* ── Bar ───────────────────────────────────────── */
 
 .bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px);
 }
 
 .barInner {
   display: flex;
+  min-height: 4rem;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-5);
   width: 100%;
-  max-width: var(--container-width);
+  max-width: 72rem;
   margin: 0 auto;
-  padding: var(--space-4) var(--container-gutter);
-  flex-wrap: wrap;
+  padding: 0.625rem clamp(1rem, 3vw, 2rem);
 }
 
 .brand {
   display: inline-flex;
+  min-width: 0;
+  flex: none;
   align-items: center;
-  gap: var(--space-3);
+  gap: 0.625rem;
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -47,49 +52,44 @@
 .brandMark {
   width: 1.75rem;
   height: 1.75rem;
+  flex: none;
 }
 
 .brandText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   font-family: var(--font-heading);
   font-size: var(--font-size-small);
   line-height: 1.2;
 }
 
-/* The client's own name, so they can see at a glance whose portal this is —
+/* The client's own name, so they can see at a glance whose portal this is:
    people do have more than one. */
 .org {
+  overflow: hidden;
+  max-width: 14rem;
   color: var(--text-tertiary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .account {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: var(--space-4);
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-}
-
-.signOut {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--brand-deep);
-  font-family: var(--font-body);
-  font-size: var(--font-size-caption);
-  cursor: pointer;
-}
-
-.signOut:hover {
-  color: var(--text-primary);
+  margin-left: auto;
 }
 
 /* ── Page ──────────────────────────────────────── */
 
 .page {
   width: 100%;
-  max-width: var(--container-width);
+  max-width: 72rem;
   margin: 0 auto;
-  padding: var(--space-7) var(--container-gutter) var(--space-9);
+  padding: var(--space-7) clamp(1rem, 3vw, 2rem) var(--space-10, 6rem);
   flex: 1;
 }
 
@@ -98,7 +98,7 @@
 }
 
 .medium {
-  max-width: 48rem;
+  max-width: 56rem;
 }
 
 .pageHead {
@@ -115,15 +115,15 @@
 }
 
 .headingAccent {
-  color: var(--brand-deep);
+  color: var(--accent-deep);
 }
 
 .lead {
-  margin: var(--space-3) 0 0;
-  max-width: 58ch;
+  margin: var(--space-2) 0 0;
+  max-width: 60ch;
   color: var(--text-secondary);
-  font-size: var(--font-size-lead);
-  line-height: 1.7;
+  font-size: var(--font-size-body);
+  line-height: 1.6;
 }
 
 .note {
@@ -133,53 +133,172 @@
   line-height: 1.6;
 }
 
+.backLink {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+  color: var(--accent-deep);
+  font-size: var(--font-size-small);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--text-primary);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-7) 0 var(--space-4);
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lead);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.3;
+}
+
+.sectionMeta {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+}
+
+/* ── Needs you ─────────────────────────────────── */
+
+.needsList {
+  display: flex;
+  flex-direction: column;
+  margin: 0 calc(var(--space-3) * -1);
+  padding: 0;
+  list-style: none;
+}
+
+.needLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0.75rem var(--space-3);
+  border-radius: var(--app-radius-control);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.needLink:hover {
+  background: var(--tone-neutral-bg);
+}
+
+.needIcon {
+  display: inline-flex;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--accent-dim);
+  color: var(--accent-deep);
+}
+
+.needUrgent {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
+}
+
+.needText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.needTitleText {
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.needDetail {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.needArrow {
+  flex: none;
+  color: var(--text-tertiary);
+}
+
 /* ── Projects ──────────────────────────────────── */
 
 .projects {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
 }
 
 .project {
   display: flex;
+  height: 100%;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
+  gap: var(--space-4);
   padding: var(--space-5);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--app-radius-card);
   background: var(--surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--app-shadow-card);
+  color: var(--text-primary);
+  text-decoration: none;
   transition:
     border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .project:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-2);
+  border-color: var(--border-active);
+  box-shadow: var(--app-shadow-pop);
+  transform: translateY(-1px);
+}
+
+.projectTop,
+.projectFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.projectRef {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
 }
 
 .projectName {
-  margin: 0;
-  color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.25;
+  font-size: var(--font-size-lead);
+  line-height: 1.3;
 }
 
-.projectLink {
-  color: inherit;
-  text-decoration: none;
+.projectLead {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
 }
 
-.projectLink:hover {
-  color: var(--brand-deep);
+.projectDate {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  text-align: right;
 }
 
 .projectMeta {
@@ -189,15 +308,116 @@
   line-height: 1.6;
 }
 
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: auto;
+}
+
+.progressBar {
+  display: block;
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg);
+}
+
+.progressBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.progressText {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
 .empty {
   padding: var(--space-7) var(--space-5);
   border: 1px dashed var(--border-active);
-  border-radius: var(--radius-lg);
+  border-radius: var(--app-radius-card);
   background: var(--surface);
   color: var(--text-secondary);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-small);
   line-height: 1.7;
   text-align: center;
+}
+
+/* ── Summary strip ─────────────────────────────── */
+
+.summary {
+  display: grid;
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-card);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  overflow: hidden;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: var(--space-4) var(--space-5);
+  border-left: 1px solid var(--border);
+}
+
+.summaryItem:first-child {
+  border-left: 0;
+}
+
+.summaryLabel {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.summaryValue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body);
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.stack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.stack > section {
+  margin: 0;
+}
+
+@media (max-width: 56rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .summaryItem {
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+
+  .summaryItem:first-child {
+    border-top: 0;
+  }
 }
 
 /* A notice, not a failure: sign-in links are single use, so arriving with a
@@ -217,12 +437,6 @@
   margin: var(--space-5) 0 0;
   padding-top: var(--space-5);
   border-top: 1px solid var(--border);
-}
-
-@media (max-width: 40rem) {
-  .page {
-    padding-top: var(--space-6);
-  }
 }
 
 /* ── What we need from the client ──────────────── */
@@ -347,16 +561,18 @@
 
 .nav {
   display: flex;
+  min-width: 0;
   align-items: center;
-  gap: var(--space-1);
-  margin-right: auto;
-  margin-left: var(--space-5);
-  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 .navLink {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--app-radius-control);
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.4;
@@ -367,7 +583,7 @@
 }
 
 .navLink:hover {
-  background: var(--surface-2);
+  background: var(--tone-neutral-bg);
   color: var(--text-primary);
 }
 
@@ -376,11 +592,43 @@
   color: var(--accent-deep);
 }
 
-@media (max-width: 40rem) {
+.navCount {
+  display: inline-flex;
+  min-width: 1.25rem;
+  justify-content: center;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--text-inverse);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+/* A phone: the sections move to their own row and scroll sideways, rather
+   than wrapping into a stack of buttons above the page. */
+@media (max-width: 48rem) {
+  .barInner {
+    flex-wrap: wrap;
+    row-gap: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
   .nav {
-    margin-left: 0;
-    width: 100%;
     order: 3;
+    width: calc(100% + 2rem);
+    margin: 0 -1rem;
+    padding: 0 1rem 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .page {
+    padding-top: var(--space-5);
   }
 }
 
@@ -515,4 +763,62 @@
 .fileMeta {
   color: var(--text-tertiary);
   font-size: var(--font-size-caption);
+}
+
+/* Cards placed one after another on a page keep their distance. */
+.page > section + section,
+.page > section + div,
+.page > div + section {
+  margin-top: var(--space-5);
+}
+
+.itemOwner {
+  display: flex;
+  max-width: 20rem;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.itemOwner > button {
+  flex: 1;
+}
+
+.itemOwnerLabel {
+  flex: none;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.itemOwnerError {
+  color: var(--tone-red-fg);
+  font-size: var(--font-size-caption);
+}
+
+.itemStatus {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.after {
+  margin-top: var(--space-5);
+}
+
+.profileHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.profileName {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lead);
+  line-height: 1.3;
 }

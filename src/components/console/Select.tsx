@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import * as RadixSelect from '@radix-ui/react-select';
 import { Check, ChevronDown } from 'lucide-react';
@@ -66,8 +66,30 @@ export function Select({
   const [inner, setInner] = useState(defaultValue ?? '');
   const current = value ?? inner;
   const trigger = useRef<HTMLButtonElement>(null);
+  const resetting = useRef(false);
+
+  /**
+   * React resets a form once its action has run, and Radix answers a reset by
+   * putting the select back to the value it mounted with. For a select that
+   * saves itself that is wrong twice over: it shows the old value, and it
+   * submits again. So a self-saving select ignores resets. The listener is in
+   * the capture phase so it runs before Radix's own.
+   */
+  useEffect(() => {
+    const form = trigger.current?.form;
+    if (!autoSubmit || !form) return;
+    const onReset = () => {
+      resetting.current = true;
+      setTimeout(() => {
+        resetting.current = false;
+      }, 0);
+    };
+    form.addEventListener('reset', onReset, { capture: true });
+    return () => form.removeEventListener('reset', onReset, { capture: true });
+  }, [autoSubmit]);
 
   function change(next: string) {
+    if (resetting.current) return;
     const plain = fromRadix(next);
     // Flushed so the hidden input already holds the new value when the form
     // is submitted on the very next line.

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { consoleEnv } from '@/lib/console/env';
+import { consoleEnv, isStaffEmailAllowed } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { tooManyLinkRequests } from '@/lib/console/rate-limit';
@@ -35,7 +35,7 @@ export async function requestStaffLink(
     message: 'If that address can access the console, a sign-in link is on its way.',
   };
 
-  const allowed = consoleEnv.staffAllowlist.includes(email);
+  const allowed = isStaffEmailAllowed(email);
   const staff = await db.staffUser.findUnique({ where: { email } });
 
   if (!allowed || !staff || !staff.isActive) {

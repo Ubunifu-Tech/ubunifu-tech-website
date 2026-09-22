@@ -6,7 +6,13 @@ import { activityForClient } from '@/lib/console/activity';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
-import { InviteButton } from '../InviteButton';
+import { AddPerson, PersonActions } from '@/components/console/People';
+import {
+  addClientContact,
+  inviteContact,
+  removeClientContact,
+  setMainContact,
+} from '../actions';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -296,9 +302,10 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
             <div className={table.toolbarText}>
               <h2 className={table.title}>People</h2>
               <span className={table.count}>
-                {client.contacts.length} {client.contacts.length === 1 ? 'contact' : 'contacts'}
+                {client.contacts.length} {client.contacts.length === 1 ? 'person' : 'people'}
               </span>
             </div>
+            <AddPerson action={addClientContact} hidden={{ clientId: client.id }} canSkipInvite />
           </div>
           <div className={table.scroll}>
             <table className={table.table}>
@@ -320,14 +327,15 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                     <td className={`${table.td} ${table.primary}`}>
                       {contact.name}
                       <span className={table.sub}>
-                        {contact.isPrimary ? 'Main contact' : (contact.role ?? '—')}
+                        {[contact.isPrimary ? 'Main contact' : null, contact.role].filter(Boolean).join(' · ') ||
+                          'No job title'}
                       </span>
                     </td>
                     <td className={table.td}>
                       <a href={`mailto:${contact.email}`}>{contact.email}</a>
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
-                      {contact.phone ?? <span className={table.muted}>—</span>}
+                      {contact.phone ?? <span className={table.muted}>Not given</span>}
                     </td>
                     <td className={table.td}>
                       {!contact.canSignIn ? (
@@ -351,12 +359,16 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                       )}
                     </td>
                     <td className={`${table.td} ${table.actions}`}>
-                      <span className={table.actionGroup}>
-                        <InviteButton
-                          contactId={contact.id}
-                          activated={contact.activatedAt !== null}
-                        />
-                      </span>
+                      <PersonActions
+                        contactId={contact.id}
+                        isPrimary={contact.isPrimary}
+                        activated={contact.activatedAt !== null}
+                        canSignIn={contact.canSignIn}
+                        hidden={{ clientId: client.id }}
+                        invite={inviteContact}
+                        makeMain={setMainContact}
+                        remove={removeClientContact}
+                      />
                     </td>
                   </tr>
                 ))}

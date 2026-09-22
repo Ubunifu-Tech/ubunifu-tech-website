@@ -59,4 +59,88 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 
-console.log('[migrate] Migrations are up to date.');
+/**
+ * Then check the database the APP will actually query.
+ *
+ * `migrate deploy` only reports on whatever URL it was pointed at, and it
+ * decides "up to date" by reading the _prisma_migrations bookkeeping table. Two
+ * things can therefore both be true: it prints success, and the running site
+ * then dies on a column that does not exist.
+ *
+ *   1. It migrated a DIFFERENT database. DIRECT_DATABASE_URL is preferred above
+ *      for DDL, exactly as prisma.config.ts does. If it ever drifts from
+ *      DATABASE_URL — a copied variable, a restored branch, a second Railway
+ *      service — the migration lands somewhere the app never reads.
+ *   2. The bookkeeping table says applied and the column is not there anyway,
+ *      after a resolve, a baseline, or a restore from a snapshot.
+ *
+ * `migrate status` catches NEITHER, because it reads the same table. Comparing
+ * the live schema against prisma/schema.prisma catches both: it is the actual
+ * columns that are compared, and --exit-code returns 2 when they differ.
+ *
+ * Without this the failure surfaces much later as a Prisma error in the middle
+ * of page collection, thirty lines under a log line claiming migrations were
+ * up to date — which is precisely the sort of build log that sends you looking
+ * in the wrong place.
+ */
+const appUrl = process.env.DATABASE_URL;
+
+if (!appUrl) {
+  console.log('[migrate] Migrations applied. No DATABASE_URL to verify against.');
+  process.exit(0);
+}
+
+if (process.env.DIRECT_DATABASE_URL && process.env.DIRECT_DATABASE_URL !== appUrl) {
+  console.log(
+    '[migrate] DIRECT_DATABASE_URL and DATABASE_URL differ, which is expected behind a\n' +
+      '[migrate] pooler. Verifying the schema against DATABASE_URL, the one the app reads.',
+  );
+}
+
+// prisma.config.ts resolves DIRECT_DATABASE_URL || DATABASE_URL, so the direct
+// URL is removed from the child's environment to force the app's own.
+const verifyEnv = { ...process.env };
+delete verifyEnv.DIRECT_DATABASE_URL;
+
+const drift = spawnSync(
+  'npx',
+  [
+    'prisma',
+    'migrate',
+    'diff',
+    '--from-config-datasource',
+    '--to-schema',
+    'prisma/schema.prisma',
+    '--exit-code',
+  ],
+  { encoding: 'utf8', env: verifyEnv },
+);
+
+// 0 = identical, 2 = differs, anything else = the check itself broke.
+if (drift.status === 2) {
+  console.error(
+    '\n[migrate] The database the app reads does NOT match prisma/schema.prisma,' +
+      '\n[migrate] even though the migration step reported success. The deployment has' +
+      '\n[migrate] been stopped; the previous one stays live.' +
+      '\n' +
+      '\n[migrate] What is missing from it:\n',
+  );
+  console.error((drift.stdout || '').trim() || '(no summary returned)');
+  console.error(
+    '\n[migrate] Usually this means migrations were applied to a different database' +
+      '\n[migrate] than DATABASE_URL points at, or _prisma_migrations records a' +
+      '\n[migrate] migration whose SQL never actually ran.\n',
+  );
+  process.exit(1);
+}
+
+if (drift.status !== 0) {
+  console.error(
+    '\n[migrate] Could not verify the schema against DATABASE_URL, so the deployment' +
+      '\n[migrate] has been stopped rather than shipped unverified.\n',
+  );
+  console.error((drift.stderr || drift.stdout || '').trim());
+  process.exit(1);
+}
+
+console.log('[migrate] Migrations are up to date, and DATABASE_URL matches the schema.');

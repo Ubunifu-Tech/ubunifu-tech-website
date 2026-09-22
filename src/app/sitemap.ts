@@ -8,6 +8,16 @@ const BASE_URL = 'https://ubunifutech.com';
 // dynamic entry per published blog post. `lastModified` for blog posts uses
 // the front-matter `date` so search engines see fresh content when we
 // publish a new post.
+/**
+ * Re-rendered at most every five minutes, as well as the moment anything is
+ * published. The publish action already revalidates this page — but a post
+ * given a FUTURE date is published now and goes live later, and at that later
+ * moment nobody presses anything. Without a time-based revalidate it simply
+ * never appeared. Five minutes is also how long a page rendered during a
+ * database outage keeps saying so before it tries again.
+ */
+export const revalidate = 300;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {

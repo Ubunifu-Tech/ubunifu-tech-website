@@ -26,6 +26,16 @@ function serializeJsonLd(value: unknown): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
+/**
+ * Re-rendered at most every five minutes, as well as the moment anything is
+ * published. The publish action already revalidates this page — but a post
+ * given a FUTURE date is published now and goes live later, and at that later
+ * moment nobody presses anything. Without a time-based revalidate it simply
+ * never appeared. Five minutes is also how long a page rendered during a
+ * database outage keeps saying so before it tries again.
+ */
+export const revalidate = 300;
+
 export async function generateStaticParams() {
   // An unreachable journal prerenders nothing rather than failing the build.
   // dynamicParams stays on, so every post still renders on first request.

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
-import { parseDateInput } from '@/lib/console/money';
+import { formatDate, parseDateInput } from '@/lib/console/money';
 import { slugify } from '@/lib/console/onboarding';
 
 export type PostState = {
@@ -148,6 +148,26 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
     };
   }
 
+  // A published post has to stay publishable. setPostStatus refuses to put a
+  // post live without a summary or with almost no body, but this used to let
+  // a post that was ALREADY live be saved down to nothing — an empty card on
+  // the home page, and an article with no article in it.
+  if (post.status === 'published') {
+    if (!excerpt) {
+      return {
+        status: 'error',
+        message: 'This is live, so it needs a summary — that is what the cards show. Take it down first to clear it.',
+        field: 'excerpt',
+      };
+    }
+    if (body.length < 200) {
+      return {
+        status: 'error',
+        message: 'This is live, and that would leave almost nothing on the page. Take it down first to rework it.',
+      };
+    }
+  }
+
   const publishedOn = parseDateInput(text(formData, 'publishedAt'));
 
   await db.post.update({
@@ -219,20 +239,27 @@ export async function setPostStatus(
     }
   }
 
-  await db.post.update({
+  const now = new Date();
+  const updated = await db.post.update({
     where: { id: post.id },
     data: {
       status: publish ? 'published' : 'draft',
       // Dated on first publish and never moved afterwards, so unpublishing to
       // fix a typo does not re-date the piece.
-      ...(publish && !post.publishedAt ? { publishedAt: new Date() } : {}),
+      ...(publish && !post.publishedAt ? { publishedAt: now } : {}),
     },
+    select: { publishedAt: true },
   });
+  // Published with a date still ahead of us is scheduled, not live, and the
+  // message has to say which — "It is live now" about a post nobody can see
+  // yet is the kind of sentence that sends someone to share a dead link.
+  const scheduledFor =
+    publish && updated.publishedAt && updated.publishedAt > now ? updated.publishedAt : null;
 
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: publish ? 'post.published' : 'post.unpublished',
+    action: !publish ? 'post.unpublished' : scheduledFor ? 'post.scheduled' : 'post.published',
     entityType: 'Post',
     entityId: post.id,
     summary: post.title,
@@ -241,7 +268,11 @@ export async function setPostStatus(
   revalidateBlog(post.slug);
   return {
     status: 'done',
-    message: publish ? 'Published. It is live now.' : 'Taken down. It is off the site.',
+    message: !publish
+      ? 'Taken down. It is off the site.'
+      : scheduledFor
+        ? `Scheduled. It goes live on ${formatDate(scheduledFor)}.`
+        : 'Published. It is live now.',
   };
 }
 

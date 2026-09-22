@@ -6,9 +6,9 @@
  * was being served — same slug, same date, same tags, same cover, same body —
  * and nothing about what a reader sees changes on the day of the switch.
  *
- * Idempotent, keyed on slug: re-running updates rather than duplicating. It
- * refuses to overwrite a post that has been edited in the console since it was
- * imported, because at that point the file is the stale copy, not the row.
+ * Idempotent, keyed on slug: a post already in the database is never touched.
+ * Once imported, the row is the source of truth and the file is the old copy,
+ * so a re-run only ever adds posts that are missing.
  *
  * Run with: npx tsx scripts/import-posts.mts
  */
@@ -49,24 +49,49 @@ const owner = await db.staffUser.findFirst({
 });
 
 let created = 0;
-let updated = 0;
 let skipped = 0;
 
 for (const post of files) {
   const existing = await db.post.findUnique({
     where: { slug: post.slug },
-    select: { id: true, createdAt: true, updatedAt: true },
+    select: {
+      id: true,
+      title: true,
+      excerpt: true,
+      bodyMarkdown: true,
+      tags: true,
+      coverImage: true,
+      coverAlt: true,
+    },
   });
 
   if (existing) {
-    // A row whose updatedAt has moved past its createdAt has been touched in
-    // the console. The file is the old copy at that point.
-    const edited = existing.updatedAt.getTime() - existing.createdAt.getTime() > 2000;
-    if (edited) {
-      console.log(`  skipped  ${post.slug} — edited in the console since it was imported`);
+    /*
+     * Compared by CONTENT, not by timestamps. This used to treat
+     * updatedAt > createdAt as "edited in the console" — but this script's own
+     * update moves updatedAt, so the third run skipped every post and blamed
+     * the console for an edit nobody made. What actually matters is whether
+     * the row still says what the file says.
+     */
+    const same =
+      existing.title === post.title &&
+      existing.excerpt === post.excerpt &&
+      existing.bodyMarkdown === post.content.trim() &&
+      JSON.stringify(existing.tags) === JSON.stringify(post.tags) &&
+      existing.coverImage === (post.coverImage ?? null) &&
+      existing.coverAlt === (post.coverAlt ?? null);
+
+    if (same) {
+      console.log(`  same     ${post.slug}`);
       skipped += 1;
       continue;
     }
+
+    // Different, and we cannot tell who changed what. The database is the
+    // source of truth now, so it wins; say so rather than guess why.
+    console.log(`  skipped  ${post.slug} — the database copy differs from the file, and the database wins`);
+    skipped += 1;
+    continue;
   }
 
   const data = {
@@ -82,19 +107,13 @@ for (const post of files) {
     publishedAt: new Date(`${post.date}T09:00:00.000Z`),
   };
 
-  if (existing) {
-    await db.post.update({ where: { slug: post.slug }, data });
-    console.log(`  updated  ${post.slug}`);
-    updated += 1;
-  } else {
-    await db.post.create({ data: { slug: post.slug, ...data } });
-    console.log(`  created  ${post.slug}`);
-    created += 1;
-  }
+  await db.post.create({ data: { slug: post.slug, ...data } });
+  console.log(`  created  ${post.slug}`);
+  created += 1;
 }
 
 await db.$disconnect();
 
 console.log(
-  `\n${files.length} file${files.length === 1 ? '' : 's'} read: ${created} created, ${updated} updated, ${skipped} left alone.`,
+  `\n${files.length} file${files.length === 1 ? '' : 's'} read: ${created} created, ${skipped} left alone.`,
 );

@@ -8,6 +8,7 @@ import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketReplyEmail } from '@/lib/emails';
 import { CLIENT_TICKET_STATUS } from '@/lib/console/tickets';
+import { formText } from '@/lib/console/form';
 
 export type TicketState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -27,7 +28,7 @@ export async function replyToTicket(
   const staff = await requireStaff();
 
   const ticketId = String(formData.get('ticketId') ?? '');
-  const body = String(formData.get('body') ?? '').trim();
+  const body = formText(formData, 'body');
   const isInternal = formData.get('isInternal') === 'on';
 
   if (body.length < 2 || body.length > 8000) {

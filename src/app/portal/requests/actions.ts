@@ -8,6 +8,7 @@ import { requireClient, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
+import { formText } from '@/lib/console/form';
 
 export type RequestState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -48,7 +49,7 @@ export async function raiseRequest(
 
   const kindRaw = String(formData.get('kind') ?? '');
   const subject = String(formData.get('subject') ?? '').trim();
-  const body = String(formData.get('body') ?? '').trim();
+  const body = formText(formData, 'body');
   const projectId = String(formData.get('projectId') ?? '').trim();
 
   if (!Object.values(TicketKind).includes(kindRaw as TicketKind)) {
@@ -137,7 +138,7 @@ export async function replyToRequest(
   const actor = await requireClient();
 
   const ticketId = String(formData.get('ticketId') ?? '');
-  const body = String(formData.get('body') ?? '').trim();
+  const body = formText(formData, 'body');
 
   if (body.length < 2 || body.length > 8000) {
     return { status: 'error', message: 'Write a reply first.' };

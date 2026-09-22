@@ -17,6 +17,7 @@ import {
 } from '@/lib/console/billing';
 import { markRenewalInvoiced, periodLabel } from '@/lib/console/renewals';
 import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
+import { formText } from '@/lib/console/form';
 
 export type BillingState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -78,7 +79,7 @@ export async function createInvoice(
   }
 
   const dueAt = parseDateInput(String(formData.get('dueAt') ?? '').trim());
-  const notes = String(formData.get('notes') ?? '').trim();
+  const notes = formText(formData, 'notes');
 
   const invoice = await db.$transaction(async (tx) => {
     const number = await nextInvoiceNumber(tx);
@@ -310,7 +311,7 @@ export async function recordPayment(
   }
 
   const reference = String(formData.get('reference') ?? '').trim();
-  const note = String(formData.get('note') ?? '').trim();
+  const note = formText(formData, 'note');
 
   const receipt = await db.$transaction(async (tx) => {
     const payment = await tx.payment.create({
@@ -438,7 +439,7 @@ export async function voidInvoice(
 ): Promise<BillingState> {
   const staff = await requireStaff();
   const invoiceId = String(formData.get('invoiceId') ?? '');
-  const reason = String(formData.get('reason') ?? '').trim();
+  const reason = formText(formData, 'reason');
 
   if (reason.length < 4) {
     return { status: 'error', message: 'Say why this invoice is being voided.' };

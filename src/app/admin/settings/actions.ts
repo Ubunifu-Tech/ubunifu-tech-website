@@ -4,11 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireStaffRole, recordAudit } from '@/lib/console/auth';
 import { parseBps } from '@/lib/console/org';
+import { formText } from '@/lib/console/form';
 
 export type SettingsState = { status: 'idle' | 'done' | 'error'; message?: string };
 
 function text(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
+  return formText(formData, key);
 }
 
 /**

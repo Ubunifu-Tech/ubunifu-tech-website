@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { EnquiryStatus } from '@/generated/prisma/client';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { formText } from '@/lib/console/form';
 
 export type TriageState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -80,7 +81,7 @@ export async function saveEnquiryNote(
   const staff = await requireStaff();
 
   const id = String(formData.get('id') ?? '');
-  const note = String(formData.get('internalNote') ?? '').trim();
+  const note = formText(formData, 'internalNote');
 
   if (note.length > 2000) {
     return { status: 'error', message: 'That note is too long.' };

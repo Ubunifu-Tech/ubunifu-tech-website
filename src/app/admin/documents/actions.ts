@@ -17,6 +17,7 @@ import {
 } from '@/lib/console/documents';
 import { runTurn } from '@/lib/console/agent';
 import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
+import { formText, formTextExact } from '@/lib/console/form';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -94,7 +95,7 @@ export async function saveVersion(
   const staff = await requireStaff();
 
   const documentId = String(formData.get('documentId') ?? '');
-  const bodyMarkdown = String(formData.get('body') ?? '');
+  const bodyMarkdown = formTextExact(formData, 'body');
   const changeNote = String(formData.get('changeNote') ?? '').trim();
 
   if (bodyMarkdown.length > 200_000) {
@@ -161,7 +162,7 @@ export async function askCopilot(
   const staff = await requireStaff();
 
   const documentId = String(formData.get('documentId') ?? '');
-  const message = String(formData.get('message') ?? '').trim();
+  const message = formText(formData, 'message');
 
   if (message.length < 2 || message.length > 4000) {
     return { status: 'error', message: 'Say what you would like.' };

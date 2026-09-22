@@ -19,6 +19,7 @@ import {
   transitionsFor,
   type Guard,
 } from '@/lib/console/transitions';
+import { formText } from '@/lib/console/form';
 
 /** Statuses a fee line can be put into by hand. */
 const LINE_STATUSES: LineItemStatus[] = [
@@ -66,7 +67,7 @@ export async function moveProject(
   const projectId = String(formData.get('projectId') ?? '');
   const to = String(formData.get('to') ?? '');
   const expectedFrom = String(formData.get('expectedFrom') ?? '');
-  const note = String(formData.get('note') ?? '').trim();
+  const note = formText(formData, 'note');
   const acknowledged = formData.get('acknowledged') === 'on';
 
   if (!Object.values(ProjectStatus).includes(to as ProjectStatus)) {
@@ -398,7 +399,7 @@ export async function saveUpdate(
 
   const projectId = String(formData.get('projectId') ?? '');
   const title = String(formData.get('title') ?? '').trim();
-  const bodyMarkdown = String(formData.get('body') ?? '').trim();
+  const bodyMarkdown = formText(formData, 'body');
   const previewUrl = String(formData.get('previewUrl') ?? '').trim();
 
   if (title.length < 3 || title.length > 160) {

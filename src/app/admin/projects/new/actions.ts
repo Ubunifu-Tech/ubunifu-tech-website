@@ -7,6 +7,7 @@ import { EngagementType, ProjectStatus, ServiceLine } from '@/generated/prisma/c
 import { requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
+import { formText } from '@/lib/console/form';
 
 export type NewProjectState = {
   status: 'idle' | 'error';
@@ -27,7 +28,7 @@ function isMember<T extends string>(values: readonly T[], value: string): value 
 }
 
 function text(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
+  return formText(formData, key);
 }
 
 /**

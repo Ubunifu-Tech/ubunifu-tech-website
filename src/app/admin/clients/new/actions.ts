@@ -15,6 +15,7 @@ import { sendConsoleEmail } from '@/lib/console/mailer';
 import { clientInviteEmail } from '@/lib/emails';
 import { createClientRecord } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
+import { formText } from '@/lib/console/form';
 
 /**
  * Everything the form posted, handed back on failure.
@@ -79,7 +80,7 @@ function isMember<T extends string>(values: readonly T[], value: string): value 
 }
 
 function text(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
+  return formText(formData, key);
 }
 
 /**

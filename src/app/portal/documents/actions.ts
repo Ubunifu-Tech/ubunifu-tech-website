@@ -8,6 +8,7 @@ import { hashDocument } from '@/lib/console/documents';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { consoleEnv } from '@/lib/console/env';
 import { documentResponseEmail } from '@/lib/emails';
+import { formText } from '@/lib/console/form';
 
 export type SignState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -204,7 +205,7 @@ export async function respondToDocument(
 
   const requestId = String(formData.get('requestId') ?? '');
   const intent = String(formData.get('intent') ?? '');
-  const note = String(formData.get('note') ?? '').trim();
+  const note = formText(formData, 'note');
 
   if (intent !== 'changes' && intent !== 'decline') {
     return { status: 'error', message: 'Choose what you would like to do.' };

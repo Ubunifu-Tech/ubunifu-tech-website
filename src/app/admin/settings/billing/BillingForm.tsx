@@ -3,6 +3,7 @@
 import React, { useActionState, useState } from 'react';
 import { saveOrgSettings, type SettingsState } from '../actions';
 import type { Org } from '@/lib/console/org';
+import { NumberField } from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: SettingsState = { status: 'idle' };
@@ -117,18 +118,28 @@ export function BillingForm({ org, vatRate }: { org: Org; vatRate: string }) {
             </div>
 
             {chargesVat && (
-              <div className={forms.field}>
-                <label className={forms.label} htmlFor="vatRate">VAT rate</label>
-                <input id="vatRate" name="vatRate" defaultValue={vatRate} className={forms.control} inputMode="decimal" placeholder="18" />
-                <p className={forms.hint}>A percentage. Stored as basis points, so 18 is exact.</p>
-              </div>
+              <NumberField
+                name="vatRate"
+                label="VAT rate"
+                defaultValue={vatRate}
+                step="0.01"
+                min={0}
+                max={100}
+                suffix="%"
+                placeholder="18"
+                hint="Stored as basis points, so 18 is exact rather than nearly."
+              />
             )}
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor="paymentTermsDays">Payment terms</label>
-              <input id="paymentTermsDays" name="paymentTermsDays" type="number" min={0} max={365} defaultValue={org.paymentTermsDays} className={forms.control} />
-              <p className={forms.hint}>Days from issue to due, unless changed on the invoice.</p>
-            </div>
+            <NumberField
+              name="paymentTermsDays"
+              label="Payment terms"
+              min={0}
+              max={365}
+              defaultValue={org.paymentTermsDays}
+              suffix="days"
+              hint="Days from issue to due, unless changed on the invoice."
+            />
 
             <div className={`${forms.field} ${forms.wide}`}>
               <label className={forms.label} htmlFor="invoiceFooter">Invoice footer <span className={forms.optional}>(optional)</span></label>

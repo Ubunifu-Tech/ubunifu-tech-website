@@ -206,6 +206,10 @@
   -webkit-appearance: none;
   padding-right: calc(var(--space-4) * 2 + 0.75rem);
   cursor: pointer;
+  /* A long option must not spill under the chevron. Browsers will not put an
+     ellipsis on a select's own text, so the overflow is clipped and the full
+     label stays available in the open menu. */
+  text-overflow: ellipsis;
 }
 
 .selectWrap::after {
@@ -254,6 +258,55 @@
 
 .date::-webkit-datetime-edit {
   padding: 0;
+}
+
+/* ── Numbers and affixes ───────────────────────── */
+
+.affixWrap {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+/* Native spinners are tiny, inconsistent between browsers, and nobody uses
+   them for a number they already know. The value is typed. */
+.number {
+  padding-right: calc(var(--space-4) * 2 + 1.5rem);
+  -moz-appearance: textfield;
+  appearance: textfield;
+  font-variant-numeric: tabular-nums;
+}
+
+.number::-webkit-outer-spin-button,
+.number::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* What the number is measured in, sitting inside the field so it reads as part
+   of the value rather than as a separate label. */
+.affix {
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ── Dates ─────────────────────────────────────── */
+
+/* The date, spelled out. The native control shows the browser's locale format,
+   which on a US-English machine is mm/dd/yyyy — and a target date on a contract
+   cannot be ambiguous about whether it means March or April. */
+.dateEcho {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
 }
 
 /* ── Checkbox ──────────────────────────────────── */

@@ -3,6 +3,7 @@
 import React, { useActionState, useState } from 'react';
 import { createInvoice, type BillingState } from '../../invoices/actions';
 import { formatMoney } from '@/lib/console/money';
+import { DateField } from '@/components/console/Fields';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -106,20 +107,13 @@ export function RaiseInvoice({
       </div>
 
       <div className={forms.grid}>
-        <div className={forms.field}>
-          <label className={forms.label} htmlFor="invoice-due">
-            Due by
-          </label>
-          <input
-            id="invoice-due"
-            name="dueAt"
-            type="date"
-            defaultValue={defaultDue}
-            className={`${forms.control} ${forms.date}`}
-            disabled={pending}
-          />
-          <p className={forms.hint}>Fourteen days is the default. Change it if you agreed otherwise.</p>
-        </div>
+        <DateField
+          name="dueAt"
+          label="Due by"
+          defaultValue={defaultDue}
+          disabled={pending}
+          hint="Fourteen days is the default. Change it if you agreed otherwise."
+        />
 
         <div className={forms.field}>
           <label className={forms.label} htmlFor="invoice-notes">

@@ -9,6 +9,7 @@ import {
   type BillingState,
 } from './actions';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
+import { DateField } from '@/components/console/Fields';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -85,21 +86,14 @@ export function RecordPaymentForm({
           />
         </div>
 
-        <div className={forms.field}>
-          <label className={forms.label} htmlFor="pay-date">
-            Date it arrived
-          </label>
-          <input
-            id="pay-date"
-            name="receivedAt"
-            type="date"
-            defaultValue={today}
-            max={today}
-            className={`${forms.control} ${forms.date}`}
-            required
-            disabled={pending}
-          />
-        </div>
+        <DateField
+          name="receivedAt"
+          label="Date it arrived"
+          defaultValue={today}
+          max={today}
+          required
+          disabled={pending}
+        />
 
         <div className={forms.field}>
           <label className={forms.label} htmlFor="pay-method">

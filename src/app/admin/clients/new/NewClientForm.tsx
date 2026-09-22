@@ -2,6 +2,7 @@
 
 import React, { useActionState, useId, useState } from 'react';
 import { createClient, type NewClientState } from './actions';
+import { DateField } from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewClientState = { status: 'idle' };
@@ -43,9 +44,9 @@ const ENGAGEMENTS: { value: string; label: string }[] = [
 ];
 
 const STATUSES: { value: string; label: string }[] = [
-  { value: 'lead', label: 'Lead — we have spoken, nothing sent' },
+  { value: 'lead', label: 'Lead' },
   { value: 'proposal_draft', label: 'Writing the proposal' },
-  { value: 'proposal_sent', label: 'Proposal sent, waiting' },
+  { value: 'proposal_sent', label: 'Proposal sent' },
   { value: 'proposal_accepted', label: 'Proposal accepted' },
 ];
 
@@ -395,7 +396,8 @@ export function NewClientForm({
                     ))}
                   </Select>
                   <p className={forms.hint}>
-                    Later stages are reached by moving the project on, so the change is recorded.
+                    A lead is somebody you have spoken to with nothing sent yet. Later stages are
+                    reached by moving the project on, so the change is recorded.
                   </p>
                 </div>
 
@@ -426,32 +428,20 @@ export function NewClientForm({
                   </p>
                 </div>
 
-                <div className={forms.field}>
-                  <label className={forms.label} htmlFor={field('startDate')}>
-                    Start date <span className={forms.optional}>(optional)</span>
-                  </label>
-                  <input
-                    id={field('startDate')}
-                    name="startDate"
-                    defaultValue={was('startDate')}
-                    type="date"
-                    className={`${forms.control} ${forms.date}`}
-                  />
-                </div>
+                <DateField
+                  name="startDate"
+                  label="Start date"
+                  optional
+                  defaultValue={was('startDate')}
+                />
 
-                <div className={forms.field}>
-                  <label className={forms.label} htmlFor={field('targetDate')}>
-                    Target date <span className={forms.optional}>(optional)</span>
-                  </label>
-                  <input
-                    id={field('targetDate')}
-                    name="targetDate"
-                    defaultValue={was('targetDate')}
-                    type="date"
-                    className={`${forms.control} ${forms.date}`}
-                    aria-invalid={invalid('targetDate')}
-                  />
-                </div>
+                <DateField
+                  name="targetDate"
+                  label="Target date"
+                  optional
+                  defaultValue={was('targetDate')}
+                  invalid={invalid('targetDate')}
+                />
 
                 <div className={`${forms.field} ${forms.wide}`}>
                   <label className={forms.label} htmlFor={field('summary')}>

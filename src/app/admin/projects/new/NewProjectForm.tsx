@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useActionState, useId, useState } from 'react';
+import React, { useActionState, useState } from 'react';
 import { createProject, type NewProjectState } from './actions';
 import type { TemplateOption } from '../../clients/new/NewClientForm';
+import {
+  DateField,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewProjectState = { status: 'idle' };
@@ -27,26 +33,11 @@ const ENGAGEMENTS = [
 ];
 
 const STATUSES = [
-  { value: 'lead', label: 'Lead — we have spoken, nothing sent' },
+  { value: 'lead', label: 'Lead' },
   { value: 'proposal_draft', label: 'Writing the proposal' },
-  { value: 'proposal_sent', label: 'Proposal sent, waiting' },
+  { value: 'proposal_sent', label: 'Proposal sent' },
   { value: 'proposal_accepted', label: 'Proposal accepted' },
 ];
-
-function Select({
-  id,
-  name,
-  children,
-  ...rest
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { id: string; name: string }) {
-  return (
-    <span className={forms.selectWrap}>
-      <select id={id} name={name} className={`${forms.control} ${forms.select}`} {...rest}>
-        {children}
-      </select>
-    </span>
-  );
-}
 
 export function NewProjectForm({
   clientId,
@@ -61,9 +52,6 @@ export function NewProjectForm({
 }) {
   const [state, action, pending] = useActionState(createProject, INITIAL);
   const [serviceLine, setServiceLine] = useState('web');
-  const ids = useId();
-
-  const field = (name: string) => `${ids}-${name}`;
   const invalid = (name: string) => (state.field === name ? true : undefined);
   const usable = templates.filter((template) => template.serviceLine === serviceLine);
 
@@ -77,141 +65,101 @@ export function NewProjectForm({
             New work for {clientName}
           </legend>
           <div className={forms.grid}>
-            <div className={`${forms.field} ${forms.wide}`}>
-              <label className={forms.label} htmlFor={field('name')}>
-                Project name
-              </label>
-              <input
-                id={field('name')}
-                name="name"
-                className={forms.control}
-                required
-                maxLength={160}
-                aria-invalid={invalid('name')}
-              />
-              <p className={forms.hint}>
-                A reference is assigned automatically. Billed in {currency}, like the rest of this
-                client&rsquo;s work.
-              </p>
-            </div>
+            <TextField
+              name="name"
+              label="Project name"
+              wide
+              required
+              maxLength={160}
+              invalid={invalid('name')}
+              disabled={pending}
+              hint={`A reference is assigned automatically. Billed in ${currency}, like the rest of this client's work.`}
+            />
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor={field('serviceLine')}>
-                Service line
-              </label>
-              <Select
-                id={field('serviceLine')}
-                name="serviceLine"
-                value={serviceLine}
-                onChange={(event) => setServiceLine(event.target.value)}
-                aria-invalid={invalid('serviceLine')}
-              >
-                {SERVICE_LINES.map((line) => (
-                  <option key={line.value} value={line.value}>
-                    {line.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <SelectField
+              name="serviceLine"
+              label="Service line"
+              value={serviceLine}
+              onChange={(event) => setServiceLine(event.target.value)}
+              invalid={invalid('serviceLine')}
+              disabled={pending}
+            >
+              {SERVICE_LINES.map((line) => (
+                <option key={line.value} value={line.value}>
+                  {line.label}
+                </option>
+              ))}
+            </SelectField>
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor={field('engagementType')}>
-                How it is billed
-              </label>
-              <Select
-                id={field('engagementType')}
-                name="engagementType"
-                defaultValue="fixed_price_project"
-                aria-invalid={invalid('engagementType')}
-              >
-                {ENGAGEMENTS.map((engagement) => (
-                  <option key={engagement.value} value={engagement.value}>
-                    {engagement.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <SelectField
+              name="engagementType"
+              label="How it is billed"
+              defaultValue="fixed_price_project"
+              invalid={invalid('engagementType')}
+              disabled={pending}
+            >
+              {ENGAGEMENTS.map((engagement) => (
+                <option key={engagement.value} value={engagement.value}>
+                  {engagement.label}
+                </option>
+              ))}
+            </SelectField>
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor={field('status')}>
-                Where it stands
-              </label>
-              <Select
-                id={field('status')}
-                name="status"
-                defaultValue="lead"
-                aria-invalid={invalid('status')}
-              >
-                {STATUSES.map((status) => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <SelectField
+              name="status"
+              label="Where it stands"
+              defaultValue="lead"
+              invalid={invalid('status')}
+              disabled={pending}
+              hint="A lead is somebody you have spoken to with nothing sent yet. Later stages are reached by moving the project on, so the change is recorded."
+            >
+              {STATUSES.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </SelectField>
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor={field('templateId')}>
-                Plan
-              </label>
-              <Select
-                id={field('templateId')}
-                name="templateId"
-                key={serviceLine}
-                defaultValue={usable.find((template) => template.isDefault)?.id ?? ''}
-                aria-invalid={invalid('templateId')}
-              >
-                <option value="">Start empty</option>
-                {usable.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </Select>
-              <p className={forms.hint}>
-                {usable.length === 0
+            <SelectField
+              name="templateId"
+              label="Plan"
+              key={serviceLine}
+              defaultValue={usable.find((template) => template.isDefault)?.id ?? ''}
+              invalid={invalid('templateId')}
+              disabled={pending}
+              hint={
+                usable.length === 0
                   ? 'No plan written for this service line yet.'
-                  : 'Phases, deliverables, what you need from them, and the fee lines to be priced.'}
-              </p>
-            </div>
+                  : 'Phases, deliverables, what you need from them, and the fee lines to be priced.'
+              }
+            >
+              <option value="">Start empty</option>
+              {usable.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}
+                </option>
+              ))}
+            </SelectField>
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor={field('startDate')}>
-                Start date <span className={forms.optional}>(optional)</span>
-              </label>
-              <input
-                id={field('startDate')}
-                name="startDate"
-                type="date"
-                className={`${forms.control} ${forms.date}`}
-              />
-            </div>
+            <DateField name="startDate" label="Start date" optional disabled={pending} />
 
-            <div className={forms.field}>
-              <label className={forms.label} htmlFor={field('targetDate')}>
-                Target date <span className={forms.optional}>(optional)</span>
-              </label>
-              <input
-                id={field('targetDate')}
-                name="targetDate"
-                type="date"
-                className={`${forms.control} ${forms.date}`}
-                aria-invalid={invalid('targetDate')}
-              />
-            </div>
+            <DateField
+              name="targetDate"
+              label="Target date"
+              optional
+              invalid={invalid('targetDate')}
+              disabled={pending}
+            />
 
-            <div className={`${forms.field} ${forms.wide}`}>
-              <label className={forms.label} htmlFor={field('summary')}>
-                What the work is <span className={forms.optional}>(optional)</span>
-              </label>
-              <textarea
-                id={field('summary')}
-                name="summary"
-                className={`${forms.control} ${forms.textarea}`}
-                maxLength={2000}
-              />
-              <p className={forms.hint}>A sentence or two. This one the client does see.</p>
-            </div>
+            <TextAreaField
+              name="summary"
+              label="What the work is"
+              optional
+              wide
+              maxLength={2000}
+              disabled={pending}
+              hint="A sentence or two. This one the client does see."
+            />
           </div>
         </fieldset>
 

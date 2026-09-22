@@ -2,6 +2,7 @@
 
 import React, { useActionState } from 'react';
 import { saveLineItem, type EditState } from './actions';
+import { DateField } from '@/components/console/Fields';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -66,19 +67,12 @@ export function LineItemRow({
         />
       </div>
 
-      <div className={forms.field}>
-        <label className={forms.label} htmlFor={`due-${id}`}>
-          {recurring ? 'Renews on' : 'Not recurring'}
-        </label>
-        <input
-          id={`due-${id}`}
-          name="nextDueAt"
-          type="date"
-          defaultValue={nextDueAt}
-          className={`${forms.control} ${forms.date}`}
-          disabled={pending || !recurring}
-        />
-      </div>
+      <DateField
+        name="nextDueAt"
+        label={recurring ? 'Renews on' : 'Not recurring'}
+        defaultValue={nextDueAt}
+        disabled={pending || !recurring}
+      />
 
       <div className={forms.field}>
         <label className={forms.label} htmlFor={`status-${id}`}>

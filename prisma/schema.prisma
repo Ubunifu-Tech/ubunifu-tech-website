@@ -87,6 +87,7 @@ model Client {
   tickets         Ticket[]
   managedServices ManagedService[]
   enquiries       Enquiry[]
+  conversations   Conversation[]
 
   @@index([deletedAt])
 }
@@ -234,6 +235,8 @@ model Enquiry {
   ip          String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+
+  conversations Conversation[]
 
   @@index([status])
   @@index([email])
@@ -736,6 +739,7 @@ model Document {
 
   versions          DocumentVersion[]
   signatureRequests SignatureRequest[]
+  conversations     Conversation[]
 
   @@index([projectId, kind])
 }
@@ -908,7 +912,8 @@ model Ticket {
   updatedAt   DateTime       @updatedAt
   resolvedAt  DateTime?
 
-  messages TicketMessage[]
+  messages      TicketMessage[]
+  conversations Conversation[]
 
   @@index([clientId, status])
   @@index([projectId])
@@ -1159,4 +1164,106 @@ model OrgSettings {
   paymentTermsDays Int @default(14)
 
   updatedAt DateTime @updatedAt
+}
+
+/// Where a conversation happened, and therefore what it is allowed to do.
+enum ConversationKind {
+  /// Staff and the model, drafting or revising a document.
+  document_draft
+  /// An anonymous visitor on the marketing site.
+  site_visitor
+  /// A signed-in client asking for help in the portal.
+  portal_client
+}
+
+enum ConversationStatus {
+  open
+  /// Produced an enquiry or a ticket. The outcome is on the conversation.
+  converted
+  closed
+  abandoned
+}
+
+enum MessageRole {
+  user
+  assistant
+  /// The result of a tool the assistant called, kept so a thread can be
+  /// replayed exactly as the model saw it.
+  tool
+}
+
+/// A thread with the model, kept so it can be continued and audited.
+///
+/// One table for every surface — the drafting copilot, the website assistant
+/// and the portal — because they are the same thing underneath: a sequence of
+/// turns, a set of tools the surface allows, and a cost. What differs is the
+/// kind, which is what decides which tools are on the table.
+model Conversation {
+  id     String             @id @default(cuid())
+  kind   ConversationKind
+  status ConversationStatus @default(open)
+
+  /// Who is on the human side, polymorphic like AuditEvent.
+  actorType ActorType?
+  actorId   String?
+  /// An anonymous visitor, keyed by a cookie so a refresh keeps the thread.
+  /// Never an identifier we can trace back to a person on its own.
+  visitorKey String?
+
+  /// What it is about, when it is about something already on record.
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  clientId   String?
+  client     Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  /// Set when the conversation produced one of these.
+  enquiryId String?
+  enquiry   Enquiry? @relation(fields: [enquiryId], references: [id], onDelete: SetNull)
+  ticketId  String?
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  title String?
+
+  /// Rolling counters, so a runaway thread can be cut off and a month's spend
+  /// answered without counting rows.
+  messageCount Int     @default(0)
+  inputTokens  Int     @default(0)
+  outputTokens Int     @default(0)
+  model        String?
+
+  ip        String?
+  userAgent String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime?
+
+  messages ConversationMessage[]
+
+  @@index([kind, status])
+  @@index([visitorKey])
+  @@index([documentId])
+}
+
+model ConversationMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    MessageRole
+  content String
+
+  /// Present when the assistant called a tool, so what it did and what it was
+  /// told back are both on the record rather than only its prose about it.
+  toolName   String?
+  toolUseId  String?
+  toolInput  Json?
+  toolResult Json?
+
+  model        String?
+  inputTokens  Int?
+  outputTokens Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
 }

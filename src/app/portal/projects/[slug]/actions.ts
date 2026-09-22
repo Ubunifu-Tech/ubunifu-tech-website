@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireClient, recordAudit } from '@/lib/console/auth';
+import { requireClient } from '@/lib/console/auth';
 import { recordAssetUpload } from '@/lib/console/uploads';
 
 export type UploadState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -37,23 +37,14 @@ export async function confirmUpload(
   if (!assetRequest) return { status: 'error', message: 'That is not something we asked you for.' };
 
   try {
-    const { created } = await recordAssetUpload({
+    // Audited inside, by whichever of this and the store's webhook creates
+    // the row — so the line exists whoever wins.
+    await recordAssetUpload({
       blobUrl,
       assetRequestId: assetRequest.id,
       actor: { type: 'client_contact', id: actor.id },
       filename,
     });
-
-    if (created) {
-      await recordAudit({
-        actorType: 'client_contact',
-        actorId: actor.id,
-        action: 'asset.uploaded',
-        entityType: 'AssetRequest',
-        entityId: assetRequest.id,
-        summary: `${filename} sent for "${assetRequest.title}"`,
-      });
-    }
   } catch (error) {
     if (error instanceof Error && error.message === 'upload-too-large') {
       return { status: 'error', message: 'That file is larger than we can take here.' };

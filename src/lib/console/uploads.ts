@@ -1,6 +1,7 @@
 import 'server-only';
 import { head, get } from '@vercel/blob';
 import { db } from '@/lib/db';
+import { recordAudit } from '@/lib/console/auth';
 import type { ActorType } from '@/generated/prisma/client';
 
 /**
@@ -120,24 +121,62 @@ export async function recordAssetUpload(input: {
     throw new Error('upload-too-large');
   }
 
-  const upload = await db.fileUpload.create({
-    data: {
-      storageKey: input.blobUrl,
-      filename: input.filename.slice(0, 200),
-      contentType: meta.contentType,
-      sizeBytes: meta.size,
-      uploadedByType: input.actor.type,
-      uploadedById: input.actor.id,
-      assetRequestId: input.assetRequestId,
-    },
-    select: { id: true },
+  const assetRequest = await db.assetRequest.findUnique({
+    where: { id: input.assetRequestId },
+    select: { title: true },
   });
 
-  // The checklist ticks itself off. Somebody can still set it back — 'received'
-  // means something arrived, not that it was the right thing.
+  let upload: { id: string };
+  try {
+    upload = await db.fileUpload.create({
+      data: {
+        storageKey: input.blobUrl,
+        filename: input.filename.slice(0, 200),
+        contentType: meta.contentType,
+        sizeBytes: meta.size,
+        uploadedByType: input.actor.type,
+        uploadedById: input.actor.id,
+        assetRequestId: input.assetRequestId,
+      },
+      select: { id: true },
+    });
+  } catch (error) {
+    /*
+     * The other writer got here between our read and our write — the browser
+     * and the store's webhook finish at almost the same moment. The unique key
+     * did its job; the file is recorded. This used to escape as a generic
+     * failure, so a client whose file HAD arrived was told "that did not
+     * arrive, try it again", and uploaded it twice.
+     */
+    if ((error as { code?: string }).code === 'P2002') {
+      const winner = await db.fileUpload.findUnique({
+        where: { storageKey: input.blobUrl },
+        select: { id: true },
+      });
+      if (winner) return { id: winner.id, created: false };
+    }
+    throw error;
+  }
+
+  // The checklist ticks itself off. 'blocked' is included: a request is
+  // usually blocked BECAUSE we are waiting on this very file, and leaving it
+  // blocked once the file lands would hide the file from nobody but the
+  // checklist. 'waived' is not — we said we no longer need it.
   await db.assetRequest.updateMany({
-    where: { id: input.assetRequestId, status: 'requested' },
+    where: { id: input.assetRequestId, status: { in: ['requested', 'blocked'] } },
     data: { status: 'received', receivedAt: new Date() },
+  });
+
+  // Audited here, by whichever writer created the row. It used to happen in
+  // the browser's path only, so when the webhook won the race the upload
+  // happened with no line in the audit trail at all.
+  await recordAudit({
+    actorType: input.actor.type,
+    actorId: input.actor.id,
+    action: 'asset.uploaded',
+    entityType: 'AssetRequest',
+    entityId: input.assetRequestId,
+    summary: `${input.filename} sent${assetRequest ? ` for "${assetRequest.title}"` : ''}`,
   });
 
   return { id: upload.id, created: true };

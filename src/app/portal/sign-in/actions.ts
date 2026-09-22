@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { consoleEnv } from '@/lib/console/env';
 import { verifyPassword } from '@/lib/console/crypto';
@@ -8,13 +9,16 @@ import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { createSession } from '@/lib/console/session';
 import {
+  allow,
   clearFailedSignIns,
   isLocked,
+  requestIp,
   recordFailedSignIn,
   tooManyLinkRequests,
 } from '@/lib/console/rate-limit';
 import { recordAudit } from '@/lib/console/auth';
 import { clientSignInEmail } from '@/lib/emails';
+import { safePortalPath } from '@/lib/console/return-path';
 
 export type PortalSignInState = {
   status: 'idle' | 'sent' | 'error';
@@ -44,6 +48,12 @@ export async function signInWithPassword(
   };
 
   if (!EMAIL_PATTERN.test(email) || !password) return refused;
+
+  // Per address as well as per account: a script trying many accounts from
+  // one machine is slowed before any single account's lock would notice.
+  if (!(await allow('portal-password:ip', requestIp(await headers()), { limit: 30, windowMinutes: 15 }))) {
+    return { status: 'error', message: 'Too many attempts from here. Wait a few minutes, or use a sign-in link.' };
+  }
 
   const contact = await db.clientContact.findFirst({
     where: { email, deletedAt: null, canSignIn: true },
@@ -105,7 +115,7 @@ export async function signInWithPassword(
     entityId: contact.id,
   });
 
-  redirect('/portal');
+  redirect(safePortalPath(formData.get('next')) ?? '/portal');
 }
 
 /**
@@ -126,6 +136,9 @@ export async function requestPortalLink(
 
   if (!EMAIL_PATTERN.test(email)) {
     return { status: 'error', message: 'Enter a valid email address.' };
+  }
+  if (!(await allow('portal-link:ip', requestIp(await headers()), { limit: 10, windowMinutes: 15 }))) {
+    return sameForEveryone;
   }
 
   const contact = await db.clientContact.findFirst({
@@ -157,10 +170,14 @@ export async function requestPortalLink(
     return sameForEveryone;
   }
 
+  // The page they were trying to reach travels inside the token, so the link
+  // lands there. The verify route checks it again before using it.
+  const next = safePortalPath(formData.get('next'));
   const { token } = await issueMagicToken({
     purpose: 'sign_in',
     actorType: 'client_contact',
     actorId: contact.id,
+    ...(next ? { entityType: 'Path', entityId: next } : {}),
   });
 
   await sendConsoleEmail({

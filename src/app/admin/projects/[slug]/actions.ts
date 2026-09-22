@@ -383,7 +383,7 @@ export async function publishUpdate(
         title: update.title,
         body: update.bodyMarkdown,
         previewUrl: update.previewUrl,
-        url: `${consoleEnv.publicOrigin}/portal`,
+        url: `${consoleEnv.publicOrigin}/portal/projects/${update.project.slug}`,
       }),
       template: 'project_update',
       entityType: 'ProjectUpdate',

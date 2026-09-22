@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getClientActor } from '@/lib/console/auth';
 import { AuthLayout } from '@/components/console/AuthLayout';
 import { SignInForms } from './SignInForms';
+import { safePortalPath } from '@/lib/console/return-path';
 import auth from '@/styles/auth.module.css';
 
 export const metadata = { title: 'Sign in' };
@@ -15,20 +16,22 @@ const LINK_PROBLEM: Record<string, string> = {
   expired:
     'That sign-in link has already been used or has run out. Links work once, so reopening an older email will land you here. Sign in below, or send yourself a new one.',
   missing:
-    'That link was incomplete — it was probably cut short by an email app. Sign in below, or send yourself a new one.',
+    'That link was incomplete. An email app probably cut it short. Sign in below, or send yourself a new one.',
 };
 
 export default async function PortalSignIn({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
+  const { error, next: nextRaw } = await searchParams;
+  const next = safePortalPath(nextRaw);
+
   const actor = await getClientActor();
   if (actor) {
-    redirect(actor.isActivated ? '/portal' : '/portal/activate');
+    redirect(actor.isActivated ? (next ?? '/portal') : '/portal/activate');
   }
 
-  const { error } = await searchParams;
   const problem = error ? LINK_PROBLEM[error] : undefined;
 
   return (
@@ -58,7 +61,7 @@ export default async function PortalSignIn({
         ) : null}
 
         <div className={auth.card}>
-          <SignInForms />
+          <SignInForms next={next} />
         </div>
         <p className={auth.foot}>
           Not sure you have an account? Email info@ubunifutech.com and we will set one up.

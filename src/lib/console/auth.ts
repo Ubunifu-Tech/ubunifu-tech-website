@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import type { ActorType, StaffRole } from '@/generated/prisma/client';
 import { isAdminHost, isStaffEmailAllowed } from './env';
 import { readSession } from './session';
+import { safePortalPath } from './return-path';
 
 /**
  * Authorisation, enforced on the server where the database is reachable.
@@ -129,7 +130,11 @@ export async function getClientActor(): Promise<ClientActor | null> {
 export async function requireClient(): Promise<ClientActor> {
   const client = await getClientActor();
   if (!client) {
-    redirect('/portal/sign-in');
+    // Back to the page they asked for once they are in.
+    const next = safePortalPath((await headers()).get('x-portal-path'));
+    redirect(
+      next && next !== '/portal' ? `/portal/sign-in?next=${encodeURIComponent(next)}` : '/portal/sign-in',
+    );
   }
   // An invited contact who has not finished setting a password can hold a
   // session but must finish before reaching anything else.

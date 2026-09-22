@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { db } from '@/lib/db';
 import { getClientActor } from '@/lib/console/auth';
+import { allow } from '@/lib/console/rate-limit';
 import {
   ALLOWED_CONTENT_TYPES,
   MAX_UPLOAD_BYTES,
@@ -35,6 +36,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const actor = await getClientActor();
         if (!actor || !actor.isActivated) throw new Error('not-signed-in');
+        // Generous for real work, a ceiling for a script filling the store.
+        if (!(await allow('portal-upload', actor.id, { limit: 60, windowMinutes: 60 }))) {
+          throw new Error('too-many-uploads');
+        }
 
         const assetRequestId = String(clientPayload ?? '');
         // Scoped in the query: an asset request on somebody else's project

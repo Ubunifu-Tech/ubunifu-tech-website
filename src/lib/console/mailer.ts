@@ -30,6 +30,8 @@ export async function sendConsoleEmail(options: {
    * not produce two emails.
    */
   idempotencyKey?: string;
+  /** Who a reply reaches. Our inbox unless the email is about someone else. */
+  replyTo?: string;
 }): Promise<SendResult> {
   const log = await db.emailLog.create({
     data: {
@@ -88,7 +90,7 @@ export async function sendConsoleEmail(options: {
       {
         from: FROM,
         to: options.to,
-        replyTo: REPLY_TO,
+        replyTo: options.replyTo ?? REPLY_TO,
         subject: options.subject,
         html: options.html,
       },

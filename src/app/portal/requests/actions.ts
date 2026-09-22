@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { TicketKind } from '@/generated/prisma/client';
 import { createTicket } from '@/lib/console/ticket-create';
+import { allow } from '@/lib/console/rate-limit';
 import { requireClient, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -45,6 +46,9 @@ export async function raiseRequest(
   }
   if (body.length < 10 || body.length > 8000) {
     return { status: 'error', message: 'Tell us a little more than that.' };
+  }
+  if (!(await allow('ticket-raise', actor.clientId, { limit: 20, windowMinutes: 24 * 60 }))) {
+    return { status: 'error', message: 'That is a lot of requests for one day. Add to an open one instead.' };
   }
 
   // A project id from the form is checked against this client's own projects,

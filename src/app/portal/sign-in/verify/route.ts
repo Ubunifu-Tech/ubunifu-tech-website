@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { safePortalPath } from '@/lib/console/return-path';
 import { consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
@@ -35,6 +36,8 @@ async function landingFor(
   clientId: string,
 ): Promise<string> {
   if (!claim.entityId) return '/portal';
+
+  if (claim.entityType === 'Path') return safePortalPath(claim.entityId) ?? '/portal';
 
   if (claim.entityType === 'Invoice') {
     const invoice = await db.invoice.findFirst({

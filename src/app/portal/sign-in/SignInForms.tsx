@@ -11,7 +11,7 @@ import forms from '@/styles/forms.module.css';
 
 const INITIAL: PortalSignInState = { status: 'idle' };
 
-export function SignInForms() {
+export function SignInForms({ next }: { next?: string | null }) {
   const [mode, setMode] = useState<'password' | 'link'>('password');
   const [pwState, pwAction, pwPending] = useActionState(signInWithPassword, INITIAL);
   const [linkState, linkAction, linkPending] = useActionState(requestPortalLink, INITIAL);
@@ -20,6 +20,7 @@ export function SignInForms() {
     const waiting = linkPending || linkState.status === 'sent';
     return (
       <form action={linkAction} className={forms.form}>
+        {next && <input type="hidden" name="next" value={next} />}
         <div className={forms.field}>
           <label htmlFor="link-email" className={forms.label}>
             Email
@@ -60,6 +61,7 @@ export function SignInForms() {
 
   return (
     <form action={pwAction} className={forms.form}>
+      {next && <input type="hidden" name="next" value={next} />}
       <div className={forms.field}>
         <label htmlFor="email" className={forms.label}>
           Email

@@ -1,5 +1,5 @@
 // Transactional email templates for the contact form. Table-based, inline
-// styles, absolute links — built to render across email clients. The two
+// styles, absolute links, built to render across email clients. The two
 // exports return ready-to-send HTML strings.
 
 const SITE = 'https://ubunifutech.com';
@@ -38,7 +38,7 @@ function preheader(text: string): string {
 function header(): string {
   return `
   <tr>
-    <td class="email-pad" bgcolor="#FFFFFF" style="background-color:#FFFFFF;padding:24px 32px;border-top:4px solid #FF6B2C;border-bottom:1px solid #E4DDF2;">
+    <td class="email-pad" bgcolor="#FFFFFF" style="background-color:#FFFFFF;padding:24px 32px;border-top:4px solid #FF6B2C;border-bottom:1px solid #ECE9E4;">
       <a href="${SITE}" style="display:inline-block;text-decoration:none;">
         <img class="brand-logo" src="${LOGO}" width="236" height="45" alt="Ubunifu Technologies" style="display:block;width:236px;height:45px;border:0;" />
       </a>
@@ -49,20 +49,20 @@ function header(): string {
 /** Light footer with contact details and links. */
 function footer(): string {
   const link =
-    'color:#3D1FA0;text-decoration:underline;font-weight:600;';
+    'color:#A63A11;text-decoration:underline;font-weight:600;';
   return `
   <tr>
-    <td class="email-pad" style="background:#F6F2FF;border-top:1px solid #DDD4F0;padding:28px 32px;font-family:${FONT};">
+    <td class="email-pad" style="background:#F7F5F2;border-top:1px solid #E4E0DA;padding:28px 32px;font-family:${FONT};">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
         <tr>
-          <td class="footer-cell" style="color:#5A5170;font-size:13px;line-height:1.9;vertical-align:top;">
-            <div style="color:#1F1A36;font-weight:700;font-size:14px;margin-bottom:6px;">Ubunifu Technologies</div>
+          <td class="footer-cell" style="color:#4A4753;font-size:13px;line-height:1.9;vertical-align:top;">
+            <div style="color:#1D1B22;font-weight:700;font-size:14px;margin-bottom:6px;">Ubunifu Technologies</div>
             <a href="mailto:${EMAIL}" style="${link}">${EMAIL}</a><br/>
             <a href="tel:${PHONE_TEL}" style="${link}">${PHONE_DISPLAY}</a> &nbsp;|&nbsp;
             <a href="${SITE}/contact?chat=open" style="${link}">Chat with us</a><br/>
             Tanzania
           </td>
-          <td class="footer-cell footer-links" align="right" style="vertical-align:top;color:#5A5170;font-size:13px;line-height:1.9;">
+          <td class="footer-cell footer-links" align="right" style="vertical-align:top;color:#4A4753;font-size:13px;line-height:1.9;">
             <a href="${SITE}" style="${link}">Website</a><br/>
             <a href="${SITE}/build" style="${link}">Services</a><br/>
             <a href="${SITE}/work" style="${link}">Our work</a>
@@ -72,7 +72,7 @@ function footer(): string {
     </td>
   </tr>
   <tr>
-    <td class="email-pad" style="background:#F6F2FF;border-top:1px solid #DDD4F0;padding:16px 32px;font-family:${FONT};color:#6B6385;font-size:12px;">
+    <td class="email-pad" style="background:#F7F5F2;border-top:1px solid #E4E0DA;padding:16px 32px;font-family:${FONT};color:#6D6975;font-size:12px;">
       &copy; ${year()} Ubunifu Technologies. All rights reserved.
     </td>
   </tr>`;
@@ -94,15 +94,15 @@ function shell(preview: string, body: string): string {
     .brand-logo { width:220px !important; height:auto !important; }
   }
 </style></head>
-<body style="margin:0;padding:0;background:#F7F5FB;">
+<body style="margin:0;padding:0;background:#F2F0EC;">
 ${preheader(preview)}
-<table class="email-wrap" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F7F5FB;padding:24px 12px;">
+<table class="email-wrap" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F2F0EC;padding:24px 12px;">
   <tr>
     <td align="center">
-      <table class="email-frame" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#FFFFFF;border-radius:8px;overflow:hidden;border:1px solid #DDD4F0;">
+      <table class="email-frame" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#FFFFFF;border-radius:8px;overflow:hidden;border:1px solid #E4E0DA;">
         ${header()}
         <tr>
-          <td class="email-pad" style="padding:36px 32px;font-family:${FONT};color:#1F1A36;">
+          <td class="email-pad" style="padding:36px 32px;font-family:${FONT};color:#1D1B22;">
             ${body}
           </td>
         </tr>
@@ -121,17 +121,17 @@ function button(href: string, label: string): string {
 }
 
 function buttonGhost(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;padding:12px 23px;background:#F6F2FF;color:#3D1FA0;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;border:1px solid #D8CCF4;">${label}</a>`;
+  return `<a href="${href}" style="display:inline-block;padding:12px 23px;background:#FDF3EE;color:#A63A11;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;border:1px solid #E9D3C6;">${label}</a>`;
 }
 
 /** Label and value rows, for the facts an email is about. Values are HTML. */
 function facts(rows: [string, string][]): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #EAE5F2;">${rows
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #ECE9E4;">${rows
     .map(
       ([label, value]) => `
     <tr>
-      <td style="padding:11px 0;border-bottom:1px solid #EAE5F2;color:#6B6385;font-size:13px;width:110px;vertical-align:top;">${label}</td>
-      <td style="padding:11px 0;border-bottom:1px solid #EAE5F2;color:#1F1A36;font-size:14px;">${value}</td>
+      <td style="padding:11px 0;border-bottom:1px solid #ECE9E4;color:#6D6975;font-size:13px;width:110px;vertical-align:top;">${label}</td>
+      <td style="padding:11px 0;border-bottom:1px solid #ECE9E4;color:#1D1B22;font-size:14px;">${value}</td>
     </tr>`,
     )
     .join('')}</table>`;
@@ -156,22 +156,22 @@ export function notificationEmail(input: {
 
   const row = (label: string, value: string) => `
     <tr>
-      <td style="padding:11px 0;border-bottom:1px solid #EAE5F2;color:#6B6385;font-size:13px;width:96px;vertical-align:top;">${label}</td>
-      <td style="padding:11px 0;border-bottom:1px solid #EAE5F2;color:#1F1A36;font-size:14px;font-weight:500;">${value}</td>
+      <td style="padding:11px 0;border-bottom:1px solid #ECE9E4;color:#6D6975;font-size:13px;width:96px;vertical-align:top;">${label}</td>
+      <td style="padding:11px 0;border-bottom:1px solid #ECE9E4;color:#1D1B22;font-size:14px;font-weight:500;">${value}</td>
     </tr>`;
 
   const body = `
     <p style="margin:0 0 5px;color:#A63A11;font-size:14px;font-weight:700;">New enquiry${
       input.via ? ` from ${escapeHtml(input.via)}` : ''
     }</p>
-    <h1 style="margin:0 0 22px;font-size:24px;font-weight:700;color:#1F1A36;">${name} got in touch</h1>
+    <h1 style="margin:0 0 22px;font-size:24px;font-weight:700;color:#1D1B22;">${name} got in touch</h1>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
       ${row('Name', name)}
-      ${row('Email', `<a href="mailto:${email}" style="color:#6D3FE8;text-decoration:none;">${email}</a>`)}
+      ${row('Email', `<a href="mailto:${email}" style="color:#A63A11;text-decoration:none;">${email}</a>`)}
       ${row('Subject', subject)}
     </table>
-    <p style="margin:26px 0 8px;color:#3D1FA0;font-size:14px;font-weight:700;">Message</p>
-    <div style="background:#FAF8FF;border:1px solid #DDD4F0;border-radius:8px;padding:18px;color:#1F1A36;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}</div>
+    <p style="margin:26px 0 8px;color:#A63A11;font-size:14px;font-weight:700;">Message</p>
+    <div style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px;color:#1D1B22;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}</div>
     <div style="margin-top:26px;">${
       input.consoleUrl
         ? `${button(input.consoleUrl, 'Read the chat')}&nbsp;&nbsp;${buttonGhost(
@@ -180,7 +180,7 @@ export function notificationEmail(input: {
           )}`
         : button(`mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`, `Reply to ${name}`)
     }</div>
-    <p style="margin:18px 0 0;color:#6B6385;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
+    <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
 
   return shell(`New enquiry from ${input.name}: ${input.subject}`, body);
 }
@@ -210,20 +210,20 @@ export function acknowledgementEmail(input: {
   const message = escapeHtml(summary.text);
 
   // Written in the first person throughout. This email comes FROM the team, so
-  // it acknowledges receipt itself — it does not report that a message was
+  // it acknowledges receipt itself; it does not report that a message was
   // passed to somebody else.
   const body = `
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1F1A36;">Thanks for reaching out, ${name}.</h1>
-    <p style="margin:0 0 26px;color:#5A5170;font-size:15px;line-height:1.7;">
-      We have your message about <strong style="color:#1F1A36;">${subject}</strong>. We read everything that comes in, and we will reply to this address directly. If it is easier to talk, say so in a reply and we will suggest a time.
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1D1B22;">Thanks for reaching out, ${name}.</h1>
+    <p style="margin:0 0 26px;color:#4A4753;font-size:15px;line-height:1.7;">
+      We have your message about <strong style="color:#1D1B22;">${subject}</strong>. We read everything that comes in, and we will reply to this address directly. If it is easier to talk, say so in a reply and we will suggest a time.
     </p>
-    <p style="margin:0 0 8px;color:#3D1FA0;font-size:14px;font-weight:700;">What you sent us</p>
-    <div style="background:#FAF8FF;border:1px solid #DDD4F0;border-radius:8px;padding:18px;color:#1F1A36;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}${
+    <p style="margin:0 0 8px;color:#A63A11;font-size:14px;font-weight:700;">What you sent us</p>
+    <div style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px;color:#1D1B22;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}${
       summary.trimmed
-        ? '<span style="color:#6B6385;"> …</span><div style="margin-top:10px;color:#6B6385;font-size:12px;">Trimmed for length. We have the whole message.</div>'
+        ? '<span style="color:#6D6975;"> …</span><div style="margin-top:10px;color:#6D6975;font-size:12px;">Trimmed for length. We have the whole message.</div>'
         : ''
     }</div>
-    <p style="margin:26px 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
+    <p style="margin:26px 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr>
       <td class="button-cell" style="padding-right:10px;">${button(INSIGHT, 'Try Ubunifu Insight')}</td>
       <td class="button-cell">${buttonGhost(SIFA, 'Try Ubunifu Sifa')}</td>
@@ -240,9 +240,9 @@ export function acknowledgementEmail(input: {
  * marketing, no products, nothing else to click.
  */
 function securityNote(minutesOrDays: string): string {
-  return `<p style="margin:22px 0 0;color:#6B6385;font-size:13px;line-height:1.6;">
+  return `<p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
     This link works once and expires in ${minutesOrDays}. If you did not request it,
-    you can ignore this email — nothing has changed on your account.
+    you can ignore this email. Nothing has changed on your account.
   </p>`;
 }
 
@@ -250,8 +250,8 @@ export function staffSignInEmail(input: { name: string; url: string }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Sign in to the console</h1>
-    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Sign in to the console</h1>
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. Use the button below to open the Ubunifu console.
     </p>
     ${button(input.url, 'Open the console')}
@@ -266,13 +266,13 @@ export function staffInviteEmail(input: { name: string; invitedBy: string; url: 
   const by = escapeHtml(input.invitedBy);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">You are on the team</h1>
-    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">You are on the team</h1>
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. ${by} added you to the Ubunifu console, where we run clients,
       projects, documents and invoices. Use the button to sign in for the first time.
     </p>
     ${button(input.url, 'Open the console')}
-    <p style="margin:22px 0 0;color:#6B6385;font-size:13px;line-height:1.6;">
+    <p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
       After today, sign in any time with your email address and we will send you a fresh link.
     </p>
     ${securityNote('14 days')}`;
@@ -292,9 +292,9 @@ export function taskAssignedEmail(input: {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">A task for you</h1>
-    <p style="margin:0 0 20px;color:#5A5170;font-size:15px;line-height:1.7;">
-      Hello ${name}. ${escapeHtml(input.by)} gave you this on <strong style="color:#1F1A36;">${escapeHtml(input.project)}</strong>.
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">A task for you</h1>
+    <p style="margin:0 0 20px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. ${escapeHtml(input.by)} gave you this on <strong style="color:#1D1B22;">${escapeHtml(input.project)}</strong>.
     </p>
     ${facts([
       ['Task', escapeHtml(input.task)],
@@ -317,13 +317,13 @@ export function colleagueInviteEmail(input: {
   const org = escapeHtml(input.clientName);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Join ${org} on the Ubunifu portal</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Join ${org} on the Ubunifu portal</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. ${by} invited you to the portal where ${org} follows its work with
       Ubunifu Technologies: project progress, what we need from you, documents to sign,
       and invoices.
     </p>
-    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
       Follow the link to choose a password and finish setting up your account.
     </p>
     ${button(input.url, 'Set up your account')}
@@ -345,13 +345,13 @@ export function clientInviteEmail(input: {
   const org = escapeHtml(input.clientName);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Your project portal is ready</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
-      Hello ${name}. We have set up a portal for <strong style="color:#1F1A36;">${org}</strong>.
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Your project portal is ready</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. We have set up a portal for <strong style="color:#1D1B22;">${org}</strong>.
       It is where you will find progress updates, anything we need from you,
       documents to review and sign, and your invoices and receipts.
     </p>
-    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
       Follow the link to choose a password and finish setting up your account.
     </p>
     ${button(input.url, 'Set up your account')}
@@ -364,8 +364,8 @@ export function clientSignInEmail(input: { name: string; url: string }): string 
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Sign in to your portal</h1>
-    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Sign in to your portal</h1>
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. Use the button below to open your project portal. You can
       also sign in with your email and password at any time.
     </p>
@@ -400,13 +400,13 @@ export function invoiceEmail(input: {
     : null;
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Invoice ${escapeHtml(input.number)}</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
-      Hello ${name}. Here is invoice <strong style="color:#1F1A36;">${escapeHtml(input.number)}</strong>
-      for <strong style="color:#1F1A36;">${org}</strong>, for
-      <strong style="color:#1F1A36;">${escapeHtml(input.total)}</strong>${due ? `, due by <strong style="color:#1F1A36;">${escapeHtml(due)}</strong>` : ''}.
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Invoice ${escapeHtml(input.number)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. Here is invoice <strong style="color:#1D1B22;">${escapeHtml(input.number)}</strong>
+      for <strong style="color:#1D1B22;">${org}</strong>, for
+      <strong style="color:#1D1B22;">${escapeHtml(input.total)}</strong>${due ? `, due by <strong style="color:#1D1B22;">${escapeHtml(due)}</strong>` : ''}.
     </p>
-    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
       Open it in your portal to see what it covers and how to pay. We will send a
       receipt as soon as the payment reaches us.
     </p>
@@ -423,6 +423,8 @@ export function receiptEmail(input: {
   invoiceNumber: string;
   amount: string;
   issuedAt: Date;
+  /** The receipt in the portal. */
+  url: string;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
   const issued = new Intl.DateTimeFormat('en-GB', {
@@ -433,15 +435,16 @@ export function receiptEmail(input: {
   }).format(input.issuedAt);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Thank you — payment received</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
-      Hello ${name}. We have recorded <strong style="color:#1F1A36;">${escapeHtml(input.amount)}</strong>
-      against invoice <strong style="color:#1F1A36;">${escapeHtml(input.invoiceNumber)}</strong>.
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Thank you, payment received</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. We have recorded <strong style="color:#1D1B22;">${escapeHtml(input.amount)}</strong>
+      against invoice <strong style="color:#1D1B22;">${escapeHtml(input.invoiceNumber)}</strong>.
     </p>
-    <p style="margin:0 0 8px;color:#5A5170;font-size:15px;line-height:1.7;">
-      This is receipt <strong style="color:#1F1A36;">${escapeHtml(input.number)}</strong>, issued ${escapeHtml(issued)}.
-      Keep it for your records — you can also find it in your portal at any time.
-    </p>`;
+    <p style="margin:0 0 8px;color:#4A4753;font-size:15px;line-height:1.7;">
+      This is receipt <strong style="color:#1D1B22;">${escapeHtml(input.number)}</strong>, issued ${escapeHtml(issued)}.
+      Keep it for your records. It is also in your portal, ready to print or save as a PDF.
+    </p>
+    <div style="margin-top:24px;">${button(input.url, 'View the receipt')}</div>`;
 
   return shell(`Receipt ${input.number} for ${input.amount}.`, body);
 }
@@ -471,19 +474,19 @@ export function projectUpdateEmail(input: {
     .filter(Boolean)
     .map(
       (block) =>
-        `<p style="margin:0 0 16px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+        `<p style="margin:0 0 16px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(
           block,
         ).replace(/\n/g, '<br />')}</p>`,
     )
     .join('');
 
   const body = `
-    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)}</p>
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.title)}</h1>
-    <p style="margin:0 0 16px;color:#5A5170;font-size:15px;line-height:1.7;">Hello ${name},</p>
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.title)}</h1>
+    <p style="margin:0 0 16px;color:#4A4753;font-size:15px;line-height:1.7;">Hello ${name},</p>
     ${paragraphs}
     ${input.previewUrl ? button(input.previewUrl, 'Take a look') : button(input.url, 'Open your portal')}
-    <p style="margin:24px 0 0;color:#8A8399;font-size:13px;line-height:1.7;">
+    <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
       Every update is kept in your portal, so you can always go back to one.
     </p>`;
 
@@ -509,25 +512,25 @@ export function documentToSignEmail(input: {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
   const body = `
-    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.documentTitle)}</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.documentTitle)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. This is ready for you to read and sign on behalf of
-      <strong style="color:#1F1A36;">${escapeHtml(input.clientName)}</strong>.
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>.
     </p>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Signing takes a moment: read it through, type your initials, and confirm.
       ${
         input.termsTitle
-          ? `You will also be accepting our <strong style="color:#1F1A36;">${escapeHtml(input.termsTitle)}</strong>, which is shown in full on the same page.`
+          ? `You will also be accepting our <strong style="color:#1D1B22;">${escapeHtml(input.termsTitle)}</strong>, which is shown in full on the same page.`
           : ''
       }
-      If anything is wrong, choose <strong style="color:#1F1A36;">Ask for changes</strong>
-      on the same page rather than signing — we would much rather fix it first.
+      If anything is wrong, choose <strong style="color:#1D1B22;">Ask for changes</strong>
+      on the same page rather than signing. We would much rather fix it first.
     </p>
     ${button(input.url, 'Read and sign')}
     ${securityNote('14 days')}
-    <p style="margin:24px 0 0;color:#8A8399;font-size:13px;line-height:1.7;">
+    <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
       If the link has expired, sign in to your portal at any time and it will be
       waiting for you there.
     </p>`;
@@ -553,22 +556,22 @@ export function ticketRaisedEmail(input: {
     .filter(Boolean)
     .map(
       (block) =>
-        `<p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+        `<p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(
           block,
         ).replace(/\n/g, '<br />')}</p>`,
     )
     .join('');
 
   const body = `
-    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">
       ${escapeHtml(input.reference)} · ${escapeHtml(input.kind.replace(/_/g, ' '))}${
         input.projectName ? ` · ${escapeHtml(input.projectName)}` : ''
       }
     </p>
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.subject)}</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
-      From <strong style="color:#1F1A36;">${escapeHtml(input.from)}</strong> at
-      <strong style="color:#1F1A36;">${escapeHtml(input.clientName)}</strong> (${escapeHtml(input.fromEmail)}).
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.subject)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      From <strong style="color:#1D1B22;">${escapeHtml(input.from)}</strong> at
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong> (${escapeHtml(input.fromEmail)}).
     </p>
     ${paragraphs}
     ${button(input.url, 'Open it in the console')}`;
@@ -592,19 +595,19 @@ export function ticketReplyEmail(input: {
     .filter(Boolean)
     .map(
       (block) =>
-        `<p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+        `<p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(
           block,
         ).replace(/\n/g, '<br />')}</p>`,
     )
     .join('');
 
   const body = `
-    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">${escapeHtml(input.reference)}</p>
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.subject)}</h1>
-    <p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">Hello ${name},</p>
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.reference)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.subject)}</h1>
+    <p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">Hello ${name},</p>
     ${paragraphs}
-    <p style="margin:0 0 24px;color:#8A8399;font-size:13px;line-height:1.7;">
-      Where it stands: <strong style="color:#1F1A36;">${escapeHtml(input.status)}</strong>.
+    <p style="margin:0 0 24px;color:#8B8793;font-size:13px;line-height:1.7;">
+      Where it stands: <strong style="color:#1D1B22;">${escapeHtml(input.status)}</strong>.
     </p>
     ${button(input.url, 'Reply in your portal')}`;
 
@@ -634,7 +637,7 @@ export function documentResponseEmail(input: {
     .filter(Boolean)
     .map(
       (block) =>
-        `<p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+        `<p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(
           block,
         ).replace(/\n/g, '<br />')}</p>`,
     )
@@ -645,13 +648,13 @@ export function documentResponseEmail(input: {
     : `${input.from} has asked for changes`;
 
   const body = `
-    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">
       ${escapeHtml(input.reference)} · version ${input.version}
     </p>
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(headline)}</h1>
-    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
-      <strong style="color:#1F1A36;">${escapeHtml(input.title)}</strong>, sent to
-      <strong style="color:#1F1A36;">${escapeHtml(input.clientName)}</strong>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(headline)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      <strong style="color:#1D1B22;">${escapeHtml(input.title)}</strong>, sent to
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>
       (${escapeHtml(input.fromEmail)}). Nothing has been signed and nothing has been charged.
     </p>
     ${paragraphs}

@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { db } from '@/lib/db';
 import type { ServiceLine } from '@/generated/prisma/client';
 import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
+import { allow, requestIp } from '@/lib/console/rate-limit';
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -216,7 +217,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid submission identifier.' }, { status: 400 });
     }
 
-    if (isRateLimited(rateLimitKey(req, email))) {
+    // Two layers: the in-memory one answers even when the database is down,
+    // and the database one holds across every server instance.
+    const ip = requestIp(req.headers);
+    if (
+      isRateLimited(rateLimitKey(req, email)) ||
+      !(await allow('contact:ip', ip, { limit: 5, windowMinutes: 10 })) ||
+      !(await allow('contact:email', email, { limit: 5, windowMinutes: 60 }))
+    ) {
       return NextResponse.json(
         { error: 'Too many messages. Please try again in a few minutes.' },
         { status: 429 },

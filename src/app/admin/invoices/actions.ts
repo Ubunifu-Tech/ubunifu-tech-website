@@ -405,6 +405,7 @@ export async function emailReceipt(
       invoiceNumber: receipt.payment.invoice.number,
       amount: formatMoney(receipt.payment.amountMinor, receipt.payment.currency),
       issuedAt: receipt.issuedAt,
+      url: `${consoleEnv.publicOrigin}/portal/receipts/${encodeURIComponent(receipt.number)}`,
     }),
     template: 'receipt_sent',
     entityType: 'Receipt',

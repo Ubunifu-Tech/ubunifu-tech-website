@@ -242,6 +242,8 @@ export async function passToTeam(input: {
         consoleUrl: `${consoleEnv.adminOrigin}/enquiries/${enquiry.id}`,
       }),
       template: 'assistant_enquiry',
+      // So "reply to this email" reaches the visitor, as the email says.
+      replyTo: input.email,
       entityType: 'Enquiry',
       entityId: enquiry.id,
       idempotencyKey: `assistant-notify-${enquiry.id}`,

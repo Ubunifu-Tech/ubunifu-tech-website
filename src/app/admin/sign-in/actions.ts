@@ -1,10 +1,11 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { consoleEnv, isStaffEmailAllowed } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
-import { tooManyLinkRequests } from '@/lib/console/rate-limit';
+import { allow, requestIp, tooManyLinkRequests } from '@/lib/console/rate-limit';
 import { recordAudit } from '@/lib/console/auth';
 import { staffSignInEmail } from '@/lib/emails';
 
@@ -34,6 +35,10 @@ export async function requestStaffLink(
     status: 'sent',
     message: 'If that address can access the console, a sign-in link is on its way.',
   };
+
+  if (!(await allow('staff-link:ip', requestIp(await headers()), { limit: 10, windowMinutes: 15 }))) {
+    return sameForEveryone;
+  }
 
   const allowed = isStaffEmailAllowed(email);
   const staff = await db.staffUser.findUnique({ where: { email } });

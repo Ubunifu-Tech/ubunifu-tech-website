@@ -80,6 +80,15 @@ export function proxy(request: NextRequest) {
     return harden(new NextResponse(null, { status: 404 }), false);
   }
 
+  // The portal page being asked for, so that sending somebody to sign in can
+  // bring them back to it. Only ever read as a candidate: the server checks it
+  // is a portal path before using it.
+  if (pathname === '/portal' || pathname.startsWith('/portal/')) {
+    const headers = new Headers(request.headers);
+    headers.set('x-portal-path', `${pathname}${search}`);
+    return harden(NextResponse.next({ request: { headers } }), false);
+  }
+
   return harden(NextResponse.next(), false);
 }
 

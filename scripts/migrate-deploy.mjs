@@ -98,9 +98,12 @@ if (process.env.DIRECT_DATABASE_URL && process.env.DIRECT_DATABASE_URL !== appUr
 }
 
 // prisma.config.ts resolves DIRECT_DATABASE_URL || DATABASE_URL, so the direct
-// URL is removed from the child's environment to force the app's own.
-const verifyEnv = { ...process.env };
-delete verifyEnv.DIRECT_DATABASE_URL;
+// URL has to be pinned to the app's own for this child. Deleting it is not
+// enough: the config file calls process.loadEnvFile('.env') itself, which
+// would put a local DIRECT_DATABASE_URL straight back and verify the wrong
+// database. loadEnvFile never overrides a variable that is already set, so
+// SETTING it is what holds.
+const verifyEnv = { ...process.env, DIRECT_DATABASE_URL: appUrl };
 
 const drift = spawnSync(
   'npx',

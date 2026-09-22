@@ -5,6 +5,7 @@ import { saveLineItem, type EditState } from './actions';
 import { DateField } from '@/components/console/Fields';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: EditState = { status: 'idle' };
 
@@ -78,21 +79,13 @@ export function LineItemRow({
         <label className={forms.label} htmlFor={`status-${id}`}>
           State
         </label>
-        <span className={forms.selectWrap}>
-          <select
+        <Select
             id={`status-${id}`}
             name="lineStatus"
             defaultValue={status}
-            className={`${forms.control} ${forms.select}`}
+            options={STATUSES}
             disabled={pending}
-          >
-            {STATUSES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </span>
+          />
       </div>
 
       <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>

@@ -13,8 +13,8 @@
 .shell {
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 16rem minmax(0, 1fr);
-  background: var(--surface-2);
+  grid-template-columns: 15.5rem minmax(0, 1fr);
+  background: var(--app-bg);
 }
 
 .sidebar {
@@ -24,7 +24,7 @@
   height: 100vh;
   flex-direction: column;
   gap: var(--space-5);
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-5) var(--space-3);
   border-right: 1px solid var(--border);
   background: var(--surface);
   overflow-y: auto;
@@ -33,8 +33,8 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-3);
+  gap: 0.625rem;
+  padding: var(--space-1) var(--space-3);
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -64,7 +64,7 @@
 }
 
 .navGroupLabel {
-  padding: var(--space-4) var(--space-3) var(--space-2);
+  padding: var(--space-4) 0.75rem var(--space-1);
   color: var(--text-tertiary);
   font-size: var(--font-size-caption);
   line-height: 1.4;
@@ -73,9 +73,9 @@
 .navLink {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
+  gap: 0.75rem;
+  padding: 0.5625rem 0.75rem;
+  border-radius: var(--app-radius-control);
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.4;
@@ -86,18 +86,19 @@
 }
 
 .navLink:hover {
-  background: var(--surface-2);
+  background: var(--tone-neutral-bg);
   color: var(--text-primary);
 }
 
 .navLink[aria-current='page'] {
-  background: var(--primary-dim);
-  color: var(--primary-deep);
+  background: var(--accent-dim);
+  color: var(--accent-deep);
 }
 
 .navIcon {
   flex-shrink: 0;
-  opacity: 0.85;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
 }
 
 .navText {
@@ -112,39 +113,48 @@
   align-items: center;
   justify-content: center;
   min-width: 1.375rem;
-  padding: 0 var(--space-2);
+  margin-left: auto;
+  padding: 0 0.4375rem;
   border-radius: var(--radius-pill);
-  background: var(--brand-deep);
+  background: var(--accent);
   color: var(--text-inverse);
   font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
   line-height: 1.5;
 }
 
 .navCountQuiet {
-  background: var(--surface-3);
-  color: var(--text-tertiary);
+  background: var(--tone-neutral-bg);
+  color: var(--tone-neutral-fg);
 }
 
 .sidebarFoot {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin-top: auto;
-  padding-top: var(--space-5);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--border);
 }
 
 .who {
-  padding: 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
   color: var(--text-primary);
   font-size: var(--font-size-small);
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .whoRole {
   display: block;
+  overflow: hidden;
   color: var(--text-tertiary);
   font-size: var(--font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .signOut {
@@ -217,9 +227,9 @@
 
 .page {
   width: 100%;
-  max-width: var(--container-width);
+  max-width: 88rem;
   margin: 0 auto;
-  padding: var(--space-7) var(--container-gutter) var(--space-9);
+  padding: var(--space-6) clamp(1.25rem, 3vw, 2.5rem) var(--space-9);
   flex: 1;
 }
 
@@ -234,9 +244,9 @@
 
 .pageHead {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-5);
+  gap: var(--space-4) var(--space-5);
   margin-bottom: var(--space-6);
   flex-wrap: wrap;
 }
@@ -261,21 +271,21 @@
   margin: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--font-size-heading);
+  font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
-  line-height: 1.18;
+  line-height: 1.25;
 }
 
 .headingAccent {
-  color: var(--brand-deep);
+  color: inherit;
 }
 
 .lead {
-  margin: var(--space-3) 0 0;
-  max-width: 58ch;
-  color: var(--text-secondary);
-  font-size: var(--font-size-lead);
-  line-height: 1.7;
+  margin: var(--space-1) 0 0;
+  max-width: 64ch;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.55;
 }
 
 .note {
@@ -446,37 +456,39 @@
 }
 
 .filters {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0.125rem;
   margin-bottom: var(--space-5);
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-control);
+  background: var(--surface);
   flex-wrap: wrap;
 }
 
 .filter {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
+  padding: 0.4375rem 0.875rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.4;
   text-decoration: none;
   transition:
-    border-color var(--transition-fast),
     background var(--transition-fast),
     color var(--transition-fast);
 }
 
 .filter:hover {
-  border-color: var(--border-active);
+  background: var(--tone-neutral-bg);
   color: var(--text-primary);
 }
 
 .filter[aria-current='true'] {
-  border-color: var(--primary-border);
-  background: var(--primary-dim);
-  color: var(--primary-deep);
+  background: var(--text-primary);
+  color: var(--text-inverse);
 }
 
 /* ── Moving a project on ───────────────────────── */
@@ -660,19 +672,21 @@
    to learn less. */
 .stats {
   display: grid;
-  gap: 0;
-  margin-bottom: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  overflow: hidden;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
 }
 
 .stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
   padding: var(--space-5);
-  border-left: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-card);
 }
 
 .stat:first-child {
@@ -690,10 +704,10 @@
   margin: var(--space-2) 0 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--font-size-title);
+  font-size: var(--font-size-heading);
   font-weight: var(--font-weight-medium);
   font-variant-numeric: tabular-nums;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .statHint {
@@ -781,8 +795,8 @@
 }
 
 .eventLive::after {
-  border-color: var(--primary);
-  background: var(--primary);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .eventText {
@@ -863,8 +877,8 @@
 
 /* Ours is tinted so a thread scanned quickly reads as a conversation. */
 .fromUs {
-  border-color: var(--primary-border);
-  background: var(--primary-dim);
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
 }
 
 /* A note to ourselves is dashed and warm, so it can never be mistaken for
@@ -939,11 +953,157 @@
 }
 
 .uploadLabel:focus-within {
-  outline: 3px solid var(--primary-dim);
+  outline: 3px solid var(--accent-dim);
   outline-offset: 2px;
 }
 
 .uploadLabel[aria-disabled='true'] {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+/* ── Active menu item and the stat tiles ─────────────────────────────── */
+
+.navLink[aria-current='page'] .navIcon {
+  color: var(--accent);
+}
+
+.navLink:hover .navIcon {
+  color: var(--text-secondary);
+}
+
+/* The coloured square beside a figure. The colour says what kind of number
+   it is — money, work, people, time — so a row of them can be read before a
+   single label is. */
+.statTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.statIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  background: var(--tone-bg, var(--tone-neutral-bg));
+  color: var(--tone-fg, var(--tone-neutral-fg));
+}
+
+.statLink {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.statLink:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 1px 2px rgba(31, 26, 54, 0.04), 0 12px 28px -14px rgba(31, 26, 54, 0.2);
+}
+
+.statLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The menu only scrolls on a short screen, so its scrollbar stays out of sight
+   until the pointer is over it — and is neutral, not the site's violet. */
+.sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.sidebar:hover {
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+}
+
+/* ── Header actions and the board/list switch ─────────────────────── */
+
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.viewSwitch {
+  display: inline-flex;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-control);
+  background: var(--surface);
+}
+
+.viewOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.3;
+  text-decoration: none;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.viewOption:hover {
+  background: var(--tone-neutral-bg);
+  color: var(--text-primary);
+}
+
+.viewOption[aria-current='page'] {
+  background: var(--text-primary);
+  color: var(--text-inverse);
+}
+
+.viewOption:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* A board needs the whole width it can get; the usual reading measure would
+   leave half the lanes off-screen on a laptop. */
+.pageWide {
+  max-width: none;
+}
+
+/* Scrollbars inside the console are neutral. The site's global ones are violet,
+   which in an app full of scrolling lists and lanes reads as decoration. */
+.shell *,
+:global(html):has(.shell) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.shell ::-webkit-scrollbar-thumb,
+:global(html):has(.shell)::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: var(--border-hover);
+}
+
+.shell ::-webkit-scrollbar-thumb:hover,
+:global(html):has(.shell)::-webkit-scrollbar-thumb:hover {
+  background: var(--border-active);
 }

@@ -1,0 +1,329 @@
+/* The dropdown and the date picker, trigger and open menu.
+ *
+ * The open parts render in a portal at the end of <body>, outside every page
+ * shell, so nothing here may depend on an ancestor's class — only on tokens,
+ * which are global. */
+
+/* ── Trigger: the closed control, shared by both ─────────────────── */
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 var(--space-3) 0 0.875rem;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--app-radius-control);
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--font-size-small);
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.trigger:hover:not(:disabled) {
+  border-color: var(--border-active);
+}
+
+.trigger:focus-visible,
+.trigger[data-state='open'] {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.trigger[aria-invalid='true'],
+.trigger[data-invalid='true'] {
+  border-color: var(--tone-red-dot);
+  box-shadow: 0 0 0 3px var(--tone-red-bg);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+}
+
+.triggerSmall {
+  min-height: 2.25rem;
+  padding-left: var(--space-3);
+  font-size: var(--font-size-caption);
+}
+
+.triggerIcon {
+  flex: none;
+  color: var(--text-tertiary);
+  transition: transform 0.18s ease;
+}
+
+.trigger[data-state='open'] .triggerIcon {
+  transform: rotate(180deg);
+}
+
+.placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ── The open menu ───────────────────────────────────────────────── */
+
+.menu {
+  z-index: 80;
+  min-width: var(--radix-select-trigger-width);
+  max-height: min(22rem, var(--radix-select-content-available-height));
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--app-shadow-pop);
+  transform-origin: var(--radix-select-content-transform-origin);
+  animation: pop-in 0.14s ease-out;
+}
+
+.menuViewport {
+  padding: 0.375rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0.5625rem 0.625rem;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.35;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.item[data-highlighted] {
+  background: var(--tone-neutral-bg);
+}
+
+.item[data-state='checked'] {
+  color: var(--tone-orange-fg);
+}
+
+.item[data-disabled] {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.itemDescription {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.itemCheck {
+  display: inline-flex;
+  flex: none;
+  color: var(--accent);
+}
+
+/* ── The calendar ────────────────────────────────────────────────── */
+
+.calendar {
+  z-index: 80;
+  width: 19.5rem;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-pop);
+  transform-origin: var(--radix-popover-content-transform-origin);
+  animation: pop-in 0.14s ease-out;
+}
+
+.dp {
+  position: relative;
+}
+
+.dpMonths,
+.dpMonth {
+  display: block;
+}
+
+.dpCaption {
+  display: flex;
+  align-items: center;
+  height: 2.25rem;
+  margin-bottom: var(--space-2);
+  padding-left: var(--space-1);
+}
+
+.dpCaptionLabel {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+}
+
+.dpNav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.dpNavButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.dpNavButton:hover:not(:disabled) {
+  background: var(--tone-neutral-bg);
+  color: var(--text-primary);
+}
+
+.dpNavButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.dpNavButton:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.dpGrid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.dpWeekday {
+  padding-bottom: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  text-align: center;
+}
+
+.dpDay {
+  padding: 1px;
+  text-align: center;
+}
+
+.dpDayButton {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.dpDayButton:hover:not(:disabled) {
+  background: var(--tone-neutral-bg);
+}
+
+.dpDayButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Today is marked by a ring rather than weight, so it never competes with the
+   chosen day for attention. */
+.dpToday .dpDayButton {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+.dpSelected .dpDayButton,
+.dpSelected .dpDayButton:hover {
+  background: var(--cta);
+  box-shadow: none;
+  color: var(--text-inverse);
+}
+
+.dpOutside .dpDayButton {
+  color: var(--text-tertiary);
+  opacity: 0.55;
+}
+
+.dpDisabled .dpDayButton {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.calendarFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.calendarLink {
+  padding: 0.375rem 0.625rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tone-orange-fg);
+  font: inherit;
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.calendarLink:hover:not(:disabled) {
+  background: var(--tone-orange-bg);
+}
+
+.calendarLink:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.calendarLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu,
+  .calendar {
+    animation: none;
+  }
+}

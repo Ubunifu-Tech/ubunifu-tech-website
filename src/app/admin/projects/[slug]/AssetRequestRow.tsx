@@ -4,6 +4,7 @@ import React, { useActionState, useRef } from 'react';
 import { setAssetRequestStatus, type EditState } from './actions';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: EditState = { status: 'idle' };
 
@@ -57,22 +58,15 @@ export function AssetRequestRow({
           </span>
         )}
       </span>
-      <span className={forms.selectWrap}>
-        <select
+      <Select
           name="assetStatus"
-          aria-label={`${title} — where it stands`}
+          aria-label={`${title} — status`}
           defaultValue={status}
-          className={`${forms.control} ${forms.select}`}
+          options={STATUSES}
           disabled={pending}
-          onChange={() => form.current?.requestSubmit()}
-        >
-          {STATUSES.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </span>
+          size="sm"
+          autoSubmit
+        />
     </form>
   );
 }

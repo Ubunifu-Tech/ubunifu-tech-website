@@ -13,6 +13,7 @@ import { DateField } from '@/components/console/Fields';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: BillingState = { status: 'idle' };
 
@@ -99,21 +100,13 @@ export function RecordPaymentForm({
           <label className={forms.label} htmlFor="pay-method">
             How it arrived
           </label>
-          <span className={forms.selectWrap}>
-            <select
+          <Select
               id="pay-method"
               name="method"
               defaultValue="bank_transfer"
-              className={`${forms.control} ${forms.select}`}
+              options={PAYMENT_METHODS}
               disabled={pending}
-            >
-              {PAYMENT_METHODS.map((method) => (
-                <option key={method.value} value={method.value}>
-                  {method.label}
-                </option>
-              ))}
-            </select>
-          </span>
+            />
         </div>
 
         <div className={forms.field}>

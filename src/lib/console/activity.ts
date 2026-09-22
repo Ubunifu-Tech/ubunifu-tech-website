@@ -28,36 +28,53 @@ export type ActivityItem = {
 /** Enum-ish action strings turned into something a person would say. */
 function describeAudit(action: string, summary: string | null): string {
   const said: Record<string, string> = {
-    'client.created': 'Client created',
+    'client.created': 'Client added',
     'client.invite.sent': 'Portal invitation sent',
-    'client.invite.send_failed': 'Portal invitation could NOT be sent',
-    'client.invite.opened': 'Invitation link opened',
-    'client.account.activated': 'Client set up their account',
+    'client.invite.send_failed': 'Portal invitation failed to send',
+    'client.invite.opened': 'Invitation opened',
+    'client.account.activated': 'Client finished setting up their account',
     'client.sign_in.success': 'Client signed in',
-    'client.sign_in.failed': 'Failed client sign-in',
-    'client.sign_in.locked': 'Client account locked after repeated failures',
+    'client.sign_in.failed': 'Client sign-in failed',
+    'client.sign_in.locked': 'Client account locked after too many attempts',
     'client.sign_in.throttled': 'Too many sign-in links requested',
     'client.sign_in.link_sent': 'Sign-in link sent',
-    'client.sign_in.rejected_at_use': 'Sign-in link refused — access had been revoked',
+    'client.sign_in.rejected_at_use': 'Sign-in refused — access had been removed',
     'client.sign_out': 'Client signed out',
-    'staff.sign_in.success': 'Staff signed in',
-    'staff.sign_in.link_sent': 'Staff sign-in link sent',
-    'staff.sign_out': 'Staff signed out',
-    'enquiry.status_changed': 'Enquiry moved',
-    'enquiry.note_saved': 'Note saved on the enquiry',
+    'staff.sign_in.success': 'Signed in',
+    'staff.sign_in.link_sent': 'Sign-in link sent',
+    'staff.sign_out': 'Signed out',
+    'enquiry.status_changed': 'Enquiry updated',
+    'enquiry.note_saved': 'Note added to an enquiry',
     'project.status_changed': 'Project moved',
-    'line_item.saved': 'Fee line updated',
-    'deliverable.completed': 'Item ticked off',
-    'deliverable.reopened': 'Item reopened',
-    'asset_request.status_changed': 'Something we asked for was updated',
-    'invoice.created': 'Invoice raised',
+    'line_item.saved': 'Fee updated',
+    'deliverable.completed': 'Task done',
+    'deliverable.reopened': 'Task reopened',
+    'asset_request.status_changed': 'Client item updated',
+    'asset.uploaded': 'Client sent a file',
+    'invoice.created': 'Invoice created',
     'invoice.sent': 'Invoice sent',
     'invoice.voided': 'Invoice voided',
     'payment.recorded': 'Payment recorded',
     'payment.reversed': 'Payment reversed',
     'project_update.drafted': 'Update drafted',
     'project_update.sent': 'Update sent to the client',
-    'project_update.send_failed': 'Update published, but the email did NOT go',
+    'project_update.send_failed': 'Update published, but the email failed',
+    'document.created': 'Document started',
+    'document.version_saved': 'Document edited',
+    'document.sent': 'Sent for signature',
+    'document.signed': 'Document signed',
+    'document.declined': 'Client declined a document',
+    'document.changes_requested': 'Client asked for changes',
+    'document.hash_mismatch': 'Signature refused — the document had changed',
+    'ticket.raised': 'New request from a client',
+    'ticket.replied': 'Reply sent',
+    'post.created': 'Post started',
+    'post.saved': 'Post edited',
+    'post.published': 'Post published',
+    'post.scheduled': 'Post scheduled',
+    'post.unpublished': 'Post taken down',
+    'post.archived': 'Post archived',
+    'media.uploaded': 'Image uploaded',
     'settings.billing_saved': 'Billing details changed',
   };
   const base = said[action] ?? action.replace(/[._]/g, ' ');
@@ -68,7 +85,13 @@ function auditTone(action: string): ActivityTone {
   if (action.includes('failed') || action.includes('locked') || action.includes('rejected')) {
     return 'bad';
   }
-  if (action.includes('voided') || action.includes('reversed')) return 'bad';
+  if (action.includes('voided') || action.includes('reversed') || action.includes('declined')) {
+    return 'bad';
+  }
+  if (action.includes('hash_mismatch')) return 'bad';
+  if (action.endsWith('.signed') || action.endsWith('.published') || action.endsWith('.uploaded')) {
+    return 'good';
+  }
   if (action.includes('send_failed')) return 'bad';
   if (
     action.includes('activated') ||
@@ -142,16 +165,18 @@ export async function activityFor(entityIds: string[], limit = 40): Promise<Acti
       id: `audit-${audit.id}`,
       at: audit.createdAt,
       text: describeAudit(audit.action, audit.summary),
-      meta: audit.actorType === 'staff' ? 'by us' : audit.actorType === 'client_contact' ? 'by the client' : 'automatic',
+      meta: audit.actorType === 'staff' ? 'You' : audit.actorType === 'client_contact' ? 'Client' : 'System',
       tone: auditTone(audit.action),
     })),
     ...emails.map((email) => ({
       id: `email-${email.id}`,
       at: email.createdAt,
+      // "sent" means the email service accepted it, which is all we can know —
+      // not that it reached an inbox.
       text:
         email.status === 'sent'
-          ? `Email delivered to ${email.toAddress}`
-          : `Email to ${email.toAddress} did not send`,
+          ? `Email sent to ${email.toAddress}`
+          : `Email to ${email.toAddress} failed`,
       meta: email.subject,
       note: email.status === 'sent' ? null : email.error,
       tone: (email.status === 'sent' ? 'good' : 'bad') as ActivityTone,
@@ -159,4 +184,25 @@ export async function activityFor(entityIds: string[], limit = 40): Promise<Acti
   ];
 
   return items.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit);
+}
+
+/** Actions too routine to fill a dashboard with. */
+const QUIET = ['staff.sign_in.success', 'staff.sign_in.link_sent', 'staff.sign_out', 'client.sign_out'];
+
+/** The latest things that happened anywhere, for the overview. */
+export async function recentActivity(limit = 8): Promise<ActivityItem[]> {
+  const audits = await db.auditEvent.findMany({
+    where: { action: { notIn: QUIET } },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    select: { id: true, action: true, summary: true, actorType: true, createdAt: true },
+  });
+
+  return audits.map((audit) => ({
+    id: `audit-${audit.id}`,
+    at: audit.createdAt,
+    text: describeAudit(audit.action, audit.summary),
+    meta: audit.actorType === 'staff' ? 'You' : audit.actorType === 'client_contact' ? 'Client' : 'System',
+    tone: auditTone(audit.action),
+  }));
 }

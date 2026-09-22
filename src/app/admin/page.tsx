@@ -3,6 +3,11 @@ import { db } from '@/lib/db';
 import { requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
+import { recentActivity } from '@/lib/console/activity';
+import { ActivityFeed } from '@/components/console/ActivityFeed';
+import { Avatar } from '@/components/console/Avatar';
+import { StatCard } from '@/components/console/StatCard';
+import { Briefcase, MailWarning, RefreshCw, Sparkles, UserPlus, Wallet } from 'lucide-react';
 import styles from './Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -22,11 +27,20 @@ const TONE_CLASS: Record<string, string> = {
 /**
  * The desk.
  *
- * One table of things somebody is waiting on, ordered by how long they have
- * been waiting, and a strip of numbers above it. Not a dashboard of totals: a
- * screen that opens on "48 completed tasks" is a screen that tells you nothing
- * you can act on, and it gets ignored by the second week.
+ * A row of figures that each open the list behind them, the things somebody
+ * is waiting on — oldest first — and what happened lately. Every number on
+ * this screen is something you can act on; none of it is a vanity total.
  */
+
+/** Morning, afternoon or evening in Tanzania, not wherever the server is. */
+function greeting(now: Date): string {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Africa/Dar_es_Salaam' }).format(now),
+  );
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 export default async function AdminHome() {
   const staff = await requireStaff();
   const now = new Date();
@@ -41,6 +55,9 @@ export default async function AdminHome() {
     failedEmails,
     waitingProjects,
     liveProjects,
+    activity,
+    enquiryCount,
+    pipelineCount,
   ] = await Promise.all([
     db.enquiry.findMany({
       where: { status: 'new' },
@@ -96,6 +113,16 @@ export default async function AdminHome() {
         status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] },
       },
     }),
+    recentActivity(8),
+    // Counted separately: the lists above are capped for the table, and a
+    // capped length shown as a total would quietly read "10" when it is 14.
+    db.enquiry.count({ where: { status: 'new' } }),
+    db.project.count({
+      where: {
+        deletedAt: null,
+        status: { in: ['lead', 'proposal_draft', 'client_review', 'proposal_sent'] },
+      },
+    }),
   ]);
 
   const owedByCurrency = new Map<string, number>();
@@ -121,7 +148,7 @@ export default async function AdminHome() {
       who: enquiry.name,
       since: enquiry.createdAt,
       href: `/enquiries?open=${enquiry.id}`,
-      badge: 'Unread enquiry',
+      badge: 'New enquiry',
       tone: forms.badgeWarn,
     })),
     ...waitingProjects.map((project) => ({
@@ -149,18 +176,21 @@ export default async function AdminHome() {
       })),
   ].sort((a, b) => a.since.getTime() - b.since.getTime());
 
+  const owed = [...owedByCurrency].filter(([, amount]) => amount > 0);
+  const [firstCurrency, firstAmount] = owed[0] ?? ['USD', 0];
+  const firstName = staff.name.split(' ')[0];
+
   return (
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <h1 className={styles.heading}>
-            Good to see you,{' '}
-            <span className={styles.headingAccent}>{staff.name.split(' ')[0]}</span>
+            {greeting(now)}, {firstName}
           </h1>
           <p className={styles.lead}>
             {waiting.length === 0
-              ? 'Nothing is waiting on you. Everything that has come in has been picked up.'
-              : 'Oldest first, because the thing that has been waiting longest is usually the one that costs something.'}
+              ? 'All clear — nothing needs you right now.'
+              : `${waiting.length} ${waiting.length === 1 ? 'thing needs' : 'things need'} your attention.`}
           </p>
         </div>
         <Link href="/clients/new" className={forms.button}>
@@ -169,101 +199,133 @@ export default async function AdminHome() {
       </div>
 
       <div className={styles.stats}>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>In flight</p>
-          <p className={styles.statValue}>{liveProjects}</p>
-          <p className={styles.statHint}>Projects being worked on</p>
-        </div>
-        {[...owedByCurrency].map(([currency, owed]) => (
-          <div key={currency} className={`${styles.stat} ${owed > 0 ? styles.statAlert : ''}`}>
-            <p className={styles.statLabel}>Owed in {currency}</p>
-            <p className={styles.statValue}>{formatMoney(owed, currency)}</p>
-            <p className={styles.statHint}>Invoiced and not settled</p>
-          </div>
-        ))}
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Renewals near</p>
-          <p className={styles.statValue}>{dueRenewals}</p>
-          <p className={styles.statHint}>Due within 45 days</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Never invited</p>
-          <p className={styles.statValue}>{uninvited}</p>
-          <p className={styles.statHint}>Contacts with no portal account</p>
-        </div>
-        {failedEmails > 0 && (
-          <div className={`${styles.stat} ${styles.statAlert}`}>
-            <p className={styles.statLabel}>Emails that failed</p>
-            <p className={styles.statValue}>{failedEmails}</p>
-            <p className={styles.statHint}>
-              <Link href="/activity?show=failures">The record survived — see which</Link>
-            </p>
-          </div>
+        <StatCard
+          label="Active projects"
+          value={liveProjects}
+          hint={`${pipelineCount} more in the pipeline`}
+          icon={Briefcase}
+          tone="blue"
+          href="/projects"
+        />
+        <StatCard
+          label="Unpaid"
+          value={formatMoney(firstAmount, firstCurrency)}
+          hint={
+            owed.length > 1
+              ? `Plus ${owed
+                  .slice(1)
+                  .map(([currency, amount]) => formatMoney(amount, currency))
+                  .join(' and ')}`
+              : `${unpaidInvoices.length} ${unpaidInvoices.length === 1 ? 'invoice' : 'invoices'} open`
+          }
+          icon={Wallet}
+          tone="amber"
+          href="/invoices"
+        />
+        <StatCard
+          label="New enquiries"
+          value={enquiryCount}
+          hint={enquiryCount === 0 ? 'Inbox is clear' : 'Waiting for a reply'}
+          icon={Sparkles}
+          tone="violet"
+          href="/enquiries"
+        />
+        <StatCard
+          label="Renewals due"
+          value={dueRenewals}
+          hint="In the next 45 days"
+          icon={RefreshCw}
+          tone="teal"
+          href="/renewals"
+        />
+        {failedEmails > 0 ? (
+          <StatCard
+            label="Emails not sent"
+            value={failedEmails}
+            hint="See which ones"
+            icon={MailWarning}
+            tone="red"
+            href="/activity?show=failures"
+          />
+        ) : (
+          <StatCard
+            label="Not invited yet"
+            value={uninvited}
+            hint="Clients without portal access"
+            icon={UserPlus}
+            tone="orange"
+            href="/clients"
+          />
         )}
       </div>
 
-      <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>Waiting on us</h2>
-            <span className={table.count}>
-              {waiting.length} {waiting.length === 1 ? 'thing' : 'things'}
-            </span>
+      <div className={styles.columns}>
+        <div className={table.frame}>
+          <div className={table.toolbar}>
+            <div className={table.toolbarText}>
+              <h2 className={table.title}>Needs your attention</h2>
+              <span className={table.count}>{waiting.length}</span>
+            </div>
           </div>
-        </div>
-        <div className={table.scroll}>
-          <table className={table.table}>
-            <thead>
-              <tr>
-                <th className={table.th} scope="col">What</th>
-                <th className={table.th} scope="col">Who</th>
-                <th className={table.th} scope="col">Waiting since</th>
-                <th className={table.th} scope="col">State</th>
-                <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {waiting.length === 0 ? (
+          <div className={table.scroll}>
+            <table className={`${table.table} ${table.compact}`}>
+              <thead>
                 <tr>
-                  <td className={table.emptyCell} colSpan={5}>
-                    <p className={table.emptyTitle}>A clear desk.</p>
-                    <p className={table.emptyHint}>
-                      {liveProjects} project{liveProjects === 1 ? ' is' : 's are'} in flight and
-                      nothing needs a decision today.
-                    </p>
-                  </td>
+                  <th className={table.th} scope="col">What</th>
+                  <th className={table.th} scope="col">Client</th>
+                  <th className={table.th} scope="col">Since</th>
+                  <th className={table.th} scope="col">Status</th>
                 </tr>
-              ) : (
-                waiting.map((item) => (
-                  <tr key={item.id} className={table.tr}>
-                    <td className={`${table.td} ${table.primary}`}>
-                      <Link href={item.href} className={table.link}>
-                        {item.what}
-                      </Link>
-                    </td>
-                    <td className={table.td}>{item.who}</td>
-                    <td className={`${table.td} ${table.nowrap}`}>
-                      {formatShortDate(item.since)}
-                      <span className={table.sub}>{formatRelative(item.since, now)}</span>
-                    </td>
-                    <td className={table.td}>
-                      <span className={`${forms.badge} ${item.tone}`}>{item.badge}</span>
-                    </td>
-                    <td className={`${table.td} ${table.actions}`}>
-                      <span className={table.actionGroup}>
-                        <Link href={item.href} className={table.action}>
-                          Open
-                        </Link>
-                      </span>
+              </thead>
+              <tbody>
+                {waiting.length === 0 ? (
+                  <tr>
+                    <td className={table.emptyCell} colSpan={4}>
+                      <p className={table.emptyTitle}>You are all caught up</p>
+                      <p className={table.emptyHint}>
+                        {liveProjects} {liveProjects === 1 ? 'project is' : 'projects are'} moving
+                        and nothing is waiting on you.
+                      </p>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  waiting.map((item) => (
+                    <tr key={item.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        <Link href={item.href} className={table.link}>
+                          {item.what}
+                        </Link>
+                      </td>
+                      <td className={table.td}>
+                        <span className={table.who}>
+                          <Avatar name={item.who} size="sm" />
+                          {item.who}
+                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatRelative(item.since, now)}
+                        <span className={table.sub}>{formatShortDate(item.since)}</span>
+                      </td>
+                      <td className={table.td}>
+                        <span className={`${forms.badge} ${item.tone}`}>{item.badge}</span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Recent activity</h2>
+            <Link href="/activity" className={table.action}>
+              See all
+            </Link>
+          </div>
+          <ActivityFeed items={activity} now={now} />
+        </section>
       </div>
     </main>
   );

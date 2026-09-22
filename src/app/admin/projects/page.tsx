@@ -4,6 +4,10 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { transitionsFor } from '@/lib/console/transitions';
+import { Avatar } from '@/components/console/Avatar';
+import { Board, type BoardCard } from './Board';
+import { KanbanSquare, List } from 'lucide-react';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -61,62 +65,53 @@ function filterToWhere(key: string): Prisma.ProjectWhereInput {
   }
 }
 
+const SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  reference: true,
+  status: true,
+  serviceLine: true,
+  currency: true,
+  targetDate: true,
+  client: { select: { name: true, slug: true } },
+  owner: { select: { name: true } },
+  lineItems: {
+    where: { status: { in: ['planned', 'active'] } },
+    select: { amountMinor: true, quantity: true, currency: true },
+  },
+  assetRequests: { where: { status: 'requested' }, select: { id: true } },
+  phases: { select: { deliverables: { select: { isComplete: true } } } },
+} satisfies Prisma.ProjectSelect;
+
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>;
+  searchParams: Promise<{ show?: string; view?: string }>;
 }) {
   await requireStaff();
-  const { show } = await searchParams;
+  const { show, view } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
+  const asList = view === 'list';
+
+  if (!asList) return <BoardView />;
 
   const projects = await db.project.findMany({
     where: { deletedAt: null, ...filterToWhere(active) },
     orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
     take: 200,
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      reference: true,
-      status: true,
-      serviceLine: true,
-      currency: true,
-      targetDate: true,
-      client: { select: { name: true, slug: true } },
-      owner: { select: { name: true } },
-      lineItems: {
-        where: { status: { in: ['planned', 'active'] } },
-        select: { amountMinor: true, quantity: true, currency: true },
-      },
-      assetRequests: { where: { status: 'requested' }, select: { id: true } },
-      phases: { select: { deliverables: { select: { isComplete: true } } } },
-    },
+    select: SELECT,
   });
 
   return (
     <main className={styles.page}>
-      <div className={styles.pageHead}>
-        <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            The <span className={styles.headingAccent}>work</span>
-          </h1>
-          <p className={styles.lead}>
-            Committed counts the lines we still expect to bill — planned and active. Deferred,
-            paused and waived are left out, because a number that includes them is not one anyone
-            can act on.
-          </p>
-        </div>
-        <Link href="/clients/new" className={forms.button}>
-          Add a client
-        </Link>
-      </div>
+      <ProjectsHeader view="list" />
 
       <div className={styles.filters}>
         {FILTERS.map((filter) => (
           <Link
             key={filter.key}
-            href={filter.key === 'live' ? '/projects' : `/projects?show=${filter.key}`}
+            href={filter.key === 'live' ? '/projects?view=list' : `/projects?view=list&show=${filter.key}`}
             className={styles.filter}
             aria-current={filter.key === active}
           >
@@ -146,7 +141,7 @@ export default async function ProjectsPage({
                 <th className={table.th} scope="col">Stage</th>
                 <th className={table.th} scope="col">Progress</th>
                 <th className={table.th} scope="col">Target</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">Value</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className={table.muted}>Actions</span>
                 </th>
@@ -189,9 +184,12 @@ export default async function ProjectsPage({
                         </span>
                       </td>
                       <td className={`${table.td} ${table.name}`}>
-                        <Link href={`/clients/${project.client.slug}`} className={table.link}>
-                          {project.client.name}
-                        </Link>
+                        <span className={table.who}>
+                          <Avatar name={project.client.name} size="sm" />
+                          <Link href={`/clients/${project.client.slug}`} className={table.link}>
+                            {project.client.name}
+                          </Link>
+                        </span>
                       </td>
                       <td className={table.td}>
                         <span
@@ -234,6 +232,95 @@ export default async function ProjectsPage({
           </table>
         </div>
       </div>
+    </main>
+  );
+}
+
+/** Title, one line of help, and the switch between the board and the list. */
+function ProjectsHeader({ view }: { view: 'board' | 'list' }) {
+  return (
+    <div className={styles.pageHead}>
+      <div className={styles.headText}>
+        <h1 className={styles.heading}>Projects</h1>
+        <p className={styles.lead}>
+          {view === 'board'
+            ? 'Drag a project to move it to its next stage.'
+            : 'Every project, with its value and how far along it is.'}
+        </p>
+      </div>
+      <div className={styles.headActions}>
+        <nav className={styles.viewSwitch} aria-label="View">
+          <Link href="/projects" className={styles.viewOption} aria-current={view === 'board' ? 'page' : undefined}>
+            <KanbanSquare size={16} strokeWidth={2} aria-hidden="true" />
+            Board
+          </Link>
+          <Link href="/projects?view=list" className={styles.viewOption} aria-current={view === 'list' ? 'page' : undefined}>
+            <List size={16} strokeWidth={2} aria-hidden="true" />
+            List
+          </Link>
+        </nav>
+        <Link href="/clients/new" className={forms.button}>
+          Add a client
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Every project on the board except cancelled ones, and finished ones only
+ * from the last three months — a Done lane that keeps every project ever
+ * closed stops being something anyone looks at.
+ */
+async function BoardView() {
+  const now = new Date();
+  const recent = new Date(now);
+  recent.setDate(recent.getDate() - 90);
+
+  const projects = await db.project.findMany({
+    where: {
+      deletedAt: null,
+      status: { not: 'cancelled' },
+      OR: [{ status: { not: 'closed' } }, { closedAt: { gte: recent } }],
+    },
+    orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
+    take: 300,
+    select: SELECT,
+  });
+
+  const cards: BoardCard[] = await Promise.all(
+    projects.map(async (project) => {
+      const deliverables = project.phases.flatMap((phase) => phase.deliverables);
+      const committed = project.lineItems
+        .filter((line) => line.currency === project.currency)
+        .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
+      // Only a held project needs the database for this; every other state's
+      // next steps are a fixed table.
+      const allowed = (await transitionsFor(project)).map((transition) => transition.to);
+      const finished = ['launched', 'handover', 'closed'].includes(project.status);
+      return {
+        id: project.id,
+        slug: project.slug,
+        name: project.name,
+        reference: project.reference ?? '',
+        status: project.status,
+        client: project.client.name,
+        owner: project.owner?.name ?? null,
+        target: project.targetDate ? formatShortDate(project.targetDate) : null,
+        overdue: !finished && project.targetDate !== null && project.targetDate < now,
+        done: deliverables.filter((deliverable) => deliverable.isComplete).length,
+        total: deliverables.length,
+        waitingOn: project.assetRequests.length,
+        committed: committed > 0 ? formatMoney(committed, project.currency) : null,
+        allowed,
+      };
+    }),
+  );
+
+  return (
+    <main className={`${styles.page} ${styles.pageWide}`}>
+      <ProjectsHeader view="board" />
+      <Board cards={cards} />
     </main>
   );
 }

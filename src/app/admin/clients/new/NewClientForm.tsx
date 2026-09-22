@@ -4,6 +4,7 @@ import React, { useActionState, useId, useState } from 'react';
 import { createClient, type NewClientState } from './actions';
 import { DateField } from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';
+import { Select as ConsoleSelect, optionsFromChildren } from '@/components/console/Select';
 
 const INITIAL: NewClientState = { status: 'idle' };
 
@@ -52,19 +53,34 @@ const STATUSES: { value: string; label: string }[] = [
 
 const CURRENCIES = ['USD', 'TZS', 'EUR', 'GBP', 'KES'];
 
-/** A native select, painted. The platform menu is what a phone should open. */
+/** The shared dropdown, taking <option> children as this form was written. */
 function Select({
   id,
   name,
   children,
-  ...rest
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { id: string; name: string }) {
+  value,
+  defaultValue,
+  onChange,
+  'aria-invalid': ariaInvalid,
+}: {
+  id: string;
+  name: string;
+  children: React.ReactNode;
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+  'aria-invalid'?: boolean;
+}) {
   return (
-    <span className={forms.selectWrap}>
-      <select id={id} name={name} className={`${forms.control} ${forms.select}`} {...rest}>
-        {children}
-      </select>
-    </span>
+    <ConsoleSelect
+      id={id}
+      name={name}
+      options={optionsFromChildren(children)}
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={onChange}
+      invalid={ariaInvalid}
+    />
   );
 }
 
@@ -350,7 +366,7 @@ export function NewClientForm({
                     id={field('serviceLine')}
                     name="serviceLine"
                     value={serviceLine}
-                    onChange={(event) => setServiceLine(event.target.value)}
+                    onChange={setServiceLine}
                     aria-invalid={invalid('serviceLine')}
                   >
                     {SERVICE_LINES.map((line) => (

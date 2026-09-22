@@ -5,6 +5,7 @@ import { replyToTicket, triageTicket, type TicketState } from './actions';
 import { STAFF_TICKET_STATUS, TICKET_PRIORITY_LABEL } from '@/lib/console/tickets';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: TicketState = { status: 'idle' };
 
@@ -96,42 +97,26 @@ export function TriageBox({
           <label className={forms.label} htmlFor="ticket-status">
             Where it stands
           </label>
-          <span className={forms.selectWrap}>
-            <select
+          <Select
               id="ticket-status"
               name="ticketStatus"
               defaultValue={status}
-              className={`${forms.control} ${forms.select}`}
+              options={Object.entries(STAFF_TICKET_STATUS).map(([value, label]) => ({ value, label }))}
               disabled={pending}
-            >
-              {Object.entries(STAFF_TICKET_STATUS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </span>
+            />
         </div>
 
         <div className={forms.field}>
           <label className={forms.label} htmlFor="ticket-priority">
             How much it matters
           </label>
-          <span className={forms.selectWrap}>
-            <select
+          <Select
               id="ticket-priority"
               name="priority"
               defaultValue={priority}
-              className={`${forms.control} ${forms.select}`}
+              options={Object.entries(TICKET_PRIORITY_LABEL).map(([value, label]) => ({ value, label }))}
               disabled={pending}
-            >
-              {Object.entries(TICKET_PRIORITY_LABEL).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </span>
+            />
           <p className={forms.hint}>
             The client never sees this. It is for comparing one request against another.
           </p>

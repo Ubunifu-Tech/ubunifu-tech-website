@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useId, useState } from 'react';
+import React, { useId } from 'react';
+import { Select, optionsFromChildren } from './Select';
+import { DatePicker } from './DatePicker';
 import forms from '@/styles/forms.module.css';
 
 /**
@@ -116,24 +118,33 @@ export function SelectField({
   invalid,
   disabled,
   wide,
+  defaultValue,
+  value,
+  onChange,
+  placeholder,
   children,
-  ...rest
-}: Common & Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'name' | 'className' | 'id'>) {
+}: Common & {
+  defaultValue?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  /** <option> elements, exactly as a native select would take them. */
+  children: React.ReactNode;
+}) {
   const id = useId();
   return (
     <Wrapper id={id} label={label} hint={hint} optional={optional} wide={wide}>
-      <span className={forms.selectWrap}>
-        <select
-          id={id}
-          name={name}
-          className={`${forms.control} ${forms.select}`}
-          aria-invalid={invalid || undefined}
-          disabled={disabled}
-          {...rest}
-        >
-          {children}
-        </select>
-      </span>
+      <Select
+        id={id}
+        name={name}
+        options={optionsFromChildren(children)}
+        defaultValue={defaultValue}
+        value={value}
+        onValueChange={onChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        invalid={invalid}
+      />
     </Wrapper>
   );
 }
@@ -177,33 +188,7 @@ export function NumberField({
   );
 }
 
-/** 2026-09-22 into "22 September 2026", without a timezone shifting the day. */
-function readable(value: string): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const parsed = new Date(`${value}T12:00:00.000Z`);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(parsed);
-}
-
-/**
- * A date field that says which date it means.
- *
- * The native control shows the browser's locale format, and on a machine set to
- * US English that is mm/dd/yyyy — so 03/04 is either March or April depending
- * on who is reading it. For a Tanzanian business writing target dates into
- * contracts that is not a cosmetic problem.
- *
- * The input stays native, because the platform picker is the right one on a
- * phone and the value is always YYYY-MM-DD on the wire whatever is displayed.
- * What is added is an unambiguous echo of the chosen date underneath, which
- * removes the ambiguity without replacing a control people already know.
- */
+/** A date, picked from a calendar and always shown as "Tue, 22 Sep 2026". */
 export function DateField({
   name,
   label,
@@ -212,7 +197,6 @@ export function DateField({
   invalid,
   disabled,
   wide,
-  required,
   defaultValue,
   min,
   max,
@@ -221,37 +205,22 @@ export function DateField({
   defaultValue?: string;
   min?: string;
   max?: string;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onChange?: (value: string) => void;
 }) {
   const id = useId();
-  const [value, setValue] = useState(defaultValue ?? '');
-  const spelled = readable(value);
-
   return (
     <Wrapper id={id} label={label} hint={hint} optional={optional} wide={wide}>
-      <input
+      <DatePicker
         id={id}
         name={name}
-        type="date"
-        // Respected by Firefox and Safari; Chromium follows the browser locale
-        // regardless, which is why the echo below exists.
-        lang="en-GB"
-        className={`${forms.control} ${forms.date}`}
-        aria-invalid={invalid || undefined}
-        aria-describedby={spelled ? `${id}-spelled` : undefined}
-        disabled={disabled}
-        required={required}
         defaultValue={defaultValue}
         min={min}
         max={max}
-        onChange={(event) => {
-          setValue(event.target.value);
-          onChange?.(event);
-        }}
+        onChange={onChange}
+        disabled={disabled}
+        invalid={invalid}
+        clearable={optional}
       />
-      <p className={spelled ? forms.dateEcho : forms.hint} id={`${id}-spelled`}>
-        {spelled ?? 'No date set'}
-      </p>
     </Wrapper>
   );
 }

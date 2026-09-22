@@ -1,0 +1,54 @@
+/* The console's colours, as classes that set three variables.
+ *
+ * A component reads --tone-bg, --tone-fg and --tone-dot and never names a
+ * colour itself, so "this is money" or "this is overdue" is decided once, where
+ * the thing is rendered, and every piece of it — tile, pill, dot, avatar —
+ * agrees. The pairs are defined in globals.css. */
+
+.green {
+  --tone-bg: var(--tone-green-bg);
+  --tone-fg: var(--tone-green-fg);
+  --tone-dot: var(--tone-green-dot);
+}
+
+.amber {
+  --tone-bg: var(--tone-amber-bg);
+  --tone-fg: var(--tone-amber-fg);
+  --tone-dot: var(--tone-amber-dot);
+}
+
+.red {
+  --tone-bg: var(--tone-red-bg);
+  --tone-fg: var(--tone-red-fg);
+  --tone-dot: var(--tone-red-dot);
+}
+
+.blue {
+  --tone-bg: var(--tone-blue-bg);
+  --tone-fg: var(--tone-blue-fg);
+  --tone-dot: var(--tone-blue-dot);
+}
+
+.teal {
+  --tone-bg: var(--tone-teal-bg);
+  --tone-fg: var(--tone-teal-fg);
+  --tone-dot: var(--tone-teal-dot);
+}
+
+.violet {
+  --tone-bg: var(--tone-violet-bg);
+  --tone-fg: var(--tone-violet-fg);
+  --tone-dot: var(--tone-violet-dot);
+}
+
+.orange {
+  --tone-bg: var(--tone-orange-bg);
+  --tone-fg: var(--tone-orange-fg);
+  --tone-dot: var(--tone-orange-dot);
+}
+
+.neutral {
+  --tone-bg: var(--tone-neutral-bg);
+  --tone-fg: var(--tone-neutral-fg);
+  --tone-dot: var(--tone-neutral-dot);
+}

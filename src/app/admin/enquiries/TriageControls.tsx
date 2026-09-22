@@ -4,6 +4,7 @@ import React, { useActionState } from 'react';
 import { setEnquiryStatus, saveEnquiryNote, type TriageState } from './actions';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: TriageState = { status: 'idle' };
 
@@ -64,21 +65,13 @@ export function TriageControls({
         <label className={forms.label} htmlFor={`status-${id}`}>
           Where it stands
         </label>
-        <span className={forms.selectWrap}>
-          <select
+        <Select
             id={`status-${id}`}
             name="status"
             defaultValue={status}
-            className={`${forms.control} ${forms.select}`}
+            options={MOVES}
             disabled={movePending}
-          >
-            {MOVES.map((move) => (
-              <option key={move.value} value={move.value}>
-                {move.label}
-              </option>
-            ))}
-          </select>
-        </span>
+          />
         <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={movePending}>
           {movePending ? 'Saving…' : 'Update'}
         </button>

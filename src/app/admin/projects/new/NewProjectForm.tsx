@@ -80,7 +80,7 @@ export function NewProjectForm({
               name="serviceLine"
               label="Service line"
               value={serviceLine}
-              onChange={(event) => setServiceLine(event.target.value)}
+              onChange={setServiceLine}
               invalid={invalid('serviceLine')}
               disabled={pending}
             >

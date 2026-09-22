@@ -2,11 +2,13 @@
  *
  * One file, imported by both surfaces, because a client filling in their
  * details and a staff member filling in theirs should be looking at the same
- * controls. Native elements throughout — a <select> that opens the platform's
- * own picker beats a div that imitates one badly, especially on a phone — but
- * the parts browsers let us paint are painted in the brand: the chevron, the
- * calendar icon and the checkbox all take their colour from the tokens and
- * turn violet on focus.
+ * controls. Text fields and checkboxes are native elements, repainted.
+ * Dropdowns and dates are not: the list a native <select> opens and the
+ * browser's calendar belong to the operating system and cannot be styled, so
+ * those are components (src/components/console/Select.tsx, DatePicker.tsx)
+ * that keep the keyboard behaviour and draw the rest themselves.
+ *
+ * Interaction colour is the warm --accent, not violet.
  */
 
 /* ── Containment ───────────────────────────────── */
@@ -17,19 +19,17 @@
 .card {
   padding: var(--space-6);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--app-radius-card);
   background: var(--surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--app-shadow-card);
 }
 
 .cardHeader {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
 }
 
@@ -37,16 +37,16 @@
   margin: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: var(--font-size-title);
+  font-size: var(--font-size-lead);
   font-weight: var(--font-weight-medium);
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .cardMeta {
   margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.6;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
 }
 
 /* ── Sections within a form ────────────────────── */
@@ -83,7 +83,7 @@
 }
 
 .huePrimary {
-  border-bottom-color: var(--primary-border);
+  border-bottom-color: var(--accent-border);
 }
 
 .hueAccent {
@@ -102,7 +102,7 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 0.5rem;
   min-width: 0;
 }
 
@@ -111,7 +111,7 @@
 }
 
 .label {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: var(--font-size-small);
   line-height: 1.4;
 }
@@ -141,13 +141,14 @@
 .control {
   width: 100%;
   min-width: 0;
-  padding: var(--space-3) var(--space-4);
+  min-height: 2.75rem;
+  padding: 0.625rem 0.875rem;
   border: 1px solid var(--border-hover);
-  border-radius: var(--control-radius);
+  border-radius: var(--app-radius-control);
   background: var(--surface);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-regular);
   line-height: 1.5;
   transition:
@@ -166,9 +167,9 @@
 
 .control:focus-visible,
 .control:focus {
-  border-color: var(--primary);
+  border-color: var(--accent);
   outline: none;
-  box-shadow: 0 0 0 3px var(--primary-dim);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .control[aria-invalid='true'] {
@@ -188,76 +189,6 @@
 .textarea {
   min-height: 7rem;
   resize: vertical;
-}
-
-/* ── Select ────────────────────────────────────── */
-
-/* The native menu is kept; only the closed state is repainted. The chevron is
-   a mask rather than a background image so its colour is a token and can
-   answer to focus. */
-.selectWrap {
-  position: relative;
-  display: flex;
-  min-width: 0;
-}
-
-.select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: calc(var(--space-4) * 2 + 0.75rem);
-  cursor: pointer;
-  /* A long option must not spill under the chevron. Browsers will not put an
-     ellipsis on a select's own text, so the overflow is clipped and the full
-     label stays available in the open menu. */
-  text-overflow: ellipsis;
-}
-
-.selectWrap::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: var(--space-4);
-  width: 0.75rem;
-  height: 0.5rem;
-  transform: translateY(-50%);
-  background-color: var(--text-tertiary);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  pointer-events: none;
-  transition: background-color var(--transition-fast);
-}
-
-.selectWrap:focus-within::after {
-  background-color: var(--primary);
-}
-
-/* ── Date ──────────────────────────────────────── */
-
-/* Chromium lets the picker button be restyled; Safari does not, and falls back
-   to its own control. Both are usable, which is the bar for a native input. */
-.date::-webkit-calendar-picker-indicator {
-  width: 1rem;
-  height: 1rem;
-  padding: 0;
-  background-color: var(--text-tertiary);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='3' width='12' height='11' rx='2' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M2 6.5h12M5.5 1.5v3M10.5 1.5v3' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.date:hover::-webkit-calendar-picker-indicator,
-.date:focus::-webkit-calendar-picker-indicator {
-  background-color: var(--primary);
-}
-
-.date::-webkit-datetime-edit {
-  padding: 0;
 }
 
 /* ── Numbers and affixes ───────────────────────── */
@@ -297,17 +228,8 @@
   pointer-events: none;
 }
 
-/* ── Dates ─────────────────────────────────────── */
-
-/* The date, spelled out. The native control shows the browser's locale format,
-   which on a US-English machine is mm/dd/yyyy — and a target date on a contract
-   cannot be ambiguous about whether it means March or April. */
-.dateEcho {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
-}
+/* Dropdowns and dates are components now — see
+   src/components/console/Controls.module.css. */
 
 /* ── Checkbox ──────────────────────────────────── */
 
@@ -317,13 +239,12 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: 0.875rem var(--space-4);
   border: 1px solid var(--border);
-  border-radius: var(--control-radius);
-  background: var(--surface-2);
+  border-radius: var(--app-radius-control);
+  background: var(--surface);
   color: var(--text-primary);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-small);
   line-height: 1.5;
   cursor: pointer;
   transition:
@@ -336,13 +257,13 @@
 }
 
 .checkRow:has(.check:checked) {
-  border-color: var(--primary-border);
-  background: var(--primary-dim);
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
 }
 
 .checkRow:has(.check:focus-visible) {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-dim);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .check {
@@ -379,8 +300,8 @@
 }
 
 .check:checked {
-  border-color: var(--primary);
-  background: var(--primary);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .check:checked::after {
@@ -390,7 +311,7 @@
 /* The row carries the focus ring, but keyboard users on browsers without
    :has() still need to see where they are. */
 .check:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -408,47 +329,52 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
   border: 1px solid transparent;
-  border-radius: var(--control-radius);
+  border-radius: var(--app-radius-control);
   background: var(--cta);
+  box-shadow: 0 1px 2px rgba(166, 58, 17, 0.22);
   color: var(--text-inverse);
   font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.4;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast);
 }
 
 .button:hover:not(:disabled) {
-  background: var(--brand-hover);
+  background: color-mix(in srgb, var(--cta) 86%, black);
 }
 
 .button:focus-visible {
-  outline: 3px solid var(--primary-dim);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-dim), 0 0 0 1px var(--accent);
 }
 
 .button:disabled {
-  background: var(--border-active);
-  color: var(--text-inverse);
   cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .quiet {
   background: var(--surface);
-  border-color: var(--border-active);
+  border-color: var(--border-hover);
+  box-shadow: none;
   color: var(--text-primary);
 }
 
 .quiet:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: var(--text-tertiary);
+  background: var(--tone-neutral-bg);
+  border-color: var(--border-active);
+  color: var(--text-primary);
 }
 
 .quiet:disabled {
@@ -459,13 +385,15 @@
 
 .danger {
   background: var(--surface);
-  border-color: var(--danger-border);
-  color: var(--danger);
+  border-color: color-mix(in srgb, var(--tone-red-dot) 40%, transparent);
+  box-shadow: none;
+  color: var(--tone-red-fg);
 }
 
 .danger:hover:not(:disabled) {
-  background: var(--danger-dim);
-  border-color: var(--danger);
+  background: var(--tone-red-bg);
+  border-color: var(--tone-red-dot);
+  color: var(--tone-red-fg);
 }
 
 .link {
@@ -493,8 +421,9 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   flex-wrap: wrap;
+  margin-top: var(--space-2);
   padding-top: var(--space-5);
   border-top: 1px solid var(--border);
 }
@@ -504,9 +433,9 @@
 .payoff {
   margin: 0;
   flex: 1 1 16rem;
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.6;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
 }
 
 /* ── Badges ────────────────────────────────────── */
@@ -514,39 +443,35 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--border);
+  gap: 0.375rem;
+  padding: 0.1875rem 0.625rem 0.1875rem 0.5rem;
+  border: 0;
   border-radius: var(--radius-pill);
-  background: var(--surface-2);
-  color: var(--text-secondary);
+  background: var(--tone-neutral-bg);
+  color: var(--tone-neutral-fg);
   font-size: var(--font-size-caption);
-  line-height: 1.5;
+  line-height: 1.4;
   white-space: nowrap;
 }
 
 .badgeLive {
-  border-color: var(--primary-border);
-  background: var(--primary-dim);
-  color: var(--primary-deep);
+  background: var(--tone-blue-bg);
+  color: var(--tone-blue-fg);
 }
 
 .badgeGood {
-  border-color: var(--success-border);
-  background: var(--success-dim);
-  color: var(--success);
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
 }
 
 .badgeWarn {
-  border-color: var(--warning-border);
-  background: var(--warning-dim);
-  color: var(--warning);
+  background: var(--tone-amber-bg);
+  color: var(--tone-amber-fg);
 }
 
 .badgeBad {
-  border-color: var(--danger-border);
-  background: var(--danger-dim);
-  color: var(--danger);
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
 }
 
 @media (max-width: 40rem) {
@@ -727,4 +652,44 @@
   font-size: var(--font-size-caption);
   color: var(--text-tertiary);
   word-break: break-all;
+}
+
+/* ── Status dots ───────────────────────────────────────────────────── */
+
+/* Every status pill carries a dot in its own, stronger shade, so the state is
+   legible at a glance even in a long column of them. */
+.badge::before {
+  content: '';
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--tone-neutral-dot);
+}
+
+.badgeGood::before {
+  background: var(--tone-green-dot);
+}
+
+.badgeWarn::before {
+  background: var(--tone-amber-dot);
+}
+
+.badgeBad::before {
+  background: var(--tone-red-dot);
+}
+
+.badgeLive::before {
+  background: var(--tone-blue-dot);
+}
+
+
+@media (max-width: 720px) {
+  .card {
+    padding: var(--space-5);
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

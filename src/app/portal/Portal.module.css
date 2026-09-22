@@ -205,9 +205,9 @@
 .notice {
   margin: 0 0 var(--space-5);
   padding: var(--space-4);
-  border: 1px solid var(--primary-border);
+  border: 1px solid var(--accent-border);
   border-radius: var(--radius-md);
-  background: var(--primary-dim);
+  background: var(--accent-dim);
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.6;
@@ -372,8 +372,8 @@
 }
 
 .navLink[aria-current='page'] {
-  background: var(--primary-dim);
-  color: var(--primary-deep);
+  background: var(--accent-dim);
+  color: var(--accent-deep);
 }
 
 @media (max-width: 40rem) {
@@ -450,8 +450,8 @@
 /* Ours is tinted, so a thread scanned quickly still reads as a conversation
    rather than as one long note. */
 .fromUs {
-  border-color: var(--primary-border);
-  background: var(--primary-dim);
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
 }
 
 .messageWho {

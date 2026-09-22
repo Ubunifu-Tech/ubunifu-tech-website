@@ -3,6 +3,7 @@
 import React, { useActionState } from 'react';
 import { createDocument, type DocumentState } from '../../documents/actions';
 import forms from '@/styles/forms.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: DocumentState = { status: 'idle' };
 
@@ -26,21 +27,13 @@ export function NewDocument({ projectId, projectName }: { projectId: string; pro
           <label className={forms.label} htmlFor="doc-kind">
             What kind
           </label>
-          <span className={forms.selectWrap}>
-            <select
+          <Select
               id="doc-kind"
               name="kind"
               defaultValue="proposal"
-              className={`${forms.control} ${forms.select}`}
+              options={KINDS}
               disabled={pending}
-            >
-              {KINDS.map((kind) => (
-                <option key={kind.value} value={kind.value}>
-                  {kind.label}
-                </option>
-              ))}
-            </select>
-          </span>
+            />
         </div>
 
         <div className={forms.field}>

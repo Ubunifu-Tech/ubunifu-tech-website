@@ -1,0 +1,376 @@
+/* The project board. Lanes scroll sideways as a row; each lane scrolls its own
+   cards, so a busy lane never pushes the others off the screen. */
+
+.board {
+  display: grid;
+  height: calc(100vh - 11.5rem);
+  min-height: 26rem;
+  grid-auto-columns: minmax(17rem, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-4);
+  align-items: stretch;
+  padding-bottom: var(--space-3);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.board[aria-busy='true'] {
+  cursor: progress;
+}
+
+/* ── Lane ─────────────────────────────────────────────────────────── */
+
+.lane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-card);
+  background: color-mix(in srgb, var(--tone-bg, var(--tone-neutral-bg)) 45%, var(--app-bg));
+  scroll-snap-align: start;
+  transition:
+    opacity 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.laneHead {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem var(--space-4) 0.75rem;
+}
+
+.laneDot {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--tone-dot, var(--tone-neutral-dot));
+}
+
+.laneTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+.laneCount {
+  margin-left: auto;
+  padding: 0.0625rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.laneBody {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0 0.625rem 0.75rem;
+  overflow-y: auto;
+}
+
+.laneEmpty {
+  margin: 0;
+  padding: var(--space-5) var(--space-3);
+  border: 1px dashed var(--border-hover);
+  border-radius: 12px;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  text-align: center;
+}
+
+/* While a card is in the air: reachable lanes are outlined, the rest fade. */
+.laneOpen {
+  border-color: var(--tone-dot, var(--border-active));
+  border-style: dashed;
+}
+
+.laneOver {
+  border-style: solid;
+  background: color-mix(in srgb, var(--tone-bg, var(--tone-neutral-bg)) 85%, white);
+}
+
+.laneBlocked {
+  opacity: 0.45;
+}
+
+/* ── Card ─────────────────────────────────────────────────────────── */
+
+.cardWrap {
+  border-radius: 12px;
+  outline: none;
+  cursor: grab;
+  touch-action: manipulation;
+}
+
+.cardWrap:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.cardWrap:active {
+  cursor: grabbing;
+}
+
+/* The card left behind while its copy is being dragged. */
+.cardGhost {
+  opacity: 0.35;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem var(--space-4) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(31, 26, 54, 0.04);
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.cardWrap:hover .card {
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 20px -12px rgba(31, 26, 54, 0.25);
+}
+
+.cardLifted {
+  box-shadow: 0 18px 40px -16px rgba(31, 26, 54, 0.4);
+  transform: rotate(1.5deg);
+  cursor: grabbing;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem var(--space-2);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.ref {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cardName {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.cardName:hover {
+  color: var(--accent-deep);
+}
+
+.cardName:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.client {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.client span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg);
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tone-dot, var(--accent));
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cardFoot,
+.cardFootRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.cardFoot {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.metaLate {
+  color: var(--tone-red-fg);
+}
+
+.metaWaiting {
+  color: var(--tone-amber-fg);
+}
+
+.value {
+  color: var(--text-primary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Messages and the confirm dialog ──────────────────────────────── */
+
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: 0.75rem var(--space-4);
+  border-radius: var(--app-radius-control);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.noticeOk {
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
+}
+
+.noticeError {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
+}
+
+.noticeClose {
+  display: inline-flex;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.noticeClose:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(31, 26, 54, 0.4);
+  animation: fade 0.15s ease-out;
+}
+
+.dialog {
+  width: min(28rem, 100%);
+  padding: var(--space-6);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-pop);
+}
+
+.dialogTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lead);
+  font-weight: var(--font-weight-medium);
+}
+
+.dialogText {
+  margin: 0 0 var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.dialogList {
+  margin: 0 0 var(--space-5);
+  padding-left: 1.125rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardLifted {
+    transform: none;
+  }
+
+  .scrim {
+    animation: none;
+  }
+}
+
+/* A long status ("With the client to review") shortens rather than running
+   into the reference beside it. */
+.cardTop > span:first-child {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

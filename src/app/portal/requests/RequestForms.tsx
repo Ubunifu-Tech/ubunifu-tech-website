@@ -4,6 +4,7 @@ import React, { useActionState, useState } from 'react';
 import { raiseRequest, replyToRequest, type RequestState } from './actions';
 import { TICKET_KINDS } from '@/lib/console/tickets';
 import forms from '@/styles/forms.module.css';
+import { Select } from '@/components/console/Select';
 
 const INITIAL: RequestState = { status: 'idle' };
 
@@ -32,22 +33,14 @@ export function RaiseRequestForm({
           <label className={forms.label} htmlFor="req-kind">
             What do you need?
           </label>
-          <span className={forms.selectWrap}>
-            <select
+          <Select
               id="req-kind"
               name="kind"
-              className={`${forms.control} ${forms.select}`}
               value={kind}
-              onChange={(event) => setKind(event.target.value)}
+              onValueChange={setKind}
+              options={TICKET_KINDS}
               disabled={pending}
-            >
-              {TICKET_KINDS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </span>
+            />
           {chosen && <p className={forms.hint}>{chosen.hint}</p>}
         </div>
 
@@ -56,21 +49,16 @@ export function RaiseRequestForm({
             <label className={forms.label} htmlFor="req-project">
               Which project <span className={forms.optional}>(optional)</span>
             </label>
-            <span className={forms.selectWrap}>
-              <select
+            <Select
                 id="req-project"
                 name="projectId"
-                className={`${forms.control} ${forms.select}`}
+                defaultValue=""
+                options={[
+                  { value: '', label: 'Not about a particular project' },
+                  ...projects.map((project) => ({ value: project.id, label: project.name })),
+                ]}
                 disabled={pending}
-              >
-                <option value="">Not about a particular one</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </span>
+              />
           </div>
         )}
 

@@ -5,6 +5,7 @@ import { BrandMark } from '@/components/BrandMark';
 import { getStaffActor } from '@/lib/console/auth';
 import { navCounts } from '@/lib/console/counts';
 import { ConsoleNav } from './ConsoleNav';
+import { Avatar } from '@/components/console/Avatar';
 import { SignOutButton } from './SignOutButton';
 import styles from './Admin.module.css';
 
@@ -51,8 +52,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         <div className={styles.sidebarFoot}>
           <p className={styles.who}>
-            {staff.name}
-            <span className={styles.whoRole}>{staff.email}</span>
+            <Avatar name={staff.name} size="md" />
+            <span style={{ minWidth: 0 }}>
+              {staff.name}
+              <span className={styles.whoRole}>{staff.email}</span>
+            </span>
           </p>
           <SignOutButton action="/sign-out" />
         </div>

@@ -1,0 +1,355 @@
+'use client';
+
+import React, { useState, useTransition } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import { CalendarDays, Clock, X } from 'lucide-react';
+import type { ProjectStatus } from '@/generated/prisma/client';
+import { LANES, laneOf, targetIn, type Lane } from '@/lib/console/board';
+import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { Avatar } from '@/components/console/Avatar';
+import { toneClass } from '@/components/console/Tone';
+import { moveProject } from './[slug]/actions';
+import forms from '@/styles/forms.module.css';
+import styles from './Board.module.css';
+
+export type BoardCard = {
+  id: string;
+  slug: string;
+  name: string;
+  reference: string;
+  status: ProjectStatus;
+  client: string;
+  owner: string | null;
+  target: string | null;
+  overdue: boolean;
+  done: number;
+  total: number;
+  waitingOn: number;
+  committed: string | null;
+  /** Where the server says this project may go next. */
+  allowed: ProjectStatus[];
+};
+
+const BADGE: Record<string, string> = {
+  neutral: '',
+  live: forms.badgeLive,
+  good: forms.badgeGood,
+  warn: forms.badgeWarn,
+  bad: forms.badgeBad,
+};
+
+type Notice = { tone: 'ok' | 'error'; text: string };
+type Confirm = { card: BoardCard; to: ProjectStatus; warnings: string[] };
+
+/**
+ * The project board.
+ *
+ * Dragging a card is a request, not a decision. It goes to the same
+ * moveProject action as the buttons on the project page, with the same guards
+ * and the same audit trail, and the card only stays where it was dropped if the
+ * server agrees. A guard that warns asks first; a guard that blocks explains.
+ */
+export function Board({ cards }: { cards: BoardCard[] }) {
+  const router = useRouter();
+  const [items, setItems] = useState(cards);
+  const [source, setSource] = useState(cards);
+  // Fresh cards from the server (after a move, the page refreshes) replace the
+  // local copy. Done during render rather than in an effect, as React
+  // recommends for state that follows a prop, and without remounting — which
+  // would also throw away the "moved" message the person is reading.
+  if (cards !== source) {
+    setSource(cards);
+    setItems(cards);
+  }
+  const [dragging, setDragging] = useState<BoardCard | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const sensors = useSensors(
+    // A few pixels of travel before it counts as a drag, so clicking a card's
+    // name still just opens the project.
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor),
+  );
+
+  function place(id: string, status: ProjectStatus) {
+    setItems((current) => current.map((card) => (card.id === id ? { ...card, status } : card)));
+  }
+
+  function move(card: BoardCard, to: ProjectStatus, acknowledged: boolean) {
+    place(card.id, to);
+    setNotice(null);
+    startTransition(async () => {
+      const form = new FormData();
+      form.set('projectId', card.id);
+      form.set('to', to);
+      form.set('expectedFrom', card.status);
+      if (acknowledged) form.set('acknowledged', 'on');
+
+      const result = await moveProject({ status: 'idle' }, form);
+
+      if (result.status === 'done') {
+        setNotice({ tone: 'ok', text: `${card.name} moved to ${STAFF_LABEL[to]}.` });
+        router.refresh();
+        return;
+      }
+
+      // Anything else leaves the card where it was.
+      place(card.id, card.status);
+      if (result.status === 'confirm') {
+        setConfirm({ card, to, warnings: (result.guards ?? []).map((guard) => guard.message) });
+      } else {
+        setNotice({ tone: 'error', text: result.message ?? 'That move did not go through.' });
+      }
+    });
+  }
+
+  function onDragStart(event: DragStartEvent) {
+    setDragging(items.find((card) => card.id === event.active.id) ?? null);
+  }
+
+  function onDragEnd(event: DragEndEvent) {
+    setDragging(null);
+    const card = items.find((item) => item.id === event.active.id);
+    const lane = LANES.find((item) => item.key === event.over?.id);
+    if (!card || !lane || lane.statuses.includes(card.status)) return;
+
+    const to = targetIn(lane, card.allowed);
+    if (!to) {
+      const next = card.allowed.map((status) => STAFF_LABEL[status]).join(', ');
+      setNotice({
+        tone: 'error',
+        text: `${card.name} can't go straight to ${lane.label}.${next ? ` Next it can go to: ${next}.` : ''}`,
+      });
+      return;
+    }
+    move(card, to, false);
+  }
+
+  return (
+    <>
+      {notice && (
+        <div
+          className={`${styles.notice} ${notice.tone === 'error' ? styles.noticeError : styles.noticeOk}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span>{notice.text}</span>
+          <button
+            type="button"
+            className={styles.noticeClose}
+            onClick={() => setNotice(null)}
+            aria-label="Dismiss"
+          >
+            <X size={15} strokeWidth={2} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      <DndContext
+        // A fixed id: dnd-kit otherwise numbers its accessibility ids with a
+        // counter that differs between the server render and the browser.
+        id="project-board"
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragCancel={() => setDragging(null)}
+        accessibility={{
+          screenReaderInstructions: {
+            draggable:
+              'To move a project, press space to pick it up, use the arrow keys to choose a stage, then press space again to drop it, or escape to cancel.',
+          },
+        }}
+      >
+        <div className={styles.board} aria-busy={pending || undefined}>
+          {LANES.map((lane) => (
+            <LaneColumn
+              key={lane.key}
+              lane={lane}
+              cards={items.filter((card) => laneOf(card.status)?.key === lane.key)}
+              dragging={dragging}
+            />
+          ))}
+        </div>
+        <DragOverlay dropAnimation={null}>
+          {dragging ? <CardBody card={dragging} lifted /> : null}
+        </DragOverlay>
+      </DndContext>
+
+      {confirm && (
+        <div className={styles.scrim} role="presentation" onClick={() => setConfirm(null)}>
+          <div
+            className={styles.dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="board-confirm-title"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setConfirm(null);
+            }}
+          >
+            <h2 id="board-confirm-title" className={styles.dialogTitle}>
+              Move to {STAFF_LABEL[confirm.to]}?
+            </h2>
+            <p className={styles.dialogText}>Before {confirm.card.name} moves, note that:</p>
+            <ul className={styles.dialogList}>
+              {confirm.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+            <div className={styles.dialogActions}>
+              <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setConfirm(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={forms.button}
+                autoFocus
+                onClick={() => {
+                  const { card, to } = confirm;
+                  setConfirm(null);
+                  move(card, to, true);
+                }}
+              >
+                Move anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function LaneColumn({
+  lane,
+  cards,
+  dragging,
+}: {
+  lane: Lane;
+  cards: BoardCard[];
+  dragging: BoardCard | null;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: lane.key });
+
+  // While a card is in the air, lanes it can reach light up and the rest fade,
+  // so the rules are visible before the drop rather than explained after it.
+  const home = dragging ? lane.statuses.includes(dragging.status) : false;
+  const reachable = dragging ? home || targetIn(lane, dragging.allowed) !== null : false;
+
+  return (
+    <section
+      ref={setNodeRef}
+      className={[
+        styles.lane,
+        toneClass(lane.tone),
+        dragging && !reachable ? styles.laneBlocked : '',
+        dragging && reachable && !home ? styles.laneOpen : '',
+        isOver && reachable && !home ? styles.laneOver : '',
+      ].join(' ')}
+      aria-label={`${lane.label}, ${cards.length} ${cards.length === 1 ? 'project' : 'projects'}`}
+    >
+      <header className={styles.laneHead}>
+        <span className={styles.laneDot} aria-hidden="true" />
+        <h2 className={styles.laneTitle}>{lane.label}</h2>
+        <span className={styles.laneCount}>{cards.length}</span>
+      </header>
+      <div className={styles.laneBody}>
+        {cards.length === 0 ? (
+          <p className={styles.laneEmpty}>Nothing here</p>
+        ) : (
+          cards.map((card) => <DraggableCard key={card.id} card={card} />)
+        )}
+      </div>
+    </section>
+  );
+}
+
+function DraggableCard({ card }: { card: BoardCard }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`${styles.cardWrap} ${isDragging ? styles.cardGhost : ''}`}
+      aria-roledescription="draggable project"
+    >
+      <CardBody card={card} />
+    </div>
+  );
+}
+
+function CardBody({ card, lifted }: { card: BoardCard; lifted?: boolean }) {
+  const percent = card.total > 0 ? Math.round((card.done / card.total) * 100) : 0;
+  return (
+    <article className={`${styles.card} ${lifted ? styles.cardLifted : ''}`}>
+      <div className={styles.cardTop}>
+        <span className={`${forms.badge} ${BADGE[STATUS_TONE[card.status]]}`}>
+          {STAFF_LABEL[card.status]}
+        </span>
+        <span className={styles.ref}>{card.reference}</span>
+      </div>
+
+      <Link href={`/projects/${card.slug}`} className={styles.cardName} draggable={false}>
+        {card.name}
+      </Link>
+
+      <div className={styles.client}>
+        <Avatar name={card.client} size="sm" />
+        <span>{card.client}</span>
+      </div>
+
+      {card.total > 0 && (
+        <div className={styles.progress}>
+          <div className={styles.progressTrack} aria-hidden="true">
+            <div className={styles.progressFill} style={{ width: `${percent}%` }} />
+          </div>
+          <span className={styles.progressText}>
+            {card.done}/{card.total} tasks
+          </span>
+        </div>
+      )}
+
+      <div className={styles.cardFoot}>
+        {card.target ? (
+          <span className={`${styles.meta} ${card.overdue ? styles.metaLate : ''}`}>
+            <CalendarDays size={14} strokeWidth={2} aria-hidden="true" />
+            {card.overdue ? `Overdue · ${card.target}` : card.target}
+          </span>
+        ) : (
+          <span className={styles.meta}>No date</span>
+        )}
+        {card.committed && <span className={styles.value}>{card.committed}</span>}
+      </div>
+
+      {(card.waitingOn > 0 || card.owner) && (
+        <div className={styles.cardFootRow}>
+          {card.waitingOn > 0 ? (
+            <span className={`${styles.meta} ${styles.metaWaiting}`}>
+              <Clock size={14} strokeWidth={2} aria-hidden="true" />
+              Waiting on {card.waitingOn} from client
+            </span>
+          ) : (
+            <span />
+          )}
+          {card.owner && <Avatar name={card.owner} size="sm" />}
+        </div>
+      )}
+    </article>
+  );
+}

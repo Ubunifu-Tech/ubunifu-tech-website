@@ -139,6 +139,54 @@
   --shadow-2: 0 8px 24px -12px rgba(31, 26, 54, 0.22);
   --shadow-3: 0 24px 50px -24px rgba(27, 14, 71, 0.32);
 
+  /* ── Console and portal ──────────────────────────────────────────────
+     Additive only: nothing on the marketing site reads these. They live here
+     rather than in a module because menus and date pickers render in a portal
+     at the end of <body>, outside any page shell that could scope them.
+
+     Each tone is a pair chosen to be read together — text on its own tint
+     clears 4.5:1 — plus a stronger dot for small marks. Colour carries meaning
+     here (on track, waiting, overdue), so the set is small and fixed. */
+  --tone-green-bg: #E7F6ED;
+  --tone-green-fg: #17663B;
+  --tone-green-dot: #22A05B;
+  --tone-amber-bg: #FEF3DC;
+  --tone-amber-fg: #8A5300;
+  --tone-amber-dot: #E3A008;
+  --tone-red-bg: #FDECEC;
+  --tone-red-fg: #A8231B;
+  --tone-red-dot: #E5484D;
+  --tone-blue-bg: #E8F0FE;
+  --tone-blue-fg: #1C4FA0;
+  --tone-blue-dot: #3B82F6;
+  --tone-teal-bg: #E2F5F3;
+  --tone-teal-fg: #0E6A62;
+  --tone-teal-dot: #14B8A6;
+  --tone-violet-bg: #F0EBFD;
+  --tone-violet-fg: #4B2BB0;
+  --tone-violet-dot: #7C5CFA;
+  --tone-orange-bg: #FFEFE6;
+  --tone-orange-fg: #A63A11;
+  --tone-orange-dot: #FF6B2C;
+  --tone-neutral-bg: #F1F0F4;
+  --tone-neutral-fg: #4A4560;
+  --tone-neutral-dot: #A09BB0;
+
+  /* The console's interaction colour: focus rings, checked boxes, the active
+     menu item. Warm, to match the brand, and deliberately a step deeper than
+     the brand orange — #FF6B2C clears only 2.8:1 on white, and a focus ring
+     or a checkbox has to clear 3:1 to be seen. This clears 3.8:1. */
+  --accent: #E0551C;
+  --accent-deep: #A63A11;
+  --accent-dim: #FFEFE6;
+  --accent-border: rgba(224, 85, 28, 0.35);
+
+  --app-bg: #F6F5F9;
+  --app-radius-card: 14px;
+  --app-radius-control: 10px;
+  --app-shadow-card: 0 1px 2px rgba(31, 26, 54, 0.04), 0 6px 20px -12px rgba(31, 26, 54, 0.12);
+  --app-shadow-pop: 0 16px 40px -16px rgba(31, 26, 54, 0.32), 0 2px 6px rgba(31, 26, 54, 0.06);
+
   /* Layout */
   --container-width: 1440px;
   /* Wide measure for full-bleed heroes. Shares --container-gutter with the

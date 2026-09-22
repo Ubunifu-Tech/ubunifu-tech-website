@@ -26,8 +26,8 @@ function serializeJsonLd(value: unknown): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
-export function generateStaticParams() {
-  return getAllPosts().map((post) => ({ slug: post.slug }));
+export async function generateStaticParams() {
+  return (await getAllPosts()).map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -36,7 +36,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return { title: 'Post not found' };
@@ -86,7 +86,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();

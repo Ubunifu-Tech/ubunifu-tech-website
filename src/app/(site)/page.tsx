@@ -11,8 +11,8 @@ export const metadata = pageMetadata({
   path: '/',
 });
 
-export default function Home() {
-  const candidates = getAllPosts().slice(0, 3);
+export default async function Home() {
+  const candidates = (await getAllPosts()).slice(0, 3);
   // Keep the latest three stories, but don't repeat the project art just shown above.
   const lead = candidates.find((post) => !projects.some((project) => project.artwork.src === resolveBlogCover(post).image));
   const latestPosts = (lead

@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   FileText,
   LifeBuoy,
+  Newspaper,
   Receipt,
   RefreshCw,
   Settings,
@@ -43,6 +44,7 @@ const ICONS = {
   renewals: RefreshCw,
   documents: FileText,
   requests: LifeBuoy,
+  posts: Newspaper,
   activity: Activity,
   settings: Settings,
 } as const;
@@ -82,6 +84,10 @@ const GROUPS: { label?: string; items: Item[] }[] = [
       { href: '/documents', label: 'Documents', icon: 'documents', count: 'documents' },
       { href: '/requests', label: 'Requests', icon: 'requests', count: 'requests' },
     ],
+  },
+  {
+    label: 'Website',
+    items: [{ href: '/posts', label: 'Journal', icon: 'posts' }],
   },
   {
     label: 'Record',

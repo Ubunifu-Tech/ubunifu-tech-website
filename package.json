@@ -22,7 +22,8 @@
     "db:deploy": "node scripts/migrate-deploy.mjs",
     "check:editor": "tsx scripts/check-editor-roundtrip.mts",
     "check:signatures": "tsx scripts/verify-signature-hashes.mts",
-    "check:renewals": "tsx scripts/check-renewal-cycle.mts"
+    "check:renewals": "tsx scripts/check-renewal-cycle.mts",
+    "check:blog-parity": "tsx scripts/check-blog-parity.mts"
   },
   "engines": {
     "node": ">=20.9.0"

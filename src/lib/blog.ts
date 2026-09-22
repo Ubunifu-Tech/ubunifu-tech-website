@@ -1,204 +1,131 @@
 import 'server-only';
+import { db } from '@/lib/db';
+import {
+  defaultBlogCover,
+  readPostFile,
+  readPostFiles,
+  resolveBlogCover,
+  type BlogPost,
+  type BlogPostMeta,
+} from './blog-files';
 
-import fs from 'node:fs';
-import path from 'node:path';
-import matter from 'gray-matter';
+/**
+ * The blog, read from the database.
+ *
+ * Posts used to be markdown files committed to the repository, which meant
+ * publishing anything needed a deploy. They now live in the Post table and are
+ * written in the console — but the shape returned here is exactly what the
+ * files produced, so every page that renders a post is unchanged.
+ *
+ * THE FILES ARE STILL THE FALLBACK, and the rule for choosing is the same one
+ * scripts/migrate-deploy.mjs uses for migrations:
+ *
+ *   No DATABASE_URL at all  → read the files. This is a preview build with no
+ *                             database attached, and failing it would block
+ *                             every preview of a marketing change.
+ *   DATABASE_URL set        → read the database, and let a failure fail. That
+ *                             is production, and quietly serving a stale copy
+ *                             of the blog is worse than a build that stops.
+ *
+ * Anything else — falling back on an error in production — would mean a
+ * database blip silently republishes whatever the files last said, which could
+ * be a post that was taken down.
+ */
 
-const postsDirectory = path.join(process.cwd(), '_posts');
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const calendarDatePattern = /^\d{4}-\d{2}-\d{2}$/;
-const coverImagePattern = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.(?:avif|jpe?g|png|webp)$/i;
+export { defaultBlogCover, resolveBlogCover };
+export type { BlogPost, BlogPostMeta };
 
-export const defaultBlogCover = {
-  image: '/editorial/build-or-buy.webp',
-  alt: 'A tactile workbench where one problem branches into modular and custom-built paths.',
-} as const;
-
-export interface BlogPostMeta {
-  slug: string;
-  title: string;
-  date: string;
-  author: string;
-  excerpt: string;
-  tags: string[];
-  readingTime: number;
-  coverImage?: string;
-  coverAlt?: string;
+function usingFiles(): boolean {
+  return !process.env.DATABASE_URL;
 }
 
-export interface BlogPost extends BlogPostMeta {
-  content: string;
-}
-
-type Frontmatter = Record<string, unknown>;
-
-function frontmatterError(fileName: string, message: string): never {
-  throw new Error(`[blog] ${fileName}: ${message}`);
-}
-
-function requiredString(
-  data: Frontmatter,
-  field: 'title' | 'date' | 'author' | 'excerpt',
-  fileName: string,
-): string {
-  const value = data[field];
-
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    return frontmatterError(fileName, `frontmatter field "${field}" must be a non-empty string`);
-  }
-
-  return value.trim();
-}
-
-function optionalString(data: Frontmatter, field: 'coverImage' | 'coverAlt', fileName: string) {
-  const value = data[field];
-
-  if (value === undefined || value === null) {
-    return undefined;
-  }
-
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    return frontmatterError(fileName, `frontmatter field "${field}" must be a non-empty string when provided`);
-  }
-
-  return value.trim();
-}
-
-function validateDate(date: string, fileName: string): string {
-  if (!calendarDatePattern.test(date)) {
-    return frontmatterError(fileName, 'frontmatter field "date" must use the YYYY-MM-DD format');
-  }
-
-  const parsed = new Date(`${date}T00:00:00.000Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
-    return frontmatterError(fileName, `frontmatter field "date" is not a valid calendar date: ${date}`);
-  }
-
-  return date;
-}
-
-function validateTags(value: unknown, fileName: string): string[] {
-  if (!Array.isArray(value)) {
-    return frontmatterError(fileName, 'frontmatter field "tags" must be an array of strings');
-  }
-
-  const tags = value.map((tag) => {
-    if (typeof tag !== 'string' || tag.trim().length === 0) {
-      return frontmatterError(fileName, 'frontmatter field "tags" may only contain non-empty strings');
-    }
-
-    return tag.trim();
-  });
-
-  if (new Set(tags).size !== tags.length) {
-    return frontmatterError(fileName, 'frontmatter field "tags" may not contain duplicates');
-  }
-
-  return tags;
-}
-
-function validateCover(data: Frontmatter, fileName: string) {
-  const coverImage = optionalString(data, 'coverImage', fileName);
-  const coverAlt = optionalString(data, 'coverAlt', fileName);
-
-  if ((coverImage && !coverAlt) || (!coverImage && coverAlt)) {
-    return frontmatterError(
-      fileName,
-      'frontmatter fields "coverImage" and "coverAlt" must be provided together',
-    );
-  }
-
-  if (coverImage && !coverImagePattern.test(coverImage)) {
-    return frontmatterError(
-      fileName,
-      'frontmatter field "coverImage" must be a safe site-relative AVIF, JPEG, PNG, or WebP path',
-    );
-  }
-
-  return { coverImage, coverAlt };
-}
-
-export function resolveBlogCover(post: Pick<BlogPostMeta, 'coverImage' | 'coverAlt'>) {
-  return {
-    image: post.coverImage ?? defaultBlogCover.image,
-    alt: post.coverAlt ?? defaultBlogCover.alt,
-  };
-}
-
-// Rough reading time at ~200 words/minute, floored at 1 minute.
+/** Same estimate the file reader used, so reading times do not shift. */
 function estimateReadingTime(content: string): number {
   const words = content.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
 
-function parsePost(fileName: string): BlogPost {
-  const slug = fileName.replace(/\.md$/, '');
-  if (!slugPattern.test(slug)) {
-    return frontmatterError(fileName, 'filename must be a lowercase, hyphen-separated slug');
-  }
+type PostRow = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  bodyMarkdown: string;
+  tags: string[];
+  coverImage: string | null;
+  coverAlt: string | null;
+  authorName: string | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+};
 
-  const fullPath = path.join(postsDirectory, fileName);
-  const fileContents = fs.readFileSync(fullPath, 'utf8');
-  const parsed = matter(fileContents);
-  const data = parsed.data as Frontmatter;
-  const title = requiredString(data, 'title', fileName);
-  const date = validateDate(requiredString(data, 'date', fileName), fileName);
-  const author = requiredString(data, 'author', fileName);
-  const excerpt = requiredString(data, 'excerpt', fileName);
-  const tags = validateTags(data.tags, fileName);
-  const { coverImage, coverAlt } = validateCover(data, fileName);
-
+function toBlogPost(row: PostRow): BlogPost {
+  const published = row.publishedAt ?? row.createdAt;
   return {
-    slug,
-    title,
-    date,
-    author,
-    excerpt,
-    tags,
-    coverImage,
-    coverAlt,
-    content: parsed.content,
-    readingTime: estimateReadingTime(parsed.content),
+    slug: row.slug,
+    title: row.title,
+    // The files carried a plain calendar date and every page formats it from
+    // that, so the same shape comes back rather than a timestamp.
+    date: published.toISOString().slice(0, 10),
+    author: row.authorName ?? 'Ubunifu Technologies',
+    excerpt: row.excerpt,
+    tags: row.tags,
+    coverImage: row.coverImage ?? undefined,
+    coverAlt: row.coverAlt ?? undefined,
+    content: row.bodyMarkdown,
+    readingTime: estimateReadingTime(row.bodyMarkdown),
   };
 }
 
+const SELECT = {
+  slug: true,
+  title: true,
+  excerpt: true,
+  bodyMarkdown: true,
+  tags: true,
+  coverImage: true,
+  coverAlt: true,
+  authorName: true,
+  publishedAt: true,
+  createdAt: true,
+} as const;
+
+/** Newest first, then by slug, which is how the files were ordered. */
 function comparePosts(a: BlogPost, b: BlogPost): number {
   const byDate = b.date.localeCompare(a.date);
-  if (byDate !== 0) {
-    return byDate;
-  }
-
-  if (a.slug === b.slug) {
-    return 0;
-  }
-
+  if (byDate !== 0) return byDate;
+  if (a.slug === b.slug) return 0;
   return a.slug < b.slug ? -1 : 1;
 }
 
-export function getAllPosts(): BlogPost[] {
-  if (!fs.existsSync(postsDirectory)) {
-    return [];
-  }
+export async function getAllPosts(): Promise<BlogPost[]> {
+  if (usingFiles()) return readPostFiles();
 
-  return fs
-    .readdirSync(postsDirectory, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-    .map((entry) => entry.name)
-    .sort()
-    .map(parsePost)
-    .sort(comparePosts);
+  const rows = await db.post.findMany({
+    where: {
+      status: 'published',
+      deletedAt: null,
+      // A post dated in the future is scheduled, not live.
+      publishedAt: { lte: new Date() },
+    },
+    orderBy: [{ publishedAt: 'desc' }, { slug: 'asc' }],
+    select: SELECT,
+  });
+
+  return rows.map(toBlogPost).sort(comparePosts);
 }
 
-export function getPostBySlug(slug: string): BlogPost | null {
-  if (!slugPattern.test(slug)) {
-    return null;
-  }
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  if (usingFiles()) return readPostFile(slug);
 
-  const fileName = `${slug}.md`;
-  const fullPath = path.join(postsDirectory, fileName);
-  if (!fs.existsSync(fullPath)) {
-    return null;
-  }
+  const row = await db.post.findFirst({
+    where: {
+      slug,
+      status: 'published',
+      deletedAt: null,
+      publishedAt: { lte: new Date() },
+    },
+    select: SELECT,
+  });
 
-  return parsePost(fileName);
+  return row ? toBlogPost(row) : null;
 }

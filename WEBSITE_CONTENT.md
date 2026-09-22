@@ -108,7 +108,9 @@ Custom consulting belongs under `/build`; it is not a fourth product. Product av
 
 ## Journal and cover images
 
-Journal articles are Markdown files in [`_posts/`](_posts/) parsed by [`src/lib/blog.ts`](src/lib/blog.ts). The index derives its published count and post order at render time; do not hard-code either in documentation.
+Journal articles live in the `Post` table and are written in the console at `/posts`. [`src/lib/blog.ts`](src/lib/blog.ts) reads them; publishing revalidates `/blog`, the home page, the post itself and the sitemap, so nothing needs a deploy. The index derives its published count and post order at render time; do not hard-code either in documentation.
+
+The Markdown files in [`_posts/`](_posts/) are the fallback for a build with no `DATABASE_URL` — a preview of a marketing change with no database attached — and they are parsed by [`src/lib/blog-files.ts`](src/lib/blog-files.ts). When a database is configured, a failure to read it fails the page rather than quietly serving the files, because republishing a post that was taken down is worse than a page that stops. `npm run check:blog-parity` asserts the two sources still say the same thing; [`scripts/import-posts.mts`](scripts/import-posts.mts) is what moved the files into the table.
 
 Standard frontmatter (`coverImage` and `coverAlt` are an optional pair):
 
@@ -124,7 +126,7 @@ coverAlt: "Meaningful description of the cover"
 ---
 ```
 
-Rules enforced by `src/lib/blog.ts`:
+Rules enforced by `src/lib/blog-files.ts` on the files, and by the console forms on what is written there:
 
 - filename is a lowercase, hyphen-separated slug;
 - `title`, `date`, `author`, `excerpt`, and `tags` are required and validated;
@@ -180,8 +182,10 @@ The form warns against sending passwords or sensitive records and links to `/pri
 | `src/content/values.tsx` | Operating principles |
 | `src/content/team.tsx` | Team bios and profile links |
 | `src/content/testimonials.tsx` | Published testimonial content |
-| `_posts/*.md` | Journal frontmatter and article bodies |
-| `src/lib/blog.ts` | Journal validation, sorting, fallback cover, reading time |
+| `_posts/*.md` | Journal fallback for a build with no database |
+| `src/lib/blog-files.ts` | File parsing, frontmatter validation, fallback cover |
+| `src/lib/blog.ts` | Journal reads: the database, or the files when there is none |
+| `src/app/admin/posts/` | Writing, publishing and archiving a post |
 | `src/lib/metadata.ts` | Shared canonical, Open Graph, and Twitter metadata |
 | `src/lib/emails.ts` | Contact notification and acknowledgement HTML |
 | `src/app/globals.css` | Design tokens, global accessibility, visual utilities |

@@ -13,8 +13,8 @@ export const metadata = pageMetadata({
   path: '/blog',
 });
 
-export default function BlogPage() {
-  const posts = getAllPosts();
+export default async function BlogPage() {
+  const posts = await getAllPosts();
 
   // Pass only what the client index needs (drop the heavy `content`).
   const meta: PostMeta[] = posts.map((post) => {

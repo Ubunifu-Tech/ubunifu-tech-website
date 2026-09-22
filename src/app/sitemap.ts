@@ -8,7 +8,7 @@ const BASE_URL = 'https://ubunifutech.com';
 // dynamic entry per published blog post. `lastModified` for blog posts uses
 // the front-matter `date` so search engines see fresh content when we
 // publish a new post.
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${BASE_URL}/`,
@@ -68,7 +68,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.75,
   }));
 
-  const blogRoutes: MetadataRoute.Sitemap = getAllPosts().map((post) => ({
+  const blogRoutes: MetadataRoute.Sitemap = (await getAllPosts()).map((post) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: 'monthly',

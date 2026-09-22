@@ -125,7 +125,7 @@ ubunifu-tech-website/
 │   ├── editorial/          # Subject-specific illustrations and labelled synthetic scenes
 │   ├── logo-v2.png         # Navy social/avatar tile with the Ligature
 │   └── og.png              # Default social preview
-├── _posts/                  # Blog posts in Markdown
+├── _posts/                  # Blog fallback for a build with no database
 ├── src/
 │   ├── app/                 # Next.js App Router
 │   │   ├── layout.tsx       # Root layout: fonts (Poppins + Inter), metadata, JSON-LD

@@ -16,7 +16,7 @@ export async function navCounts(): Promise<NavCounts> {
   const horizon = new Date();
   horizon.setDate(horizon.getDate() + 45);
 
-  const [enquiries, projects, invoices, renewals, documents] = await Promise.all([
+  const [enquiries, projects, invoices, renewals, documents, requests] = await Promise.all([
     db.enquiry.count({ where: { status: 'new' } }),
     db.project.count({
       where: {
@@ -38,7 +38,9 @@ export async function navCounts(): Promise<NavCounts> {
     // Out with the client and not yet signed — the one document state that
     // means somebody is waiting on somebody.
     db.document.count({ where: { status: { in: ['sent', 'viewed', 'changes_requested'] } } }),
+    // Waiting on us, not on them — a request handed back is not a task.
+    db.ticket.count({ where: { status: { in: ['open', 'triaged', 'in_progress'] } } }),
   ]);
 
-  return { enquiries, projects, invoices, renewals, documents };
+  return { enquiries, projects, invoices, renewals, documents, requests };
 }

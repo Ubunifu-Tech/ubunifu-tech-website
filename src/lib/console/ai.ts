@@ -18,7 +18,18 @@ import { DOCUMENT_KIND_LABEL } from './documents';
  * clause" has to be answerable.
  */
 
-export const DRAFT_MODEL = 'claude-opus-5';
+/**
+ * Sonnet 5 by default, overridable without a deploy.
+ *
+ * Drafting a proposal from facts that are already written down is exactly the
+ * shape Sonnet handles well, and it is a fifth of the price of the Opus tier on
+ * a task the agency will run several times a week. The env var is there so the
+ * model can be raised for a hard document without shipping a change.
+ *
+ * Whatever it is set to must accept adaptive thinking, which every current
+ * model does — the fixed `budget_tokens` form is rejected by all of them.
+ */
+export const DRAFT_MODEL = process.env.ANTHROPIC_DRAFT_MODEL || 'claude-sonnet-5';
 
 export type DraftResult =
   | { ok: true; markdown: string; model: string }

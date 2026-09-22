@@ -10,6 +10,7 @@ import {
   Inbox,
   LayoutDashboard,
   FileText,
+  LifeBuoy,
   Receipt,
   RefreshCw,
   Settings,
@@ -30,6 +31,7 @@ export type NavCounts = {
   invoices: number;
   renewals: number;
   documents: number;
+  requests: number;
 };
 
 const ICONS = {
@@ -40,6 +42,7 @@ const ICONS = {
   invoices: Receipt,
   renewals: RefreshCw,
   documents: FileText,
+  requests: LifeBuoy,
   activity: Activity,
   settings: Settings,
 } as const;
@@ -75,7 +78,10 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   },
   {
     label: 'Client care',
-    items: [{ href: '/documents', label: 'Documents', icon: 'documents', count: 'documents' }],
+    items: [
+      { href: '/documents', label: 'Documents', icon: 'documents', count: 'documents' },
+      { href: '/requests', label: 'Requests', icon: 'requests', count: 'requests' },
+    ],
   },
   {
     label: 'Record',

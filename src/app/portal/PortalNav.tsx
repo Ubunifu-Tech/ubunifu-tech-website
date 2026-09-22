@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/portal', label: 'Projects', exact: true },
   { href: '/portal/documents', label: 'Documents' },
   { href: '/portal/invoices', label: 'Invoices' },
+  { href: '/portal/requests', label: 'Ask us' },
 ];
 
 /** Two sections, so the bar carries them rather than a menu. */

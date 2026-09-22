@@ -439,3 +439,79 @@ export function documentToSignEmail(input: {
 
   return shell(`${input.documentTitle} is ready for your signature.`, body);
 }
+
+/** Our own alert that a client has asked for something. */
+export function ticketRaisedEmail(input: {
+  reference: string;
+  clientName: string;
+  from: string;
+  fromEmail: string;
+  kind: string;
+  subject: string;
+  body: string;
+  projectName: string | null;
+  url: string;
+}): string {
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+          block,
+        ).replace(/\n/g, '<br />')}</p>`,
+    )
+    .join('');
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">
+      ${escapeHtml(input.reference)} · ${escapeHtml(input.kind.replace(/_/g, ' '))}${
+        input.projectName ? ` · ${escapeHtml(input.projectName)}` : ''
+      }
+    </p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.subject)}</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      From <strong style="color:#1F1A36;">${escapeHtml(input.from)}</strong> at
+      <strong style="color:#1F1A36;">${escapeHtml(input.clientName)}</strong> (${escapeHtml(input.fromEmail)}).
+    </p>
+    ${paragraphs}
+    ${button(input.url, 'Open it in the console')}`;
+
+  return shell(`${input.reference}: ${input.subject}`, body);
+}
+
+/** A reply going the other way, to the client. */
+export function ticketReplyEmail(input: {
+  name: string;
+  reference: string;
+  subject: string;
+  body: string;
+  status: string;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+          block,
+        ).replace(/\n/g, '<br />')}</p>`,
+    )
+    .join('');
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">${escapeHtml(input.reference)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.subject)}</h1>
+    <p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">Hello ${name},</p>
+    ${paragraphs}
+    <p style="margin:0 0 24px;color:#8A8399;font-size:13px;line-height:1.7;">
+      Where it stands: <strong style="color:#1F1A36;">${escapeHtml(input.status)}</strong>.
+    </p>
+    ${button(input.url, 'Reply in your portal')}`;
+
+  return shell(`${input.reference}: ${input.subject}`, body);
+}

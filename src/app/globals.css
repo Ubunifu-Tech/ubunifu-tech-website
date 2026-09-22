@@ -56,6 +56,20 @@
   --text-inverse-secondary: rgba(255, 255, 255, 0.72);
   --text-inverse-tertiary: rgba(255, 255, 255, 0.60);
 
+  /* Status — state, not identity. Used for outcomes the reader must act on:
+     a refused field, a paid invoice, a renewal coming due. Kept out of the
+     identity palette on purpose, so "this went wrong" never reads as "this is
+     Ubunifu orange". All three clear AA on white. */
+  --danger: #B42318;
+  --danger-dim: rgba(180, 35, 24, 0.10);
+  --danger-border: rgba(180, 35, 24, 0.24);
+  --success: #0F7355;
+  --success-dim: rgba(15, 115, 85, 0.10);
+  --success-border: rgba(15, 115, 85, 0.24);
+  --warning: #9A5B06;
+  --warning-dim: rgba(154, 91, 6, 0.12);
+  --warning-border: rgba(154, 91, 6, 0.26);
+
   /* Borders */
   --border: rgba(31, 26, 54, 0.08);
   --border-hover: rgba(31, 26, 54, 0.16);

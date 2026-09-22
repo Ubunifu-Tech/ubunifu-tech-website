@@ -248,6 +248,7 @@ export async function createClient(
         phone: values.contactPhone || null,
       },
       project,
+      enquiryId: text(formData, 'enquiryId') || null,
       staffId: staff.id,
     });
   } catch (error) {
@@ -304,6 +305,7 @@ export async function createClient(
   }
 
   revalidatePath('/admin/clients');
+  revalidatePath('/admin/enquiries');
   // Two different paths on purpose. The cache is keyed by the internal route,
   // /admin/clients, but the browser is on admin.ubunifutech.com/clients — the
   // /admin prefix only exists after the rewrite. A redirect written with the

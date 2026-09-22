@@ -46,7 +46,7 @@
 }
 
 .trigger[aria-invalid='true'] {
-  border-color: #b42318;
+  border-color: var(--danger);
 }
 
 .trigger:disabled {

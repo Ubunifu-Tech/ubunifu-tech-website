@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getClientActor } from '@/lib/console/auth';
 import { SignInForms } from './SignInForms';
 import styles from '../Portal.module.css';
+import forms from '@/styles/forms.module.css';
 
 export const metadata = { title: 'Sign in' };
 
@@ -13,7 +14,8 @@ export const metadata = { title: 'Sign in' };
 const LINK_PROBLEM: Record<string, string> = {
   expired:
     'That sign-in link has already been used or has run out. Links work once, so reopening an older email will land you here. Sign in below, or send yourself a new one.',
-  missing: 'That link was incomplete — it was probably cut short by an email app. Sign in below, or send yourself a new one.',
+  missing:
+    'That link was incomplete — it was probably cut short by an email app. Sign in below, or send yourself a new one.',
 };
 
 export default async function PortalSignIn({
@@ -30,19 +32,25 @@ export default async function PortalSignIn({
   const problem = error ? LINK_PROBLEM[error] : undefined;
 
   return (
-    <main className={`${styles.main} ${styles.narrow}`}>
-      <h1 className={styles.heading}>
-        Sign in to your <span className={styles.headingAccent}>portal</span>
-      </h1>
-      <p className={styles.lead}>
-        Progress updates, documents to review, and your invoices.
-      </p>
+    <main className={`${styles.page} ${styles.narrow}`}>
+      <div className={styles.pageHead}>
+        <h1 className={styles.heading}>
+          Sign in to your <span className={styles.headingAccent}>portal</span>
+        </h1>
+        <p className={styles.lead}>
+          Progress updates, documents to review, and your invoices.
+        </p>
+      </div>
+
       {problem ? (
         <p className={styles.notice} role="status">
           {problem}
         </p>
       ) : null}
-      <SignInForms />
+
+      <div className={forms.card}>
+        <SignInForms />
+      </div>
     </main>
   );
 }

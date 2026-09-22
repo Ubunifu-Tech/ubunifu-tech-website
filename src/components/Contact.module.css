@@ -254,11 +254,11 @@
 }
 
 .input:user-invalid {
-  border-color: #b42318;
+  border-color: var(--danger);
 }
 
 .input:user-invalid:focus-visible {
-  outline-color: #b42318;
+  outline-color: var(--danger);
 }
 
 .input:disabled {
@@ -394,7 +394,7 @@
 
 .statusError {
   background: #fff5f4;
-  color: #b42318;
+  color: var(--danger);
 }
 
 @media (max-width: 900px) {

@@ -82,12 +82,6 @@ function addDays(from: Date, days: number): Date {
   return date;
 }
 
-function addMonths(from: Date, months: number): Date {
-  const date = new Date(from);
-  date.setMonth(date.getMonth() + months);
-  return date;
-}
-
 function intervalFor(kind: BillingKind): number | null {
   if (kind === 'recurring_monthly') return 1;
   if (kind === 'recurring_annual') return 12;
@@ -119,6 +113,8 @@ export type NewClientInput = {
     startDate?: Date | null;
     targetDate?: Date | null;
   };
+  /** Set when this client came from a website enquiry, to close the loop. */
+  enquiryId?: string | null;
   staffId: string;
 };
 
@@ -169,7 +165,24 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
 
     const contactId = client.contacts[0]!.id;
 
+    /**
+     * Closes the enquiry in the same transaction that creates the client.
+     *
+     * Conditional on it still being unconverted, so two staff members
+     * onboarding the same enquiry cannot both claim it — the second update
+     * matches nothing and the second client is created unlinked rather than
+     * silently stealing the first one's enquiry.
+     */
+    const closeEnquiry = async (projectId: string | null) => {
+      if (!input.enquiryId) return;
+      await tx.enquiry.updateMany({
+        where: { id: input.enquiryId, clientId: null, status: { not: 'converted' } },
+        data: { clientId: client.id, projectId, status: 'converted' },
+      });
+    };
+
     if (!input.project || !projectSlug || !reference) {
+      await closeEnquiry(null);
       return { clientId: client.id, contactId, projectId: null, reference: null };
     }
 
@@ -209,6 +222,8 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
         currency: input.client.currency,
       });
     }
+
+    await closeEnquiry(project.id);
 
     return { clientId: client.id, contactId, projectId: project.id, reference };
   });
@@ -317,9 +332,18 @@ export async function applyTemplate(
         terms: line.terms,
         position: line.position,
         intervalMonths,
-        // A renewal date is only meaningful once the thing renewing exists, so
-        // recurring lines start a full interval out and are corrected on launch.
-        nextDueAt: intervalMonths ? addMonths(options.start, intervalMonths) : null,
+        /**
+         * Left null deliberately.
+         *
+         * A renewal date is only meaningful once the thing renewing exists. A
+         * date pre-filled here is anchored to the day somebody typed the client
+         * in, which is not when the domain was registered or the hosting began
+         * — so it would bill at the wrong time, and worse, it would satisfy the
+         * launch guard that exists precisely to catch a renewal with no date.
+         * A guard that always passes is not a guard. The date is set when the
+         * line goes live, on the project screen, by someone who knows it.
+         */
+        nextDueAt: null,
       },
     });
   }

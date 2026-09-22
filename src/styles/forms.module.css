@@ -1,0 +1,507 @@
+/* Console and portal form vocabulary.
+ *
+ * One file, imported by both surfaces, because a client filling in their
+ * details and a staff member filling in theirs should be looking at the same
+ * controls. Native elements throughout — a <select> that opens the platform's
+ * own picker beats a div that imitates one badly, especially on a phone — but
+ * the parts browsers let us paint are painted in the brand: the chevron, the
+ * calendar icon and the checkbox all take their colour from the tokens and
+ * turn violet on focus.
+ */
+
+/* ── Containment ───────────────────────────────── */
+
+/* Fields belong inside something. A form laid straight onto the page reads as
+   a list of unrelated questions; a card says "this is one thing you are
+   filling in" and gives the eye an edge to stop at. */
+.card {
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.cardMeta {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+/* ── Sections within a form ────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+/* A rule in the section's own hue, rather than a box inside a box. Nesting
+   cards three deep is how a form starts looking like a filing cabinet. */
+.sectionTitle {
+  width: 100%;
+  margin: 0 0 var(--space-5);
+  padding: 0 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.hueBrand {
+  border-bottom-color: var(--brand-border);
+}
+
+.huePrimary {
+  border-bottom-color: var(--primary-border);
+}
+
+.hueAccent {
+  border-bottom-color: var(--accent-border);
+}
+
+/* Row gap is a step larger than the column gap on purpose: hints sit under
+   their field, so without it the hint of one row crowds the label of the
+   next and the pairing stops being obvious. */
+.grid {
+  display: grid;
+  gap: var(--space-5) var(--space-5);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.optional {
+  color: var(--text-tertiary);
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+/* ── The control ───────────────────────────────── */
+
+/* One look for every text-entry control, matching the contact form on the
+   public site so the two halves of the business feel like one company. */
+.control {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--control-radius);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.control::placeholder {
+  color: var(--text-tertiary);
+}
+
+.control:hover:not(:disabled):not(:focus) {
+  border-color: var(--border-active);
+}
+
+.control:focus-visible,
+.control:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-dim);
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.control[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px var(--danger-dim);
+}
+
+.control:disabled {
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+/* ── Select ────────────────────────────────────── */
+
+/* The native menu is kept; only the closed state is repainted. The chevron is
+   a mask rather than a background image so its colour is a token and can
+   answer to focus. */
+.selectWrap {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: calc(var(--space-4) * 2 + 0.75rem);
+  cursor: pointer;
+}
+
+.selectWrap::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  width: 0.75rem;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  background-color: var(--text-tertiary);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  pointer-events: none;
+  transition: background-color var(--transition-fast);
+}
+
+.selectWrap:focus-within::after {
+  background-color: var(--primary);
+}
+
+/* ── Date ──────────────────────────────────────── */
+
+/* Chromium lets the picker button be restyled; Safari does not, and falls back
+   to its own control. Both are usable, which is the bar for a native input. */
+.date::-webkit-calendar-picker-indicator {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  background-color: var(--text-tertiary);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='3' width='12' height='11' rx='2' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M2 6.5h12M5.5 1.5v3M10.5 1.5v3' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.date:hover::-webkit-calendar-picker-indicator,
+.date:focus::-webkit-calendar-picker-indicator {
+  background-color: var(--primary);
+}
+
+.date::-webkit-datetime-edit {
+  padding: 0;
+}
+
+/* ── Checkbox ──────────────────────────────────── */
+
+/* A row, not a bare box: the label is the target, and the explanation sits
+   under it where it will actually be read. */
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.checkRow:hover {
+  border-color: var(--border-active);
+}
+
+.checkRow:has(.check:checked) {
+  border-color: var(--primary-border);
+  background: var(--primary-dim);
+}
+
+.checkRow:has(.check:focus-visible) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-dim);
+}
+
+.check {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0.1875rem 0 0;
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.check::after {
+  content: '';
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: var(--text-inverse);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.4 5.5 10.4 11.5 3.6' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.4 5.5 10.4 11.5 3.6' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transform: scale(0);
+  transition: transform var(--transition-fast);
+}
+
+.check:checked {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.check:checked::after {
+  transform: scale(1);
+}
+
+/* The row carries the focus ring, but keyboard users on browsers without
+   :has() still need to see where they are. */
+.check:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.checkText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* ── Buttons ───────────────────────────────────── */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  background: var(--cta);
+  color: var(--text-inverse);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.button:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--primary-dim);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  background: var(--border-active);
+  color: var(--text-inverse);
+  cursor: not-allowed;
+}
+
+.quiet {
+  background: var(--surface);
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+.quiet:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--text-tertiary);
+}
+
+.quiet:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-tertiary);
+}
+
+.danger {
+  background: var(--surface);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-deep);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.link:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.link:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+/* ── Footer of a form ──────────────────────────── */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+/* The payoff line: what pressing the button will actually do, said next to the
+   button rather than in a paragraph above the form nobody re-reads. */
+.payoff {
+  margin: 0;
+  flex: 1 1 16rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+/* ── Badges ────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.badgeLive {
+  border-color: var(--primary-border);
+  background: var(--primary-dim);
+  color: var(--primary-deep);
+}
+
+.badgeGood {
+  border-color: var(--success-border);
+  background: var(--success-dim);
+  color: var(--success);
+}
+
+.badgeWarn {
+  border-color: var(--warning-border);
+  background: var(--warning-dim);
+  color: var(--warning);
+}
+
+.badgeBad {
+  border-color: var(--danger-border);
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+@media (max-width: 40rem) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card {
+    padding: var(--space-5) var(--space-4);
+  }
+}

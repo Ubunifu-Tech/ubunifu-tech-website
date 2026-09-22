@@ -1,23 +1,39 @@
 /* The client portal.
-   Served on the public host at /portal, but outside the (site) group, so it has
-   no marketing navbar or footer. A client signing in to check an invoice should
-   not land in a sales page. */
+ *
+ * Served on the public host at /portal, but outside the (site) group, so it
+ * has no marketing navbar or footer. A client signing in to check an invoice
+ * should not land in a sales page.
+ *
+ * It shares the form vocabulary in src/styles/forms.module.css with the staff
+ * console deliberately: the two halves of the same system should not look like
+ * two different companies. What differs is the chrome — this one is quieter,
+ * because it belongs to the client rather than to us.
+ */
 
 .shell {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background: var(--background);
+  background: var(--surface-2);
 }
 
+/* ── Bar ───────────────────────────────────────── */
+
 .bar {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.barInner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
+  width: 100%;
+  max-width: var(--container-width);
+  margin: 0 auto;
   padding: var(--space-4) var(--container-gutter);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -25,29 +41,72 @@
   align-items: center;
   gap: var(--space-3);
   color: var(--text-primary);
+  text-decoration: none;
+}
+
+.brandMark {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.brandText {
   font-family: var(--font-heading);
-  font-size: var(--font-size-body);
-}
-
-.org {
-  color: var(--text-secondary);
   font-size: var(--font-size-small);
+  line-height: 1.2;
 }
 
-.main {
+/* The client's own name, so they can see at a glance whose portal this is —
+   people do have more than one. */
+.org {
+  color: var(--text-tertiary);
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.signOut {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-deep);
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.signOut:hover {
+  color: var(--text-primary);
+}
+
+/* ── Page ──────────────────────────────────────── */
+
+.page {
   width: 100%;
   max-width: var(--container-width);
   margin: 0 auto;
-  padding: var(--section-space) var(--container-gutter);
+  padding: var(--space-7) var(--container-gutter) var(--space-9);
   flex: 1;
 }
 
 .narrow {
-  max-width: 30rem;
+  max-width: 28rem;
+}
+
+.medium {
+  max-width: 48rem;
+}
+
+.pageHead {
+  margin-bottom: var(--space-6);
 }
 
 .heading {
-  margin: 0 0 var(--space-4);
+  margin: 0;
   color: var(--text-primary);
   font-family: var(--font-heading);
   font-size: var(--font-size-heading);
@@ -60,136 +119,21 @@
 }
 
 .lead {
-  margin: 0 0 var(--space-6);
-  max-width: 56ch;
+  margin: var(--space-3) 0 0;
+  max-width: 58ch;
   color: var(--text-secondary);
   font-size: var(--font-size-lead);
   line-height: 1.7;
 }
 
-/* ── Forms ─────────────────────────────────────── */
-
-.form {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-  max-width: 24rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.label {
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-}
-
-.hint {
-  margin: 0;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
-}
-
-.input {
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-active);
-  border-radius: var(--radius-md);
-  background: var(--background);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-}
-
-.input:focus-visible {
-  border-color: var(--primary);
-  outline: 3px solid var(--primary-dim);
-  outline-offset: 0;
-}
-
-.input:disabled {
-  background: var(--surface-2);
-  color: var(--text-tertiary);
-}
-
-.button {
-  padding: var(--space-3) var(--space-5);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--cta);
-  color: var(--text-inverse);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-
-.button:hover:not(:disabled) {
-  background: var(--brand-hover);
-}
-
-.button:disabled {
-  background: var(--border-active);
-  cursor: not-allowed;
-}
-
-.button:focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 3px;
-}
-
-.linkButton {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--brand-deep);
-  font-family: var(--font-body);
-  font-size: var(--font-size-small);
-  text-align: left;
-  cursor: pointer;
-}
-
-.formNote {
+.note {
   margin: 0;
   color: var(--text-tertiary);
   font-size: var(--font-size-small);
   line-height: 1.6;
 }
 
-.formError {
-  margin: 0;
-  color: var(--brand-deep);
-  font-size: var(--font-size-small);
-  line-height: 1.6;
-}
-
-/*
- * Sign-in links are single use, so arriving with a spent one is a normal thing
- * to do — most often by reopening the email a second time. It reads as an
- * explanation rather than a failure, because nothing has gone wrong.
- */
-.notice {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.6;
-}
-
-.divider {
-  margin: var(--space-4) 0 0;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border);
-}
-
-/* ── Dashboard ─────────────────────────────────── */
+/* ── Projects ──────────────────────────────────── */
 
 .projects {
   display: grid;
@@ -197,7 +141,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
 }
 
 .project {
@@ -207,9 +151,17 @@
   gap: var(--space-3);
   padding: var(--space-5);
   border: 1px solid var(--border);
-  border-top: 2px solid var(--primary);
   border-radius: var(--radius-lg);
-  background: var(--surface-2);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.project:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-2);
 }
 
 .projectName {
@@ -218,7 +170,16 @@
   font-family: var(--font-heading);
   font-size: var(--font-size-title);
   font-weight: var(--font-weight-medium);
-  line-height: 1.2;
+  line-height: 1.25;
+}
+
+.projectLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.projectLink:hover {
+  color: var(--brand-deep);
 }
 
 .projectMeta {
@@ -228,21 +189,156 @@
   line-height: 1.6;
 }
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-pill);
-  background: var(--primary-dim);
-  color: var(--primary-deep);
-  font-size: var(--font-size-caption);
-}
-
 .empty {
-  margin: 0;
+  padding: var(--space-7) var(--space-5);
+  border: 1px dashed var(--border-active);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   color: var(--text-secondary);
   font-size: var(--font-size-body);
   line-height: 1.7;
+  text-align: center;
+}
+
+/* A notice, not a failure: sign-in links are single use, so arriving with a
+   spent one is a normal thing to do — usually by reopening the email twice. */
+.notice {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-md);
+  background: var(--primary-dim);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.divider {
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding-top: var(--space-6);
+  }
+}
+
+/* ── What we need from the client ──────────────── */
+
+.needList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.needItem {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.needItem:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.needTitle {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+}
+
+/* ── Progress ──────────────────────────────────── */
+
+.stage {
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--border);
+}
+
+.stage:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.stageHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.stageName {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+}
+
+.stageList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A tick and a hollow ring rather than a checkbox: the client cannot change
+   these, and a control that does nothing when clicked is a small lie. */
+.stageOpen,
+.stageDone {
+  position: relative;
+  padding-left: var(--space-6);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.stageOpen {
+  color: var(--text-secondary);
+}
+
+.stageDone {
+  color: var(--text-tertiary);
+}
+
+.stageOpen::before,
+.stageDone::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-active);
+}
+
+.stageDone::before {
+  border-color: var(--success);
+  background: var(--success);
+  -webkit-mask-image: none;
+}
+
+.stageDone::after {
+  content: '';
+  position: absolute;
+  left: 0.1875rem;
+  top: 0.55em;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--text-inverse);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.4 5.5 10.4 11.5 3.6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2.5 7.4 5.5 10.4 11.5 3.6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }

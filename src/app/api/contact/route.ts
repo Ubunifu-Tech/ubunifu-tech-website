@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { db } from '@/lib/db';
+import type { ServiceLine } from '@/generated/prisma/client';
 import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
 
 const RATE_LIMIT = 5;
@@ -85,6 +87,62 @@ function asString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+/**
+ * The subject the visitor picked, mapped to a service line where it is
+ * unambiguous. Left null otherwise: "Project enquiry" could be any of six
+ * things, and a wrong guess sitting in the record is worse than an empty field
+ * somebody has to fill in on triage.
+ */
+const SERVICE_LINE_GUESS: Record<string, ServiceLine> = {
+  'Product question': 'product',
+  'Hosting, domains & email': 'hosting',
+  'Branding & design': 'branding',
+};
+
+/**
+ * Records the enquiry.
+ *
+ * Runs BEFORE the email, and the response no longer depends on the email
+ * succeeding. Until the console existed, a Resend outage meant the enquiry was
+ * gone — the visitor was told to email us directly and the lead was lost. Now
+ * the row is the record and the email is a notification about it, which is the
+ * right way round.
+ *
+ * submissionId is unique, so the double-submit the client already guards
+ * against cannot produce two rows either. A repeat is treated as the same
+ * enquiry rather than a new one.
+ */
+async function recordEnquiry(input: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  submissionId: string;
+  ip: string | null;
+}): Promise<boolean> {
+  try {
+    await db.enquiry.upsert({
+      where: { submissionId: input.submissionId },
+      update: {},
+      create: {
+        name: input.name,
+        email: input.email,
+        subject: input.subject,
+        message: input.message,
+        serviceLine: SERVICE_LINE_GUESS[input.subject] ?? null,
+        submissionId: input.submissionId,
+        ip: input.ip,
+      },
+    });
+    return true;
+  } catch (error) {
+    // Logged, never thrown. A database that is briefly unreachable must not
+    // stop the email going out — between the two of them the enquiry survives.
+    console.error('Contact form: could not record the enquiry:', error);
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const mediaType = req.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase();
@@ -165,9 +223,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Recorded first. Everything below is notification about a row that now
+    // exists, rather than the only trace of the enquiry.
+    const recorded = await recordEnquiry({
+      name,
+      email,
+      subject,
+      message,
+      submissionId,
+      ip:
+        req.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+        null,
+    });
+
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       console.error('Contact form: RESEND_API_KEY is not set');
+      // Only a failure if the enquiry was not captured either. If it is in the
+      // console, a missing mail key is our problem to fix, not the visitor's
+      // to work around.
+      if (recorded) return NextResponse.json({ success: true });
       return NextResponse.json(
         { error: 'Email is not configured. Please email info@ubunifutech.com directly.' },
         { status: 503 },
@@ -175,19 +251,36 @@ export async function POST(req: NextRequest) {
     }
 
     const resend = new Resend(apiKey);
-    const notification = await resend.emails.send(
-      {
-        from: 'Ubunifu Website <notifications@ubunifutech.com>',
-        to: 'info@ubunifutech.com',
-        replyTo: email,
-        subject: `[Website] ${subject} from ${name}`,
-        html: notificationEmail({ name, email, subject, message }),
-      },
-      { idempotencyKey: `contact-notify-${submissionId}` },
-    );
 
-    if (notification.error) {
-      console.error('Contact form: team notification rejected:', notification.error);
+    // Caught here rather than by the handler's outer catch: a thrown network
+    // error and a rejected send are the same event to the visitor, and once
+    // the enquiry is recorded neither of them is their problem. Letting it
+    // reach the outer catch would answer 500 and invite a resubmission of
+    // something already in the console.
+    let notificationFailed = false;
+    try {
+      const notification = await resend.emails.send(
+        {
+          from: 'Ubunifu Website <notifications@ubunifutech.com>',
+          to: 'info@ubunifutech.com',
+          replyTo: email,
+          subject: `[Website] ${subject} from ${name}`,
+          html: notificationEmail({ name, email, subject, message }),
+        },
+        { idempotencyKey: `contact-notify-${submissionId}` },
+      );
+      if (notification.error) {
+        console.error('Contact form: team notification rejected:', notification.error);
+        notificationFailed = true;
+      }
+    } catch (error) {
+      console.error('Contact form: team notification failed:', error);
+      notificationFailed = true;
+    }
+
+    if (notificationFailed && !recorded) {
+      // Neither route worked. This is the only case where the visitor has to
+      // do something, so it is the only case that reports a failure.
       return NextResponse.json(
         { error: 'We could not send your message. Please email info@ubunifutech.com directly.' },
         { status: 502 },

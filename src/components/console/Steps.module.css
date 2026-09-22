@@ -102,3 +102,25 @@ button.target:focus-visible {
 .done .label {
   color: var(--text-secondary);
 }
+
+/* A phone: numbers for every step, the name only for the one you are on, so
+   the whole journey fits without scrolling. */
+@media (max-width: 40rem) {
+  .step:not(.current) .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .step {
+    min-width: 0;
+  }
+
+  .step:not(:last-child)::after {
+    min-width: var(--space-2);
+    margin: 0 var(--space-1);
+  }
+}

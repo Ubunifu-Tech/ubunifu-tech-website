@@ -1251,3 +1251,29 @@
   color: var(--tone-green-fg);
   font-size: var(--font-size-caption);
 }
+
+/* A phone: figures two to a row, smaller, so the dashboard is a glance
+   rather than a scroll. */
+@media (max-width: 40rem) {
+  .stats {
+    gap: var(--space-3);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat {
+    padding: var(--space-4);
+  }
+
+  .statValue {
+    font-size: var(--font-size-title);
+  }
+
+  .statIcon {
+    width: 1.875rem;
+    height: 1.875rem;
+  }
+
+  .pageHead {
+    margin-bottom: var(--space-5);
+  }
+}

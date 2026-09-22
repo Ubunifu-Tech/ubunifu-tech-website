@@ -41,7 +41,7 @@ const COPY: Record<
     launcher: 'Chat with us',
     opener:
       'Hello. Ask me anything about what we do, or tell me what you are working on and I will pass it to the team.',
-    placeholder: 'A booking site for a safari company…',
+    placeholder: 'Ask us anything…',
   },
   portal: {
     endpoint: '/api/portal/assistant',
@@ -50,7 +50,7 @@ const COPY: Record<
     launcher: 'Help',
     opener:
       'Hello. Ask me about your projects, documents or invoices, or tell me what you need and I will pass it to the team.',
-    placeholder: 'When is the next update due?',
+    placeholder: 'Ask about your projects…',
   },
 };
 

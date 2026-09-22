@@ -621,6 +621,21 @@
   margin: 0;
 }
 
+/* On a phone a wide table scrolls sideways inside the document rather than
+   squeezing each cell to a word per line. */
+@media (max-width: 40rem) {
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    table-layout: auto;
+  }
+
+  .prose th,
+  .prose td {
+    min-width: 8rem;
+  }
+}
+
 .prose img {
   max-width: 100%;
   height: auto;

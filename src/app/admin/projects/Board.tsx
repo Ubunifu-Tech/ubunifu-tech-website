@@ -7,7 +7,8 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -80,9 +81,11 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
   const [pending, startTransition] = useTransition();
 
   const sensors = useSensors(
-    // A few pixels of travel before it counts as a drag, so clicking a card's
-    // name still just opens the project.
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // With a mouse, a few pixels of travel before it counts as a drag, so
+    // clicking a card's name still just opens the project. On a touch screen,
+    // press and hold: a quick swipe scrolls the lanes instead of grabbing.
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor),
   );
 

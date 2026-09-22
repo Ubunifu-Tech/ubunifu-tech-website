@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
@@ -61,7 +62,10 @@ export function MobileNav({
         <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
       </Link>
 
-      {open && (
+      {/* Rendered into <body>: the top bar's blur would otherwise become the
+          box a fixed drawer is positioned in, and clip it to the bar. */}
+      {open &&
+        createPortal(
         <div className={styles.drawerBackdrop} onClick={() => setOpen(false)}>
           <aside
             id="console-drawer"
@@ -87,8 +91,9 @@ export function MobileNav({
             </div>
             <ConsoleNav counts={counts} permissions={permissions} />
           </aside>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   );
 }

@@ -68,13 +68,26 @@ export async function inviteContact(
     entityId: contact.id,
   });
 
+  /**
+   * The audit line is derived from what actually happened, not from having
+   * tried. Recording "sent" against a send that failed puts the audit trail in
+   * direct contradiction with the email log, and the audit trail is the one
+   * people believe — so the failure would be invisible until a client said
+   * they never got it.
+   */
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: contact.activatedAt ? 'client.sign_in.link_sent' : 'client.invite.sent',
+    action: sent.ok
+      ? contact.activatedAt
+        ? 'client.sign_in.link_sent'
+        : 'client.invite.sent'
+      : 'client.invite.send_failed',
     entityType: 'ClientContact',
     entityId: contact.id,
-    summary: `Sent to ${contact.email}`,
+    summary: sent.ok
+      ? `Sent to ${contact.email}`
+      : `Could not send to ${contact.email}: ${sent.error}`,
   });
 
   revalidatePath('/admin/clients');

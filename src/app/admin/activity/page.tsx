@@ -32,6 +32,7 @@ const FILTERS = [
 const ACTION_LABEL: Record<string, string> = {
   'client.created': 'Client created',
   'client.invite.sent': 'Portal invitation sent',
+  'client.invite.send_failed': 'Invitation could not be sent',
   'client.invite.opened': 'Invitation opened',
   'client.account.activated': 'Client set up their account',
   'client.sign_in.success': 'Client signed in',

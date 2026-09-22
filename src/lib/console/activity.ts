@@ -30,6 +30,7 @@ function describeAudit(action: string, summary: string | null): string {
   const said: Record<string, string> = {
     'client.created': 'Client created',
     'client.invite.sent': 'Portal invitation sent',
+    'client.invite.send_failed': 'Portal invitation could NOT be sent',
     'client.invite.opened': 'Invitation link opened',
     'client.account.activated': 'Client set up their account',
     'client.sign_in.success': 'Client signed in',
@@ -64,6 +65,7 @@ function auditTone(action: string): ActivityTone {
     return 'bad';
   }
   if (action.includes('voided') || action.includes('reversed')) return 'bad';
+  if (action.includes('send_failed')) return 'bad';
   if (
     action.includes('activated') ||
     action.includes('completed') ||

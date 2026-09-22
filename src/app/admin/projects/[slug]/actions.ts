@@ -8,7 +8,7 @@ import {
   ProjectStatus,
 } from '@/generated/prisma/client';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
-import { parseDateInput, parseMoney } from '@/lib/console/money';
+import { formatMoney, parseDateInput, parseMoney, toDateInputValue } from '@/lib/console/money';
 import {
   guardsFor,
   isAllowed,
@@ -209,6 +209,11 @@ export async function saveLineItem(
       label: true,
       currency: true,
       billingKind: true,
+      // The current values, so the audit line can say what changed rather than
+      // only what it changed to.
+      amountMinor: true,
+      status: true,
+      nextDueAt: true,
       project: { select: { slug: true, deletedAt: true } },
     },
   });
@@ -249,17 +254,50 @@ export async function saveLineItem(
     },
   });
 
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: 'line_item.saved',
-    entityType: 'LineItem',
-    entityId: line.id,
-    summary: `${line.label} — ${amountMinor} ${line.currency}`,
-  });
+  /**
+   * Only what actually differs, with both values.
+   *
+   * The previous version recorded the new amount alone, in raw minor units,
+   * and said nothing about status or renewal date — so moving a line from
+   * planned to waived wrote a row that read like a price edit, and nobody
+   * could tell afterwards what the price had been. A price change is the one
+   * thing on a project a client is most likely to dispute.
+   */
+  const changes: Record<string, [string, string]> = {};
+
+  if (line.amountMinor !== amountMinor) {
+    changes.amount = [
+      formatMoney(line.amountMinor, line.currency),
+      formatMoney(amountMinor, line.currency),
+    ];
+  }
+  if (status && status !== line.status) {
+    changes.status = [line.status, status];
+  }
+  if (recurring && line.nextDueAt?.getTime() !== nextDueAt?.getTime()) {
+    changes.renewsOn = [
+      line.nextDueAt ? toDateInputValue(line.nextDueAt) : 'not set',
+      nextDueAt ? toDateInputValue(nextDueAt) : 'not set',
+    ];
+  }
+
+  // Saving a form without touching anything is not an event.
+  if (Object.keys(changes).length > 0) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'line_item.saved',
+      entityType: 'LineItem',
+      entityId: line.id,
+      summary: `${line.label}: ${Object.entries(changes)
+        .map(([field, [before, after]]) => `${field} ${before} → ${after}`)
+        .join(', ')}`,
+      metadata: { changes },
+    });
+  }
 
   revalidatePath(`/admin/projects/${line.project.slug}`);
-  return { status: 'done', message: 'Saved.' };
+  return { status: 'done', message: Object.keys(changes).length > 0 ? 'Saved.' : 'Nothing changed.' };
 }
 
 /** Ticking a deliverable off. The client sees this in their portal. */

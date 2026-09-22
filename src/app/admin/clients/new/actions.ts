@@ -271,7 +271,7 @@ export async function createClient(
       actorId: created.contactId,
     });
 
-    await sendConsoleEmail({
+    const sent = await sendConsoleEmail({
       to: email,
       subject: 'Your Ubunifu project portal is ready',
       html: clientInviteEmail({
@@ -284,13 +284,16 @@ export async function createClient(
       entityId: created.contactId,
     });
 
+    // Derived from the outcome. This action redirects straight afterwards, so
+    // the audit line is the only trace the person who clicked will ever see —
+    // it has to say what really happened rather than what was attempted.
     await recordAudit({
       actorType: 'staff',
       actorId: staff.id,
-      action: 'client.invite.sent',
+      action: sent.ok ? 'client.invite.sent' : 'client.invite.send_failed',
       entityType: 'ClientContact',
       entityId: created.contactId,
-      summary: `Sent to ${email}`,
+      summary: sent.ok ? `Sent to ${email}` : `Could not send to ${email}: ${sent.error}`,
     });
   }
 

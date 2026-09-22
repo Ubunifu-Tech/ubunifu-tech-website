@@ -106,3 +106,21 @@ export async function currentTerms() {
 }
 
 export { renderMarkdown };
+
+/**
+ * Records that the client opened a signing request, once.
+ *
+ * NOT a server action, and it used to be one. Living in a 'use server' file
+ * made it a public endpoint: anyone with a request id could POST to it, signed
+ * in or not, and move another client's contract from "sent" to "opened" — which
+ * is the fact staff read before deciding whether to chase. It is only ever
+ * called from the portal page, after that page's own query has already
+ * established the request belongs to the reader, so the check lives there and
+ * this is plain server code nobody can reach from outside.
+ */
+export async function markSignatureRequestViewed(requestId: string): Promise<void> {
+  await db.signatureRequest.updateMany({
+    where: { id: requestId, status: 'sent' },
+    data: { status: 'viewed', viewedAt: new Date() },
+  });
+}

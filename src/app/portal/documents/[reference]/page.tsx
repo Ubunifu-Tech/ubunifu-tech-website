@@ -3,13 +3,13 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import {
+  markSignatureRequestViewed,
   DOCUMENT_KIND_LABEL,
   PORTAL_DOCUMENT_STATUS_LABEL,
   renderMarkdown,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { RespondForm, SignForm } from '../SignForm';
-import { markViewed } from '../actions';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -83,7 +83,7 @@ export default async function PortalDocument({
   if (!request) notFound();
 
   // Recorded once, so we know whether they have actually opened it.
-  if (request.status === 'sent') await markViewed(request.id);
+  if (request.status === 'sent') await markSignatureRequestViewed(request.id);
 
   const signature = request.signatures[0];
   const expired = request.expiresAt !== null && request.expiresAt.getTime() < now.getTime();
@@ -131,7 +131,9 @@ export default async function PortalDocument({
         </p>
       )}
 
-      {request.respondedAt && (
+      {/* Not once it is signed: "we are working on a new version" is untrue the
+          moment they decide this one is fine after all. */}
+      {request.respondedAt && !signature && (
         <div className={styles.notice} role="status">
           <p>
             {declined

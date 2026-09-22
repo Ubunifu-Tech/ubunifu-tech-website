@@ -70,6 +70,13 @@ export async function signDocument(
       message: 'This version was withdrawn. A newer one should be waiting for you.',
     };
   }
+  if (request.status === 'declined') {
+    return {
+      status: 'error',
+      message:
+        'You told us you could not sign this version, so it is closed. If that has changed, ask us and we will send it again.',
+    };
+  }
   if (request.expiresAt && request.expiresAt.getTime() < Date.now()) {
     return { status: 'error', message: 'This signing request has expired. Ask us to send it again.' };
   }
@@ -98,14 +105,22 @@ export async function signDocument(
   const headerList = await headers();
   const now = new Date();
 
-  await db.$transaction(async (tx) => {
+  /*
+   * The claim decides whether a signature happened, so its answer has to reach
+   * the code below it. This used to throw on a lost claim and then SWALLOW the
+   * throw — after which the function carried on, wrote "document.signed" into
+   * the audit trail and told the client "Signed. Thank you". Nothing had been
+   * signed: a double tap, or a decline in another tab a moment earlier, lost
+   * the claim, and the record then said the opposite of what happened.
+   */
+  const signed = await db.$transaction(async (tx) => {
     // Conditional on the status we read, so two taps on a phone cannot record
     // two signatures against one request.
     const claimed = await tx.signatureRequest.updateMany({
       where: { id: request.id, status: { in: ['sent', 'viewed'] } },
       data: { status: 'signed' },
     });
-    if (claimed.count !== 1) throw new Error('already-signed');
+    if (claimed.count !== 1) return false;
 
     await tx.signature.create({
       data: {
@@ -131,10 +146,24 @@ export async function signDocument(
       where: { id: request.document.id },
       data: { status: 'signed' },
     });
-  }).catch((error: unknown) => {
-    if (error instanceof Error && error.message === 'already-signed') return;
-    throw error;
+    return true;
   });
+
+  if (!signed) {
+    // Somebody — possibly this same person in another tab — got there first.
+    // Say what the request is now rather than guess.
+    const current = await db.signatureRequest.findUnique({
+      where: { id: request.id },
+      select: { status: true },
+    });
+    return {
+      status: 'error',
+      message:
+        current?.status === 'signed'
+          ? 'This has already been signed — your copy is on this page.'
+          : 'This could not be signed because it changed while you were on the page. Refresh to see where it stands.',
+    };
+  }
 
   await recordAudit({
     actorType: 'client_contact',
@@ -153,13 +182,6 @@ export async function signDocument(
   return { status: 'done', message: 'Signed. Thank you — we have a copy and so do you.' };
 }
 
-/** Records that the client opened it, once. */
-export async function markViewed(requestId: string): Promise<void> {
-  await db.signatureRequest.updateMany({
-    where: { id: requestId, status: 'sent' },
-    data: { status: 'viewed', viewedAt: new Date() },
-  });
-}
 
 /**
  * Not signing.
@@ -205,6 +227,8 @@ export async function respondToDocument(
     select: {
       id: true,
       status: true,
+      expiresAt: true,
+      respondedAt: true,
       version: { select: { version: true } },
       document: {
         select: {
@@ -221,8 +245,23 @@ export async function respondToDocument(
   if (request.status === 'signed') {
     return { status: 'error', message: 'This has already been signed.' };
   }
-  if (request.status === 'declined') {
+  // Each of these used to fall through to one message — "we already have your
+  // answer" — including for a request we had WITHDRAWN, where the client had
+  // never answered anything. Say which it actually is.
+  if (request.status === 'declined' || request.respondedAt) {
     return { status: 'error', message: 'We already have your answer on this one.' };
+  }
+  if (request.status === 'cancelled') {
+    return {
+      status: 'error',
+      message: 'We withdrew this version, so there is nothing to answer. A newer one should be waiting for you.',
+    };
+  }
+  if (request.expiresAt && request.expiresAt.getTime() < Date.now()) {
+    return {
+      status: 'error',
+      message: 'This request has run out. Tell us what you wanted to say and we will send a fresh one.',
+    };
   }
 
   const now = new Date();
@@ -231,9 +270,12 @@ export async function respondToDocument(
   try {
     await db.$transaction(async (tx) => {
       // Conditional on the status we read, for the same reason signing is:
-      // two taps must not produce two answers.
+      // two taps must not produce two answers. respondedAt is part of the
+      // claim because asking for changes does not move the status — without
+      // it, a second answer from another tab matched too and silently
+      // replaced the first one's words.
       const claimed = await tx.signatureRequest.updateMany({
-        where: { id: request.id, status: { in: ['sent', 'viewed'] } },
+        where: { id: request.id, status: { in: ['sent', 'viewed'] }, respondedAt: null },
         data: {
           // Asking for changes leaves it open. The client may still sign this
           // version once we have spoken, and closing it here would force a
@@ -253,7 +295,20 @@ export async function respondToDocument(
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'already-answered') {
-      return { status: 'error', message: 'We already have your answer on this one.' };
+      // Lost the claim to a change we did not see. Read what it is now.
+      const current = await db.signatureRequest.findUnique({
+        where: { id: request.id },
+        select: { status: true, respondedAt: true },
+      });
+      return {
+        status: 'error',
+        message:
+          current?.status === 'signed'
+            ? 'This was signed a moment ago, so there is nothing left to answer.'
+            : current?.respondedAt || current?.status === 'declined'
+              ? 'We already have your answer on this one.'
+              : 'This changed while you were on the page. Refresh to see where it stands.',
+      };
     }
     throw error;
   }

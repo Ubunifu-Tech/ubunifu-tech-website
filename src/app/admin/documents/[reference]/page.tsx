@@ -341,7 +341,13 @@ export default async function DocumentPage({
                 <div className={forms.cardHeader}>
                   <h2 className={forms.cardTitle}>Send it</h2>
                   <span className={forms.cardMeta}>
-                    {live ? `Version ${live.version.version} is with them` : 'Not sent yet'}
+                    {!live
+                      ? 'Not sent yet'
+                      : live.status === 'declined'
+                        ? `Version ${live.version.version} was declined`
+                        : live.status === 'signed'
+                          ? `Version ${live.version.version} is signed`
+                          : `Version ${live.version.version} is with them`}
                   </span>
                 </div>
                 {live && (

@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BrandMark } from '@/components/BrandMark';
 import { getClientActor } from '@/lib/console/auth';
+import { PortalNav } from './PortalNav';
 import styles from './Portal.module.css';
 
 /**
@@ -42,6 +43,7 @@ export default async function PortalLayout({ children }: { children: React.React
               Ubunifu <span className={styles.org}>· {actor.clientName}</span>
             </span>
           </Link>
+          <PortalNav />
           <div className={styles.account}>
             <span>{actor.name}</span>
             {/* A plain form, so signing out does not depend on JavaScript —

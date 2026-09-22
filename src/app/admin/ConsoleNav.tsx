@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Receipt,
   RefreshCw,
+  Settings,
 } from 'lucide-react';
 import styles from './Admin.module.css';
 
@@ -37,6 +38,7 @@ const ICONS = {
   invoices: Receipt,
   renewals: RefreshCw,
   activity: Activity,
+  settings: Settings,
 } as const;
 
 type Item = {
@@ -70,7 +72,10 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   },
   {
     label: 'Record',
-    items: [{ href: '/activity', label: 'Activity', icon: 'activity' }],
+    items: [
+      { href: '/activity', label: 'Activity', icon: 'activity' },
+      { href: '/settings', label: 'Settings', icon: 'settings' },
+    ],
   },
 ];
 

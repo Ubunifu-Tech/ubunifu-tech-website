@@ -342,3 +342,44 @@
   -webkit-mask-size: contain;
   mask-size: contain;
 }
+
+/* ── Portal navigation ─────────────────────────── */
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-right: auto;
+  margin-left: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.navLink {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.navLink:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.navLink[aria-current='page'] {
+  background: var(--primary-dim);
+  color: var(--primary-deep);
+}
+
+@media (max-width: 40rem) {
+  .nav {
+    margin-left: 0;
+    width: 100%;
+    order: 3;
+  }
+}

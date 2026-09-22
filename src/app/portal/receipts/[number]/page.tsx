@@ -2,14 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
-import { requireStaff } from '@/lib/console/auth';
+import { requireClient } from '@/lib/console/auth';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
-import { EmailReceiptButton } from '../../invoices/InvoiceControls';
-import { PrintButton } from '../PrintButton';
-import styles from '../../Admin.module.css';
-import sheet from '../Receipt.module.css';
+import { PrintButton } from '@/app/admin/receipts/PrintButton';
+import styles from '../../Portal.module.css';
+import sheet from '@/app/admin/receipts/Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -17,25 +16,28 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
 }
 
 /**
- * The receipt.
+ * The client's own receipt — the same document staff see.
  *
- * Deliberately the same document staff see and the client receives — there is
- * no second, prettier version for sending. What is on screen is what prints,
- * which is the only way the two can never disagree.
+ * There is deliberately no separate client-facing version: two renderings of
+ * one receipt is two things that can disagree, and this is the piece of paper
+ * that proves they paid us.
  */
-export default async function ReceiptPage({
+export default async function PortalReceipt({
   params,
 }: {
   params: Promise<{ number: string }>;
 }) {
-  await requireStaff();
+  const actor = await requireClient();
   const { number } = await params;
   const org = await getOrg();
 
-  const receipt = await db.receipt.findUnique({
-    where: { number: decodeURIComponent(number) },
+  const receipt = await db.receipt.findFirst({
+    where: {
+      number: decodeURIComponent(number),
+      // Scoped in the query: another client's receipt simply does not match.
+      payment: { invoice: { clientId: actor.clientId } },
+    },
     select: {
-      id: true,
       number: true,
       issuedAt: true,
       payment: {
@@ -45,16 +47,14 @@ export default async function ReceiptPage({
           method: true,
           reference: true,
           receivedAt: true,
-          note: true,
-          recordedBy: { select: { name: true } },
           invoice: {
             select: {
               number: true,
               totalMinor: true,
               paidMinor: true,
               currency: true,
-              client: { select: { name: true, legalName: true, slug: true, country: true } },
-              project: { select: { name: true, reference: true, slug: true } },
+              client: { select: { name: true, legalName: true, country: true } },
+              project: { select: { name: true, reference: true } },
             },
           },
         },
@@ -73,11 +73,10 @@ export default async function ReceiptPage({
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
-        <Link href={`/invoices/${invoice.number}`} className={styles.backLink}>
-          ← {invoice.number}
+        <Link href="/portal/invoices" className={styles.projectMeta}>
+          ← Invoices
         </Link>
         <PrintButton />
-        <EmailReceiptButton receiptId={receipt.id} />
       </div>
 
       <article className={sheet.sheet}>
@@ -87,9 +86,7 @@ export default async function ReceiptPage({
             <p className={sheet.issuerName}>
               {org.legalName}
               {org.addressLines && (
-                <span className={sheet.issuerLine}>
-                  {org.addressLines.split('\n').join(', ')}
-                </span>
+                <span className={sheet.issuerLine}>{org.addressLines.split('\n').join(', ')}</span>
               )}
               <span className={sheet.issuerLine}>{org.email}</span>
               {org.tin && <span className={sheet.issuerLine}>TIN {org.tin}</span>}
@@ -153,12 +150,8 @@ export default async function ReceiptPage({
             )}
             <tr>
               <th className={sheet.detailKey} scope="row">Against invoice</th>
-              <td className={sheet.detailValue}>{invoice.number}</td>
-            </tr>
-            <tr>
-              <th className={sheet.detailKey} scope="row">Invoice total</th>
               <td className={sheet.detailValue}>
-                {formatMoney(invoice.totalMinor, invoice.currency)}
+                <Link href={`/portal/invoices/${invoice.number}`}>{invoice.number}</Link>
               </td>
             </tr>
             <tr>
@@ -166,9 +159,7 @@ export default async function ReceiptPage({
                 {stillOwed === 0 ? 'Balance' : 'Balance remaining'}
               </th>
               <td className={sheet.detailValue}>
-                {stillOwed === 0
-                  ? 'Paid in full'
-                  : formatMoney(stillOwed, invoice.currency)}
+                {stillOwed === 0 ? 'Paid in full' : formatMoney(stillOwed, invoice.currency)}
               </td>
             </tr>
           </tbody>
@@ -177,7 +168,6 @@ export default async function ReceiptPage({
         <p className={sheet.foot}>
           This receipt confirms a payment recorded against invoice {invoice.number}. It is issued
           by {org.legalName} and is valid without a signature.
-          {payment.recordedBy ? ` Recorded by ${payment.recordedBy.name}.` : ''}
         </p>
       </article>
     </main>

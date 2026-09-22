@@ -1117,3 +1117,46 @@ model LineItemTemplate {
 
   @@unique([templateId, position])
 }
+
+/// Who we are on a document, and how to pay us.
+///
+/// A single row. It exists because an invoice without a registered name and a
+/// TIN is not one a Tanzanian client's accountant will accept, and because
+/// hardcoding bank details in a component means changing them requires a
+/// deploy. Snapshotted onto an invoice when it is sent, so changing the bank
+/// account later never rewrites a document somebody is already holding.
+model OrgSettings {
+  /// Always "default". A constant id is what makes this a singleton without a
+  /// separate table of one.
+  id String @id @default("default")
+
+  legalName String @default("Ubunifu Technologies")
+  tradingName String?
+  /// Taxpayer Identification Number. Printed on every invoice.
+  tin       String?
+  /// VAT Registration Number, where registered.
+  vrn       String?
+  addressLines String?
+  country   String  @default("TZ")
+  email     String  @default("info@ubunifutech.com")
+  phone     String?
+  website   String?
+
+  /// Basis points, so 18% is 1800 and nothing is stored as a float.
+  vatRateBps Int     @default(0)
+  chargesVat Boolean @default(false)
+
+  bankName        String?
+  bankAccountName String?
+  bankAccountNumber String?
+  bankSwift       String?
+  mobileMoneyName String?
+  mobileMoneyNumber String?
+
+  /// Printed at the foot of every invoice.
+  invoiceFooter String?
+  /// Days from issue to due, unless overridden on the invoice.
+  paymentTermsDays Int @default(14)
+
+  updatedAt DateTime @updatedAt
+}

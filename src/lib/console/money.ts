@@ -99,6 +99,20 @@ export function formatRelative(value: Date | null | undefined, now: Date): strin
   return 'just now';
 }
 
+/**
+ * Reads what an <input type="date"> posted.
+ *
+ * Parsed at noon UTC rather than midnight, so a date does not slide to the
+ * previous day for anyone east of Greenwich — which, for a Tanzanian business,
+ * is everyone. Returns null for anything unreadable, so a typo becomes a
+ * validation error rather than an Invalid Date written to a column.
+ */
+export function parseDateInput(value: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T12:00:00.000Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /** For <input type="date">, which only ever speaks YYYY-MM-DD. */
 export function toDateInputValue(value: Date | null | undefined): string {
   if (!value) return '';

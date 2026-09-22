@@ -279,3 +279,74 @@ export function clientSignInEmail(input: { name: string; url: string }): string 
 
   return shell('Your link to sign in to the Ubunifu portal.', body);
 }
+
+/**
+ * An invoice, with the amount and due date in the body rather than only behind
+ * the link. Someone deciding whether to open a payment email at 9pm wants to
+ * know what it is for first.
+ */
+export function invoiceEmail(input: {
+  name: string;
+  clientName: string;
+  number: string;
+  total: string;
+  dueAt: Date | null;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const org = escapeHtml(input.clientName);
+  const due = input.dueAt
+    ? new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      }).format(input.dueAt)
+    : null;
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Invoice ${escapeHtml(input.number)}</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. Here is invoice <strong style="color:#1F1A36;">${escapeHtml(input.number)}</strong>
+      for <strong style="color:#1F1A36;">${org}</strong>, for
+      <strong style="color:#1F1A36;">${escapeHtml(input.total)}</strong>${due ? `, due by <strong style="color:#1F1A36;">${escapeHtml(due)}</strong>` : ''}.
+    </p>
+    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Open it in your portal to see what it covers and how to pay. We will send a
+      receipt as soon as the payment reaches us.
+    </p>
+    ${button(input.url, 'View the invoice')}
+    ${securityNote('30 days')}`;
+
+  return shell(`Invoice ${input.number} for ${input.total}.`, body);
+}
+
+/** Proof of payment, sent the moment it is recorded. */
+export function receiptEmail(input: {
+  name: string;
+  number: string;
+  invoiceNumber: string;
+  amount: string;
+  issuedAt: Date;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const issued = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(input.issuedAt);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Thank you — payment received</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. We have recorded <strong style="color:#1F1A36;">${escapeHtml(input.amount)}</strong>
+      against invoice <strong style="color:#1F1A36;">${escapeHtml(input.invoiceNumber)}</strong>.
+    </p>
+    <p style="margin:0 0 8px;color:#5A5170;font-size:15px;line-height:1.7;">
+      This is receipt <strong style="color:#1F1A36;">${escapeHtml(input.number)}</strong>, issued ${escapeHtml(issued)}.
+      Keep it for your records — you can also find it in your portal at any time.
+    </p>`;
+
+  return shell(`Receipt ${input.number} for ${input.amount}.`, body);
+}

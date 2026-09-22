@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
-import { formatRelative } from '@/lib/console/money';
+import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { TriageControls } from './TriageControls';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Enquiries' };
 
@@ -30,8 +31,6 @@ const STATUS_BADGE: Record<EnquiryStatus, string> = {
 };
 
 /**
- * Filters, as links rather than a control.
- *
  * "Open" is the default because it answers the only question anyone opens this
  * screen with: what has come in that nobody has dealt with. Spam and declined
  * are kept rather than deleted — an address that sent one real enquiry and one
@@ -66,10 +65,10 @@ function filterToWhere(key: string): Prisma.EnquiryWhereInput {
 export default async function EnquiriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>;
+  searchParams: Promise<{ show?: string; open?: string }>;
 }) {
   await requireStaff();
-  const { show } = await searchParams;
+  const { show, open } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const now = new Date();
 
@@ -87,9 +86,12 @@ export default async function EnquiriesPage({
       serviceLine: true,
       internalNote: true,
       createdAt: true,
-      client: { select: { id: true, name: true } },
+      client: { select: { name: true, slug: true } },
     },
   });
+
+  /** One row is expanded at a time, chosen by ?open=. */
+  const expanded = enquiries.find((enquiry) => enquiry.id === open);
 
   return (
     <main className={styles.page}>
@@ -99,8 +101,8 @@ export default async function EnquiriesPage({
             What has <span className={styles.headingAccent}>come in</span>
           </h1>
           <p className={styles.lead}>
-            Everything sent through the website form. Nothing here is deleted — an address that
-            sends one real enquiry and one piece of spam is worth being able to look up.
+            Everything sent through the website form, recorded before anyone is emailed — so an
+            outage never loses a lead. Nothing here is deleted.
           </p>
         </div>
       </div>
@@ -118,58 +120,144 @@ export default async function EnquiriesPage({
         ))}
       </div>
 
-      {enquiries.length === 0 ? (
-        <p className={styles.empty}>
-          {active === 'open'
-            ? 'Nothing waiting. Everything that has come in has been picked up.'
-            : 'Nothing here.'}
-        </p>
-      ) : (
-        <div className={styles.stack}>
-          {enquiries.map((enquiry) => (
-            <article key={enquiry.id} className={styles.record}>
-              <div className={styles.recordHead}>
-                <h2 className={styles.recordName}>{enquiry.name}</h2>
-                <span className={`${forms.badge} ${STATUS_BADGE[enquiry.status]}`}>
-                  {STATUS_LABEL[enquiry.status]}
-                </span>
-              </div>
-              <p className={styles.recordMeta}>
-                <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a> · {enquiry.subject} ·{' '}
-                {formatRelative(enquiry.createdAt, now)}
-                {enquiry.client && ` · now ${enquiry.client.name}`}
-              </p>
+      <div className={styles.stack}>
+        <div className={table.frame}>
+          <div className={table.toolbar}>
+            <div className={table.toolbarText}>
+              <h2 className={table.title}>
+                {FILTERS.find((f) => f.key === active)?.label ?? 'Enquiries'}
+              </h2>
+              <span className={table.count}>
+                {enquiries.length} {enquiries.length === 1 ? 'enquiry' : 'enquiries'}
+              </span>
+            </div>
+          </div>
 
-              <p className={styles.quote}>{enquiry.message}</p>
-
-              {enquiry.status === 'converted' ? (
-                <div className={styles.recordActions}>
-                  <p className={styles.note}>
-                    Onboarded as {enquiry.client?.name ?? 'a client'}. Nothing left to do here.
-                  </p>
-                </div>
-              ) : (
-                <div className={styles.rows}>
-                  <TriageControls
-                    id={enquiry.id}
-                    status={enquiry.status}
-                    note={enquiry.internalNote}
-                  />
-                  <div className={styles.recordActions}>
-                    <Link href={`/clients/new?enquiry=${enquiry.id}`} className={forms.button}>
-                      Onboard as a client
-                    </Link>
-                    <p className={forms.payoff}>
-                      Opens the new client form with their name, email and what they asked for
-                      already filled in.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </article>
-          ))}
+          <div className={table.scroll}>
+            <table className={table.table}>
+              <thead>
+                <tr>
+                  <th className={table.th} scope="col">From</th>
+                  <th className={table.th} scope="col">About</th>
+                  <th className={table.th} scope="col">Message</th>
+                  <th className={table.th} scope="col">Stage</th>
+                  <th className={table.th} scope="col">Received</th>
+                  <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                    <span className={table.muted}>Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {enquiries.length === 0 ? (
+                  <tr>
+                    <td className={table.emptyCell} colSpan={6}>
+                      <p className={table.emptyTitle}>
+                        {active === 'open' ? 'Nothing waiting.' : 'Nothing here.'}
+                      </p>
+                      <p className={table.emptyHint}>
+                        {active === 'open'
+                          ? 'Everything that has come in has been picked up.'
+                          : 'Try another view.'}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  enquiries.map((enquiry) => (
+                    <tr key={enquiry.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        {enquiry.name}
+                        <span className={table.sub}>
+                          <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
+                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{enquiry.subject}</td>
+                      <td className={table.td}>
+                        <span className={table.clamp}>{enquiry.message}</span>
+                      </td>
+                      <td className={table.td}>
+                        <span className={`${forms.badge} ${STATUS_BADGE[enquiry.status]}`}>
+                          {STATUS_LABEL[enquiry.status]}
+                        </span>
+                        {enquiry.client && (
+                          <span className={table.sub}>
+                            <Link href={`/clients/${enquiry.client.slug}`}>
+                              {enquiry.client.name}
+                            </Link>
+                          </span>
+                        )}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(enquiry.createdAt)}
+                        <span className={table.sub}>
+                          {formatRelative(enquiry.createdAt, now)}
+                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <span className={table.actionGroup}>
+                          {enquiry.status === 'converted' ? (
+                            <span className={table.muted}>Onboarded</span>
+                          ) : (
+                            <>
+                              <Link
+                                href={
+                                  expanded?.id === enquiry.id
+                                    ? `/enquiries?show=${active}`
+                                    : `/enquiries?show=${active}&open=${enquiry.id}`
+                                }
+                                className={table.action}
+                                scroll={false}
+                              >
+                                {expanded?.id === enquiry.id ? 'Close' : 'Triage'}
+                              </Link>
+                              <Link
+                                href={`/clients/new?enquiry=${enquiry.id}`}
+                                className={table.action}
+                              >
+                                Onboard
+                              </Link>
+                            </>
+                          )}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
+
+        {/* Triage opens beneath the table rather than inside a row: a note box
+            and a status control crammed into a cell make every other row taller
+            for no reason. */}
+        {expanded && (
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>{expanded.name}</h2>
+              <span className={forms.cardMeta}>
+                {expanded.subject} · {formatRelative(expanded.createdAt, now)}
+              </span>
+            </div>
+            <p className={styles.quote}>{expanded.message}</p>
+            <div className={styles.rows}>
+              <TriageControls
+                id={expanded.id}
+                status={expanded.status}
+                note={expanded.internalNote}
+              />
+            </div>
+            <div className={forms.actions}>
+              <Link href={`/clients/new?enquiry=${expanded.id}`} className={forms.button}>
+                Onboard as a client
+              </Link>
+              <p className={forms.payoff}>
+                Opens the new client form with their name, email and what they asked for already
+                filled in.
+              </p>
+            </div>
+          </section>
+        )}
+      </div>
     </main>
   );
 }

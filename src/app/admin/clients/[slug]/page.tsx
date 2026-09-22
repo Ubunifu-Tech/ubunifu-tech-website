@@ -1,0 +1,403 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { db } from '@/lib/db';
+import { requireStaff } from '@/lib/console/auth';
+import { activityForClient } from '@/lib/console/activity';
+import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
+import { ActivityFeed } from '@/components/console/ActivityFeed';
+import { InviteButton } from '../InviteButton';
+import styles from '../../Admin.module.css';
+import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
+
+const TONE_CLASS: Record<string, string> = {
+  neutral: '',
+  live: forms.badgeLive,
+  good: forms.badgeGood,
+  warn: forms.badgeWarn,
+  bad: forms.badgeBad,
+};
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const client = await db.client.findUnique({ where: { slug }, select: { name: true } });
+  return { title: client?.name ?? 'Client' };
+}
+
+/**
+ * The client record as a hub.
+ *
+ * Everything about one organisation in one place: their people, their work,
+ * what they owe, and the whole history of what has passed between us. This is
+ * the screen someone opens when a client rings, so it answers the questions a
+ * client asks on the phone rather than the ones a database would.
+ */
+export default async function ClientPage({ params }: { params: Promise<{ slug: string }> }) {
+  await requireStaff();
+  const { slug } = await params;
+  const now = new Date();
+
+  const client = await db.client.findFirst({
+    where: { slug, deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      legalName: true,
+      country: true,
+      currency: true,
+      website: true,
+      notes: true,
+      createdAt: true,
+      contacts: {
+        where: { deletedAt: null },
+        orderBy: [{ isPrimary: 'desc' }, { name: 'asc' }],
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          phone: true,
+          isPrimary: true,
+          canSignIn: true,
+          activatedAt: true,
+          lastSeenAt: true,
+        },
+      },
+      projects: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          reference: true,
+          status: true,
+          serviceLine: true,
+          currency: true,
+          targetDate: true,
+          lineItems: {
+            where: { status: { in: ['planned', 'active'] } },
+            select: { amountMinor: true, quantity: true, currency: true },
+          },
+        },
+      },
+      invoices: {
+        where: { status: { notIn: ['draft', 'void'] } },
+        select: { totalMinor: true, paidMinor: true, currency: true },
+      },
+      enquiries: {
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        select: { id: true, subject: true, createdAt: true, status: true },
+      },
+    },
+  });
+
+  if (!client) notFound();
+
+  const activity = await activityForClient(client.id);
+
+  /**
+   * Summed only within the client's own currency. There is no FX rate anywhere
+   * in this system, so adding a TZS line into a USD total would print a figure
+   * that is not money. Anything outside it is named rather than folded in.
+   */
+  const ownCurrency = <T extends { currency: string }>(rows: T[]) =>
+    rows.filter((row) => row.currency === client.currency);
+
+  const allLines = client.projects.flatMap((p) => p.lineItems);
+  const committed = ownCurrency(allLines).reduce(
+    (total, line) => total + line.amountMinor * line.quantity,
+    0,
+  );
+  const outstanding = ownCurrency(client.invoices).reduce(
+    (total, invoice) => total + Math.max(0, invoice.totalMinor - invoice.paidMinor),
+    0,
+  );
+  const received = ownCurrency(client.invoices).reduce(
+    (total, invoice) => total + invoice.paidMinor,
+    0,
+  );
+  const mixed = [
+    ...new Set(
+      [...allLines, ...client.invoices]
+        .filter((row) => row.currency !== client.currency)
+        .map((row) => row.currency),
+    ),
+  ];
+
+  const live = client.projects.filter(
+    (p) => !['closed', 'cancelled'].includes(p.status),
+  ).length;
+
+  return (
+    <main className={styles.page}>
+      <div className={styles.pageHead}>
+        <div className={styles.headText}>
+          <Link href="/clients" className={styles.backLink}>
+            ← Clients
+          </Link>
+          <h1 className={styles.heading}>{client.name}</h1>
+          <p className={styles.facts}>
+            {client.legalName && (
+              <span>
+                <span className={styles.factLabel}>Registered as</span> {client.legalName}
+              </span>
+            )}
+            <span>
+              <span className={styles.factLabel}>Country</span> {client.country}
+            </span>
+            <span>
+              <span className={styles.factLabel}>Billed in</span> {client.currency}
+            </span>
+            {client.website && (
+              <a href={client.website} target="_blank" rel="noreferrer noopener">
+                {client.website.replace(/^https?:\/\//, '')}
+              </a>
+            )}
+            <span>
+              <span className={styles.factLabel}>Client since</span>{' '}
+              {formatShortDate(client.createdAt)}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div className={styles.stats}>
+        <div className={styles.stat}>
+          <p className={styles.statLabel}>Projects</p>
+          <p className={styles.statValue}>{client.projects.length}</p>
+          <p className={styles.statHint}>{live} still open</p>
+        </div>
+        <div className={styles.stat}>
+          <p className={styles.statLabel}>Committed</p>
+          <p className={styles.statValue}>{formatMoney(committed, client.currency)}</p>
+          <p className={styles.statHint}>Planned and active fee lines</p>
+        </div>
+        <div className={styles.stat}>
+          <p className={styles.statLabel}>Received</p>
+          <p className={styles.statValue}>{formatMoney(received, client.currency)}</p>
+          <p className={styles.statHint}>Recorded against invoices</p>
+        </div>
+        <div className={`${styles.stat} ${outstanding > 0 ? styles.statAlert : ''}`}>
+          <p className={styles.statLabel}>Outstanding</p>
+          <p className={styles.statValue}>{formatMoney(outstanding, client.currency)}</p>
+          <p className={styles.statHint}>
+            {outstanding > 0 ? 'Invoiced and not settled' : 'Nothing owed'}
+          </p>
+        </div>
+        <div className={styles.stat}>
+          <p className={styles.statLabel}>People</p>
+          <p className={styles.statValue}>{client.contacts.length}</p>
+          <p className={styles.statHint}>
+            {client.contacts.filter((c) => c.activatedAt).length} with a portal account
+          </p>
+        </div>
+      </div>
+
+      {mixed.length > 0 && (
+        <p className={styles.note}>
+          This client also has amounts in {mixed.join(', ')}. Those are not included in the totals
+          above — nothing here converts between currencies, so a combined figure would not be a
+          real number.
+        </p>
+      )}
+
+      <div className={styles.stack}>
+        <div className={table.frame}>
+          <div className={table.toolbar}>
+            <div className={table.toolbarText}>
+              <h2 className={table.title}>Projects</h2>
+              <span className={table.count}>
+                {client.projects.length} in total, {live} open
+              </span>
+            </div>
+          </div>
+          <div className={table.scroll}>
+            <table className={table.table}>
+              <thead>
+                <tr>
+                  <th className={table.th} scope="col">Project</th>
+                  <th className={table.th} scope="col">Reference</th>
+                  <th className={table.th} scope="col">Stage</th>
+                  <th className={table.th} scope="col">Target</th>
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
+                  <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                    <span className={table.muted}>Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {client.projects.length === 0 ? (
+                  <tr>
+                    <td className={table.emptyCell} colSpan={6}>
+                      <p className={table.emptyTitle}>No projects for this client yet.</p>
+                      <p className={table.emptyHint}>
+                        They are on the books, but nothing has been agreed.
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  client.projects.map((project) => (
+                    <tr key={project.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        <Link href={`/projects/${project.slug}`} className={table.link}>
+                          {project.name}
+                        </Link>
+                        <span className={table.sub}>{project.serviceLine}</span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{project.reference}</td>
+                      <td className={table.td}>
+                        <span
+                          className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}
+                        >
+                          {STAFF_LABEL[project.status]}
+                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(project.targetDate)}
+                      </td>
+                      <td className={`${table.td} ${table.numeric}`}>
+                        {formatMoney(
+                          project.lineItems.reduce(
+                            (t, l) => t + l.amountMinor * l.quantity,
+                            0,
+                          ),
+                          project.currency,
+                        )}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <span className={table.actionGroup}>
+                          <Link href={`/projects/${project.slug}`} className={table.action}>
+                            Open
+                          </Link>
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className={table.frame}>
+          <div className={table.toolbar}>
+            <div className={table.toolbarText}>
+              <h2 className={table.title}>People</h2>
+              <span className={table.count}>
+                {client.contacts.length} {client.contacts.length === 1 ? 'contact' : 'contacts'}
+              </span>
+            </div>
+          </div>
+          <div className={table.scroll}>
+            <table className={table.table}>
+              <thead>
+                <tr>
+                  <th className={table.th} scope="col">Name</th>
+                  <th className={table.th} scope="col">Email</th>
+                  <th className={table.th} scope="col">Phone</th>
+                  <th className={table.th} scope="col">Portal</th>
+                  <th className={table.th} scope="col">Last seen</th>
+                  <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                    <span className={table.muted}>Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {client.contacts.map((contact) => (
+                  <tr key={contact.id} className={table.tr}>
+                    <td className={`${table.td} ${table.primary}`}>
+                      {contact.name}
+                      <span className={table.sub}>
+                        {contact.isPrimary ? 'Main contact' : (contact.role ?? '—')}
+                      </span>
+                    </td>
+                    <td className={table.td}>
+                      <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`}>
+                      {contact.phone ?? <span className={table.muted}>—</span>}
+                    </td>
+                    <td className={table.td}>
+                      {!contact.canSignIn ? (
+                        <span className={`${forms.badge} ${forms.badgeBad}`}>Off</span>
+                      ) : contact.activatedAt ? (
+                        <span className={`${forms.badge} ${forms.badgeGood}`}>Active</span>
+                      ) : (
+                        <span className={`${forms.badge} ${forms.badgeWarn}`}>Not set up</span>
+                      )}
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`}>
+                      {contact.lastSeenAt ? (
+                        <>
+                          {formatShortDate(contact.lastSeenAt)}
+                          <span className={table.sub}>
+                            {formatRelative(contact.lastSeenAt, now)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className={table.muted}>Never</span>
+                      )}
+                    </td>
+                    <td className={`${table.td} ${table.actions}`}>
+                      <span className={table.actionGroup}>
+                        <InviteButton
+                          contactId={contact.id}
+                          activated={contact.activatedAt !== null}
+                        />
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className={styles.columns}>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Everything that has happened</h2>
+              <span className={forms.cardMeta}>
+                Actions and emails, newest first
+              </span>
+            </div>
+            <ActivityFeed items={activity} now={now} />
+          </section>
+
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Notes</h2>
+            </div>
+            {client.notes ? (
+              <p className={styles.quote}>{client.notes}</p>
+            ) : (
+              <p className={styles.note}>Nothing noted about this client.</p>
+            )}
+
+            {client.enquiries.length > 0 && (
+              <>
+                <div className={`${forms.cardHeader} ${styles.spaced}`}>
+                  <h3 className={forms.cardTitle}>How they found us</h3>
+                </div>
+                <ul className={styles.timeline}>
+                  {client.enquiries.map((enquiry) => (
+                    <li key={enquiry.id} className={styles.event}>
+                      <p className={styles.eventText}>{enquiry.subject}</p>
+                      <p className={styles.eventMeta}>
+                        {formatRelative(enquiry.createdAt, now)} · {enquiry.status}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}

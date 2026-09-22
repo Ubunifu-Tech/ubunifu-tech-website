@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
+import { billableLines } from '@/lib/console/billing';
+import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import {
   formatMoney,
   formatRelative,
@@ -15,8 +17,10 @@ import { MoveControls } from './MoveControls';
 import { LineItemRow } from './LineItemRow';
 import { DeliverableToggle } from './DeliverableToggle';
 import { AssetRequestRow } from './AssetRequestRow';
+import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
 
 const TONE_CLASS: Record<string, string> = {
   neutral: '',
@@ -98,6 +102,18 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           nextDueAt: true,
         },
       },
+      invoices: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          number: true,
+          status: true,
+          currency: true,
+          totalMinor: true,
+          paidMinor: true,
+          dueAt: true,
+        },
+      },
       statusEvents: {
         orderBy: { createdAt: 'desc' },
         take: 12,
@@ -108,10 +124,28 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
   if (!project) notFound();
 
-  const [transitions, facts] = await Promise.all([
+  const [transitions, facts, billable] = await Promise.all([
     transitionsFor(project),
     loadGuardFacts(project.id),
+    billableLines(project.id),
   ]);
+
+  const toBill: BillableLine[] = billable
+    .filter((line) => line.remainingMinor > 0 && line.amountMinor > 0)
+    .map((line) => ({
+      id: line.id,
+      label: line.label,
+      terms: line.terms,
+      remaining: formatMoney(line.remainingMinor, line.currency),
+      remainingMinor: line.remainingMinor,
+      currency: line.currency,
+      kind: line.billingKind,
+      due: line.nextDueAt ? formatShortDate(line.nextDueAt) : null,
+    }));
+
+  // Fourteen days, unless somebody changes it on the form.
+  const defaultDue = new Date(now);
+  defaultDue.setDate(defaultDue.getDate() + 14);
 
   // Shown before anything is clicked, so the blockers are visible while there
   // is still time to clear them rather than at the moment of refusal.
@@ -248,6 +282,92 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                 </p>
               </>
             )}
+          </section>
+
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Invoices</h2>
+                <span className={table.count}>
+                  {project.invoices.length === 0
+                    ? 'Nothing raised yet'
+                    : `${project.invoices.length} raised`}
+                </span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={`${table.table} ${table.compact}`}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">Number</th>
+                    <th className={table.th} scope="col">State</th>
+                    <th className={table.th} scope="col">Due</th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">Total</th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">Outstanding</th>
+                    <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                      <span className={table.muted}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {project.invoices.length === 0 ? (
+                    <tr>
+                      <td className={table.emptyCell} colSpan={6}>
+                        <p className={table.emptyTitle}>No invoices on this project.</p>
+                        <p className={table.emptyHint}>
+                          Raise one below from the fee lines that are due.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    project.invoices.map((invoice) => (
+                      <tr key={invoice.id} className={table.tr}>
+                        <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
+                          <Link href={`/invoices/${invoice.number}`} className={table.link}>
+                            {invoice.number}
+                          </Link>
+                        </td>
+                        <td className={table.td}>
+                          {INVOICE_STATUS_LABEL[invoice.status]}
+                        </td>
+                        <td className={`${table.td} ${table.nowrap}`}>
+                          {formatShortDate(invoice.dueAt)}
+                        </td>
+                        <td className={`${table.td} ${table.numeric}`}>
+                          {formatMoney(invoice.totalMinor, invoice.currency)}
+                        </td>
+                        <td className={`${table.td} ${table.numeric}`}>
+                          {invoice.totalMinor - invoice.paidMinor <= 0 ? (
+                            <span className={table.muted}>—</span>
+                          ) : (
+                            formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)
+                          )}
+                        </td>
+                        <td className={`${table.td} ${table.actions}`}>
+                          <span className={table.actionGroup}>
+                            <Link href={`/invoices/${invoice.number}`} className={table.action}>
+                              Open
+                            </Link>
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Raise an invoice</h2>
+              <span className={forms.cardMeta}>From what is still owed on this project</span>
+            </div>
+            <RaiseInvoice
+              projectId={project.id}
+              lines={toBill}
+              defaultDue={toDateInputValue(defaultDue)}
+            />
           </section>
         </div>
 

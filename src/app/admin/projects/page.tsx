@@ -6,6 +6,7 @@ import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Projects' };
 
@@ -15,6 +16,17 @@ const TONE_CLASS: Record<string, string> = {
   good: forms.badgeGood,
   warn: forms.badgeWarn,
   bad: forms.badgeBad,
+};
+
+const SERVICE_LABEL: Record<string, string> = {
+  web: 'Web',
+  hosting: 'Hosting',
+  branding: 'Branding',
+  data: 'Data',
+  ai: 'AI',
+  strategy: 'Strategy',
+  product: 'Product',
+  other: 'Other',
 };
 
 /**
@@ -34,7 +46,9 @@ function filterToWhere(key: string): Prisma.ProjectWhereInput {
   switch (key) {
     case 'pipeline':
       return {
-        status: { in: ['lead', 'proposal_draft', 'proposal_sent', 'proposal_accepted', 'contract_sent'] },
+        status: {
+          in: ['lead', 'proposal_draft', 'proposal_sent', 'proposal_accepted', 'contract_sent'],
+        },
       };
     case 'waiting':
       return { status: { in: ['proposal_sent', 'contract_sent', 'client_review', 'on_hold'] } };
@@ -43,9 +57,7 @@ function filterToWhere(key: string): Prisma.ProjectWhereInput {
     case 'all':
       return {};
     default:
-      return {
-        status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] },
-      };
+      return { status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] } };
   }
 }
 
@@ -71,13 +83,14 @@ export default async function ProjectsPage({
       serviceLine: true,
       currency: true,
       targetDate: true,
-      client: { select: { name: true } },
+      client: { select: { name: true, slug: true } },
       owner: { select: { name: true } },
       lineItems: {
         where: { status: { in: ['planned', 'active'] } },
-        select: { amountMinor: true, quantity: true },
+        select: { amountMinor: true, quantity: true, currency: true },
       },
       assetRequests: { where: { status: 'requested' }, select: { id: true } },
+      phases: { select: { deliverables: { select: { isComplete: true } } } },
     },
   });
 
@@ -89,9 +102,9 @@ export default async function ProjectsPage({
             The <span className={styles.headingAccent}>work</span>
           </h1>
           <p className={styles.lead}>
-            Committed value counts the lines we still expect to bill — planned and active. Deferred,
-            paused and waived lines are excluded, because a number that includes them is not a
-            number anyone can act on.
+            Committed counts the lines we still expect to bill — planned and active. Deferred,
+            paused and waived are left out, because a number that includes them is not one anyone
+            can act on.
           </p>
         </div>
         <Link href="/clients/new" className={forms.button}>
@@ -112,67 +125,116 @@ export default async function ProjectsPage({
         ))}
       </div>
 
-      {projects.length === 0 ? (
-        <p className={styles.empty}>
-          {active === 'live'
-            ? 'Nothing in flight. Everything is either still in the pipeline or finished.'
-            : 'Nothing here.'}
-        </p>
-      ) : (
-        <div className={styles.stack}>
-          {projects.map((project) => {
-            const committed = project.lineItems.reduce(
-              (total, line) => total + line.amountMinor * line.quantity,
-              0,
-            );
-            const unpriced = project.lineItems.some((line) => line.amountMinor === 0);
-
-            return (
-              <article key={project.id} className={styles.record}>
-                <div className={styles.recordHead}>
-                  <h2 className={styles.recordName}>
-                    <Link href={`/projects/${project.slug}`} className={styles.recordLink}>
-                      {project.name}
-                    </Link>
-                  </h2>
-                  <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
-                    {STAFF_LABEL[project.status]}
-                  </span>
-                </div>
-                <p className={styles.recordMeta}>
-                  {project.client.name} · {project.reference}
-                  {project.owner ? ` · ${project.owner.name}` : ''}
-                  {project.targetDate ? ` · target ${formatShortDate(project.targetDate)}` : ''}
-                </p>
-
-                <div className={styles.rows}>
-                  <div className={styles.row}>
-                    <span className={styles.rowLabel}>Committed</span>
-                    <span className={styles.rowValue}>
-                      {formatMoney(committed, project.currency)}
-                      {unpriced && (
-                        <span className={`${forms.badge} ${forms.badgeWarn}`}>
-                          {' '}
-                          Some lines have no price yet
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {project.assetRequests.length > 0 && (
-                    <div className={styles.row}>
-                      <span className={styles.rowLabel}>Waiting on the client</span>
-                      <span className={styles.rowValue}>
-                        {project.assetRequests.length} thing
-                        {project.assetRequests.length === 1 ? '' : 's'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+      <div className={table.frame}>
+        <div className={table.toolbar}>
+          <div className={table.toolbarText}>
+            <h2 className={table.title}>
+              {FILTERS.find((f) => f.key === active)?.label ?? 'Projects'}
+            </h2>
+            <span className={table.count}>
+              {projects.length} {projects.length === 1 ? 'project' : 'projects'}
+            </span>
+          </div>
         </div>
-      )}
+
+        <div className={table.scroll}>
+          <table className={table.table}>
+            <thead>
+              <tr>
+                <th className={table.th} scope="col">Project</th>
+                <th className={table.th} scope="col">Client</th>
+                <th className={table.th} scope="col">Stage</th>
+                <th className={table.th} scope="col">Progress</th>
+                <th className={table.th} scope="col">Target</th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
+                <th className={table.th} scope="col">Owner</th>
+                <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                  <span className={table.muted}>Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.length === 0 ? (
+                <tr>
+                  <td className={table.emptyCell} colSpan={8}>
+                    <p className={table.emptyTitle}>
+                      {active === 'live' ? 'Nothing in flight.' : 'Nothing here.'}
+                    </p>
+                    <p className={table.emptyHint}>
+                      {active === 'live'
+                        ? 'Everything is either still in the pipeline or already finished.'
+                        : 'Try another view.'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                projects.map((project) => {
+                  const deliverables = project.phases.flatMap((p) => p.deliverables);
+                  const done = deliverables.filter((d) => d.isComplete).length;
+                  const committed = project.lineItems
+                    .filter((line) => line.currency === project.currency)
+                    .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
+                  const unpriced = project.lineItems.some((line) => line.amountMinor === 0);
+
+                  return (
+                    <tr key={project.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        <Link href={`/projects/${project.slug}`} className={table.link}>
+                          {project.name}
+                        </Link>
+                        <span className={table.sub}>
+                          {project.reference} · {SERVICE_LABEL[project.serviceLine]}
+                        </span>
+                      </td>
+                      <td className={table.td}>
+                        <Link href={`/clients/${project.client.slug}`} className={table.link}>
+                          {project.client.name}
+                        </Link>
+                      </td>
+                      <td className={table.td}>
+                        <span
+                          className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}
+                        >
+                          {STAFF_LABEL[project.status]}
+                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {deliverables.length === 0 ? (
+                          <span className={table.muted}>No plan</span>
+                        ) : (
+                          `${done}/${deliverables.length}`
+                        )}
+                        {project.assetRequests.length > 0 && (
+                          <span className={table.sub}>
+                            waiting on {project.assetRequests.length} from them
+                          </span>
+                        )}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(project.targetDate)}
+                      </td>
+                      <td className={`${table.td} ${table.numeric}`}>
+                        {formatMoney(committed, project.currency)}
+                        {unpriced && <span className={table.sub}>some lines unpriced</span>}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {project.owner?.name ?? <span className={table.muted}>Nobody</span>}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <span className={table.actionGroup}>
+                          <Link href={`/projects/${project.slug}`} className={table.action}>
+                            Open
+                          </Link>
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </main>
   );
 }

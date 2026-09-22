@@ -8,7 +8,7 @@ import {
   ProjectStatus,
 } from '@/generated/prisma/client';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
-import { parseMoney } from '@/lib/console/money';
+import { parseDateInput, parseMoney } from '@/lib/console/money';
 import {
   guardsFor,
   isAllowed,
@@ -229,18 +229,10 @@ export async function saveLineItem(
   const recurring =
     line.billingKind === 'recurring_monthly' || line.billingKind === 'recurring_annual';
   const dueRaw = String(formData.get('nextDueAt') ?? '').trim();
-  let nextDueAt: Date | null = null;
+  const nextDueAt = recurring && dueRaw ? parseDateInput(dueRaw) : null;
 
-  if (recurring && dueRaw) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueRaw)) {
-      return { status: 'error', message: 'That date could not be read.' };
-    }
-    // Noon UTC, so a renewal does not slide to the previous day for anyone
-    // east of Greenwich — which, for a Tanzanian business, is everyone.
-    nextDueAt = new Date(`${dueRaw}T12:00:00.000Z`);
-    if (Number.isNaN(nextDueAt.getTime())) {
-      return { status: 'error', message: 'That date could not be read.' };
-    }
+  if (recurring && dueRaw && !nextDueAt) {
+    return { status: 'error', message: 'That date could not be read.' };
   }
 
   const statusRaw = String(formData.get('lineStatus') ?? '');

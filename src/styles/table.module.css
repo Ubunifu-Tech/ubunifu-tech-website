@@ -1,0 +1,301 @@
+/* Tables.
+ *
+ * Lists of records are tables: columns, rows, one row action group. Cards were
+ * the wrong call — they make you read the same labels over and over, they stop
+ * you comparing two rows at a glance, and they fall apart the moment a client
+ * has forty invoices. Cards are kept only for a single record's summary, where
+ * there is nothing to compare it against.
+ *
+ * Rules the whole product follows:
+ *   · money is right-aligned and tabular, so digits line up down the column
+ *   · dates, references and money never wrap
+ *   · the first column identifies the row and is the link into it
+ *   · actions sit in the last column, right-aligned, and are always reachable
+ *     by keyboard — not revealed on hover only
+ *   · the header stays put when the body scrolls
+ */
+
+.frame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+/* Title, count and actions, above the header row rather than floating
+   somewhere else on the page. */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.toolbarText {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.count {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Horizontal scroll rather than a squeezed layout. A table that reflows into
+   something unreadable on a laptop is worse than one you nudge sideways. */
+.scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* min-width is what makes .scroll do its job. Without it the table obeys the
+   container and crushes every column to one word per line rather than
+   overflowing, which is the opposite of what a scroll container is for. */
+.table {
+  width: 100%;
+  min-width: 56rem;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+/* A narrower table for panels inside a detail page, where there is less room
+   and fewer columns. */
+.compact {
+  min-width: 34rem;
+}
+
+.th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.td {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.tr:last-child .td {
+  border-bottom: 0;
+}
+
+.tr {
+  transition: background var(--transition-fast);
+}
+
+.tr:hover {
+  background: var(--surface-2);
+}
+
+/* The cell that says which record this is. Darker than the rest, so the eye
+   can run down the column without reading every other value. */
+.primary {
+  min-width: 12rem;
+  color: var(--text-primary);
+}
+
+.link {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--brand-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sub {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+/* Tabular figures so that 1,250.00 and 995.00 line up on the decimal point.
+   Right-aligned for the same reason: a money column read down is a column of
+   magnitudes, and left alignment destroys that. */
+.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.numericHead {
+  text-align: right;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* Long free text — a message, a note. Capped so one verbose row cannot set the
+   width of every column beside it. */
+.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 34rem;
+}
+
+.muted {
+  color: var(--text-tertiary);
+}
+
+/* ── Row actions ───────────────────────────────── */
+
+.actionsHead {
+  text-align: right;
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.actionGroup {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.action:hover:not(:disabled) {
+  border-color: var(--border-active);
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.action:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+.actionDanger:hover:not(:disabled) {
+  border-color: var(--danger-border);
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+/* ── Empty and footer ──────────────────────────── */
+
+.emptyCell {
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.6;
+}
+
+.emptyHint {
+  margin: var(--space-2) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  flex-wrap: wrap;
+}
+
+/* A totals row. Set apart from the body by weight of rule rather than by a
+   different background, so it still reads as part of the same column. */
+.totalRow .td {
+  border-top: 1px solid var(--border-active);
+  border-bottom: 0;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+@media (max-width: 48rem) {
+  .th,
+  .td {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .clamp {
+    max-width: 18rem;
+  }
+}

@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation';
-import { BrandMark } from '@/components/BrandMark';
 import { getStaffActor } from '@/lib/console/auth';
+import { AuthLayout } from '@/components/console/AuthLayout';
 import { SignInForm } from './SignInForm';
-import styles from '../Admin.module.css';
-import forms from '@/styles/forms.module.css';
+import auth from '@/styles/auth.module.css';
 
 export const metadata = { title: 'Sign in' };
 
@@ -14,21 +13,31 @@ export default async function AdminSignIn() {
   }
 
   return (
-    <main className={`${styles.page} ${styles.narrow}`}>
-      <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
-      <div className={styles.pageHead}>
-        <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            Sign in to the <span className={styles.headingAccent}>console</span>
-          </h1>
-          <p className={styles.lead}>
-            Ubunifu staff only. This page is not served on ubunifutech.com.
-          </p>
+    <AuthLayout
+      role="Console"
+      pitch="Every client, every project,"
+      pitchAccent="one record."
+      points={[
+        'Enquiries land here before anyone is emailed, so an outage never loses a lead.',
+        'Projects move through a state machine that records who decided what, and why.',
+        'Every invoice, payment and receipt is numbered, and nothing is ever deleted.',
+      ]}
+      foot="Ubunifu Technologies · Tanzania"
+    >
+      <div className={auth.panel}>
+        <h1 className={auth.heading}>
+          Sign in to the <span className={auth.headingAccent}>console</span>
+        </h1>
+        <p className={auth.lead}>
+          Ubunifu staff only. This page is not served on ubunifutech.com.
+        </p>
+        <div className={auth.card}>
+          <SignInForm />
         </div>
+        <p className={auth.foot}>
+          Looking for your project portal? It is at ubunifutech.com/portal.
+        </p>
       </div>
-      <div className={forms.card}>
-        <SignInForm />
-      </div>
-    </main>
+    </AuthLayout>
   );
 }

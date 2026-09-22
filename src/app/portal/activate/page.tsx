@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getClientActor } from '@/lib/console/auth';
+import { AuthLayout } from '@/components/console/AuthLayout';
 import { ActivateForm } from './ActivateForm';
-import styles from '../Portal.module.css';
-import forms from '@/styles/forms.module.css';
+import auth from '@/styles/auth.module.css';
 
 export const metadata = { title: 'Set up your account' };
 
@@ -13,19 +13,29 @@ export default async function ActivatePage() {
   if (actor.isActivated) redirect('/portal');
 
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
-      <div className={styles.pageHead}>
-        <h1 className={styles.heading}>
-          Set up your <span className={styles.headingAccent}>account</span>
+    <AuthLayout
+      role="Portal"
+      pitch="Welcome to"
+      pitchAccent={actor.clientName}
+      points={[
+        'One password, and you are in whenever you like.',
+        'No more digging through email for the latest version.',
+        'Everything about your project in one place, for as long as you need it.',
+      ]}
+      foot="Ubunifu Technologies · Tanzania"
+    >
+      <div className={`${auth.panel} ${auth.wide}`}>
+        <h1 className={auth.heading}>
+          Set up your <span className={auth.headingAccent}>account</span>
         </h1>
-        <p className={styles.lead}>
+        <p className={auth.lead}>
           This is the portal for {actor.clientName}. Choose a password and you can sign in any time
           without waiting for an email.
         </p>
+        <div className={auth.card}>
+          <ActivateForm defaultName={actor.name} />
+        </div>
       </div>
-      <div className={forms.card}>
-        <ActivateForm defaultName={actor.name} />
-      </div>
-    </main>
+    </AuthLayout>
   );
 }

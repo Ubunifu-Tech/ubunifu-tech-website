@@ -25,33 +25,33 @@ export const metadata: Metadata = {
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const actor = await getClientActor();
 
+  /**
+   * Signed out means sign-in or the invitation link, and both bring their own
+   * full-height layout. A bar above them would be chrome for an account that
+   * does not exist yet, on top of a screen already designed as an entrance.
+   */
+  if (!actor) return <>{children}</>;
+
   return (
     <div className={styles.shell}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <Link href={actor ? '/portal' : '/'} className={styles.brand}>
+          <Link href="/portal" className={styles.brand}>
             <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
             <span className={styles.brandText}>
-              Ubunifu{' '}
-              {actor ? (
-                <span className={styles.org}>· {actor.clientName}</span>
-              ) : (
-                <span className={styles.org}>portal</span>
-              )}
+              Ubunifu <span className={styles.org}>· {actor.clientName}</span>
             </span>
           </Link>
-          {actor && (
-            <div className={styles.account}>
-              <span>{actor.name}</span>
-              {/* A plain form, so signing out does not depend on JavaScript —
-                  and POST, so an image tag cannot trigger it. */}
-              <form action="/portal/sign-out" method="post">
-                <button type="submit" className={styles.signOut}>
-                  Sign out
-                </button>
-              </form>
-            </div>
-          )}
+          <div className={styles.account}>
+            <span>{actor.name}</span>
+            {/* A plain form, so signing out does not depend on JavaScript —
+                and POST, so an image tag cannot trigger it. */}
+            <form action="/portal/sign-out" method="post">
+              <button type="submit" className={styles.signOut}>
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
       {children}

@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getClientActor } from '@/lib/console/auth';
+import { AuthLayout } from '@/components/console/AuthLayout';
 import { SignInForms } from './SignInForms';
-import styles from '../Portal.module.css';
-import forms from '@/styles/forms.module.css';
+import auth from '@/styles/auth.module.css';
 
 export const metadata = { title: 'Sign in' };
 
@@ -32,25 +32,38 @@ export default async function PortalSignIn({
   const problem = error ? LINK_PROBLEM[error] : undefined;
 
   return (
-    <main className={`${styles.page} ${styles.narrow}`}>
-      <div className={styles.pageHead}>
-        <h1 className={styles.heading}>
-          Sign in to your <span className={styles.headingAccent}>portal</span>
+    <AuthLayout
+      role="Portal"
+      pitch="Your project,"
+      pitchAccent="as it happens."
+      points={[
+        'See exactly where the work has got to, stage by stage.',
+        'Find everything we still need from you, in one list.',
+        'Your invoices and receipts, whenever you need them.',
+      ]}
+      foot="Ubunifu Technologies · Tanzania"
+    >
+      <div className={auth.panel}>
+        <h1 className={auth.heading}>
+          Sign in to your <span className={auth.headingAccent}>portal</span>
         </h1>
-        <p className={styles.lead}>
+        <p className={auth.lead}>
           Progress updates, documents to review, and your invoices.
         </p>
-      </div>
 
-      {problem ? (
-        <p className={styles.notice} role="status">
-          {problem}
+        {problem ? (
+          <p className={auth.notice} role="status">
+            {problem}
+          </p>
+        ) : null}
+
+        <div className={auth.card}>
+          <SignInForms />
+        </div>
+        <p className={auth.foot}>
+          Not sure you have an account? Email info@ubunifutech.com and we will set one up.
         </p>
-      ) : null}
-
-      <div className={forms.card}>
-        <SignInForms />
       </div>
-    </main>
+    </AuthLayout>
   );
 }

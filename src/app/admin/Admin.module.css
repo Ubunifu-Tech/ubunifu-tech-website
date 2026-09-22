@@ -7,38 +7,34 @@
  * layout, chrome, and the shapes that only the console has.
  */
 
+/* The console is a two-column application: a sidebar that never moves and a
+   scrolling work area. Staff keep this open all day, so navigation is always
+   visible and never costs a click to reach. */
 .shell {
-  display: flex;
+  display: grid;
   min-height: 100vh;
-  flex-direction: column;
+  grid-template-columns: 16rem minmax(0, 1fr);
   background: var(--surface-2);
 }
 
-/* ── Bar ───────────────────────────────────────── */
-
-.bar {
+.sidebar {
   position: sticky;
   top: 0;
-  z-index: 10;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.barInner {
   display: flex;
-  align-items: center;
+  height: 100vh;
+  flex-direction: column;
   gap: var(--space-5);
-  width: 100%;
-  max-width: var(--container-width);
-  margin: 0 auto;
-  padding: var(--space-3) var(--container-gutter);
-  flex-wrap: wrap;
+  padding: var(--space-5) var(--space-4);
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
+  padding: 0 var(--space-3);
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -46,6 +42,7 @@
 .brandMark {
   width: 1.75rem;
   height: 1.75rem;
+  flex-shrink: 0;
 }
 
 .brandText {
@@ -62,15 +59,23 @@
 
 .nav {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--space-1);
-  margin-right: auto;
-  flex-wrap: wrap;
+}
+
+.navGroupLabel {
+  padding: var(--space-4) var(--space-3) var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
 }
 
 .navLink {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.4;
@@ -90,12 +95,122 @@
   color: var(--primary-deep);
 }
 
-.account {
+.navIcon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.navText {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A count only appears when it is greater than zero, and only on the things
+   that mean somebody is waiting. A badge showing "0" is furniture. */
+.navCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.375rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--brand-deep);
+  color: var(--text-inverse);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.navCountQuiet {
+  background: var(--surface-3);
+  color: var(--text-tertiary);
+}
+
+.sidebarFoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.who {
+  padding: 0 var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.whoRole {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.signOut {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
+  width: 100%;
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.signOut:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+@media (max-width: 60rem) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-4);
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .nav {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .navGroupLabel,
+  .who,
+  .navText {
+    display: none;
+  }
+
+  .sidebarFoot {
+    flex-direction: row;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .navLink,
+  .signOut {
+    width: auto;
+  }
 }
 
 /* ── Page ──────────────────────────────────────── */
@@ -535,4 +650,195 @@
   .lineRow {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ── Stat strip ────────────────────────────────── */
+
+/* The four or five numbers that describe a record at a glance, in one band
+   across the top. Deliberately not cards with shadows and icons — these are
+   read as a row of figures, and boxing each one makes the eye stop five times
+   to learn less. */
+.stats {
+  display: grid;
+  gap: 0;
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  overflow: hidden;
+}
+
+.stat {
+  padding: var(--space-5);
+  border-left: 1px solid var(--border);
+}
+
+.stat:first-child {
+  border-left: 0;
+}
+
+.statLabel {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.statValue {
+  margin: var(--space-2) 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.statHint {
+  margin: var(--space-1) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.statAlert .statValue {
+  color: var(--danger);
+}
+
+/* ── Detail header ─────────────────────────────── */
+
+.facts {
+  display: flex;
+  gap: var(--space-5);
+  margin: var(--space-3) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+  flex-wrap: wrap;
+}
+
+.factLabel {
+  color: var(--text-tertiary);
+}
+
+/* ── Activity ──────────────────────────────────── */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event {
+  position: relative;
+  padding: 0 0 var(--space-5) var(--space-6);
+}
+
+.event:last-child {
+  padding-bottom: 0;
+}
+
+/* The track down the left, drawn as a border on the item rather than as an
+   extra element, and stopped on the last one so it does not dangle. */
+.event::before {
+  content: '';
+  position: absolute;
+  left: 0.3125rem;
+  top: 1.1em;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.event:last-child::before {
+  display: none;
+}
+
+.event::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 0.6875rem;
+  height: 0.6875rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-active);
+  background: var(--surface);
+}
+
+.eventOk::after {
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.eventBad::after {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.eventLive::after {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.eventText {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.eventMeta {
+  margin: var(--space-1) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.eventNote {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ── Tabs ──────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-decoration: none;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab[aria-current='page'] {
+  border-bottom-color: var(--brand);
+  color: var(--text-primary);
+}
+
+/* A second header inside a card that already has one. */
+.spaced {
+  margin-top: var(--space-6);
 }

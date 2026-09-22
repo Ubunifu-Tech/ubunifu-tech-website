@@ -14,6 +14,7 @@ import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { clientInviteEmail } from '@/lib/emails';
 import { createClientRecord } from '@/lib/console/onboarding';
+import { parseDateInput } from '@/lib/console/money';
 
 /**
  * Everything the form posted, handed back on failure.
@@ -79,17 +80,6 @@ function isMember<T extends string>(values: readonly T[], value: string): value 
 
 function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? '').trim();
-}
-
-/**
- * Dates arrive from <input type="date"> as YYYY-MM-DD. Parsed at UTC noon so a
- * target date does not slide to the previous day for anyone east of Greenwich —
- * which, for a Tanzanian business, is everyone.
- */
-function parseDate(value: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const date = new Date(`${value}T12:00:00.000Z`);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 /**
@@ -211,8 +201,8 @@ export async function createClient(
       }
     }
 
-    const startDate = parseDate(values.startDate);
-    const targetDate = parseDate(values.targetDate);
+    const startDate = parseDateInput(values.startDate);
+    const targetDate = parseDateInput(values.targetDate);
     if (startDate && targetDate && targetDate < startDate) {
       return fail('The target date is before the start date.', 'targetDate');
     }

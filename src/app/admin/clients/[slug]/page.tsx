@@ -214,6 +214,14 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                 {client.projects.length} in total, {live} open
               </span>
             </div>
+            <div className={table.toolbarActions}>
+              <Link
+                href={`/projects/new?client=${client.slug}`}
+                className={`${forms.button} ${forms.quiet}`}
+              >
+                Start a project
+              </Link>
+            </div>
           </div>
           <div className={table.scroll}>
             <table className={table.table}>

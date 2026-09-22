@@ -229,6 +229,80 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
   });
 }
 
+export type NewProjectInput = {
+  clientId: string;
+  name: string;
+  serviceLine: Prisma.ProjectCreateInput['serviceLine'];
+  engagementType: Prisma.ProjectCreateInput['engagementType'];
+  status: ProjectStatus;
+  templateId?: string | null;
+  summary?: string | null;
+  startDate?: Date | null;
+  targetDate?: Date | null;
+  staffId: string;
+};
+
+/**
+ * A second project for a client who already exists.
+ *
+ * Separate from createClientRecord rather than a flag on it, because the two
+ * answer different questions: one is "who is this", the other is "what are we
+ * doing for them". Sharing the reference, slug and template logic is what
+ * matters; sharing the form would mean asking for a client's country again
+ * every time they come back with more work.
+ */
+export async function createProjectForClient(
+  input: NewProjectInput,
+): Promise<{ projectId: string; slug: string; reference: string }> {
+  const client = await db.client.findFirstOrThrow({
+    where: { id: input.clientId, deletedAt: null },
+    select: { id: true, currency: true },
+  });
+
+  const projectSlug = await freeSlug(slugify(input.name), projectSlugTaken);
+  const reference = await nextProjectReference();
+  const start = input.startDate ?? new Date();
+
+  return db.$transaction(async (tx) => {
+    const project = await tx.project.create({
+      data: {
+        clientId: client.id,
+        name: input.name,
+        slug: projectSlug,
+        reference,
+        serviceLine: input.serviceLine,
+        engagementType: input.engagementType,
+        status: input.status,
+        summary: input.summary || null,
+        currency: client.currency,
+        startDate: input.startDate ?? null,
+        targetDate: input.targetDate ?? null,
+        ownerId: input.staffId,
+        statusEvents: {
+          create: {
+            to: input.status,
+            actorType: 'staff',
+            actorId: input.staffId,
+            note: 'Created from the console',
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    if (input.templateId) {
+      await applyTemplate(tx, {
+        projectId: project.id,
+        templateId: input.templateId,
+        start,
+        currency: client.currency,
+      });
+    }
+
+    return { projectId: project.id, slug: projectSlug, reference };
+  });
+}
+
 /**
  * Copies a template into a real project.
  *

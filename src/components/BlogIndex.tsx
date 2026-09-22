@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import type { BlogPostMeta } from '@/lib/blog';
 import { formatDateShort } from '@/lib/date';
-import styles from '../app/blog/Blog.module.css';
+import styles from '../app/(site)/blog/Blog.module.css';
 
 export type PostMeta = Omit<BlogPostMeta, 'coverImage' | 'coverAlt'> & {
   coverImage: string;

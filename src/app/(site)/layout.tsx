@@ -1,0 +1,160 @@
+import type { Metadata } from 'next';
+import { SmoothScroll } from '@/components/SmoothScroll';
+import { MotionProvider } from '@/components/MotionProvider';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { WhatsAppButton } from '@/components/WhatsAppButton';
+import { services } from '@/content/services';
+
+/**
+ * The public marketing site. Everything under this group gets the navbar,
+ * footer, smooth scroll and organisation JSON-LD; the console, which sits
+ * outside it, gets none of them.
+ */
+export const metadata: Metadata = {
+  title: {
+    default: 'Ubunifu Technologies · Technology consulting and products',
+    template: '%s | Ubunifu Technologies',
+  },
+  description: 'Ubunifu Technologies is a Tanzanian technology consultancy that also builds and operates products. We work across strategy, brand, software, data, AI, hosting, and support.',
+  keywords: [
+    'software Africa',
+    'AI platform Tanzania',
+    'Ubunifu Insight',
+    'Ubunifu Sifa',
+    'web development Tanzania',
+    'web hosting Tanzania',
+    'domain registration Tanzania',
+    'business email Tanzania',
+    'graphic design Tanzania',
+    'logo design Tanzania',
+    'business software Tanzania',
+    'custom software Tanzania',
+    'consulting Tanzania',
+    'data analytics Tanzania',
+    'AI Tanzania',
+  ],
+  authors: [{ name: 'Ubunifu Technologies' }],
+  creator: 'Ubunifu Technologies',
+  publisher: 'Ubunifu Technologies',
+  metadataBase: new URL('https://ubunifutech.com'),
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://ubunifutech.com',
+    siteName: 'Ubunifu Technologies',
+    title: 'Ubunifu Technologies · Technology consulting and products',
+    description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
+    images: [
+      {
+        url: '/og.png',
+        width: 1672,
+        height: 941,
+        alt: 'Ubunifu Technologies, consulting and products, built in Tanzania.',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ubunifu Technologies · Technology consulting and products',
+    description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
+    images: ['/og.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+};
+
+export default function SiteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Ubunifu Technologies',
+    description: 'A Tanzanian technology consultancy that also builds and operates products, working across brand, software, data, and AI.',
+    url: 'https://ubunifutech.com',
+    logo: 'https://ubunifutech.com/logo-v2.png',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: '+255-748-548-816',
+      contactType: 'customer service',
+      email: 'info@ubunifutech.com',
+      areaServed: 'TZ',
+      availableLanguage: ['English'],
+    },
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'TZ',
+    },
+    founder: {
+      '@type': 'Person',
+      name: 'Richard Pallangyo',
+      jobTitle: 'Data & AI Builder',
+    },
+    makesOffer: [
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'SoftwareApplication',
+          name: 'Ubunifu Insight',
+          applicationCategory: 'BusinessApplication',
+          url: 'https://insight.ubunifutech.com',
+        },
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'SoftwareApplication',
+          name: 'Ubunifu Sifa',
+          applicationCategory: 'BusinessApplication',
+          url: 'https://sifa.ubunifutech.com',
+        },
+      },
+    ],
+    // Machine-readable list of the service pillars, kept in sync with
+    // src/content/services.tsx (the same source the /build page renders).
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Services',
+      itemListElement: services.map((service) => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: service.title,
+          description: service.summary,
+        },
+      })),
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <MotionProvider>
+        <SmoothScroll>
+          <Navbar />
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
+          <Footer />
+          <WhatsAppButton />
+        </SmoothScroll>
+      </MotionProvider>
+    </>
+  );
+}

@@ -62,3 +62,91 @@
 .statusLabel {
   color: var(--text-secondary);
 }
+
+/* ── Forms ─────────────────────────────────────── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  max-width: 24rem;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.input {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+}
+
+.input:focus-visible {
+  border-color: var(--primary);
+  outline: 3px solid var(--primary-dim);
+  outline-offset: 0;
+}
+
+.input:disabled {
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+}
+
+.button {
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--cta);
+  color: var(--text-inverse);
+  font-family: var(--font-body);
+  /* Regular, not medium: check-typography locks body-size text to the regular
+     weight site-wide, and the console is inside that rule too. */
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.button:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+
+.button:disabled {
+  background: var(--border-active);
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.formNote {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.formError {
+  margin: 0;
+  color: var(--brand-deep);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.signOut {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand-deep);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}

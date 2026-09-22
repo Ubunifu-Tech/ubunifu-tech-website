@@ -1,11 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
-import { SmoothScroll } from '@/components/SmoothScroll';
-import { MotionProvider } from '@/components/MotionProvider';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
-import { WhatsAppButton } from '@/components/WhatsAppButton';
-import { services } from '@/content/services';
 import './globals.css';
 
 const inter = Inter({
@@ -21,65 +15,24 @@ const poppins = Poppins({
   display: 'swap',
 });
 
+/**
+ * Minimal root: document, fonts and tokens, nothing else.
+ *
+ * The marketing chrome — navbar, footer, WhatsApp button, smooth scroll — lives
+ * in the (site) group layout instead. The console is served from the same app
+ * on a different host, and it must not inherit any of it: those nav links point
+ * at marketing routes, which middleware rewrites into /admin/* on the console
+ * host and 404s. Staff would have been one click from a dead end on every page.
+ *
+ * Splitting here rather than reading the host in this layout keeps the
+ * marketing pages statically generated. Calling headers() up here would make
+ * every public page dynamic.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ubunifutech.com'),
   title: {
     default: 'Ubunifu Technologies · Technology consulting and products',
     template: '%s | Ubunifu Technologies',
-  },
-  description: 'Ubunifu Technologies is a Tanzanian technology consultancy that also builds and operates products. We work across strategy, brand, software, data, AI, hosting, and support.',
-  keywords: [
-    'software Africa',
-    'AI platform Tanzania',
-    'Ubunifu Insight',
-    'Ubunifu Sifa',
-    'web development Tanzania',
-    'web hosting Tanzania',
-    'domain registration Tanzania',
-    'business email Tanzania',
-    'graphic design Tanzania',
-    'logo design Tanzania',
-    'business software Tanzania',
-    'custom software Tanzania',
-    'consulting Tanzania',
-    'data analytics Tanzania',
-    'AI Tanzania',
-  ],
-  authors: [{ name: 'Ubunifu Technologies' }],
-  creator: 'Ubunifu Technologies',
-  publisher: 'Ubunifu Technologies',
-  metadataBase: new URL('https://ubunifutech.com'),
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://ubunifutech.com',
-    siteName: 'Ubunifu Technologies',
-    title: 'Ubunifu Technologies · Technology consulting and products',
-    description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
-    images: [
-      {
-        url: '/og.png',
-        width: 1672,
-        height: 941,
-        alt: 'Ubunifu Technologies, consulting and products, built in Tanzania.',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Ubunifu Technologies · Technology consulting and products',
-    description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
-    images: ['/og.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
   },
 };
 
@@ -88,91 +41,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Ubunifu Technologies',
-    description: 'A Tanzanian technology consultancy that also builds and operates products, working across brand, software, data, and AI.',
-    url: 'https://ubunifutech.com',
-    logo: 'https://ubunifutech.com/logo-v2.png',
-    contactPoint: {
-      '@type': 'ContactPoint',
-      telephone: '+255-748-548-816',
-      contactType: 'customer service',
-      email: 'info@ubunifutech.com',
-      areaServed: 'TZ',
-      availableLanguage: ['English'],
-    },
-    address: {
-      '@type': 'PostalAddress',
-      addressCountry: 'TZ',
-    },
-    founder: {
-      '@type': 'Person',
-      name: 'Richard Pallangyo',
-      jobTitle: 'Data & AI Builder',
-    },
-    makesOffer: [
-      {
-        '@type': 'Offer',
-        itemOffered: {
-          '@type': 'SoftwareApplication',
-          name: 'Ubunifu Insight',
-          applicationCategory: 'BusinessApplication',
-          url: 'https://insight.ubunifutech.com',
-        },
-      },
-      {
-        '@type': 'Offer',
-        itemOffered: {
-          '@type': 'SoftwareApplication',
-          name: 'Ubunifu Sifa',
-          applicationCategory: 'BusinessApplication',
-          url: 'https://sifa.ubunifutech.com',
-        },
-      },
-    ],
-    // Machine-readable list of the service pillars, kept in sync with
-    // src/content/services.tsx (the same source the /build page renders).
-    hasOfferCatalog: {
-      '@type': 'OfferCatalog',
-      name: 'Services',
-      itemListElement: services.map((service) => ({
-        '@type': 'Offer',
-        itemOffered: {
-          '@type': 'Service',
-          name: service.title,
-          description: service.summary,
-        },
-      })),
-    },
-  };
-
   return (
     <html
       lang="en"
       className={`${inter.variable} ${poppins.variable}`}
       data-scroll-behavior="smooth"
     >
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </head>
-      <body>
-        <a href="#main-content" className="skip-link">Skip to main content</a>
-        <MotionProvider>
-          <SmoothScroll>
-            <Navbar />
-            <div id="main-content" tabIndex={-1}>
-              {children}
-            </div>
-            <Footer />
-            <WhatsAppButton />
-          </SmoothScroll>
-        </MotionProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

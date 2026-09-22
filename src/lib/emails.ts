@@ -208,3 +208,74 @@ export function acknowledgementEmail(input: {
 
   return shell(`We have your message about ${input.subject}. We will reply directly.`, body);
 }
+
+/* ── Console: sign-in and invitation ──────────── */
+
+/**
+ * A link is a credential, so these templates say plainly what the link does,
+ * how long it lasts, and what to do if the recipient did not ask for it. No
+ * marketing, no products, nothing else to click.
+ */
+function securityNote(minutesOrDays: string): string {
+  return `<p style="margin:22px 0 0;color:#6B6385;font-size:13px;line-height:1.6;">
+    This link works once and expires in ${minutesOrDays}. If you did not request it,
+    you can ignore this email — nothing has changed on your account.
+  </p>`;
+}
+
+export function staffSignInEmail(input: { name: string; url: string }): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Sign in to the console</h1>
+    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. Use the button below to open the Ubunifu console.
+    </p>
+    ${button(input.url, 'Open the console')}
+    ${securityNote('20 minutes')}`;
+
+  return shell('Your link to sign in to the Ubunifu console.', body);
+}
+
+/**
+ * The first link a client ever receives. It is an invitation rather than a
+ * sign-in: following it is where they set a password and the account begins.
+ */
+export function clientInviteEmail(input: {
+  name: string;
+  clientName: string;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const org = escapeHtml(input.clientName);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Your project portal is ready</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. We have set up a portal for <strong style="color:#1F1A36;">${org}</strong>.
+      It is where you will find progress updates, anything we need from you,
+      documents to review and sign, and your invoices and receipts.
+    </p>
+    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Follow the link to choose a password and finish setting up your account.
+    </p>
+    ${button(input.url, 'Set up your account')}
+    ${securityNote('14 days')}`;
+
+  return shell(`Set up your ${input.clientName} project portal.`, body);
+}
+
+export function clientSignInEmail(input: { name: string; url: string }): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">Sign in to your portal</h1>
+    <p style="margin:0 0 24px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. Use the button below to open your project portal. You can
+      also sign in with your email and password at any time.
+    </p>
+    ${button(input.url, 'Open my portal')}
+    ${securityNote('20 minutes')}`;
+
+  return shell('Your link to sign in to the Ubunifu portal.', body);
+}

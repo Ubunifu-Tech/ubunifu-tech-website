@@ -1,7 +1,18 @@
 import Link from 'next/link';
 import { Topography } from '@/components/Topography';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 import { cta } from '@/content/site';
 import styles from './NotFound.module.css';
+
+/**
+ * Carries its own navbar and footer.
+ *
+ * Next resolves an unmatched URL against the root not-found, which sits outside
+ * the (site) group and so does not inherit the marketing chrome. Rather than
+ * push the chrome back up into the root layout — which would hand it to the
+ * console too — this one page brings its own.
+ */
 
 export const metadata = {
   title: 'Page not found',
@@ -10,6 +21,7 @@ export const metadata = {
 export default function NotFound() {
   return (
     <>
+      <Navbar />
       <main className={styles.main}>
         <div className={styles.backdrop} aria-hidden="true">
           <div className={styles.aurora} />
@@ -36,6 +48,7 @@ export default function NotFound() {
           </div>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

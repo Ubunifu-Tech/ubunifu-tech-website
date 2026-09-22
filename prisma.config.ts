@@ -22,15 +22,24 @@ try {
  * pointing at the pooler for the app. Until then the two are the same.
  */
 const url = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
-if (!url) {
-  throw new Error('DATABASE_URL is not set. Copy .env.example to .env and fill it in.');
-}
 
+/**
+ * Deliberately does NOT throw when the URL is missing.
+ *
+ * `prisma generate` loads this file but needs no database — only migrate and
+ * introspect do. Throwing here broke `next build` on any environment without a
+ * DATABASE_URL, which is every Vercel preview deployment that has no database
+ * attached. A preview of a marketing copy change should not fail because the
+ * console has nowhere to migrate to.
+ *
+ * Commands that genuinely need the connection still fail on their own, and
+ * scripts/migrate-deploy.mjs skips the migration rather than guessing.
+ */
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
     seed: 'npx tsx prisma/seed.ts',
   },
-  datasource: { url },
+  ...(url ? { datasource: { url } } : {}),
 });

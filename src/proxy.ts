@@ -3,8 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 /**
  * Host routing and hardening. NOT authorisation.
  *
- * Middleware runs on the Edge runtime: no Postgres, no Node crypto, so it
- * cannot validate a session. Every access decision is made server-side in
+ * Named `proxy` because Next 16 deprecated the `middleware` file convention.
+ * Same execution model: the Edge runtime, with no Postgres and no Node crypto,
+ * so it cannot validate a session. Every access decision is made server-side in
  * src/lib/console/auth.ts. What this does is decide which app a host is allowed
  * to see, which is a routing question rather than a security check — and then
  * set the headers that hold regardless.
@@ -49,7 +50,7 @@ function harden(response: NextResponse, onAdminHost: boolean): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const onAdminHost = isAdminHost(request.headers.get('host'));
 
@@ -85,7 +86,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   /**
    * Everything except Next's own assets and the files served from /public.
-   * Matching those would add a middleware invocation per image for no benefit.
+   * Matching those would add an invocation per image for no benefit.
    */
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$).*)',

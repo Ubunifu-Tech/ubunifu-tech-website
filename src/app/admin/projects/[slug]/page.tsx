@@ -19,6 +19,8 @@ import { DeliverableToggle } from './DeliverableToggle';
 import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
+import { NewDocument } from './NewDocument';
+import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -101,6 +103,18 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           status: true,
           billingKind: true,
           nextDueAt: true,
+        },
+      },
+      documents: {
+        orderBy: { updatedAt: 'desc' },
+        select: {
+          id: true,
+          reference: true,
+          title: true,
+          kind: true,
+          status: true,
+          updatedAt: true,
+          versions: { select: { id: true } },
         },
       },
       updates: {
@@ -382,6 +396,78 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               </table>
             </div>
           </div>
+
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Documents</h2>
+                <span className={table.count}>
+                  Proposals, agreements and anything else they have to read
+                </span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={`${table.table} ${table.compact}`}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">Document</th>
+                    <th className={table.th} scope="col">Kind</th>
+                    <th className={table.th} scope="col">State</th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">Versions</th>
+                    <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                      <span className={table.muted}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {project.documents.length === 0 ? (
+                    <tr>
+                      <td className={table.emptyCell} colSpan={5}>
+                        <p className={table.emptyTitle}>No documents on this project.</p>
+                        <p className={table.emptyHint}>Start one below.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    project.documents.map((document) => (
+                      <tr key={document.id} className={table.tr}>
+                        <td className={`${table.td} ${table.primary}`}>
+                          <Link href={`/documents/${document.reference}`} className={table.link}>
+                            {document.title}
+                          </Link>
+                          <span className={table.sub}>{document.reference}</span>
+                        </td>
+                        <td className={`${table.td} ${table.nowrap}`}>
+                          {DOCUMENT_KIND_LABEL[document.kind]}
+                        </td>
+                        <td className={table.td}>{DOCUMENT_STATUS_LABEL[document.status]}</td>
+                        <td className={`${table.td} ${table.numeric}`}>
+                          {document.versions.length}
+                        </td>
+                        <td className={`${table.td} ${table.actions}`}>
+                          <span className={table.actionGroup}>
+                            <Link
+                              href={`/documents/${document.reference}`}
+                              className={table.action}
+                            >
+                              Open
+                            </Link>
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Start a document</h2>
+              <span className={forms.cardMeta}>Written here, drafted with help if you want it</span>
+            </div>
+            <NewDocument projectId={project.id} projectName={project.name} />
+          </section>
 
           <section className={forms.card}>
             <div className={forms.cardHeader}>

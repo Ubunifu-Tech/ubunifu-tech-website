@@ -394,3 +394,48 @@ export function projectUpdateEmail(input: {
 
   return shell(`${input.projectName}: ${input.title}`, body);
 }
+
+/**
+ * A document waiting for signature.
+ *
+ * Names the terms the client will be accepting alongside it, because
+ * "and by signing you agree to our terms" discovered at the last screen is how
+ * people end up feeling tricked by something they would have agreed to anyway.
+ */
+export function documentToSignEmail(input: {
+  name: string;
+  clientName: string;
+  documentTitle: string;
+  kind: string;
+  reference: string;
+  termsTitle: string | null;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(input.documentTitle)}</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Hello ${name}. This is ready for you to read and sign on behalf of
+      <strong style="color:#1F1A36;">${escapeHtml(input.clientName)}</strong>.
+    </p>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      Signing takes a moment: read it through, type your initials, and confirm.
+      ${
+        input.termsTitle
+          ? `You will also be accepting our <strong style="color:#1F1A36;">${escapeHtml(input.termsTitle)}</strong>, which is shown in full on the same page.`
+          : ''
+      }
+      If anything is wrong, reply to this email rather than signing — we would
+      much rather fix it first.
+    </p>
+    ${button(input.url, 'Read and sign')}
+    ${securityNote('20 minutes')}
+    <p style="margin:24px 0 0;color:#8A8399;font-size:13px;line-height:1.7;">
+      If the link has expired, sign in to your portal at any time and it will be
+      waiting for you there.
+    </p>`;
+
+  return shell(`${input.documentTitle} is ready for your signature.`, body);
+}

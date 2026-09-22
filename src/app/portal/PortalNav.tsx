@@ -6,6 +6,7 @@ import styles from './Portal.module.css';
 
 const LINKS = [
   { href: '/portal', label: 'Projects', exact: true },
+  { href: '/portal/documents', label: 'Documents' },
   { href: '/portal/invoices', label: 'Invoices' },
 ];
 

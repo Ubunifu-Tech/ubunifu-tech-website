@@ -505,3 +505,88 @@
     padding: var(--space-5) var(--space-4);
   }
 }
+
+/* ── Document body ─────────────────────────────── */
+
+/* Rendered document text. Measured for reading rather than for filling a
+   container: a contract at full desk width is one nobody finishes. */
+.prose {
+  max-width: 68ch;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.75;
+}
+
+.prose h2 {
+  margin: var(--space-6) 0 var(--space-3);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+/* Sub-headings are body size, so they take the regular weight the type scale
+   locks in and separate themselves from the prose by colour and family
+   instead — which is how the rest of the site distinguishes them too. */
+.prose h3,
+.prose h4,
+.prose h5 {
+  margin: var(--space-5) 0 var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose p {
+  margin: 0 0 var(--space-4);
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+}
+
+.prose li {
+  margin-bottom: var(--space-2);
+}
+
+.prose hr {
+  margin: var(--space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.prose strong {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* The editor. Monospace, because a document body is markdown and the markers
+   matter more than the prose reads while you are writing it. */
+.editor {
+  min-height: 28rem;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-small);
+  line-height: 1.7;
+  resize: vertical;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+/* A hash, shown so a person can compare two. */
+.fingerprint {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary);
+  word-break: break-all;
+}

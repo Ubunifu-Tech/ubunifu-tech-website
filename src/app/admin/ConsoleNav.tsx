@@ -9,6 +9,7 @@ import {
   Building2,
   Inbox,
   LayoutDashboard,
+  FileText,
   Receipt,
   RefreshCw,
   Settings,
@@ -28,6 +29,7 @@ export type NavCounts = {
   projects: number;
   invoices: number;
   renewals: number;
+  documents: number;
 };
 
 const ICONS = {
@@ -37,6 +39,7 @@ const ICONS = {
   projects: Briefcase,
   invoices: Receipt,
   renewals: RefreshCw,
+  documents: FileText,
   activity: Activity,
   settings: Settings,
 } as const;
@@ -69,6 +72,10 @@ const GROUPS: { label?: string; items: Item[] }[] = [
       { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices' },
       { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals' },
     ],
+  },
+  {
+    label: 'Client care',
+    items: [{ href: '/documents', label: 'Documents', icon: 'documents', count: 'documents' }],
   },
   {
     label: 'Record',

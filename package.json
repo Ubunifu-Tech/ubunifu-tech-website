@@ -25,6 +25,7 @@
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
     "@paper-design/shaders-react": "0.0.80",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",

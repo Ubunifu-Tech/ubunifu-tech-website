@@ -15,7 +15,13 @@ try {
   // Fine in CI or production, where DATABASE_URL is already in the environment.
 }
 
-const url = process.env.DATABASE_URL;
+/**
+ * Migrations run against a direct connection. If a pooler is ever put in front
+ * of Railway (PgBouncer in transaction mode cannot run DDL or advisory locks),
+ * set DIRECT_DATABASE_URL to the direct connection and leave DATABASE_URL
+ * pointing at the pooler for the app. Until then the two are the same.
+ */
+const url = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 if (!url) {
   throw new Error('DATABASE_URL is not set. Copy .env.example to .env and fill it in.');
 }

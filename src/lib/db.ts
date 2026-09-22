@@ -23,7 +23,19 @@ function createClient() {
   }
 
   return new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
+    adapter: new PrismaPg({
+      connectionString,
+      /**
+       * Vercel runs each function in its own container, so every warm instance
+       * holds its own pool. Railway's Postgres has a finite connection limit,
+       * and a handful of instances with the pg default of 10 each will exhaust
+       * it. Small pool, short idle timeout: reconnecting is cheaper than being
+       * refused.
+       */
+      max: Number(process.env.DATABASE_POOL_MAX ?? 5),
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 10_000,
+    }),
     log:
       process.env.NODE_ENV === 'development'
         ? ['warn', 'error']

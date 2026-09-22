@@ -1,0 +1,64 @@
+/* Console shell. Deliberately plain for now: the design pass comes with the
+   screens themselves, and a half-styled chrome is worse than none. */
+.shell {
+  min-height: 100vh;
+  padding: var(--section-space) 0;
+  background: var(--background);
+}
+
+.panel {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0 var(--container-gutter);
+}
+
+.heading {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.18;
+}
+
+.headingAccent {
+  color: var(--brand-deep);
+}
+
+.lead {
+  margin: 0 0 var(--space-6);
+  color: var(--text-secondary);
+  font-size: var(--font-size-lead);
+  line-height: 1.7;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
+.statusLabel {
+  color: var(--text-secondary);
+}

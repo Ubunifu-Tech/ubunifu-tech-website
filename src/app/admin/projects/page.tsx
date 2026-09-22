@@ -147,7 +147,6 @@ export default async function ProjectsPage({
                 <th className={table.th} scope="col">Progress</th>
                 <th className={table.th} scope="col">Target</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
-                <th className={table.th} scope="col">Owner</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className={table.muted}>Actions</span>
                 </th>
@@ -156,7 +155,7 @@ export default async function ProjectsPage({
             <tbody>
               {projects.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={8}>
+                  <td className={table.emptyCell} colSpan={7}>
                     <p className={table.emptyTitle}>
                       {active === 'live' ? 'Nothing in flight.' : 'Nothing here.'}
                     </p>
@@ -183,10 +182,13 @@ export default async function ProjectsPage({
                           {project.name}
                         </Link>
                         <span className={table.sub}>
-                          {project.reference} · {SERVICE_LABEL[project.serviceLine]}
+                          {project.reference} · {SERVICE_LABEL[project.serviceLine]} ·{' '}
+                          {/* The owner is a fact about the project, not a column
+                              anybody sorts by — it reads better under the name. */}
+                          {project.owner?.name ?? 'nobody yet'}
                         </span>
                       </td>
-                      <td className={table.td}>
+                      <td className={`${table.td} ${table.name}`}>
                         <Link href={`/clients/${project.client.slug}`} className={table.link}>
                           {project.client.name}
                         </Link>
@@ -216,9 +218,6 @@ export default async function ProjectsPage({
                       <td className={`${table.td} ${table.numeric}`}>
                         {formatMoney(committed, project.currency)}
                         {unpriced && <span className={table.sub}>some lines unpriced</span>}
-                      </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
-                        {project.owner?.name ?? <span className={table.muted}>Nobody</span>}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
                         <span className={table.actionGroup}>

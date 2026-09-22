@@ -42,8 +42,12 @@ export async function navCounts(): Promise<NavCounts> {
         },
       },
     }),
-    // Out with the client and not yet signed — the one document state that
-    // means somebody is waiting on somebody.
+    /*
+     * Documents where somebody is still waiting: out for signature, or handed
+     * back with changes to make. 'declined' is deliberately NOT here — a deal
+     * that died stays declined for ever, and a badge that never clears is a
+     * badge nobody reads. It has its own view on the documents list instead.
+     */
     db.document.count({ where: { status: { in: ['sent', 'viewed', 'changes_requested'] } } }),
     // Waiting on us, not on them — a request handed back is not a task.
     db.ticket.count({ where: { status: { in: ['open', 'triaged', 'in_progress'] } } }),

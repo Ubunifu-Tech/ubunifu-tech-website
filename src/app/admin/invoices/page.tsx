@@ -196,12 +196,12 @@ export default async function InvoicesPage({
                           {invoice.issuedAt ? formatShortDate(invoice.issuedAt) : 'Not sent'}
                         </span>
                       </td>
-                      <td className={table.td}>
+                      <td className={`${table.td} ${table.name}`}>
                         <Link href={`/clients/${invoice.client.slug}`} className={table.link}>
                           {invoice.client.name}
                         </Link>
                       </td>
-                      <td className={table.td}>
+                      <td className={`${table.td} ${table.name}`}>
                         {invoice.project ? (
                           <Link href={`/projects/${invoice.project.slug}`} className={table.link}>
                             {invoice.project.name}

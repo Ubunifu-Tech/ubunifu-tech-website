@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
+import { DOCUMENT_KIND_LABEL, PORTAL_DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { formatShortDate } from '@/lib/console/money';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -26,20 +26,31 @@ export default async function PortalDocuments() {
       status: true,
       project: { select: { name: true } },
       signatureRequests: {
-        where: { status: { in: ['sent', 'viewed', 'signed'] } },
+        where: { status: { in: ['sent', 'viewed', 'signed', 'declined'] } },
         orderBy: { createdAt: 'desc' },
         take: 1,
         select: {
           sentAt: true,
+          status: true,
+          respondedAt: true,
           signatures: { select: { signedAt: true, initials: true } },
         },
       },
     },
   });
 
-  const waiting = documents.filter(
-    (document) => document.signatureRequests[0]?.signatures.length === 0,
-  ).length;
+  // Waiting on THEM. A document they have already answered — declined, or
+  // asked for changes on — is waiting on us, and telling somebody they owe us
+  // a signature they have explicitly refused is the fastest way to be ignored.
+  const waiting = documents.filter((document) => {
+    const request = document.signatureRequests[0];
+    return (
+      request !== undefined &&
+      request.signatures.length === 0 &&
+      request.respondedAt === null &&
+      request.status !== 'declined'
+    );
+  }).length;
 
   return (
     <main className={styles.page}>
@@ -91,6 +102,8 @@ export default async function PortalDocuments() {
                 documents.map((document) => {
                   const request = document.signatureRequests[0];
                   const signature = request?.signatures[0];
+                  const answered = request?.respondedAt !== null && request?.respondedAt !== undefined;
+                  const declined = request?.status === 'declined';
                   return (
                     <tr key={document.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
@@ -105,17 +118,23 @@ export default async function PortalDocuments() {
                       <td className={`${table.td} ${table.nowrap}`}>
                         {DOCUMENT_KIND_LABEL[document.kind]}
                       </td>
-                      <td className={table.td}>{document.project.name}</td>
+                      <td className={`${table.td} ${table.name}`}>{document.project.name}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(request?.sentAt)}
                       </td>
                       <td className={table.td}>
                         <span
-                          className={`${forms.badge} ${signature ? forms.badgeGood : forms.badgeWarn}`}
+                          className={`${forms.badge} ${
+                            signature
+                              ? forms.badgeGood
+                              : declined
+                                ? forms.badgeBad
+                                : forms.badgeWarn
+                          }`}
                         >
                           {signature
                             ? `Signed ${formatShortDate(signature.signedAt)}`
-                            : DOCUMENT_STATUS_LABEL[document.status]}
+                            : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
@@ -124,7 +143,7 @@ export default async function PortalDocuments() {
                             href={`/portal/documents/${document.reference}`}
                             className={table.action}
                           >
-                            {signature ? 'View' : 'Read and sign'}
+                            {signature || answered ? 'View' : 'Read and sign'}
                           </Link>
                         </span>
                       </td>

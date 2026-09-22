@@ -623,6 +623,91 @@
   font-weight: var(--font-weight-medium);
 }
 
+.prose a {
+  color: var(--brand-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Everything below mirrors RichText.module.css rule for rule. The editor
+   claims to show a writer what the reader will see, and it only actually does
+   that if these two agree — a quote, a table or a code block used to be styled
+   while being written and unstyled once sent. */
+.prose blockquote,
+.quote {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+  border-left: 2px solid var(--brand-border);
+  color: var(--text-secondary);
+}
+
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose code {
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+}
+
+.prose pre {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  overflow-x: auto;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: var(--font-size-caption);
+}
+
+.prose table {
+  width: 100%;
+  margin: 0 0 var(--space-4);
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+  table-layout: fixed;
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-3);
+  border: 1px solid var(--border-active);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-regular);
+}
+
+.prose th p,
+.prose td p {
+  margin: 0;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+/* A client's own words, quoted back on the page where we act on them. */
+.quote {
+  font-size: var(--font-size-body);
+  white-space: pre-wrap;
+}
+
 /* The editor. Monospace, because a document body is markdown and the markers
    matter more than the prose reads while you are writing it. */
 .editor {

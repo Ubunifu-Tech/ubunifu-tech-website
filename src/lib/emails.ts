@@ -515,3 +515,52 @@ export function ticketReplyEmail(input: {
 
   return shell(`${input.reference}: ${input.subject}`, body);
 }
+
+/**
+ * A client did not sign.
+ *
+ * Deliberately quotes their words in full rather than summarising them. This
+ * email exists so somebody reads the objection today, not so it can be filed.
+ */
+export function documentResponseEmail(input: {
+  reference: string;
+  title: string;
+  clientName: string;
+  from: string;
+  fromEmail: string;
+  declined: boolean;
+  note: string;
+  version: number;
+  url: string;
+}): string {
+  const paragraphs = input.note
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 14px;color:#5A5170;font-size:15px;line-height:1.7;">${escapeHtml(
+          block,
+        ).replace(/\n/g, '<br />')}</p>`,
+    )
+    .join('');
+
+  const headline = input.declined
+    ? `${input.from} declined to sign it`
+    : `${input.from} has asked for changes`;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8A8399;font-size:13px;line-height:1.5;">
+      ${escapeHtml(input.reference)} · version ${input.version}
+    </p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1F1A36;">${escapeHtml(headline)}</h1>
+    <p style="margin:0 0 18px;color:#5A5170;font-size:15px;line-height:1.7;">
+      <strong style="color:#1F1A36;">${escapeHtml(input.title)}</strong>, sent to
+      <strong style="color:#1F1A36;">${escapeHtml(input.clientName)}</strong>
+      (${escapeHtml(input.fromEmail)}). Nothing has been signed and nothing has been charged.
+    </p>
+    ${paragraphs}
+    ${button(input.url, 'Open it in the console')}`;
+
+  return shell(`${input.reference}: ${headline}`, body);
+}

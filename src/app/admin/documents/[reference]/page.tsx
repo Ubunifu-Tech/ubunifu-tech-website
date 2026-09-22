@@ -87,6 +87,9 @@ export default async function DocumentPage({
           sentAt: true,
           viewedAt: true,
           expiresAt: true,
+          respondedAt: true,
+          responseNote: true,
+          respondedBy: { select: { name: true, email: true } },
           version: { select: { version: true } },
           termsVersion: { select: { version: true, title: true } },
           signatures: {
@@ -138,9 +141,12 @@ export default async function DocumentPage({
   const latest = document.versions[0];
   const signed = document.status === 'signed';
   const live = document.signatureRequests.find((request) =>
-    ['sent', 'viewed', 'signed'].includes(request.status),
+    // 'declined' belongs here: a refused request is still the current one, and
+    // dropping it would leave this page looking like nothing was ever sent.
+    ['sent', 'viewed', 'signed', 'declined'].includes(request.status),
   );
   const signature = live?.signatures[0];
+  const answered = live?.respondedAt ? live : null;
 
   return (
     <main className={styles.page}>
@@ -172,6 +178,32 @@ export default async function DocumentPage({
           {DOCUMENT_STATUS_LABEL[document.status]}
         </span>
       </div>
+
+      {answered && (
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>
+              {answered.status === 'declined'
+                ? 'The client declined this'
+                : 'The client asked for changes'}
+            </h2>
+            <span className={forms.cardMeta}>
+              Version {answered.version.version} · {formatShortDate(answered.respondedAt)}
+            </span>
+          </div>
+          <p className={styles.note}>
+            {answered.respondedBy
+              ? `${answered.respondedBy.name} (${answered.respondedBy.email}) wrote:`
+              : 'They wrote:'}
+          </p>
+          <blockquote className={forms.quote}>{answered.responseNote}</blockquote>
+          <p className={forms.hint}>
+            {answered.status === 'declined'
+              ? 'This request is closed. Write the next version below and send it as a new one.'
+              : 'This request is still open, so they can still sign this version. Write the next version below if the change is agreed.'}
+          </p>
+        </section>
+      )}
 
       {signature && (
         <div className={styles.stats}>

@@ -183,7 +183,7 @@ export default async function RequestsPage({
                         {ticket.messages.length === 1 ? 'message' : 'messages'}
                       </span>
                     </td>
-                    <td className={table.td}>
+                    <td className={`${table.td} ${table.name}`}>
                       <Link href={`/clients/${ticket.client.slug}`} className={table.link}>
                         {ticket.client.name}
                       </Link>

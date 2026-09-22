@@ -178,10 +178,8 @@ export default async function RenewalsPage() {
                   <tr>
                     <th className={table.th} scope="col">Item</th>
                     <th className={table.th} scope="col">Period</th>
-                    <th className={table.th} scope="col">Client</th>
                     <th className={table.th} scope="col">Project</th>
                     <th className={table.th} scope="col">Due</th>
-                    <th className={table.th} scope="col">Every</th>
                     <th className={`${table.th} ${table.numericHead}`} scope="col">Amount</th>
                     <th className={table.th} scope="col">State</th>
                     <th className={`${table.th} ${table.actionsHead}`} scope="col">
@@ -192,7 +190,7 @@ export default async function RenewalsPage() {
                 <tbody>
                   {group.rows.length === 0 ? (
                     <tr>
-                      <td className={table.emptyCell} colSpan={9}>
+                      <td className={table.emptyCell} colSpan={7}>
                         <p className={table.emptyTitle}>Nothing here.</p>
                         <p className={table.emptyHint}>
                           {group.key === 'overdue'
@@ -207,22 +205,20 @@ export default async function RenewalsPage() {
                       const distance = days(renewal.dueAt);
                       return (
                         <tr key={renewal.id} className={table.tr}>
-                          <td className={`${table.td} ${table.primary}`}>{line.label}</td>
+                          <td className={`${table.td} ${table.primary}`}>
+                            {line.label}
+                            <span className={table.sub}>
+                              {KIND_LABEL[line.billingKind] ?? line.billingKind}
+                            </span>
+                          </td>
                           <td className={`${table.td} ${table.nowrap}`}>
                             {periodLabel(renewal.periodStart, renewal.periodEnd)}
                           </td>
-                          <td className={table.td}>
-                            <Link
-                              href={`/clients/${line.project.client.slug}`}
-                              className={table.link}
-                            >
-                              {line.project.client.name}
-                            </Link>
-                          </td>
-                          <td className={table.td}>
+                          <td className={`${table.td} ${table.name}`}>
                             <Link href={`/projects/${line.project.slug}`} className={table.link}>
                               {line.project.reference}
                             </Link>
+                            <span className={table.sub}>{line.project.client.name}</span>
                           </td>
                           <td className={`${table.td} ${table.nowrap}`}>
                             {formatShortDate(renewal.dueAt)}
@@ -233,9 +229,6 @@ export default async function RenewalsPage() {
                                   : `in ${distance} days`}
                               </span>
                             )}
-                          </td>
-                          <td className={`${table.td} ${table.nowrap}`}>
-                            {KIND_LABEL[line.billingKind] ?? line.billingKind}
                           </td>
                           <td className={`${table.td} ${table.numeric}`}>
                             {line.amountMinor === 0 ? (

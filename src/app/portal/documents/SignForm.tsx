@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useActionState, useState } from 'react';
-import { signDocument, type SignState } from './actions';
+import { respondToDocument, signDocument, type SignState } from './actions';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -80,7 +80,8 @@ export function SignForm({
         <span className={forms.checkText}>
           <span>I have read this document and agree to it</span>
           <span className={forms.hint}>
-            If anything is wrong, close this and email us instead. We would much rather fix it.
+            If anything is wrong, do not sign it — ask for changes below. We would much rather fix
+            it.
           </span>
         </span>
       </label>
@@ -115,6 +116,126 @@ export function SignForm({
         <p className={forms.payoff}>
           You will get a copy, and it stays in your portal.
         </p>
+      </div>
+
+      {state.status === 'error' && (
+        <p className={forms.error} role="alert">
+          {state.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+type Intent = 'changes' | 'decline';
+
+const WORDING: Record<
+  Intent,
+  { open: string; title: string; hint: string; submit: string; working: string }
+> = {
+  changes: {
+    open: 'Ask for changes',
+    title: 'What should change?',
+    hint: 'We will read it, make the changes and send you a new version to sign. This one stays here in the meantime, so you can still sign it if we talk it through.',
+    submit: 'Send it to us',
+    working: 'Sending…',
+  },
+  decline: {
+    open: 'I cannot sign this',
+    title: 'Why not?',
+    hint: 'This closes the request. Nothing is signed, nothing is charged, and we will come back to you — a new version would arrive as a fresh request.',
+    submit: 'Decline it',
+    working: 'Recording…',
+  },
+};
+
+/**
+ * The other two answers.
+ *
+ * Kept off the signing form and behind a press each, so neither is something
+ * you can hit by accident while reaching for the button that matters — but
+ * both are on the page, because a page that only lets you say yes is not
+ * asking anything.
+ */
+export function RespondForm({ requestId }: { requestId: string }) {
+  const [state, action, pending] = useActionState(respondToDocument, INITIAL);
+  const [intent, setIntent] = useState<Intent | null>(null);
+  // Controlled, so a rejected submission does not hand back an empty box.
+  // React resets an uncontrolled form once the action returns, and asking
+  // somebody to retype the reason they cannot sign is how you stop hearing it.
+  const [note, setNote] = useState('');
+
+  if (state.status === 'done') {
+    return (
+      <p className={styles.notice} role="status">
+        {state.message}
+      </p>
+    );
+  }
+
+  if (!intent) {
+    return (
+      <div className={forms.actions}>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setIntent('changes')}
+        >
+          {WORDING.changes.open}
+        </button>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setIntent('decline')}
+        >
+          {WORDING.decline.open}
+        </button>
+      </div>
+    );
+  }
+
+  const wording = WORDING[intent];
+
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="requestId" value={requestId} />
+      <input type="hidden" name="intent" value={intent} />
+
+      <div className={forms.field}>
+        <label className={forms.label} htmlFor="respond-note">
+          {wording.title}
+        </label>
+        <textarea
+          id="respond-note"
+          name="note"
+          className={forms.control}
+          rows={5}
+          minLength={10}
+          maxLength={4000}
+          required
+          disabled={pending}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+        />
+        <p className={forms.hint}>{wording.hint}</p>
+      </div>
+
+      <div className={forms.actions}>
+        <button
+          type="submit"
+          className={`${forms.button} ${intent === 'decline' ? forms.danger : ''}`}
+          disabled={pending}
+        >
+          {pending ? wording.working : wording.submit}
+        </button>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setIntent(null)}
+          disabled={pending}
+        >
+          Back
+        </button>
       </div>
 
       {state.status === 'error' && (

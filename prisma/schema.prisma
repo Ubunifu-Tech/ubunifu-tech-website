@@ -121,6 +121,7 @@ model ClientContact {
 
   signatures   Signature[]
   ticketsOpened Ticket[]
+  documentResponses SignatureRequest[]
 
   @@unique([clientId, email])
   @@index([email])
@@ -798,6 +799,13 @@ model SignatureRequest {
   sentAt     DateTime?
   viewedAt   DateTime?
   expiresAt  DateTime?
+  /// What the client said when they did not sign. Recorded on the request
+  /// rather than on the document, because it is an answer to THIS revision —
+  /// a later version gets its own request and its own answer.
+  respondedAt   DateTime?
+  responseNote  String?
+  respondedById String?
+  respondedBy   ClientContact? @relation(fields: [respondedById], references: [id], onDelete: SetNull)
   createdAt  DateTime               @default(now())
   updatedAt  DateTime               @updatedAt
 

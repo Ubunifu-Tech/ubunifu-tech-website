@@ -22,8 +22,13 @@ const STATUS_BADGE: Record<string, string> = {
   superseded: '',
 };
 
+/* 'With the client' used to include changes_requested, which is the one state
+   that means the opposite — they have answered and the next move is ours. The
+   two now have separate views, because a list of what you are waiting on is
+   only useful if nothing on it is waiting on you. */
 const FILTERS = [
   { key: 'open', label: 'With the client' },
+  { key: 'back', label: 'Back to us' },
   { key: 'drafts', label: 'Drafts' },
   { key: 'signed', label: 'Signed' },
   { key: 'all', label: 'Everything' },
@@ -31,6 +36,8 @@ const FILTERS = [
 
 function filterToWhere(key: string): Prisma.DocumentWhereInput {
   switch (key) {
+    case 'back':
+      return { status: { in: ['changes_requested', 'declined'] } };
     case 'drafts':
       return { status: { in: ['draft', 'internal_review'] } };
     case 'signed':
@@ -38,7 +45,7 @@ function filterToWhere(key: string): Prisma.DocumentWhereInput {
     case 'all':
       return {};
     default:
-      return { status: { in: ['sent', 'viewed', 'changes_requested'] } };
+      return { status: { in: ['sent', 'viewed'] } };
   }
 }
 
@@ -117,12 +124,13 @@ export default async function DocumentsPage({
           <table className={table.table}>
             <thead>
               <tr>
+                {/* Kind and the version count moved under the title: eight columns
+                    did not fit a laptop, and the two that were cut are the two
+                    nobody sorts or compares by. */}
                 <th className={table.th} scope="col">Document</th>
-                <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">Client</th>
                 <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">State</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Versions</th>
                 <th className={table.th} scope="col">Last touched</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className={table.muted}>Actions</span>
@@ -132,7 +140,7 @@ export default async function DocumentsPage({
             <tbody>
               {documents.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={8}>
+                  <td className={table.emptyCell} colSpan={6}>
                     <p className={table.emptyTitle}>
                       {active === 'open' ? 'Nothing with a client.' : 'Nothing here.'}
                     </p>
@@ -153,14 +161,13 @@ export default async function DocumentsPage({
                           {document.title}
                         </Link>
                         <span className={table.sub}>
-                          {document.reference}
+                          {document.reference} · {DOCUMENT_KIND_LABEL[document.kind]} ·{' '}
+                          {document.versions.length}{' '}
+                          {document.versions.length === 1 ? 'version' : 'versions'}
                           {aiUsed ? ' · drafted with help' : ''}
                         </span>
                       </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
-                        {DOCUMENT_KIND_LABEL[document.kind]}
-                      </td>
-                      <td className={table.td}>
+                      <td className={`${table.td} ${table.name}`}>
                         <Link
                           href={`/clients/${document.project.client.slug}`}
                           className={table.link}
@@ -168,7 +175,7 @@ export default async function DocumentsPage({
                           {document.project.client.name}
                         </Link>
                       </td>
-                      <td className={table.td}>
+                      <td className={`${table.td} ${table.name}`}>
                         <Link href={`/projects/${document.project.slug}`} className={table.link}>
                           {document.project.name}
                         </Link>
@@ -182,9 +189,6 @@ export default async function DocumentsPage({
                             {formatShortDate(request.signatures[0].signedAt)}
                           </span>
                         )}
-                      </td>
-                      <td className={`${table.td} ${table.numeric}`}>
-                        {document.versions.length}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(document.updatedAt)}

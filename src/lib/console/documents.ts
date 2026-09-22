@@ -45,6 +45,23 @@ export const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   superseded: 'Superseded',
 };
 
+/**
+ * The same states, said to the person they are about.
+ *
+ * "With the client" and "Opened by the client" are how we talk about a
+ * document among ourselves; showing either of them to the client is talking
+ * about somebody in the third person while they are standing there.
+ */
+export const PORTAL_DOCUMENT_STATUS_LABEL: Record<string, string> = {
+  sent: 'Waiting for your signature',
+  viewed: 'Waiting for your signature',
+  changes_requested: 'You asked for changes',
+  signed: 'Signed',
+  declined: 'You declined this',
+  expired: 'Expired',
+  superseded: 'Replaced by a newer version',
+};
+
 /** AGR-2026-004. Per kind, per year, derived from the highest already issued. */
 export async function nextDocumentReference(
   tx: Prisma.TransactionClient,

@@ -4,11 +4,11 @@ import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import {
   DOCUMENT_KIND_LABEL,
-  DOCUMENT_STATUS_LABEL,
+  PORTAL_DOCUMENT_STATUS_LABEL,
   renderMarkdown,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
-import { SignForm } from '../SignForm';
+import { RespondForm, SignForm } from '../SignForm';
 import { markViewed } from '../actions';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -51,7 +51,10 @@ export default async function PortalDocument({
       status: true,
       project: { select: { name: true, reference: true, slug: true } },
       signatureRequests: {
-        where: { status: { in: ['sent', 'viewed', 'signed'] } },
+        // 'declined' is in here deliberately: a client who said no still has
+        // to be able to open what they said no to, and so does anyone reading
+        // this later.
+        where: { status: { in: ['sent', 'viewed', 'signed', 'declined'] } },
         orderBy: { createdAt: 'desc' },
         take: 1,
         select: {
@@ -59,6 +62,9 @@ export default async function PortalDocument({
           status: true,
           sentAt: true,
           expiresAt: true,
+          respondedAt: true,
+          responseNote: true,
+          respondedBy: { select: { name: true } },
           version: { select: { bodyMarkdown: true, version: true } },
           termsVersion: {
             select: { id: true, version: true, title: true, bodyMarkdown: true },
@@ -81,7 +87,10 @@ export default async function PortalDocument({
 
   const signature = request.signatures[0];
   const expired = request.expiresAt !== null && request.expiresAt.getTime() < now.getTime();
-  const canSign = !signature && !expired;
+  const declined = request.status === 'declined';
+  // Asking for changes does not close the request, so signing stays open —
+  // declining does close it, and so does the clock.
+  const canSign = !signature && !expired && !declined;
 
   return (
     <main className={`${styles.page} ${styles.medium}`}>
@@ -96,13 +105,21 @@ export default async function PortalDocument({
         </p>
         <p>
           <span
-            className={`${forms.badge} ${signature ? forms.badgeGood : expired ? forms.badgeWarn : forms.badgeLive}`}
+            className={`${forms.badge} ${
+              signature
+                ? forms.badgeGood
+                : declined
+                  ? forms.badgeBad
+                  : expired
+                    ? forms.badgeWarn
+                    : forms.badgeLive
+            }`}
           >
             {signature
               ? `Signed ${formatDate(signature.signedAt)}`
               : expired
                 ? 'This request has expired'
-                : DOCUMENT_STATUS_LABEL[document.status]}
+                : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
           </span>
         </p>
       </div>
@@ -112,6 +129,22 @@ export default async function PortalDocument({
           Signed by {signature.signerName} as &ldquo;{signature.initials}&rdquo; on{' '}
           {formatDate(signature.signedAt)}. This is your copy and it stays here.
         </p>
+      )}
+
+      {request.respondedAt && (
+        <div className={styles.notice} role="status">
+          <p>
+            {declined
+              ? `You declined this on ${formatDate(request.respondedAt)}. Nothing was signed and nothing has been charged.`
+              : `You asked for changes on ${formatDate(request.respondedAt)}. We are working on a new version.`}
+          </p>
+          <p>
+            <strong>
+              {request.respondedBy?.name ? `${request.respondedBy.name} wrote:` : 'You wrote:'}
+            </strong>{' '}
+            {request.responseNote}
+          </p>
+        </div>
       )}
 
       {expired && !signature && (
@@ -163,6 +196,16 @@ export default async function PortalDocument({
             termsVersion={request.termsVersion?.version ?? null}
             signerName={actor.name}
           />
+        </section>
+      )}
+
+      {canSign && !request.respondedAt && (
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Not ready to sign?</h2>
+            <span className={forms.cardMeta}>Neither of these signs anything</span>
+          </div>
+          <RespondForm requestId={request.id} />
         </section>
       )}
     </main>

@@ -92,7 +92,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-secondary);
@@ -103,10 +103,23 @@
 }
 
 .td {
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-4);
   border-bottom: 1px solid var(--border);
   color: var(--text-secondary);
   vertical-align: middle;
+}
+
+/* The gutters stay wide; only the gaps between columns narrow. Eight columns
+   at the old spacing spent a third of a laptop's width on padding, which is
+   how a table that fits ends up behind a scrollbar. */
+.th:first-child,
+.td:first-child {
+  padding-left: var(--space-5);
+}
+
+.th:last-child,
+.td:last-child {
+  padding-right: var(--space-5);
 }
 
 .tr:last-child .td {
@@ -126,6 +139,16 @@
 .primary {
   min-width: 12rem;
   color: var(--text-primary);
+}
+
+/* A name — a client, a project, a person.
+ *
+ * An auto-layout table steals room from whichever column will still fit, and a
+ * column of names always will: it just breaks at every space and stacks one
+ * word per line. Giving names a floor makes the table ask for the width it
+ * actually needs, which is what .scroll is there to provide. */
+.name {
+  min-width: 10rem;
 }
 
 .link {

@@ -5,6 +5,12 @@ import { db } from '@/lib/db';
 import type { ActorType, StaffRole } from '@/generated/prisma/client';
 import { isAdminHost, isStaffEmailAllowed } from './env';
 import { readSession } from './session';
+import { cache } from 'react';
+import {
+  permissionsForRole,
+  readRolePermissions,
+  type Permission,
+} from './permissions';
 import { safePortalPath } from './return-path';
 
 /**
@@ -22,7 +28,32 @@ export type StaffActor = {
   name: string;
   role: StaffRole;
   title: string | null;
+  /** What this person's role allows, read fresh on every request. */
+  permissions: Permission[];
 };
+
+/** The team's permission settings, read once per request. */
+const rolePermissions = cache(async () => {
+  const settings = await db.orgSettings.findUnique({
+    where: { id: 'default' },
+    select: { rolePermissions: true },
+  });
+  return readRolePermissions(settings?.rolePermissions);
+});
+
+export function can(staff: Pick<StaffActor, 'permissions'>, permission: Permission): boolean {
+  return staff.permissions.includes(permission);
+}
+
+/**
+ * For pages: the signed-in staff member, if their role allows this. Anyone
+ * else is shown a page that says so, rather than a 404 that looks broken.
+ */
+export async function requirePermission(permission: Permission): Promise<StaffActor> {
+  const staff = await requireStaff();
+  if (!can(staff, permission)) redirect(`/no-access?need=${permission}`);
+  return staff;
+}
 
 export type ClientActor = {
   id: string;
@@ -69,6 +100,7 @@ export async function getStaffActor(): Promise<StaffActor | null> {
     name: staff.name,
     role: staff.role,
     title: staff.title,
+    permissions: permissionsForRole(staff.role, await rolePermissions()),
   };
 }
 

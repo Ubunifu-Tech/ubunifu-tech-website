@@ -1077,10 +1077,11 @@
 
 .summary {
   display: grid;
+  gap: 1px;
   margin-bottom: var(--space-5);
   border: 1px solid var(--border);
   border-radius: var(--app-radius-card);
-  background: var(--surface);
+  background: var(--border);
   box-shadow: var(--app-shadow-card);
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   overflow: hidden;
@@ -1091,11 +1092,7 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: var(--space-4) var(--space-5);
-  border-left: 1px solid var(--border);
-}
-
-.summaryItem:first-child {
-  border-left: 0;
+  background: var(--surface);
 }
 
 .summaryLabel {
@@ -1212,5 +1209,45 @@
 
 .taskMeta {
   color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.noAccess {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+}
+
+.noAccessIcon {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--tone-amber-bg);
+  color: var(--tone-amber-fg);
+}
+
+.leadRead {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.accessList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.accessList li {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-pill);
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
   font-size: var(--font-size-caption);
 }

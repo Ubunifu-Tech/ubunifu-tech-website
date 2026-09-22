@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff } from '@/lib/console/auth';
 import { ROLE_DESCRIPTION, ROLE_LABEL } from '@/lib/console/people';
+import { PERMISSIONS } from '@/lib/console/permissions';
 import { Avatar } from '@/components/console/Avatar';
 import { ProfileForm } from '../settings/team/TeamControls';
 import styles from '../Admin.module.css';
@@ -36,10 +37,18 @@ export default async function ProfilePage() {
           <h2 className={forms.cardTitle}>Access</h2>
           <span className={`${forms.badge}`}>{ROLE_LABEL[staff.role]}</span>
         </div>
+        <p className={styles.note}>{ROLE_DESCRIPTION[staff.role]}</p>
+        <ul className={styles.accessList}>
+          {PERMISSIONS.filter((permission) => staff.permissions.includes(permission.key)).map(
+            (permission) => (
+              <li key={permission.key}>{permission.label}</li>
+            ),
+          )}
+        </ul>
         <p className={styles.note}>
-          {ROLE_DESCRIPTION[staff.role]} You sign in with a link sent to {staff.email}.{' '}
+          You sign in with a link sent to {staff.email}.{' '}
           <Link href="/settings/team" className={styles.inlineLink}>
-            See the team
+            See the team and permissions
           </Link>
         </p>
       </section>

@@ -4,10 +4,17 @@
   margin-bottom: var(--space-6);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
+  scrollbar-width: none;
 }
 
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tabs never shrink into each other; on a phone the row scrolls sideways. */
 .tab {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: -1px;

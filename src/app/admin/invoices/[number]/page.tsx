@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import {
@@ -49,7 +49,7 @@ export default async function InvoicePage({
 }: {
   params: Promise<{ number: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('invoices');
   const { number } = await params;
   const now = new Date();
 

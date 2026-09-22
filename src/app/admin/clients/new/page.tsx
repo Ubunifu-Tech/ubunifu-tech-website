@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { formatDate } from '@/lib/console/money';
 import { NewClientForm, type Prefill } from './NewClientForm';
 import styles from '../../Admin.module.css';
@@ -27,7 +27,7 @@ export default async function NewClientPage({
 }: {
   searchParams: Promise<{ enquiry?: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('clients');
   const { enquiry: enquiryId } = await searchParams;
 
   const [templates, enquiry] = await Promise.all([

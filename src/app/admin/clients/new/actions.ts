@@ -1,5 +1,6 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
@@ -8,7 +9,7 @@ import {
   ProjectStatus,
   ServiceLine,
 } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -95,6 +96,7 @@ export async function createClient(
   formData: FormData,
 ): Promise<NewClientState> {
   const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
 
   const values: NewClientValues = {
     name: text(formData, 'name'),

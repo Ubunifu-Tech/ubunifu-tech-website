@@ -51,9 +51,12 @@ function PublishButton({ id }: { id: string }) {
 export function UpdateComposer({
   projectId,
   updates,
+  readOnly = false,
 }: {
   projectId: string;
   updates: UpdateRow[];
+  /** For a role that can read updates but not send them. */
+  readOnly?: boolean;
 }) {
   const [state, action, pending] = useActionState(saveUpdate, INITIAL);
 
@@ -100,8 +103,8 @@ export function UpdateComposer({
                     </span>
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
-                    {update.published ? (
-                      <span className={table.muted}>Nothing to do</span>
+                    {update.published || readOnly ? (
+                      <span className={table.muted}>{update.published ? 'Nothing to do' : 'Draft'}</span>
                     ) : (
                       <PublishButton id={update.id} />
                     )}
@@ -113,6 +116,7 @@ export function UpdateComposer({
         </div>
       )}
 
+      {!readOnly && (
       <form action={action} className={forms.form}>
         <input type="hidden" name="projectId" value={projectId} />
         <div className={forms.grid}>
@@ -174,6 +178,7 @@ export function UpdateComposer({
         </div>
         <Result state={state} />
       </form>
+      )}
 
       {updates.length === 0 && (
         <p className={styles.note}>

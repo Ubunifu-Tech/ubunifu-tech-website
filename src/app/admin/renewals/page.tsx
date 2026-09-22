@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import {
   RENEWAL_STATUS_LABEL,
   ensureRenewalEvents,
@@ -39,7 +39,7 @@ const STATUS_BADGE: Record<string, string> = {
  * nobody opens does not need rows waiting in a table.
  */
 export default async function RenewalsPage() {
-  await requireStaff();
+  await requirePermission('invoices');
 
   await ensureRenewalEvents();
 

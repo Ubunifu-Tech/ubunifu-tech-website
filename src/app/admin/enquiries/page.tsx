@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { TriageControls } from './TriageControls';
 import styles from '../Admin.module.css';
@@ -67,7 +67,7 @@ export default async function EnquiriesPage({
 }: {
   searchParams: Promise<{ show?: string; open?: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('enquiries');
   const { show, open } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const now = new Date();

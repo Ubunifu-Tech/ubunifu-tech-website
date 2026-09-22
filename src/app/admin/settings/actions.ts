@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireStaffRole, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { parseBps } from '@/lib/console/org';
 import { formText } from '@/lib/console/form';
 
@@ -23,7 +24,8 @@ export async function saveOrgSettings(
   _previous: SettingsState,
   formData: FormData,
 ): Promise<SettingsState> {
-  const staff = await requireStaffRole('admin');
+  const staff = await requireStaff();
+  if (!can(staff, 'billing_settings')) return { status: 'error', message: NO_PERMISSION };
 
   const legalName = text(formData, 'legalName');
   if (legalName.length < 2) {

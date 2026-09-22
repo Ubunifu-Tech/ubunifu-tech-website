@@ -2,10 +2,11 @@ import { db } from '@/lib/db';
 import { requireStaff } from '@/lib/console/auth';
 import { staffDomains } from '@/lib/console/env';
 import { formatRelative } from '@/lib/console/money';
-import { ROLE_DESCRIPTION, ROLE_LABEL, ROLE_OPTIONS } from '@/lib/console/people';
+import { ROLE_LABEL } from '@/lib/console/people';
 import { Avatar } from '@/components/console/Avatar';
 import { SettingsTabs } from '../SettingsTabs';
-import { InviteStaff, RoleControl, RowActions } from './TeamControls';
+import { InviteStaff, PermissionsGrid, RoleControl, RowActions } from './TeamControls';
+import { PERMISSIONS, readRolePermissions } from '@/lib/console/permissions';
 import styles from '../../Admin.module.css';
 import team from './Team.module.css';
 import forms from '@/styles/forms.module.css';
@@ -38,6 +39,11 @@ export default async function TeamPage() {
   });
 
   const active = people.filter((person) => person.isActive).length;
+  const settings = await db.orgSettings.findUnique({
+    where: { id: 'default' },
+    select: { rolePermissions: true },
+  });
+  const granted = readRolePermissions(settings?.rolePermissions);
 
   return (
     <main className={styles.page}>
@@ -133,14 +139,15 @@ export default async function TeamPage() {
         </div>
       </div>
 
-      <dl className={team.roles}>
-        {ROLE_OPTIONS.map((option) => (
-          <div key={option.value}>
-            <dt>{option.label}</dt>
-            <dd>{ROLE_DESCRIPTION[option.value]}</dd>
-          </div>
-        ))}
-      </dl>
+      <section className={`${forms.card} ${team.permissionsCard}`}>
+        <div className={forms.cardHeader}>
+          <h2 className={forms.cardTitle}>What each role can do</h2>
+          <span className={forms.cardMeta}>
+            {isOwner ? 'Changes apply straight away' : 'Only owners can change these'}
+          </span>
+        </div>
+        <PermissionsGrid permissions={PERMISSIONS} granted={granted} editable={isOwner} />
+      </section>
     </main>
   );
 }

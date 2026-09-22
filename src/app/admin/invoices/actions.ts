@@ -1,10 +1,11 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { PaymentMethod } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -33,6 +34,7 @@ export async function createInvoice(
   formData: FormData,
 ): Promise<BillingState> {
   const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
 
   const projectId = String(formData.get('projectId') ?? '');
   const chosen = formData.getAll('billables').map(String).filter(Boolean);
@@ -149,6 +151,7 @@ export async function sendInvoice(
   formData: FormData,
 ): Promise<BillingState> {
   const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
   const invoiceId = String(formData.get('invoiceId') ?? '');
 
   const invoice = await db.invoice.findUnique({
@@ -258,6 +261,7 @@ export async function recordPayment(
   formData: FormData,
 ): Promise<BillingState> {
   const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
   const invoiceId = String(formData.get('invoiceId') ?? '');
 
   const invoice = await db.invoice.findUnique({
@@ -359,6 +363,7 @@ export async function emailReceipt(
   formData: FormData,
 ): Promise<BillingState> {
   const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
   const receiptId = String(formData.get('receiptId') ?? '');
 
   const receipt = await db.receipt.findUnique({
@@ -439,6 +444,7 @@ export async function voidInvoice(
   formData: FormData,
 ): Promise<BillingState> {
   const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
   const invoiceId = String(formData.get('invoiceId') ?? '');
   const reason = formText(formData, 'reason');
 

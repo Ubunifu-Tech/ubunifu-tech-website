@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
@@ -89,12 +89,13 @@ export default async function ProjectsPage({
 }: {
   searchParams: Promise<{ show?: string; view?: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
+  const canRun = can(staff, 'projects');
   const { show, view } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
   const asList = view === 'list';
 
-  if (!asList) return <BoardView />;
+  if (!asList) return <BoardView canRun={canRun} />;
 
   const projects = await db.project.findMany({
     where: { deletedAt: null, ...filterToWhere(active) },
@@ -105,7 +106,7 @@ export default async function ProjectsPage({
 
   return (
     <main className={styles.page}>
-      <ProjectsHeader view="list" />
+      <ProjectsHeader view="list" canRun={canRun} />
 
       <div className={styles.filters}>
         {FILTERS.map((filter) => (
@@ -237,15 +238,17 @@ export default async function ProjectsPage({
 }
 
 /** Title, one line of help, and the switch between the board and the list. */
-function ProjectsHeader({ view }: { view: 'board' | 'list' }) {
+function ProjectsHeader({ view, canRun }: { view: 'board' | 'list'; canRun: boolean }) {
   return (
     <div className={styles.pageHead}>
       <div className={styles.headText}>
         <h1 className={styles.heading}>Projects</h1>
         <p className={styles.lead}>
           {view === 'board'
-            ? 'Drag a project to move it to its next stage.'
-            : 'Every project, with its value and how far along it is.'}
+            ? canRun
+              ? 'Drag a project to move it to its next stage.'
+              : 'Where every project stands.'
+            : 'Every project and how far along it is.'}
         </p>
       </div>
       <div className={styles.headActions}>
@@ -259,9 +262,11 @@ function ProjectsHeader({ view }: { view: 'board' | 'list' }) {
             List
           </Link>
         </nav>
-        <Link href="/clients/new" className={forms.button}>
-          Add a client
-        </Link>
+        {canRun && (
+          <Link href="/projects/new" className={forms.button}>
+            New project
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -272,7 +277,7 @@ function ProjectsHeader({ view }: { view: 'board' | 'list' }) {
  * from the last three months — a Done lane that keeps every project ever
  * closed stops being something anyone looks at.
  */
-async function BoardView() {
+async function BoardView({ canRun }: { canRun: boolean }) {
   const now = new Date();
   const recent = new Date(now);
   recent.setDate(recent.getDate() - 90);
@@ -319,8 +324,8 @@ async function BoardView() {
 
   return (
     <main className={`${styles.page} ${styles.pageWide}`}>
-      <ProjectsHeader view="board" />
-      <Board cards={cards} />
+      <ProjectsHeader view="board" canRun={canRun} />
+      <Board cards={cards} canMove={canRun} />
     </main>
   );
 }

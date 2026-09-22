@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { recentActivity } from '@/lib/console/activity';
@@ -35,7 +35,11 @@ const TONE_CLASS: Record<string, string> = {
 /** Morning, afternoon or evening in Tanzania, not wherever the server is. */
 function greeting(now: Date): string {
   const hour = Number(
-    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Africa/Dar_es_Salaam' }).format(now),
+    new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: 'Africa/Dar_es_Salaam',
+    }).format(now),
   );
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
@@ -138,7 +142,7 @@ export default async function AdminHome() {
         dueAt: true,
         phase: { select: { project: { select: { name: true, slug: true } } } },
       },
-    })
+    }),
   ]);
 
   const owedByCurrency = new Map<string, number>();
@@ -157,8 +161,11 @@ export default async function AdminHome() {
     tone: string;
   };
 
+  const seesEnquiries = can(staff, 'enquiries');
+  const seesMoney = can(staff, 'invoices');
+
   const waiting: Waiting[] = [
-    ...newEnquiries.map((enquiry) => ({
+    ...(seesEnquiries ? newEnquiries : []).map((enquiry) => ({
       id: `e-${enquiry.id}`,
       what: enquiry.subject,
       who: enquiry.name,
@@ -176,11 +183,11 @@ export default async function AdminHome() {
       badge: STAFF_LABEL[project.status],
       tone: TONE_CLASS[STATUS_TONE[project.status]],
     })),
-    ...unpaidInvoices
+    ...(seesMoney ? unpaidInvoices : [])
       .filter((invoice) => invoice.dueAt !== null && invoice.dueAt.getTime() < now.getTime())
       .map((invoice) => ({
         id: `i-${invoice.id}`,
-        what: `${invoice.number} — ${formatMoney(
+        what: `${invoice.number}: ${formatMoney(
           invoice.totalMinor - invoice.paidMinor,
           invoice.currency,
         )} outstanding`,
@@ -205,13 +212,15 @@ export default async function AdminHome() {
           </h1>
           <p className={styles.lead}>
             {waiting.length === 0
-              ? 'All clear — nothing needs you right now.'
+              ? 'All clear. Nothing needs you right now.'
               : `${waiting.length} ${waiting.length === 1 ? 'thing needs' : 'things need'} your attention.`}
           </p>
         </div>
-        <Link href="/clients/new" className={forms.button}>
-          Add a client
-        </Link>
+        {can(staff, 'clients') && (
+          <Link href="/clients/new" className={forms.button}>
+            Add a client
+          </Link>
+        )}
       </div>
 
       <div className={styles.stats}>
@@ -223,37 +232,43 @@ export default async function AdminHome() {
           tone="blue"
           href="/projects"
         />
-        <StatCard
-          label="Unpaid"
-          value={formatMoney(firstAmount, firstCurrency)}
-          hint={
-            owed.length > 1
-              ? `Plus ${owed
-                  .slice(1)
-                  .map(([currency, amount]) => formatMoney(amount, currency))
-                  .join(' and ')}`
-              : `${unpaidInvoices.length} ${unpaidInvoices.length === 1 ? 'invoice' : 'invoices'} open`
-          }
-          icon={Wallet}
-          tone="amber"
-          href="/invoices"
-        />
-        <StatCard
-          label="New enquiries"
-          value={enquiryCount}
-          hint={enquiryCount === 0 ? 'Inbox is clear' : 'Waiting for a reply'}
-          icon={Sparkles}
-          tone="violet"
-          href="/enquiries"
-        />
-        <StatCard
-          label="Renewals due"
-          value={dueRenewals}
-          hint="In the next 45 days"
-          icon={RefreshCw}
-          tone="teal"
-          href="/renewals"
-        />
+        {seesMoney && (
+          <StatCard
+            label="Unpaid"
+            value={formatMoney(firstAmount, firstCurrency)}
+            hint={
+              owed.length > 1
+                ? `Plus ${owed
+                    .slice(1)
+                    .map(([currency, amount]) => formatMoney(amount, currency))
+                    .join(' and ')}`
+                : `${unpaidInvoices.length} ${unpaidInvoices.length === 1 ? 'invoice' : 'invoices'} open`
+            }
+            icon={Wallet}
+            tone="amber"
+            href="/invoices"
+          />
+        )}
+        {seesEnquiries && (
+          <StatCard
+            label="New enquiries"
+            value={enquiryCount}
+            hint={enquiryCount === 0 ? 'Inbox is clear' : 'Waiting for a reply'}
+            icon={Sparkles}
+            tone="violet"
+            href="/enquiries"
+          />
+        )}
+        {seesMoney && (
+          <StatCard
+            label="Renewals due"
+            value={dueRenewals}
+            hint="In the next 45 days"
+            icon={RefreshCw}
+            tone="teal"
+            href="/renewals"
+          />
+        )}
         {failedEmails > 0 ? (
           <StatCard
             label="Emails not sent"
@@ -287,10 +302,18 @@ export default async function AdminHome() {
             <table className={`${table.table} ${table.compact}`}>
               <thead>
                 <tr>
-                  <th className={table.th} scope="col">What</th>
-                  <th className={table.th} scope="col">Client</th>
-                  <th className={table.th} scope="col">Since</th>
-                  <th className={table.th} scope="col">Status</th>
+                  <th className={table.th} scope="col">
+                    What
+                  </th>
+                  <th className={table.th} scope="col">
+                    Client
+                  </th>
+                  <th className={table.th} scope="col">
+                    Since
+                  </th>
+                  <th className={table.th} scope="col">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -334,50 +357,56 @@ export default async function AdminHome() {
         </div>
 
         <div className={styles.stack}>
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Your tasks</h2>
-            <span className={forms.cardMeta}>{myTasks.length === 0 ? 'Nothing assigned' : `${myTasks.length} open`}</span>
-          </div>
-          {myTasks.length === 0 ? (
-            <p className={styles.note}>
-              Nothing is assigned to you. Tasks are given out on each project&rsquo;s{' '}
-              <Link href="/projects" className={styles.inlineLink}>
-                plan
-              </Link>
-              .
-            </p>
-          ) : (
-            <ul className={styles.glance}>
-              {myTasks.map((task) => {
-                const late = task.dueAt !== null && task.dueAt < now;
-                return (
-                  <li key={task.id}>
-                    <Link href={`/projects/${task.phase.project.slug}?tab=plan`}>
-                      <span className={styles.taskText}>
-                        {task.title}
-                        <span className={styles.taskMeta}>{task.phase.project.name}</span>
-                      </span>
-                      <span className={`${forms.badge} ${late ? forms.badgeBad : ''}`}>
-                        {task.dueAt ? (late ? `Late, ${formatShortDate(task.dueAt)}` : formatShortDate(task.dueAt)) : 'No date'}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Your tasks</h2>
+              <span className={forms.cardMeta}>
+                {myTasks.length === 0 ? 'Nothing assigned' : `${myTasks.length} open`}
+              </span>
+            </div>
+            {myTasks.length === 0 ? (
+              <p className={styles.note}>
+                Nothing is assigned to you. Tasks are given out on each project&rsquo;s{' '}
+                <Link href="/projects" className={styles.inlineLink}>
+                  plan
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className={styles.glance}>
+                {myTasks.map((task) => {
+                  const late = task.dueAt !== null && task.dueAt < now;
+                  return (
+                    <li key={task.id}>
+                      <Link href={`/projects/${task.phase.project.slug}?tab=plan`}>
+                        <span className={styles.taskText}>
+                          {task.title}
+                          <span className={styles.taskMeta}>{task.phase.project.name}</span>
+                        </span>
+                        <span className={`${forms.badge} ${late ? forms.badgeBad : ''}`}>
+                          {task.dueAt
+                            ? late
+                              ? `Late, ${formatShortDate(task.dueAt)}`
+                              : formatShortDate(task.dueAt)
+                            : 'No date'}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Recent activity</h2>
-            <Link href="/activity" className={table.action}>
-              See all
-            </Link>
-          </div>
-          <ActivityFeed items={activity} now={now} />
-        </section>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Recent activity</h2>
+              <Link href="/activity" className={table.action}>
+                See all
+              </Link>
+            </div>
+            <ActivityFeed items={activity} now={now} />
+          </section>
         </div>
       </div>
     </main>

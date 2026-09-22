@@ -8,9 +8,9 @@ export const ROLE_LABEL: Record<StaffRole, string> = {
 };
 
 export const ROLE_DESCRIPTION: Record<StaffRole, string> = {
-  owner: 'Everything, including who is on the team.',
-  admin: 'Everything except managing the team.',
-  member: 'Clients, projects, documents and requests. Not billing details or the team.',
+  owner: 'Everything, including the team and what each role may do.',
+  admin: 'Most things, as set in the permissions on the Team page.',
+  member: 'Day-to-day work, as set in the permissions on the Team page.',
 };
 
 export const ROLE_OPTIONS = (['member', 'admin', 'owner'] as const).map((role) => ({

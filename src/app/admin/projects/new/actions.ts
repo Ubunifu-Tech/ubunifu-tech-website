@@ -1,10 +1,11 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { EngagementType, ProjectStatus, ServiceLine } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
@@ -43,6 +44,7 @@ export async function createProject(
   formData: FormData,
 ): Promise<NewProjectState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
   const fail = (message: string, field?: string): NewProjectState => ({
     status: 'error',

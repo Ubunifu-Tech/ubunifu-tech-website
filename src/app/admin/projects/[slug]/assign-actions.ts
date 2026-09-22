@@ -1,8 +1,9 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { formatDate, parseDateInput } from '@/lib/console/money';
@@ -30,6 +31,7 @@ async function staffMember(id: string) {
 /** Who leads the project. */
 export async function setProjectLead(_previous: AssignState, formData: FormData): Promise<AssignState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const project = await db.project.findFirst({
     where: { id: formText(formData, 'projectId'), deletedAt: null },
     select: { id: true, slug: true, name: true, ownerId: true },

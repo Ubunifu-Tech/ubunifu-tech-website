@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, CircleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import {
   DOCUMENT_KIND_LABEL,
@@ -62,7 +62,7 @@ export default async function DocumentPage({
   params: Promise<{ reference: string }>;
   searchParams: Promise<{ step?: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('documents');
   const [{ reference }, query] = await Promise.all([params, searchParams]);
   const now = new Date();
 

@@ -55,13 +55,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </span>
         </Link>
 
-        <ConsoleNav counts={counts} />
+        <ConsoleNav counts={counts} permissions={staff.permissions} />
       </aside>
 
       <div className={styles.work}>
         <header className={styles.topbar}>
           <div className={styles.topbarStart}>
-            <MobileNav counts={counts} />
+            <MobileNav counts={counts} permissions={staff.permissions} />
           </div>
           <ProfileMenu
             name={staff.name}

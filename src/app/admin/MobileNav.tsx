@@ -6,13 +6,20 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
 import { ConsoleNav, type NavCounts } from './ConsoleNav';
+import type { Permission } from '@/lib/console/permissions';
 import styles from './Admin.module.css';
 
 /**
  * The sidebar, on a phone: a menu button in the top bar that slides the same
  * navigation in from the left. It closes itself when a page opens.
  */
-export function MobileNav({ counts }: { counts: NavCounts }) {
+export function MobileNav({
+  counts,
+  permissions,
+}: {
+  counts: NavCounts;
+  permissions: readonly Permission[];
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const [shownFor, setShownFor] = useState(pathname);
@@ -78,7 +85,7 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
                 <X size={20} strokeWidth={1.8} aria-hidden="true" />
               </button>
             </div>
-            <ConsoleNav counts={counts} />
+            <ConsoleNav counts={counts} permissions={permissions} />
           </aside>
         </div>
       )}

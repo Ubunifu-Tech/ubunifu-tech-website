@@ -1,9 +1,10 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { TicketPriority, TicketStatus } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketReplyEmail } from '@/lib/emails';
@@ -26,6 +27,7 @@ export async function replyToTicket(
   formData: FormData,
 ): Promise<TicketState> {
   const staff = await requireStaff();
+  if (!can(staff, 'requests')) return { status: 'error', message: NO_PERMISSION };
 
   const ticketId = String(formData.get('ticketId') ?? '');
   const body = formText(formData, 'body');
@@ -117,6 +119,7 @@ export async function triageTicket(
   formData: FormData,
 ): Promise<TicketState> {
   const staff = await requireStaff();
+  if (!can(staff, 'requests')) return { status: 'error', message: NO_PERMISSION };
 
   const ticketId = String(formData.get('ticketId') ?? '');
   const statusRaw = String(formData.get('ticketStatus') ?? '');

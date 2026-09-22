@@ -350,10 +350,11 @@
 
 .summary {
   display: grid;
+  gap: 1px;
   margin-bottom: var(--space-5);
   border: 1px solid var(--border);
   border-radius: var(--app-radius-card);
-  background: var(--surface);
+  background: var(--border);
   box-shadow: var(--app-shadow-card);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   overflow: hidden;
@@ -364,11 +365,7 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: var(--space-4) var(--space-5);
-  border-left: 1px solid var(--border);
-}
-
-.summaryItem:first-child {
-  border-left: 0;
+  background: var(--surface);
 }
 
 .summaryLabel {
@@ -409,16 +406,6 @@
   }
 }
 
-@media (max-width: 40rem) {
-  .summaryItem {
-    border-top: 1px solid var(--border);
-    border-left: 0;
-  }
-
-  .summaryItem:first-child {
-    border-top: 0;
-  }
-}
 
 /* A notice, not a failure: sign-in links are single use, so arriving with a
    spent one is a normal thing to do — usually by reopening the email twice. */

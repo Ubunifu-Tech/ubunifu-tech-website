@@ -1,9 +1,10 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { AssetRequestStatus, ProjectStatus } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { projectUpdateEmail } from '@/lib/emails';
@@ -49,6 +50,7 @@ export async function moveProject(
   // A server action is a public endpoint; the form having been rendered proves
   // nothing about who is posting to it.
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
   const projectId = String(formData.get('projectId') ?? '');
   const to = String(formData.get('to') ?? '');
@@ -269,6 +271,7 @@ export async function saveUpdate(
   formData: FormData,
 ): Promise<EditState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
   const projectId = String(formData.get('projectId') ?? '');
   const title = String(formData.get('title') ?? '').trim();
@@ -332,6 +335,7 @@ export async function publishUpdate(
   formData: FormData,
 ): Promise<EditState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const updateId = String(formData.get('updateId') ?? '');
 
   const update = await db.projectUpdate.findUnique({

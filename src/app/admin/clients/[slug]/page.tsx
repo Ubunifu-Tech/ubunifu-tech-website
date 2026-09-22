@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
@@ -40,7 +40,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
  * client asks on the phone rather than the ones a database would.
  */
 export default async function ClientPage({ params }: { params: Promise<{ slug: string }> }) {
-  await requireStaff();
+  const staff = await requireStaff();
+  const mayManage = can(staff, 'clients');
+  const seesMoney = can(staff, 'invoices');
   const { slug } = await params;
   const now = new Date();
 
@@ -177,6 +179,8 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
           <p className={styles.statValue}>{client.projects.length}</p>
           <p className={styles.statHint}>{live} still open</p>
         </div>
+        {seesMoney && (
+        <>
         <div className={styles.stat}>
           <p className={styles.statLabel}>Committed</p>
           <p className={styles.statValue}>{formatMoney(committed, client.currency)}</p>
@@ -194,6 +198,8 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
             {outstanding > 0 ? 'Invoiced and not settled' : 'Nothing owed'}
           </p>
         </div>
+        </>
+        )}
         <div className={styles.stat}>
           <p className={styles.statLabel}>People</p>
           <p className={styles.statValue}>{client.contacts.length}</p>
@@ -220,14 +226,16 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                 {client.projects.length} in total, {live} open
               </span>
             </div>
-            <div className={table.toolbarActions}>
-              <Link
-                href={`/projects/new?client=${client.slug}`}
-                className={`${forms.button} ${forms.quiet}`}
-              >
-                Start a project
-              </Link>
-            </div>
+            {can(staff, 'projects') && (
+              <div className={table.toolbarActions}>
+                <Link
+                  href={`/projects/new?client=${client.slug}`}
+                  className={`${forms.button} ${forms.quiet}`}
+                >
+                  Start a project
+                </Link>
+              </div>
+            )}
           </div>
           <div className={table.scroll}>
             <table className={table.table}>
@@ -305,7 +313,9 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                 {client.contacts.length} {client.contacts.length === 1 ? 'person' : 'people'}
               </span>
             </div>
-            <AddPerson action={addClientContact} hidden={{ clientId: client.id }} canSkipInvite />
+            {mayManage && (
+              <AddPerson action={addClientContact} hidden={{ clientId: client.id }} canSkipInvite />
+            )}
           </div>
           <div className={table.scroll}>
             <table className={table.table}>
@@ -359,6 +369,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                       )}
                     </td>
                     <td className={`${table.td} ${table.actions}`}>
+                      {mayManage && (
                       <PersonActions
                         contactId={contact.id}
                         isPrimary={contact.isPrimary}
@@ -369,6 +380,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                         makeMain={setMainContact}
                         remove={removeClientContact}
                       />
+                      )}
                     </td>
                   </tr>
                 ))}

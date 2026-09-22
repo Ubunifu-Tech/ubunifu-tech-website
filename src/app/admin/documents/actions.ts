@@ -1,10 +1,11 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { DocumentKind } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -28,6 +29,7 @@ export async function createDocument(
   formData: FormData,
 ): Promise<DocumentState> {
   const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const projectId = String(formData.get('projectId') ?? '');
   const kindRaw = String(formData.get('kind') ?? '');
@@ -88,6 +90,7 @@ export async function saveDetails(
   formData: FormData,
 ): Promise<DocumentState> {
   const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const documentId = formText(formData, 'documentId');
   const title = formText(formData, 'title');
@@ -144,6 +147,7 @@ export async function saveVersion(
   formData: FormData,
 ): Promise<DocumentState> {
   const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const documentId = String(formData.get('documentId') ?? '');
   const bodyMarkdown = formTextExact(formData, 'body');
@@ -222,6 +226,7 @@ export async function askCopilot(
   formData: FormData,
 ): Promise<DocumentState> {
   const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const documentId = String(formData.get('documentId') ?? '');
   const message = formText(formData, 'message');
@@ -309,6 +314,7 @@ export async function sendForSignature(
   formData: FormData,
 ): Promise<DocumentState> {
   const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
   const documentId = String(formData.get('documentId') ?? '');
 
   const document = await db.document.findUnique({

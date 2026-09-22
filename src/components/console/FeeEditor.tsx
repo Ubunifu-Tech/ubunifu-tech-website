@@ -64,10 +64,13 @@ export function FeeEditor({
   projectId,
   currency,
   fees,
+  readOnly = false,
 }: {
   projectId: string;
   currency: string;
   fees: FeeRow[];
+  /** For a role that can see fees but not change them. */
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState<FeeRow | 'new' | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -87,7 +90,9 @@ export function FeeEditor({
       {fees.length === 0 && editing === null ? (
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>No fees yet</p>
-          <p className={styles.emptyText}>Add what the client will pay. It goes straight into the contract.</p>
+          <p className={styles.emptyText}>
+            {readOnly ? 'Someone who can set fees will add them.' : 'Add what the client will pay. It goes straight into the contract.'}
+          </p>
         </div>
       ) : (
         <ul className={styles.list}>
@@ -114,7 +119,7 @@ export function FeeEditor({
                     ? 'No price yet'
                     : `${fee.quantity > 1 ? `${fee.quantity} × ` : ''}${formatMoney(fee.amountMinor, currency)}${BILLING[fee.billingKind].per}`}
                 </span>
-                {removing === fee.id ? (
+                {readOnly ? null : removing === fee.id ? (
                   <form action={removeAction} className={styles.confirmRemove}>
                     <input type="hidden" name="lineItemId" value={fee.id} />
                     <span>Remove?</span>
@@ -167,7 +172,7 @@ export function FeeEditor({
       )}
 
       <div className={styles.foot}>
-        {editing === null && (
+        {editing === null && !readOnly && (
           <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setEditing('new')}>
             <Plus size={16} strokeWidth={2} aria-hidden="true" />
             Add a fee

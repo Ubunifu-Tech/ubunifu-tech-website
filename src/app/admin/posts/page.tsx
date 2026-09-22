@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { formatShortDate } from '@/lib/console/money';
 import { NewPostForm } from './PostForms';
@@ -11,7 +11,7 @@ import table from '@/styles/table.module.css';
 export const metadata = { title: 'Journal' };
 
 export default async function PostsPage() {
-  await requireStaff();
+  await requirePermission('journal');
   const now = new Date();
 
   const posts = await db.post.findMany({

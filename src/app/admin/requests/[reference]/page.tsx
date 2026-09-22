@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import {
   CLIENT_TICKET_STATUS,
@@ -34,7 +34,8 @@ export default async function TicketPage({
 }: {
   params: Promise<{ reference: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
+  const mayReply = can(staff, 'requests');
   const { reference } = await params;
   const now = new Date();
 
@@ -132,7 +133,7 @@ export default async function TicketPage({
             })}
           </ul>
 
-          <ReplyBox ticketId={ticket.id} />
+          {mayReply && <ReplyBox ticketId={ticket.id} />}
         </section>
 
         <div className={styles.stack}>
@@ -143,11 +144,9 @@ export default async function TicketPage({
                 They see &ldquo;{CLIENT_TICKET_STATUS[ticket.status]}&rdquo;
               </span>
             </div>
-            <TriageBox
-              ticketId={ticket.id}
-              status={ticket.status}
-              priority={ticket.priority}
-            />
+            {mayReply && (
+              <TriageBox ticketId={ticket.id} status={ticket.status} priority={ticket.priority} />
+            )}
             {ticket.resolvedAt && (
               <p className={styles.note}>
                 First marked done on {formatDate(ticket.resolvedAt)}. That date never moves, even

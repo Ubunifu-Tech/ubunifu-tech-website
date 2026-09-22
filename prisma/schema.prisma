@@ -1228,6 +1228,11 @@ model OrgSettings {
   /// Days from issue to due, unless overridden on the invoice.
   paymentTermsDays Int @default(14)
 
+  /// What admins and members may do, as { admin: [...], member: [...] }.
+  /// Owners can always do everything, so the team can never be locked out.
+  /// Null means the defaults in src/lib/console/permissions.ts.
+  rolePermissions Json?
+
   updatedAt DateTime @updatedAt
 }
 

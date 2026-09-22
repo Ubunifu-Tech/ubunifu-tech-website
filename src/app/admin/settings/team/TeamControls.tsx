@@ -9,6 +9,7 @@ import {
   inviteStaff,
   resendInvite,
   saveProfile,
+  savePermissions,
   setActive,
   type TeamState,
 } from './actions';
@@ -179,6 +180,79 @@ export function ProfileForm({ name, title }: { name: string; title: string | nul
         </button>
         <Message state={state} />
       </div>
+    </form>
+  );
+}
+
+/**
+ * What each role may do, as a grid of switches. Owners always have every
+ * permission, so their column is fixed; only owners can change the others.
+ */
+export function PermissionsGrid({
+  permissions,
+  granted,
+  editable,
+}: {
+  permissions: readonly { key: string; label: string; description: string }[];
+  granted: { admin: readonly string[]; member: readonly string[] };
+  editable: boolean;
+}) {
+  const [state, action, pending] = useActionState(savePermissions, INITIAL);
+
+  return (
+    <form action={action} className={styles.permissions}>
+      <div className={styles.permissionsScroll}>
+        <table className={styles.grid}>
+          <thead>
+            <tr>
+              <th scope="col">Permission</th>
+              <th scope="col">Member</th>
+              <th scope="col">Admin</th>
+              <th scope="col">Owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            {permissions.map((permission) => (
+              <tr key={permission.key}>
+                <th scope="row">
+                  <span className={styles.permissionLabel}>{permission.label}</span>
+                  <span className={styles.permissionText}>{permission.description}</span>
+                </th>
+                {(['member', 'admin'] as const).map((role) => (
+                  <td key={role}>
+                    <input
+                      type="checkbox"
+                      name={`${role}:${permission.key}`}
+                      defaultChecked={granted[role].includes(permission.key)}
+                      disabled={!editable}
+                      className={forms.check}
+                      aria-label={`${role === 'admin' ? 'Admin' : 'Member'}: ${permission.label}`}
+                    />
+                  </td>
+                ))}
+                <td>
+                  <input
+                    type="checkbox"
+                    checked
+                    disabled
+                    readOnly
+                    className={forms.check}
+                    aria-label={`Owner: ${permission.label}, always`}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {editable && (
+        <div className={forms.actions}>
+          <button type="submit" className={forms.button} disabled={pending}>
+            {pending ? 'Saving…' : 'Save permissions'}
+          </button>
+          <Message state={state} />
+        </div>
+      )}
     </form>
   );
 }

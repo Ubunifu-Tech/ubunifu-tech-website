@@ -1,8 +1,9 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import {
   addContact,
   invitePerson,
@@ -34,6 +35,7 @@ export async function inviteContact(
   formData: FormData,
 ): Promise<InviteState> {
   const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
 
   const contact = await db.clientContact.findFirst({
     where: { id: formText(formData, 'contactId'), deletedAt: null },
@@ -74,6 +76,7 @@ export async function addClientContact(
   formData: FormData,
 ): Promise<InviteState> {
   const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
   const client = await clientFor({ id: formText(formData, 'clientId') });
   if (!client) return { status: 'error', message: 'That client no longer exists.' };
 
@@ -100,6 +103,7 @@ export async function setMainContact(
   formData: FormData,
 ): Promise<InviteState> {
   const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
   const client = await clientFor({ id: formText(formData, 'clientId') });
   if (!client) return { status: 'error', message: 'That client no longer exists.' };
 
@@ -117,6 +121,7 @@ export async function removeClientContact(
   formData: FormData,
 ): Promise<InviteState> {
   const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
   const client = await clientFor({ id: formText(formData, 'clientId') });
   if (!client) return { status: 'error', message: 'That client no longer exists.' };
 

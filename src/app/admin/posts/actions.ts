@@ -1,9 +1,10 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { formatDate, parseDateInput } from '@/lib/console/money';
 import { slugify } from '@/lib/console/onboarding';
 import { parseMediaFile } from '@/lib/console/media';
@@ -43,6 +44,7 @@ export async function createPost(
   formData: FormData,
 ): Promise<PostState> {
   const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
   const title = text(formData, 'title');
   if (title.length < 4 || title.length > 200) {
@@ -102,6 +104,7 @@ export async function createPost(
  */
 export async function savePost(_previous: PostState, formData: FormData): Promise<PostState> {
   const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
   const id = text(formData, 'postId');
   const post = await db.post.findFirst({
@@ -230,6 +233,7 @@ export async function setPostStatus(
   formData: FormData,
 ): Promise<PostState> {
   const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
   const id = text(formData, 'postId');
   const publish = formData.get('publish') === 'on';
@@ -309,6 +313,7 @@ export async function setPostStatus(
  */
 export async function archivePost(_previous: PostState, formData: FormData): Promise<PostState> {
   const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
   const id = text(formData, 'postId');
   const post = await db.post.findFirst({

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
@@ -28,7 +28,7 @@ export default async function ReceiptPage({
 }: {
   params: Promise<{ number: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('invoices');
   const { number } = await params;
   const org = await getOrg();
 

@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Settings,
 } from 'lucide-react';
+import type { Permission } from '@/lib/console/permissions';
 import styles from './Admin.module.css';
 
 /**
@@ -57,6 +58,8 @@ type Item = {
   count?: keyof NavCounts;
   /** Quiet counts are information; loud ones mean somebody is waiting. */
   quiet?: boolean;
+  /** Shown only to roles that have this. */
+  need?: Permission;
 };
 
 const GROUPS: { label?: string; items: Item[] }[] = [
@@ -66,7 +69,7 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   {
     label: 'Pipeline',
     items: [
-      { href: '/enquiries', label: 'Enquiries', icon: 'enquiries', count: 'enquiries' },
+      { href: '/enquiries', label: 'Enquiries', icon: 'enquiries', count: 'enquiries', need: 'enquiries' },
       { href: '/clients', label: 'Clients', icon: 'clients' },
       { href: '/projects', label: 'Projects', icon: 'projects', count: 'projects', quiet: true },
     ],
@@ -74,8 +77,8 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   {
     label: 'Money',
     items: [
-      { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices' },
-      { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals' },
+      { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices', need: 'invoices' },
+      { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals', need: 'invoices' },
     ],
   },
   {
@@ -87,7 +90,7 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   },
   {
     label: 'Website',
-    items: [{ href: '/posts', label: 'Journal', icon: 'posts' }],
+    items: [{ href: '/posts', label: 'Journal', icon: 'posts', need: 'journal' }],
   },
   {
     label: 'Record',
@@ -98,12 +101,22 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   },
 ];
 
-export function ConsoleNav({ counts }: { counts: NavCounts }) {
+export function ConsoleNav({
+  counts,
+  permissions,
+}: {
+  counts: NavCounts;
+  permissions: readonly Permission[];
+}) {
   const pathname = usePathname();
+  const groups = GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.need || permissions.includes(item.need)),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <nav className={styles.nav} aria-label="Console">
-      {GROUPS.map((group, index) => (
+      {groups.map((group, index) => (
         <React.Fragment key={group.label ?? index}>
           {group.label && <p className={styles.navGroupLabel}>{group.label}</p>}
           {group.items.map((item) => {

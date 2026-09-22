@@ -10,6 +10,13 @@ import { sendConsoleEmail } from '@/lib/console/mailer';
 import { allow } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
 import { ROLE_LABEL } from '@/lib/console/people';
+import {
+  CONFIGURABLE_ROLES,
+  PERMISSIONS,
+  PERMISSION_KEYS,
+  readRolePermissions,
+  type RolePermissions,
+} from '@/lib/console/permissions';
 import { staffInviteEmail } from '@/lib/emails';
 
 export type TeamState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -216,4 +223,51 @@ export async function saveProfile(_previous: TeamState, formData: FormData): Pro
 
   refresh();
   return { status: 'done', message: 'Saved.' };
+}
+
+/**
+ * What admins and members may do. Owners are not in the form: they can always
+ * do everything, which is what keeps the team from locking itself out.
+ */
+export async function savePermissions(_previous: TeamState, formData: FormData): Promise<TeamState> {
+  const staff = await requireStaffRole('owner');
+
+  const next: RolePermissions = {
+    admin: PERMISSION_KEYS.filter((key) => formData.get(`admin:${key}`) === 'on'),
+    member: PERMISSION_KEYS.filter((key) => formData.get(`member:${key}`) === 'on'),
+  };
+
+  const current = await db.orgSettings.findUnique({
+    where: { id: 'default' },
+    select: { rolePermissions: true },
+  });
+  const before = readRolePermissions(current?.rolePermissions);
+
+  const changes = CONFIGURABLE_ROLES.flatMap((role) =>
+    PERMISSIONS.flatMap((permission) => {
+      const had = before[role].includes(permission.key);
+      const has = next[role].includes(permission.key);
+      if (had === has) return [];
+      return [`${ROLE_LABEL[role]} ${has ? 'can now' : 'can no longer'}: ${permission.label.toLowerCase()}`];
+    }),
+  );
+  if (changes.length === 0) return { status: 'done', message: 'Nothing changed.' };
+
+  await db.orgSettings.upsert({
+    where: { id: 'default' },
+    update: { rolePermissions: next },
+    create: { id: 'default', rolePermissions: next },
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'staff.permissions_changed',
+    entityType: 'OrgSettings',
+    entityId: 'default',
+    summary: changes.join('; '),
+    metadata: { before, after: next },
+  });
+
+  refresh();
+  return { status: 'done', message: 'Saved. It applies straight away.' };
 }

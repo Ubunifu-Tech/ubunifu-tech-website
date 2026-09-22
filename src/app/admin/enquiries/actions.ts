@@ -1,9 +1,10 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { EnquiryStatus } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
 
 export type TriageState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -32,6 +33,7 @@ export async function setEnquiryStatus(
   // Inside the action, not inherited from the page: a server action is a
   // public endpoint and the form having been rendered proves nothing.
   const staff = await requireStaff();
+  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
 
   const id = String(formData.get('id') ?? '');
   const next = String(formData.get('status') ?? '');
@@ -79,6 +81,7 @@ export async function saveEnquiryNote(
   formData: FormData,
 ): Promise<TriageState> {
   const staff = await requireStaff();
+  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
 
   const id = String(formData.get('id') ?? '');
   const note = formText(formData, 'internalNote');

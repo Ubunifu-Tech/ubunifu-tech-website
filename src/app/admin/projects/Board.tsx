@@ -62,7 +62,7 @@ type Confirm = { card: BoardCard; to: ProjectStatus; warnings: string[] };
  * and the same audit trail, and the card only stays where it was dropped if the
  * server agrees. A guard that warns asks first; a guard that blocks explains.
  */
-export function Board({ cards }: { cards: BoardCard[] }) {
+export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?: boolean }) {
   const router = useRouter();
   const [items, setItems] = useState(cards);
   const [source, setSource] = useState(cards);
@@ -164,7 +164,8 @@ export function Board({ cards }: { cards: BoardCard[] }) {
         // A fixed id: dnd-kit otherwise numbers its accessibility ids with a
         // counter that differs between the server render and the browser.
         id="project-board"
-        sensors={sensors}
+        // A role that cannot move projects sees the board, but nothing drags.
+        sensors={canMove ? sensors : []}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onDragCancel={() => setDragging(null)}

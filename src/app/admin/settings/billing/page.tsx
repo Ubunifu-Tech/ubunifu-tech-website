@@ -1,4 +1,4 @@
-import { requireStaffRole } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { formatBps, getOrg, missingForInvoicing } from '@/lib/console/org';
 import { BillingForm } from './BillingForm';
 import styles from '../../Admin.module.css';
@@ -15,7 +15,7 @@ export const metadata = { title: 'Billing details' };
  * bank account hardcoded in a component needs a deploy to change.
  */
 export default async function BillingSettingsPage() {
-  const staff = await requireStaffRole('admin');
+  const staff = await requirePermission('billing_settings');
   const org = await getOrg();
   const gaps = missingForInvoicing(org);
 

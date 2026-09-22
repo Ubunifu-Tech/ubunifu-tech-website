@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { NewProjectForm } from './NewProjectForm';
 import styles from '../../Admin.module.css';
 
@@ -19,7 +19,7 @@ export default async function NewProjectPage({
 }: {
   searchParams: Promise<{ client?: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('projects');
   const { client: slug } = await searchParams;
   if (!slug) notFound();
 

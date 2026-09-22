@@ -69,3 +69,63 @@
   font-size: var(--font-size-caption);
   line-height: 1.5;
 }
+
+.permissions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.permissionsScroll {
+  overflow-x: auto;
+}
+
+.grid {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+}
+
+.grid th,
+.grid td {
+  padding: 0.875rem var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.grid thead th {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+}
+
+.grid th[scope='row'],
+.grid thead th:first-child {
+  text-align: left;
+}
+
+.grid tbody tr:last-child th,
+.grid tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.permissionLabel {
+  display: block;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+}
+
+.permissionText {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.45;
+}
+
+.permissionsCard {
+  margin-top: var(--space-5);
+}

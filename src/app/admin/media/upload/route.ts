@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
-import { getStaffActor } from '@/lib/console/auth';
+import { can, getStaffActor } from '@/lib/console/auth';
 import { uploadsConfigured } from '@/lib/console/uploads';
 import { MAX_MEDIA_BYTES, MEDIA_CONTENT_TYPES, recordMediaAsset } from '@/lib/console/media';
 
@@ -28,7 +28,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async () => {
         const staff = await getStaffActor();
-        if (!staff) throw new Error('not-staff');
+        if (!staff || !can(staff, 'journal')) throw new Error('not-staff');
 
         return {
           allowedContentTypes: MEDIA_CONTENT_TYPES,

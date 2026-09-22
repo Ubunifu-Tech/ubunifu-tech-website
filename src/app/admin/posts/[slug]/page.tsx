@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import { renderMarkdown } from '@/lib/console/markdown';
 import { formatShortDate, toDateInputValue } from '@/lib/console/money';
@@ -22,7 +22,7 @@ export default async function EditPostPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('journal');
   const { slug } = await params;
   const now = new Date();
 

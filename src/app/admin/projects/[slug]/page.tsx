@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
 import { billableLines } from '@/lib/console/billing';
@@ -50,8 +50,12 @@ export default async function ProjectPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ tab?: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { slug } = await params;
+  const mayRun = can(staff, 'projects');
+  const mayFees = can(staff, 'fees');
+  const mayMoney = can(staff, 'invoices');
+  const mayDocs = can(staff, 'documents');
   const { tab: tabParam } = await searchParams;
   const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? '') ? (tabParam as Tab) : 'overview';
   const now = new Date();
@@ -296,7 +300,13 @@ export default async function ProjectPage({
           </p>
         </div>
         <div className={styles.headActions}>
-          <LeadSelect projectId={project.id} ownerId={project.ownerId ?? ''} people={people} />
+          {mayRun ? (
+            <LeadSelect projectId={project.id} ownerId={project.ownerId ?? ''} people={people} />
+          ) : (
+            <span className={styles.leadRead}>
+              Lead: {team.find((person) => person.id === project.ownerId)?.name ?? 'nobody yet'}
+            </span>
+          )}
           <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
             {STAFF_LABEL[project.status]}
           </span>
@@ -313,18 +323,24 @@ export default async function ProjectPage({
             <span style={{ width: `${percent}%` }} />
           </span>
         </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>Agreed fees</span>
-          <span className={styles.summaryValue}>{formatMoney(committed, project.currency)}</span>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>Invoiced</span>
-          <span className={styles.summaryValue}>{formatMoney(invoiced, project.currency)}</span>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>Paid</span>
-          <span className={styles.summaryValue}>{formatMoney(paid, project.currency)}</span>
-        </div>
+        {(mayFees || mayMoney) && (
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Agreed fees</span>
+            <span className={styles.summaryValue}>{formatMoney(committed, project.currency)}</span>
+          </div>
+        )}
+        {mayMoney && (
+          <>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Invoiced</span>
+              <span className={styles.summaryValue}>{formatMoney(invoiced, project.currency)}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Paid</span>
+              <span className={styles.summaryValue}>{formatMoney(paid, project.currency)}</span>
+            </div>
+          </>
+        )}
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Target date</span>
           <span className={styles.summaryValue}>
@@ -338,7 +354,16 @@ export default async function ProjectPage({
         tabs={[
           { key: 'overview', label: 'Overview', href: href('overview') },
           { key: 'plan', label: 'Plan', href: href('plan'), count: totalDeliverables - doneDeliverables },
-          { key: 'fees', label: 'Fees & billing', href: href('fees'), count: project.invoices.length },
+          ...(mayFees || mayMoney
+            ? [
+                {
+                  key: 'fees',
+                  label: mayMoney ? 'Fees & billing' : 'Fees',
+                  href: href('fees'),
+                  count: mayMoney ? project.invoices.length : undefined,
+                },
+              ]
+            : []),
           { key: 'documents', label: 'Documents', href: href('documents'), count: project.documents.length },
           { key: 'updates', label: 'Updates', href: href('updates'), count: project.updates.length },
           { key: 'activity', label: 'Activity', href: href('activity') },
@@ -352,7 +377,13 @@ export default async function ProjectPage({
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>Next step</h2>
               </div>
-              <MoveControls projectId={project.id} status={project.status} actions={actions} />
+              {mayRun ? (
+                <MoveControls projectId={project.id} status={project.status} actions={actions} />
+              ) : (
+                <p className={styles.note}>
+                  {STAFF_LABEL[project.status]}. Moving a project on is for roles that run projects.
+                </p>
+              )}
             </section>
 
             <section className={forms.card}>
@@ -367,6 +398,7 @@ export default async function ProjectPage({
                       : `${totalDeliverables - doneDeliverables} tasks still to do`}
                   </Link>
                 </li>
+                {(mayFees || mayMoney) && (
                 <li>
                   <Link href={href('fees')}>
                     {fees.length === 0
@@ -376,6 +408,7 @@ export default async function ProjectPage({
                         : `${fees.length} ${fees.length === 1 ? 'fee' : 'fees'} set, ${formatMoney(committed, project.currency)}`}
                   </Link>
                 </li>
+                )}
                 <li>
                   <Link href={href('documents')}>
                     {project.documents.length === 0
@@ -470,7 +503,7 @@ export default async function ProjectPage({
         </section>
       )}
 
-      {tab === 'fees' && (
+      {tab === 'fees' && (mayFees || mayMoney) && (
         <div className={styles.stack}>
           <section className={forms.card}>
             <div className={forms.cardHeader}>
@@ -483,9 +516,11 @@ export default async function ProjectPage({
                 sent until every fee is priced.
               </Callout>
             )}
-            <FeeEditor projectId={project.id} currency={project.currency} fees={fees} />
+            <FeeEditor projectId={project.id} currency={project.currency} fees={fees} readOnly={!mayFees} />
           </section>
 
+          {mayMoney && (
+          <>
           <section className={forms.card}>
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Raise an invoice</h2>
@@ -545,6 +580,8 @@ export default async function ProjectPage({
               </table>
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
 
@@ -599,12 +636,14 @@ export default async function ProjectPage({
             </div>
           </div>
 
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>New document</h2>
-            </div>
-            <NewDocument projectId={project.id} projectName={project.name} />
-          </section>
+          {mayDocs && (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>New document</h2>
+              </div>
+              <NewDocument projectId={project.id} projectName={project.name} />
+            </section>
+          )}
         </div>
       )}
 
@@ -614,7 +653,7 @@ export default async function ProjectPage({
             <h2 className={forms.cardTitle}>Updates for the client</h2>
             <span className={forms.cardMeta}>Shown in their portal and emailed to them</span>
           </div>
-          <UpdateComposer projectId={project.id} updates={updates} />
+          <UpdateComposer projectId={project.id} updates={updates} readOnly={!mayRun} />
         </section>
       )}
 

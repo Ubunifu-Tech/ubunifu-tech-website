@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { requireStaff } from '@/lib/console/auth';
+import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import styles from '../Admin.module.css';
@@ -44,7 +44,7 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<{ show?: string }>;
 }) {
-  await requireStaff();
+  await requirePermission('invoices');
   const { show } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'owing';
   const today = new Date();

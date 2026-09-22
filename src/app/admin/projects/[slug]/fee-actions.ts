@@ -1,9 +1,10 @@
 'use server';
 
+import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { BillingKind, LineItemStatus } from '@/generated/prisma/client';
-import { requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { formatMoney, parseDateInput, parseMoney, toDateInputValue } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { BILLING, isRecurring } from '@/lib/console/fee-labels';
@@ -122,6 +123,7 @@ function revalidate(slug: string) {
 
 export async function addFee(_previous: FeeState, formData: FormData): Promise<FeeState> {
   const staff = await requireStaff();
+  if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
   const project = await db.project.findFirst({
     where: { id: formText(formData, 'projectId'), deletedAt: null },
@@ -175,6 +177,7 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
 
 export async function updateFee(_previous: FeeState, formData: FormData): Promise<FeeState> {
   const staff = await requireStaff();
+  if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
   const line = await db.lineItem.findUnique({
     where: { id: formText(formData, 'lineItemId') },
@@ -282,6 +285,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
  */
 export async function removeFee(_previous: FeeState, formData: FormData): Promise<FeeState> {
   const staff = await requireStaff();
+  if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
   const line = await db.lineItem.findUnique({
     where: { id: formText(formData, 'lineItemId') },

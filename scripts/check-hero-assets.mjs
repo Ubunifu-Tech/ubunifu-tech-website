@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { requireBuild } from './require-build.mjs';
 
 const routes = {
@@ -19,7 +18,7 @@ const failures = [];
 let scenesChecked = 0;
 
 function readRoute(route) {
-  return readFileSync(join('.next/server/app', `${route}.html`), 'utf8');
+  return readFileSync(requireBuild(`${route}.html`), 'utf8');
 }
 
 for (const [route, expectedScene] of Object.entries(routes)) {

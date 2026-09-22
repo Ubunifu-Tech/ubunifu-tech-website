@@ -49,6 +49,17 @@ const TEMPLATES: Array<{
   description: string;
   phases: Array<{ name: string; goal: string; startDayOffset: number; endDayOffset: number; deliverables: string[] }>;
   assets: Array<{ title: string; detail?: string; category?: string }>;
+  /**
+   * The fee shape, deliberately without amounts.
+   *
+   * What a template knows is the structure of the money — that a build is split
+   * into a deposit and a balance, that a domain renews every year, that model
+   * usage is billed at cost. What it cannot know is the price, which is agreed
+   * per client. Seeding a plausible-looking default would be worse than leaving
+   * it blank, because a number that is already filled in is a number that gets
+   * invoiced without being read. Zero has to be replaced.
+   */
+  lines: Array<{ label: string; description?: string; billingKind: BillingKind; terms?: string }>;
 }> = [
   {
     serviceLine: 'web',
@@ -92,6 +103,12 @@ const TEMPLATES: Array<{
       { title: 'Media and imagery', detail: 'High-resolution photographs you own or are licensed to use.', category: 'Media' },
       { title: 'Contact details', detail: 'WhatsApp number, phone, email, physical location, social handles.', category: 'Contact' },
     ],
+    lines: [
+      { label: 'Deposit', billingKind: 'installment', terms: 'Half the agreed build fee, due at kick-off. Work starts once it is received.' },
+      { label: 'Balance', billingKind: 'installment', terms: 'The remaining half, due at launch.' },
+      { label: 'Domain registration', billingKind: 'recurring_annual', terms: 'Renews every year. Registered in the client’s name.' },
+      { label: 'Hosting', billingKind: 'recurring_annual', terms: 'Renews every year. Covers hosting and SSL.' },
+    ],
   },
   {
     serviceLine: 'hosting',
@@ -105,6 +122,12 @@ const TEMPLATES: Array<{
       { title: 'Preferred domain name', detail: 'First and second choice.', category: 'Domain' },
       { title: 'Registrant details', detail: 'Legal name, address and contact for the registration record.', category: 'Domain' },
       { title: 'Mailbox list', detail: 'The addresses to create and who owns each.', category: 'Email' },
+    ],
+    lines: [
+      { label: 'Setup and migration', billingKind: 'one_off', terms: 'One-off, due once the service is live and verified.' },
+      { label: 'Domain registration', billingKind: 'recurring_annual', terms: 'Renews every year. Registered in the client’s name.' },
+      { label: 'Hosting', billingKind: 'recurring_annual', terms: 'Renews every year. Covers hosting and SSL.' },
+      { label: 'Business email', billingKind: 'recurring_annual', description: 'Priced per mailbox.', terms: 'Renews every year.' },
     ],
   },
   {
@@ -121,6 +144,10 @@ const TEMPLATES: Array<{
       { title: 'Audience description', detail: 'Who you are trying to reach.', category: 'Strategy' },
       { title: 'Reference examples', detail: 'Brands you admire, and why.', category: 'Strategy' },
     ],
+    lines: [
+      { label: 'Deposit', billingKind: 'installment', terms: 'Half the agreed fee, due at kick-off.' },
+      { label: 'Balance', billingKind: 'installment', terms: 'The remaining half, due when the files are handed over.' },
+    ],
   },
   {
     serviceLine: 'data',
@@ -135,6 +162,11 @@ const TEMPLATES: Array<{
       { title: 'Data source access', detail: 'Credentials or exports for each system involved.', category: 'Access' },
       { title: 'Current reports', detail: 'Whatever the team uses today, including spreadsheets.', category: 'Context' },
       { title: 'Decisions to support', detail: 'What the team needs to be able to decide from this.', category: 'Context' },
+    ],
+    lines: [
+      { label: 'Deposit', billingKind: 'installment', terms: 'Half the agreed fee, due at kick-off.' },
+      { label: 'Balance', billingKind: 'installment', terms: 'The remaining half, due at handover.' },
+      { label: 'Dashboard hosting and support', billingKind: 'recurring_monthly', terms: 'Monthly, starting the month after handover. Optional.' },
     ],
   },
   {
@@ -151,6 +183,11 @@ const TEMPLATES: Array<{
       { title: 'Examples of good output', detail: 'What a person would produce for those inputs today.', category: 'Data' },
       { title: 'Reviewer', detail: 'Who checks the output before it is used.', category: 'People' },
     ],
+    lines: [
+      { label: 'Deposit', billingKind: 'installment', terms: 'Half the agreed fee, due at kick-off.' },
+      { label: 'Balance', billingKind: 'installment', terms: 'The remaining half, due when the workflow is in production.' },
+      { label: 'Model usage', billingKind: 'usage', description: 'What the provider charges to run the workflow.', terms: 'Billed monthly at cost, with the provider’s invoice attached.' },
+    ],
   },
   {
     serviceLine: 'strategy',
@@ -164,6 +201,10 @@ const TEMPLATES: Array<{
       { title: 'System list', detail: 'What the organisation runs on now, including spreadsheets and paper.', category: 'Context' },
       { title: 'Stakeholders', detail: 'Who should be interviewed.', category: 'People' },
       { title: 'Budget range', detail: 'What the organisation can realistically spend.', category: 'Context' },
+    ],
+    lines: [
+      { label: 'Advisory fee', billingKind: 'one_off', terms: 'Due on delivery of the written recommendation.' },
+      { label: 'Ongoing advisory', billingKind: 'recurring_monthly', terms: 'Optional. A monthly retainer once the engagement ends.' },
     ],
   },
 ];
@@ -184,6 +225,7 @@ async function seedTemplates() {
     // Rebuild children so an edited template file is reflected exactly.
     await db.phaseTemplate.deleteMany({ where: { templateId: template.id } });
     await db.assetRequestTemplate.deleteMany({ where: { templateId: template.id } });
+    await db.lineItemTemplate.deleteMany({ where: { templateId: template.id } });
 
     for (const [i, phase] of t.phases.entries()) {
       await db.phaseTemplate.create({
@@ -208,6 +250,20 @@ async function seedTemplates() {
           title: asset.title,
           detail: asset.detail,
           category: asset.category,
+          position: i,
+        },
+      });
+    }
+
+    for (const [i, line] of t.lines.entries()) {
+      await db.lineItemTemplate.create({
+        data: {
+          templateId: template.id,
+          label: line.label,
+          description: line.description,
+          billingKind: line.billingKind,
+          // amountMinor stays at its default of zero. See the note on the type.
+          terms: line.terms,
           position: i,
         },
       });

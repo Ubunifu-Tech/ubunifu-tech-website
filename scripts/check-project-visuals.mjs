@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { requireBuild } from './require-build.mjs';
 
 // Run after the production build. This checks rendered source, not browser layout.
@@ -17,7 +16,7 @@ const failures = [];
 let diagramsChecked = 0;
 
 for (const [route, kinds] of routes) {
-  const html = readFileSync(join('.next/server/app', `${route}.html`), 'utf8');
+  const html = readFileSync(requireBuild(`${route}.html`), 'utf8');
   for (const kind of kinds) {
     if (!html.includes(`data-project-diagram="${kind}"`)) {
       failures.push(`${route}: missing ${kind} diagram`);

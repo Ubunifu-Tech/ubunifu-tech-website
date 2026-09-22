@@ -99,9 +99,13 @@
   color: var(--text-tertiary);
 }
 
+/* Used on <button> and on <Link>, so it carries the bits an anchor does not
+   get for free. */
 .button {
+  display: inline-block;
   padding: var(--space-3) var(--space-5);
   border: 0;
+  text-decoration: none;
   border-radius: var(--radius-md);
   background: var(--cta);
   color: var(--text-inverse);
@@ -149,4 +153,171 @@
   font-family: var(--font-body);
   font-size: var(--font-size-small);
   cursor: pointer;
+}
+
+.inlineForm {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ── Record forms ──────────────────────────────── */
+
+/* Wider than the sign-in panel: an onboarding form read in one pass beats a
+   narrow column that has to be scrolled three times. */
+.wide {
+  max-width: 46rem;
+}
+
+.recordForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  max-width: none;
+}
+
+/* Sections are separated by a rule in their own hue rather than by boxes, which
+   keeps the three parts of the form legible without turning each into a card. */
+.group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.groupTitle {
+  width: 100%;
+  margin: 0 0 var(--space-5);
+  padding: 0 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.groupOrg {
+  border-bottom-color: var(--brand-deep);
+}
+
+.groupContact {
+  border-bottom-color: var(--primary);
+}
+
+.groupProject {
+  border-bottom-color: var(--accent);
+}
+
+.fields {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.select {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+}
+
+.select:focus-visible {
+  border-color: var(--primary);
+  outline: 3px solid var(--primary-dim);
+  outline-offset: 0;
+}
+
+.textarea {
+  min-height: 6rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.textarea:focus-visible {
+  border-color: var(--primary);
+  outline: 3px solid var(--primary-dim);
+  outline-offset: 0;
+}
+
+.toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+}
+
+.toggleInput {
+  margin-top: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.toggleText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  color: var(--brand-deep);
+  font-size: var(--font-size-small);
+}
+
+/* The payoff line: what pressing the button will actually do, stated where the
+   button is rather than in a paragraph above the form nobody re-reads. */
+.payoff {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+@media (max-width: 40rem) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

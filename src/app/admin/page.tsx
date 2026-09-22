@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireStaff } from '@/lib/console/auth';
 import styles from './Admin.module.css';
 
@@ -25,8 +26,14 @@ export default async function AdminHome() {
           <span>{staff.role}</span>
         </div>
       </div>
+      <p className={styles.actions}>
+        <Link href="/clients" className={styles.button}>
+          Clients
+        </Link>
+        <span className={styles.payoff}>Add a client, and send their portal invitation.</span>
+      </p>
       <p className={styles.note}>
-        Projects, clients, billing and the CMS land here next.
+        Projects, billing and the CMS land here next.
       </p>
     </main>
   );

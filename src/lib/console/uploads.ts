@@ -144,12 +144,90 @@ export async function recordAssetUpload(input: {
 }
 
 /**
+ * Types a browser may RENDER rather than download.
+ *
+ * A receipt or a signed contract should open when you click it — being made to
+ * download a PDF to read one line of it is a small indignity we control. So
+ * this is an allowlist of things that are safe to put on screen, and the answer
+ * for everything else is still "download it".
+ *
+ * image/svg+xml is deliberately NOT here, and neither is anything HTML-shaped.
+ * An SVG is a document that can carry a script tag, and rendered inline on our
+ * own origin that script would run with the reader's session. A client sending
+ * their logo as an SVG is completely ordinary, so it is still accepted — it is
+ * just never rendered, only downloaded.
+ */
+const INLINE_CONTENT_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'image/gif',
+  'text/plain',
+]);
+
+/** The hosts a stored object may legitimately come from. */
+const BLOB_HOST = /(^|\.)blob\.vercel-storage\.com$/;
+
+/**
+ * Builds the Content-Disposition header.
+ *
+ * Two filenames: an ASCII-only one that every browser understands, and an
+ * RFC 5987 one carrying the name the client actually gave the file, so
+ * "Ripoti ya Mwaka.pdf" does not arrive as "Ripoti-ya-Mwaka.pdf". Both are
+ * escaped — a filename is attacker-supplied text going into a response header,
+ * and a raw quote or newline in one is header injection.
+ */
+function disposition(contentType: string, filename: string): string {
+  const kind = INLINE_CONTENT_TYPES.has(contentType) ? 'inline' : 'attachment';
+  const ascii = safeFilename(filename);
+  const encoded = encodeURIComponent(filename).replace(/['()*]/g, (c) =>
+    `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  return `${kind}; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
+/**
  * Streams a stored file back, for a route that has already decided the reader
  * is allowed to have it. It takes no session and makes no decision of its own.
+ *
+ * The object is fetched BY PATHNAME, not by the stored URL. The SDK rebuilds
+ * the address from the store id, so even a storageKey that somehow pointed at
+ * another host could not make this function fetch from it — the host is checked
+ * as well, but the pathname is what makes the check redundant rather than
+ * load-bearing.
  */
 export async function streamUpload(storageKey: string, filename: string): Promise<Response> {
-  const pathname = new URL(storageKey).pathname.replace(/^\//, '');
-  const result = await get(pathname, { access: 'private' });
+  let pathname: string;
+  try {
+    const parsed = new URL(storageKey);
+    if (!BLOB_HOST.test(parsed.hostname)) return new Response(null, { status: 404 });
+    pathname = parsed.pathname.replace(/^\//, '');
+  } catch {
+    // Not a URL at all. Nothing written by recordAssetUpload looks like this.
+    return new Response(null, { status: 404 });
+  }
+
+  // A file that was uploaded while a store was configured outlives the
+  // configuration. Saying so is better than a 500 that looks like the file is
+  // corrupt when it is the deployment that is missing something.
+  if (!uploadsConfigured()) {
+    return new Response('File storage is not configured on this deployment.', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  let result;
+  try {
+    result = await get(pathname, { access: 'private' });
+  } catch (error) {
+    // The store refused or is unreachable. The row is still correct, so this
+    // is not a 404 — but the reader gets nothing either way.
+    console.error('[uploads] could not read', pathname, error);
+    return new Response(null, { status: 502 });
+  }
 
   if (!result || result.statusCode !== 200) {
     return new Response(null, { status: 404 });
@@ -158,12 +236,14 @@ export async function streamUpload(storageKey: string, filename: string): Promis
   return new Response(result.stream, {
     headers: {
       'Content-Type': result.blob.contentType,
-      // attachment, always. Nothing a client uploaded is ever rendered by the
-      // browser on our origin — an SVG is a document with a script tag in it.
-      'Content-Disposition': `attachment; filename="${safeFilename(filename)}"`,
+      'Content-Disposition': disposition(result.blob.contentType, filename),
       'Content-Length': String(result.blob.size),
       'Cache-Control': 'private, no-store',
+      // nosniff stops a mislabelled file being re-read as HTML; the sandbox
+      // CSP means that even if one ever were, it would run no script, load
+      // nothing and reach no cookie. Inline rendering is why both are here.
       'X-Content-Type-Options': 'nosniff',
+      'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
     },
   });
 }

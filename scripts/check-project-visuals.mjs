@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { requireBuild } from './require-build.mjs';
 
 // Run after the production build. This checks rendered source, not browser layout.
 const routes = [

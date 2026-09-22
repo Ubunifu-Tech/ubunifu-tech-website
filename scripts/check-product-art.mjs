@@ -1,7 +1,8 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { requireBuild } from './require-build.mjs';
 
-const html = readFileSync('.next/server/app/products.html', 'utf8');
+const html = readFileSync(requireBuild('products.html'), 'utf8');
 const rows = new Map([...html.matchAll(/<article\b[^>]*data-product="([^"]+)"[^>]*>([\s\S]*?)<\/article>/g)].map((match) => [match[1], match[2]]));
 const failures = [];
 

@@ -51,3 +51,6 @@ next-env.d.ts
 # legacy brand-asset masters (current canonical files live in public/brand/;
 # the old local export archive remains intentionally untracked)
 /branding/
+
+# Prisma client output
+/src/generated

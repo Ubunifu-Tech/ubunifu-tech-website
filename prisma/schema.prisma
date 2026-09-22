@@ -1,0 +1,1026 @@
+// Ubunifu Console — client journey, delivery, billing, documents, support, CMS.
+//
+// MODELLING RULES, so later additions stay consistent:
+//
+// 1. MONEY is always an integer in the currency's minor unit (cents, senti) plus
+//    an ISO-4217 code. Never a float. A USD 75.00 deposit is amountMinor 7500,
+//    currency "USD". Mixed-currency work is normal here: proposals quote USD,
+//    Sifa customers think in TZS.
+//
+// 2. PROJECT STATUS is a delivery state machine only. Money state lives on
+//    invoices and payments. A transition that depends on money (you cannot start
+//    build before the deposit clears) is enforced as a guard in application code,
+//    not by folding payment states into this enum — otherwise every new billing
+//    arrangement forces a new project state.
+//
+// 3. ACTORS are polymorphic by (actorType, actorId) rather than by nullable
+//    foreign keys to every table. Staff, client contacts and the system itself
+//    all write audit events and messages.
+//
+// 4. TEMPLATES exist because the six service lines have genuinely different
+//    shapes. A branding engagement has no launch; hosting has no build phase;
+//    advisory ends in a report. Seeding a project from a template gives each
+//    line its own default plan without hard-coding a website workflow.
+//
+// 5. SOFT DELETE (deletedAt) on records a client may have seen. Hard deletes
+//    break audit trails and receipts.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+// Prisma 7 no longer takes the connection URL here — it lives in
+// prisma.config.ts for the CLI, and reaches the client through a driver adapter.
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Identity and access
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum StaffRole {
+  owner // full access, including billing and staff management
+  admin // full delivery access, no staff management
+  member // assigned work only
+}
+
+model StaffUser {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  role      StaffRole @default(member)
+  isActive  Boolean   @default(true)
+  lastSeenAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  ownedProjects   Project[]        @relation("ProjectOwner")
+  documentVersions DocumentVersion[]
+  payments        Payment[]
+  timeEntries     TimeEntry[]
+  posts           Post[]
+
+  @@index([isActive])
+}
+
+/// The client organisation. A person is a ClientContact; billing and projects
+/// hang off the organisation so a change of contact does not orphan history.
+model Client {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  legalName    String?
+  country      String    @default("TZ")
+  /// Default currency for this client's invoices. Overridable per invoice.
+  currency     String    @default("USD")
+  website      String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  contacts        ClientContact[]
+  projects        Project[]
+  invoices        Invoice[]
+  tickets         Ticket[]
+  managedServices ManagedService[]
+  enquiries       Enquiry[]
+
+  @@index([deletedAt])
+}
+
+model ClientContact {
+  id        String    @id @default(cuid())
+  clientId  String
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  email     String
+  name      String
+  role      String?
+  phone     String?
+  /// The contact who signs and receives billing by default.
+  isPrimary Boolean   @default(false)
+  /// Portal access can be revoked without deleting the person's history.
+  canSignIn Boolean   @default(true)
+  lastSeenAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  signatures   Signature[]
+  ticketsOpened Ticket[]
+
+  @@unique([clientId, email])
+  @@index([email])
+}
+
+enum ActorType {
+  staff
+  client_contact
+  system
+}
+
+/// Issued to both staff and client contacts. Only the hash is stored, so a
+/// leaked database row cannot be replayed as a session.
+model Session {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  actorType    ActorType
+  actorId      String
+  /// Which host the session was issued for. An admin-console session must not
+  /// be replayable against the client portal, or the other way round.
+  audience     String
+  ip           String?
+  userAgent    String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([actorType, actorId])
+  @@index([expiresAt])
+}
+
+enum MagicTokenPurpose {
+  sign_in
+  document_access
+  invoice_access
+  update_access
+}
+
+/// Single-use, short-lived, hashed. Covers both passwordless sign-in and the
+/// "secure link" emails for documents, invoices and progress updates.
+model MagicToken {
+  id         String            @id @default(cuid())
+  tokenHash  String            @unique
+  purpose    MagicTokenPurpose
+  actorType  ActorType
+  actorId    String
+  /// Optional target the link grants access to (a document, invoice, update).
+  entityType String?
+  entityId   String?
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime          @default(now())
+  ip         String?
+
+  @@index([actorType, actorId])
+  @@index([expiresAt])
+}
+
+/// Append-only. Never updated, never deleted.
+model AuditEvent {
+  id         String    @id @default(cuid())
+  actorType  ActorType
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  summary    String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enquiries — the front door, fed by the marketing site's contact form
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EnquiryStatus {
+  new
+  triaged
+  in_conversation
+  qualified
+  converted
+  declined
+  spam
+}
+
+/// Written by POST /api/contact. Every message the public form accepts lands
+/// here first, whether or not it ever becomes a project.
+model Enquiry {
+  id          String        @id @default(cuid())
+  /// Matches the allowlist in the contact route, e.g. "Project enquiry".
+  subject     String
+  name        String
+  email       String
+  message     String
+  status      EnquiryStatus @default(new)
+  /// Best guess at the service line, set on triage.
+  serviceLine ServiceLine?
+  source      String        @default("website_contact_form")
+  /// Set once the enquiry becomes a real client.
+  clientId    String?
+  client      Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  internalNote String?
+  submissionId String?      @unique
+  ip          String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([email])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Projects and delivery
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Mirrors src/content/services.tsx. Keep the two in step.
+enum ServiceLine {
+  web // Websites & Custom Platforms
+  hosting // Hosting, Domains & Email
+  branding // Brand Identity & Design
+  data // Data & Business Intelligence
+  ai // AI & Automation
+  strategy // Technology Strategy & Advisory
+  product // Insight / Sifa / Rafiki subscriptions
+  other
+}
+
+/// How the work is shaped and billed, which is independent of the service line.
+/// A branding job can be fixed-price; hosting is a retainer; Insight is usage.
+enum EngagementType {
+  fixed_price_project
+  retainer
+  subscription
+  advisory
+  support_only
+}
+
+enum ProjectStatus {
+  lead
+  proposal_draft
+  proposal_sent
+  proposal_accepted
+  contract_sent
+  contract_signed
+  in_progress
+  client_review
+  launch_ready
+  launched
+  handover
+  closed
+  on_hold
+  cancelled
+}
+
+model Project {
+  id             String         @id @default(cuid())
+  clientId       String
+  client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String         @unique
+  reference      String         @unique
+  serviceLine    ServiceLine
+  engagementType EngagementType @default(fixed_price_project)
+  status         ProjectStatus  @default(lead)
+  summary        String?
+  currency       String         @default("USD")
+  startDate      DateTime?
+  targetDate     DateTime?
+  launchedAt     DateTime?
+  closedAt       DateTime?
+  ownerId        String?
+  owner          StaffUser?     @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  phases          ProjectPhase[]
+  assetRequests   AssetRequest[]
+  updates         ProjectUpdate[]
+  lineItems       LineItem[]
+  invoices        Invoice[]
+  documents       Document[]
+  tickets         Ticket[]
+  brandKit        BrandKit?
+  managedServices ManagedService[]
+  statusEvents    ProjectStatusEvent[]
+  timeEntries     TimeEntry[]
+  enquiries       Enquiry[]
+
+  @@index([clientId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Every status change, with who and why. The project's current status is the
+/// latest of these; the column on Project is the denormalised read.
+model ProjectStatusEvent {
+  id        String        @id @default(cuid())
+  projectId String
+  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  from      ProjectStatus?
+  to        ProjectStatus
+  actorType ActorType
+  actorId   String?
+  note      String?
+  createdAt DateTime      @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+enum PhaseStatus {
+  not_started
+  in_progress
+  blocked
+  client_review
+  complete
+}
+
+model ProjectPhase {
+  id        String      @id @default(cuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  goal      String?
+  position  Int
+  status    PhaseStatus @default(not_started)
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  deliverables Deliverable[]
+  updates      ProjectUpdate[]
+
+  @@unique([projectId, position])
+  @@index([projectId])
+}
+
+model Deliverable {
+  id          String    @id @default(cuid())
+  phaseId     String
+  phase       ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  title       String
+  detail      String?
+  position    Int
+  isComplete  Boolean   @default(false)
+  completedAt DateTime?
+  /// Shown to the client in the portal. Internal engineering tasks are not.
+  isClientVisible Boolean @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([phaseId])
+}
+
+enum AssetRequestStatus {
+  requested
+  received
+  waived
+  blocked
+}
+
+/// The "what we need from you" checklist. On the Nifuate proposal this is the
+/// logo, founder bio, mission/vision/values, tour packages, media and contacts.
+/// Clients fulfil these from the portal, which is why it is a first-class model
+/// rather than a line in a document.
+model AssetRequest {
+  id          String             @id @default(cuid())
+  projectId   String
+  project     Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  detail      String?
+  category    String?
+  status      AssetRequestStatus @default(requested)
+  position    Int
+  dueAt       DateTime?
+  receivedAt  DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  uploads FileUpload[]
+
+  @@index([projectId, status])
+}
+
+enum UpdateStatus {
+  draft
+  published
+}
+
+/// The Weekly Update. Publishing one is what the client sees change in the
+/// portal, and what triggers their notification email.
+model ProjectUpdate {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phaseId     String?
+  phase       ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  title       String
+  bodyMarkdown String
+  status      UpdateStatus @default(draft)
+  /// A staging link, preview URL or anything the client should open.
+  previewUrl  String?
+  publishedAt DateTime?
+  notifiedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  uploads FileUpload[]
+
+  @@index([projectId, status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Brand kit — carried by branding and web work, per the proposal's section 2
+// ─────────────────────────────────────────────────────────────────────────────
+
+model BrandKit {
+  id         String   @id @default(cuid())
+  projectId  String   @unique
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  typography String?
+  principles String?
+  imageryDirection String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  colors BrandColor[]
+}
+
+model BrandColor {
+  id       String   @id @default(cuid())
+  kitId    String
+  kit      BrandKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  name     String
+  hex      String
+  usage    String?
+  position Int
+
+  @@index([kitId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Money
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// How a line is charged. The Nifuate proposal alone needs one-off ($15 domain),
+/// a 50/50 split ($75 + $75) and annual recurring ($60 hosting, $20/yr support).
+enum BillingKind {
+  one_off
+  installment
+  recurring_monthly
+  recurring_annual
+  usage
+}
+
+/// A line can be agreed but not active. The proposal carries a "Deferred"
+/// professional-email line and a "Paused" contact-form line, and both must
+/// survive in the record without being billed.
+enum LineItemStatus {
+  planned
+  active
+  deferred
+  paused
+  waived
+  cancelled
+}
+
+model LineItem {
+  id          String         @id @default(cuid())
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label       String
+  description String?
+  billingKind BillingKind    @default(one_off)
+  status      LineItemStatus @default(planned)
+  amountMinor Int
+  currency    String         @default("USD")
+  quantity    Int            @default(1)
+  /// Plain-language terms, e.g. "50% deposit due at kick-off".
+  terms       String?
+  position    Int
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  invoiceLines InvoiceLine[]
+  managedService ManagedService?
+
+  @@index([projectId, status])
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  part_paid
+  paid
+  overdue
+  void
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  number       String        @unique
+  clientId     String
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId    String?
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  status       InvoiceStatus @default(draft)
+  currency     String        @default("USD")
+  /// Denormalised from the lines so listing screens do not need a join.
+  subtotalMinor Int          @default(0)
+  taxMinor     Int           @default(0)
+  totalMinor   Int           @default(0)
+  paidMinor    Int           @default(0)
+  notes        String?
+  issuedAt     DateTime?
+  dueAt        DateTime?
+  paidAt       DateTime?
+  voidedAt     DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  lines    InvoiceLine[]
+  payments Payment[]
+
+  @@index([clientId, status])
+  @@index([projectId])
+}
+
+model InvoiceLine {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  /// Kept as a snapshot: editing the project line later must not rewrite an
+  /// invoice that has already been sent.
+  lineItemId  String?
+  lineItem    LineItem? @relation(fields: [lineItemId], references: [id], onDelete: SetNull)
+  label       String
+  description String?
+  amountMinor Int
+  quantity    Int       @default(1)
+  position    Int
+
+  @@index([invoiceId])
+}
+
+/// Mobile money and bank transfer matter more than cards for Tanzanian clients,
+/// so payments are recorded rather than processed. A gateway can later write
+/// these same rows.
+enum PaymentMethod {
+  bank_transfer
+  mobile_money
+  cash
+  card
+  other
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  amountMinor  Int
+  currency     String        @default("USD")
+  method       PaymentMethod @default(bank_transfer)
+  /// Bank reference, mobile-money transaction id, or similar.
+  reference    String?
+  receivedAt   DateTime
+  recordedById String?
+  recordedBy   StaffUser?    @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  note         String?
+  createdAt    DateTime      @default(now())
+
+  receipt Receipt?
+
+  @@index([invoiceId])
+}
+
+model Receipt {
+  id        String   @id @default(cuid())
+  number    String   @unique
+  paymentId String   @unique
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  issuedAt  DateTime @default(now())
+  /// Storage key for the rendered PDF, once generated.
+  pdfKey    String?
+  createdAt DateTime @default(now())
+}
+
+/// Domains, hosting plans, mailboxes and maintenance cover — things with a
+/// renewal date that someone has to chase. This is the difference between a
+/// project tracker and something that can actually run a hosting business.
+enum ManagedServiceKind {
+  domain
+  hosting
+  email
+  ssl
+  maintenance
+  other
+}
+
+model ManagedService {
+  id         String             @id @default(cuid())
+  clientId   String
+  client     Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  /// The line that bills this renewal, when there is one.
+  lineItemId String?            @unique
+  lineItem   LineItem?          @relation(fields: [lineItemId], references: [id], onDelete: SetNull)
+  kind       ManagedServiceKind
+  label      String
+  /// Domain name, hostname or mailbox, depending on kind.
+  identifier String?
+  provider   String?
+  isActive   Boolean            @default(true)
+  autoRenew  Boolean            @default(false)
+  startsAt   DateTime?
+  renewsAt   DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([clientId])
+  @@index([renewsAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Documents, contracts and signatures
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum DocumentKind {
+  proposal
+  contract
+  change_order
+  statement_of_work
+  handover
+  other
+}
+
+enum DocumentStatus {
+  draft
+  internal_review
+  sent
+  viewed
+  changes_requested
+  signed
+  declined
+  expired
+  superseded
+}
+
+model Document {
+  id        String         @id @default(cuid())
+  projectId String
+  project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind      DocumentKind
+  title     String
+  status    DocumentStatus @default(draft)
+  reference String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  versions          DocumentVersion[]
+  signatureRequests SignatureRequest[]
+
+  @@index([projectId, kind])
+}
+
+/// Every revision is kept. AI drafts a version; a human edits it into the next
+/// one; the client requests changes and another follows. Nothing is overwritten,
+/// so "back and forth until final agreement" is reconstructable afterwards.
+model DocumentVersion {
+  id              String    @id @default(cuid())
+  documentId      String
+  document        Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version         Int
+  /// The editable source of truth. Rendered to HTML/PDF for sending.
+  bodyMarkdown    String
+  changeNote      String?
+  /// True when a model drafted this revision. A human still has to accept it,
+  /// so this records provenance rather than authorship.
+  aiAssisted      Boolean   @default(false)
+  aiModel         String?
+  aiPromptSummary String?
+  createdById     String?
+  createdBy       StaffUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+
+  signatureRequests SignatureRequest[]
+
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+enum SignatureRequestStatus {
+  draft
+  sent
+  viewed
+  signed
+  declined
+  expired
+  cancelled
+}
+
+model SignatureRequest {
+  id         String                 @id @default(cuid())
+  documentId String
+  document   Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  /// Pinned to the exact revision sent. A later edit cannot change what was signed.
+  versionId  String
+  version    DocumentVersion        @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  status     SignatureRequestStatus @default(draft)
+  /// SHA-256 of the rendered document at send time, sealed into the audit trail.
+  documentHash String
+  tokenHash  String?                @unique
+  sentAt     DateTime?
+  viewedAt   DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  signatures Signature[]
+
+  @@index([documentId])
+}
+
+enum SignatureMethod {
+  typed
+  drawn
+}
+
+model Signature {
+  id          String           @id @default(cuid())
+  requestId   String
+  request     SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     ClientContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  signerName  String
+  signerEmail String
+  method      SignatureMethod  @default(typed)
+  /// Data URL of the drawn mark, when method is drawn.
+  signatureData String?
+  /// Re-hashed at signing time and compared with the request's hash, so a
+  /// mismatch proves the document changed underneath the signer.
+  documentHash String
+  ip          String?
+  userAgent   String?
+  signedAt    DateTime         @default(now())
+
+  @@index([requestId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Support and change requests
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TicketKind {
+  support
+  change_request
+  bug
+  question
+  content_update
+}
+
+enum TicketStatus {
+  open
+  triaged
+  in_progress
+  waiting_on_client
+  resolved
+  closed
+}
+
+enum TicketPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  reference   String         @unique
+  clientId    String
+  client      Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  openedById  String?
+  openedBy    ClientContact? @relation(fields: [openedById], references: [id], onDelete: SetNull)
+  kind        TicketKind     @default(support)
+  status      TicketStatus   @default(open)
+  priority    TicketPriority @default(normal)
+  subject     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  resolvedAt  DateTime?
+
+  messages TicketMessage[]
+
+  @@index([clientId, status])
+  @@index([projectId])
+}
+
+model TicketMessage {
+  id         String    @id @default(cuid())
+  ticketId   String
+  ticket     Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorType  ActorType
+  actorId    String?
+  body       String
+  /// Internal notes stay out of the portal.
+  isInternal Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  uploads FileUpload[]
+
+  @@index([ticketId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Files
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// One upload table with optional parents, rather than an attachments table per
+/// feature. Storage key points at whatever bucket is configured.
+model FileUpload {
+  id             String         @id @default(cuid())
+  storageKey     String         @unique
+  filename       String
+  contentType    String
+  sizeBytes      Int
+  checksum       String?
+  uploadedByType ActorType
+  uploadedById   String?
+  assetRequestId String?
+  assetRequest   AssetRequest?  @relation(fields: [assetRequestId], references: [id], onDelete: Cascade)
+  updateId       String?
+  update         ProjectUpdate? @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  ticketMessageId String?
+  ticketMessage  TicketMessage? @relation(fields: [ticketMessageId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  deletedAt      DateTime?
+
+  @@index([assetRequestId])
+  @@index([updateId])
+  @@index([ticketMessageId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Outbound email
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum EmailStatus {
+  queued
+  sent
+  failed
+}
+
+/// Every message the system sends, so "did the client get the link" is
+/// answerable without opening the Resend dashboard.
+model EmailLog {
+  id         String      @id @default(cuid())
+  toAddress  String
+  template   String
+  subject    String
+  status     EmailStatus @default(queued)
+  providerId String?
+  error      String?
+  entityType String?
+  entityId   String?
+  sentAt     DateTime?
+  createdAt  DateTime    @default(now())
+
+  @@index([toAddress])
+  @@index([entityType, entityId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Effort
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Not billed by the hour today, but knowing what a fixed-price job actually
+/// cost is the only way to price the next one honestly.
+model TimeEntry {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  staffId    String
+  staff      StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  minutes    Int
+  note       String?
+  workedOn   DateTime
+  createdAt  DateTime  @default(now())
+
+  @@index([projectId, workedOn])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PostStatus {
+  draft
+  scheduled
+  published
+}
+
+/// The marketing site currently reads _posts/*.md through gray-matter. This
+/// model is the destination for that content; the reader can fall back to files
+/// until every post is migrated, so the public site never depends on a database
+/// that might be down.
+model Post {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  title        String
+  excerpt      String
+  bodyMarkdown String
+  status       PostStatus @default(draft)
+  tags         String[]   @default([])
+  coverImage   String?
+  coverAlt     String?
+  authorId     String?
+  author       StaffUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  publishedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  @@index([status, publishedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Templates — so each service line starts from its own sensible plan
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ProjectTemplate {
+  id          String      @id @default(cuid())
+  serviceLine ServiceLine
+  name        String
+  description String?
+  isDefault   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  phases        PhaseTemplate[]
+  assetRequests AssetRequestTemplate[]
+  lineItems     LineItemTemplate[]
+
+  @@unique([serviceLine, name])
+}
+
+model PhaseTemplate {
+  id         String          @id @default(cuid())
+  templateId String
+  template   ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name       String
+  goal       String?
+  position   Int
+  /// Offsets from project start, so a template can lay out a timeline.
+  startDayOffset Int?
+  endDayOffset   Int?
+
+  deliverables DeliverableTemplate[]
+
+  @@unique([templateId, position])
+}
+
+model DeliverableTemplate {
+  id              String        @id @default(cuid())
+  phaseTemplateId String
+  phaseTemplate   PhaseTemplate @relation(fields: [phaseTemplateId], references: [id], onDelete: Cascade)
+  title           String
+  detail          String?
+  position        Int
+  isClientVisible Boolean       @default(true)
+
+  @@unique([phaseTemplateId, position])
+}
+
+model AssetRequestTemplate {
+  id         String          @id @default(cuid())
+  templateId String
+  template   ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title      String
+  detail     String?
+  category   String?
+  position   Int
+
+  @@unique([templateId, position])
+}
+
+model LineItemTemplate {
+  id          String          @id @default(cuid())
+  templateId  String
+  template    ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  label       String
+  description String?
+  billingKind BillingKind     @default(one_off)
+  /// Suggested amount; always editable when the project is created.
+  amountMinor Int             @default(0)
+  currency    String          @default("USD")
+  terms       String?
+  position    Int
+
+  @@unique([templateId, position])
+}

@@ -386,6 +386,8 @@ async function seedNifuate(ownerId: string) {
     status: LineItemStatus;
     amount: number;
     terms: string;
+    intervalMonths?: number;
+    nextDueAt?: Date;
   }> = [
     {
       label: 'Domain name',
@@ -394,6 +396,8 @@ async function seedNifuate(ownerId: string) {
       status: 'active',
       amount: usd(15),
       terms: 'To be secured on 21 September.',
+      intervalMonths: 12,
+      nextDueAt: d('2027-09-21'),
     },
     {
       label: 'Website development deposit',
@@ -418,6 +422,8 @@ async function seedNifuate(ownerId: string) {
       status: 'planned',
       amount: usd(60),
       terms: 'Payable right before site launch.',
+      intervalMonths: 12,
+      nextDueAt: d('2027-10-31'),
     },
     {
       label: 'Professional email',
@@ -426,6 +432,7 @@ async function seedNifuate(ownerId: string) {
       status: 'deferred',
       amount: usd(10),
       terms: 'Deferred. $10/mo current estimate; exploring lower-cost solutions.',
+      intervalMonths: 1,
     },
     {
       label: 'Contact form processing',
@@ -442,6 +449,11 @@ async function seedNifuate(ownerId: string) {
       status: 'waived',
       amount: 0,
       terms: 'First-year fee waived; standard $20/yr thereafter.',
+      // Waived at zero for year one. The first renewal falls due a year after
+      // launch, at which point the amount is raised to $20 and the line made
+      // active — the renewal drafts an invoice rather than billing silently.
+      intervalMonths: 12,
+      nextDueAt: d('2027-10-31'),
     },
   ];
 
@@ -457,6 +469,8 @@ async function seedNifuate(ownerId: string) {
         amountMinor: line.amount,
         currency: 'USD',
         terms: line.terms,
+        intervalMonths: line.intervalMonths,
+        nextDueAt: line.nextDueAt,
         position: i,
       },
     });
@@ -485,9 +499,113 @@ async function seedNifuate(ownerId: string) {
   return { client, project };
 }
 
+
+/**
+ * Version 1 of the standard terms.
+ *
+ * DRAFT FOR REVIEW. These are written to be plain and fair, and they are not
+ * legal advice — have them checked before the first contract goes out. Editing
+ * them in the admin publishes version 2; contracts already signed stay pinned
+ * to the version their signer accepted.
+ */
+const TERMS_V1 = `## 1. Who these terms are between
+
+These terms apply between Ubunifu Technologies ("we", "us") and the client named
+in the accompanying proposal or contract ("you"). The proposal sets out the
+scope, price and dates. Where the proposal and these terms disagree, the
+proposal wins.
+
+## 2. What we will do
+
+We will carry out the work described in the proposal with reasonable skill and
+care. Where the proposal names phases and dates, we will keep you informed of
+progress against them and tell you promptly if a date is at risk.
+
+## 3. What we need from you
+
+Delivery depends on material only you can provide: logos, copy, photographs,
+access to systems, and decisions when we ask for them. The proposal lists what
+we need and when. Dates move if that material arrives late, and we will tell you
+when it does rather than absorbing the delay silently.
+
+## 4. Payment
+
+Fees, instalments and recurring charges are set out in the proposal. Invoices
+are due within 14 days of issue unless the proposal says otherwise. Work may
+pause on overdue invoices, and we will tell you before it does.
+
+Recurring charges — domains, hosting, mailboxes, maintenance — renew on the
+dates recorded in your portal. We raise a draft invoice ahead of each renewal
+and send it to you for review; nothing renews without an invoice you have seen.
+
+## 5. Ownership
+
+On final payment, you own the deliverables produced for you, including designs,
+content and custom code written specifically for your project. We keep ownership
+of our own pre-existing tools, libraries and methods, and grant you a licence to
+use them as part of the deliverables.
+
+Third-party components keep their own licences. Domains and hosting accounts are
+registered in your name wherever the provider allows it.
+
+## 6. Our own work
+
+We may describe the work publicly and show it in our portfolio, unless you ask
+us in writing not to. We will not publish anything you have told us is
+confidential.
+
+## 7. Confidentiality
+
+Each of us will keep the other's confidential information private and use it
+only for this project.
+
+## 8. Changes
+
+Either of us can propose a change to the scope. A change that affects price or
+dates is agreed in writing, as a change order, before the work is done.
+
+## 9. Support after launch
+
+Support and maintenance apply only where the proposal says so, for the period it
+states. Outside that, support is quoted separately.
+
+## 10. Liability
+
+We are responsible for loss we cause by failing to meet these terms, up to the
+total fees you have paid us for the project. We are not responsible for loss of
+profit, loss of data you have not asked us to back up, or the failure of
+third-party services outside our control. Nothing here limits liability that
+cannot be limited by law.
+
+## 11. Ending the engagement
+
+Either of us may end the engagement in writing. You pay for work completed up to
+that point. We will hand over completed deliverables and access we hold for you.
+
+## 12. Governing law
+
+These terms are governed by the laws of the United Republic of Tanzania.
+`;
+
+async function seedTerms() {
+  return db.termsVersion.upsert({
+    where: { version: 1 },
+    update: {},
+    create: {
+      version: 1,
+      title: 'Standard terms of engagement',
+      bodyMarkdown: TERMS_V1,
+      isCurrent: true,
+      effectiveFrom: d('2026-09-21'),
+      publishedAt: new Date(),
+    },
+  });
+}
+
 async function main() {
   const owner = await seedStaff();
   const templateCount = await seedTemplates();
+  const terms = await seedTerms();
   const { client, project } = await seedNifuate(owner.id);
 
   const [phases, deliverables, assets, lines] = await Promise.all([
@@ -497,6 +615,10 @@ async function main() {
     db.lineItem.count({ where: { projectId: project.id } }),
   ]);
 
+  const recurring = await db.lineItem.count({
+    where: { projectId: project.id, nextDueAt: { not: null } },
+  });
+
   const agreed = await db.lineItem.aggregate({
     where: { projectId: project.id, status: { in: ['active', 'planned'] } },
     _sum: { amountMinor: true },
@@ -505,6 +627,7 @@ async function main() {
   console.log('Seeded');
   console.log(`  staff owner        ${owner.email}`);
   console.log(`  project templates  ${templateCount} (one per service line)`);
+  console.log(`  standard terms     v${terms.version} — ${terms.title}`);
   console.log(`  client             ${client.name}`);
   console.log(`  project            ${project.reference} — ${project.name}`);
   console.log(`  phases             ${phases}`);
@@ -512,6 +635,7 @@ async function main() {
   console.log(`  asset requests     ${assets}`);
   console.log(`  line items         ${lines}`);
   console.log(`  committed value    USD ${((agreed._sum.amountMinor ?? 0) / 100).toFixed(2)} (active + planned only)`);
+  console.log(`  recurring lines    ${recurring} with a renewal date set`);
 }
 
 main()

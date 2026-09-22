@@ -103,6 +103,16 @@ model ClientContact {
   isPrimary Boolean   @default(false)
   /// Portal access can be revoked without deleting the person's history.
   canSignIn Boolean   @default(true)
+  /// Set when the contact completes account creation from their first magic
+  /// link. Until then they can follow secure links but have no password.
+  activatedAt   DateTime?
+  /// scrypt, salt embedded. Null means the account is invite-only so far.
+  passwordHash  String?
+  passwordSetAt DateTime?
+  /// Throttles credential stuffing without locking anyone out permanently;
+  /// the magic-link route stays open as the recovery path.
+  failedSignIns Int       @default(0)
+  lockedUntil   DateTime?
   lastSeenAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -501,13 +511,56 @@ model LineItem {
   /// Plain-language terms, e.g. "50% deposit due at kick-off".
   terms       String?
   position    Int
+  /// ── Recurrence, for recurring_monthly and recurring_annual lines ───────
+  /// Billing lives here; the thing being billed lives on ManagedService, since
+  /// a domain's expiry date and its invoice date are not always the same day.
+  intervalMonths  Int?
+  nextDueAt       DateTime?
+  /// How far ahead of nextDueAt a draft invoice is raised.
+  renewalLeadDays Int            @default(30)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
   invoiceLines InvoiceLine[]
   managedService ManagedService?
+  renewals     RenewalEvent[]
 
   @@index([projectId, status])
+  @@index([nextDueAt])
+}
+
+enum RenewalStatus {
+  pending
+  drafted
+  invoiced
+  paid
+  skipped
+  cancelled
+}
+
+/// One occurrence of a recurring charge.
+///
+/// Renewals draft an invoice and raise an alert; nothing is sent to a client
+/// without someone looking at it first. This row is also what stops a scheduler
+/// from drafting the same period twice, which is why the period is unique per
+/// line rather than being inferred from dates at run time.
+model RenewalEvent {
+  id          String        @id @default(cuid())
+  lineItemId  String
+  lineItem    LineItem      @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd   DateTime
+  dueAt       DateTime
+  status      RenewalStatus @default(pending)
+  invoiceId   String?
+  invoice     Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  draftedAt   DateTime?
+  note        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([lineItemId, periodStart])
+  @@index([status, dueAt])
 }
 
 enum InvoiceStatus {
@@ -543,6 +596,7 @@ model Invoice {
 
   lines    InvoiceLine[]
   payments Payment[]
+  renewals RenewalEvent[]
 
   @@index([clientId, status])
   @@index([projectId])
@@ -732,6 +786,10 @@ model SignatureRequest {
   status     SignatureRequestStatus @default(draft)
   /// SHA-256 of the rendered document at send time, sealed into the audit trail.
   documentHash String
+  /// The terms in force when this was sent. Pinned, so republishing the
+  /// standard terms cannot change what this request asked someone to accept.
+  termsVersionId String?
+  termsVersion   TermsVersion? @relation(fields: [termsVersionId], references: [id], onDelete: Restrict)
   tokenHash  String?                @unique
   sentAt     DateTime?
   viewedAt   DateTime?
@@ -744,7 +802,35 @@ model SignatureRequest {
   @@index([documentId])
 }
 
+/// The standard terms, maintained once in the admin and versioned.
+///
+/// A contract references the version in force when it was sent, and the client
+/// accepts that version by name. Editing the terms later publishes a new
+/// version and never rewrites what somebody already agreed to — which is the
+/// whole point of keeping them out of the contract body.
+model TermsVersion {
+  id            String    @id @default(cuid())
+  version       Int       @unique
+  title         String
+  bodyMarkdown  String
+  /// Exactly one row may be current; enforced in application code on publish.
+  isCurrent     Boolean   @default(false)
+  effectiveFrom DateTime
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  signatureRequests SignatureRequest[]
+  signatures        Signature[]
+
+  @@index([isCurrent])
+}
+
+/// Initials typed by the signer, plus an explicit acceptance of the terms.
+/// Deliberately not DocuSign: proportionate to the size of these engagements,
+/// and the audit trail is ours rather than a third party's.
 enum SignatureMethod {
+  initials
   typed
   drawn
 }
@@ -757,9 +843,16 @@ model Signature {
   contact     ClientContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
   signerName  String
   signerEmail String
-  method      SignatureMethod  @default(typed)
+  method      SignatureMethod  @default(initials)
+  /// What the signer actually typed, e.g. "RP". Kept verbatim.
+  initials    String?
   /// Data URL of the drawn mark, when method is drawn.
   signatureData String?
+  /// Acceptance is separate from the signature itself, so it is answerable
+  /// later which version of the terms this person agreed to and when.
+  termsVersionId  String?
+  termsVersion    TermsVersion? @relation(fields: [termsVersionId], references: [id], onDelete: Restrict)
+  termsAcceptedAt DateTime?
   /// Re-hashed at signing time and compared with the request's hash, so a
   /// mismatch proves the document changed underneath the signer.
   documentHash String

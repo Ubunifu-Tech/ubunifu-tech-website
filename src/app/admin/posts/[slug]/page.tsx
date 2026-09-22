@@ -9,6 +9,7 @@ import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { ArchiveControl, PostEditor, PublishControls, type PostDraft } from '../PostForms';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import { Callout } from '@/components/console/Callout';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -102,12 +103,9 @@ export default async function EditPostPage({
       </div>
 
       {scheduled && (
-        <ul className={styles.warnList}>
-          <li className={styles.warnItem}>
-            Published, but dated {formatShortDate(post.publishedAt)} — it stays off the site until
-            then.
-          </li>
-        </ul>
+        <Callout kind="info">
+          Scheduled for {formatShortDate(post.publishedAt)}. It will appear on the site then.
+        </Callout>
       )}
 
       <div className={styles.columns}>

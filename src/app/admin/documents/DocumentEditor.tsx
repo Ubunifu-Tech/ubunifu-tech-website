@@ -2,10 +2,19 @@
 
 import React, { useActionState, useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { askCopilot, saveVersion, sendForSignature, type DocumentState } from './actions';
+import {
+  askCopilot,
+  saveDetails,
+  saveVersion,
+  sendForSignature,
+  type DocumentState,
+} from './actions';
 import { RichText } from '@/components/console/RichText';
+import { Select } from '@/components/console/Select';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import { Callout } from '@/components/console/Callout';
+import { DOCUMENT_KINDS } from './kinds';
 
 const INITIAL: DocumentState = { status: 'idle' };
 
@@ -40,13 +49,7 @@ export type CopilotTurn = {
  *
  * It can write a version and nothing else. It never sends.
  */
-export function Copilot({
-  documentId,
-  turns,
-}: {
-  documentId: string;
-  turns: CopilotTurn[];
-}) {
+export function Copilot({ documentId, turns }: { documentId: string; turns: CopilotTurn[] }) {
   const [state, action, pending] = useActionState(askCopilot, INITIAL);
   const [draft, setDraft] = useState('');
 
@@ -89,10 +92,7 @@ export function Copilot({
             }
             disabled={pending}
           />
-          <p className={forms.hint}>
-            It already has the project&rsquo;s fees, plan, dates and everything we have asked them
-            for. This is for what is not written down anywhere.
-          </p>
+          <p className={forms.hint}>It knows the project&rsquo;s plan, fees and dates.</p>
         </div>
 
         <div className={forms.actions}>
@@ -104,10 +104,7 @@ export function Copilot({
             <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
             {pending ? 'Thinking…' : 'Send'}
           </button>
-          <p className={forms.payoff}>
-            When it writes, it saves a new version you can edit or discard. It never sends
-            anything, and anything it had to guess is marked TO CONFIRM.
-          </p>
+          <p className={forms.payoff}>It saves a new version for you to check. It never sends.</p>
         </div>
         <Result state={state} />
       </form>
@@ -115,52 +112,86 @@ export function Copilot({
   );
 }
 
+/** The document's kind and title. */
+export function DetailsForm({
+  documentId,
+  title,
+  kind,
+}: {
+  documentId: string;
+  title: string;
+  kind: string;
+}) {
+  const [state, action, pending] = useActionState(saveDetails, INITIAL);
+
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="documentId" value={documentId} />
+      <div className={forms.grid}>
+        <div className={forms.field}>
+          <label className={forms.label} htmlFor="doc-kind">
+            Kind
+          </label>
+          <Select id="doc-kind" name="kind" defaultValue={kind} options={DOCUMENT_KINDS} />
+        </div>
+        <div className={forms.field}>
+          <label className={forms.label} htmlFor="doc-title">
+            Title
+          </label>
+          <input
+            id="doc-title"
+            name="title"
+            className={forms.control}
+            maxLength={200}
+            defaultValue={title}
+            required
+          />
+        </div>
+      </div>
+      <div className={forms.actions}>
+        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
+          {pending ? 'Saving…' : 'Save details'}
+        </button>
+        <Result state={state} />
+      </div>
+    </form>
+  );
+}
+
 export function VersionEditor({
   documentId,
   body,
-  locked,
+  withFees,
 }: {
   documentId: string;
   body: string;
-  locked: boolean;
+  withFees: boolean;
 }) {
   const [state, action, pending] = useActionState(saveVersion, INITIAL);
   const [draft, setDraft] = useState(body);
   const hasMarkers = draft.includes('[TO CONFIRM');
 
-  if (locked) {
-    return (
-      <p className={styles.note}>
-        This document has been signed. It cannot be edited — a signed document is a record of what
-        two people agreed to, and rewriting it afterwards would make that record a lie. Start a
-        change order instead.
-      </p>
-    );
-  }
-
   return (
     <form action={action} className={forms.form}>
       <input type="hidden" name="documentId" value={documentId} />
-      <div className={forms.field}>
-        <span className={forms.label}>The document</span>
-        <RichText
-          name="body"
-          label="The document"
-          initialMarkdown={body}
-          disabled={pending}
-          minHeight="tall"
-          onMarkdownChange={setDraft}
-          hint="The toolbar is everything this document can contain. There is no code, no quote and no link, because a contract renders from a fixed set of shapes and anything outside it would read differently to the person signing."
-        />
-      </div>
+      <RichText
+        name="body"
+        label="The document"
+        initialMarkdown={body}
+        disabled={pending}
+        minHeight="tall"
+        onMarkdownChange={setDraft}
+        hint={
+          withFees
+            ? 'Type {{fees}} on its own line where the fee table should go. Otherwise it goes at the end.'
+            : undefined
+        }
+      />
 
       {hasMarkers && (
-        <ul className={styles.warnList}>
-          <li className={styles.warnItem}>
-            This still contains TO CONFIRM markers. They are places the assistant needed something
-            it did not have. It will not send while they are there.
-          </li>
-        </ul>
+        <Callout kind="warn" title="Some details still need filling in">
+          Replace each TO CONFIRM before sending.
+        </Callout>
       )}
 
       <div className={forms.field}>
@@ -178,14 +209,20 @@ export function VersionEditor({
       </div>
 
       <div className={forms.actions}>
-        <button type="submit" className={forms.button} disabled={pending}>
-          {pending ? 'Saving…' : 'Save a new version'}
+        <button
+          type="submit"
+          name="then"
+          value="review"
+          className={forms.button}
+          disabled={pending}
+        >
+          {pending ? 'Saving…' : 'Save and review'}
         </button>
-        <p className={forms.payoff}>
-          Always a new version, never an overwrite. What was sent stays exactly as it was sent.
-        </p>
+        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
+          Save
+        </button>
+        <Result state={state} />
       </div>
-      <Result state={state} />
     </form>
   );
 }
@@ -193,23 +230,29 @@ export function VersionEditor({
 export function SendForSignature({
   documentId,
   alreadySent,
+  ready,
+  signer,
 }: {
   documentId: string;
   alreadySent: boolean;
+  ready: boolean;
+  signer: string | null;
 }) {
   const [state, action, pending] = useActionState(sendForSignature, INITIAL);
 
   return (
     <form action={action} className={forms.form}>
       <input type="hidden" name="documentId" value={documentId} />
-      <div className={forms.actions}>
-        <button type="submit" className={forms.button} disabled={pending}>
-          {pending ? 'Sending…' : alreadySent ? 'Send the latest version' : 'Send for signature'}
-        </button>
-        <p className={forms.payoff}>
-          Pins this version and a fingerprint of it. Any earlier request is withdrawn, so they
-          cannot sign something you have moved on from.
+      {signer && ready && (
+        <p className={styles.note}>
+          {signer} gets an email with a link to read and sign it.
+          {alreadySent && ' The copy they have now is withdrawn.'}
         </p>
+      )}
+      <div className={forms.actions}>
+        <button type="submit" className={forms.button} disabled={pending || !ready}>
+          {pending ? 'Sending…' : alreadySent ? 'Send the new version' : 'Send for signature'}
+        </button>
       </div>
       <Result state={state} />
     </form>

@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft, ArrowRight, Check, CircleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireStaff } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
@@ -9,15 +11,22 @@ import {
   renderMarkdown,
   shortHash,
 } from '@/lib/console/documents';
+import { authorText, prepareDocument, type DocumentStep } from '@/lib/console/document-ready';
+import { editableFees, feeSchedule, projectFees } from '@/lib/console/fees';
 import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
+import { Callout } from '@/components/console/Callout';
+import { FeeEditor } from '@/components/console/FeeEditor';
+import { Steps } from '@/components/console/Steps';
 import {
   Copilot,
+  DetailsForm,
   SendForSignature,
   VersionEditor,
   type CopilotTurn,
 } from '../DocumentEditor';
 import styles from '../../Admin.module.css';
+import page from './Document.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
@@ -33,6 +42,14 @@ const STATUS_BADGE: Record<string, string> = {
   superseded: '',
 };
 
+const STEP_LABEL: Record<DocumentStep, string> = {
+  details: 'Details',
+  fees: 'Fees',
+  write: 'Write',
+  review: 'Review',
+  send: 'Send',
+};
+
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
   return { title: decodeURIComponent(reference) };
@@ -40,11 +57,13 @@ export async function generateMetadata({ params }: { params: Promise<{ reference
 
 export default async function DocumentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ reference: string }>;
+  searchParams: Promise<{ step?: string }>;
 }) {
   await requireStaff();
-  const { reference } = await params;
+  const [{ reference }, query] = await Promise.all([params, searchParams]);
   const now = new Date();
 
   const document = await db.document.findUnique({
@@ -58,10 +77,12 @@ export default async function DocumentPage({
       createdAt: true,
       project: {
         select: {
+          id: true,
           name: true,
           slug: true,
           reference: true,
-          client: { select: { name: true, slug: true } },
+          currency: true,
+          client: { select: { id: true, name: true, slug: true } },
         },
       },
       versions: {
@@ -70,10 +91,10 @@ export default async function DocumentPage({
           id: true,
           version: true,
           bodyMarkdown: true,
+          sourceMarkdown: true,
           changeNote: true,
           aiAssisted: true,
           aiModel: true,
-          aiPromptSummary: true,
           createdAt: true,
           createdBy: { select: { name: true } },
         },
@@ -86,11 +107,10 @@ export default async function DocumentPage({
           documentHash: true,
           sentAt: true,
           viewedAt: true,
-          expiresAt: true,
           respondedAt: true,
           responseNote: true,
           respondedBy: { select: { name: true, email: true } },
-          version: { select: { version: true } },
+          version: { select: { version: true, bodyMarkdown: true } },
           termsVersion: { select: { version: true, title: true } },
           signatures: {
             select: {
@@ -101,7 +121,6 @@ export default async function DocumentPage({
               signedAt: true,
               termsAcceptedAt: true,
               documentHash: true,
-              ip: true,
             },
           },
         },
@@ -111,278 +130,495 @@ export default async function DocumentPage({
 
   if (!document) notFound();
 
-  const activity = await activityFor([document.id]);
-
-  // The drafting thread, if one has been started. Tool turns are folded into
-  // the assistant turn they belong to, so the panel reads as a conversation
-  // rather than as a transcript of the protocol.
-  const conversation = await db.conversation.findFirst({
-    where: { documentId: document.id, kind: 'document_draft' },
-    orderBy: { createdAt: 'desc' },
-    select: {
-      messages: {
-        where: { role: { in: ['user', 'assistant'] } },
-        orderBy: { createdAt: 'asc' },
-        select: { id: true, role: true, content: true, toolName: true, createdAt: true },
-      },
-    },
-  });
-
-  const turns: CopilotTurn[] = (conversation?.messages ?? [])
-    .filter((message) => message.content.trim().length > 0 || message.toolName)
-    .map((message) => ({
-      id: message.id,
-      role: message.role,
-      content: message.content.trim() || 'Wrote a new version.',
-      toolName: message.toolName,
-      when: formatRelative(message.createdAt, now),
-    }));
-
   const latest = document.versions[0];
+  const source = latest ? authorText(latest) : '';
   const signed = document.status === 'signed';
   const live = document.signatureRequests.find((request) =>
     // 'declined' belongs here: a refused request is still the current one, and
     // dropping it would leave this page looking like nothing was ever sent.
     ['sent', 'viewed', 'signed', 'declined'].includes(request.status),
   );
-  const signature = live?.signatures[0];
   const answered = live?.respondedAt ? live : null;
 
-  return (
-    <main className={styles.page}>
-      <div className={styles.pageHead}>
-        <div className={styles.headText}>
-          <Link href={`/projects/${document.project.slug}`} className={styles.backLink}>
-            ← {document.project.reference}
+  const head = (
+    <div className={styles.pageHead}>
+      <div className={styles.headText}>
+        <Link href={`/projects/${document.project.slug}?tab=documents`} className={styles.backLink}>
+          ← {document.project.name}
+        </Link>
+        <h1 className={styles.heading}>{document.title}</h1>
+        <p className={styles.lead}>
+          {DOCUMENT_KIND_LABEL[document.kind]} · {document.reference} ·{' '}
+          <Link href={`/clients/${document.project.client.slug}`} className={styles.inlineLink}>
+            {document.project.client.name}
           </Link>
-          <h1 className={styles.heading}>{document.title}</h1>
-          <p className={styles.facts}>
-            <span>
-              <span className={styles.factLabel}>Kind</span> {DOCUMENT_KIND_LABEL[document.kind]}
-            </span>
-            <span>
-              <span className={styles.factLabel}>Reference</span> {document.reference}
-            </span>
-            <span>
-              <span className={styles.factLabel}>Client</span>{' '}
-              <Link href={`/clients/${document.project.client.slug}`}>
-                {document.project.client.name}
-              </Link>
-            </span>
-            <span>
-              <span className={styles.factLabel}>Versions</span> {document.versions.length}
-            </span>
-          </p>
-        </div>
-        <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
-          {DOCUMENT_STATUS_LABEL[document.status]}
-        </span>
+        </p>
       </div>
+      <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
+        {DOCUMENT_STATUS_LABEL[document.status]}
+      </span>
+    </div>
+  );
 
-      {answered && (
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>
-              {answered.status === 'declined'
-                ? 'The client declined this'
-                : 'The client asked for changes'}
-            </h2>
-            <span className={forms.cardMeta}>
-              Version {answered.version.version} · {formatShortDate(answered.respondedAt)}
-            </span>
-          </div>
-          <p className={styles.note}>
-            {answered.respondedBy
-              ? `${answered.respondedBy.name} (${answered.respondedBy.email}) wrote:`
-              : 'They wrote:'}
-          </p>
-          <blockquote className={forms.quote}>{answered.responseNote}</blockquote>
-          <p className={forms.hint}>
-            {answered.status === 'declined'
-              ? 'This request is closed. Write the next version below and send it as a new one.'
-              : 'This request is still open, so they can still sign this version. Write the next version below if the change is agreed.'}
-          </p>
-        </section>
-      )}
+  const activity = await activityFor([document.id]);
 
-      {signature && (
-        <div className={styles.stats}>
-          <div className={styles.stat}>
-            <p className={styles.statLabel}>Signed by</p>
-            <p className={styles.statValue}>{signature.initials}</p>
-            <p className={styles.statHint}>
-              {signature.signerName} · {signature.signerEmail}
-            </p>
-          </div>
-          <div className={styles.stat}>
-            <p className={styles.statLabel}>When</p>
-            <p className={styles.statValue}>{formatShortDate(signature.signedAt)}</p>
-            <p className={styles.statHint}>Version {live?.version.version}</p>
-          </div>
-          <div className={styles.stat}>
-            <p className={styles.statLabel}>Terms accepted</p>
-            <p className={styles.statValue}>
-              {live?.termsVersion ? `v${live.termsVersion.version}` : '—'}
-            </p>
-            <p className={styles.statHint}>
-              {signature.termsAcceptedAt ? formatShortDate(signature.termsAcceptedAt) : 'not pinned'}
-            </p>
-          </div>
-          <div className={styles.stat}>
-            <p className={styles.statLabel}>Fingerprint matched</p>
-            <p className={styles.statValue}>
-              {signature.documentHash === live?.documentHash ? 'Yes' : 'NO'}
-            </p>
-            <p className={styles.statHint}>
-              <span className={forms.fingerprint}>{shortHash(signature.documentHash)}</span>
-            </p>
-          </div>
+  const versions = (
+    <div className={table.frame}>
+      <div className={table.toolbar}>
+        <div className={table.toolbarText}>
+          <h2 className={table.title}>Versions</h2>
+          <span className={table.count}>{document.versions.length}</span>
         </div>
-      )}
+      </div>
+      <div className={table.scroll}>
+        <table className={`${table.table} ${table.compact}`}>
+          <thead>
+            <tr>
+              <th className={`${table.th} ${table.numericHead}`} scope="col">
+                Version
+              </th>
+              <th className={table.th} scope="col">
+                What changed
+              </th>
+              <th className={table.th} scope="col">
+                By
+              </th>
+              <th className={table.th} scope="col">
+                When
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {document.versions.map((version) => (
+              <tr key={version.id} className={table.tr}>
+                <td className={`${table.td} ${table.numeric}`}>{version.version}</td>
+                <td className={`${table.td} ${table.primary}`}>
+                  {version.changeNote ?? <span className={table.muted}>Edited</span>}
+                  {version.aiAssisted && (
+                    <span className={table.sub}>Drafted with the assistant</span>
+                  )}
+                </td>
+                <td className={`${table.td} ${table.nowrap}`}>
+                  {version.createdBy?.name ?? <span className={table.muted}>Unknown</span>}
+                </td>
+                <td className={`${table.td} ${table.nowrap}`}>
+                  {formatShortDate(version.createdAt)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 
-      <div className={styles.columns}>
-        <div className={styles.stack}>
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>How it reads</h2>
-              <span className={forms.cardMeta}>
-                Version {latest?.version ?? 0} — exactly what the client sees
+  const activityCard = (
+    <section className={forms.card}>
+      <div className={forms.cardHeader}>
+        <h2 className={forms.cardTitle}>Activity</h2>
+      </div>
+      <ActivityFeed items={activity} now={now} />
+    </section>
+  );
+
+  // ── Signed: a record, not a workspace ─────────────────────────────
+  if (signed && live) {
+    const signature = live.signatures[0];
+    return (
+      <main className={styles.page}>
+        {head}
+        {signature && (
+          <div className={styles.summary}>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Signed by</span>
+              <span className={styles.summaryValue}>{signature.signerName}</span>
+              <span className={styles.summaryLabel}>
+                Initials {signature.initials} · {signature.signerEmail}
               </span>
             </div>
-            {latest && latest.bodyMarkdown.trim() ? (
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Signed on</span>
+              <span className={styles.summaryValue}>{formatShortDate(signature.signedAt)}</span>
+              <span className={styles.summaryLabel}>Version {live.version.version}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Terms</span>
+              <span className={styles.summaryValue}>
+                {live.termsVersion ? `Version ${live.termsVersion.version}` : 'None attached'}
+              </span>
+              <span className={styles.summaryLabel}>
+                {signature.termsAcceptedAt
+                  ? `Accepted ${formatShortDate(signature.termsAcceptedAt)}`
+                  : ' '}
+              </span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Unchanged since signing</span>
+              <span className={styles.summaryValue}>
+                {signature.documentHash === live.documentHash ? 'Yes' : 'No'}
+              </span>
+              <span className={`${styles.summaryLabel} ${forms.fingerprint}`}>
+                {shortHash(signature.documentHash)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className={page.split}>
+          <div className={styles.stack}>
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>What was signed</h2>
+                <span className={forms.cardMeta}>Version {live.version.version}</span>
+              </div>
               <div
                 className={forms.prose}
                 // The renderer escapes everything first and reintroduces only
-                // headings, paragraphs, lists and emphasis. There is no path
-                // from a document body to a script tag or a link.
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(latest.bodyMarkdown) }}
-              />
-            ) : (
-              <p className={styles.note}>
-                Nothing written yet. Ask the assistant for a draft, or write it below.
-              </p>
-            )}
-          </section>
-
-          {!signed && (
-            <section className={forms.card}>
-              <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>Write it</h2>
-                <span className={forms.cardMeta}>Saved as a new version each time</span>
-              </div>
-              <VersionEditor
-                documentId={document.id}
-                body={latest?.bodyMarkdown ?? ''}
-                locked={signed}
+                // headings, paragraphs, lists, tables and emphasis.
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(live.version.bodyMarkdown) }}
               />
             </section>
-          )}
-
-          <div className={table.frame}>
-            <div className={table.toolbar}>
-              <div className={table.toolbarText}>
-                <h2 className={table.title}>Every version</h2>
-                <span className={table.count}>Nothing here is ever edited or removed</span>
-              </div>
-            </div>
-            <div className={table.scroll}>
-              <table className={`${table.table} ${table.compact}`}>
-                <thead>
-                  <tr>
-                    <th className={`${table.th} ${table.numericHead}`} scope="col">v</th>
-                    <th className={table.th} scope="col">What changed</th>
-                    <th className={table.th} scope="col">By</th>
-                    <th className={table.th} scope="col">When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {document.versions.map((version) => (
-                    <tr key={version.id} className={table.tr}>
-                      <td className={`${table.td} ${table.numeric}`}>{version.version}</td>
-                      <td className={`${table.td} ${table.primary}`}>
-                        {version.changeNote ?? <span className={table.muted}>—</span>}
-                        {version.aiAssisted && (
-                          <span className={table.sub}>
-                            Drafted with {version.aiModel}
-                            {version.aiPromptSummary ? ` · “${version.aiPromptSummary}”` : ''}
-                          </span>
-                        )}
-                      </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
-                        {version.createdBy?.name ?? <span className={table.muted}>—</span>}
-                      </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
-                        {formatShortDate(version.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {versions}
           </div>
+          {activityCard}
         </div>
+      </main>
+    );
+  }
 
-        <div className={styles.stack}>
-          {!signed && (
-            <>
-              <section className={forms.card}>
-                <div className={forms.cardHeader}>
-                  <h2 className={forms.cardTitle}>Drafting</h2>
-                  <span className={forms.cardMeta}>
-                    {turns.length === 0
-                      ? 'A co-pilot, not an author'
-                      : `${turns.length} ${turns.length === 1 ? 'message' : 'messages'} so far`}
-                  </span>
-                </div>
-                <Copilot documentId={document.id} turns={turns} />
-              </section>
+  // ── A draft, or sent and waiting: the steps ─────────────────────
+  const prepared = await prepareDocument({
+    kind: document.kind,
+    source,
+    project: {
+      id: document.project.id,
+      currency: document.project.currency,
+      clientId: document.project.client.id,
+      clientSlug: document.project.client.slug,
+    },
+  });
 
-              <section className={forms.card}>
-                <div className={forms.cardHeader}>
-                  <h2 className={forms.cardTitle}>Send it</h2>
-                  <span className={forms.cardMeta}>
-                    {!live
-                      ? 'Not sent yet'
-                      : live.status === 'declined'
-                        ? `Version ${live.version.version} was declined`
-                        : live.status === 'signed'
-                          ? `Version ${live.version.version} is signed`
-                          : `Version ${live.version.version} is with them`}
-                  </span>
-                </div>
-                {live && (
-                  <div className={styles.rows}>
-                    <div className={styles.row}>
-                      <span className={styles.rowLabel}>Sent</span>
-                      <span className={styles.rowValue}>{formatDate(live.sentAt)}</span>
-                    </div>
-                    <div className={styles.row}>
-                      <span className={styles.rowLabel}>Opened</span>
-                      <span className={styles.rowValue}>
-                        {live.viewedAt ? formatDate(live.viewedAt) : 'not yet'}
-                      </span>
-                    </div>
-                    <div className={styles.row}>
-                      <span className={styles.rowLabel}>Fingerprint</span>
-                      <span className={`${styles.rowValue} ${forms.fingerprint}`}>
-                        {shortHash(live.documentHash)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                <SendForSignature documentId={document.id} alreadySent={Boolean(live)} />
-              </section>
-            </>
+  const order: DocumentStep[] = prepared.withFeeTable
+    ? ['details', 'fees', 'write', 'review', 'send']
+    : ['details', 'write', 'review', 'send'];
+
+  const sentOrAnswered = Boolean(live);
+  const fallback: DocumentStep = sentOrAnswered
+    ? 'send'
+    : source.trim().length > 0
+      ? 'write'
+      : prepared.withFeeTable
+        ? 'fees'
+        : 'write';
+  const step: DocumentStep = order.includes(query.step as DocumentStep)
+    ? (query.step as DocumentStep)
+    : fallback;
+  const index = order.indexOf(step);
+  const hrefFor = (target: DocumentStep) => `/documents/${document.reference}?step=${target}`;
+
+  const feeCheck = prepared.checks.find((check) => check.fix?.step === 'fees');
+  const writeChecks = prepared.checks.filter((check) => check.fix?.step === 'write');
+  const complete = order.map((key) => {
+    if (key === 'details') return true;
+    if (key === 'fees') return feeCheck?.ok ?? true;
+    if (key === 'write') return writeChecks.every((check) => check.ok);
+    if (key === 'review') return prepared.ready;
+    return sentOrAnswered;
+  });
+
+  const previous = index > 0 ? order[index - 1] : null;
+  const next = index < order.length - 1 ? order[index + 1] : null;
+
+  const stepNav = (
+    <div className={page.stepNav}>
+      {previous ? (
+        <Link href={hrefFor(previous)} className={`${forms.button} ${forms.quiet}`} scroll={false}>
+          <ArrowLeft size={15} strokeWidth={1.8} aria-hidden="true" />
+          {STEP_LABEL[previous]}
+        </Link>
+      ) : (
+        <span />
+      )}
+      {next && (
+        <Link href={hrefFor(next)} className={forms.button} scroll={false}>
+          Next: {STEP_LABEL[next]}
+          <ArrowRight size={15} strokeWidth={1.8} aria-hidden="true" />
+        </Link>
+      )}
+    </div>
+  );
+
+  let body: ReactNode = null;
+
+  if (step === 'details') {
+    body = (
+      <section className={`${forms.card} ${page.narrowCard}`}>
+        <div className={forms.cardHeader}>
+          <h2 className={forms.cardTitle}>Details</h2>
+        </div>
+        <DetailsForm documentId={document.id} title={document.title} kind={document.kind} />
+        <dl className={page.facts}>
+          <div>
+            <dt>Project</dt>
+            <dd>
+              <Link href={`/projects/${document.project.slug}`} className={styles.inlineLink}>
+                {document.project.name}
+              </Link>
+            </dd>
+          </div>
+          <div>
+            <dt>Who signs</dt>
+            <dd>
+              {prepared.signer ? (
+                `${prepared.signer.name} (${prepared.signer.email})`
+              ) : (
+                <Link
+                  href={`/clients/${document.project.client.slug}`}
+                  className={styles.inlineLink}
+                >
+                  Add a main contact first
+                </Link>
+              )}
+            </dd>
+          </div>
+        </dl>
+        {stepNav}
+      </section>
+    );
+  }
+
+  if (step === 'fees') {
+    const [fees, counted] = await Promise.all([
+      editableFees(document.project.id),
+      projectFees(document.project.id),
+    ]);
+    body = (
+      <div className={page.column}>
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Fees</h2>
+            <span className={forms.cardMeta}>Shared with the whole project</span>
+          </div>
+          {feeCheck && !feeCheck.ok && <Callout kind="warn">{feeCheck.problem}</Callout>}
+          <FeeEditor
+            projectId={document.project.id}
+            currency={document.project.currency}
+            fees={fees}
+          />
+        </section>
+
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>How the fee table reads</h2>
+          </div>
+          <div
+            className={`${forms.prose} ${page.feePreview}`}
+            dangerouslySetInnerHTML={{
+              __html: renderMarkdown(feeSchedule(counted, document.project.currency)),
+            }}
+          />
+          <p className={forms.hint}>
+            Put {'{{fees}}'} on its own line in the document to choose where this goes. Otherwise it
+            goes at the end.
+          </p>
+          {stepNav}
+        </section>
+      </div>
+    );
+  }
+
+  if (step === 'write') {
+    // The drafting thread, if one has been started. Tool turns are folded into
+    // the assistant turn they belong to, so it reads as a conversation.
+    const conversation = await db.conversation.findFirst({
+      where: { documentId: document.id, kind: 'document_draft' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        messages: {
+          where: { role: { in: ['user', 'assistant'] } },
+          orderBy: { createdAt: 'asc' },
+          select: { id: true, role: true, content: true, toolName: true, createdAt: true },
+        },
+      },
+    });
+
+    const turns: CopilotTurn[] = (conversation?.messages ?? [])
+      .filter((message) => message.content.trim().length > 0 || message.toolName)
+      .map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content.trim() || 'Wrote a new version.',
+        toolName: message.toolName,
+        when: formatRelative(message.createdAt, now),
+      }));
+
+    body = (
+      <div className={page.split}>
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>The document</h2>
+            <span className={forms.cardMeta}>Version {latest?.version ?? 1}</span>
+          </div>
+          <VersionEditor
+            // A new version from the assistant replaces what is in the editor.
+            key={latest?.id}
+            documentId={document.id}
+            body={source}
+            withFees={prepared.withFeeTable}
+          />
+        </section>
+
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Assistant</h2>
+          </div>
+          <Copilot documentId={document.id} turns={turns} />
+        </section>
+      </div>
+    );
+  }
+
+  if (step === 'review') {
+    body = (
+      <div className={page.split}>
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>What the client will read</h2>
+          </div>
+          {source.trim() ? (
+            <div
+              className={forms.prose}
+              // The renderer escapes everything first and reintroduces only
+              // headings, paragraphs, lists, tables and emphasis.
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(prepared.final) }}
+            />
+          ) : (
+            <p className={styles.note}>Nothing written yet.</p>
           )}
+        </section>
 
+        <section className={`${forms.card} ${page.sticky}`}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Before it goes</h2>
+          </div>
+          <ul className={page.checks}>
+            {prepared.checks.map((check) => (
+              <li key={check.label} className={check.ok ? page.checkOk : page.checkBad}>
+                <span className={page.checkIcon} aria-hidden="true">
+                  {check.ok ? (
+                    <Check size={14} strokeWidth={2.5} />
+                  ) : (
+                    <CircleAlert size={15} strokeWidth={2} />
+                  )}
+                </span>
+                <span className={page.checkText}>
+                  <span>{check.ok ? check.label : check.problem}</span>
+                  {!check.ok && check.fix && (
+                    <Link
+                      href={check.fix.step ? hrefFor(check.fix.step) : (check.fix.href ?? '#')}
+                      className={styles.inlineLink}
+                    >
+                      {check.fix.text}
+                    </Link>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {stepNav}
+        </section>
+      </div>
+    );
+  }
+
+  if (step === 'send') {
+    body = (
+      <div className={page.split}>
+        <div className={styles.stack}>
           <section className={forms.card}>
             <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>What has happened</h2>
+              <h2 className={forms.cardTitle}>Send for signature</h2>
+              <span className={forms.cardMeta}>
+                {!live
+                  ? 'Not sent yet'
+                  : live.status === 'declined'
+                    ? `Version ${live.version.version} was declined`
+                    : `Version ${live.version.version} is with them`}
+              </span>
             </div>
-            <ActivityFeed items={activity} now={now} />
+            {live && (
+              <dl className={page.facts}>
+                <div>
+                  <dt>Sent</dt>
+                  <dd>{formatDate(live.sentAt)}</dd>
+                </div>
+                <div>
+                  <dt>Opened</dt>
+                  <dd>{live.viewedAt ? formatDate(live.viewedAt) : 'Not yet'}</dd>
+                </div>
+                <div>
+                  <dt>Fingerprint</dt>
+                  <dd className={forms.fingerprint}>{shortHash(live.documentHash)}</dd>
+                </div>
+              </dl>
+            )}
+            {!prepared.ready && (
+              <Callout
+                kind="warn"
+                title="Not ready to send"
+                action={
+                  <Link href={hrefFor('review')} className={styles.inlineLink}>
+                    See what is missing
+                  </Link>
+                }
+              >
+                {prepared.checks.find((check) => !check.ok)?.problem}
+              </Callout>
+            )}
+            <SendForSignature
+              documentId={document.id}
+              alreadySent={Boolean(live)}
+              ready={prepared.ready}
+              signer={prepared.signer?.name ?? null}
+            />
+            {stepNav}
           </section>
+          {versions}
         </div>
+        {activityCard}
       </div>
+    );
+  }
+
+  return (
+    <main className={styles.page}>
+      {head}
+
+      {answered && (
+        <Callout
+          kind={answered.status === 'declined' ? 'bad' : 'warn'}
+          title={
+            answered.status === 'declined'
+              ? `Declined on ${formatShortDate(answered.respondedAt)}`
+              : `Changes asked for on ${formatShortDate(answered.respondedAt)}`
+          }
+        >
+          {answered.respondedBy ? `${answered.respondedBy.name}: ` : ''}
+          &ldquo;{answered.responseNote}&rdquo;
+        </Callout>
+      )}
+
+      <div className={page.steps}>
+        <Steps
+          steps={order.map((key) => ({ key, label: STEP_LABEL[key] }))}
+          current={index}
+          hrefFor={(target) => hrefFor(order[target])}
+          reachable={order.length - 1}
+          complete={complete}
+        />
+      </div>
+
+      {body}
     </main>
   );
 }

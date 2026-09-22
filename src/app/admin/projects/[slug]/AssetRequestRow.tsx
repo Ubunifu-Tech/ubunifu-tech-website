@@ -1,20 +1,22 @@
 'use client';
 
-import React, { useActionState, useRef } from 'react';
+import React, { useActionState } from 'react';
+import { Paperclip } from 'lucide-react';
 import { setAssetRequestStatus, type EditState } from './actions';
-import styles from '../../Admin.module.css';
-import forms from '@/styles/forms.module.css';
 import { Select } from '@/components/console/Select';
+import forms from '@/styles/forms.module.css';
+import styles from './AssetRequestRow.module.css';
 
 const INITIAL: EditState = { status: 'idle' };
 
 const STATUSES = [
-  { value: 'requested', label: 'Still waiting' },
+  { value: 'requested', label: 'Waiting' },
   { value: 'received', label: 'Received' },
   { value: 'waived', label: 'Not needed' },
-  { value: 'blocked', label: 'They cannot get it' },
+  { value: 'blocked', label: 'Not available' },
 ];
 
+/** One thing we asked the client for, its files, and where it stands. */
 export function AssetRequestRow({
   id,
   title,
@@ -30,21 +32,20 @@ export function AssetRequestRow({
   files?: { id: string; filename: string; size: string; when: string }[];
 }) {
   const [state, action, pending] = useActionState(setAssetRequestStatus, INITIAL);
-  const form = useRef<HTMLFormElement>(null);
 
   return (
-    <form action={action} ref={form} className={styles.row}>
+    <form action={action} className={styles.row}>
       <input type="hidden" name="assetRequestId" value={id} />
-      <span>
-        {title}
-        {detail && <span className={styles.rowLabel}> · {detail}</span>}
+      <div className={styles.text}>
+        <span className={styles.title}>{title}</span>
+        {detail && <span className={styles.detail}>{detail}</span>}
         {files.length > 0 && (
-          <span className={styles.rowFiles}>
+          <span className={styles.files}>
             {files.map((file) => (
-              <a key={file.id} href={`/files/${file.id}`} className={styles.rowFile}>
+              <a key={file.id} href={`/files/${file.id}`} className={styles.file} target="_blank" rel="noreferrer">
+                <Paperclip size={13} strokeWidth={2} aria-hidden="true" />
                 {file.filename}
-                <span className={styles.rowLabel}>
-                  {' '}
+                <span className={styles.fileMeta}>
                   {file.size} · {file.when}
                 </span>
               </a>
@@ -53,20 +54,21 @@ export function AssetRequestRow({
         )}
         {state.status === 'error' && (
           <span className={forms.error} role="alert">
-            {' '}
             {state.message}
           </span>
         )}
-      </span>
-      <Select
+      </div>
+      <div className={styles.status}>
+        <Select
           name="assetStatus"
-          aria-label={`${title} — status`}
+          aria-label={`${title} status`}
           defaultValue={status}
           options={STATUSES}
           disabled={pending}
           size="sm"
           autoSubmit
         />
+      </div>
     </form>
   );
 }

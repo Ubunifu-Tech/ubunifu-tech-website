@@ -38,7 +38,7 @@ function describeAudit(action: string, summary: string | null): string {
     'client.sign_in.locked': 'Client account locked after too many attempts',
     'client.sign_in.throttled': 'Too many sign-in links requested',
     'client.sign_in.link_sent': 'Sign-in link sent',
-    'client.sign_in.rejected_at_use': 'Sign-in refused — access had been removed',
+    'client.sign_in.rejected_at_use': 'Sign-in refused: access had been removed',
     'client.sign_out': 'Client signed out',
     'staff.sign_in.success': 'Signed in',
     'staff.sign_in.link_sent': 'Sign-in link sent',
@@ -46,7 +46,25 @@ function describeAudit(action: string, summary: string | null): string {
     'enquiry.status_changed': 'Enquiry updated',
     'enquiry.note_saved': 'Note added to an enquiry',
     'project.status_changed': 'Project moved',
+    'line_item.created': 'Fee added',
     'line_item.saved': 'Fee updated',
+    'line_item.removed': 'Fee removed',
+    'document.details_saved': 'Document details changed',
+    'document.send_failed': 'Document email failed to send',
+    'document.copilot_turn': 'Assistant used',
+    'document.copilot_failed': 'Assistant failed',
+    'staff.invited': 'Team member invited',
+    'staff.invite.send_failed': 'Team invitation failed to send',
+    'staff.role_changed': 'Team member role changed',
+    'staff.deactivated': 'Team member removed',
+    'staff.reactivated': 'Team member restored',
+    'staff.profile_saved': 'Profile updated',
+    'client.contact_added': 'Contact added',
+    'client.contact_removed': 'Contact removed',
+    'client.profile_saved': 'Contact details updated',
+    'deliverable.assigned': 'Task assigned',
+    'asset_request.assigned': 'Client item assigned',
+    'project.owner_changed': 'Project lead changed',
     'deliverable.completed': 'Task done',
     'deliverable.reopened': 'Task reopened',
     'asset_request.status_changed': 'Client item updated',
@@ -65,7 +83,7 @@ function describeAudit(action: string, summary: string | null): string {
     'document.signed': 'Document signed',
     'document.declined': 'Client declined a document',
     'document.changes_requested': 'Client asked for changes',
-    'document.hash_mismatch': 'Signature refused — the document had changed',
+    'document.hash_mismatch': 'Signature refused: the document had changed',
     'ticket.raised': 'New request from a client',
     'ticket.replied': 'Reply sent',
     'post.created': 'Post started',
@@ -78,7 +96,9 @@ function describeAudit(action: string, summary: string | null): string {
     'settings.billing_saved': 'Billing details changed',
   };
   const base = said[action] ?? action.replace(/[._]/g, ' ');
-  return summary ? `${base} — ${summary}` : base;
+  if (!summary) return base;
+  // Older lines were written with dashes; they read the same with a colon.
+  return `${base}: ${summary.replace(/\s+[—–]\s+/g, ': ')}`;
 }
 
 function auditTone(action: string): ActivityTone {

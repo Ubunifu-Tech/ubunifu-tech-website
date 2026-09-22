@@ -51,6 +51,8 @@ model StaffUser {
   email     String    @unique
   name      String
   role      StaffRole @default(member)
+  /// What they do here, shown beside their name: "Designer", "Developer".
+  title     String?
   isActive  Boolean   @default(true)
   lastSeenAt DateTime?
   createdAt DateTime  @default(now())
@@ -62,6 +64,7 @@ model StaffUser {
   timeEntries     TimeEntry[]
   posts           Post[]
   mediaAssets     MediaAsset[]
+  assignedTasks   Deliverable[]    @relation("DeliverableAssignee")
 
   @@index([isActive])
 }
@@ -123,6 +126,7 @@ model ClientContact {
   signatures   Signature[]
   ticketsOpened Ticket[]
   documentResponses SignatureRequest[]
+  assignedRequests  AssetRequest[] @relation("AssetRequestAssignee")
 
   @@unique([clientId, email])
   @@index([email])
@@ -386,10 +390,15 @@ model Deliverable {
   completedAt DateTime?
   /// Shown to the client in the portal. Internal engineering tasks are not.
   isClientVisible Boolean @default(true)
+  /// Who on our side is doing it.
+  assigneeId  String?
+  assignee    StaffUser? @relation("DeliverableAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  dueAt       DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([phaseId])
+  @@index([assigneeId])
 }
 
 enum AssetRequestStatus {
@@ -414,12 +423,16 @@ model AssetRequest {
   position    Int
   dueAt       DateTime?
   receivedAt  DateTime?
+  /// Who at the client is sending it. Set by staff or by the client.
+  assigneeId  String?
+  assignee    ClientContact?     @relation("AssetRequestAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
   uploads FileUpload[]
 
   @@index([projectId, status])
+  @@index([assigneeId])
 }
 
 enum UpdateStatus {
@@ -758,8 +771,14 @@ model DocumentVersion {
   documentId      String
   document        Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
   version         Int
-  /// The editable source of truth. Rendered to HTML/PDF for sending.
+  /// Exactly what the client reads and signs. Rendered, hashed, never edited
+  /// once a signature request points at it.
   bodyMarkdown    String
+  /// What the author wrote, when it differs from bodyMarkdown. A sent version
+  /// has its {{fees}} placeholder filled in from the project's fees; keeping
+  /// the source separately lets the next edit start from the placeholder, so
+  /// the fee schedule is regenerated rather than duplicated.
+  sourceMarkdown  String?
   changeNote      String?
   /// True when a model drafted this revision. A human still has to accept it,
   /// so this records provenance rather than authorship.

@@ -1,0 +1,141 @@
+.steps {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-card);
+}
+
+.steps nav {
+  margin: 0;
+}
+
+/* The work on the left, what supports it on the right. */
+.split {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+  grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 1fr);
+}
+
+.narrowCard {
+  max-width: 44rem;
+}
+
+.sticky {
+  position: sticky;
+  top: var(--space-5);
+}
+
+.stepNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3) var(--space-5);
+  margin: var(--space-5) 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.facts dt {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.facts dd {
+  margin: 0.125rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.feePreview {
+  overflow-x: auto;
+}
+
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.checkIcon {
+  display: inline-flex;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.checkOk .checkIcon {
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
+}
+
+.checkBad .checkIcon {
+  background: var(--tone-amber-bg);
+  color: var(--tone-amber-fg);
+}
+
+.checkText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-top: 0.125rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.checkOk .checkText {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 64rem) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sticky {
+    position: static;
+  }
+}
+
+@media (max-width: 40rem) {
+  .steps {
+    padding: var(--space-3) var(--space-4);
+    overflow-x: auto;
+  }
+
+  .stepNav {
+    flex-wrap: wrap;
+  }
+}
+
+/* One thing after another, at a width a table can breathe in. */
+.column {
+  display: flex;
+  max-width: 60rem;
+  flex-direction: column;
+  gap: var(--space-5);
+}

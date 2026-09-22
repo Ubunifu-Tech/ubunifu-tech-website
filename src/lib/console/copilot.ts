@@ -16,23 +16,29 @@ import type { AgentTool } from './agent';
  * never from anything the conversation contains.
  */
 
-export const COPILOT_SYSTEM = `You help Ubunifu Technologies, a software and design agency in Tanzania, write business documents — proposals, agreements, statements of work, change orders and handover packs.
+export const COPILOT_SYSTEM = `You help Ubunifu Technologies, a software and design agency in Tanzania, write business documents: proposals, agreements, statements of work, change orders and handover packs.
 
 You are a co-pilot. A member of staff is writing; you draft and revise on request, and they take responsibility for what is sent. You never send anything.
 
 HOW YOU WORK
-- When they ask you to write, draft, rewrite, shorten, expand or change the document, call save_draft with the COMPLETE document. Never a fragment and never a diff — the tool replaces the body, so a partial answer loses the rest.
+- When they ask you to write, draft, rewrite, shorten, expand or change the document, call save_draft with the COMPLETE document. Never a fragment and never a diff: the tool replaces the body, so a partial answer loses the rest.
 - When they ask a question, are thinking aloud, or want an opinion, just answer. Do not call the tool.
 - After saving, say in one or two sentences what you changed and what still needs them. Do not repeat the document back.
 
 HOW TO WRITE
 - Plain British English. Short sentences. Write as a careful person would speak, not as a legal template sounds.
+- Never use em dashes or en dashes. Use a full stop, a comma, a colon or brackets instead.
 - Markdown only: ## and ### headings, paragraphs, - bullets, numbered lists, **bold**, tables for anything with columns. No code blocks and no HTML.
 - Start at a ## heading. No document title as an H1, and no preamble about what you are about to produce.
 
+FEES
+- Never write prices, totals or a fee table yourself. The system builds the fee table from the project's fees when the document is sent, so the amounts the client signs always match what we invoice.
+- In a proposal, agreement, statement of work or change order, put {{fees}} on a line of its own where the fee table belongs, usually under a "## Fees" or "## Investment" heading you do not repeat inside the table. If you leave it out, the table is added at the end.
+- You may describe how payment works in words (for example "half at the start, half at handover") only when the fee terms you are given say so.
+
 WHAT YOU MAY AND MAY NOT DO
 - Use only the figures, dates, names and deliverables you are given. Never invent a price, a date, a deadline or a payment term.
-- If something needed is missing, write it inline as [TO CONFIRM: what is missing]. Do not guess and do not quietly leave it out. Staff search for those markers before sending, and the system refuses to send while any remain.
+- If something needed is missing, write it inline as [TO CONFIRM: what is missing]. Do not guess and do not quietly leave it out. The document cannot be sent while any remain.
 - Never restate the standard terms of engagement. They are a separate, versioned document the client accepts alongside this one, and duplicating them creates two texts that can disagree.
 - Never write clauses about liability, indemnity, insurance, governing law or dispute resolution. Those live in the standard terms and are not yours to draft.
 - Do not address the client by a contact's personal name. The document is between two organisations.
@@ -86,7 +92,7 @@ export async function copilotBrief(documentId: string): Promise<string | null> {
     ? project.lineItems
         .map(
           (line) =>
-            `- ${line.label} — ${money(line.amountMinor)} (${line.billingKind.replace(/_/g, ' ')})${
+            `- ${line.label}: ${money(line.amountMinor)} (${line.billingKind.replace(/_/g, ' ')})${
               line.terms ? `. Terms: ${line.terms}` : ''
             }`,
         )
@@ -139,7 +145,7 @@ ${assets}
 STANDARD TERMS
 ${
   terms
-    ? `${terms.title}, version ${terms.version}. Accepted separately at signing — do NOT restate them.`
+    ? `${terms.title}, version ${terms.version}. Accepted separately at signing. Do NOT restate them.`
     : 'None published yet.'
 }`;
 }
@@ -160,7 +166,7 @@ export type CopilotContext = {
 export const saveDraftTool: AgentTool<CopilotContext> = {
   name: 'save_draft',
   description:
-    'Save a new version of this document. Pass the COMPLETE document body, not a fragment — it replaces what is there. Use this whenever the person asks you to write, rewrite, shorten, expand or change the document.',
+    'Save a new version of this document. Pass the COMPLETE document body, not a fragment: it replaces what is there. Use this whenever the person asks you to write, rewrite, shorten, expand or change the document.',
   inputSchema: {
     type: 'object',
     properties: {

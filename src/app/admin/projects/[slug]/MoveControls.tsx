@@ -1,44 +1,51 @@
 'use client';
 
 import React, { useActionState, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { moveProject, type MoveState } from './actions';
 import type { Transition } from '@/lib/console/transitions';
-import styles from '../../Admin.module.css';
+import type { ProjectStatus } from '@/generated/prisma/client';
+import { STAFF_LABEL } from '@/lib/console/project-status';
+import { Callout } from '@/components/console/Callout';
+import styles from './MoveControls.module.css';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: MoveState = { status: 'idle' };
 
+export type StageAction = Transition & {
+  /** Why this cannot happen right now, or null when it can. */
+  blocked: string | null;
+};
+
 /**
  * Moving the project on.
  *
- * Buttons rather than a dropdown, because what a project can do next depends on
- * where it is, and a dropdown listing all fourteen states invites somebody to
- * pick one that makes no sense. The expected status travels with the post: if
- * the project moved while this page was open, the server refuses rather than
- * writing an event whose "from" never happened.
+ * The main next steps are buttons; everything else is a quieter list under
+ * them. A step that is not possible right now is shown greyed with the reason,
+ * rather than as a warning about something nobody tried to do. The expected
+ * status travels with the post, so a project moved by someone else in the
+ * meantime is refused rather than recorded with a history that never happened.
  */
 export function MoveControls({
   projectId,
   status,
-  transitions,
+  actions,
 }: {
   projectId: string;
-  status: string;
-  transitions: Transition[];
+  status: ProjectStatus;
+  actions: StageAction[];
 }) {
   const [state, action, pending] = useActionState(moveProject, INITIAL);
-  const [chosen, setChosen] = useState<Transition | null>(null);
+  const [chosen, setChosen] = useState<StageAction | null>(null);
 
   const confirming = state.status === 'confirm' && state.to && chosen?.to === state.to;
 
-  if (transitions.length === 0) {
-    return (
-      <p className={styles.note}>
-        This project has come to rest. New work for the same client starts as a new project, with
-        its own reference.
-      </p>
-    );
+  if (actions.length === 0) {
+    return <p className={styles.rest}>This project is finished. New work starts as a new project.</p>;
   }
+
+  const primary = actions.filter((item) => item.tone === 'primary' && !item.blocked);
+  const others = actions.filter((item) => !primary.includes(item));
 
   return (
     <form action={action}>
@@ -47,83 +54,83 @@ export function MoveControls({
       <input type="hidden" name="to" value={chosen?.to ?? ''} />
 
       {confirming ? (
-        <div className={forms.form}>
-          <p className={forms.cardMeta}>
-            Before moving this to <strong>{chosen!.to.replace(/_/g, ' ')}</strong>:
-          </p>
-          <ul className={styles.warnList}>
-            {state.guards?.map((guard, index) => (
-              <li key={index} className={styles.warnItem}>
-                {guard.message}
-              </li>
-            ))}
-          </ul>
+        <div className={styles.confirm}>
+          <p className={styles.confirmTitle}>Move to {STAFF_LABEL[chosen!.to]}?</p>
+          <Callout kind="warn" items={state.guards?.map((guard) => guard.message)} />
 
           <div className={forms.field}>
             <label className={forms.label} htmlFor="move-note">
-              What is happening, in your words
+              Note <span className={forms.optional}>(saved in the project history)</span>
             </label>
             <textarea
               id="move-note"
               name="note"
               className={`${forms.control} ${forms.textarea}`}
               maxLength={2000}
-              placeholder="Why this is going ahead anyway. This is the only record of the decision."
+              placeholder="Why you are going ahead"
             />
           </div>
 
           <label className={forms.checkRow} htmlFor="move-ack">
-            <input
-              id="move-ack"
-              name="acknowledged"
-              type="checkbox"
-              className={forms.check}
-              required
-            />
-            <span className={forms.checkText}>
-              <span>I have read the above and am going ahead</span>
-              <span className={forms.hint}>
-                Recorded against your name in the project&rsquo;s history, along with what you were
-                warned about.
-              </span>
-            </span>
+            <input id="move-ack" name="acknowledged" type="checkbox" className={forms.check} required />
+            <span className={forms.checkText}>I understand, move it anyway</span>
           </label>
 
-          <div className={forms.actions}>
+          <div className={styles.confirmActions}>
             <button type="submit" className={forms.button} disabled={pending}>
-              {pending ? 'Moving…' : `Move to ${chosen!.to.replace(/_/g, ' ')}`}
+              {pending ? 'Moving…' : `Move to ${STAFF_LABEL[chosen!.to]}`}
             </button>
-            <button
-              type="button"
-              className={`${forms.button} ${forms.quiet}`}
-              onClick={() => setChosen(null)}
-            >
-              Not now
+            <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setChosen(null)}>
+              Cancel
             </button>
           </div>
         </div>
       ) : (
-        <div className={styles.moves}>
-          {transitions.map((transition) => (
-            <div key={transition.to} className={styles.move}>
-              <button
-                type="submit"
-                className={`${forms.button} ${
-                  transition.tone === 'danger'
-                    ? forms.danger
-                    : transition.tone === 'quiet'
-                      ? forms.quiet
-                      : ''
-                }`}
-                disabled={pending}
-                onClick={() => setChosen(transition)}
-              >
-                {transition.label}
-              </button>
-              {transition.detail && <p className={forms.hint}>{transition.detail}</p>}
+        <>
+          {primary.length > 0 && (
+            <div className={styles.primary}>
+              {primary.map((item) => (
+                <button
+                  key={item.to}
+                  type="submit"
+                  className={forms.button}
+                  disabled={pending}
+                  onClick={() => setChosen(item)}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+
+          {others.length > 0 && (
+            <div className={styles.others}>
+              <p className={styles.othersLabel}>{primary.length > 0 ? 'Other options' : 'Options'}</p>
+              <ul className={styles.list}>
+                {others.map((item) => (
+                  <li key={item.to}>
+                    <button
+                      type="submit"
+                      className={`${styles.option} ${item.tone === 'danger' ? styles.optionDanger : ''}`}
+                      disabled={pending || item.blocked !== null}
+                      onClick={() => setChosen(item)}
+                    >
+                      <span className={styles.optionText}>
+                        <span className={styles.optionLabel}>{item.label}</span>
+                        {(item.blocked ?? item.detail) && (
+                          <span className={styles.optionDetail}>{item.blocked ?? item.detail}</span>
+                        )}
+                      </span>
+                      {item.blocked === null && (
+                        <ChevronRight size={16} strokeWidth={2} className={styles.optionIcon} aria-hidden="true" />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
       {state.status === 'error' && (
@@ -132,7 +139,7 @@ export function MoveControls({
         </p>
       )}
       {state.status === 'done' && (
-        <p className={forms.hint} role="status" aria-live="polite">
+        <p className={styles.done} role="status" aria-live="polite">
           {state.message}
         </p>
       )}

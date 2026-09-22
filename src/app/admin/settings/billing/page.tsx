@@ -2,6 +2,7 @@ import { requireStaffRole } from '@/lib/console/auth';
 import { formatBps, getOrg, missingForInvoicing } from '@/lib/console/org';
 import { BillingForm } from './BillingForm';
 import styles from '../../Admin.module.css';
+import { Callout } from '@/components/console/Callout';
 
 export const metadata = { title: 'Billing details' };
 
@@ -21,21 +22,13 @@ export default async function BillingSettingsPage() {
     <main className={`${styles.page} ${styles.medium}`}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            Billing <span className={styles.headingAccent}>details</span>
-          </h1>
-          <p className={styles.lead}>
-            What appears on every invoice and receipt, and where clients are told to send money.
-          </p>
+          <h1 className={styles.heading}>Billing details</h1>
+          <p className={styles.lead}>Shown on every invoice, receipt and contract you send.</p>
         </div>
       </div>
 
       {gaps.length > 0 && (
-        <ul className={styles.warnList}>
-          <li className={styles.warnItem}>
-            Documents can still go out, but they are missing {gaps.join('; ')}.
-          </li>
-        </ul>
+        <Callout kind="warn" title="Your invoices, receipts and contracts are missing:" items={gaps} />
       )}
 
       <BillingForm org={org} vatRate={org.vatRateBps === 0 ? '' : formatBps(org.vatRateBps).replace('%', '')} />

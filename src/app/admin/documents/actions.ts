@@ -18,6 +18,7 @@ import {
 import { runTurn } from '@/lib/console/agent';
 import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
 import { formText, formTextExact } from '@/lib/console/form';
+import { authorText, prepareDocument } from '@/lib/console/document-ready';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -74,11 +75,61 @@ export async function createDocument(
     action: 'document.created',
     entityType: 'Document',
     entityId: document.id,
-    summary: `${document.reference} — ${title}`,
+    summary: `${document.reference}: ${title}`,
   });
 
   revalidatePath(`/admin/projects/${project.slug}`);
   redirect(`/documents/${document.reference}`);
+}
+
+/** Renames a document or changes its kind, up to the moment it is signed. */
+export async function saveDetails(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+
+  const documentId = formText(formData, 'documentId');
+  const title = formText(formData, 'title');
+  const kindRaw = formText(formData, 'kind');
+
+  if (!Object.values(DocumentKind).includes(kindRaw as DocumentKind)) {
+    return { status: 'error', message: 'Choose what kind of document this is.' };
+  }
+  if (title.length < 3 || title.length > 200) {
+    return { status: 'error', message: 'Give the document a title.' };
+  }
+  const kind = kindRaw as DocumentKind;
+
+  const document = await db.document.findUnique({
+    where: { id: documentId },
+    select: { id: true, reference: true, title: true, kind: true, status: true },
+  });
+  if (!document) return { status: 'error', message: 'That document no longer exists.' };
+  if (document.status === 'signed') {
+    return { status: 'error', message: 'This has been signed, so it cannot change.' };
+  }
+  if (document.title === title && document.kind === kind) {
+    return { status: 'done', message: 'Nothing changed.' };
+  }
+
+  await db.document.update({ where: { id: document.id }, data: { title, kind } });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.details_saved',
+    entityType: 'Document',
+    entityId: document.id,
+    summary:
+      document.kind !== kind
+        ? `${document.reference}: now ${DOCUMENT_KIND_LABEL[kind].toLowerCase()}`
+        : `${document.reference}: renamed to ${title}`,
+  });
+
+  revalidatePath(`/admin/documents/${document.reference}`);
+  revalidatePath('/admin/documents');
+  return { status: 'done', message: 'Saved.' };
 }
 
 /**
@@ -108,7 +159,11 @@ export async function saveVersion(
       id: true,
       reference: true,
       status: true,
-      versions: { orderBy: { version: 'desc' }, take: 1, select: { version: true, bodyMarkdown: true } },
+      versions: {
+        orderBy: { version: 'desc' },
+        take: 1,
+        select: { version: true, bodyMarkdown: true, sourceMarkdown: true },
+      },
     },
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };
@@ -116,8 +171,14 @@ export async function saveVersion(
     return { status: 'error', message: 'This has been signed. A signed document cannot be edited.' };
   }
 
+  // Compared with what the author last wrote, not with the sent copy that has
+  // the fee table filled in, or every save after a send would look like a change.
   const latest = document.versions[0];
-  if (latest && latest.bodyMarkdown === bodyMarkdown) {
+  const then = formText(formData, 'then');
+  const next = then === 'review' ? `/documents/${document.reference}?step=review` : null;
+
+  if (latest && authorText(latest) === bodyMarkdown) {
+    if (next) redirect(next);
     return { status: 'done', message: 'Nothing changed.' };
   }
 
@@ -138,10 +199,11 @@ export async function saveVersion(
     action: 'document.version_saved',
     entityType: 'Document',
     entityId: document.id,
-    summary: `${document.reference} — version ${version}${changeNote ? `: ${changeNote}` : ''}`,
+    summary: `${document.reference}, version ${version}${changeNote ? `: ${changeNote}` : ''}`,
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
+  if (next) redirect(next);
   return { status: 'done', message: `Saved as version ${version}.` };
 }
 
@@ -176,7 +238,7 @@ export async function askCopilot(
   if (document.status === 'signed') {
     return {
       status: 'error',
-      message: 'This has been signed. A signed document cannot be redrafted — raise a change order.',
+      message: 'This has been signed, so it cannot be redrafted. Start a change order instead.',
     };
   }
 
@@ -222,8 +284,8 @@ export async function askCopilot(
     entityType: 'Document',
     entityId: document.id,
     summary: result.ok
-      ? `${document.reference} — ${result.usedTools.length > 0 ? 'wrote a version' : 'answered'}`
-      : `${document.reference} — ${result.error}`,
+      ? `${document.reference}: ${result.usedTools.length > 0 ? 'wrote a version' : 'answered'}`
+      : `${document.reference}: ${result.error}`,
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
@@ -233,12 +295,14 @@ export async function askCopilot(
 }
 
 /**
- * Sends the latest version for signature.
+ * Sends the document for signature.
  *
- * Three things are pinned at this moment and never move again: the version, a
- * SHA-256 of how it renders, and the terms in force. The hash is recomputed
- * when somebody signs and compared with this one — that comparison is the whole
- * proof, because there is no third party here to hold a copy.
+ * The fee table is filled in from the project's fees here, and the result is
+ * saved as its own version, so the text the client signs, and the fingerprint
+ * of it, include the exact amounts. Three things are then pinned and never
+ * move again: that version, a SHA-256 of how it renders, and the terms in
+ * force. The hash is recomputed when somebody signs and compared with this
+ * one; that comparison is the whole proof.
  */
 export async function sendForSignature(
   _previous: DocumentState,
@@ -258,22 +322,15 @@ export async function sendForSignature(
       versions: {
         orderBy: { version: 'desc' },
         take: 1,
-        select: { id: true, version: true, bodyMarkdown: true },
+        select: { id: true, version: true, bodyMarkdown: true, sourceMarkdown: true },
       },
       project: {
         select: {
+          id: true,
           name: true,
           slug: true,
-          client: {
-            select: {
-              name: true,
-              contacts: {
-                where: { deletedAt: null, canSignIn: true, isPrimary: true },
-                select: { id: true, name: true, email: true },
-                take: 1,
-              },
-            },
-          },
+          currency: true,
+          client: { select: { id: true, name: true, slug: true } },
         },
       },
     },
@@ -284,30 +341,52 @@ export async function sendForSignature(
     return { status: 'error', message: 'This has already been signed.' };
   }
 
-  const version = document.versions[0];
-  if (!version || version.bodyMarkdown.trim().length < 40) {
+  const latest = document.versions[0];
+  if (!latest) {
     return { status: 'error', message: 'There is nothing to send. Write the document first.' };
   }
-  if (version.bodyMarkdown.includes('[TO CONFIRM')) {
-    return {
-      status: 'error',
-      message:
-        'This still has TO CONFIRM markers in it. Those are the assistant telling you something is missing — fill them in before it goes out.',
-    };
-  }
 
-  const contact = document.project.client.contacts[0];
-  if (!contact) {
+  const prepared = await prepareDocument({
+    kind: document.kind,
+    source: authorText(latest),
+    project: {
+      id: document.project.id,
+      currency: document.project.currency,
+      clientId: document.project.client.id,
+      clientSlug: document.project.client.slug,
+    },
+  });
+
+  const failing = prepared.checks.find((check) => !check.ok);
+  if (failing || !prepared.signer) {
     return {
       status: 'error',
-      message: 'This client has no main contact who can sign in. Add one first.',
+      message: failing?.problem ?? 'The client has no main contact yet.',
     };
   }
+  const contact = prepared.signer;
 
   const terms = await currentTerms();
-  const documentHash = hashDocument(version.bodyMarkdown);
+  const documentHash = hashDocument(prepared.final);
 
   const request = await db.$transaction(async (tx) => {
+    // The copy with the fees filled in is a version of its own, unless the
+    // latest already is exactly that.
+    const version =
+      latest.bodyMarkdown === prepared.final
+        ? latest
+        : await tx.documentVersion.create({
+            data: {
+              documentId: document.id,
+              version: latest.version + 1,
+              bodyMarkdown: prepared.final,
+              sourceMarkdown: prepared.source,
+              changeNote: 'Fees filled in for sending',
+              createdById: staff.id,
+            },
+            select: { id: true, version: true },
+          });
+
     // Any earlier request is withdrawn, so a client cannot sign a version we
     // have moved on from.
     await tx.signatureRequest.updateMany({
@@ -333,7 +412,7 @@ export async function sendForSignature(
       data: { status: 'sent' },
     });
 
-    return created;
+    return { id: created.id, version: version.version };
   });
 
   const { token } = await issueMagicToken({
@@ -346,7 +425,7 @@ export async function sendForSignature(
 
   const sent = await sendConsoleEmail({
     to: contact.email,
-    subject: `${document.title} — ready for your signature`,
+    subject: `${document.title}: ready for your signature`,
     html: documentToSignEmail({
       name: contact.name,
       clientName: document.project.client.name,
@@ -368,9 +447,9 @@ export async function sendForSignature(
     entityType: 'Document',
     entityId: document.id,
     summary: sent.ok
-      ? `${document.reference} version ${version.version} to ${contact.email}`
-      : `${document.reference} — could not send to ${contact.email}: ${sent.error}`,
-    metadata: { documentHash, version: version.version },
+      ? `${document.reference} version ${request.version} to ${contact.email}`
+      : `${document.reference}: could not send to ${contact.email}: ${sent.error}`,
+    metadata: { documentHash, version: request.version },
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
@@ -379,8 +458,8 @@ export async function sendForSignature(
   if (!sent.ok) {
     return {
       status: 'error',
-      message: `It is waiting in their portal and the attempt is logged, but the email did not go: ${sent.error}`,
+      message: `It is waiting in their portal, but the email did not go: ${sent.error}`,
     };
   }
-  return { status: 'done', message: `Sent to ${contact.email}. It is version ${version.version}.` };
+  return { status: 'done', message: `Sent to ${contact.name} (${contact.email}).` };
 }

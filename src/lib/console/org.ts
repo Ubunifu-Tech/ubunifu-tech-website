@@ -71,13 +71,13 @@ export async function getOrg(): Promise<Org> {
  */
 export function missingForInvoicing(org: Org): string[] {
   const gaps: string[] = [];
-  if (!org.tin) gaps.push('a TIN — a Tanzanian client’s accountant will ask for it');
-  if (!org.addressLines) gaps.push('a postal address');
+  if (!org.tin) gaps.push('Your TIN');
+  if (!org.addressLines) gaps.push('A postal address');
   if (!org.bankAccountNumber && !org.mobileMoneyNumber) {
-    gaps.push('somewhere to pay — a bank account or a mobile-money number');
+    gaps.push('How to pay you: a bank account or mobile money number');
   }
-  if (org.chargesVat && org.vatRateBps === 0) gaps.push('a VAT rate, since VAT is switched on');
-  if (org.chargesVat && !org.vrn) gaps.push('a VRN, since VAT is switched on');
+  if (org.chargesVat && org.vatRateBps === 0) gaps.push('A VAT rate (VAT is switched on)');
+  if (org.chargesVat && !org.vrn) gaps.push('Your VRN (VAT is switched on)');
   return gaps;
 }
 

@@ -1,23 +1,23 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import React, { useActionState, useState } from 'react';
 import { createDocument, type DocumentState } from '../../documents/actions';
+import { DOCUMENT_KINDS } from '../../documents/kinds';
 import forms from '@/styles/forms.module.css';
 import { Select } from '@/components/console/Select';
 
 const INITIAL: DocumentState = { status: 'idle' };
 
-const KINDS = [
-  { value: 'proposal', label: 'Proposal' },
-  { value: 'contract', label: 'Agreement' },
-  { value: 'statement_of_work', label: 'Statement of work' },
-  { value: 'change_order', label: 'Change order' },
-  { value: 'handover', label: 'Handover pack' },
-  { value: 'other', label: 'Something else' },
-];
+function titleFor(kind: string, projectName: string) {
+  const label = DOCUMENT_KINDS.find((option) => option.value === kind)?.label ?? 'Document';
+  return `${label} for ${projectName}`;
+}
 
 export function NewDocument({ projectId, projectName }: { projectId: string; projectName: string }) {
   const [state, action, pending] = useActionState(createDocument, INITIAL);
+  const [kind, setKind] = useState('proposal');
+  const [title, setTitle] = useState(() => titleFor('proposal', projectName));
+  const [edited, setEdited] = useState(false);
 
   return (
     <form action={action} className={forms.form}>
@@ -25,15 +25,20 @@ export function NewDocument({ projectId, projectName }: { projectId: string; pro
       <div className={forms.grid}>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="doc-kind">
-            What kind
+            Kind
           </label>
           <Select
-              id="doc-kind"
-              name="kind"
-              defaultValue="proposal"
-              options={KINDS}
-              disabled={pending}
-            />
+            id="doc-kind"
+            name="kind"
+            value={kind}
+            onValueChange={(value) => {
+              setKind(value);
+              // The title follows the kind until somebody types their own.
+              if (!edited) setTitle(titleFor(value, projectName));
+            }}
+            options={DOCUMENT_KINDS}
+            disabled={pending}
+          />
         </div>
 
         <div className={forms.field}>
@@ -45,20 +50,20 @@ export function NewDocument({ projectId, projectName }: { projectId: string; pro
             name="title"
             className={forms.control}
             maxLength={200}
-            defaultValue={`${projectName} — proposal`}
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value);
+              setEdited(true);
+            }}
             disabled={pending}
           />
-          <p className={forms.hint}>What the client sees at the top of the email.</p>
         </div>
       </div>
 
       <div className={forms.actions}>
-        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
-          {pending ? 'Creating…' : 'New document'}
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Creating…' : 'Create and continue'}
         </button>
-        <p className={forms.payoff}>
-          Opens the editor. Nothing goes to the client until you send it.
-        </p>
       </div>
 
       {state.message && (

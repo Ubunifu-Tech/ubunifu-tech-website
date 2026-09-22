@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { ProjectStatus } from '@/generated/prisma/client';
+import { STAFF_LABEL } from './project-status';
 import { formatMoney } from './money';
 
 /**
@@ -61,7 +62,7 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     {
       to: 'proposal_sent',
       label: 'Record a proposal already sent',
-      detail: 'For a proposal that went out before this was in the console.',
+      detail: 'For one sent before you used the console.',
       tone: 'quiet',
     },
     { to: 'cancelled', label: 'Mark as lost', tone: 'danger' },
@@ -76,7 +77,7 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     {
       to: 'proposal_draft',
       label: 'Pull the proposal back',
-      detail: 'Only for a proposal sent by mistake. Rewriting one already with the client is a new version of the document, not a change of state.',
+      detail: 'Only if it was sent by mistake.',
       tone: 'quiet',
     },
     { to: 'cancelled', label: 'Mark the proposal lost', tone: 'danger' },
@@ -86,71 +87,71 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     {
       to: 'in_progress',
       label: 'Start work without an agreement',
-      detail: 'Recorded as exactly that, so it is visible later that nothing was signed.',
+      detail: 'Noted in the history as started without a signature.',
       tone: 'quiet',
     },
     { to: 'proposal_sent', label: 'They have not actually accepted', tone: 'quiet' },
     {
       to: 'on_hold',
-      label: 'Park it before anything starts',
-      detail: 'Accepted work that is not starting yet. Without this, an engagement with no contract stage has nowhere to wait.',
+      label: 'Park it for now',
+      detail: 'Accepted, but not starting yet.',
       tone: 'quiet',
     },
-    { to: 'cancelled', label: 'Cancel — accepted but not going ahead', tone: 'danger' },
+    { to: 'cancelled', label: 'Cancel, not going ahead', tone: 'danger' },
   ],
   contract_sent: [
-    { to: 'contract_signed', label: 'Record the signature', tone: 'primary' },
-    { to: 'proposal_accepted', label: 'Withdraw it and renegotiate', tone: 'quiet' },
-    { to: 'cancelled', label: 'Withdraw it and close this as dead', tone: 'danger' },
+    { to: 'contract_signed', label: 'Mark as signed', tone: 'primary' },
+    { to: 'proposal_accepted', label: 'Withdraw and renegotiate', tone: 'quiet' },
+    { to: 'cancelled', label: 'Withdraw and cancel', tone: 'danger' },
   ],
   contract_signed: [
     { to: 'in_progress', label: 'Start the work', tone: 'primary' },
     { to: 'on_hold', label: 'Pause before kick-off', tone: 'quiet' },
-    { to: 'cancelled', label: 'Cancel a signed engagement', tone: 'danger' },
+    { to: 'cancelled', label: 'Cancel the engagement', tone: 'danger' },
   ],
   in_progress: [
-    { to: 'client_review', label: 'Send to the client for review', tone: 'primary' },
+    { to: 'client_review', label: 'Send for client review', tone: 'primary' },
     { to: 'launch_ready', label: 'Mark ready to launch', tone: 'primary' },
     {
       to: 'handover',
       label: 'Go straight to handover',
-      detail: 'For work with nothing to launch — a brand kit, or a report. A retainer or a standing service belongs here at "in progress" for as long as it runs; handing it over means it has ended.',
+      detail: 'For work with nothing to launch, like a brand kit or a report.',
       tone: 'quiet',
     },
-    { to: 'closed', label: 'Close without a handover', tone: 'quiet' },
+    { to: 'closed', label: 'Close without handover', tone: 'quiet' },
     { to: 'on_hold', label: 'Pause the work', tone: 'quiet' },
-    { to: 'cancelled', label: 'Stop the work and cancel', tone: 'danger' },
+    { to: 'cancelled', label: 'Cancel the project', tone: 'danger' },
   ],
   client_review: [
-    { to: 'in_progress', label: 'Take the feedback back into the work', tone: 'primary' },
-    { to: 'launch_ready', label: 'Signed off — ready to launch', tone: 'primary' },
-    { to: 'handover', label: 'Signed off — hand it over', tone: 'quiet' },
-    { to: 'on_hold', label: 'Pause — the work itself is stopping', tone: 'quiet' },
+    { to: 'in_progress', label: 'Work on their feedback', tone: 'primary' },
+    { to: 'launch_ready', label: 'Approved, ready to launch', tone: 'primary' },
+    { to: 'handover', label: 'Approved, hand it over', tone: 'quiet' },
+    { to: 'on_hold', label: 'Pause the work', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel during review', tone: 'danger' },
   ],
   launch_ready: [
     { to: 'launched', label: 'Go live', tone: 'primary' },
     {
       to: 'handover',
-      label: 'Hand it over without launching',
-      detail: 'When the client deploys it themselves. No launch date is recorded, so this project will never appear in launch figures — which is correct, because we did not launch it.',
+      label: 'Hand over without launching',
+      detail: 'When the client puts it live themselves.',
       tone: 'quiet',
     },
     {
       to: 'closed',
       label: 'Finish without launching',
-      detail: 'Work that was delivered and paid for but is not going live.',
+      detail: 'Delivered, but not going live.',
       tone: 'quiet',
     },
-    { to: 'client_review', label: 'One more thing for the client to check', tone: 'quiet' },
-    { to: 'in_progress', label: 'Hold the launch, back to the work', tone: 'quiet' },
+    { to: 'client_review', label: 'Back to the client to check', tone: 'quiet' },
+    { to: 'in_progress', label: 'Back to the work', tone: 'quiet' },
     { to: 'on_hold', label: 'Hold the launch', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel before launch', tone: 'danger' },
   ],
   launched: [
     { to: 'handover', label: 'Start handover', tone: 'primary' },
-    { to: 'closed', label: 'Close without a separate handover', tone: 'quiet' },
-    { to: 'in_progress', label: 'Roll the launch back', tone: 'quiet' },
+    { to: 'closed', label: 'Close without handover', tone: 'quiet' },
+    { to: 'in_progress', label: 'Undo the launch', tone: 'quiet' },
     { to: 'on_hold', label: 'Suspend the live service', tone: 'quiet' },
   ],
   handover: [
@@ -162,17 +163,17 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     {
       to: 'in_progress',
       label: 'Reopen this project',
-      detail: 'Only for work that is genuinely a continuation. New work for the same client is a new project, with its own reference.',
+      detail: 'For more of the same work. New work is a new project.',
       tone: 'quiet',
     },
-    { to: 'handover', label: 'Reopen — handover was not finished', tone: 'quiet' },
+    { to: 'handover', label: 'Reopen the handover', tone: 'quiet' },
   ],
   on_hold: [],
   cancelled: [
     {
       to: 'lead',
       label: 'It is back on',
-      detail: 'Returns to the top of the pipeline rather than to where it died, because a revived deal is renegotiated in practice. The cancellation stays in the history.',
+      detail: 'Starts again as a lead.',
       tone: 'quiet',
     },
   ],
@@ -212,8 +213,8 @@ export async function transitionsFor(project: {
     // No readable hold origin. Rather than guess, offer the two ends that are
     // always honest: pick the work up, or close it out.
     return [
-      { to: 'in_progress', label: 'Pick the work back up', tone: 'primary' },
-      { to: 'closed', label: 'Close it out without resuming', tone: 'quiet' },
+      { to: 'in_progress', label: 'Resume the work', tone: 'primary' },
+      { to: 'closed', label: 'Close without resuming', tone: 'quiet' },
       { to: 'cancelled', label: 'Cancel this project', tone: 'danger' },
     ];
   }
@@ -222,7 +223,7 @@ export async function transitionsFor(project: {
   const seen = new Set<ProjectStatus>();
   const resume: Transition[] = [];
 
-  for (const candidate of [{ to: held, label: `Resume at ${held.replace(/_/g, ' ')}`, tone: 'primary' as const }, ...onward]) {
+  for (const candidate of [{ to: held, label: `Resume (${STAFF_LABEL[held].toLowerCase()})`, tone: 'primary' as const }, ...onward]) {
     if (seen.has(candidate.to) || candidate.to === 'on_hold') continue;
     seen.add(candidate.to);
     resume.push(candidate);
@@ -358,7 +359,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     if (facts.currencies.length > 1) {
       guards.push({
         severity: 'block',
-        message: `This project has priced lines in ${facts.currencies.join(' and ')}. Nothing here converts between currencies, so no correct total can be printed on a document the client keeps. Put every line in one currency first.`,
+        message: `Fees are in more than one currency (${facts.currencies.join(' and ')}). Put them all in one currency first.`,
       });
     }
   }
@@ -366,7 +367,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
   if (to === 'contract_sent' && facts.linesUnpriced > 0) {
     guards.push({
       severity: 'block',
-      message: `${facts.linesUnpriced} fee line${facts.linesUnpriced === 1 ? ' has' : 's have'} no price. An agreement cannot be sent with a blank amount in it.`,
+      message: `${facts.linesUnpriced} fee${facts.linesUnpriced === 1 ? ' has' : 's have'} no price yet. Price ${facts.linesUnpriced === 1 ? 'it' : 'them'} first.`,
     });
   }
 
@@ -374,14 +375,14 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'warn',
       message:
-        'No signature is recorded against this project. If it was signed on paper or over email, say so in the note — otherwise there is nothing on file showing what they agreed to.',
+        'No signature is on file. If it was signed on paper or by email, say so in the note.',
     });
   }
 
   if (to === 'proposal_accepted' && facts.openSignatureRequests > 0) {
     guards.push({
       severity: 'warn',
-      message: `There ${facts.openSignatureRequests === 1 ? 'is 1 signing request' : `are ${facts.openSignatureRequests} signing requests`} still open. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} so the client cannot sign a version you have moved on from.`,
+      message: `${facts.openSignatureRequests === 1 ? 'A document is' : `${facts.openSignatureRequests} documents are`} still waiting for the client's signature. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first.`,
     });
   }
 
@@ -390,22 +391,22 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       severity: 'warn',
       message:
         facts.invoicedMinor === 0
-          ? `Nothing has been invoiced on this project yet, and the committed value is ${money(facts.committedMinor)}. Starting is your call — but raise the deposit invoice, because nobody will chase what was never sent.`
-          : `${money(facts.invoicedMinor)} has been invoiced and no payment has been recorded. That may only mean nobody has entered it yet. Check before the team starts.`,
+          ? `Nothing has been invoiced yet (${money(facts.committedMinor)} agreed). Consider sending the deposit invoice.`
+          : `${money(facts.invoicedMinor)} is invoiced but no payment is recorded yet.`,
     });
   }
 
   if (to === 'launched' && facts.recurringWithoutDueDate > 0) {
     guards.push({
       severity: 'block',
-      message: `${facts.recurringWithoutDueDate} recurring line${facts.recurringWithoutDueDate === 1 ? ' has' : 's have'} no next due date. A renewal with no date never fires — it is not late, it simply never happens, and the first anyone notices is when the domain expires. Set the date first.`,
+      message: `${facts.recurringWithoutDueDate} recurring fee${facts.recurringWithoutDueDate === 1 ? ' needs' : 's need'} a renewal date. Add ${facts.recurringWithoutDueDate === 1 ? 'it' : 'them'} first.`,
     });
   }
 
   if (to === 'launched' && facts.outstandingAssetRequests > 0) {
     guards.push({
       severity: 'warn',
-      message: `${facts.outstandingAssetRequests} thing${facts.outstandingAssetRequests === 1 ? '' : 's'} you asked the client for ${facts.outstandingAssetRequests === 1 ? 'is' : 'are'} still outstanding. Going live without them is fine if they are not needed — mark them waived so the client stops seeing the request in their portal.`,
+      message: `The client still owes ${facts.outstandingAssetRequests} item${facts.outstandingAssetRequests === 1 ? '' : 's'}. If ${facts.outstandingAssetRequests === 1 ? 'it is' : 'they are'} not needed, mark ${facts.outstandingAssetRequests === 1 ? 'it' : 'them'} as not needed.`,
     });
   }
 
@@ -413,13 +414,13 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     if (facts.outstandingMinor > 0) {
       guards.push({
         severity: 'warn',
-        message: `${money(facts.outstandingMinor)} has been invoiced and not settled. Handing over is a decision you can make anyway — but it is much harder to collect afterwards.`,
+        message: `${money(facts.outstandingMinor)} is still unpaid. It is harder to collect after handover.`,
       });
     }
     if (facts.uninvoicedOneOffMinor > 0) {
       guards.push({
         severity: 'warn',
-        message: `${money(facts.uninvoicedOneOffMinor)} of build fees has never been invoiced at all. That is our omission rather than theirs — raise it before the work leaves our hands.`,
+        message: `${money(facts.uninvoicedOneOffMinor)} of fees has not been invoiced yet.`,
       });
     }
   }
@@ -439,28 +440,28 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'block',
       message:
-        'This project has already been delivered, so it cannot be cancelled — a cancelled record carrying a launch date would misstate what happened. Close it instead, and put the reason in the note.',
+        'Already delivered. Close it instead.',
     });
   }
 
   if (to === 'closed' && (facts.liveRecurringLines > 0 || facts.activeManagedServices > 0)) {
     guards.push({
       severity: 'warn',
-      message: `This project still carries ${facts.liveRecurringLines} recurring fee line${facts.liveRecurringLines === 1 ? '' : 's'} and ${facts.activeManagedServices} live service${facts.activeManagedServices === 1 ? '' : 's'}. Closing does not stop either: hosting under a closed website still costs money every year. Decide per item — transfer it, cancel it, or keep billing it — and say which in the note.`,
+      message: `${facts.liveRecurringLines} recurring fee${facts.liveRecurringLines === 1 ? '' : 's'} and ${facts.activeManagedServices} service${facts.activeManagedServices === 1 ? '' : 's'} are still active. Closing does not stop them. Say in the note what happens to each.`,
     });
   }
 
   if (to === 'cancelled' && facts.paidMinor > 0) {
     guards.push({
       severity: 'warn',
-      message: `${money(facts.paidMinor)} has already been paid on this project. Cancelling does not refund it or void the invoices. Say in the note what is happening to that money.`,
+      message: `${money(facts.paidMinor)} has been paid. Cancelling does not refund it. Say in the note what happens to it.`,
     });
   }
 
   if (to === 'cancelled' && facts.openSignatureRequests > 0) {
     guards.push({
       severity: 'block',
-      message: `${facts.openSignatureRequests} signing request${facts.openSignatureRequests === 1 ? ' is' : 's are'} still open. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first, or the client can sign an agreement for a project that no longer exists.`,
+      message: `${facts.openSignatureRequests === 1 ? 'A document is' : `${facts.openSignatureRequests} documents are`} still out for signature. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first.`,
     });
   }
 

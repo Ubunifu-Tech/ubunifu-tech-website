@@ -2,16 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import {
-  AssetRequestStatus,
-  LineItemStatus,
-  ProjectStatus,
-} from '@/generated/prisma/client';
+import { AssetRequestStatus, ProjectStatus } from '@/generated/prisma/client';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { projectUpdateEmail } from '@/lib/emails';
-import { formatMoney, parseDateInput, parseMoney, toDateInputValue } from '@/lib/console/money';
 import {
   guardsFor,
   isAllowed,
@@ -21,15 +16,6 @@ import {
 } from '@/lib/console/transitions';
 import { formText } from '@/lib/console/form';
 
-/** Statuses a fee line can be put into by hand. */
-const LINE_STATUSES: LineItemStatus[] = [
-  LineItemStatus.planned,
-  LineItemStatus.active,
-  LineItemStatus.deferred,
-  LineItemStatus.paused,
-  LineItemStatus.waived,
-  LineItemStatus.cancelled,
-];
 
 const ASSET_STATUSES: AssetRequestStatus[] = [
   AssetRequestStatus.requested,
@@ -190,119 +176,6 @@ export async function moveProject(
 }
 
 export type EditState = { status: 'idle' | 'done' | 'error'; message?: string };
-
-/**
- * Prices a fee line and dates its renewal.
- *
- * These two fields are what the launch and contract guards are about, so this
- * is the screen that makes those guards satisfiable. A guard with no way to
- * clear it is not a guard, it is a dead end that teaches people to look for a
- * way round the system.
- */
-export async function saveLineItem(
-  _previous: EditState,
-  formData: FormData,
-): Promise<EditState> {
-  const staff = await requireStaff();
-
-  const lineItemId = String(formData.get('lineItemId') ?? '');
-  const line = await db.lineItem.findUnique({
-    where: { id: lineItemId },
-    select: {
-      id: true,
-      label: true,
-      currency: true,
-      billingKind: true,
-      // The current values, so the audit line can say what changed rather than
-      // only what it changed to.
-      amountMinor: true,
-      status: true,
-      nextDueAt: true,
-      project: { select: { slug: true, deletedAt: true } },
-    },
-  });
-
-  if (!line || line.project.deletedAt) {
-    return { status: 'error', message: 'That fee line no longer exists.' };
-  }
-
-  const amountRaw = String(formData.get('amount') ?? '').trim();
-  const amountMinor = amountRaw === '' ? 0 : parseMoney(amountRaw, line.currency);
-  if (amountMinor === null) {
-    return { status: 'error', message: 'That amount could not be read. Digits and a decimal point.' };
-  }
-  if (amountMinor < 0) {
-    return { status: 'error', message: 'An amount cannot be negative. Use a credit note instead.' };
-  }
-
-  const recurring =
-    line.billingKind === 'recurring_monthly' || line.billingKind === 'recurring_annual';
-  const dueRaw = String(formData.get('nextDueAt') ?? '').trim();
-  const nextDueAt = recurring && dueRaw ? parseDateInput(dueRaw) : null;
-
-  if (recurring && dueRaw && !nextDueAt) {
-    return { status: 'error', message: 'That date could not be read.' };
-  }
-
-  const statusRaw = String(formData.get('lineStatus') ?? '');
-  const status = (LINE_STATUSES as string[]).includes(statusRaw)
-    ? (statusRaw as LineItemStatus)
-    : undefined;
-
-  await db.lineItem.update({
-    where: { id: line.id },
-    data: {
-      amountMinor,
-      ...(recurring ? { nextDueAt } : {}),
-      ...(status ? { status } : {}),
-    },
-  });
-
-  /**
-   * Only what actually differs, with both values.
-   *
-   * The previous version recorded the new amount alone, in raw minor units,
-   * and said nothing about status or renewal date — so moving a line from
-   * planned to waived wrote a row that read like a price edit, and nobody
-   * could tell afterwards what the price had been. A price change is the one
-   * thing on a project a client is most likely to dispute.
-   */
-  const changes: Record<string, [string, string]> = {};
-
-  if (line.amountMinor !== amountMinor) {
-    changes.amount = [
-      formatMoney(line.amountMinor, line.currency),
-      formatMoney(amountMinor, line.currency),
-    ];
-  }
-  if (status && status !== line.status) {
-    changes.status = [line.status, status];
-  }
-  if (recurring && line.nextDueAt?.getTime() !== nextDueAt?.getTime()) {
-    changes.renewsOn = [
-      line.nextDueAt ? toDateInputValue(line.nextDueAt) : 'not set',
-      nextDueAt ? toDateInputValue(nextDueAt) : 'not set',
-    ];
-  }
-
-  // Saving a form without touching anything is not an event.
-  if (Object.keys(changes).length > 0) {
-    await recordAudit({
-      actorType: 'staff',
-      actorId: staff.id,
-      action: 'line_item.saved',
-      entityType: 'LineItem',
-      entityId: line.id,
-      summary: `${line.label}: ${Object.entries(changes)
-        .map(([field, [before, after]]) => `${field} ${before} → ${after}`)
-        .join(', ')}`,
-      metadata: { changes },
-    });
-  }
-
-  revalidatePath(`/admin/projects/${line.project.slug}`);
-  return { status: 'done', message: Object.keys(changes).length > 0 ? 'Saved.' : 'Nothing changed.' };
-}
 
 /** Ticking a deliverable off. The client sees this in their portal. */
 export async function toggleDeliverable(

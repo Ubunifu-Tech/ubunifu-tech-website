@@ -32,6 +32,10 @@ globals.HTMLElement = dom.window.HTMLElement;
 
 const { getSchema, generateJSON } = await import('@tiptap/core');
 const { default: StarterKit } = await import('@tiptap/starter-kit');
+const { CharacterCount } = await import('@tiptap/extension-character-count');
+const { Image } = await import('@tiptap/extension-image');
+const { Table, TableCell, TableHeader, TableRow } = await import('@tiptap/extension-table');
+const { Typography } = await import('@tiptap/extension-typography');
 const { renderMarkdown } = await import('../src/lib/console/markdown');
 const { documentToMarkdown } = await import('../src/lib/console/tiptap');
 
@@ -39,27 +43,41 @@ const { documentToMarkdown } = await import('../src/lib/console/tiptap');
  * The same configuration the editor uses. If these drift apart the test stops
  * proving anything, so any change in RichText.tsx belongs here too.
  */
-const extensions = [
-  StarterKit.configure({
-    heading: { levels: [3, 4, 5] },
-    code: false,
-    codeBlock: false,
-    blockquote: false,
-    strike: false,
-    link: false,
-    underline: false,
-  }),
-];
+function extensionsFor(profile: 'document' | 'post') {
+  const base = [
+    StarterKit.configure({
+      heading: { levels: [3, 4, 5] },
+      link: { openOnClick: false, autolink: true, protocols: ['http', 'https'] },
+      underline: false,
+      code: profile === 'post' ? undefined : (false as const),
+      codeBlock: profile === 'post' ? undefined : (false as const),
+    }),
+    Typography,
+    Table.configure({ resizable: false }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    CharacterCount,
+  ];
+  if (profile === 'post') {
+    base.push(Image.configure({ inline: false, allowBase64: false }) as never);
+  }
+  return base;
+}
 
-getSchema(extensions);
+// Fails loudly if a configuration cannot produce a valid schema at all.
+getSchema(extensionsFor('document'));
+getSchema(extensionsFor('post'));
 
-function roundTrip(markdown: string): string {
+function roundTrip(markdown: string, profile: 'document' | 'post'): string {
   const html = renderMarkdown(markdown) || '<p></p>';
-  const json = generateJSON(html, extensions);
+  const json = generateJSON(html, extensionsFor(profile));
   return documentToMarkdown(json);
 }
 
-const CASES: { name: string; markdown: string }[] = [
+type Case = { name: string; markdown: string; profile?: 'document' | 'post' };
+
+const CASES: Case[] = [
   { name: 'empty', markdown: '' },
   { name: 'one paragraph', markdown: 'A single line of plain text.' },
   {
@@ -112,17 +130,86 @@ Six weeks from kick-off.`,
     name: 'a TO CONFIRM marker',
     markdown: 'The balance is due [TO CONFIRM: how many days after handover].',
   },
+  { name: 'a quote', markdown: '> They said the site paid for itself in a season.' },
+  {
+    name: 'strikethrough',
+    markdown: 'The fee is ~~US$200.00~~ **US$150.00**.',
+  },
+  {
+    name: 'links, internal and external',
+    markdown:
+      'See [our work](/work) and [the brief](https://example.com/brief) before signing.',
+  },
+  {
+    name: 'a fee table',
+    markdown: `## Fees
+
+| Item | When | Amount |
+| --- | --- | --- |
+| Deposit | Kick-off | **US$75.00** |
+| Balance | Handover | **US$75.00** |`,
+  },
+  {
+    name: 'a table with a pipe inside a cell',
+    markdown: `| Option | Note |
+| --- | --- |
+| A \\| B | Either one |`,
+  },
+  {
+    name: 'inline code',
+    markdown: 'Set `DATABASE_URL` before the build runs.',
+    profile: 'post',
+  },
+  {
+    name: 'a fenced code block',
+    markdown: '```ts\nconst total = lines.reduce((sum, line) => sum + line.amountMinor, 0);\n```',
+    profile: 'post',
+  },
+  {
+    name: 'an image',
+    markdown: '![A workbench with two paths](/editorial/build-or-buy.webp)',
+    profile: 'post',
+  },
+  {
+    name: 'a dangerous link is neutralised',
+    markdown: 'Careful with [this one](javascript:alert(1)) please.',
+  },
+  {
+    name: 'everything at once',
+    markdown: `## Scope
+
+A build for **Nifuate**, covering [treks](/work) and beach excursions.
+
+> Agreed on the call of 14 September.
+
+### What is included
+
+- Domain and hosting
+- ~~Print collateral~~ removed from scope
+- Responsive pages
+
+| Stage | Amount |
+| --- | --- |
+| Deposit | US$75.00 |
+| Balance | US$75.00 |
+
+---
+
+1. Kick-off
+2. Handover`,
+  },
 ];
 
 const failures: string[] = [];
 
 for (const testCase of CASES) {
+  const profile = testCase.profile ?? 'document';
   const before = renderMarkdown(testCase.markdown);
-  const after = renderMarkdown(roundTrip(testCase.markdown));
+  const after = renderMarkdown(roundTrip(testCase.markdown, profile));
 
   if (before !== after) {
     failures.push(
-      `${testCase.name}:\n  before: ${JSON.stringify(before)}\n  after:  ${JSON.stringify(after)}`,
+      `${testCase.name} (${profile}):\n  before: ${JSON.stringify(before)}\n  after:  ${JSON.stringify(after)}`,
     );
   }
 }

@@ -28,15 +28,10 @@ export default async function AdminSignIn() {
         <h1 className={auth.heading}>
           Sign in to the <span className={auth.headingAccent}>console</span>
         </h1>
-        <p className={auth.lead}>
-          Ubunifu staff only. This page is not served on ubunifutech.com.
-        </p>
+        <p className={auth.lead}>For the Ubunifu team.</p>
         <div className={auth.card}>
           <SignInForm />
         </div>
-        <p className={auth.foot}>
-          Looking for your project portal? It is at ubunifutech.com/portal.
-        </p>
       </div>
     </AuthLayout>
   );

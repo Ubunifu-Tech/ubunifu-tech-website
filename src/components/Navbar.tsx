@@ -131,6 +131,9 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className={styles.actions}>
+            <Link href="/portal" className={styles.login}>
+              {cta.portal}
+            </Link>
             <Link href="/contact" className={styles.cta}>
               {cta.primary}
               <ArrowRight aria-hidden="true" size={17} strokeWidth={1.9} />
@@ -185,6 +188,9 @@ export const Navbar: React.FC = () => {
           <Link href="/contact" className={styles.mobileCta} onClick={closeMobileMenu}>
             {cta.primary}
             <ArrowRight aria-hidden="true" size={19} strokeWidth={1.9} />
+          </Link>
+          <Link href="/portal" className={styles.mobileLogin} onClick={closeMobileMenu}>
+            {cta.portal}
           </Link>
         </div>
       </div>

@@ -25,6 +25,8 @@ export const cta = {
   primary: 'Start a project',
   /** Anything that sends someone to /work. */
   secondary: 'See our work',
+  /** Where a client signs in to their project portal. */
+  portal: 'Client login',
 } as const;
 
 // Navigation links - order = display order.
@@ -80,6 +82,7 @@ export const footerColumns: ReadonlyArray<{
       { label: 'Insights', href: '/blog' },
       { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
+      { label: 'Client login', href: '/portal' },
     ],
   },
 ];

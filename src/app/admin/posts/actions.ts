@@ -6,6 +6,8 @@ import { db } from '@/lib/db';
 import { requireStaff, recordAudit } from '@/lib/console/auth';
 import { formatDate, parseDateInput } from '@/lib/console/money';
 import { slugify } from '@/lib/console/onboarding';
+import { parseMediaFile } from '@/lib/console/media';
+import { formText } from '@/lib/console/form';
 
 export type PostState = {
   status: 'idle' | 'done' | 'error';
@@ -18,7 +20,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const COVER_PATTERN = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.(?:avif|jpe?g|png|webp)$/i;
 
 function text(formData: FormData, key: string): string {
-  return String(formData.get(key) ?? '').trim();
+  return formText(formData, key);
 }
 
 /**
@@ -146,6 +148,26 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
       message: 'The cover should be a site path like /editorial/name.webp — avif, jpg, png or webp.',
       field: 'coverImage',
     };
+  }
+
+  // An uploaded image's address passes the pattern whether or not the image
+  // exists, so a mistyped or since-removed one would be saved and then shown
+  // on the live site as a broken picture. Check it is really there.
+  if (coverImage.startsWith('/media/')) {
+    const file = parseMediaFile(coverImage);
+    const exists =
+      file &&
+      (await db.mediaAsset.findFirst({
+        where: { id: file.id, extension: file.extension, deletedAt: null },
+        select: { id: true },
+      }));
+    if (!exists) {
+      return {
+        status: 'error',
+        message: 'There is no uploaded image at that address. Upload it again, or clear the field.',
+        field: 'coverImage',
+      };
+    }
   }
 
   // A published post has to stay publishable. setPostStatus refuses to put a

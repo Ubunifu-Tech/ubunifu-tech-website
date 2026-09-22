@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { type Extensions } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -64,6 +64,7 @@ export function RichText({
   label,
   hint,
   onMarkdownChange,
+  uploadImage,
 }: {
   name: string;
   initialMarkdown: string;
@@ -73,8 +74,21 @@ export function RichText({
   label: string;
   hint?: string;
   onMarkdownChange?: (markdown: string) => void;
+  /**
+   * Given a file, stores it and returns its address. When present the Image
+   * button picks a file instead of asking for a path — a post's pictures no
+   * longer have to be committed to the repository before they can be used.
+   */
+  uploadImage?: (
+    file: File,
+    onProgress: (percent: number) => void,
+  ) => Promise<{ ok: true; path: string } | { ok: false; message: string }>;
 }) {
   const [markdown, setMarkdown] = useState(initialMarkdown);
+  // Looked up by id when the button is pressed, rather than held in a ref the
+  // toolbar would read while rendering.
+  const fileInputId = useId();
+  const [imageStatus, setImageStatus] = useState<string | null>(null);
 
   const initialHtml = useMemo(
     () => renderMarkdown(initialMarkdown) || '<p></p>',
@@ -185,11 +199,40 @@ export function RichText({
 
   const addImage = useCallback(() => {
     if (!editor) return;
+    if (uploadImage) {
+      document.getElementById(fileInputId)?.click();
+      return;
+    }
     const src = window.prompt('Image address — a path like /editorial/name.webp, or a full URL');
     if (!src?.trim()) return;
     const alt = window.prompt('Describe the image for anyone who cannot see it') ?? '';
     editor.chain().focus().setImage({ src: src.trim(), alt }).run();
-  }, [editor]);
+  }, [editor, uploadImage, fileInputId]);
+
+  const onImagePicked = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file || !editor || !uploadImage) return;
+
+      setImageStatus(`Uploading ${file.name}…`);
+      const result = await uploadImage(file, (percent) =>
+        setImageStatus(`Uploading ${file.name} — ${percent}%`),
+      );
+      if (!result.ok) {
+        setImageStatus(result.message);
+        return;
+      }
+
+      // Asked after the upload, not before: a description of a picture that
+      // then failed to arrive is a question wasted.
+      const alt =
+        window.prompt('Describe the image for anyone who cannot see it', '')?.trim() ?? '';
+      editor.chain().focus().setImage({ src: result.path, alt }).run();
+      setImageStatus(alt ? null : 'Added without a description — screen readers will skip it.');
+    },
+    [editor, uploadImage],
+  );
 
   const words = editor?.storage.characterCount?.words?.() ?? 0;
 
@@ -264,8 +307,26 @@ export function RichText({
           stored format has not changed. */}
       <input type="hidden" name={name} value={markdown} />
 
+      {uploadImage && (
+        <input
+          id={fileInputId}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+          className={styles.fileInput}
+          onChange={onImagePicked}
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      )}
+
       <div className={styles.foot}>
-        {hint && <p className={styles.hint}>{hint}</p>}
+        {imageStatus ? (
+          <p className={styles.hint} role="status" aria-live="polite">
+            {imageStatus}
+          </p>
+        ) : (
+          hint && <p className={styles.hint}>{hint}</p>
+        )}
         <p className={styles.count}>
           {words} {words === 1 ? 'word' : 'words'}
         </p>

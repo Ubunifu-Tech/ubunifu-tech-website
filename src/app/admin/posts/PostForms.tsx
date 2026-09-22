@@ -3,6 +3,7 @@
 import React, { useActionState, useState } from 'react';
 import { archivePost, createPost, savePost, setPostStatus, type PostState } from './actions';
 import { RichText } from '@/components/console/RichText';
+import { uploadWebsiteImage } from '@/components/console/uploadWebsiteImage';
 import { DateField, TextAreaField, TextField } from '@/components/console/Fields';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -77,6 +78,40 @@ export type PostDraft = {
 export function PostEditor({ post }: { post: PostDraft }) {
   const [state, action, pending] = useActionState(savePost, INITIAL);
   const [body, setBody] = useState(post.body);
+  // Controlled, so an upload can fill it in — and so a rejected save does not
+  // hand back an empty box after the author picked a picture.
+  const [coverImage, setCoverImage] = useState(post.coverImage);
+  const [coverAlt, setCoverAlt] = useState(post.coverAlt);
+  const [coverStatus, setCoverStatus] = useState<string | null>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
+
+  async function onCoverPicked(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    // GIFs are fine inside a post, but a cover sits on a card beside other
+    // cards, and one that moves pulls every eye on the page to itself.
+    if (file.type === 'image/gif') {
+      setCoverStatus('A cover has to be a still image — JPG, PNG, WebP or AVIF. A GIF can go inside the post.');
+      return;
+    }
+    setCoverBusy(true);
+    setCoverStatus(`Uploading ${file.name}…`);
+    const result = await uploadWebsiteImage(file, (percent) =>
+      setCoverStatus(`Uploading ${file.name} — ${percent}%`),
+    );
+    setCoverBusy(false);
+    if (!result.ok) {
+      setCoverStatus(result.message);
+      return;
+    }
+    setCoverImage(result.path);
+    setCoverStatus(
+      coverAlt.trim()
+        ? 'Uploaded. Save to use it.'
+        : 'Uploaded. Describe it below, then save — a cover needs both.',
+    );
+  }
 
   const words = body.trim().split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.round(words / 200));
@@ -127,7 +162,8 @@ export function PostEditor({ post }: { post: PostDraft }) {
               onMarkdownChange={setBody}
               disabled={pending}
               minHeight="tall"
-              hint="Headings, lists, quotes, links, code and images. An image needs a path the site already serves, like /editorial/name.webp."
+              uploadImage={uploadWebsiteImage}
+              hint="Headings, lists, quotes, links, code and images. The Image button uploads a picture from your computer."
             />
           </div>
         </div>
@@ -138,22 +174,63 @@ export function PostEditor({ post }: { post: PostDraft }) {
           <h2 className={forms.cardTitle}>How it appears</h2>
         </div>
         <div className={forms.grid}>
-          <TextField
-            name="coverImage"
-            label="Cover image"
-            optional
-            defaultValue={post.coverImage}
-            maxLength={200}
-            placeholder="/editorial/name.webp"
-            invalid={state.field === 'coverImage'}
-            disabled={pending}
-            hint="Leave it empty and the post gets one of the six standard illustrations, picked from its address. It will not change afterwards."
-          />
+          <div className={`${forms.field} ${forms.wide}`}>
+            <TextField
+              name="coverImage"
+              label="Cover image"
+              optional
+              value={coverImage}
+              onChange={(event) => setCoverImage(event.target.value)}
+              maxLength={200}
+              placeholder="/editorial/name.webp"
+              invalid={state.field === 'coverImage'}
+              disabled={pending || coverBusy}
+              hint="Upload one, or leave it empty and the post gets one of the six standard illustrations, picked from its address."
+            />
+            <div className={styles.inlineForm}>
+              <label className={`${forms.button} ${forms.quiet} ${styles.uploadLabel}`} aria-disabled={pending || coverBusy}>
+                {coverBusy ? 'Uploading…' : coverImage ? 'Replace the cover' : 'Upload a cover'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className={styles.visuallyHidden}
+                  onChange={onCoverPicked}
+                  disabled={pending || coverBusy}
+                />
+              </label>
+              {coverImage && !coverBusy && (
+                <button
+                  type="button"
+                  className={`${forms.button} ${forms.quiet}`}
+                  onClick={() => {
+                    setCoverImage('');
+                    setCoverAlt('');
+                    setCoverStatus('Removed. Save to go back to the standard illustration.');
+                  }}
+                  disabled={pending}
+                >
+                  Use the standard illustration
+                </button>
+              )}
+            </div>
+            {coverStatus && (
+              <p className={forms.hint} role="status" aria-live="polite">
+                {coverStatus}
+              </p>
+            )}
+            {/* What was chosen, before anyone saves it. A path is not a picture. */}
+            {coverImage && /^\/(?:media|editorial)\//.test(coverImage) && (
+              // eslint-disable-next-line @next/next/no-img-element -- a console preview of whatever path was typed; next/image would refuse an unknown one rather than show it broken.
+              <img src={coverImage} alt="" className={styles.coverPreview} />
+            )}
+          </div>
           <TextField
             name="coverAlt"
             label="Describe the cover"
             optional
-            defaultValue={post.coverAlt}
+            wide
+            value={coverAlt}
+            onChange={(event) => setCoverAlt(event.target.value)}
             maxLength={300}
             invalid={state.field === 'coverAlt'}
             disabled={pending}

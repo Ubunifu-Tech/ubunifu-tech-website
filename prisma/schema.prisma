@@ -61,6 +61,7 @@ model StaffUser {
   payments        Payment[]
   timeEntries     TimeEntry[]
   posts           Post[]
+  mediaAssets     MediaAsset[]
 
   @@index([isActive])
 }
@@ -1028,6 +1029,35 @@ model TimeEntry {
 // ─────────────────────────────────────────────────────────────────────────────
 // CMS
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// Images for the public website: journal covers, and images inside posts.
+///
+/// A separate table from FileUpload ON PURPOSE. /media/<id> serves these to
+/// anyone, with no session, because a blog image has to load for a stranger
+/// reading the blog. A public route that can only ever query this table cannot
+/// — by construction, not by a WHERE clause somebody might one day get wrong —
+/// hand out a client's contract, invoice or founder bio. Those live in
+/// FileUpload and are only ever served behind a session check.
+///
+/// The bytes are in the same private blob store as everything else; the route
+/// is the only door, which is what keeps the address on our own domain.
+model MediaAsset {
+  id           String     @id @default(cuid())
+  storageKey   String     @unique
+  /// As the uploader's computer had it. Shown in the console, never in a URL.
+  filename     String
+  contentType  String
+  /// The extension the public URL carries, derived from contentType on the
+  /// way in so there is exactly one address per image.
+  extension    String
+  sizeBytes    Int
+  uploadedById String?
+  uploadedBy   StaffUser? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+  deletedAt    DateTime?
+
+  @@index([createdAt])
+}
 
 enum PostStatus {
   draft

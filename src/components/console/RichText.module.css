@@ -289,3 +289,14 @@
   line-height: 1.5;
   white-space: nowrap;
 }
+
+/* The real file input, kept out of sight: the toolbar's Image button is what
+   people press, and this is only what that button opens. */
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

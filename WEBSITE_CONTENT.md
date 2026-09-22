@@ -112,6 +112,10 @@ Journal articles live in the `Post` table and are written in the console at `/po
 
 The Markdown files in [`_posts/`](_posts/) are the fallback for a build with no `DATABASE_URL` — a preview of a marketing change with no database attached — and they are parsed by [`src/lib/blog-files.ts`](src/lib/blog-files.ts). When a database is configured, a failure to read it fails the page rather than quietly serving the files, because republishing a post that was taken down is worse than a page that stops. `npm run check:blog-parity` asserts the two sources still say the same thing; [`scripts/import-posts.mts`](scripts/import-posts.mts) is what moved the files into the table.
 
+**Images and covers.** Pictures for a post are uploaded from the console — the cover field's upload button, and the editor's Image button for pictures inside the body. They are stored privately in Vercel Blob and served from our own domain at `/media/<id>.<ext>`, so link previews read `ubunifutech.com` and `next/image` needs no remote-host configuration. `/media` can only ever read the `MediaAsset` table, never a client's files. Covers must be still images (JPG, PNG, WebP, AVIF); GIFs can go inside a post. A post saved with a `/media/…` cover is checked against the table so a mistyped or removed image is refused rather than shown broken.
+
+A post with no cover gets one of the six standing wordless compositions, chosen by hashing its slug ([`src/content/blog-covers.ts`](src/content/blog-covers.ts)) — distinct from its neighbours and fixed for the life of the post.
+
 Standard frontmatter (`coverImage` and `coverAlt` are an optional pair):
 
 ```yaml

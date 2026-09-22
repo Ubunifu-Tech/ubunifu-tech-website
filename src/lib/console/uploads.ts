@@ -228,8 +228,22 @@ function disposition(contentType: string, filename: string): string {
 }
 
 /**
- * Streams a stored file back, for a route that has already decided the reader
- * is allowed to have it. It takes no session and makes no decision of its own.
+ * How a stored object is sent back. The two callers differ in exactly these:
+ *
+ *   private — a client's file. Never cached anywhere but the reader's own
+ *             browser session, disposition decided by type.
+ *   public  — a website image. Cached by every CDN for a year, because its
+ *             address is its id and an id never gets different bytes: a
+ *             replaced image is a new upload with a new address.
+ */
+export type StreamOptions = {
+  filename: string;
+  cache: 'private' | 'public';
+};
+
+/**
+ * Streams a stored object back, for a route that has ALREADY decided the reader
+ * may have it. It takes no session and makes no decision of its own.
  *
  * The object is fetched BY PATHNAME, not by the stored URL. The SDK rebuilds
  * the address from the store id, so even a storageKey that somehow pointed at
@@ -237,14 +251,14 @@ function disposition(contentType: string, filename: string): string {
  * as well, but the pathname is what makes the check redundant rather than
  * load-bearing.
  */
-export async function streamUpload(storageKey: string, filename: string): Promise<Response> {
+export async function streamBlob(storageKey: string, options: StreamOptions): Promise<Response> {
   let pathname: string;
   try {
     const parsed = new URL(storageKey);
     if (!BLOB_HOST.test(parsed.hostname)) return new Response(null, { status: 404 });
     pathname = parsed.pathname.replace(/^\//, '');
   } catch {
-    // Not a URL at all. Nothing written by recordAssetUpload looks like this.
+    // Not a URL at all. Nothing written by this module looks like this.
     return new Response(null, { status: 404 });
   }
 
@@ -275,9 +289,10 @@ export async function streamUpload(storageKey: string, filename: string): Promis
   return new Response(result.stream, {
     headers: {
       'Content-Type': result.blob.contentType,
-      'Content-Disposition': disposition(result.blob.contentType, filename),
+      'Content-Disposition': disposition(result.blob.contentType, options.filename),
       'Content-Length': String(result.blob.size),
-      'Cache-Control': 'private, no-store',
+      'Cache-Control':
+        options.cache === 'public' ? 'public, max-age=31536000, immutable' : 'private, no-store',
       // nosniff stops a mislabelled file being re-read as HTML; the sandbox
       // CSP means that even if one ever were, it would run no script, load
       // nothing and reach no cookie. Inline rendering is why both are here.
@@ -285,4 +300,9 @@ export async function streamUpload(storageKey: string, filename: string): Promis
       'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
     },
   });
+}
+
+/** A client's file: private caching, disposition by type. */
+export function streamUpload(storageKey: string, filename: string): Promise<Response> {
+  return streamBlob(storageKey, { filename, cache: 'private' });
 }

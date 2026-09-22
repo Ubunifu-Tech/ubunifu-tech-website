@@ -906,3 +906,44 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Hidden from sight, not from the form. The label around it is the control
+   people press; the input only has to exist for the label to open it. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The cover as chosen, at the proportions the article page gives it. */
+.coverPreview {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  aspect-ratio: 16 / 9;
+  margin-top: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  object-fit: cover;
+}
+
+/* A label dressed as a button, around a hidden file input. Focus lands on the
+   input, which nobody can see, so the ring is drawn on the label instead —
+   the same ring a real button gets. */
+.uploadLabel {
+  cursor: pointer;
+}
+
+.uploadLabel:focus-within {
+  outline: 3px solid var(--primary-dim);
+  outline-offset: 2px;
+}
+
+.uploadLabel[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

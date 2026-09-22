@@ -61,7 +61,7 @@ export default async function BlogPage() {
             <div className={styles.empty}>
               <p>
                 The articles are not loading at the moment. This is our end, not yours, and it is
-                usually brief — refreshing in a minute or two normally does it.
+                usually brief. Refreshing in a minute or two normally does it.
               </p>
               <p>
                 In the meantime there is <Link href="/work">the work we have done</Link> and{' '}

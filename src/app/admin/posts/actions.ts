@@ -148,7 +148,7 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   if (coverImage && !COVER_PATTERN.test(coverImage)) {
     return {
       status: 'error',
-      message: 'The cover should be a site path like /editorial/name.webp — avif, jpg, png or webp.',
+      message: 'The cover should be a site path like /editorial/name.webp: avif, jpg, png or webp.',
       field: 'coverImage',
     };
   }
@@ -181,7 +181,7 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
     if (!excerpt) {
       return {
         status: 'error',
-        message: 'This is live, so it needs a summary — that is what the cards show. Take it down first to clear it.',
+        message: 'This is live, so it needs a summary. That is what the cards show. Take it down first to clear it.',
         field: 'excerpt',
       };
     }
@@ -257,7 +257,7 @@ export async function setPostStatus(
     if (!post.excerpt.trim()) {
       return {
         status: 'error',
-        message: 'It needs a summary before it can go live — that is what appears on the cards.',
+        message: 'It needs a summary before it can go live. That is what appears on the cards.',
       };
     }
     if (post.bodyMarkdown.trim().length < 200) {
@@ -325,7 +325,7 @@ export async function archivePost(_previous: PostState, formData: FormData): Pro
   if (post.status === 'published') {
     return {
       status: 'error',
-      message: 'Take it down first — archiving should not be how something leaves the blog.',
+      message: 'Take it down first, then archive it.',
     };
   }
 

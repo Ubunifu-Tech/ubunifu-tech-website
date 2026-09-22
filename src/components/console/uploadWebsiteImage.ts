@@ -22,7 +22,7 @@ export async function uploadWebsiteImage(
   if (!MEDIA_CONTENT_TYPES.includes(file.type)) {
     return {
       ok: false,
-      message: 'That is not an image the site can show — use JPG, PNG, WebP, AVIF or GIF.',
+      message: 'That is not an image the site can show. Use JPG, PNG, WebP, AVIF or GIF.',
     };
   }
   if (file.size > MAX_MEDIA_BYTES) {

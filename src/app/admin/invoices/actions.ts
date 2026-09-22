@@ -4,7 +4,9 @@ import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { PaymentMethod } from '@/generated/prisma/client';
+import { PaymentMethod, Prisma } from '@/generated/prisma/client';
+import { getOrg } from '@/lib/console/org';
+import { retryOnConflict } from '@/lib/console/conflict';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
@@ -21,6 +23,12 @@ import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 
 export type BillingState = { status: 'idle' | 'done' | 'error'; message?: string };
+
+/** Thrown inside the transaction when a fee was invoiced by someone else first. */
+class AlreadyBilled extends Error {}
+
+/** Thrown inside the transaction when a payment would take the invoice past paid. */
+class Overpaid extends Error {}
 
 /**
  * Raises an invoice from a project's fee lines.
@@ -62,7 +70,7 @@ export async function createInvoice(
     return {
       status: 'error',
       message:
-        'One of those is no longer billable — it may have been invoiced already. Reload and try again.',
+        'One of those can no longer be billed. It may have been invoiced already. Reload and try again.',
     };
   }
   if (lines.some((line) => line.amountMinor === 0)) {
@@ -83,47 +91,102 @@ export async function createInvoice(
   const dueAt = parseDateInput(String(formData.get('dueAt') ?? '').trim());
   const notes = formText(formData, 'notes');
 
-  const invoice = await db.$transaction(async (tx) => {
-    const number = await nextInvoiceNumber(tx);
-    const created = await tx.invoice.create({
-      data: {
-        number,
-        clientId: project.clientId,
-        projectId: project.id,
-        currency: currencies[0]!,
-        notes: notes || null,
-        dueAt,
-        lines: {
-          create: lines.map((line, index) => ({
-            lineItemId: line.lineItemId,
-            label: line.label,
-            // A renewal says which period it covers, because "Hosting" on its
-            // own tells a client nothing about which year they are paying for.
-            description:
-              line.periodStart && line.periodEnd
-                ? `${periodLabel(line.periodStart, line.periodEnd)}${line.terms ? ` · ${line.terms}` : ''}`
-                : line.terms,
-            amountMinor: line.amountMinor,
-            quantity: 1,
-            position: index,
-          })),
-        },
-      },
-      select: { id: true, number: true },
-    });
+  // VAT is added on top of the fees when the company charges it, at the rate
+  // in the billing details at the moment the invoice is raised.
+  const org = await getOrg();
+  const subtotal = lines.reduce((total, line) => total + line.amountMinor, 0);
+  const taxMinor =
+    org.chargesVat && org.vatRateBps > 0 ? Math.round((subtotal * org.vatRateBps) / 10_000) : 0;
 
-    // Marks each period invoiced and moves its line on to the next one. Throws
-    // if a period was billed between the read above and here, which rolls the
-    // whole invoice back rather than charging for it twice.
-    for (const line of lines) {
-      if (line.renewalEventId) {
-        await markRenewalInvoiced(tx, line.renewalEventId, created.id);
-      }
+  let invoice: { id: string; number: string };
+  try {
+    invoice = await retryOnConflict(() =>
+      db.$transaction(async (tx) => {
+        /**
+         * Two people invoicing the same fee at the same moment must not both
+         * succeed. The fee rows are locked for the length of this transaction and
+         * what is still unbilled is read again under the lock: the second invoice
+         * waits, sees the first, and stops. Renewal periods are guarded the same
+         * way by markRenewalInvoiced below.
+         */
+        const oneOff = lines.filter((line) => !line.renewalEventId);
+        if (oneOff.length > 0) {
+          const ids = oneOff.map((line) => line.lineItemId);
+          await tx.$queryRaw`SELECT id FROM "LineItem" WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
+          const current = await tx.lineItem.findMany({
+            where: { id: { in: ids } },
+            select: {
+              id: true,
+              amountMinor: true,
+              quantity: true,
+              invoiceLines: {
+                where: { invoice: { status: { not: 'void' } } },
+                select: { amountMinor: true, quantity: true },
+              },
+            },
+          });
+          for (const line of oneOff) {
+            const fee = current.find((row) => row.id === line.lineItemId);
+            const billed = (fee?.invoiceLines ?? []).reduce(
+              (t, l) => t + l.amountMinor * l.quantity,
+              0,
+            );
+            const left = fee ? fee.amountMinor * fee.quantity - billed : 0;
+            if (line.amountMinor > left) throw new AlreadyBilled();
+          }
+        }
+
+        const number = await nextInvoiceNumber(tx);
+        const created = await tx.invoice.create({
+          data: {
+            number,
+            clientId: project.clientId,
+            projectId: project.id,
+            currency: currencies[0]!,
+            notes: notes || null,
+            dueAt,
+            taxMinor,
+            lines: {
+              create: lines.map((line, index) => ({
+                lineItemId: line.lineItemId,
+                label: line.label,
+                // A renewal says which period it covers, because "Hosting" on its
+                // own tells a client nothing about which year they are paying for.
+                description:
+                  line.periodStart && line.periodEnd
+                    ? `${periodLabel(line.periodStart, line.periodEnd)}${line.terms ? ` · ${line.terms}` : ''}`
+                    : line.terms,
+                amountMinor: line.amountMinor,
+                quantity: 1,
+                position: index,
+              })),
+            },
+          },
+          select: { id: true, number: true },
+        });
+
+        // Marks each period invoiced and moves its line on to the next one. Throws
+        // if a period was billed between the read above and here, which rolls the
+        // whole invoice back rather than charging for it twice.
+        for (const line of lines) {
+          if (line.renewalEventId) {
+            await markRenewalInvoiced(tx, line.renewalEventId, created.id);
+          }
+        }
+
+        await recomputeInvoice(tx, created.id);
+        return created;
+      }),
+    );
+  } catch (error) {
+    if (error instanceof AlreadyBilled) {
+      return {
+        status: 'error',
+        message: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.',
+      };
     }
-
-    await recomputeInvoice(tx, created.id);
-    return created;
-  });
+    throw error;
+  }
 
   await recordAudit({
     actorType: 'staff',
@@ -317,30 +380,54 @@ export async function recordPayment(
   const reference = String(formData.get('reference') ?? '').trim();
   const note = formText(formData, 'note');
 
-  const receipt = await db.$transaction(async (tx) => {
-    const payment = await tx.payment.create({
-      data: {
-        invoiceId: invoice.id,
-        amountMinor,
-        currency: invoice.currency,
-        method: methodRaw as PaymentMethod,
-        reference: reference || null,
-        receivedAt,
-        recordedById: staff.id,
-        note: note || null,
-      },
-      select: { id: true },
-    });
+  let receipt: { id: string; number: string };
+  try {
+    receipt = await retryOnConflict(() =>
+      db.$transaction(async (tx) => {
+        // A double click, or two people recording the same transfer, must not
+        // both land. The invoice is locked and what is owed is read again under
+        // the lock, so the second one sees the first and stops.
+        await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${invoice.id} FOR UPDATE`;
+        const fresh = await tx.invoice.findUniqueOrThrow({
+          where: { id: invoice.id },
+          select: { totalMinor: true, paidMinor: true },
+        });
+        if (amountMinor > fresh.totalMinor - fresh.paidMinor) throw new Overpaid();
 
-    const number = await nextReceiptNumber(tx);
-    const created = await tx.receipt.create({
-      data: { number, paymentId: payment.id },
-      select: { id: true, number: true },
-    });
+        const payment = await tx.payment.create({
+          data: {
+            invoiceId: invoice.id,
+            amountMinor,
+            currency: invoice.currency,
+            method: methodRaw as PaymentMethod,
+            reference: reference || null,
+            receivedAt,
+            recordedById: staff.id,
+            note: note || null,
+          },
+          select: { id: true },
+        });
 
-    await recomputeInvoice(tx, invoice.id);
-    return created;
-  });
+        const number = await nextReceiptNumber(tx);
+        const created = await tx.receipt.create({
+          data: { number, paymentId: payment.id },
+          select: { id: true, number: true },
+        });
+
+        await recomputeInvoice(tx, invoice.id);
+        return created;
+      }),
+    );
+  } catch (error) {
+    if (error instanceof Overpaid) {
+      return {
+        status: 'error',
+        message:
+          'A payment was recorded against this invoice a moment ago. Reload to see what is still owed.',
+      };
+    }
+    throw error;
+  }
 
   await recordAudit({
     actorType: 'staff',
@@ -348,7 +435,7 @@ export async function recordPayment(
     action: 'payment.recorded',
     entityType: 'Invoice',
     entityId: invoice.id,
-    summary: `${formatMoney(amountMinor, invoice.currency)} — receipt ${receipt.number}`,
+    summary: `${formatMoney(amountMinor, invoice.currency)}, receipt ${receipt.number}`,
     metadata: { method: methodRaw, reference: reference || null },
   });
 
@@ -427,7 +514,10 @@ export async function emailReceipt(
   });
 
   if (!sent.ok) {
-    return { status: 'error', message: `The attempt is logged, but the email did not go: ${sent.error}` };
+    return {
+      status: 'error',
+      message: `The attempt is logged, but the email did not go: ${sent.error}`,
+    };
   }
   return { status: 'done', message: `Sent to ${contact.email}.` };
 }
@@ -463,7 +553,7 @@ export async function voidInvoice(
     return {
       status: 'error',
       message:
-        'Money has already been recorded against this invoice. Voiding it would erase the demand the payment answers — raise a credit note instead, or reverse the payment first.',
+        'Money has already been recorded against this invoice. Reverse the payment first, or raise a credit note instead.',
     };
   }
 
@@ -482,7 +572,7 @@ export async function voidInvoice(
     action: 'invoice.voided',
     entityType: 'Invoice',
     entityId: invoice.id,
-    summary: `${invoice.number} — ${reason}`,
+    summary: `${invoice.number}: ${reason}`,
   });
 
   revalidatePath(`/admin/invoices/${invoice.number}`);

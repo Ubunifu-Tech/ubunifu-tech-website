@@ -14,6 +14,7 @@ import {
 import { authorText, prepareDocument, type DocumentStep } from '@/lib/console/document-ready';
 import { editableFees, feeSchedule, projectFees } from '@/lib/console/fees';
 import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
+import { getOrg } from '@/lib/console/org';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Callout } from '@/components/console/Callout';
 import { FeeEditor } from '@/components/console/FeeEditor';
@@ -23,6 +24,7 @@ import {
   DetailsForm,
   SendForSignature,
   VersionEditor,
+  WithdrawDocument,
   type CopilotTurn,
 } from '../DocumentEditor';
 import styles from '../../Admin.module.css';
@@ -154,9 +156,14 @@ export default async function DocumentPage({
           </Link>
         </p>
       </div>
-      <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
-        {DOCUMENT_STATUS_LABEL[document.status]}
-      </span>
+      <div className={styles.headActions}>
+        <Link href={`/documents/${document.reference}/print`} className={`${forms.button} ${forms.quiet}`}>
+          Print or save as PDF
+        </Link>
+        <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
+          {DOCUMENT_STATUS_LABEL[document.status]}
+        </span>
+      </div>
     </div>
   );
 
@@ -388,9 +395,10 @@ export default async function DocumentPage({
   }
 
   if (step === 'fees') {
-    const [fees, counted] = await Promise.all([
+    const [fees, counted, org] = await Promise.all([
       editableFees(document.project.id),
       projectFees(document.project.id),
+      getOrg(),
     ]);
     body = (
       <div className={page.column}>
@@ -414,7 +422,9 @@ export default async function DocumentPage({
           <div
             className={`${forms.prose} ${page.feePreview}`}
             dangerouslySetInnerHTML={{
-              __html: renderMarkdown(feeSchedule(counted, document.project.currency)),
+              __html: renderMarkdown(
+                feeSchedule(counted, document.project.currency, org.chargesVat ? org.vatRateBps : 0),
+              ),
             }}
           />
           <p className={forms.hint}>
@@ -574,6 +584,9 @@ export default async function DocumentPage({
               >
                 {prepared.checks.find((check) => !check.ok)?.problem}
               </Callout>
+            )}
+            {live && ['sent', 'viewed'].includes(live.status) && (
+              <WithdrawDocument documentId={document.id} />
             )}
             <SendForSignature
               documentId={document.id}

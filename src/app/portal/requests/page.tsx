@@ -121,7 +121,7 @@ export default async function PortalRequests() {
                       {TICKET_KIND_LABEL[ticket.kind]}
                     </td>
                     <td className={table.td}>
-                      {ticket.project?.name ?? <span className={table.muted}>—</span>}
+                      {ticket.project?.name ?? <span className={table.muted}>General</span>}
                     </td>
                     <td className={table.td}>
                       <span className={`${forms.badge} ${STATUS_BADGE[ticket.status]}`}>

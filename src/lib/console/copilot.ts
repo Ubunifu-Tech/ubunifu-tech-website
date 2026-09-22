@@ -1,4 +1,5 @@
 import 'server-only';
+import { isUniqueConflict } from './conflict';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { formatDate, formatMoney } from './money';
@@ -28,6 +29,7 @@ HOW YOU WORK
 HOW TO WRITE
 - Plain British English. Short sentences. Write as a careful person would speak, not as a legal template sounds.
 - Never use em dashes or en dashes. Use a full stop, a comma, a colon or brackets instead.
+- Never oversell. No words like amazing, exciting, seamless, cutting-edge or world-class. Say what the work is and what it does.
 - Markdown only: ## and ### headings, paragraphs, - bullets, numbered lists, **bold**, tables for anything with columns. No code blocks and no HTML.
 - Start at a ## heading. No document title as an H1, and no preamble about what you are about to produce.
 
@@ -188,10 +190,10 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
       (input ?? {}) as { markdown?: unknown; change_note?: unknown };
 
     if (typeof markdown !== 'string' || markdown.trim().length < 40) {
-      return { result: 'That is too short to be a document. Write the whole thing.' };
+      return { result: 'That is too short to be a document. Write the whole thing.', done: false };
     }
     if (markdown.length > 200_000) {
-      return { result: 'That is too long to save. Make it shorter.' };
+      return { result: 'That is too long to save. Make it shorter.', done: false };
     }
 
     const document = await db.document.findUnique({
@@ -203,16 +205,18 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
       },
     });
 
-    if (!document) return { result: 'That document no longer exists.' };
+    if (!document) return { result: 'That document no longer exists.', done: false };
     if (document.status === 'signed') {
       return {
         result:
           'This document has been signed and cannot be changed. Tell them a change order is the way to alter a signed agreement.',
+        done: false,
       };
     }
 
     const version = (document.versions[0]?.version ?? 0) + 1;
 
+    try {
     await db.documentVersion.create({
       data: {
         documentId: document.id,
@@ -226,6 +230,15 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
         createdById: context.staffId,
       },
     });
+    } catch (error) {
+      if (isUniqueConflict(error)) {
+        return {
+          result: 'Someone saved a version at the same moment. Tell them to reload, then ask again.',
+          done: false,
+        };
+      }
+      throw error;
+    }
 
     const markers = (markdown.match(/\[TO CONFIRM/g) ?? []).length;
 

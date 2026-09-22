@@ -809,3 +809,29 @@
   font-size: var(--font-size-lead);
   line-height: 1.3;
 }
+
+.signArea {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: var(--space-5);
+}
+
+.signArea > section + section {
+  margin-top: var(--space-5);
+}
+
+/* Paper: the page, not the portal. */
+@media print {
+  .bar {
+    display: none;
+  }
+
+  .shell {
+    background: #fff;
+  }
+
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+}

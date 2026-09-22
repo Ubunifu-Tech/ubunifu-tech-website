@@ -20,8 +20,12 @@ import { runTurn } from '@/lib/console/agent';
 import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
 import { formText, formTextExact } from '@/lib/console/form';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
+import { isUniqueConflict, retryOnConflict } from '@/lib/console/conflict';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
+
+/** Thrown inside the send transaction when the document changed after it was checked. */
+class MovedOn extends Error {}
 
 /** Creates the document and its first, empty version. */
 export async function createDocument(
@@ -50,7 +54,7 @@ export async function createDocument(
 
   const kind = kindRaw as DocumentKind;
 
-  const document = await db.$transaction(async (tx) => {
+  const document = await retryOnConflict(() => db.$transaction(async (tx) => {
     const reference = await nextDocumentReference(tx, kind);
     return tx.document.create({
       data: {
@@ -69,7 +73,7 @@ export async function createDocument(
       },
       select: { id: true, reference: true },
     });
-  });
+  }));
 
   await recordAudit({
     actorType: 'staff',
@@ -187,15 +191,26 @@ export async function saveVersion(
   }
 
   const version = (latest?.version ?? 0) + 1;
-  await db.documentVersion.create({
-    data: {
-      documentId: document.id,
-      version,
-      bodyMarkdown,
-      changeNote: changeNote || null,
-      createdById: staff.id,
-    },
-  });
+  try {
+    await db.documentVersion.create({
+      data: {
+        documentId: document.id,
+        version,
+        bodyMarkdown,
+        changeNote: changeNote || null,
+        createdById: staff.id,
+      },
+    });
+  } catch (error) {
+    // Version numbers are unique per document: someone else saved first.
+    if (isUniqueConflict(error)) {
+      return {
+        status: 'error',
+        message: 'Someone saved a version a moment ago. Copy your changes, reload, and apply them again.',
+      };
+    }
+    throw error;
+  }
 
   await recordAudit({
     actorType: 'staff',
@@ -375,7 +390,20 @@ export async function sendForSignature(
   const terms = await currentTerms();
   const documentHash = hashDocument(prepared.final);
 
-  const request = await db.$transaction(async (tx) => {
+  let request: { id: string; version: number };
+  try {
+    request = await db.$transaction(async (tx) => {
+    // One send at a time per document, and against the version that was
+    // checked: a second click, or an edit saved in the same moment, waits
+    // here and then finds things have moved on.
+    await tx.$queryRaw`SELECT id FROM "Document" WHERE id = ${document.id} FOR UPDATE`;
+    const current = await tx.documentVersion.findFirst({
+      where: { documentId: document.id },
+      orderBy: { version: 'desc' },
+      select: { id: true },
+    });
+    if (current?.id !== latest.id) throw new MovedOn();
+
     // The copy with the fees filled in is a version of its own, unless the
     // latest already is exactly that.
     const version =
@@ -419,7 +447,16 @@ export async function sendForSignature(
     });
 
     return { id: created.id, version: version.version };
-  });
+    });
+  } catch (error) {
+    if (error instanceof MovedOn) {
+      return {
+        status: 'error',
+        message: 'This changed a moment ago, or was just sent. Reload and check it before sending.',
+      };
+    }
+    throw error;
+  }
 
   const { token } = await issueMagicToken({
     purpose: 'document_access',
@@ -468,4 +505,62 @@ export async function sendForSignature(
     };
   }
   return { status: 'done', message: `Sent to ${contact.name} (${contact.email}).` };
+}
+
+/**
+ * Takes back a document that is waiting for a signature, so it can be changed
+ * or a project can move on without it. Conditional on the request still being
+ * open: if the client signs in the same moment, the signature wins and this
+ * says so, rather than cancelling something that has just been agreed.
+ */
+export async function withdrawDocument(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const document = await db.document.findUnique({
+    where: { id: formText(formData, 'documentId') },
+    select: { id: true, reference: true, project: { select: { slug: true } } },
+  });
+  if (!document) return { status: 'error', message: 'That document no longer exists.' };
+
+  const withdrawn = await db.$transaction(async (tx) => {
+    const requests = await tx.signatureRequest.updateMany({
+      where: { documentId: document.id, status: { in: ['sent', 'viewed'] } },
+      data: { status: 'cancelled' },
+    });
+    if (requests.count === 0) return false;
+    await tx.document.updateMany({
+      where: { id: document.id, status: { in: ['sent', 'viewed'] } },
+      data: { status: 'draft' },
+    });
+    return true;
+  });
+
+  if (!withdrawn) {
+    const now = await db.document.findUnique({ where: { id: document.id }, select: { status: true } });
+    return {
+      status: 'error',
+      message:
+        now?.status === 'signed'
+          ? 'It was signed a moment ago, so it cannot be withdrawn.'
+          : 'There is nothing waiting for a signature.',
+    };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.withdrawn',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: document.reference,
+  });
+
+  revalidatePath(`/admin/documents/${document.reference}`);
+  revalidatePath(`/admin/projects/${document.project.slug}`);
+  revalidatePath('/portal', 'layout');
+  return { status: 'done', message: 'Withdrawn. You can change it and send it again.' };
 }

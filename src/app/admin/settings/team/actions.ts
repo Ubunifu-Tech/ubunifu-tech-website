@@ -18,6 +18,7 @@ import {
   type RolePermissions,
 } from '@/lib/console/permissions';
 import { staffInviteEmail } from '@/lib/emails';
+import { isUniqueConflict } from '@/lib/console/conflict';
 
 export type TeamState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -91,10 +92,18 @@ export async function inviteStaff(_previous: TeamState, formData: FormData): Pro
   const existing = await db.staffUser.findUnique({ where: { email }, select: { id: true } });
   if (existing) return { status: 'error', message: 'Someone with that email is already on the team.' };
 
-  const person = await db.staffUser.create({
-    data: { name, email, title, role: roleRaw as StaffRole },
-    select: { id: true, name: true, email: true },
-  });
+  let person;
+  try {
+    person = await db.staffUser.create({
+      data: { name, email, title, role: roleRaw as StaffRole },
+      select: { id: true, name: true, email: true },
+    });
+  } catch (error) {
+    if (isUniqueConflict(error)) {
+      return { status: 'error', message: 'Someone with that email is already on the team.' };
+    }
+    throw error;
+  }
 
   const sent = await sendInvite(person, staff);
   refresh();

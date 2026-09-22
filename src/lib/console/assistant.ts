@@ -4,6 +4,7 @@ import type { Prisma, ServiceLine } from '@/generated/prisma/client';
 import type { AgentTool } from './agent';
 import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
+import { allow } from './rate-limit';
 import { acknowledgementEmail, notificationEmail } from '@/lib/emails';
 
 /** Where new enquiries and requests are announced. */
@@ -34,6 +35,7 @@ HOW TO TALK
 - Short. Two or three sentences usually. This is a chat window, not a brochure.
 - Plain British English. No marketing language, no exclamation marks, no "I'd be happy to".
 - Never use em dashes or en dashes. Use a full stop, a comma or a colon instead.
+- Never oversell. No words like amazing, exciting, seamless, cutting-edge or world-class, and no claims about being special. Say what something does and let that be enough.
 - Ask one question at a time. A visitor who is asked three things answers none.
 - When a page on the site answers the question better, name its path, like /build or /work.
 
@@ -141,6 +143,20 @@ export const recordEnquiryTool: AgentTool<AssistantContext> = {
       typeof serviceLine === 'string' && SERVICE_LINES.includes(serviceLine as ServiceLine)
         ? (serviceLine as ServiceLine)
         : null;
+
+    // The same limits as the "Talk to a person" form. Without them the chat
+    // could be steered into sending our acknowledgement to a list of strangers.
+    const [byAddress, byEmail] = await Promise.all([
+      allow('site-handoff:ip', context.ip, { limit: 5, windowMinutes: 60 }),
+      allow('site-handoff:email', cleanEmail, { limit: 3, windowMinutes: 60 }),
+    ]);
+    if (!byAddress || !byEmail) {
+      return {
+        result:
+          'Not sent: too many in the last hour. Tell them it could not go through right now and to email info@ubunifutech.com.',
+        done: false,
+      };
+    }
 
     const outcome = await passToTeam({
       conversationId: context.conversationId,

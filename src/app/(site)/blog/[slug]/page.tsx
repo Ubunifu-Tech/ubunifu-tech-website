@@ -113,7 +113,7 @@ function ArticleUnavailable() {
           <div className={styles.content}>
             <h1>This article is not loading</h1>
             <p>
-              Something on our side is not answering. It is usually brief — trying again in a
+              Something on our side is not answering. It is usually brief. Trying again in a
               minute or two normally does it, and the link you followed is still good.
             </p>
             <p>

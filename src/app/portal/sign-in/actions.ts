@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { redirect, unstable_rethrow } from 'next/navigation';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { consoleEnv } from '@/lib/console/env';
@@ -36,6 +36,20 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * working. The audit log keeps the real reason.
  */
 export async function signInWithPassword(
+  previous: PortalSignInState,
+  formData: FormData,
+): Promise<PortalSignInState> {
+  try {
+    return await passwordSignIn(previous, formData);
+  } catch (error) {
+    // Signing in ends in a redirect, which Next throws; that must go through.
+    unstable_rethrow(error);
+    console.error('[portal] password sign-in failed', error);
+    return { status: 'error', message: 'We could not sign you in just now. Please try again in a minute.' };
+  }
+}
+
+async function passwordSignIn(
   _previous: PortalSignInState,
   formData: FormData,
 ): Promise<PortalSignInState> {
@@ -124,6 +138,18 @@ export async function signInWithPassword(
  * sets a new one from inside the portal.
  */
 export async function requestPortalLink(
+  previous: PortalSignInState,
+  formData: FormData,
+): Promise<PortalSignInState> {
+  try {
+    return await sendPortalLink(previous, formData);
+  } catch (error) {
+    console.error('[portal] sign-in link failed', error);
+    return { status: 'error', message: 'The link could not be sent just now. Please try again in a minute.' };
+  }
+}
+
+async function sendPortalLink(
   _previous: PortalSignInState,
   formData: FormData,
 ): Promise<PortalSignInState> {

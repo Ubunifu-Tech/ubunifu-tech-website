@@ -203,7 +203,7 @@ export function RichText({
       document.getElementById(fileInputId)?.click();
       return;
     }
-    const src = window.prompt('Image address — a path like /editorial/name.webp, or a full URL');
+    const src = window.prompt('Image address: a path like /editorial/name.webp, or a full URL');
     if (!src?.trim()) return;
     const alt = window.prompt('Describe the image for anyone who cannot see it') ?? '';
     editor.chain().focus().setImage({ src: src.trim(), alt }).run();
@@ -217,7 +217,7 @@ export function RichText({
 
       setImageStatus(`Uploading ${file.name}…`);
       const result = await uploadImage(file, (percent) =>
-        setImageStatus(`Uploading ${file.name} — ${percent}%`),
+        setImageStatus(`Uploading ${file.name}: ${percent}%`),
       );
       if (!result.ok) {
         setImageStatus(result.message);
@@ -229,7 +229,7 @@ export function RichText({
       const alt =
         window.prompt('Describe the image for anyone who cannot see it', '')?.trim() ?? '';
       editor.chain().focus().setImage({ src: result.path, alt }).run();
-      setImageStatus(alt ? null : 'Added without a description — screen readers will skip it.');
+      setImageStatus(alt ? null : 'Added without a description. Screen readers will skip it.');
     },
     [editor, uploadImage],
   );

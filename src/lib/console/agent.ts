@@ -158,6 +158,12 @@ export async function runTurn<Context>(options: {
   tools: AgentTool<Context>[];
   context: Context;
   maxTokens?: number;
+  /**
+   * Whether the model thinks before it answers. Worth it for drafting a
+   * contract; not for a chat reply, where it adds seconds and can use up a
+   * small token budget before any answer is written.
+   */
+  think?: boolean;
 }): Promise<AgentResult> {
   const conversation = await db.conversation.findUnique({
     where: { id: options.conversationId },
@@ -225,7 +231,7 @@ export async function runTurn<Context>(options: {
         model: AGENT_MODEL,
         max_tokens: options.maxTokens ?? 16000,
         system,
-        thinking: { type: 'adaptive' },
+        ...(options.think === false ? {} : { thinking: { type: 'adaptive' as const } }),
         messages,
         ...(toolDefinitions.length > 0 ? { tools: toolDefinitions } : {}),
       });

@@ -73,7 +73,7 @@ export async function replyToTicket(
     action: isInternal ? 'ticket.note_added' : 'ticket.replied',
     entityType: 'Ticket',
     entityId: ticket.id,
-    summary: `${ticket.reference} — ${ticket.subject}`,
+    summary: `${ticket.reference}: ${ticket.subject}`,
   });
 
   revalidatePath(`/admin/requests/${ticket.reference}`);
@@ -169,7 +169,7 @@ export async function triageTicket(
     action: 'ticket.triaged',
     entityType: 'Ticket',
     entityId: ticket.id,
-    summary: `${ticket.reference} — ${changes.join(', ')}`,
+    summary: `${ticket.reference}: ${changes.join(', ')}`,
   });
 
   revalidatePath(`/admin/requests/${ticket.reference}`);

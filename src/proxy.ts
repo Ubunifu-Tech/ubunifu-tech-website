@@ -55,8 +55,9 @@ export function proxy(request: NextRequest) {
   const onAdminHost = isAdminHost(request.headers.get('host'));
 
   if (onAdminHost) {
-    // Already rewritten, or an internal asset route: let it through.
-    if (pathname.startsWith('/admin')) {
+    // Already rewritten, or an internal asset route: let it through. The
+    // app's own icons are generated at the root and are the same everywhere.
+    if (pathname.startsWith('/admin') || /^\/(icon|apple-icon)(\/|$)/.test(pathname)) {
       return harden(NextResponse.next(), true);
     }
 

@@ -155,7 +155,7 @@ export async function moveProject(
     if (error instanceof Error && error.message === 'concurrent-move') {
       return {
         status: 'error',
-        message: 'Somebody moved this project at the same moment. Nothing was changed — reload and try again.',
+        message: 'Somebody moved this project at the same moment. Nothing was changed. Reload and try again.',
       };
     }
     console.error('Project move failed', error);
@@ -411,8 +411,8 @@ export async function publishUpdate(
     entityId: update.id,
     summary:
       recipients.length === 0
-        ? `${update.title} — published, but this client has nobody to email`
-        : `${update.title} — emailed ${delivered} of ${recipients.length}`,
+        ? `${update.title}: published, but this client has nobody to email`
+        : `${update.title}: emailed ${delivered} of ${recipients.length}`,
   });
 
   revalidatePath(`/admin/projects/${update.project.slug}`);
@@ -426,7 +426,7 @@ export async function publishUpdate(
   if (delivered < recipients.length) {
     return {
       status: 'error',
-      message: `Published, and it is in their portal — but only ${delivered} of ${recipients.length} emails went out. The rest are in the activity record with the reason.`,
+      message: `Published and in their portal, but only ${delivered} of ${recipients.length} emails went out. See Activity for why.`,
     };
   }
   return { status: 'done', message: `Published and emailed to ${delivered}.` };

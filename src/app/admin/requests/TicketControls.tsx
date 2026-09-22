@@ -118,7 +118,7 @@ export function TriageBox({
               disabled={pending}
             />
           <p className={forms.hint}>
-            The client never sees this. It is for comparing one request against another.
+            Only the team sees this.
           </p>
         </div>
       </div>

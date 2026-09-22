@@ -134,8 +134,8 @@ export function RaiseInvoice({
 
       {mixed && (
         <p className={forms.error} role="alert">
-          Those lines are in {currencies.join(' and ')}. One invoice can only be in one currency —
-          untick one set and raise a second invoice for the other.
+          Those lines are in {currencies.join(' and ')}. An invoice has one currency, so untick one
+          set and raise a second invoice for the other.
         </p>
       )}
 
@@ -150,7 +150,7 @@ export function RaiseInvoice({
         <p className={forms.payoff}>
           {picked.length === 0
             ? 'Pick at least one line.'
-            : `${picked.length} line${picked.length === 1 ? '' : 's'}, ${formatMoney(total, currencies[0] ?? 'USD')}. Raised as a draft — nothing is sent until you send it.`}
+            : `${picked.length} line${picked.length === 1 ? '' : 's'}, ${formatMoney(total, currencies[0] ?? 'USD')}. Raised as a draft. Nothing is sent until you send it.`}
         </p>
       </div>
 

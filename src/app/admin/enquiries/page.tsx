@@ -88,6 +88,7 @@ export default async function EnquiriesPage({
       source: true,
       createdAt: true,
       client: { select: { name: true, slug: true } },
+      project: { select: { name: true, slug: true } },
       conversations: {
         orderBy: { createdAt: 'desc' },
         take: 1,
@@ -106,6 +107,15 @@ export default async function EnquiriesPage({
   /** One row is expanded at a time, chosen by ?open=. */
   const expanded = enquiries.find((enquiry) => enquiry.id === open);
 
+  // Somebody who is already a client, writing in about something new.
+  const returning =
+    expanded && expanded.status !== 'converted'
+      ? await db.clientContact.findFirst({
+          where: { email: expanded.email, deletedAt: null, client: { deletedAt: null } },
+          select: { client: { select: { name: true, slug: true } } },
+        })
+      : null;
+
   return (
     <main className={styles.page}>
       <div className={styles.pageHead}>
@@ -114,8 +124,7 @@ export default async function EnquiriesPage({
             What has <span className={styles.headingAccent}>come in</span>
           </h1>
           <p className={styles.lead}>
-            Everything sent through the website form, recorded before anyone is emailed — so an
-            outage never loses a lead. Nothing here is deleted.
+            Messages from the website form and the chat.
           </p>
         </div>
       </div>
@@ -263,7 +272,7 @@ export default async function EnquiriesPage({
                 <div className={`${forms.cardHeader} ${styles.spaced}`}>
                   <h3 className={forms.cardTitle}>What they said in the chat</h3>
                   <span className={forms.cardMeta}>
-                    The assistant summarised this above; here it is in full
+                    The whole conversation
                   </span>
                 </div>
                 <ul className={styles.thread}>
@@ -293,15 +302,49 @@ export default async function EnquiriesPage({
                 note={expanded.internalNote}
               />
             </div>
-            <div className={forms.actions}>
-              <Link href={`/clients/new?enquiry=${expanded.id}`} className={forms.button}>
-                Onboard as a client
-              </Link>
-              <p className={forms.payoff}>
-                Opens the new client form with their name, email and what they asked for already
-                filled in.
+            {expanded.status === 'converted' ? (
+              <p className={styles.note}>
+                Became{' '}
+                {expanded.client ? (
+                  <Link href={`/clients/${expanded.client.slug}`} className={styles.inlineLink}>
+                    {expanded.client.name}
+                  </Link>
+                ) : (
+                  'a client'
+                )}
+                {expanded.project && (
+                  <>
+                    {', '}
+                    <Link href={`/projects/${expanded.project.slug}`} className={styles.inlineLink}>
+                      {expanded.project.name}
+                    </Link>
+                  </>
+                )}
+                .
               </p>
-            </div>
+            ) : returning ? (
+              <div className={forms.actions}>
+                <Link
+                  href={`/projects/new?client=${returning.client.slug}&enquiry=${expanded.id}`}
+                  className={forms.button}
+                >
+                  Start a project for {returning.client.name}
+                </Link>
+                <Link href={`/clients/new?enquiry=${expanded.id}`} className={`${forms.button} ${forms.quiet}`}>
+                  Add as a new client instead
+                </Link>
+                <p className={forms.payoff}>{expanded.email} is already one of their contacts.</p>
+              </div>
+            ) : (
+              <div className={forms.actions}>
+                <Link href={`/clients/new?enquiry=${expanded.id}`} className={forms.button}>
+                  Make them a client
+                </Link>
+                <p className={forms.payoff}>
+                  Their name, email and message are filled in. You can start the project in the same step.
+                </p>
+              </div>
+            )}
           </section>
         )}
       </div>

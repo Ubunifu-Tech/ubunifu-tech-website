@@ -127,8 +127,19 @@ export async function createProject(
     action: 'project.created',
     entityType: 'Project',
     entityId: created.projectId,
-    summary: `${created.reference} — ${name} for ${client.name}`,
+    summary: `${created.reference}: ${name} for ${client.name}`,
   });
+
+  // Closes the enquiry it came from. Conditional, so an enquiry already
+  // turned into something else by someone else is left as they left it.
+  const enquiryId = text(formData, 'enquiryId');
+  if (enquiryId) {
+    await db.enquiry.updateMany({
+      where: { id: enquiryId, status: { not: 'converted' } },
+      data: { clientId: client.id, projectId: created.projectId, status: 'converted' },
+    });
+    revalidatePath('/admin/enquiries');
+  }
 
   revalidatePath('/admin/projects');
   revalidatePath(`/admin/clients/${client.slug}`);

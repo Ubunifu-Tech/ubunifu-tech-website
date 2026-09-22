@@ -162,6 +162,7 @@ async function handle(request: NextRequest) {
     context: { conversationId: conversation.id, ip },
     // Short answers on purpose: this is a chat window, not a brochure.
     maxTokens: 2000,
+    think: false,
   });
 
   const response = result.ok

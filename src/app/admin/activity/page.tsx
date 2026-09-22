@@ -40,7 +40,7 @@ const ACTION_LABEL: Record<string, string> = {
   'client.sign_in.locked': 'Account locked',
   'client.sign_in.throttled': 'Too many link requests',
   'client.sign_in.link_sent': 'Sign-in link sent',
-  'client.sign_in.rejected_at_use': 'Link refused — access revoked',
+  'client.sign_in.rejected_at_use': 'Link refused: access had been removed',
   'client.sign_out': 'Client signed out',
   'staff.sign_in.success': 'Staff signed in',
   'staff.sign_in.link_sent': 'Staff link sent',
@@ -176,8 +176,7 @@ export default async function ActivityPage({
             The <span className={styles.headingAccent}>record</span>
           </h1>
           <p className={styles.lead}>
-            Every action and every email, in one place. This is what answers &ldquo;the client says
-            they never got it&rdquo; without opening anybody else&rsquo;s dashboard.
+            Every action and every email, newest first.
           </p>
         </div>
       </div>

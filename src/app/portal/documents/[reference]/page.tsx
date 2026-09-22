@@ -6,10 +6,13 @@ import {
   markSignatureRequestViewed,
   DOCUMENT_KIND_LABEL,
   PORTAL_DOCUMENT_STATUS_LABEL,
-  renderMarkdown,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { RespondForm, SignForm } from '../SignForm';
+import { ContractSheet } from '@/components/documents/ContractSheet';
+import { PrintButton } from '@/app/admin/receipts/PrintButton';
+import { getOrg } from '@/lib/console/org';
+import sheet from '@/app/admin/receipts/Receipt.module.css';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -49,7 +52,9 @@ export default async function PortalDocument({
       title: true,
       kind: true,
       status: true,
-      project: { select: { name: true, reference: true, slug: true } },
+      project: {
+        select: { name: true, slug: true, client: { select: { name: true, legalName: true } } },
+      },
       signatureRequests: {
         // 'declined' is in here deliberately: a client who said no still has
         // to be able to open what they said no to, and so does anyone reading
@@ -92,101 +97,74 @@ export default async function PortalDocument({
   // declining does close it, and so does the clock.
   const canSign = !signature && !expired && !declined;
 
+  const org = await getOrg();
+
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
-      <div className={styles.pageHead}>
-        <Link href="/portal/documents" className={styles.projectMeta}>
+    <main className={styles.page}>
+      <div className={sheet.toolbar}>
+        <Link href="/portal/documents" className={styles.backLink}>
           ← Documents
         </Link>
-        <h1 className={styles.heading}>{document.title}</h1>
-        <p className={styles.lead}>
-          {DOCUMENT_KIND_LABEL[document.kind]} · {document.reference} ·{' '}
-          <Link href={`/portal/projects/${document.project.slug}`}>{document.project.name}</Link>
-        </p>
-        <p>
-          <span
-            className={`${forms.badge} ${
-              signature
-                ? forms.badgeGood
-                : declined
-                  ? forms.badgeBad
-                  : expired
-                    ? forms.badgeWarn
-                    : forms.badgeLive
-            }`}
-          >
-            {signature
-              ? `Signed ${formatDate(signature.signedAt)}`
-              : expired
-                ? 'This request has expired'
-                : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
-          </span>
-        </p>
+        <PrintButton />
+        <span
+          className={`${forms.badge} ${
+            signature
+              ? forms.badgeGood
+              : declined
+                ? forms.badgeBad
+                : expired
+                  ? forms.badgeWarn
+                  : forms.badgeLive
+          }`}
+        >
+          {signature
+            ? `Signed ${formatDate(signature.signedAt)}`
+            : expired
+              ? 'This request has expired'
+              : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
+        </span>
       </div>
 
-      {signature && (
-        <p className={styles.notice} role="status">
-          Signed by {signature.signerName} as &ldquo;{signature.initials}&rdquo; on{' '}
-          {formatDate(signature.signedAt)}. This is your copy and it stays here.
-        </p>
-      )}
-
-      {/* Not once it is signed: "we are working on a new version" is untrue the
-          moment they decide this one is fine after all. */}
-      {request.respondedAt && !signature && (
-        <div className={styles.notice} role="status">
-          <p>
-            {declined
-              ? `You declined this on ${formatDate(request.respondedAt)}. Nothing was signed and nothing has been charged.`
-              : `You asked for changes on ${formatDate(request.respondedAt)}. We are working on a new version.`}
-          </p>
-          <p>
-            <strong>
-              {request.respondedBy?.name ? `${request.respondedBy.name} wrote:` : 'You wrote:'}
-            </strong>{' '}
-            {request.responseNote}
-          </p>
-        </div>
-      )}
-
-      {expired && !signature && (
-        <p className={styles.notice} role="status">
-          This signing request has run out. Nothing is lost — email us and we will send it again.
-        </p>
-      )}
-
-      <section className={forms.card}>
-        <div className={forms.cardHeader}>
-          <h2 className={forms.cardTitle}>{document.title}</h2>
-          <span className={forms.cardMeta}>
-            Version {request.version.version} · sent {formatDate(request.sentAt)}
-          </span>
-        </div>
-        <div
-          className={forms.prose}
-          // Escaped first; only headings, paragraphs, lists and emphasis are
-          // reintroduced by the renderer.
-          dangerouslySetInnerHTML={{ __html: renderMarkdown(request.version.bodyMarkdown) }}
-        />
-      </section>
-
-      {request.termsVersion && (
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>{request.termsVersion.title}</h2>
-            <span className={forms.cardMeta}>
-              Version {request.termsVersion.version} — the exact text you are accepting
-            </span>
+      <div className={sheet.toolbar}>
+        {/* Not once it is signed: "we are working on a new version" is untrue the
+            moment they decide this one is fine after all. */}
+        {request.respondedAt && !signature && (
+          <div className={styles.notice} role="status">
+            <p>
+              {declined
+                ? `You declined this on ${formatDate(request.respondedAt)}. Nothing was signed and nothing has been charged.`
+                : `You asked for changes on ${formatDate(request.respondedAt)}. We are working on a new version.`}
+            </p>
+            <p>
+              <strong>
+                {request.respondedBy?.name ? `${request.respondedBy.name} wrote:` : 'You wrote:'}
+              </strong>{' '}
+              {request.responseNote}
+            </p>
           </div>
-          <div
-            className={forms.prose}
-            dangerouslySetInnerHTML={{
-              __html: renderMarkdown(request.termsVersion.bodyMarkdown),
-            }}
-          />
-        </section>
-      )}
+        )}
 
+        {expired && !signature && (
+          <p className={styles.notice} role="status">
+            This signing request has run out. Nothing is lost. Ask in Help and we will send it again.
+          </p>
+        )}
+      </div>
+
+      <ContractSheet
+        org={org}
+        kind={DOCUMENT_KIND_LABEL[document.kind]}
+        title={document.title}
+        reference={document.reference}
+        client={document.project.client}
+        projectName={document.project.name}
+        sentAt={request.sentAt}
+        bodyMarkdown={request.version.bodyMarkdown}
+        terms={request.termsVersion}
+        signature={signature ?? null}
+      />
+
+      <div className={`${sheet.toolbar} ${sheet.noPrint} ${styles.signArea}`}>
       {canSign && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
@@ -210,6 +188,7 @@ export default async function PortalDocument({
           <RespondForm requestId={request.id} />
         </section>
       )}
+      </div>
     </main>
   );
 }

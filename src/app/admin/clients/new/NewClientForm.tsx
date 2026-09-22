@@ -23,6 +23,8 @@ export type Prefill = {
   contactEmail: string;
   serviceLine: string;
   notes: string;
+  /** What they wrote in about, as a first name for the project. */
+  projectName: string;
 };
 
 const SERVICE_LINES: { value: string; label: string }[] = [
@@ -124,20 +126,19 @@ export function NewClientForm({
           <div className={forms.grid}>
             <div className={`${forms.field} ${forms.wide}`}>
               <label className={forms.label} htmlFor={field('name')}>
-                Name
+                Name <span className={forms.optional}>(optional)</span>
               </label>
               <input
                 id={field('name')}
                 name="name"
                 defaultValue={was('name')}
                 className={forms.control}
-                required
                 maxLength={160}
                 autoComplete="organization"
                 aria-invalid={invalid('name')}
               />
               <p className={forms.hint}>
-                What they call themselves. Used everywhere a client sees their own name.
+                Leave blank for someone working on their own. Their name is used instead.
               </p>
             </div>
 
@@ -305,7 +306,7 @@ export function NewClientForm({
                   <span>Email them the invitation now</span>
                   <span className={forms.hint}>
                     They set their own password from the link. Leave this off while a project is
-                    still being prepared — you can send it from the client list at any time.
+                    still being prepared. You can send it from the client page at any time.
                   </span>
                 </span>
               </label>
@@ -332,7 +333,7 @@ export function NewClientForm({
                 <span className={forms.checkText}>
                   <span>Start a project for them now</span>
                   <span className={forms.hint}>
-                    Turn this off to record the organisation alone — a contact you expect to work
+                    Turn this off to record the organisation alone, for a contact you expect to work
                     with, but with nothing agreed yet.
                   </span>
                 </span>
@@ -348,7 +349,7 @@ export function NewClientForm({
                   <input
                     id={field('projectName')}
                     name="projectName"
-                    defaultValue={was('projectName')}
+                    defaultValue={was('projectName', prefill?.projectName)}
                     className={forms.control}
                     maxLength={160}
                     aria-invalid={invalid('projectName')}
@@ -412,8 +413,7 @@ export function NewClientForm({
                     ))}
                   </Select>
                   <p className={forms.hint}>
-                    A lead is somebody you have spoken to with nothing sent yet. Later stages are
-                    reached by moving the project on, so the change is recorded.
+                    Most projects start as a lead. Move them on from the project page.
                   </p>
                 </div>
 
@@ -440,7 +440,7 @@ export function NewClientForm({
                   <p className={forms.hint}>
                     {usable.length === 0
                       ? 'No plan written for this service line yet. The project starts empty.'
-                      : 'Fills in the phases, deliverables, the things you need from them, and the fee lines to be priced. All editable afterwards.'}
+                      : 'Adds a starting plan, what to ask them for, and fees to price. All editable.'}
                   </p>
                 </div>
 
@@ -483,7 +483,7 @@ export function NewClientForm({
           </button>
           <p className={forms.payoff}>
             {startProject
-              ? 'Creates the organisation, the contact and the project together — or nothing at all if any part fails.'
+              ? 'Creates the client, their contact and the project.'
               : 'Creates the organisation and the contact. You can add a project whenever one is agreed.'}
           </p>
         </div>

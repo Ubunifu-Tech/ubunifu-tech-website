@@ -89,9 +89,7 @@ export default async function DocumentsPage({
             Proposals and <span className={styles.headingAccent}>agreements</span>
           </h1>
           <p className={styles.lead}>
-            Documents are written here, drafted with help if you want it, and signed with initials
-            plus an explicit acceptance of a named version of our terms. A signed one is never
-            edited again.
+            Proposals and agreements, from draft to signed.
           </p>
         </div>
       </div>
@@ -145,8 +143,7 @@ export default async function DocumentsPage({
                       {active === 'open' ? 'Nothing with a client.' : 'Nothing here.'}
                     </p>
                     <p className={table.emptyHint}>
-                      Documents are started from a project — open one and use &ldquo;New
-                      document&rdquo;.
+                      Start one from a project&rsquo;s Documents tab.
                     </p>
                   </td>
                 </tr>

@@ -49,8 +49,7 @@ export default async function ClientsPage() {
             Clients <span className={styles.headingAccent}>and contacts</span>
           </h1>
           <p className={styles.lead}>
-            Everyone we work for. Open a client to see their projects, their money and everything
-            that has passed between us.
+            Everyone we work for.
           </p>
         </div>
         <Link href="/clients/new" className={forms.button}>

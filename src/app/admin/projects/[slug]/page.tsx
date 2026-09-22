@@ -230,6 +230,8 @@ export default async function ProjectPage({
     ...transition,
     blocked:
       guardsFor(transition.to, facts).find((guard) => guard.severity === 'block')?.message ?? null,
+    blockedFix:
+      guardsFor(transition.to, facts).find((guard) => guard.severity === 'block')?.fix ?? null,
   }));
 
   const committed = project.lineItems
@@ -378,7 +380,12 @@ export default async function ProjectPage({
                 <h2 className={forms.cardTitle}>Next step</h2>
               </div>
               {mayRun ? (
-                <MoveControls projectId={project.id} status={project.status} actions={actions} />
+                <MoveControls
+                  projectId={project.id}
+                  projectSlug={project.slug}
+                  status={project.status}
+                  actions={actions}
+                />
               ) : (
                 <p className={styles.note}>
                   {STAFF_LABEL[project.status]}. Moving a project on is for roles that run projects.

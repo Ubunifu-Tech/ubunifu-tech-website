@@ -92,13 +92,13 @@ export function PostEditor({ post }: { post: PostDraft }) {
     // GIFs are fine inside a post, but a cover sits on a card beside other
     // cards, and one that moves pulls every eye on the page to itself.
     if (file.type === 'image/gif') {
-      setCoverStatus('A cover has to be a still image — JPG, PNG, WebP or AVIF. A GIF can go inside the post.');
+      setCoverStatus('A cover has to be a still image: JPG, PNG, WebP or AVIF. A GIF can go inside the post.');
       return;
     }
     setCoverBusy(true);
     setCoverStatus(`Uploading ${file.name}…`);
     const result = await uploadWebsiteImage(file, (percent) =>
-      setCoverStatus(`Uploading ${file.name} — ${percent}%`),
+      setCoverStatus(`Uploading ${file.name}: ${percent}%`),
     );
     setCoverBusy(false);
     if (!result.ok) {
@@ -109,7 +109,7 @@ export function PostEditor({ post }: { post: PostDraft }) {
     setCoverStatus(
       coverAlt.trim()
         ? 'Uploaded. Save to use it.'
-        : 'Uploaded. Describe it below, then save — a cover needs both.',
+        : 'Uploaded. Describe it below, then save. A cover needs both.',
     );
   }
 
@@ -313,7 +313,7 @@ export function ArchiveControl({ postId, published }: { postId: string; publishe
   if (published) {
     return (
       <p className={forms.hint}>
-        Take it down before archiving it. Archiving should not be how something leaves the blog.
+        Take it down before archiving it.
       </p>
     );
   }
@@ -336,8 +336,7 @@ export function ArchiveControl({ postId, published }: { postId: string; publishe
     <form action={action} className={forms.form}>
       <input type="hidden" name="postId" value={postId} />
       <p className={forms.hint}>
-        It leaves the journal but the post itself is kept, so the address stays spoken for and
-        nothing that happened to it loses its record.
+        It leaves the journal. The post and its history are kept.
       </p>
       <div className={styles.inlineForm}>
         <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>

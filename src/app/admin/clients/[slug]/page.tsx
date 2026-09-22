@@ -211,9 +211,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
 
       {mixed.length > 0 && (
         <p className={styles.note}>
-          This client also has amounts in {mixed.join(', ')}. Those are not included in the totals
-          above — nothing here converts between currencies, so a combined figure would not be a
-          real number.
+          This client also has amounts in {mixed.join(', ')}, which are not in the totals above.
         </p>
       )}
 

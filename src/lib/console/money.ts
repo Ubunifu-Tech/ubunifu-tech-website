@@ -54,7 +54,7 @@ export function parseMoney(input: string, currency: string): number | null {
 }
 
 export function formatDate(value: Date | null | undefined): string {
-  if (!value) return '—';
+  if (!value) return 'Not set';
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -64,7 +64,7 @@ export function formatDate(value: Date | null | undefined): string {
 }
 
 export function formatShortDate(value: Date | null | undefined): string {
-  if (!value) return '—';
+  if (!value) return 'Not set';
   return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -78,7 +78,7 @@ export function formatShortDate(value: Date | null | undefined): string {
  * where the distance matters more than the date itself.
  */
 export function formatRelative(value: Date | null | undefined, now: Date): string {
-  if (!value) return '—';
+  if (!value) return 'Never';
 
   const seconds = Math.round((value.getTime() - now.getTime()) / 1000);
   const absolute = Math.abs(seconds);

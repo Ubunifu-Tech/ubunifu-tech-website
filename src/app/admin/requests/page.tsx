@@ -93,8 +93,7 @@ export default async function RequestsPage({
             What clients have <span className={styles.headingAccent}>asked for</span>
           </h1>
           <p className={styles.lead}>
-            Support, changes, content and questions raised from the portal. Priority is ours to
-            set — the client never sees it, and nobody is asked to rank their own problem.
+            Support, changes, content and questions from clients.
           </p>
         </div>
       </div>

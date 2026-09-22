@@ -118,7 +118,7 @@ export async function replyToRequest(
     action: 'ticket.client_replied',
     entityType: 'Ticket',
     entityId: ticket.id,
-    summary: `${ticket.reference} — ${ticket.subject}`,
+    summary: `${ticket.reference}: ${ticket.subject}`,
   });
 
   await sendConsoleEmail({

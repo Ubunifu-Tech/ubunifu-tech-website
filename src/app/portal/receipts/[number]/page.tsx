@@ -54,7 +54,7 @@ export default async function PortalReceipt({
               paidMinor: true,
               currency: true,
               client: { select: { name: true, legalName: true, country: true } },
-              project: { select: { name: true, reference: true } },
+              project: { select: { name: true } },
             },
           },
         },
@@ -115,11 +115,7 @@ export default async function PortalReceipt({
             <p className={sheet.partyLabel}>For</p>
             <p className={sheet.partyValue}>
               {invoice.project ? (
-                <>
-                  {invoice.project.name}
-                  <br />
-                  {invoice.project.reference}
-                </>
+                invoice.project.name
               ) : (
                 'Services rendered'
               )}

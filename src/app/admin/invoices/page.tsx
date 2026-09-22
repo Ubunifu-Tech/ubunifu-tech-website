@@ -87,8 +87,7 @@ export default async function InvoicesPage({
             Money <span className={styles.headingAccent}>owed</span>
           </h1>
           <p className={styles.lead}>
-            Payments are recorded by hand, so an invoice sitting unpaid may only mean nobody has
-            entered it yet. Every recorded payment issues a numbered receipt.
+            Every invoice and what is still owed. Record payments as they arrive.
           </p>
         </div>
       </div>
@@ -172,8 +171,7 @@ export default async function InvoicesPage({
                       {active === 'owing' ? 'Nothing outstanding.' : 'No invoices here.'}
                     </p>
                     <p className={table.emptyHint}>
-                      Invoices are raised from a project&rsquo;s fee lines — open a project and use
-                      &ldquo;Raise an invoice&rdquo;.
+                      Raise one from a project&rsquo;s Fees tab.
                     </p>
                   </td>
                 </tr>
@@ -207,7 +205,7 @@ export default async function InvoicesPage({
                             {invoice.project.name}
                           </Link>
                         ) : (
-                          <span className={table.muted}>—</span>
+                          <span className={table.muted}>No project</span>
                         )}
                       </td>
                       <td className={table.td}>
@@ -224,7 +222,7 @@ export default async function InvoicesPage({
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {owed === 0 ? (
-                          <span className={table.muted}>—</span>
+                          <span className={table.muted}>Paid</span>
                         ) : (
                           formatMoney(owed, invoice.currency)
                         )}

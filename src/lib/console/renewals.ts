@@ -168,7 +168,7 @@ export function periodLabel(start: Date, end: Date): string {
     new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
       date,
     );
-  return `${format(start)} – ${format(end)}`;
+  return `${format(start)} to ${format(end)}`;
 }
 
 export const RENEWAL_STATUS_LABEL: Record<string, string> = {

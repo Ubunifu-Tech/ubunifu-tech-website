@@ -17,13 +17,16 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "owner:create": "tsx scripts/create-owner.mts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:deploy": "node scripts/migrate-deploy.mjs",
     "check:editor": "tsx scripts/check-editor-roundtrip.mts",
     "check:signatures": "tsx scripts/verify-signature-hashes.mts",
     "check:renewals": "tsx scripts/check-renewal-cycle.mts",
-    "check:blog-parity": "tsx scripts/check-blog-parity.mts"
+    "check:blog-parity": "tsx scripts/check-blog-parity.mts",
+    "check:links": "tsx --conditions=react-server scripts/check-links.mts",
+    "check:assistant": "tsx --conditions=react-server scripts/check-assistant.mts"
   },
   "engines": {
     "node": ">=20.9.0"
@@ -73,6 +76,7 @@
     "typescript": "5.9.3"
   },
   "overrides": {
-    "postcss": "^8.5.10"
+    "postcss": "^8.5.10",
+    "mysql2": "^3.24.4"
   }
 }

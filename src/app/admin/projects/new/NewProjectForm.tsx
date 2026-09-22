@@ -44,20 +44,24 @@ export function NewProjectForm({
   clientName,
   currency,
   templates,
+  from,
 }: {
   clientId: string;
   clientName: string;
   currency: string;
   templates: TemplateOption[];
+  /** The enquiry this project answers, when it started as one. */
+  from?: { enquiryId: string; name: string; summary: string; serviceLine: string | null };
 }) {
   const [state, action, pending] = useActionState(createProject, INITIAL);
-  const [serviceLine, setServiceLine] = useState('web');
+  const [serviceLine, setServiceLine] = useState(from?.serviceLine ?? 'web');
   const invalid = (name: string) => (state.field === name ? true : undefined);
   const usable = templates.filter((template) => template.serviceLine === serviceLine);
 
   return (
     <form action={action} className={forms.form}>
       <input type="hidden" name="clientId" value={clientId} />
+      {from && <input type="hidden" name="enquiryId" value={from.enquiryId} />}
 
       <div className={forms.card}>
         <fieldset className={forms.section}>
@@ -68,6 +72,7 @@ export function NewProjectForm({
             <TextField
               name="name"
               label="Project name"
+              defaultValue={from?.name}
               wide
               required
               maxLength={160}
@@ -154,6 +159,7 @@ export function NewProjectForm({
             <TextAreaField
               name="summary"
               label="What the work is"
+              defaultValue={from?.summary}
               optional
               wide
               maxLength={2000}
@@ -168,8 +174,7 @@ export function NewProjectForm({
             {pending ? 'Creating…' : 'Start the project'}
           </button>
           <p className={forms.payoff}>
-            Opens on the project screen, with the plan laid out and the fee lines waiting to be
-            priced.
+            Opens the new project, ready to plan and price.
           </p>
         </div>
 

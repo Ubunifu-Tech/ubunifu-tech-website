@@ -482,3 +482,10 @@
     font-size: var(--font-size-body);
   }
 }
+
+@media print {
+  .launcher,
+  .panel {
+    display: none;
+  }
+}

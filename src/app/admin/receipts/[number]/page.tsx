@@ -118,11 +118,7 @@ export default async function ReceiptPage({
             <p className={sheet.partyLabel}>For</p>
             <p className={sheet.partyValue}>
               {invoice.project ? (
-                <>
-                  {invoice.project.name}
-                  <br />
-                  {invoice.project.reference}
-                </>
+                invoice.project.name
               ) : (
                 'Services rendered'
               )}

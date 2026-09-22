@@ -5,6 +5,7 @@ import { recordAudit, type ClientActor } from './auth';
 import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
+import { retryOnConflict } from './conflict';
 
 /**
  * A client asking us for something, from the requests form or from the
@@ -38,7 +39,7 @@ export async function createTicket(input: {
 }) {
   const { actor, kind, subject, body, project } = input;
 
-  const ticket = await db.$transaction(async (tx) => {
+  const ticket = await retryOnConflict(() => db.$transaction(async (tx) => {
     const reference = await nextTicketReference(tx);
     return tx.ticket.create({
       data: {
@@ -54,7 +55,7 @@ export async function createTicket(input: {
       },
       select: { id: true, reference: true },
     });
-  });
+  }));
 
   await recordAudit({
     actorType: 'client_contact',

@@ -62,7 +62,8 @@ export default async function NewClientPage({
         contactName: usable.name,
         contactEmail: usable.email,
         serviceLine: usable.serviceLine ?? 'web',
-        notes: `From the website enquiry on ${formatDate(usable.createdAt)} — ${usable.subject}:\n\n${usable.message}`,
+        notes: `From the website enquiry on ${formatDate(usable.createdAt)}, about ${usable.subject}:\n\n${usable.message}`,
+        projectName: usable.subject.slice(0, 160),
       }
     : undefined;
 
@@ -78,7 +79,7 @@ export default async function NewClientPage({
           </h1>
           <p className={styles.lead}>
             {usable
-              ? `Turning ${usable.name}'s enquiry into a client. We still need the organisation's name — the enquiry only told us who wrote in.`
+              ? `From ${usable.name}'s enquiry. Add their organisation if they have one.`
               : 'For work that came in by phone or in person rather than through the website.'}
           </p>
         </div>

@@ -183,3 +183,195 @@
     box-shadow: none;
   }
 }
+
+/* ── Invoice lines ─────────────────────────────── */
+
+.lineTable {
+  width: 100%;
+  margin: var(--space-2) 0 0;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+.lineTable th,
+.lineTable td {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  text-align: left;
+  vertical-align: top;
+  font-weight: var(--font-weight-regular);
+}
+
+.lineTable thead th {
+  padding-top: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.lineTable tfoot th {
+  color: var(--text-secondary);
+}
+
+.lineTable .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lineNote {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.lineNote a {
+  color: inherit;
+}
+
+.totalRow th,
+.totalRow td {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body);
+  border-bottom-width: 2px;
+}
+
+.amountDue {
+  border-color: var(--brand-border);
+  background: var(--brand-dim);
+}
+
+.amountDue .amount {
+  color: var(--brand-deep);
+}
+
+.payBlock {
+  margin: var(--space-2) 0 0;
+}
+
+.payList {
+  display: grid;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.payList dt {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.payList dd {
+  margin: 0.125rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.payNote {
+  margin: var(--space-4) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
+@media print {
+  .amountDue,
+  .amountBlock {
+    background: none;
+  }
+}
+
+/* ── Proposals and agreements ──────────────────── */
+
+.docTitle {
+  margin: var(--space-6) 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.body {
+  max-width: none;
+  margin: var(--space-2) 0 var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.signatures {
+  display: grid;
+  gap: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 2px solid var(--text-primary);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  break-inside: avoid;
+}
+
+.signLine {
+  margin: var(--space-6) 0 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-active);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.appendix {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.appendixTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lead);
+  font-weight: var(--font-weight-regular);
+}
+
+@media print {
+  .appendix {
+    break-before: page;
+    border-top: 0;
+  }
+
+  .head {
+    border-bottom-color: #000;
+  }
+
+  .body {
+    color: #111;
+  }
+}
+
+/* Tables inside a document: ruled rows rather than a grid, and the first
+   column (what the line is) given the room it needs. */
+.body table {
+  table-layout: auto;
+}
+
+.body th,
+.body td {
+  border-width: 0 0 1px;
+  padding-left: 0;
+}
+
+.body th:not(:first-child),
+.body td:not(:first-child) {
+  padding-left: var(--space-3);
+}
+
+.body th {
+  background: none;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.body td:first-child {
+  width: 42%;
+  color: var(--text-primary);
+}

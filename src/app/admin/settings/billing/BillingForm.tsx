@@ -110,8 +110,7 @@ export function BillingForm({ org, vatRate }: { org: Org; vatRate: string }) {
                 <span className={forms.checkText}>
                   <span>We charge VAT</span>
                   <span className={forms.hint}>
-                    Leave this off until registered. Charging VAT without a VRN is worse than not
-                    charging it.
+                    Leave this off until you are VAT registered.
                   </span>
                 </span>
               </label>
@@ -154,8 +153,7 @@ export function BillingForm({ org, vatRate }: { org: Org; vatRate: string }) {
             {pending ? 'Saving…' : 'Save these details'}
           </button>
           <p className={forms.payoff}>
-            Used on every invoice and receipt from now on. Documents already sent keep what they
-            were sent with.
+            Used from now on. Documents already sent do not change.
           </p>
         </div>
 

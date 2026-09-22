@@ -148,11 +148,11 @@ export default async function PortalInvoices() {
                         {formatMoney(invoice.totalMinor, invoice.currency)}
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
-                        {owed === 0 ? <span className={table.muted}>—</span> : formatMoney(owed, invoice.currency)}
+                        {owed === 0 ? <span className={table.muted}>Nothing</span> : formatMoney(owed, invoice.currency)}
                       </td>
                       <td className={table.td}>
                         {invoice.payments.length === 0 ? (
-                          <span className={table.muted}>—</span>
+                          <span className={table.muted}>None yet</span>
                         ) : (
                           invoice.payments.map((payment) => (
                             <span key={payment.id} className={table.sub}>

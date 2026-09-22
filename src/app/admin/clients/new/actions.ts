@@ -129,9 +129,11 @@ export async function createClient(
   });
 
   // ── The organisation ──────────────────────────────────────────────────
-  const { name } = values;
+  // Someone working on their own is their own client: with no organisation
+  // name, the contact's name is used.
+  const name = values.name || values.contactName;
   if (name.length < 2 || name.length > 160) {
-    return fail('Enter the organisation’s name.', 'name');
+    return fail('Add the organisation’s name, or the name of the person.', 'name');
   }
 
   const country = values.country.toUpperCase();
@@ -262,7 +264,7 @@ export async function createClient(
     action: 'client.created',
     entityType: 'Client',
     entityId: created.clientId,
-    summary: created.reference ? `${name} — ${created.reference}` : name,
+    summary: created.reference ? `${name}, ${created.reference}` : name,
     metadata: { manual: true, projectId: created.projectId },
   });
 

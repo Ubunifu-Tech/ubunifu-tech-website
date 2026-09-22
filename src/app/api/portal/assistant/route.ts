@@ -164,6 +164,7 @@ async function handle(request: NextRequest) {
     tools: [raiseRequestTool],
     context: { actor, conversationId: conversation.id },
     maxTokens: 2000,
+    think: false,
   });
 
   if (!result.ok) {

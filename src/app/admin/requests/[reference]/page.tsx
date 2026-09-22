@@ -121,7 +121,7 @@ export default async function TicketPage({
                 >
                   <p className={styles.messageWho}>
                     {message.isInternal
-                      ? 'Internal note — the client cannot see this'
+                      ? 'Internal note. The client cannot see this.'
                       : fromUs
                         ? 'Us'
                         : (ticket.openedBy?.name ?? 'The client')}{' '}

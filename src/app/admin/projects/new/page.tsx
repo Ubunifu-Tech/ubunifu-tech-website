@@ -2,26 +2,26 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
+import { ChevronRight } from 'lucide-react';
+import { Steps } from '@/components/console/Steps';
 import { NewProjectForm } from './NewProjectForm';
+import forms from '@/styles/forms.module.css';
 import styles from '../../Admin.module.css';
 
 export const metadata = { title: 'New project' };
 
 /**
- * More work for a client already on the books.
- *
- * Reached with ?client=<slug>, because a project without a client is not a
- * thing this system can hold — and picking the client from a list here would
- * duplicate the onboarding form for the one case it does not cover.
+ * More work for a client. Without ?client= it starts by asking who it is for,
+ * with a way to add someone new; with it, it goes straight to the project.
  */
 export default async function NewProjectPage({
   searchParams,
 }: {
-  searchParams: Promise<{ client?: string }>;
+  searchParams: Promise<{ client?: string; enquiry?: string }>;
 }) {
   await requirePermission('projects');
-  const { client: slug } = await searchParams;
-  if (!slug) notFound();
+  const { client: slug, enquiry: enquiryId } = await searchParams;
+  if (!slug) return <ChooseClient />;
 
   const [client, templates] = await Promise.all([
     db.client.findFirst({
@@ -36,6 +36,13 @@ export default async function NewProjectPage({
 
   if (!client) notFound();
 
+  const enquiry = enquiryId
+    ? await db.enquiry.findFirst({
+        where: { id: enquiryId, status: { not: 'converted' } },
+        select: { id: true, subject: true, serviceLine: true },
+      })
+    : null;
+
   return (
     <main className={`${styles.page} ${styles.medium}`}>
       <div className={styles.pageHead}>
@@ -46,18 +53,95 @@ export default async function NewProjectPage({
           <h1 className={styles.heading}>
             New <span className={styles.headingAccent}>project</span>
           </h1>
-          <p className={styles.lead}>
-            For {client.name}, who is already on the books. Their details, contacts and billing
-            currency carry over.
-          </p>
+          <p className={styles.lead}>For {client.name}.</p>
         </div>
       </div>
+      <Steps
+        steps={[
+          { key: 'client', label: 'Client' },
+          { key: 'project', label: 'Project' },
+        ]}
+        current={1}
+        hrefFor={() => '/projects/new'}
+      />
       <NewProjectForm
         clientId={client.id}
         clientName={client.name}
         currency={client.currency}
         templates={templates}
+        from={
+          enquiry
+            ? {
+                enquiryId: enquiry.id,
+                name: enquiry.subject.slice(0, 160),
+                // Their message is not the summary the client will see; staff write that.
+                summary: '',
+                serviceLine: enquiry.serviceLine,
+              }
+            : undefined
+        }
       />
+    </main>
+  );
+}
+
+/** The first step: who the project is for. */
+async function ChooseClient() {
+  const clients = await db.client.findMany({
+    where: { deletedAt: null },
+    orderBy: { name: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      _count: { select: { projects: { where: { deletedAt: null } } } },
+    },
+  });
+
+  return (
+    <main className={`${styles.page} ${styles.medium}`}>
+      <div className={styles.pageHead}>
+        <div className={styles.headText}>
+          <Link href="/projects" className={styles.backLink}>
+            ← Projects
+          </Link>
+          <h1 className={styles.heading}>New project</h1>
+          <p className={styles.lead}>Who is it for?</p>
+        </div>
+      </div>
+
+      <Steps
+        steps={[
+          { key: 'client', label: 'Client' },
+          { key: 'project', label: 'Project' },
+        ]}
+        current={0}
+      />
+
+      <section className={forms.card}>
+        <ul className={styles.glance}>
+          {clients.map((client) => (
+            <li key={client.id}>
+              <Link href={`/projects/new?client=${client.slug}`}>
+                <span className={styles.taskText}>
+                  {client.name}
+                  <span className={styles.taskMeta}>
+                    {client._count.projects === 0
+                      ? 'No projects yet'
+                      : `${client._count.projects} ${client._count.projects === 1 ? 'project' : 'projects'}`}
+                  </span>
+                </span>
+                <ChevronRight size={16} strokeWidth={1.8} aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className={forms.actions}>
+          <Link href="/clients/new" className={`${forms.button} ${forms.quiet}`}>
+            Someone new
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

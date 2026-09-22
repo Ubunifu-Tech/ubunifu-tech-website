@@ -45,7 +45,12 @@ function cell(text: string): string {
 }
 
 /** The table and totals, without a heading. withFees decides on the heading. */
-export function feeSchedule(lines: ScheduleLine[], currency: string): string {
+export function feeSchedule(
+  lines: ScheduleLine[],
+  currency: string,
+  /** Basis points of VAT added on invoices, when the company charges it. */
+  vatBps = 0,
+): string {
   if (lines.length === 0) {
     return 'No fees have been set for this work yet.';
   }
@@ -86,7 +91,10 @@ export function feeSchedule(lines: ScheduleLine[], currency: string): string {
     yearly > 0 ? `Then ${formatMoney(yearly, currency)} a year.` : null,
   ].filter(Boolean);
 
-  return [head, ...rows, '', ...totals.map((line) => `${line}\n`)].join('\n').trimEnd();
+  const vat =
+    vatBps > 0 ? [`Prices exclude VAT at ${(vatBps / 100).toString()}%, which is added to each invoice.`] : [];
+
+  return [head, ...rows, '', ...totals.map((line) => `${line}\n`), ...vat].join('\n').trimEnd();
 }
 
 const HEADING = /^#{1,3}[ \t]+\S/;

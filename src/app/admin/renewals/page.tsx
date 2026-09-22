@@ -106,7 +106,7 @@ export default async function RenewalsPage() {
     {
       key: 'soon',
       title: 'Coming up',
-      hint: 'Inside the lead time on the line — close enough to invoice now.',
+      hint: 'Close enough to invoice now.',
       rows: soon,
     },
     {
@@ -131,9 +131,8 @@ export default async function RenewalsPage() {
             What <span className={styles.headingAccent}>renews</span>
           </h1>
           <p className={styles.lead}>
-            Domains, hosting and anything else billed again on a date, one period at a time.
-            Nothing chases these automatically, so this list is the only thing between a client and
-            an expired domain.
+            Domains, hosting and anything else billed again on a date. Nothing renews itself, so
+            invoice these on time.
           </p>
         </div>
       </div>

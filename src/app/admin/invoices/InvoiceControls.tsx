@@ -132,7 +132,7 @@ export function RecordPaymentForm({
           {pending ? 'Recording…' : 'Record the payment'}
         </button>
         <p className={forms.payoff}>
-          Issues a numbered receipt straight away. Nothing else in the system makes money true.
+          Issues a numbered receipt straight away.
         </p>
       </div>
       <Result state={state} />
@@ -193,8 +193,7 @@ export function VoidInvoiceForm({ invoiceId }: { invoiceId: string }) {
           disabled={pending}
         />
         <p className={forms.hint}>
-          The invoice is kept and keeps its number — a gap in the numbering is the first thing an
-          accountant asks about. The reason is added to its notes.
+          The invoice keeps its number, and the reason is added to its notes.
         </p>
       </div>
       <div className={forms.actions}>

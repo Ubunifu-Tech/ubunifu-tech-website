@@ -28,7 +28,13 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const staff = await getStaffActor();
+  // If the database cannot be reached, the chrome steps aside rather than
+  // taking the page down with it: the sign-in screen still loads, and any
+  // other page reports the problem through its own error screen.
+  const staff = await getStaffActor().catch((error: unknown) => {
+    console.error('[console] could not read the session', error);
+    return null;
+  });
 
   /**
    * Signed out means the sign-in screen, which brings its own full-height
@@ -37,7 +43,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
    */
   if (!staff) return <>{children}</>;
 
-  const counts = await navCounts();
+  const counts = await navCounts().catch(() => ({
+    enquiries: 0,
+    projects: 0,
+    invoices: 0,
+    renewals: 0,
+    documents: 0,
+    requests: 0,
+  }));
 
   const links: ProfileLink[] = [
     { href: '/profile', label: 'Your profile', icon: 'profile' },

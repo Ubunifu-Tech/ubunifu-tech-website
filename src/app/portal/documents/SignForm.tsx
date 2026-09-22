@@ -80,7 +80,7 @@ export function SignForm({
         <span className={forms.checkText}>
           <span>I have read this document and agree to it</span>
           <span className={forms.hint}>
-            If anything is wrong, do not sign it — ask for changes below. We would much rather fix
+            If anything is wrong, do not sign it. Ask for changes below. We would much rather fix
             it.
           </span>
         </span>
@@ -143,7 +143,7 @@ const WORDING: Record<
   decline: {
     open: 'I cannot sign this',
     title: 'Why not?',
-    hint: 'This closes the request. Nothing is signed, nothing is charged, and we will come back to you — a new version would arrive as a fresh request.',
+    hint: 'This closes the request. Nothing is signed, nothing is charged, and we will come back to you. A new version would arrive as a fresh request.',
     submit: 'Decline it',
     working: 'Recording…',
   },

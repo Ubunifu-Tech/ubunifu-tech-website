@@ -39,6 +39,8 @@ export type GuardSeverity = 'block' | 'warn';
 export type Guard = {
   severity: GuardSeverity;
   message: string;
+  /** The project tab where it is put right, so every warning has a way forward. */
+  fix?: 'fees' | 'documents' | 'overview';
 };
 
 export type Transition = {
@@ -360,6 +362,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       guards.push({
         severity: 'block',
         message: `Fees are in more than one currency (${facts.currencies.join(' and ')}). Put them all in one currency first.`,
+        fix: 'fees',
       });
     }
   }
@@ -368,6 +371,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'block',
       message: `${facts.linesUnpriced} fee${facts.linesUnpriced === 1 ? ' has' : 's have'} no price yet. Price ${facts.linesUnpriced === 1 ? 'it' : 'them'} first.`,
+        fix: 'fees',
     });
   }
 
@@ -376,6 +380,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       severity: 'warn',
       message:
         'No signature is on file. If it was signed on paper or by email, say so in the note.',
+        fix: 'documents',
     });
   }
 
@@ -383,6 +388,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'warn',
       message: `${facts.openSignatureRequests === 1 ? 'A document is' : `${facts.openSignatureRequests} documents are`} still waiting for the client's signature. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first.`,
+        fix: 'documents',
     });
   }
 
@@ -393,6 +399,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
         facts.invoicedMinor === 0
           ? `Nothing has been invoiced yet (${money(facts.committedMinor)} agreed). Consider sending the deposit invoice.`
           : `${money(facts.invoicedMinor)} is invoiced but no payment is recorded yet.`,
+        fix: 'fees',
     });
   }
 
@@ -400,6 +407,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'block',
       message: `${facts.recurringWithoutDueDate} recurring fee${facts.recurringWithoutDueDate === 1 ? ' needs' : 's need'} a renewal date. Add ${facts.recurringWithoutDueDate === 1 ? 'it' : 'them'} first.`,
+        fix: 'fees',
     });
   }
 
@@ -407,6 +415,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'warn',
       message: `The client still owes ${facts.outstandingAssetRequests} item${facts.outstandingAssetRequests === 1 ? '' : 's'}. If ${facts.outstandingAssetRequests === 1 ? 'it is' : 'they are'} not needed, mark ${facts.outstandingAssetRequests === 1 ? 'it' : 'them'} as not needed.`,
+        fix: 'overview',
     });
   }
 
@@ -415,12 +424,14 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       guards.push({
         severity: 'warn',
         message: `${money(facts.outstandingMinor)} is still unpaid. It is harder to collect after handover.`,
+        fix: 'fees',
       });
     }
     if (facts.uninvoicedOneOffMinor > 0) {
       guards.push({
         severity: 'warn',
         message: `${money(facts.uninvoicedOneOffMinor)} of fees has not been invoiced yet.`,
+        fix: 'fees',
       });
     }
   }
@@ -448,6 +459,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'warn',
       message: `${facts.liveRecurringLines} recurring fee${facts.liveRecurringLines === 1 ? '' : 's'} and ${facts.activeManagedServices} service${facts.activeManagedServices === 1 ? '' : 's'} are still active. Closing does not stop them. Say in the note what happens to each.`,
+        fix: 'fees',
     });
   }
 
@@ -455,6 +467,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'warn',
       message: `${money(facts.paidMinor)} has been paid. Cancelling does not refund it. Say in the note what happens to it.`,
+        fix: 'fees',
     });
   }
 
@@ -462,6 +475,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'block',
       message: `${facts.openSignatureRequests === 1 ? 'A document is' : `${facts.openSignatureRequests} documents are`} still out for signature. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first.`,
+        fix: 'documents',
     });
   }
 

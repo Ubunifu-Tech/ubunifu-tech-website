@@ -121,3 +121,16 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+
+.fixes {
+  display: flex;
+  gap: var(--space-4);
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.fixLink {
+  display: inline-block;
+  margin: 0 0 var(--space-2) 0.75rem;
+  font-size: var(--font-size-caption);
+}

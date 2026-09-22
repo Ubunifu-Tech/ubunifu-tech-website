@@ -7,6 +7,7 @@ import {
   saveDetails,
   saveVersion,
   sendForSignature,
+  withdrawDocument,
   type DocumentState,
 } from './actions';
 import { RichText } from '@/components/console/RichText';
@@ -252,6 +253,38 @@ export function SendForSignature({
       <div className={forms.actions}>
         <button type="submit" className={forms.button} disabled={pending || !ready}>
           {pending ? 'Sending…' : alreadySent ? 'Send the new version' : 'Send for signature'}
+        </button>
+      </div>
+      <Result state={state} />
+    </form>
+  );
+}
+
+/** Takes back a document the client has not signed yet. */
+export function WithdrawDocument({ documentId }: { documentId: string }) {
+  const [state, action, pending] = useActionState(withdrawDocument, INITIAL);
+  const [confirming, setConfirming] = useState(false);
+
+  if (!confirming) {
+    return (
+      <div className={forms.actions}>
+        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setConfirming(true)}>
+          Withdraw it
+        </button>
+        <Result state={state} />
+      </div>
+    );
+  }
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="documentId" value={documentId} />
+      <p className={styles.note}>They will no longer be able to sign it. You can change it and send it again.</p>
+      <div className={forms.actions}>
+        <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>
+          {pending ? 'Withdrawing…' : 'Withdraw'}
+        </button>
+        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setConfirming(false)}>
+          Keep it with them
         </button>
       </div>
       <Result state={state} />

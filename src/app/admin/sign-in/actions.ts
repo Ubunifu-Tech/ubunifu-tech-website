@@ -31,9 +31,23 @@ export async function requestStaffLink(
     return { status: 'error', message: 'Enter a valid email address.' };
   }
 
+  try {
+    return await sendStaffLink(email);
+  } catch (error) {
+    // A database or mail outage must not become an error page. The person
+    // is told plainly, and the cause is in the server log.
+    console.error('[console] sign-in link failed', error);
+    return {
+      status: 'error',
+      message: 'The link could not be sent just now. Please try again in a minute.',
+    };
+  }
+}
+
+async function sendStaffLink(email: string): Promise<SignInState> {
   const sameForEveryone: SignInState = {
     status: 'sent',
-    message: 'If that address can access the console, a sign-in link is on its way.',
+    message: 'If that address can use the console, a link is on its way. Check your spam folder if it does not arrive.',
   };
 
   if (!(await allow('staff-link:ip', requestIp(await headers()), { limit: 10, windowMinutes: 15 }))) {
@@ -41,7 +55,27 @@ export async function requestStaffLink(
   }
 
   const allowed = isStaffEmailAllowed(email);
-  const staff = await db.staffUser.findUnique({ where: { email } });
+  let staff = await db.staffUser.findUnique({ where: { email } });
+
+  /**
+   * Setting up the console is the company account's job and nobody else's.
+   * The first time it asks for a link, it becomes the owner. Everyone else
+   * can only sign in once an owner has added them on the Team page.
+   */
+  if (!staff && email === consoleEnv.ownerEmail) {
+    staff = await db.staffUser.upsert({
+      where: { email },
+      update: {},
+      create: { email, name: 'Ubunifu Technologies', role: 'owner' },
+    });
+    await recordAudit({
+      actorType: 'system',
+      action: 'staff.owner_created',
+      entityType: 'StaffUser',
+      entityId: staff.id,
+      summary: email,
+    });
+  }
 
   if (!allowed || !staff || !staff.isActive) {
     await recordAudit({
@@ -49,7 +83,11 @@ export async function requestStaffLink(
       action: 'staff.sign_in.refused',
       entityType: 'StaffUser',
       entityId: staff?.id ?? email,
-      summary: !allowed ? 'Address not on the staff allowlist' : 'No active staff account',
+      summary: !staff
+        ? 'Not added on the Team page'
+        : !staff.isActive
+          ? 'Removed from the team'
+          : 'Address not allowed by CONSOLE_STAFF_EMAILS',
     });
     return sameForEveryone;
   }
@@ -73,7 +111,7 @@ export async function requestStaffLink(
 
   const url = `${consoleEnv.adminOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`;
 
-  await sendConsoleEmail({
+  const sent = await sendConsoleEmail({
     to: staff.email,
     subject: 'Sign in to the Ubunifu console',
     html: staffSignInEmail({ name: staff.name, url }),
@@ -85,9 +123,10 @@ export async function requestStaffLink(
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: 'staff.sign_in.link_sent',
+    action: sent.ok ? 'staff.sign_in.link_sent' : 'staff.sign_in.send_failed',
     entityType: 'StaffUser',
     entityId: staff.id,
+    summary: sent.ok ? undefined : sent.error,
   });
 
   return sameForEveryone;

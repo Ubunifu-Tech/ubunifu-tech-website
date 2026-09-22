@@ -1,6 +1,7 @@
 import 'server-only';
 import type { DocumentKind } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
+import { getOrg } from './org';
 import { carriesFees, feeProblems, feeSchedule, hasFeesToken, projectFees, withFees } from './fees';
 
 /**
@@ -45,16 +46,18 @@ export async function prepareDocument(document: {
   const { kind, source, project } = document;
   const withFeeTable = carriesFees(kind) || hasFeesToken(source);
 
-  const [lines, signer] = await Promise.all([
+  const [lines, signer, org] = await Promise.all([
     withFeeTable ? projectFees(project.id) : Promise.resolve([]),
     db.clientContact.findFirst({
       where: { clientId: project.clientId, deletedAt: null, canSignIn: true, isPrimary: true },
       select: { id: true, name: true, email: true },
     }),
+    getOrg(),
   ]);
+  const vatBps = org.chargesVat ? org.vatRateBps : 0;
 
   const final = withFeeTable
-    ? withFees(source, feeSchedule(lines, project.currency), kind)
+    ? withFees(source, feeSchedule(lines, project.currency, vatBps), kind)
     : source;
 
   const checks: ReadyCheck[] = [];

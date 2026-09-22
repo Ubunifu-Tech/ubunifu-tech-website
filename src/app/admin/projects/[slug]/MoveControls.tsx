@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useActionState, useState } from 'react';
+import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { moveProject, type MoveState } from './actions';
 import type { Transition } from '@/lib/console/transitions';
@@ -15,6 +16,16 @@ const INITIAL: MoveState = { status: 'idle' };
 export type StageAction = Transition & {
   /** Why this cannot happen right now, or null when it can. */
   blocked: string | null;
+  /** The tab where the reason is put right. */
+  blockedFix: FixTab | null;
+};
+
+type FixTab = 'fees' | 'documents' | 'overview';
+
+const FIX_LABEL: Record<FixTab, string> = {
+  fees: 'Go to fees',
+  documents: 'Go to documents',
+  overview: 'See what the client owes',
 };
 
 /**
@@ -28,13 +39,17 @@ export type StageAction = Transition & {
  */
 export function MoveControls({
   projectId,
+  projectSlug,
   status,
   actions,
 }: {
   projectId: string;
+  projectSlug: string;
   status: ProjectStatus;
   actions: StageAction[];
 }) {
+  const fixHref = (tab: FixTab) =>
+    tab === 'overview' ? `/projects/${projectSlug}` : `/projects/${projectSlug}?tab=${tab}`;
   const [state, action, pending] = useActionState(moveProject, INITIAL);
   const [chosen, setChosen] = useState<StageAction | null>(null);
 
@@ -57,6 +72,15 @@ export function MoveControls({
         <div className={styles.confirm}>
           <p className={styles.confirmTitle}>Move to {STAFF_LABEL[chosen!.to]}?</p>
           <Callout kind="warn" items={state.guards?.map((guard) => guard.message)} />
+          {state.guards?.some((guard) => guard.fix) && (
+            <p className={styles.fixes}>
+              {[...new Set(state.guards.flatMap((guard) => (guard.fix ? [guard.fix] : [])))].map((tab) => (
+                <Link key={tab} href={fixHref(tab)} className={forms.link}>
+                  {FIX_LABEL[tab]}
+                </Link>
+              ))}
+            </p>
+          )}
 
           <div className={forms.field}>
             <label className={forms.label} htmlFor="move-note">
@@ -125,6 +149,11 @@ export function MoveControls({
                         <ChevronRight size={16} strokeWidth={2} className={styles.optionIcon} aria-hidden="true" />
                       )}
                     </button>
+                    {item.blocked && item.blockedFix && (
+                      <Link href={fixHref(item.blockedFix)} className={`${forms.link} ${styles.fixLink}`}>
+                        {FIX_LABEL[item.blockedFix]}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

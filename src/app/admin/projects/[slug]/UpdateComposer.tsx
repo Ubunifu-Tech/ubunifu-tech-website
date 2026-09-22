@@ -147,8 +147,7 @@ export function UpdateComposer({
               disabled={pending}
             />
             <p className={forms.hint}>
-              This goes into the email itself, not behind a link. A client who has to sign in to
-              find out whether anything happened stops opening these.
+              This goes in the email itself.
             </p>
           </div>
 
@@ -172,8 +171,7 @@ export function UpdateComposer({
             {pending ? 'Saving…' : 'Save as a draft'}
           </button>
           <p className={forms.payoff}>
-            Saved first so you can read it back as the client will see it. Nothing is sent until you
-            press send.
+            Nothing is sent until you press send.
           </p>
         </div>
         <Result state={state} />

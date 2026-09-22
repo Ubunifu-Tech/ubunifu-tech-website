@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { Topography } from '@/components/Topography';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { cta } from '@/content/site';
 import styles from './NotFound.module.css';
 
 /**
@@ -43,21 +42,17 @@ export default function SiteError({
         </div>
 
         <div className={`container ${styles.inner}`}>
-          <p className={styles.code}>Sorry</p>
-          <h1 className={styles.title}>Something on our side broke.</h1>
+          <p className={styles.code}>Error</p>
+          <h1 className={styles.title}>Something went wrong.</h1>
           <p className={styles.lead}>
-            Not you, and not the link — it is ours to fix, and we can already see it. Trying again
-            often works, because most of these are brief.
+            Please try again. If it keeps happening, email info@ubunifutech.com.
           </p>
           <div className={styles.actions}>
             <button type="button" onClick={reset} className={styles.btnPrimary}>
               Try again
             </button>
             <Link href="/" className={styles.btnSecondary}>
-              Back home
-            </Link>
-            <Link href="/contact" className={styles.btnSecondary}>
-              {cta.primary}
+              Go home
             </Link>
           </div>
         </div>

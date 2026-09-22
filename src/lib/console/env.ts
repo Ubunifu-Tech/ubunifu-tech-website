@@ -49,14 +49,24 @@ export const consoleEnv = {
   },
 
   /**
-   * Emails allowed to request a staff sign-in link. A staff account alone is
-   * not enough: the address has to be on this list too, so a stray row in
-   * StaffUser cannot become console access. An entry starting with @ allows
-   * a whole domain ("@ubunifutech.com"), which is what lets an owner invite a
-   * colleague from the team page without a redeploy.
+   * The company account. Its first sign-in sets the console up and makes it
+   * the owner; it is always allowed in, whatever the list below says.
+   */
+  get ownerEmail(): string {
+    return optional('CONSOLE_OWNER_EMAIL', 'info@ubunifutech.com').trim().toLowerCase();
+  },
+
+  /**
+   * Addresses allowed to sign in, as an extra fence around the team. Being
+   * on it is not enough on its own: a person must also have been added on
+   * the Team page, so a stray row in StaffUser cannot become access. An entry
+   * starting with @ allows a whole domain. Unset, it allows the company
+   * account's domain, so anyone an owner adds with an @ubunifutech.com
+   * address can sign in without a redeploy.
    */
   get staffAllowlist(): string[] {
-    return optional('CONSOLE_STAFF_EMAILS', 'info@ubunifutech.com')
+    const owner = consoleEnv.ownerEmail;
+    return optional('CONSOLE_STAFF_EMAILS', owner.slice(owner.lastIndexOf('@')))
       .split(',')
       .map((entry) => entry.trim().toLowerCase())
       .filter(Boolean);
@@ -93,6 +103,7 @@ export function isAdminHost(host: string | null): boolean {
 /** Whether an address is on the staff allowlist, by address or by domain. */
 export function isStaffEmailAllowed(email: string): boolean {
   const address = email.trim().toLowerCase();
+  if (address === consoleEnv.ownerEmail) return true;
   const domain = address.slice(address.lastIndexOf('@'));
   return consoleEnv.staffAllowlist.some((entry) =>
     entry.startsWith('@') ? entry === domain : entry === address,

@@ -91,7 +91,7 @@ export function RaiseRequestForm({
             disabled={pending}
           />
           <p className={forms.hint}>
-            There is no wrong way to write this. Detail helps, but a sentence is fine — we will ask
+            There is no wrong way to write this. Detail helps, but a sentence is fine. We will ask
             if we need more.
           </p>
         </div>

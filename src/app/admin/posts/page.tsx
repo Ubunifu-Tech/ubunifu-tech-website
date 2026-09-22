@@ -49,8 +49,7 @@ export default async function PostsPage() {
             The <span className={styles.headingAccent}>journal</span>
           </h1>
           <p className={styles.lead}>
-            Written here and published straight to the site. A post dated in the future waits until
-            then, even once published.
+            Articles on the website. A post dated in the future goes live on that date.
           </p>
         </div>
       </div>

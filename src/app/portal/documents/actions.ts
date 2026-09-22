@@ -35,7 +35,7 @@ export async function signDocument(
   const acceptedDocument = formData.get('acceptDocument') === 'on';
 
   if (!/^[\p{L}][\p{L}.\s'-]{0,11}$/u.test(initials)) {
-    return { status: 'error', message: 'Type your initials — letters only, up to twelve.' };
+    return { status: 'error', message: 'Type your initials: letters only, up to twelve.' };
   }
   if (!acceptedDocument) {
     return { status: 'error', message: 'Tick the box to confirm you have read it.' };
@@ -99,7 +99,7 @@ export async function signDocument(
     return {
       status: 'error',
       message:
-        'This document no longer matches what was sent to you, so it cannot be signed. Nobody has been charged and nothing has been agreed — please tell us, and we will send a fresh copy.',
+        'This document no longer matches what was sent to you, so it cannot be signed. Nobody has been charged and nothing has been agreed. Please tell us, and we will send a fresh copy.',
     };
   }
 
@@ -161,7 +161,7 @@ export async function signDocument(
       status: 'error',
       message:
         current?.status === 'signed'
-          ? 'This has already been signed — your copy is on this page.'
+          ? 'This has already been signed. Your copy is on this page.'
           : 'This could not be signed because it changed while you were on the page. Refresh to see where it stands.',
     };
   }
@@ -180,7 +180,7 @@ export async function signDocument(
   revalidatePath(`/admin/documents/${request.document.reference}`);
   revalidatePath(`/admin/projects/${request.document.project.slug}`);
 
-  return { status: 'done', message: 'Signed. Thank you — we have a copy and so do you.' };
+  return { status: 'done', message: 'Signed. Thank you. We have a copy and so do you.' };
 }
 
 
@@ -216,7 +216,7 @@ export async function respondToDocument(
       message:
         intent === 'decline'
           ? 'Tell us why, even briefly. We would rather understand than guess.'
-          : 'Say what should change — a line is enough.',
+          : 'Say what should change. A line is enough.',
     };
   }
   if (note.length > 4000) {
@@ -322,7 +322,7 @@ export async function respondToDocument(
     entityId: request.document.id,
     summary: declined
       ? `${request.document.reference} declined by ${actor.name}`
-      : `${request.document.reference} — ${actor.name} asked for changes`,
+      : `${request.document.reference}: ${actor.name} asked for changes`,
     metadata: { version: request.version.version, note },
   });
 
@@ -355,7 +355,7 @@ export async function respondToDocument(
   return {
     status: 'done',
     message: declined
-      ? 'Recorded. Nothing has been signed and nothing has been charged — we will be in touch.'
+      ? 'Recorded. Nothing has been signed and nothing has been charged. We will be in touch.'
       : 'Sent. We will look at it and send you a new version.',
   };
 }

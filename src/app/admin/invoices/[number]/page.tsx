@@ -137,9 +137,16 @@ export default async function InvoicePage({
             </span>
           </p>
         </div>
-        <span className={`${forms.badge} ${STATUS_BADGE[invoice.status]}`}>
+<div className={styles.headActions}>
+          {invoice.status !== 'void' && (
+            <Link href={`/invoices/${invoice.number}/print`} className={`${forms.button} ${forms.quiet}`}>
+              Print or save as PDF
+            </Link>
+          )}
+                  <span className={`${forms.badge} ${STATUS_BADGE[invoice.status]}`}>
           {INVOICE_STATUS_LABEL[invoice.status]}
         </span>
+        </div>
       </div>
 
       <div className={styles.stats}>
@@ -171,8 +178,7 @@ export default async function InvoicePage({
             <div className={table.toolbarText}>
               <h2 className={table.title}>What this covers</h2>
               <span className={table.count}>
-                A snapshot taken when the invoice was raised — later changes to the project do not
-                rewrite it
+                As raised
               </span>
             </div>
           </div>
@@ -241,7 +247,7 @@ export default async function InvoicePage({
                     <td className={table.emptyCell} colSpan={7}>
                       <p className={table.emptyTitle}>Nothing received yet.</p>
                       <p className={table.emptyHint}>
-                        Payments are entered by hand — this stays empty until someone records one.
+                        No payments recorded yet.
                       </p>
                     </td>
                   </tr>
@@ -267,10 +273,10 @@ export default async function InvoicePage({
                         {methodLabel(payment.method)}
                       </td>
                       <td className={table.td}>
-                        {payment.reference ?? <span className={table.muted}>—</span>}
+                        {payment.reference ?? <span className={table.muted}>None</span>}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
-                        {payment.recordedBy?.name ?? <span className={table.muted}>—</span>}
+                        {payment.recordedBy?.name ?? <span className={table.muted}>Unknown</span>}
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {formatMoney(payment.amountMinor, payment.currency)}
@@ -314,9 +320,7 @@ export default async function InvoicePage({
                 {invoice.status === 'draft' ? (
                   <>
                     <p className={styles.note}>
-                      This invoice has not been sent yet. Send it first — recording a payment
-                      against something the client never received would put the record ahead of
-                      reality.
+                      Send the invoice before recording a payment against it.
                     </p>
                     <div className={forms.actions}>
                       <SendInvoiceButton invoiceId={invoice.id} sent={false} />
@@ -326,8 +330,7 @@ export default async function InvoicePage({
                   <div className={forms.actions}>
                     <SendInvoiceButton invoiceId={invoice.id} sent />
                     <p className={forms.payoff}>
-                      Nothing left to collect. Resending is only useful if they have asked for a
-                      copy.
+                      Paid in full. Resend only if they ask for a copy.
                     </p>
                   </div>
                 ) : (

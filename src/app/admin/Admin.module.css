@@ -1277,3 +1277,21 @@
     margin-bottom: var(--space-5);
   }
 }
+
+/* Paper: the document, not the console. */
+@media print {
+  .sidebar,
+  .topbar {
+    display: none;
+  }
+
+  .shell {
+    display: block;
+    background: #fff;
+  }
+
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+}

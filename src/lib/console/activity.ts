@@ -50,6 +50,7 @@ function describeAudit(action: string, summary: string | null): string {
     'line_item.saved': 'Fee updated',
     'line_item.removed': 'Fee removed',
     'document.details_saved': 'Document details changed',
+    'document.withdrawn': 'Document withdrawn',
     'document.send_failed': 'Document email failed to send',
     'document.copilot_turn': 'Assistant used',
     'document.copilot_failed': 'Assistant failed',

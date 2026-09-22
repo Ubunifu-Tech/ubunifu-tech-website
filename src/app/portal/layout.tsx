@@ -46,7 +46,11 @@ async function countsFor(clientId: string): Promise<PortalCounts> {
 }
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
-  const actor = await getClientActor();
+  // A database blip must not take the sign-in screen down with it.
+  const actor = await getClientActor().catch((error: unknown) => {
+    console.error('[portal] could not read the session', error);
+    return null;
+  });
 
   /**
    * Signed out means sign-in or the invitation link, and both bring their own

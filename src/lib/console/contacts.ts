@@ -5,6 +5,7 @@ import { consoleEnv } from './env';
 import { issueMagicToken } from './magic-link';
 import { sendConsoleEmail } from './mailer';
 import { clientInviteEmail, colleagueInviteEmail } from '@/lib/emails';
+import { isUniqueConflict } from './conflict';
 
 /**
  * People at a client: added by us from the console, or by a colleague from
@@ -63,7 +64,9 @@ export async function addContact(input: {
     return { ok: false, message: 'Someone with that email is already here.' };
   }
 
-  const person = existing
+  let person;
+  try {
+  person = existing
     ? await db.clientContact.update({
         where: { id: existing.id },
         data: { ...contact, deletedAt: null, canSignIn: true },
@@ -73,6 +76,11 @@ export async function addContact(input: {
         data: { clientId: input.clientId, ...contact },
         select: { id: true, name: true, email: true, activatedAt: true },
       });
+  } catch (error) {
+    // Added by someone else in the same moment.
+    if (isUniqueConflict(error)) return { ok: false, message: 'Someone with that email is already here.' };
+    throw error;
+  }
 
   await recordAudit({
     actorType: by.type,
@@ -189,13 +197,19 @@ export async function makeMainContact(input: { contactId: string; clientId: stri
   if (!contact) return { ok: false as const, message: 'They are not on this account.' };
   if (contact.isPrimary) return { ok: true as const, message: 'Already the main contact.' };
 
-  await db.$transaction([
-    db.clientContact.updateMany({
+  // Locked on the client, so two people choosing at once cannot leave two
+  // main contacts behind.
+  await db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Client" WHERE id = ${input.clientId} FOR UPDATE`;
+    await tx.clientContact.updateMany({
       where: { clientId: input.clientId, isPrimary: true },
       data: { isPrimary: false },
-    }),
-    db.clientContact.update({ where: { id: contact.id }, data: { isPrimary: true, canSignIn: true } }),
-  ]);
+    });
+    await tx.clientContact.update({
+      where: { id: contact.id },
+      data: { isPrimary: true, canSignIn: true },
+    });
+  });
   await recordAudit({
     actorType: input.by.type,
     actorId: input.by.id,

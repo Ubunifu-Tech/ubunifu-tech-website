@@ -147,6 +147,7 @@ export function PostEditor({ post }: { post: PostDraft }) {
             placeholder="/editorial/name.webp"
             invalid={state.field === 'coverImage'}
             disabled={pending}
+            hint="Leave it empty and the post gets one of the six standard illustrations, picked from its address. It will not change afterwards."
           />
           <TextField
             name="coverAlt"

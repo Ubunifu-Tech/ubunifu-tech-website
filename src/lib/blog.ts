@@ -39,6 +39,7 @@ import {
  */
 
 export { defaultBlogCover, resolveBlogCover };
+export type { BlogCover } from '@/content/blog-covers';
 export type { BlogPost, BlogPostMeta };
 
 function usingFiles(): boolean {

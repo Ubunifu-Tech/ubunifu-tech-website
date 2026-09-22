@@ -128,7 +128,7 @@ export default async function PostsPage() {
                           </Link>
                           <span className={table.sub}>
                             /blog/{post.slug}
-                            {!post.coverImage && ' · no cover'}
+                            {!post.coverImage && ' · standard cover'}
                           </span>
                         </td>
                         <td className={table.td}>

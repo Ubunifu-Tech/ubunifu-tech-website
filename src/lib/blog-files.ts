@@ -15,16 +15,18 @@ import 'server-only';
 import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
+import { blogCovers, coverForSlug, type BlogCover } from '@/content/blog-covers';
 
 const postsDirectory = path.join(process.cwd(), '_posts');
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const calendarDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 const coverImagePattern = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.(?:avif|jpe?g|png|webp)$/i;
 
-export const defaultBlogCover = {
-  image: '/editorial/build-or-buy.webp',
-  alt: 'A tactile workbench where one problem branches into modular and custom-built paths.',
-} as const;
+/**
+ * Kept for anything that needs "a cover" with no post in hand. A post itself
+ * never reaches for this — see resolveBlogCover, which gives each slug its own.
+ */
+export const defaultBlogCover = blogCovers[3]!;
 
 export interface BlogPostMeta {
   slug: string;
@@ -130,10 +132,24 @@ function validateCover(data: Frontmatter, fileName: string) {
   return { coverImage, coverAlt };
 }
 
-export function resolveBlogCover(post: Pick<BlogPostMeta, 'coverImage' | 'coverAlt'>) {
+/**
+ * A post's cover: the one it was given, or the one its address earns it.
+ *
+ * Writing a post in the console no longer means finding an image first. A post
+ * with no cover gets one of the six standing compositions, chosen from the
+ * slug, so it is distinct from its neighbours and identical on every render.
+ *
+ * coverImage and coverAlt are validated as a pair on the way in, so a post
+ * either has both or neither; the ?? on each is belt and braces rather than a
+ * real third case.
+ */
+export function resolveBlogCover(
+  post: Pick<BlogPostMeta, 'slug' | 'coverImage' | 'coverAlt'>,
+): BlogCover {
+  const fallback = coverForSlug(post.slug);
   return {
-    image: post.coverImage ?? defaultBlogCover.image,
-    alt: post.coverAlt ?? defaultBlogCover.alt,
+    image: post.coverImage ?? fallback.image,
+    alt: post.coverAlt ?? fallback.alt,
   };
 }
 

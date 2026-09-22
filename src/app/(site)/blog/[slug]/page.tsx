@@ -8,7 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import { CtaBand } from '@/components/CtaBand';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { getProjectDiagram } from '@/content/project-visuals';
-import { getAllPosts, getPostBySlug, resolveBlogCover } from '@/lib/blog';
+import { readPost, readPosts, resolveBlogCover } from '@/lib/blog';
 import { formatDateLong } from '@/lib/date';
 import styles from './BlogSlug.module.css';
 
@@ -27,7 +27,10 @@ function serializeJsonLd(value: unknown): string {
 }
 
 export async function generateStaticParams() {
-  return (await getAllPosts()).map((post) => ({ slug: post.slug }));
+  // An unreachable journal prerenders nothing rather than failing the build.
+  // dynamicParams stays on, so every post still renders on first request.
+  const { posts } = await readPosts();
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -36,10 +39,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const { post, unavailable } = await readPost(slug);
 
   if (!post) {
-    return { title: 'Post not found' };
+    // "Not found" is a claim about the world. Only make it when we actually
+    // asked and the answer was no.
+    return unavailable
+      ? { title: 'This article is not loading', robots: { index: false } }
+      : { title: 'Post not found' };
   }
 
   const url = `${SITE_URL}/blog/${post.slug}`;
@@ -80,13 +87,51 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * What a reader gets when the journal cannot be reached.
+ *
+ * Deliberately not a 404 and deliberately not an apology with nowhere to go:
+ * somebody followed a link to read something of ours, so the page says plainly
+ * whose problem it is and offers the two things they might have wanted instead.
+ */
+function ArticleUnavailable() {
+  return (
+    <>
+      <PageAtmosphere />
+      <main data-atmosphere className={styles.main}>
+        <div className={`container ${styles.articleContainer}`}>
+          <div className={styles.content}>
+            <h1>This article is not loading</h1>
+            <p>
+              Something on our side is not answering. It is usually brief — trying again in a
+              minute or two normally does it, and the link you followed is still good.
+            </p>
+            <p>
+              <Link href="/blog">Everything else we have written</Link> ·{' '}
+              <Link href="/work">the work we have done</Link> ·{' '}
+              <Link href="/contact">ask us for it directly</Link>
+            </p>
+          </div>
+        </div>
+      </main>
+      <CtaBand />
+    </>
+  );
+}
+
 export default async function BlogPostPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const { post, unavailable } = await readPost(slug);
+
+  // A database that cannot be reached is not a missing article. Returning a
+  // 404 here would tell the reader something untrue, and Next would cache it.
+  if (unavailable) {
+    return <ArticleUnavailable />;
+  }
 
   if (!post) {
     notFound();

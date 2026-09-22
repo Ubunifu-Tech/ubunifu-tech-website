@@ -20,10 +20,10 @@ requireFromHere.cache[serverOnly]!.loaded = true;
 requireFromHere.cache[serverOnly]!.exports = {};
 
 const { readPostFiles } = await import('../src/lib/blog-files');
-const { getAllPosts } = await import('../src/lib/blog');
+const { getAllPostsOrThrow } = await import('../src/lib/blog');
 
 const files = readPostFiles();
-const rows = await getAllPosts();
+const rows = await getAllPostsOrThrow();
 
 const failures: string[] = [];
 

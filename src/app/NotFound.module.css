@@ -128,3 +128,14 @@
   outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
+
+/* The error boundary's "Try again" is a real button, and a button arrives with
+   user-agent chrome an anchor does not: its own border, its own font. These
+   two rules are what let one set of styles dress both. */
+button.btnPrimary,
+button.btnSecondary {
+  border: 0;
+  font-family: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}

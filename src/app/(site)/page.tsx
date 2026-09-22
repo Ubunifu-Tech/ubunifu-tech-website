@@ -1,6 +1,6 @@
 import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { HomeLanding, type HomeInsight } from '@/components/HomeLanding';
-import { getAllPosts, resolveBlogCover } from '@/lib/blog';
+import { readPosts, resolveBlogCover } from '@/lib/blog';
 import { projects } from '@/content/portfolio';
 import { pageMetadata } from '@/lib/metadata';
 
@@ -12,7 +12,11 @@ export const metadata = pageMetadata({
 });
 
 export default async function Home() {
-  const candidates = (await getAllPosts()).slice(0, 3);
+  // If the journal cannot be read, the home page simply has no insights strip
+  // today. Everything else on it — what we do, the work, how to reach us — is
+  // in the code and does not need a database to render.
+  const { posts } = await readPosts();
+  const candidates = posts.slice(0, 3);
   // Keep the latest three stories, but don't repeat the project art just shown above.
   const lead = candidates.find((post) => !projects.some((project) => project.artwork.src === resolveBlogCover(post).image));
   const latestPosts = (lead

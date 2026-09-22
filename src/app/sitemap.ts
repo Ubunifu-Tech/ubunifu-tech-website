@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getAllPosts } from '@/lib/blog';
+import { readPosts } from '@/lib/blog';
 import { projects } from '@/content/portfolio';
 
 const BASE_URL = 'https://ubunifutech.com';
@@ -68,7 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  const blogRoutes: MetadataRoute.Sitemap = (await getAllPosts()).map((post) => ({
+  // An unreachable journal drops the article URLs from the map rather than
+  // failing it. A sitemap missing some entries is re-crawled; a sitemap that
+  // 500s teaches a crawler to come back less often.
+  const { posts } = await readPosts();
+  const blogRoutes: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
     lastModified: new Date(post.date),
     changeFrequency: 'monthly',

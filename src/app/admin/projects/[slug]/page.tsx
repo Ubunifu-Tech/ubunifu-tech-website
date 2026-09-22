@@ -5,6 +5,7 @@ import { requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
 import { billableLines } from '@/lib/console/billing';
+import { periodLabel } from '@/lib/console/renewals';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import {
   formatMoney,
@@ -160,16 +161,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   ]);
 
   const toBill: BillableLine[] = billable
-    .filter((line) => line.remainingMinor > 0 && line.amountMinor > 0)
-    .map((line) => ({
-      id: line.id,
-      label: line.label,
-      terms: line.terms,
-      remaining: formatMoney(line.remainingMinor, line.currency),
-      remainingMinor: line.remainingMinor,
-      currency: line.currency,
-      kind: line.billingKind,
-      due: line.nextDueAt ? formatShortDate(line.nextDueAt) : null,
+    .filter((item) => item.amountMinor > 0)
+    .map((item) => ({
+      key: item.key,
+      label: item.label,
+      terms: item.terms,
+      amount: formatMoney(item.amountMinor, item.currency),
+      amountMinor: item.amountMinor,
+      currency: item.currency,
+      // A renewal says which period it covers; a one-off says when it is due.
+      period:
+        item.periodStart && item.periodEnd
+          ? periodLabel(item.periodStart, item.periodEnd)
+          : null,
+      due: item.dueAt ? formatShortDate(item.dueAt) : null,
     }));
 
   // Fourteen days, unless somebody changes it on the form.

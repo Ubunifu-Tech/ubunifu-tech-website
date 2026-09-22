@@ -26,13 +26,20 @@ export async function navCounts(): Promise<NavCounts> {
     }),
     // Money we have asked for and not been paid. Draft and void are neither.
     db.invoice.count({ where: { status: { in: ['sent', 'part_paid', 'overdue'] } } }),
-    // A renewal is worth flagging once it is close enough to act on. Anything
-    // further out is a diary entry, not a task.
-    db.lineItem.count({
+    /**
+     * Periods that are close enough to act on and have not been invoiced.
+     * Counted from RenewalEvent rather than from the line's next date, so a
+     * period already billed stops being a task — which is the whole point of
+     * there being one row per period.
+     */
+    db.renewalEvent.count({
       where: {
-        status: { in: ['planned', 'active'] },
-        nextDueAt: { not: null, lte: horizon },
-        project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } },
+        status: 'pending',
+        dueAt: { lte: horizon },
+        lineItem: {
+          status: { in: ['planned', 'active'] },
+          project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } },
+        },
       },
     }),
     // Out with the client and not yet signed — the one document state that

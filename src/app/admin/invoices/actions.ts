@@ -15,6 +15,7 @@ import {
   nextReceiptNumber,
   recomputeInvoice,
 } from '@/lib/console/billing';
+import { markRenewalInvoiced, periodLabel } from '@/lib/console/renewals';
 import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
 
 export type BillingState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -33,7 +34,7 @@ export async function createInvoice(
   const staff = await requireStaff();
 
   const projectId = String(formData.get('projectId') ?? '');
-  const chosen = formData.getAll('lineIds').map(String).filter(Boolean);
+  const chosen = formData.getAll('billables').map(String).filter(Boolean);
 
   if (chosen.length === 0) {
     return { status: 'error', message: 'Pick at least one fee line to invoice.' };
@@ -45,17 +46,21 @@ export async function createInvoice(
   });
   if (!project) return { status: 'error', message: 'That project no longer exists.' };
 
+  /**
+   * Re-derived from the database rather than trusted from the form. What was
+   * billable when the page rendered may have been invoiced by somebody else
+   * since, and a renewal period is exactly the thing two people can bill at
+   * once.
+   */
   const billable = await billableLines(project.id);
-  const lines = billable.filter((line) => chosen.includes(line.id));
+  const lines = billable.filter((item) => chosen.includes(item.key));
 
   if (lines.length !== chosen.length) {
     return {
       status: 'error',
-      message: 'One of those lines is no longer billable. Reload and try again.',
+      message:
+        'One of those is no longer billable — it may have been invoiced already. Reload and try again.',
     };
-  }
-  if (lines.some((line) => line.remainingMinor <= 0)) {
-    return { status: 'error', message: 'One of those lines has already been invoiced in full.' };
   }
   if (lines.some((line) => line.amountMinor === 0)) {
     return {
@@ -87,12 +92,15 @@ export async function createInvoice(
         dueAt,
         lines: {
           create: lines.map((line, index) => ({
-            lineItemId: line.id,
+            lineItemId: line.lineItemId,
             label: line.label,
-            description: line.terms ?? line.description,
-            // Only what is left on the line, so a half-billed installment
-            // cannot be charged twice by raising a second invoice for it.
-            amountMinor: line.remainingMinor,
+            // A renewal says which period it covers, because "Hosting" on its
+            // own tells a client nothing about which year they are paying for.
+            description:
+              line.periodStart && line.periodEnd
+                ? `${periodLabel(line.periodStart, line.periodEnd)}${line.terms ? ` · ${line.terms}` : ''}`
+                : line.terms,
+            amountMinor: line.amountMinor,
             quantity: 1,
             position: index,
           })),
@@ -100,6 +108,15 @@ export async function createInvoice(
       },
       select: { id: true, number: true },
     });
+
+    // Marks each period invoiced and moves its line on to the next one. Throws
+    // if a period was billed between the read above and here, which rolls the
+    // whole invoice back rather than charging for it twice.
+    for (const line of lines) {
+      if (line.renewalEventId) {
+        await markRenewalInvoiced(tx, line.renewalEventId, created.id);
+      }
+    }
 
     await recomputeInvoice(tx, created.id);
     return created;

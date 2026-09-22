@@ -11,13 +11,14 @@ import table from '@/styles/table.module.css';
 const INITIAL: BillingState = { status: 'idle' };
 
 export type BillableLine = {
-  id: string;
+  key: string;
   label: string;
   terms: string | null;
-  remaining: string;
-  remainingMinor: number;
+  amount: string;
+  amountMinor: number;
   currency: string;
-  kind: string;
+  /** Set when this is one period of a recurring line. */
+  period: string | null;
   due: string | null;
 };
 
@@ -39,13 +40,13 @@ export function RaiseInvoice({
   defaultDue: string;
 }) {
   const [state, action, pending] = useActionState(createInvoice, INITIAL);
-  const [chosen, setChosen] = useState<string[]>(() => lines.map((line) => line.id));
+  const [chosen, setChosen] = useState<string[]>(() => lines.map((line) => line.key));
 
   if (lines.length === 0) {
     return (
       <p className={styles.note}>
-        Nothing to invoice. Every fee line is either already billed in full, unpriced, or a renewal
-        that is not due yet.
+        Nothing to invoice. Every fee line is either billed in full, unpriced, or a renewal whose
+        next period is not close enough yet.
       </p>
     );
   }
@@ -55,9 +56,9 @@ export function RaiseInvoice({
       current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
 
-  const picked = lines.filter((line) => chosen.includes(line.id));
+  const picked = lines.filter((line) => chosen.includes(line.key));
   const currencies = [...new Set(picked.map((line) => line.currency))];
-  const total = picked.reduce((sum, line) => sum + line.remainingMinor, 0);
+  const total = picked.reduce((sum, line) => sum + line.amountMinor, 0);
   const mixed = currencies.length > 1;
 
   return (
@@ -70,34 +71,35 @@ export function RaiseInvoice({
             <tr>
               <th className={table.th} scope="col">Bill</th>
               <th className={table.th} scope="col">Item</th>
-              <th className={table.th} scope="col">When</th>
+              <th className={table.th} scope="col">Due</th>
               <th className={`${table.th} ${table.numericHead}`} scope="col">Amount</th>
             </tr>
           </thead>
           <tbody>
             {lines.map((line) => (
-              <tr key={line.id} className={table.tr}>
+              <tr key={line.key} className={table.tr}>
                 <td className={table.td}>
                   <input
                     type="checkbox"
-                    name="lineIds"
-                    value={line.id}
+                    name="billables"
+                    value={line.key}
                     className={forms.check}
-                    checked={chosen.includes(line.id)}
-                    onChange={() => toggle(line.id)}
-                    aria-label={`Include ${line.label}`}
+                    checked={chosen.includes(line.key)}
+                    onChange={() => toggle(line.key)}
+                    aria-label={`Include ${line.label}${line.period ? `, ${line.period}` : ''}`}
                     disabled={pending}
                   />
                 </td>
                 <td className={`${table.td} ${table.primary}`}>
                   {line.label}
-                  {line.terms && <span className={table.sub}>{line.terms}</span>}
+                  {line.period && <span className={table.sub}>{line.period}</span>}
+                  {!line.period && line.terms && <span className={table.sub}>{line.terms}</span>}
                 </td>
                 <td className={`${table.td} ${table.nowrap}`}>
                   {line.due ?? <span className={table.muted}>On agreement</span>}
                 </td>
                 <td className={`${table.td} ${table.numeric}`}>
-                  {line.remaining}
+                  {line.amount}
                   <span className={table.sub}>{line.currency}</span>
                 </td>
               </tr>

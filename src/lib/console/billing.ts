@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
+import { HORIZON_DAYS, ensureRenewalEvents } from './renewals';
 
 /**
  * Invoices, payments and receipts.
@@ -124,26 +125,50 @@ export async function recomputeInvoice(
 }
 
 /**
- * What a project still has to be invoiced for.
+ * What a project can be invoiced for right now.
  *
- * Fee lines that are planned or active, minus what has already been put on a
- * non-void invoice for that same line. Renewals are included only once their
- * due date is within reach: invoicing next year's hosting today would be a
- * demand for money that is not owed.
+ * Two different shapes share this list, because they are billed differently:
+ *
+ *   A ONE-OFF or INSTALLMENT is a fixed amount that gets billed once. What is
+ *   left is its worth minus whatever has already been put on a non-void
+ *   invoice, so a half-billed deposit can be finished and a fully billed one
+ *   disappears.
+ *
+ *   A RECURRING line is not an amount at all — it is an amount owed again every
+ *   interval, for ever. It is offered as a PERIOD, from RenewalEvent, and
+ *   billing one marks that period and moves the line on to the next. Treating
+ *   it like a one-off is what made a renewal billable exactly once.
  */
-export async function billableLines(projectId: string, horizonDays = 45) {
+export type Billable = {
+  /** What the form posts. Carries which period, when there is one. */
+  key: string;
+  lineItemId: string;
+  renewalEventId: string | null;
+  label: string;
+  terms: string | null;
+  amountMinor: number;
+  currency: string;
+  billingKind: string;
+  /** The period this covers, for a renewal. */
+  periodStart: Date | null;
+  periodEnd: Date | null;
+  dueAt: Date | null;
+};
+
+export async function billableLines(projectId: string, horizonDays = 45): Promise<Billable[]> {
+  /**
+   * Periods close enough to bill may not exist as rows yet. Materialised at
+   * least as far as this call is going to look — otherwise the filter below
+   * could ask for a period further out than anything that was created, and
+   * report nothing to bill when there is something.
+   */
+  await ensureRenewalEvents({ projectId }, Math.max(horizonDays, HORIZON_DAYS));
+
   const horizon = new Date();
   horizon.setDate(horizon.getDate() + horizonDays);
 
   const lines = await db.lineItem.findMany({
-    where: {
-      projectId,
-      status: { in: ['planned', 'active'] },
-      OR: [
-        { billingKind: { in: ['one_off', 'installment', 'usage'] } },
-        { nextDueAt: { not: null, lte: horizon } },
-      ],
-    },
+    where: { projectId, status: { in: ['planned', 'active'] } },
     orderBy: { position: 'asc' },
     select: {
       id: true,
@@ -159,27 +184,61 @@ export async function billableLines(projectId: string, horizonDays = 45) {
         where: { invoice: { status: { not: 'void' } } },
         select: { amountMinor: true, quantity: true },
       },
+      renewals: {
+        where: { status: 'pending', dueAt: { lte: horizon } },
+        orderBy: { periodStart: 'asc' },
+        select: { id: true, periodStart: true, periodEnd: true, dueAt: true },
+      },
     },
   });
 
-  return lines.map((line) => {
+  const billable: Billable[] = [];
+
+  for (const line of lines) {
+    const recurring =
+      line.billingKind === 'recurring_monthly' || line.billingKind === 'recurring_annual';
+
+    if (recurring) {
+      for (const renewal of line.renewals) {
+        billable.push({
+          key: `renewal:${renewal.id}`,
+          lineItemId: line.id,
+          renewalEventId: renewal.id,
+          label: line.label,
+          terms: line.terms,
+          amountMinor: line.amountMinor * line.quantity,
+          currency: line.currency,
+          billingKind: line.billingKind,
+          periodStart: renewal.periodStart,
+          periodEnd: renewal.periodEnd,
+          dueAt: renewal.dueAt,
+        });
+      }
+      continue;
+    }
+
     const alreadyBilled = line.invoiceLines.reduce(
       (total, invoiceLine) => total + invoiceLine.amountMinor * invoiceLine.quantity,
       0,
     );
-    const worth = line.amountMinor * line.quantity;
-    return {
-      id: line.id,
+    const remaining = Math.max(0, line.amountMinor * line.quantity - alreadyBilled);
+    if (remaining === 0) continue;
+
+    billable.push({
+      key: `line:${line.id}`,
+      lineItemId: line.id,
+      renewalEventId: null,
       label: line.label,
-      description: line.description,
       terms: line.terms,
-      amountMinor: line.amountMinor,
-      quantity: line.quantity,
+      amountMinor: remaining,
       currency: line.currency,
       billingKind: line.billingKind,
-      nextDueAt: line.nextDueAt,
-      alreadyBilled,
-      remainingMinor: Math.max(0, worth - alreadyBilled),
-    };
-  });
+      periodStart: null,
+      periodEnd: null,
+      dueAt: null,
+    });
+  }
+
+  return billable;
 }
+

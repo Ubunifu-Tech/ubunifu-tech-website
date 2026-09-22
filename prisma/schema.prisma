@@ -156,6 +156,10 @@ model Session {
 
 enum MagicTokenPurpose {
   sign_in
+  /// An invitation to a contact who has not set a password yet. Its own
+  /// purpose because it has its own lifetime: the email promises 14 days, and
+  /// a sign-in link lives 20 minutes.
+  invite
   document_access
   invoice_access
   update_access

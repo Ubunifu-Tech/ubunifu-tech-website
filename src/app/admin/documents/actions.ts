@@ -336,7 +336,7 @@ export async function sendForSignature(
   });
 
   const { token } = await issueMagicToken({
-    purpose: 'sign_in',
+    purpose: 'document_access',
     actorType: 'client_contact',
     actorId: contact.id,
     entityType: 'SignatureRequest',

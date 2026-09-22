@@ -3,6 +3,57 @@ import { db } from '@/lib/db';
 import { consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
+import type { MagicTokenPurpose } from '@/generated/prisma/client';
+
+/**
+ * Every link we email a client comes through here. They differ in how long
+ * they live — a sign-in link twenty minutes, an invitation or a contract two
+ * weeks, an invoice thirty days — which is why they are different purposes,
+ * and they differ in where they land. Before this list existed the route took
+ * only sign_in, so an invoice link was dead on arrival and every invitation
+ * and contract link had quietly been issued as a twenty-minute sign-in link
+ * while its email promised two weeks.
+ */
+const CLIENT_LINKS: readonly MagicTokenPurpose[] = [
+  'sign_in',
+  'invite',
+  'document_access',
+  'invoice_access',
+];
+
+/**
+ * Where a link lands after it signs someone in.
+ *
+ * An email that says "view your invoice" should open the invoice, not a
+ * dashboard the client then has to search. The destination comes ONLY from
+ * the token row — never from a query parameter, which would make this an open
+ * redirect — and it is re-scoped to the contact's own client, so a token
+ * pointing at somebody else's record lands on the portal home instead.
+ */
+async function landingFor(
+  claim: { entityType: string | null; entityId: string | null },
+  clientId: string,
+): Promise<string> {
+  if (!claim.entityId) return '/portal';
+
+  if (claim.entityType === 'Invoice') {
+    const invoice = await db.invoice.findFirst({
+      where: { id: claim.entityId, clientId },
+      select: { number: true },
+    });
+    if (invoice) return `/portal/invoices/${encodeURIComponent(invoice.number)}`;
+  }
+
+  if (claim.entityType === 'SignatureRequest') {
+    const request = await db.signatureRequest.findFirst({
+      where: { id: claim.entityId, document: { project: { clientId } } },
+      select: { document: { select: { reference: true } } },
+    });
+    if (request) return `/portal/documents/${encodeURIComponent(request.document.reference)}`;
+  }
+
+  return '/portal';
+}
 
 /**
  * Burns a client sign-in link and starts a portal session.
@@ -23,7 +74,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(signIn);
   }
 
-  const claim = await consumeMagicToken(token, 'sign_in');
+  const claim = await consumeMagicToken(token, CLIENT_LINKS);
   if (!claim || claim.actorType !== 'client_contact') {
     signIn.searchParams.set('error', 'expired');
     return NextResponse.redirect(signIn);
@@ -33,6 +84,7 @@ export async function GET(request: NextRequest) {
     where: { id: claim.actorId },
     select: {
       id: true,
+      clientId: true,
       canSignIn: true,
       deletedAt: true,
       activatedAt: true,
@@ -71,7 +123,11 @@ export async function GET(request: NextRequest) {
     entityId: contact.id,
   });
 
-  return NextResponse.redirect(
-    new URL(contact.activatedAt ? '/portal' : '/portal/activate', origin),
-  );
+  // Someone who has not set a password finishes that first, whatever the link
+  // was for; the thing it pointed at is one click away from the portal home.
+  const destination = contact.activatedAt
+    ? await landingFor(claim, contact.clientId)
+    : '/portal/activate';
+
+  return NextResponse.redirect(new URL(destination, origin));
 }

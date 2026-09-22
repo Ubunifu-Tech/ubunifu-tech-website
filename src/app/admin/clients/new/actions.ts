@@ -266,7 +266,7 @@ export async function createClient(
   // ── Invitation ────────────────────────────────────────────────────────
   if (values.sendInvite) {
     const { token } = await issueMagicToken({
-      purpose: 'sign_in',
+      purpose: 'invite',
       actorType: 'client_contact',
       actorId: created.contactId,
     });

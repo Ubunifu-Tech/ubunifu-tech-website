@@ -18,6 +18,8 @@ import { generateToken, hashToken } from './crypto';
 const TTL_MINUTES: Record<MagicTokenPurpose, number> = {
   /** Short, because it is a credential arriving in an inbox. */
   sign_in: 20,
+  /** A new client may not open the invitation the same day. */
+  invite: 60 * 24 * 14,
   /** Longer: a client may open a contract days after it is sent. */
   document_access: 60 * 24 * 14,
   invoice_access: 60 * 24 * 30,
@@ -78,13 +80,14 @@ export type ConsumedToken = {
  */
 export async function consumeMagicToken(
   rawToken: string,
-  expected: MagicTokenPurpose,
+  expected: MagicTokenPurpose | readonly MagicTokenPurpose[],
 ): Promise<ConsumedToken | null> {
   const tokenHash = hashToken(rawToken);
+  const accepted: readonly MagicTokenPurpose[] = Array.isArray(expected) ? expected : [expected];
 
   const token = await db.magicToken.findUnique({ where: { tokenHash } });
   if (!token) return null;
-  if (token.purpose !== expected) return null;
+  if (!accepted.includes(token.purpose)) return null;
   if (token.usedAt) return null;
   if (token.expiresAt.getTime() <= Date.now()) return null;
 

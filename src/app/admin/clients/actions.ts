@@ -6,7 +6,7 @@ import { requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
-import { clientInviteEmail } from '@/lib/emails';
+import { clientInviteEmail, clientSignInEmail } from '@/lib/emails';
 
 export type InviteState = { status: 'idle' | 'sent' | 'error'; message?: string };
 
@@ -43,8 +43,10 @@ export async function inviteContact(
     return { status: 'error', message: 'Portal access is turned off for this contact.' };
   }
 
+  // The purpose decides how long the link lives, and it has to match what the
+  // email says: an invitation promises two weeks, a sign-in link twenty minutes.
   const { token } = await issueMagicToken({
-    purpose: 'sign_in',
+    purpose: contact.activatedAt ? 'sign_in' : 'invite',
     actorType: 'client_contact',
     actorId: contact.id,
   });
@@ -58,11 +60,12 @@ export async function inviteContact(
     subject: contact.activatedAt
       ? 'Sign in to your Ubunifu portal'
       : 'Your Ubunifu project portal is ready',
-    html: clientInviteEmail({
-      name: contact.name,
-      clientName: contact.client.name,
-      url,
-    }),
+    // Somebody who already has a password was being sent "choose a password
+    // and finish setting up your account" under a subject line saying "sign
+    // in". The body now matches the subject.
+    html: contact.activatedAt
+      ? clientSignInEmail({ name: contact.name, url })
+      : clientInviteEmail({ name: contact.name, clientName: contact.client.name, url }),
     template: contact.activatedAt ? 'client_sign_in' : 'client_invite',
     entityType: 'ClientContact',
     entityId: contact.id,

@@ -427,11 +427,11 @@ export function documentToSignEmail(input: {
           ? `You will also be accepting our <strong style="color:#1F1A36;">${escapeHtml(input.termsTitle)}</strong>, which is shown in full on the same page.`
           : ''
       }
-      If anything is wrong, reply to this email rather than signing — we would
-      much rather fix it first.
+      If anything is wrong, choose <strong style="color:#1F1A36;">Ask for changes</strong>
+      on the same page rather than signing — we would much rather fix it first.
     </p>
     ${button(input.url, 'Read and sign')}
-    ${securityNote('20 minutes')}
+    ${securityNote('14 days')}
     <p style="margin:24px 0 0;color:#8A8399;font-size:13px;line-height:1.7;">
       If the link has expired, sign in to your portal at any time and it will be
       waiting for you there.

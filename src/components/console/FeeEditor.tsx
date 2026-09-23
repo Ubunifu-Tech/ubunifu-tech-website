@@ -161,10 +161,6 @@ export function FeeEditor({
         </ul>
       )}
 
-      {fees.length === 0 && editing === 'new' && (
-        <FeeForm projectId={projectId} currency={currency} onDone={() => setEditing(null)} />
-      )}
-
       {removeState.status === 'error' && (
         <p className={forms.error} role="alert">
           {removeState.message}

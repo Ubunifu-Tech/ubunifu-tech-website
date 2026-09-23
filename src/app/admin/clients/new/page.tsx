@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/console/auth';
 import { formatDate } from '@/lib/console/money';
 import { NewClientForm, type Prefill } from './NewClientForm';
 import styles from '../../Admin.module.css';
+import forms from '@/styles/forms.module.css';
 
 export const metadata = { title: 'New client' };
 
@@ -68,7 +69,7 @@ export default async function NewClientPage({
     : undefined;
 
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
+    <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <Link href={usable ? '/enquiries' : '/clients'} className={styles.backLink}>
@@ -84,7 +85,40 @@ export default async function NewClientPage({
           </p>
         </div>
       </div>
-      <NewClientForm templates={templates} prefill={prefill} />
+
+      <div className={styles.split}>
+        <div className={styles.splitMain}>
+          <NewClientForm templates={templates} prefill={prefill} />
+        </div>
+
+        <aside className={styles.splitAside}>
+          {usable ? (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>What they wrote</h2>
+                <span className={forms.cardMeta}>{formatDate(usable.createdAt)}</span>
+              </div>
+              <p className={styles.note}>
+                {usable.name} · <a href={`mailto:${usable.email}`}>{usable.email}</a>
+              </p>
+              <p className={styles.asideSubject}>{usable.subject}</p>
+              <p className={styles.asideMessage}>{usable.message}</p>
+            </section>
+          ) : (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>What this creates</h2>
+              </div>
+              <ul className={styles.asideList}>
+                <li>The client, with their billing currency.</li>
+                <li>The person you deal with, who can sign in to the portal.</li>
+                <li>Their first project, with a plan to start from, if you want one now.</li>
+                <li>An invitation email, only if you choose to send it.</li>
+              </ul>
+            </section>
+          )}
+        </aside>
+      </div>
     </main>
   );
 }

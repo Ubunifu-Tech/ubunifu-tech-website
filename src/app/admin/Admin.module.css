@@ -1144,3 +1144,118 @@
     padding: 0;
   }
 }
+
+/* ── A task with its context beside it ─────────── */
+
+/* One job on the left at a width a form reads well at, and beside it what
+   that job affects: a preview, the message it came from, what it will
+   create. A wide screen carries useful context instead of empty margins. */
+.split {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
+}
+
+.splitMain {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.splitAside {
+  position: sticky;
+  top: 5rem;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (max-width: 64rem) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .splitAside {
+    position: static;
+  }
+}
+
+/* A small printed-page preview: how details read on a client's document. */
+.paper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 8px 24px rgb(0 0 0 / 6%);
+  color: #1f1d2b;
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.paperHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.paperName {
+  margin: 0;
+  color: #1f1d2b;
+  font-size: var(--font-size-small);
+}
+
+.paperLine {
+  display: block;
+  color: #5b5870;
+}
+
+.paperMissing {
+  display: block;
+  color: var(--tone-amber-fg);
+}
+
+.paperLabel {
+  margin: 0 0 var(--space-1);
+  color: #8a879b;
+}
+
+.paperDoc {
+  margin: 0;
+  color: #8a879b;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.asideSubject {
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.asideMessage {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.asideList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}

@@ -13,7 +13,7 @@ export default async function ProfilePage() {
   const staff = await requireStaff();
 
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
+    <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <h1 className={styles.heading}>Your profile</h1>
@@ -21,37 +21,41 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <section className={forms.card}>
-        <div className={styles.profileHead}>
-          <Avatar name={staff.name} size="lg" />
-          <div>
-            <p className={styles.profileName}>{staff.name}</p>
-            <p className={styles.note}>{staff.email}</p>
+      <div className={styles.split}>
+        <section className={`${forms.card} ${styles.splitMain}`}>
+          <div className={styles.profileHead}>
+            <Avatar name={staff.name} size="lg" />
+            <div>
+              <p className={styles.profileName}>{staff.name}</p>
+              <p className={styles.note}>{staff.email}</p>
+            </div>
           </div>
-        </div>
-        <ProfileForm name={staff.name} title={staff.title} />
-      </section>
+          <ProfileForm name={staff.name} title={staff.title} />
+        </section>
 
-      <section className={forms.card}>
-        <div className={forms.cardHeader}>
-          <h2 className={forms.cardTitle}>Access</h2>
-          <span className={`${forms.badge}`}>{ROLE_LABEL[staff.role]}</span>
-        </div>
-        <p className={styles.note}>{ROLE_DESCRIPTION[staff.role]}</p>
-        <ul className={styles.accessList}>
-          {PERMISSIONS.filter((permission) => staff.permissions.includes(permission.key)).map(
-            (permission) => (
-              <li key={permission.key}>{permission.label}</li>
-            ),
-          )}
-        </ul>
-        <p className={styles.note}>
-          You sign in with a link sent to {staff.email}.{' '}
-          <Link href="/settings/team" className={styles.inlineLink}>
-            See the team and permissions
-          </Link>
-        </p>
-      </section>
+        <aside className={styles.splitAside}>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Access</h2>
+              <span className={`${forms.badge}`}>{ROLE_LABEL[staff.role]}</span>
+            </div>
+            <p className={styles.note}>{ROLE_DESCRIPTION[staff.role]}</p>
+            <ul className={styles.accessList}>
+              {PERMISSIONS.filter((permission) => staff.permissions.includes(permission.key)).map(
+                (permission) => (
+                  <li key={permission.key}>{permission.label}</li>
+                ),
+              )}
+            </ul>
+            <p className={styles.note}>
+              You sign in with a link sent to {staff.email}.{' '}
+              <Link href="/settings/team" className={styles.inlineLink}>
+                See the team and permissions
+              </Link>
+            </p>
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }

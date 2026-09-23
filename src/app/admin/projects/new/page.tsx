@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/console/auth';
 import { ChevronRight } from 'lucide-react';
 import { Steps } from '@/components/console/Steps';
 import { NewProjectForm } from './NewProjectForm';
+import { STAFF_LABEL } from '@/lib/console/project-status';
 import forms from '@/styles/forms.module.css';
 import styles from '../../Admin.module.css';
 
@@ -26,7 +27,18 @@ export default async function NewProjectPage({
   const [client, templates] = await Promise.all([
     db.client.findFirst({
       where: { slug, deletedAt: null },
-      select: { id: true, name: true, slug: true, currency: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        currency: true,
+        projects: {
+          where: { deletedAt: null },
+          orderBy: { updatedAt: 'desc' },
+          take: 6,
+          select: { id: true, name: true, slug: true, status: true },
+        },
+      },
     }),
     db.projectTemplate.findMany({
       orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
@@ -44,7 +56,7 @@ export default async function NewProjectPage({
     : null;
 
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
+    <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <Link href={`/clients/${client.slug}`} className={styles.backLink}>
@@ -64,23 +76,55 @@ export default async function NewProjectPage({
         current={1}
         hrefFor={() => '/projects/new'}
       />
-      <NewProjectForm
-        clientId={client.id}
-        clientName={client.name}
-        currency={client.currency}
-        templates={templates}
-        from={
-          enquiry
-            ? {
-                enquiryId: enquiry.id,
-                name: enquiry.subject.slice(0, 160),
-                // Their message is not the summary the client will see; staff write that.
-                summary: '',
-                serviceLine: enquiry.serviceLine,
-              }
-            : undefined
-        }
-      />
+      <div className={styles.split}>
+        <div className={styles.splitMain}>
+          <NewProjectForm
+            clientId={client.id}
+            clientName={client.name}
+            currency={client.currency}
+            templates={templates}
+            from={
+              enquiry
+                ? {
+                    enquiryId: enquiry.id,
+                    name: enquiry.subject.slice(0, 160),
+                    // Their message is not the summary the client will see; staff write that.
+                    summary: '',
+                    serviceLine: enquiry.serviceLine,
+                  }
+                : undefined
+            }
+          />
+        </div>
+
+        <aside className={styles.splitAside}>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>{client.name}</h2>
+              <span className={forms.cardMeta}>Billed in {client.currency}</span>
+            </div>
+            {client.projects.length === 0 ? (
+              <p className={styles.note}>This is their first project.</p>
+            ) : (
+              <>
+                <p className={styles.note}>Their other projects:</p>
+                <ul className={styles.glance}>
+                  {client.projects.map((project) => (
+                    <li key={project.id}>
+                      <Link href={`/projects/${project.slug}`}>
+                        <span className={styles.taskText}>
+                          {project.name}
+                          <span className={styles.taskMeta}>{STAFF_LABEL[project.status]}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }
@@ -99,7 +143,7 @@ async function ChooseClient() {
   });
 
   return (
-    <main className={`${styles.page} ${styles.medium}`}>
+    <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <Link href="/projects" className={styles.backLink}>
@@ -118,30 +162,43 @@ async function ChooseClient() {
         current={0}
       />
 
-      <section className={forms.card}>
-        <ul className={styles.glance}>
-          {clients.map((client) => (
-            <li key={client.id}>
-              <Link href={`/projects/new?client=${client.slug}`}>
-                <span className={styles.taskText}>
-                  {client.name}
-                  <span className={styles.taskMeta}>
-                    {client._count.projects === 0
-                      ? 'No projects yet'
-                      : `${client._count.projects} ${client._count.projects === 1 ? 'project' : 'projects'}`}
+      <div className={styles.split}>
+        <section className={`${forms.card} ${styles.splitMain}`}>
+          <ul className={styles.glance}>
+            {clients.map((client) => (
+              <li key={client.id}>
+                <Link href={`/projects/new?client=${client.slug}`}>
+                  <span className={styles.taskText}>
+                    {client.name}
+                    <span className={styles.taskMeta}>
+                      {client._count.projects === 0
+                        ? 'No projects yet'
+                        : `${client._count.projects} ${client._count.projects === 1 ? 'project' : 'projects'}`}
+                    </span>
                   </span>
-                </span>
-                <ChevronRight size={16} strokeWidth={1.8} aria-hidden="true" />
+                  <ChevronRight size={16} strokeWidth={1.8} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <aside className={styles.splitAside}>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Someone new</h2>
+            </div>
+            <p className={styles.note}>
+              Add them as a client first. Their first project can be set up in the same form.
+            </p>
+            <div className={forms.actions}>
+              <Link href="/clients/new" className={forms.button}>
+                Add a client
               </Link>
-            </li>
-          ))}
-        </ul>
-        <div className={forms.actions}>
-          <Link href="/clients/new" className={`${forms.button} ${forms.quiet}`}>
-            Someone new
-          </Link>
-        </div>
-      </section>
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }

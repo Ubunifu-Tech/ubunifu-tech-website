@@ -132,6 +132,12 @@
   }
 }
 
+/* A client's own words, with their line breaks kept. */
+.said {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* One thing after another, at a width a table can breathe in. */
 .column {
   display: flex;

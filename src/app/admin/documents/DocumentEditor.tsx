@@ -7,6 +7,8 @@ import {
   saveDetails,
   saveVersion,
   sendForSignature,
+  setSuggestionAside,
+  startFromSuggestion,
   withdrawDocument,
   type DocumentState,
 } from './actions';
@@ -288,6 +290,114 @@ export function WithdrawDocument({ documentId }: { documentId: string }) {
         </button>
       </div>
       <Result state={state} />
+    </form>
+  );
+}
+
+/**
+ * What to do with wording a client suggested.
+ *
+ * Starting from it goes straight through when the version they saw is still
+ * the latest, since nothing is lost: it becomes the next version and the Write
+ * step opens on it. When somebody has saved a newer version since, the press
+ * first says that the next version starts from their wording rather than from
+ * that one. Setting it aside always asks first, because it leaves the list.
+ */
+export function SuggestionActions({
+  suggestionId,
+  basedOnVersion,
+  latestVersion,
+}: {
+  suggestionId: string;
+  basedOnVersion: number;
+  latestVersion: number;
+}) {
+  const [startState, startAction, starting] = useActionState(startFromSuggestion, INITIAL);
+  const [asideState, asideAction, settingAside] = useActionState(setSuggestionAside, INITIAL);
+  const [confirming, setConfirming] = useState<'start' | 'aside' | null>(null);
+  const pending = starting || settingAside;
+  const newer = latestVersion > basedOnVersion;
+
+  if (confirming === 'aside') {
+    return (
+      <form action={asideAction} className={forms.form}>
+        <input type="hidden" name="suggestionId" value={suggestionId} />
+        <p className={styles.note}>
+          It comes off this list and they are not told. The version they have stays with them.
+        </p>
+        <div className={forms.actions}>
+          <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>
+            {settingAside ? 'Setting it aside…' : 'Set it aside'}
+          </button>
+          <button
+            type="button"
+            className={`${forms.button} ${forms.quiet}`}
+            onClick={() => setConfirming(null)}
+            disabled={pending}
+          >
+            Keep it
+          </button>
+        </div>
+        <Result state={asideState} />
+      </form>
+    );
+  }
+
+  if (confirming === 'start') {
+    return (
+      <form action={startAction} className={forms.form}>
+        <input type="hidden" name="suggestionId" value={suggestionId} />
+        <p className={styles.note}>
+          Version {latestVersion} was saved after they saw version {basedOnVersion}. The next version
+          starts from their wording instead, and version {latestVersion} stays in the list of versions.
+        </p>
+        <div className={forms.actions}>
+          <button type="submit" className={forms.button} disabled={pending}>
+            {starting ? 'Starting…' : 'Start from their wording'}
+          </button>
+          <button
+            type="button"
+            className={`${forms.button} ${forms.quiet}`}
+            onClick={() => setConfirming(null)}
+            disabled={pending}
+          >
+            Cancel
+          </button>
+        </div>
+        <Result state={startState} />
+      </form>
+    );
+  }
+
+  return (
+    <form action={startAction} className={forms.form}>
+      <input type="hidden" name="suggestionId" value={suggestionId} />
+      <div className={forms.actions}>
+        {newer ? (
+          <button
+            type="button"
+            className={forms.button}
+            onClick={() => setConfirming('start')}
+            disabled={pending}
+          >
+            Start the next version from this
+          </button>
+        ) : (
+          <button type="submit" className={forms.button} disabled={pending}>
+            {starting ? 'Starting…' : 'Start the next version from this'}
+          </button>
+        )}
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setConfirming('aside')}
+          disabled={pending}
+        >
+          Set aside
+        </button>
+      </div>
+      <Result state={startState} />
+      <Result state={asideState} />
     </form>
   );
 }

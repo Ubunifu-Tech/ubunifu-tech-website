@@ -22,6 +22,7 @@ import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copil
 import { formText, formTextExact } from '@/lib/console/form';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { isUniqueConflict, retryOnConflict } from '@/lib/console/conflict';
+import { sourceFromSuggestion } from '@/lib/console/suggestions';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -577,4 +578,187 @@ export async function withdrawDocument(
   revalidatePath(`/admin/projects/${document.project.slug}`);
   revalidatePath('/portal', 'layout');
   return { status: 'done', message: 'Withdrawn. You can change it and send it again.' };
+}
+
+/** Who sent a suggestion, named the way a change note or an audit line reads. */
+function suggestedBy(suggestion: {
+  contact: { name: string } | null;
+  document: { project: { client: { name: string } } };
+}): string {
+  const client = suggestion.document.project.client.name;
+  return suggestion.contact ? `${suggestion.contact.name} (${client})` : client;
+}
+
+/**
+ * Starts the next version from a client's suggested wording.
+ *
+ * A new version like any other, never an edit of one: the version they were
+ * sent, and anything signed, stays exactly as it was. Their text comes in with
+ * the fee schedule turned back into the {{fees}} placeholder, so the next send
+ * fills in the project's fees once instead of carrying a copy of the old table
+ * with a fresh one underneath.
+ */
+export async function startFromSuggestion(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const suggestion = await db.documentSuggestion.findUnique({
+    where: { id: formText(formData, 'suggestionId') },
+    select: {
+      id: true,
+      status: true,
+      basedOnVersion: true,
+      bodyMarkdown: true,
+      contact: { select: { name: true } },
+      document: {
+        select: {
+          id: true,
+          reference: true,
+          status: true,
+          project: { select: { slug: true, deletedAt: true, client: { select: { name: true } } } },
+        },
+      },
+    },
+  });
+  if (!suggestion || suggestion.document.project.deletedAt) {
+    return { status: 'error', message: 'That suggestion no longer exists.' };
+  }
+  const document = suggestion.document;
+  if (document.status === 'signed') {
+    return { status: 'error', message: 'This has been signed. A signed document cannot be edited.' };
+  }
+  if (suggestion.status !== 'open') {
+    return { status: 'error', message: 'Someone has already dealt with this. Reload to see where it stands.' };
+  }
+
+  const seen = await db.documentVersion.findUnique({
+    where: { documentId_version: { documentId: document.id, version: suggestion.basedOnVersion } },
+    select: { bodyMarkdown: true, sourceMarkdown: true },
+  });
+  if (!seen) return { status: 'error', message: 'The version they saw no longer exists.' };
+
+  const { source } = sourceFromSuggestion(seen, suggestion.bodyMarkdown);
+  const who = suggestedBy(suggestion);
+
+  let version: number;
+  try {
+    version = await db.$transaction(async (tx) => {
+      // The same lock sending takes, and signing waits on the same row, so a
+      // signature landing this moment is seen here rather than followed by a
+      // new version nobody needs.
+      await tx.$queryRaw`SELECT id FROM "Document" WHERE id = ${document.id} FOR UPDATE`;
+      const current = await tx.document.findUnique({
+        where: { id: document.id },
+        select: { status: true },
+      });
+      if (current?.status === 'signed') throw new MovedOn('signed');
+
+      const claimed = await tx.documentSuggestion.updateMany({
+        where: { id: suggestion.id, status: 'open' },
+        data: { status: 'used', resolvedAt: new Date() },
+      });
+      if (claimed.count !== 1) throw new MovedOn('resolved');
+
+      const latest = await tx.documentVersion.findFirst({
+        where: { documentId: document.id },
+        orderBy: { version: 'desc' },
+        select: { version: true },
+      });
+      const next = (latest?.version ?? 0) + 1;
+      await tx.documentVersion.create({
+        data: {
+          documentId: document.id,
+          version: next,
+          bodyMarkdown: source,
+          changeNote: `Wording suggested by ${who}`,
+          createdById: staff.id,
+        },
+      });
+      return next;
+    });
+  } catch (error) {
+    if (error instanceof MovedOn) {
+      return {
+        status: 'error',
+        message:
+          error.message === 'signed'
+            ? 'It was signed a moment ago, so it cannot change.'
+            : 'Someone has already dealt with this. Reload to see where it stands.',
+      };
+    }
+    // Version numbers are unique per document: a save landed in between.
+    if (isUniqueConflict(error)) {
+      return { status: 'error', message: 'Someone saved a version a moment ago. Reload and try again.' };
+    }
+    throw error;
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.suggestion_used',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: `${document.reference}: version ${version} started from the wording ${who} suggested for version ${suggestion.basedOnVersion}`,
+    metadata: { suggestionId: suggestion.id, version, basedOnVersion: suggestion.basedOnVersion },
+  });
+
+  revalidatePath(`/admin/documents/${document.reference}`);
+  revalidatePath(`/admin/projects/${document.project.slug}`);
+  revalidatePath(`/portal/documents/${document.reference}`);
+  redirect(`/documents/${document.reference}?step=write`);
+}
+
+/** Takes a suggestion off the document without using it. The record keeps it. */
+export async function setSuggestionAside(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const suggestion = await db.documentSuggestion.findUnique({
+    where: { id: formText(formData, 'suggestionId') },
+    select: {
+      id: true,
+      basedOnVersion: true,
+      contact: { select: { name: true } },
+      document: {
+        select: {
+          id: true,
+          reference: true,
+          project: { select: { slug: true, client: { select: { name: true } } } },
+        },
+      },
+    },
+  });
+  if (!suggestion) return { status: 'error', message: 'That suggestion no longer exists.' };
+
+  // Conditional, so it cannot undo a suggestion someone has just used.
+  const updated = await db.documentSuggestion.updateMany({
+    where: { id: suggestion.id, status: 'open' },
+    data: { status: 'dismissed', resolvedAt: new Date() },
+  });
+  if (updated.count !== 1) {
+    return { status: 'error', message: 'Someone has already dealt with this. Reload to see where it stands.' };
+  }
+
+  const document = suggestion.document;
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.suggestion_set_aside',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: `${document.reference}: set aside the wording ${suggestedBy(suggestion)} suggested for version ${suggestion.basedOnVersion}`,
+    metadata: { suggestionId: suggestion.id, basedOnVersion: suggestion.basedOnVersion },
+  });
+
+  revalidatePath(`/admin/documents/${document.reference}`);
+  revalidatePath(`/admin/projects/${document.project.slug}`);
+  revalidatePath(`/portal/documents/${document.reference}`);
+  return { status: 'done', message: 'Set aside.' };
 }

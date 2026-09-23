@@ -1,0 +1,121 @@
+.card {
+  margin-bottom: var(--space-5);
+}
+
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legend del,
+.legend ins {
+  padding: 0.0625rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.legend del {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
+}
+
+.legend ins {
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
+  text-decoration: none;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item + .item {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.byline {
+  margin: 0 0 var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.55;
+}
+
+.who {
+  color: var(--text-primary);
+}
+
+.note {
+  margin: 0 0 var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+/* The comparison. Removed blocks are struck through as well as tinted, so the
+   difference does not rest on telling red from green. */
+.diff {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+}
+
+.diff > div,
+.diff > del,
+.diff > ins,
+.diff > details {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.diff > del {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.diff > ins {
+  background: var(--tone-green-bg);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.diff > del strong,
+.diff > ins strong {
+  color: inherit;
+}
+
+.diff > * > :first-child,
+.diff > details > div > :first-child {
+  margin-top: 0;
+}
+
+.diff > * > :last-child,
+.diff > details > div > :last-child {
+  margin-bottom: 0;
+}
+
+.diff > details {
+  border: 1px dashed var(--border);
+}
+
+.diff > details > summary {
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.diff > details > div {
+  padding: var(--space-2) 0;
+}
+
+.diff > details[open] > summary {
+  margin-bottom: var(--space-2);
+}

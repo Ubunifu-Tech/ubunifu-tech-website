@@ -54,7 +54,9 @@ export function ConfirmRemoval({
     );
   }
 
-  const ready = namesMatch(typed, name);
+  // Not ready until the page has said what will happen: a fast typist should
+  // not be able to remove something before its consequences are on screen.
+  const ready = namesMatch(typed, name) && consequences !== null;
 
   return (
     <form action={formAction} className={styles.confirm}>

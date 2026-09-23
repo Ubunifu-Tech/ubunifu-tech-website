@@ -325,7 +325,10 @@ export default async function EnquiriesPage({
             ) : null}
 
             <div className={styles.rows}>
+              {/* Keyed by enquiry: moving between ?open= keeps this page mounted, so
+                  without a key a half-done Remove on one enquiry would carry to the next. */}
               <TriageControls
+                key={expanded.id}
                 id={expanded.id}
                 status={expanded.status}
                 note={expanded.internalNote}

@@ -26,11 +26,12 @@ requireFromHere.cache[serverOnly]!.loaded = true;
 requireFromHere.cache[serverOnly]!.exports = {};
 
 const { PrismaPg } = await import('@prisma/adapter-pg');
+const { databaseTarget } = await import('../src/lib/db-connection');
 const { PrismaClient } = await import('../src/generated/prisma/client');
 const { billableLines } = await import('../src/lib/console/billing');
 const { markRenewalInvoiced } = await import('../src/lib/console/renewals');
 
-const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+const db = new PrismaClient({ adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)) });
 
 /**
  * Pinned to ONE line, because several clients can hold a line with the same

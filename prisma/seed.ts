@@ -15,12 +15,13 @@
  */
 
 import { PrismaPg } from '@prisma/adapter-pg';
+import { databaseTarget } from '../src/lib/db-connection';
 import { PrismaClient, BillingKind, LineItemStatus, ServiceLine } from '../src/generated/prisma/client';
 
 process.loadEnvFile('.env');
 
 const db = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)),
 });
 
 /** USD amounts in the proposal are whole dollars; store them as cents. */

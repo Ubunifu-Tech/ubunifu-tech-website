@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@/generated/prisma/client';
+import { databaseTarget } from './db-connection';
 
 /**
  * One Prisma client for the whole process, created on first use.
@@ -33,7 +34,9 @@ function createClient(): PrismaClient {
 
   return new PrismaClient({
     adapter: new PrismaPg({
-      connectionString,
+      // The URL with its SSL settings turned into an explicit TLS config:
+      // see db-connection.ts for why sslmode cannot be left to the driver.
+      ...databaseTarget(connectionString),
       /**
        * Vercel runs each function in its own container, so every warm instance
        * holds its own pool. Railway's Postgres has a finite connection limit,

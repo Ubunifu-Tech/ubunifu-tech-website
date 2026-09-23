@@ -26,6 +26,7 @@
     "check:renewals": "tsx scripts/check-renewal-cycle.mts",
     "check:blog-parity": "tsx scripts/check-blog-parity.mts",
     "check:links": "tsx --conditions=react-server scripts/check-links.mts",
+    "check:db-tls": "tsx scripts/check-db-tls.mts",
     "check:assistant": "tsx --conditions=react-server scripts/check-assistant.mts"
   },
   "engines": {

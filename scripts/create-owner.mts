@@ -23,8 +23,9 @@ if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || name.length < 2) {
 }
 
 const { PrismaPg } = await import('@prisma/adapter-pg');
+const { databaseTarget } = await import('../src/lib/db-connection');
 const { PrismaClient } = await import('../src/generated/prisma/client');
-const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+const db = new PrismaClient({ adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)) });
 
 const owner = await db.staffUser.upsert({
   where: { email: email.toLowerCase() },

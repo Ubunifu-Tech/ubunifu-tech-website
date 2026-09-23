@@ -16,9 +16,10 @@ process.loadEnvFile('.env');
 // are TypeScript ES modules loaded through tsx, and a static import of a
 // .ts module from an .mts entry resolves before the loader is ready.
 const { renderMarkdown } = await import('../src/lib/console/markdown');
+const { databaseTarget } = await import('../src/lib/db-connection');
 
 const db = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
+  adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)),
 });
 
 const signatures = await db.signature.findMany({

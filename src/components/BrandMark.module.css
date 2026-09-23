@@ -1,4 +1,8 @@
-.mark {
+/* Zero specificity on purpose. Whoever places the mark gives it a size, and
+   that size has to win however a build orders the stylesheets. At equal
+   specificity the order decided it, and in production the console sidebar
+   loaded this rule last and drew the mark the width of the sidebar. */
+:where(.mark) {
   display: block;
   width: 100%;
   height: 100%;

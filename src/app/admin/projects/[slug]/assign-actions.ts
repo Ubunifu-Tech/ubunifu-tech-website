@@ -120,8 +120,8 @@ export async function setTaskDue(_previous: AssignState, formData: FormData): Pr
   const dueAt = raw ? parseDateInput(raw) : null;
   if (raw && !dueAt) return { status: 'error', message: 'That date could not be read.' };
 
-  const task = await db.deliverable.findUnique({
-    where: { id: formText(formData, 'deliverableId') },
+  const task = await db.deliverable.findFirst({
+    where: { id: formText(formData, 'deliverableId'), phase: { project: { deletedAt: null } } },
     select: { id: true, phase: { select: { project: { select: { slug: true } } } } },
   });
   if (!task) return { status: 'error', message: 'That task no longer exists.' };
@@ -137,8 +137,8 @@ export async function assignClientItem(
   formData: FormData,
 ): Promise<AssignState> {
   const staff = await requireStaff();
-  const item = await db.assetRequest.findUnique({
-    where: { id: formText(formData, 'assetRequestId') },
+  const item = await db.assetRequest.findFirst({
+    where: { id: formText(formData, 'assetRequestId'), project: { deletedAt: null } },
     select: {
       id: true,
       title: true,

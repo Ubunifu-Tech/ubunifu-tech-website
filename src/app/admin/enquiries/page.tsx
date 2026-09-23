@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
+import { liveEnquiry } from '@/lib/console/live';
 import { TriageControls } from './TriageControls';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
@@ -90,19 +91,19 @@ export default async function EnquiriesPage({
   const [viewCounts, thisWeek, weekBefore] = await Promise.all([
     Promise.all(
       FILTERS.map((filter) =>
-        db.enquiry.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+        db.enquiry.count({ where: { AND: [liveEnquiry, filterToWhere(filter.key), matching] } }),
       ),
     ),
-    db.enquiry.count({ where: { createdAt: { gte: weekAgo }, status: { not: 'spam' } } }),
+    db.enquiry.count({ where: { ...liveEnquiry, createdAt: { gte: weekAgo }, status: { not: 'spam' } } }),
     db.enquiry.count({
-      where: { createdAt: { gte: twoWeeksAgo, lt: weekAgo }, status: { not: 'spam' } },
+      where: { ...liveEnquiry, createdAt: { gte: twoWeeksAgo, lt: weekAgo }, status: { not: 'spam' } },
     }),
   ]);
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
   const keepQuery = query ? `&q=${encodeURIComponent(query)}` : '';
 
   const enquiries = await db.enquiry.findMany({
-    where: { AND: [filterToWhere(active), matching] },
+    where: { AND: [liveEnquiry, filterToWhere(active), matching] },
     orderBy: { createdAt: 'desc' },
     take: 100,
     select: {
@@ -116,8 +117,10 @@ export default async function EnquiriesPage({
       internalNote: true,
       source: true,
       createdAt: true,
-      client: { select: { name: true, slug: true } },
-      project: { select: { name: true, slug: true } },
+      // Kept even when since removed: the enquiry still became them, but a
+      // link to a page that is gone would lead nowhere.
+      client: { select: { name: true, slug: true, deletedAt: true } },
+      project: { select: { name: true, slug: true, deletedAt: true } },
       conversations: {
         orderBy: { createdAt: 'desc' },
         take: 1,
@@ -228,9 +231,13 @@ export default async function EnquiriesPage({
                         </span>
                         {enquiry.client && (
                           <span className={table.sub}>
-                            <Link href={`/clients/${enquiry.client.slug}`}>
-                              {enquiry.client.name}
-                            </Link>
+                            {enquiry.client.deletedAt ? (
+                              `${enquiry.client.name}, since removed`
+                            ) : (
+                              <Link href={`/clients/${enquiry.client.slug}`}>
+                                {enquiry.client.name}
+                              </Link>
+                            )}
                           </span>
                         )}
                       </td>
@@ -318,7 +325,10 @@ export default async function EnquiriesPage({
             ) : null}
 
             <div className={styles.rows}>
+              {/* Keyed by enquiry: moving between ?open= keeps this page mounted, so
+                  without a key a half-done Remove on one enquiry would carry to the next. */}
               <TriageControls
+                key={expanded.id}
                 id={expanded.id}
                 status={expanded.status}
                 note={expanded.internalNote}
@@ -327,14 +337,16 @@ export default async function EnquiriesPage({
             {expanded.status === 'converted' ? (
               <p className={styles.note}>
                 Became{' '}
-                {expanded.client ? (
+                {expanded.client && !expanded.client.deletedAt ? (
                   <Link href={`/clients/${expanded.client.slug}`} className={styles.inlineLink}>
                     {expanded.client.name}
                   </Link>
+                ) : expanded.client ? (
+                  `${expanded.client.name}, since removed`
                 ) : (
                   'a client'
                 )}
-                {expanded.project && (
+                {expanded.project && !expanded.project.deletedAt && (
                   <>
                     {', '}
                     <Link href={`/projects/${expanded.project.slug}`} className={styles.inlineLink}>

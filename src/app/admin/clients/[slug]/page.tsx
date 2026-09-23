@@ -5,6 +5,8 @@ import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
+import { liveEnquiry } from '@/lib/console/live';
+import { clientRemovalCounts } from '@/lib/console/removal';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { AddPerson, PersonActions } from '@/components/console/People';
 import {
@@ -15,6 +17,7 @@ import {
 } from '../actions';
 import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
+import { RemoveClient } from './RemoveClient';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -29,7 +32,7 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const client = await db.client.findUnique({ where: { slug }, select: { name: true } });
+  const client = await db.client.findFirst({ where: { slug, deletedAt: null }, select: { name: true } });
   return { title: client?.name ?? 'Client' };
 }
 
@@ -94,10 +97,15 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
         },
       },
       invoices: {
-        where: { status: { notIn: ['draft', 'void'] } },
+        // Not those on a removed project: they are out of sight everywhere else.
+        where: {
+          status: { notIn: ['draft', 'void'] },
+          OR: [{ projectId: null }, { project: { deletedAt: null } }],
+        },
         select: { totalMinor: true, paidMinor: true, currency: true },
       },
       enquiries: {
+        where: liveEnquiry,
         orderBy: { createdAt: 'desc' },
         take: 3,
         select: { id: true, subject: true, createdAt: true, status: true },
@@ -107,7 +115,10 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
 
   if (!client) notFound();
 
-  const activity = await activityForClient(client.id);
+  const [activity, removal] = await Promise.all([
+    activityForClient(client.id),
+    mayManage ? clientRemovalCounts(client.id) : null,
+  ]);
 
   /**
    * Summed only within the client's own currency. There is no FX rate anywhere
@@ -435,6 +446,15 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
             )}
           </section>
         </div>
+
+        {removal && (
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Remove this client</h2>
+            </div>
+            <RemoveClient clientId={client.id} clientName={client.name} counts={removal} />
+          </section>
+        )}
       </div>
     </main>
   );

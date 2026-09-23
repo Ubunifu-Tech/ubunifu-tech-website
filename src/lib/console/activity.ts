@@ -29,6 +29,9 @@ export type ActivityItem = {
 function describeAudit(action: string, summary: string | null): string {
   const said: Record<string, string> = {
     'client.created': 'Client added',
+    'client.removed': 'Client removed',
+    'project.removed': 'Project removed',
+    'enquiry.removed': 'Enquiry removed',
     'client.invite.sent': 'Portal invitation sent',
     'client.invite.send_failed': 'Portal invitation failed to send',
     'client.invite.opened': 'Invitation opened',

@@ -11,6 +11,7 @@ import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
 import { formText } from '@/lib/console/form';
+import { liveTicket } from '@/lib/console/live';
 
 export type RequestState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -91,7 +92,7 @@ export async function replyToRequest(
   }
 
   const ticket = await db.ticket.findFirst({
-    where: { id: ticketId, clientId: actor.clientId },
+    where: { id: ticketId, clientId: actor.clientId, ...liveTicket },
     select: { id: true, reference: true, subject: true, status: true },
   });
   if (!ticket) return { status: 'error', message: 'That request is not one of yours.' };

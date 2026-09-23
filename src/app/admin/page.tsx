@@ -4,6 +4,7 @@ import { can, requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { recentActivity } from '@/lib/console/activity';
+import { liveEnquiry, liveInvoice } from '@/lib/console/live';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Avatar } from '@/components/console/Avatar';
 import { Callout } from '@/components/console/Callout';
@@ -67,7 +68,7 @@ export default async function AdminHome() {
     enquiriesWeekBefore,
   ] = await Promise.all([
     db.enquiry.findMany({
-      where: { status: 'new' },
+      where: { ...liveEnquiry, status: 'new' },
       orderBy: { createdAt: 'asc' },
       take: 10,
       select: { id: true, name: true, subject: true, createdAt: true },
@@ -78,7 +79,7 @@ export default async function AdminHome() {
     // Every open invoice, not a capped list: the total owed is added up from
     // these, and a total of the first ten would quietly be wrong.
     db.invoice.findMany({
-      where: { status: { in: ['sent', 'part_paid', 'overdue'] } },
+      where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] } },
       orderBy: { dueAt: 'asc' },
       select: {
         id: true,
@@ -124,7 +125,7 @@ export default async function AdminHome() {
     recentActivity(8),
     // Counted separately: the lists above are capped for the table, and a
     // capped length shown as a total would quietly read "10" when it is 14.
-    db.enquiry.count({ where: { status: 'new' } }),
+    db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
     db.project.count({
       where: {
         deletedAt: null,
@@ -147,10 +148,15 @@ export default async function AdminHome() {
       },
     }),
     db.enquiry.count({
-      where: { createdAt: { gte: new Date(now.getTime() - 7 * 86_400_000) }, status: { not: 'spam' } },
+      where: {
+        ...liveEnquiry,
+        createdAt: { gte: new Date(now.getTime() - 7 * 86_400_000) },
+        status: { not: 'spam' },
+      },
     }),
     db.enquiry.count({
       where: {
+        ...liveEnquiry,
         createdAt: {
           gte: new Date(now.getTime() - 14 * 86_400_000),
           lt: new Date(now.getTime() - 7 * 86_400_000),

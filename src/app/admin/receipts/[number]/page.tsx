@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
 import { requirePermission } from '@/lib/console/auth';
+import { livePayment } from '@/lib/console/live';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
@@ -33,7 +34,7 @@ export default async function ReceiptPage({
   const org = await getOrg();
 
   const receipt = await db.receipt.findUnique({
-    where: { number: decodeURIComponent(number) },
+    where: { number: decodeURIComponent(number), payment: livePayment },
     select: {
       id: true,
       number: true,

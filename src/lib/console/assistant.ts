@@ -189,7 +189,8 @@ export const recordEnquiryTool: AgentTool<AssistantContext> = {
  * "Talk to a person" form, which needs no model at all.
  *
  * Once per conversation. A second hand-off updates the first enquiry, because
- * somebody who rephrases themselves is not a second lead.
+ * somebody who rephrases themselves is not a second lead, unless staff have
+ * removed that enquiry, in which case it starts a new one.
  */
 export async function passToTeam(input: {
   conversationId: string | null;
@@ -209,9 +210,19 @@ export async function passToTeam(input: {
 
   const message = `${input.details}\n\n(From the website chat.)`;
 
-  if (conversation?.enquiryId) {
+  // Only a live enquiry takes the update. If staff removed the first one, nobody
+  // would ever see the rewrite, so this is a fresh lead: a new enquiry, a new
+  // alert to the team, and a confirmation the visitor can trust.
+  const linked = conversation?.enquiryId
+    ? await db.enquiry.findFirst({
+        where: { id: conversation.enquiryId, deletedAt: null },
+        select: { id: true },
+      })
+    : null;
+
+  if (linked) {
     await db.enquiry.update({
-      where: { id: conversation.enquiryId },
+      where: { id: linked.id },
       data: {
         name: input.name,
         email: input.email,
@@ -220,7 +231,7 @@ export async function passToTeam(input: {
         ...(input.serviceLine ? { serviceLine: input.serviceLine } : {}),
       },
     });
-    return { enquiryId: conversation.enquiryId, updated: true };
+    return { enquiryId: linked.id, updated: true };
   }
 
   const enquiry = await db.enquiry.create({

@@ -14,7 +14,7 @@ export default async function PortalDocuments() {
 
   const documents = await db.document.findMany({
     where: {
-      project: { clientId: actor.clientId },
+      project: { clientId: actor.clientId, deletedAt: null },
       status: { notIn: ['draft', 'internal_review'] },
     },
     orderBy: { updatedAt: 'desc' },

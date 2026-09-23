@@ -2,10 +2,14 @@
 
 import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
-import { issueMagicToken } from '@/lib/console/magic-link';
+import { issueMagicToken, revokeEveryMagicToken } from '@/lib/console/magic-link';
+import { revokeSessionsFor } from '@/lib/console/session';
+import { namesMatch, type RemovalState } from '@/lib/console/confirm-name';
+import { withdrawOpenSignatures } from '@/lib/console/removal';
 import {
   addContact,
   invitePerson,
@@ -223,4 +227,121 @@ function whatsappNumber(phone: string | null): string {
   if (!digits) return '';
   if (digits.startsWith('0') && digits.length === 10) return `255${digits.slice(1)}`;
   return digits;
+}
+
+/**
+ * Removes a client: the client, every project and every person, in one
+ * transaction, so there is never a moment where the client is gone and its
+ * people can still sign in, or its projects still sit on the board.
+ *
+ * Nothing is deleted. deletedAt hides the rows, and invoices, payments,
+ * signatures and the activity record stay exactly as they were. What is in
+ * motion stops: documents out for signature are withdrawn, and every sign-in
+ * link and portal session the people held is ended.
+ */
+export async function removeClient(
+  _previous: RemovalState,
+  formData: FormData,
+): Promise<RemovalState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+  if (!namesMatch(formText(formData, 'confirmName'), client.name)) {
+    return { status: 'error', message: `Type ${client.name} to confirm.` };
+  }
+
+  const removed = await db.$transaction(async (tx) => {
+    const now = new Date();
+
+    // Conditional, so two people removing the same client at once cannot
+    // both go on to record it.
+    const claimed = await tx.client.updateMany({
+      where: { id: client.id, deletedAt: null },
+      data: { deletedAt: now },
+    });
+    if (claimed.count === 0) return null;
+
+    const projects = await tx.project.findMany({
+      where: { clientId: client.id, deletedAt: null },
+      select: { id: true },
+    });
+    const projectIds = projects.map((project) => project.id);
+    if (projectIds.length > 0) {
+      await tx.project.updateMany({
+        where: { id: { in: projectIds } },
+        data: { deletedAt: now },
+      });
+    }
+
+    // Everyone, including people removed earlier: their old links and
+    // sessions end too, which costs nothing and leaves nothing behind.
+    const contacts = await tx.clientContact.findMany({
+      where: { clientId: client.id },
+      select: { id: true, deletedAt: true, canSignIn: true },
+    });
+    const contactIds = contacts.map((contact) => contact.id);
+    const people = contacts.filter((contact) => !contact.deletedAt && contact.canSignIn).length;
+    await tx.clientContact.updateMany({
+      where: { clientId: client.id, deletedAt: null },
+      data: { deletedAt: now, canSignIn: false },
+    });
+    await tx.clientContact.updateMany({
+      where: { clientId: client.id, canSignIn: true },
+      data: { canSignIn: false },
+    });
+
+    const withdrawn = await withdrawOpenSignatures(tx, projectIds);
+    const links = await revokeEveryMagicToken(tx, 'client_contact', contactIds);
+    const sessions = await revokeSessionsFor(tx, 'client_contact', contactIds);
+
+    return { projectIds, people, withdrawn, links, sessions };
+  });
+
+  if (!removed) return { status: 'error', message: 'That client no longer exists.' };
+
+  const projectCount = removed.projectIds.length;
+  const documentCount = removed.withdrawn.length;
+  const said = [
+    projectCount === 0
+      ? client.name
+      : `${client.name} and ${projectCount === 1 ? 'its project' : `its ${projectCount} projects`}`,
+    removed.people > 0
+      ? `${removed.people} ${removed.people === 1 ? 'person' : 'people'} lost portal access`
+      : null,
+    documentCount > 0
+      ? `${documentCount} ${documentCount === 1 ? 'document' : 'documents'} withdrawn`
+      : null,
+  ].filter(Boolean);
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'client.removed',
+    entityType: 'Client',
+    entityId: client.id,
+    summary: said.join('; '),
+    metadata: {
+      projectIds: removed.projectIds,
+      withdrawnDocumentIds: removed.withdrawn.map((document) => document.id),
+      linksRevoked: removed.links,
+      sessionsEnded: removed.sessions,
+    },
+  });
+  for (const document of removed.withdrawn) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'document.withdrawn',
+      entityType: 'Document',
+      entityId: document.id,
+      summary: `${document.reference}, because ${client.name} was removed`,
+    });
+  }
+
+  // Every list, count and figure in the console, and the portal those people
+  // were using.
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/portal', 'layout');
+  redirect('/clients');
 }

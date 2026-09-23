@@ -6,6 +6,7 @@ import { CLIENT_LABEL } from './project-status';
 import { INVOICE_STATUS_LABEL } from './billing-labels';
 import { CLIENT_TICKET_STATUS } from './tickets';
 import { formatDate, formatMoney } from './money';
+import { liveInvoice, liveTicket } from './live';
 
 /**
  * What the portal assistant is told, and what it knows: its instructions, the
@@ -80,11 +81,14 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
       },
     }),
     db.document.findMany({
-      where: { project: { clientId: actor.clientId }, status: { in: ['sent', 'viewed', 'changes_requested'] } },
+      where: {
+        project: { clientId: actor.clientId, deletedAt: null },
+        status: { in: ['sent', 'viewed', 'changes_requested'] },
+      },
       select: { reference: true, title: true, status: true, updatedAt: true },
     }),
     db.invoice.findMany({
-      where: { clientId: actor.clientId, status: { notIn: ['draft', 'void', 'paid'] } },
+      where: { clientId: actor.clientId, ...liveInvoice, status: { notIn: ['draft', 'void', 'paid'] } },
       orderBy: { dueAt: 'asc' },
       select: {
         number: true,
@@ -96,7 +100,7 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
       },
     }),
     db.ticket.findMany({
-      where: { clientId: actor.clientId, status: { notIn: ['closed'] } },
+      where: { clientId: actor.clientId, ...liveTicket, status: { notIn: ['closed'] } },
       orderBy: { createdAt: 'desc' },
       take: 10,
       select: { reference: true, subject: true, status: true },

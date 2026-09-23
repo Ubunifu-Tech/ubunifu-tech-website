@@ -192,8 +192,8 @@ export async function toggleDeliverable(
   const id = String(formData.get('deliverableId') ?? '');
   const complete = formData.get('complete') === 'on';
 
-  const deliverable = await db.deliverable.findUnique({
-    where: { id },
+  const deliverable = await db.deliverable.findFirst({
+    where: { id, phase: { project: { deletedAt: null } } },
     select: { id: true, title: true, phase: { select: { project: { select: { slug: true } } } } },
   });
   if (!deliverable) return { status: 'error', message: 'That item no longer exists.' };
@@ -234,8 +234,8 @@ export async function setAssetRequestStatus(
     return { status: 'error', message: 'That is not a state a request can be in.' };
   }
 
-  const request = await db.assetRequest.findUnique({
-    where: { id },
+  const request = await db.assetRequest.findFirst({
+    where: { id, project: { deletedAt: null } },
     select: { id: true, title: true, project: { select: { slug: true } } },
   });
   if (!request) return { status: 'error', message: 'That request no longer exists.' };
@@ -341,8 +341,9 @@ export async function publishUpdate(
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const updateId = String(formData.get('updateId') ?? '');
 
-  const update = await db.projectUpdate.findUnique({
-    where: { id: updateId },
+  // Never to the people of a project, or a client, that has been removed.
+  const update = await db.projectUpdate.findFirst({
+    where: { id: updateId, project: { deletedAt: null } },
     select: {
       id: true,
       title: true,

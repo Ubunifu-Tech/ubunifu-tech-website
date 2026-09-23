@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { EnquiryStatus } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
+import { liveEnquiry } from '@/lib/console/live';
 
 export type TriageState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -42,8 +43,8 @@ export async function setEnquiryStatus(
     return { status: 'error', message: 'That is not a status an enquiry can be moved to.' };
   }
 
-  const enquiry = await db.enquiry.findUnique({
-    where: { id },
+  const enquiry = await db.enquiry.findFirst({
+    where: { id, ...liveEnquiry },
     select: { id: true, status: true, name: true },
   });
 
@@ -90,7 +91,7 @@ export async function saveEnquiryNote(
     return { status: 'error', message: 'That note is too long.' };
   }
 
-  const enquiry = await db.enquiry.findUnique({ where: { id }, select: { id: true } });
+  const enquiry = await db.enquiry.findFirst({ where: { id, ...liveEnquiry }, select: { id: true } });
   if (!enquiry) return { status: 'error', message: 'That enquiry no longer exists.' };
 
   await db.enquiry.update({
@@ -108,4 +109,45 @@ export async function saveEnquiryNote(
 
   revalidatePath('/admin/enquiries');
   return { status: 'done', message: 'Saved.' };
+}
+
+/**
+ * Takes an enquiry out of the console: test messages, duplicates, anything
+ * nobody should have to scroll past again. The row stays, so the record of who
+ * wrote in and when is still there for the activity history; every list and
+ * count leaves it out.
+ */
+export async function removeEnquiry(
+  _previous: TriageState,
+  formData: FormData,
+): Promise<TriageState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
+
+  const id = formText(formData, 'id');
+  const enquiry = await db.enquiry.findFirst({
+    where: { id, ...liveEnquiry },
+    select: { id: true, name: true, subject: true },
+  });
+  if (!enquiry) return { status: 'error', message: 'That enquiry no longer exists.' };
+
+  // Conditional, so a second press from another tab records nothing twice.
+  const removed = await db.enquiry.updateMany({
+    where: { id: enquiry.id, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (removed.count === 0) return { status: 'error', message: 'That enquiry no longer exists.' };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'enquiry.removed',
+    entityType: 'Enquiry',
+    entityId: enquiry.id,
+    summary: `${enquiry.name}, about ${enquiry.subject}`,
+  });
+
+  // The list, and the unread counts on the overview and in the sidebar.
+  revalidatePath('/admin', 'layout');
+  return { status: 'done', message: 'Removed.' };
 }

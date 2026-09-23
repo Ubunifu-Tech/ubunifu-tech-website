@@ -9,6 +9,7 @@ import {
   TICKET_PRIORITY_LABEL,
 } from '@/lib/console/tickets';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
+import { liveTicket } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
@@ -78,7 +79,7 @@ export default async function RequestsPage({
 
   const [tickets, viewCounts, unread, urgent, oldest, resolvedThisWeek] = await Promise.all([
     db.ticket.findMany({
-      where: { AND: [filterToWhere(active), matching] },
+      where: { AND: [liveTicket, filterToWhere(active), matching] },
       // Oldest first: the one that has waited longest is the one that costs us.
       orderBy: [{ priority: 'desc' }, { updatedAt: 'asc' }],
       take: 200,
@@ -99,18 +100,18 @@ export default async function RequestsPage({
     }),
     Promise.all(
       FILTERS.map((filter) =>
-        db.ticket.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+        db.ticket.count({ where: { AND: [liveTicket, filterToWhere(filter.key), matching] } }),
       ),
     ),
     // The figures cover every request, whichever view is open below.
-    db.ticket.count({ where: { status: 'open' } }),
-    db.ticket.count({ where: { priority: 'urgent', status: { in: [...OPEN_TO_US] } } }),
+    db.ticket.count({ where: { ...liveTicket, status: 'open' } }),
+    db.ticket.count({ where: { ...liveTicket, priority: 'urgent', status: { in: [...OPEN_TO_US] } } }),
     db.ticket.findFirst({
-      where: { status: { in: [...OPEN_TO_US] } },
+      where: { ...liveTicket, status: { in: [...OPEN_TO_US] } },
       orderBy: { createdAt: 'asc' },
       select: { reference: true, createdAt: true },
     }),
-    db.ticket.count({ where: { resolvedAt: { gte: weekAgo } } }),
+    db.ticket.count({ where: { ...liveTicket, resolvedAt: { gte: weekAgo } } }),
   ]);
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
   const oldestDays = oldest

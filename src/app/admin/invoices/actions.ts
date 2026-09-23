@@ -21,6 +21,7 @@ import {
 import { markRenewalInvoiced, periodLabel } from '@/lib/console/renewals';
 import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
+import { liveInvoice, livePayment } from '@/lib/console/live';
 
 export type BillingState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -218,7 +219,7 @@ export async function sendInvoice(
   const invoiceId = String(formData.get('invoiceId') ?? '');
 
   const invoice = await db.invoice.findUnique({
-    where: { id: invoiceId },
+    where: { id: invoiceId, ...liveInvoice },
     select: {
       id: true,
       number: true,
@@ -334,7 +335,7 @@ export async function recordPayment(
   const invoiceId = String(formData.get('invoiceId') ?? '');
 
   const invoice = await db.invoice.findUnique({
-    where: { id: invoiceId },
+    where: { id: invoiceId, ...liveInvoice },
     select: {
       id: true,
       number: true,
@@ -460,7 +461,7 @@ export async function emailReceipt(
   const receiptId = String(formData.get('receiptId') ?? '');
 
   const receipt = await db.receipt.findUnique({
-    where: { id: receiptId },
+    where: { id: receiptId, payment: livePayment },
     select: {
       id: true,
       number: true,
@@ -555,7 +556,7 @@ export async function voidInvoice(
   }
 
   const invoice = await db.invoice.findUnique({
-    where: { id: invoiceId },
+    where: { id: invoiceId, ...liveInvoice },
     select: { id: true, number: true, status: true, paidMinor: true, notes: true },
   });
 

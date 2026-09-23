@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
+import { liveDocument } from '@/lib/console/live';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { getOrg } from '@/lib/console/org';
 import { ContractSheet } from '@/components/documents/ContractSheet';
@@ -26,7 +27,7 @@ export default async function PrintDocument({ params }: { params: Promise<{ refe
 
   const [document, org] = await Promise.all([
     db.document.findUnique({
-      where: { reference: decodeURIComponent(reference) },
+      where: { reference: decodeURIComponent(reference), ...liveDocument },
       select: {
         reference: true,
         title: true,

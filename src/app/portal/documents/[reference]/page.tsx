@@ -41,8 +41,9 @@ export default async function PortalDocument({
   const document = await db.document.findFirst({
     where: {
       reference: decodeURIComponent(reference),
-      // Scoped here: another client's document does not match at all.
-      project: { clientId: actor.clientId },
+      // Scoped here: another client's document, or one on a project that
+      // has been removed, does not match at all.
+      project: { clientId: actor.clientId, deletedAt: null },
       // A draft is ours until we send it.
       status: { notIn: ['draft', 'internal_review'] },
     },

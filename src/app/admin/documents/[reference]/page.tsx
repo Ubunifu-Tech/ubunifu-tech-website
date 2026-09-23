@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, CircleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
+import { liveDocument } from '@/lib/console/live';
 import {
   DOCUMENT_KIND_LABEL,
   DOCUMENT_STATUS_LABEL,
@@ -69,7 +70,7 @@ export default async function DocumentPage({
   const now = new Date();
 
   const document = await db.document.findUnique({
-    where: { reference: decodeURIComponent(reference) },
+    where: { reference: decodeURIComponent(reference), ...liveDocument },
     select: {
       id: true,
       reference: true,

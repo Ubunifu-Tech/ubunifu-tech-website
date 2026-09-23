@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
+import { liveEnquiry } from '@/lib/console/live';
 import { formatDate } from '@/lib/console/money';
 import { NewClientForm, type Prefill } from './NewClientForm';
 import styles from '../../Admin.module.css';
@@ -37,8 +38,8 @@ export default async function NewClientPage({
       select: { id: true, name: true, serviceLine: true, description: true, isDefault: true },
     }),
     enquiryId
-      ? db.enquiry.findUnique({
-          where: { id: enquiryId },
+      ? db.enquiry.findFirst({
+          where: { id: enquiryId, ...liveEnquiry },
           select: {
             id: true,
             name: true,

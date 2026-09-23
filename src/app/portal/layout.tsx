@@ -6,6 +6,7 @@ import { Assistant } from '@/components/Assistant';
 import { ProfileMenu } from '@/components/console/ProfileMenu';
 import { getClientActor } from '@/lib/console/auth';
 import { db } from '@/lib/db';
+import { liveInvoice, liveTicket } from '@/lib/console/live';
 import { PortalNav, type PortalCounts } from './PortalNav';
 import styles from './Portal.module.css';
 
@@ -31,12 +32,12 @@ async function countsFor(clientId: string): Promise<PortalCounts> {
   try {
     const [documents, invoices, requests] = await Promise.all([
       db.document.count({
-        where: { project: { clientId }, status: { in: ['sent', 'viewed'] } },
+        where: { project: { clientId, deletedAt: null }, status: { in: ['sent', 'viewed'] } },
       }),
       db.invoice.count({
-        where: { clientId, status: { in: ['sent', 'overdue', 'part_paid'] } },
+        where: { clientId, ...liveInvoice, status: { in: ['sent', 'overdue', 'part_paid'] } },
       }),
-      db.ticket.count({ where: { clientId, status: 'waiting_on_client' } }),
+      db.ticket.count({ where: { clientId, ...liveTicket, status: 'waiting_on_client' } }),
     ]);
     return { documents, invoices, requests };
   } catch {

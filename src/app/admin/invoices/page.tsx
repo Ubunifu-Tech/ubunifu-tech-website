@@ -4,6 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { liveInvoice, livePayment } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
@@ -79,7 +80,7 @@ export default async function InvoicesPage({
 
   const [invoices, viewCounts, open, drafts, payments] = await Promise.all([
     db.invoice.findMany({
-      where: { AND: [filterToWhere(active), matching] },
+      where: { AND: [liveInvoice, filterToWhere(active), matching] },
       orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
       take: 200,
       select: {
@@ -97,17 +98,17 @@ export default async function InvoicesPage({
     }),
     Promise.all(
       FILTERS.map((filter) =>
-        db.invoice.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+        db.invoice.count({ where: { AND: [liveInvoice, filterToWhere(filter.key), matching] } }),
       ),
     ),
     // The figures describe the whole ledger, whichever view is open below.
     db.invoice.findMany({
-      where: filterToWhere('owing'),
+      where: { AND: [liveInvoice, filterToWhere('owing')] },
       select: { currency: true, totalMinor: true, paidMinor: true, dueAt: true },
     }),
-    db.invoice.count({ where: { status: 'draft' } }),
+    db.invoice.count({ where: { ...liveInvoice, status: 'draft' } }),
     db.payment.findMany({
-      where: { receivedAt: { gte: lastMonthStart } },
+      where: { ...livePayment, receivedAt: { gte: lastMonthStart } },
       select: { amountMinor: true, currency: true, receivedAt: true },
     }),
   ]);

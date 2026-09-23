@@ -20,6 +20,7 @@ import {
 import { runTurn } from '@/lib/console/agent';
 import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
 import { formText, formTextExact } from '@/lib/console/form';
+import { liveDocument } from '@/lib/console/live';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { isUniqueConflict, retryOnConflict } from '@/lib/console/conflict';
 
@@ -110,7 +111,7 @@ export async function saveDetails(
   const kind = kindRaw as DocumentKind;
 
   const document = await db.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId, ...liveDocument },
     select: { id: true, reference: true, title: true, kind: true, status: true },
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };
@@ -163,7 +164,7 @@ export async function saveVersion(
   }
 
   const document = await db.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId, ...liveDocument },
     select: {
       id: true,
       reference: true,
@@ -252,7 +253,7 @@ export async function askCopilot(
   }
 
   const document = await db.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId, ...liveDocument },
     select: { id: true, reference: true, status: true },
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };
@@ -337,7 +338,7 @@ export async function sendForSignature(
   const documentId = String(formData.get('documentId') ?? '');
 
   const document = await db.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId, ...liveDocument },
     select: {
       id: true,
       reference: true,
@@ -535,7 +536,7 @@ export async function withdrawDocument(
   if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const document = await db.document.findUnique({
-    where: { id: formText(formData, 'documentId') },
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
     select: { id: true, reference: true, project: { select: { slug: true } } },
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };

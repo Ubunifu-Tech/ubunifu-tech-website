@@ -5,6 +5,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { formatDate, formatMoney } from './money';
 import { DOCUMENT_KIND_LABEL, currentTerms } from './documents';
 import { getOrg } from './org';
+import { liveDocument } from './live';
 import type { AgentTool } from './agent';
 
 /**
@@ -50,7 +51,7 @@ You are producing a draft, not advice. A person decides what is sent.`;
 /** Everything the model is allowed to know about this project, as plain text. */
 export async function copilotBrief(documentId: string): Promise<string | null> {
   const document = await db.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId, ...liveDocument },
     select: {
       kind: true,
       title: true,
@@ -197,7 +198,7 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
     }
 
     const document = await db.document.findUnique({
-      where: { id: context.documentId },
+      where: { id: context.documentId, ...liveDocument },
       select: {
         id: true,
         status: true,

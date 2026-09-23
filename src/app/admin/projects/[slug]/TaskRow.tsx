@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useActionState, useRef } from 'react';
+import React, { useActionState, useRef, useState } from 'react';
 import { Select, type SelectOption } from '@/components/console/Select';
 import { DatePicker } from '@/components/console/DatePicker';
 import { DeliverableToggle } from './DeliverableToggle';
 import { assignTask, setProjectLead, setTaskDue, type AssignState } from './assign-actions';
+import { removeTask } from './plan-actions';
+import { RemoveConfirm, RenameTask, RowTools } from './PlanEditor';
 import styles from './TaskRow.module.css';
 
 const INITIAL: AssignState = { status: 'idle' };
@@ -17,6 +19,8 @@ export function TaskRow({
   dueAt,
   assigneeId,
   people,
+  teamOnly = false,
+  editable = false,
 }: {
   id: string;
   title: string;
@@ -24,16 +28,46 @@ export function TaskRow({
   dueAt: string;
   assigneeId: string;
   people: readonly SelectOption[];
+  /** Kept off the client's view of the plan. */
+  teamOnly?: boolean;
+  /** Can be renamed or removed here. */
+  editable?: boolean;
 }) {
   const [assignState, assign] = useActionState(assignTask, INITIAL);
   const [dueState, due] = useActionState(setTaskDue, INITIAL);
+  const [mode, setMode] = useState<'view' | 'rename' | 'remove'>('view');
   const dueForm = useRef<HTMLFormElement>(null);
   const problem = assignState.status === 'error' ? assignState.message : dueState.message;
 
+  if (mode === 'rename') {
+    return (
+      <div className={styles.row}>
+        <div className={styles.wide}>
+          <RenameTask id={id} title={title} onDone={() => setMode('view')} />
+        </div>
+      </div>
+    );
+  }
+  if (mode === 'remove') {
+    return (
+      <div className={styles.row}>
+        <div className={styles.wide}>
+          <RemoveConfirm
+            question={`Remove "${title}" from the plan?`}
+            action={removeTask}
+            hidden={{ deliverableId: id }}
+            onCancel={() => setMode('view')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${editable ? styles.editable : ''}`}>
       <div className={styles.task}>
         <DeliverableToggle id={id} title={title} complete={complete} />
+        {teamOnly && <span className={styles.teamOnly}>Team only</span>}
         {problem && <p className={styles.problem}>{problem}</p>}
       </div>
       <form action={due} ref={dueForm} className={styles.due}>
@@ -59,6 +93,13 @@ export function TaskRow({
           aria-label={`Who is doing ${title}`}
         />
       </form>
+      {editable && (
+        <RowTools
+          name={title}
+          onEdit={() => setMode('rename')}
+          onRemove={() => setMode('remove')}
+        />
+      )}
     </div>
   );
 }

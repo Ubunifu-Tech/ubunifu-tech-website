@@ -9,6 +9,7 @@ import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
+import { isCurrency } from '@/lib/console/currencies';
 
 export type NewProjectState = {
   status: 'idle' | 'error';
@@ -35,9 +36,11 @@ function text(formData: FormData, key: string): string {
 /**
  * Starts another project for a client already on the books.
  *
- * Nothing here asks about the client — they exist, and their currency, country
- * and contacts already have answers. Asking again is how two records of the
- * same organisation end up disagreeing.
+ * Nothing here asks about the client — they exist, and their country and
+ * contacts already have answers. Asking again is how two records of the same
+ * organisation end up disagreeing. Currency is the exception: it starts as the
+ * client's, but a project can be billed in another, because a client who was
+ * quoted in USD for a build may pay for local work in TZS.
  */
 export async function createProject(
   _previous: NewProjectState,
@@ -55,7 +58,7 @@ export async function createProject(
   const clientId = text(formData, 'clientId');
   const client = await db.client.findFirst({
     where: { id: clientId, deletedAt: null },
-    select: { id: true, slug: true, name: true },
+    select: { id: true, slug: true, name: true, currency: true },
   });
   if (!client) return fail('That client no longer exists.');
 
@@ -91,6 +94,13 @@ export async function createProject(
     }
   }
 
+  // Absent only from a form posted without the field; the client's own
+  // currency is what the field would have defaulted to.
+  const currency = (text(formData, 'currency') || client.currency).toUpperCase();
+  if (!isCurrency(currency)) {
+    return fail('Choose a currency.', 'currency');
+  }
+
   const startDate = parseDateInput(text(formData, 'startDate'));
   const targetDate = parseDateInput(text(formData, 'targetDate'));
   if (startDate && targetDate && targetDate < startDate) {
@@ -109,6 +119,7 @@ export async function createProject(
       summary: text(formData, 'summary') || null,
       startDate,
       targetDate,
+      currency,
       staffId: staff.id,
     });
   } catch (error) {
@@ -127,7 +138,9 @@ export async function createProject(
     action: 'project.created',
     entityType: 'Project',
     entityId: created.projectId,
-    summary: `${created.reference}: ${name} for ${client.name}`,
+    summary: `${created.reference}: ${name} for ${client.name}${
+      currency === client.currency ? '' : `, billed in ${currency}`
+    }`,
   });
 
   // Closes the enquiry it came from. Conditional, so an enquiry already

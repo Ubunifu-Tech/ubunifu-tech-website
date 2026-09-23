@@ -2,8 +2,19 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
-import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { documentStage, guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
+import {
+  ENGAGEMENTS,
+  SERVICE_LABEL,
+  SERVICE_LINES,
+  STAFF_LABEL,
+  STATUS_TONE,
+} from '@/lib/console/project-status';
+import {
+  documentStage,
+  guardsFor,
+  loadGuardFacts,
+  transitionsFor,
+} from '@/lib/console/transitions';
 import { activityFor } from '@/lib/console/activity';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Figures } from '@/components/console/Figures';
@@ -12,7 +23,12 @@ import { billableLines } from '@/lib/console/billing';
 import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
-import { formatMoney, formatRelative, formatShortDate, toDateInputValue } from '@/lib/console/money';
+import {
+  formatMoney,
+  formatRelative,
+  formatShortDate,
+  toDateInputValue,
+} from '@/lib/console/money';
 import { MoveControls, type StageAction } from './MoveControls';
 import { FeeEditor, type FeeRow } from '@/components/console/FeeEditor';
 import { Tabs } from '@/components/console/Tabs';
@@ -22,6 +38,8 @@ import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
+import { AddPhase, AddTask, AskForSomething, PhaseHead, ProjectDetailsCard } from './PlanEditor';
+import { currencyLabel } from '@/lib/console/currencies';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -34,6 +52,14 @@ const TONE_CLASS: Record<string, string> = {
   warn: forms.badgeWarn,
   bad: forms.badgeBad,
 };
+
+/** "21 Sept 2026 to 31 Oct 2026", or as much of it as is known. */
+function dateRange(start: Date | null, end: Date | null): string {
+  if (start && end) return `${formatShortDate(start)} to ${formatShortDate(end)}`;
+  if (start) return `From ${formatShortDate(start)}`;
+  if (end) return `Until ${formatShortDate(end)}`;
+  return 'No dates yet';
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -61,7 +87,9 @@ export default async function ProjectPage({
   const mayMoney = can(staff, 'invoices');
   const mayDocs = can(staff, 'documents');
   const { tab: tabParam } = await searchParams;
-  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? '') ? (tabParam as Tab) : 'overview';
+  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? '')
+    ? (tabParam as Tab)
+    : 'overview';
   const now = new Date();
 
   const project = await db.project.findFirst({
@@ -106,6 +134,8 @@ export default async function ProjectPage({
           name: true,
           goal: true,
           status: true,
+          startDate: true,
+          endDate: true,
           deliverables: {
             orderBy: { position: 'asc' },
             select: {
@@ -114,6 +144,7 @@ export default async function ProjectPage({
               isComplete: true,
               dueAt: true,
               assigneeId: true,
+              isClientVisible: true,
             },
           },
         },
@@ -216,9 +247,7 @@ export default async function ProjectPage({
       currency: item.currency,
       // A renewal says which period it covers; a one-off says when it is due.
       period:
-        item.periodStart && item.periodEnd
-          ? periodLabel(item.periodStart, item.periodEnd)
-          : null,
+        item.periodStart && item.periodEnd ? periodLabel(item.periodStart, item.periodEnd) : null,
       due: item.dueAt ? formatShortDate(item.dueAt) : null,
     }));
 
@@ -246,9 +275,25 @@ export default async function ProjectPage({
       guardsFor(transition.to, facts).find((guard) => guard.severity === 'block')?.fix ?? null,
   }));
 
-  const committed = project.lineItems
-    .filter((line) => line.status === 'planned' || line.status === 'active')
-    .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
+  // What the client has agreed to pay, split by how often: a one-off build and
+  // a yearly renewal added into one number is a figure nobody is charged.
+  const agreed = project.lineItems.filter(
+    (line) => line.status === 'planned' || line.status === 'active',
+  );
+  const agreedSum = (kinds: string[]) =>
+    agreed
+      .filter((line) => kinds.includes(line.billingKind))
+      .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
+  const agreedParts = [
+    { amount: agreedSum(['one_off', 'installment', 'usage']), per: '' },
+    { amount: agreedSum(['recurring_monthly']), per: ' a month' },
+    { amount: agreedSum(['recurring_annual']), per: ' a year' },
+  ]
+    .filter((part) => part.amount > 0)
+    .map((part) => `${formatMoney(part.amount, project.currency)}${part.per}`);
+  const notChargedNow = project.lineItems.filter(
+    (line) => line.status === 'deferred' || line.status === 'paused',
+  ).length;
 
   const fees: FeeRow[] = project.lineItems.map((line) => ({
     id: line.id,
@@ -262,8 +307,14 @@ export default async function ProjectPage({
     status: line.status,
     invoiced: line._count.invoiceLines > 0,
   }));
+  // A draft has not been sent, so nobody has been asked for it yet.
   const invoiced = project.invoices
-    .filter((invoice) => invoice.status !== 'void' && invoice.currency === project.currency)
+    .filter(
+      (invoice) =>
+        invoice.status !== 'void' &&
+        invoice.status !== 'draft' &&
+        invoice.currency === project.currency,
+    )
     .reduce((total, invoice) => total + invoice.totalMinor, 0);
   const paid = project.invoices
     .filter((invoice) => invoice.currency === project.currency)
@@ -271,7 +322,9 @@ export default async function ProjectPage({
   const unpriced = fees.filter(
     (fee) => (fee.status === 'planned' || fee.status === 'active') && fee.amountMinor === 0,
   ).length;
-  const outstandingAssets = project.assetRequests.filter((request) => request.status === 'requested').length;
+  const outstandingAssets = project.assetRequests.filter(
+    (request) => request.status === 'requested',
+  ).length;
 
   const totalDeliverables = project.phases.reduce((n, p) => n + p.deliverables.length, 0);
   const doneDeliverables = project.phases.reduce(
@@ -287,7 +340,11 @@ export default async function ProjectPage({
   });
   const people = [
     { value: '', label: 'Nobody yet' },
-    ...team.map((person) => ({ value: person.id, label: person.name, hint: person.title ?? undefined })),
+    ...team.map((person) => ({
+      value: person.id,
+      label: person.name,
+      hint: person.title ?? undefined,
+    })),
   ];
   const theirPeople = [
     { value: '', label: 'Anyone at the client' },
@@ -302,7 +359,9 @@ export default async function ProjectPage({
     .filter(
       (invoice) =>
         invoice.currency === project.currency &&
-        (invoice.status === 'sent' || invoice.status === 'part_paid' || invoice.status === 'overdue') &&
+        (invoice.status === 'sent' ||
+          invoice.status === 'part_paid' ||
+          invoice.status === 'overdue') &&
         invoice.dueAt !== null &&
         invoice.dueAt < now,
     )
@@ -326,15 +385,21 @@ export default async function ProjectPage({
 
   const signedAgreement = project.documents.find(
     (document) =>
-      document.status === 'signed' && (document.kind === 'contract' || document.kind === 'statement_of_work'),
+      document.status === 'signed' &&
+      (document.kind === 'contract' || document.kind === 'statement_of_work'),
   );
-  const recent = await activityFor(
-    [project.id, ...project.documents.map((d) => d.id), ...project.invoices.map((i) => i.id)],
-    6,
-  );
+  // Invoice and payment lines only for those who handle money.
+  const activityIds = [
+    project.id,
+    ...project.documents.map((d) => d.id),
+    ...(mayMoney ? project.invoices.map((i) => i.id) : []),
+  ];
+  const recent = await activityFor(activityIds, tab === 'activity' ? 60 : 6);
 
-  const href = (key: Tab) => (key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`);
-  const percent = totalDeliverables > 0 ? Math.round((doneDeliverables / totalDeliverables) * 100) : 0;
+  const href = (key: Tab) =>
+    key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`;
+  const percent =
+    totalDeliverables > 0 ? Math.round((doneDeliverables / totalDeliverables) * 100) : 0;
 
   return (
     <main className={styles.page}>
@@ -391,7 +456,10 @@ export default async function ProjectPage({
         items={[
           {
             label: 'Progress',
-            value: totalDeliverables === 0 ? 'No plan yet' : `${doneDeliverables} of ${totalDeliverables}`,
+            value:
+              totalDeliverables === 0
+                ? 'No plan yet'
+                : `${doneDeliverables} of ${totalDeliverables}`,
             note:
               totalDeliverables === 0
                 ? 'Add phases and tasks on the Plan tab'
@@ -402,13 +470,22 @@ export default async function ProjectPage({
             ? [
                 {
                   label: 'Agreed fees',
-                  value: formatMoney(committed, project.currency),
+                  value:
+                    agreedParts[0] ??
+                    (fees.length === 0 ? 'None yet' : formatMoney(0, project.currency)),
                   note:
                     fees.length === 0
                       ? 'No fees set yet'
                       : unpriced > 0
                         ? `${unpriced} ${unpriced === 1 ? 'fee needs' : 'fees need'} a price`
-                        : `${fees.length} ${fees.length === 1 ? 'fee' : 'fees'}`,
+                        : [
+                            agreedParts.length > 1
+                              ? `plus ${agreedParts.slice(1).join(' and ')}`
+                              : `${agreed.length} ${agreed.length === 1 ? 'fee' : 'fees'}`,
+                            notChargedNow > 0 ? `${notChargedNow} not charged for now` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(', '),
                   tone: unpriced > 0 ? ('warn' as const) : undefined,
                   href: href('fees'),
                 },
@@ -453,7 +530,12 @@ export default async function ProjectPage({
         current={tab}
         tabs={[
           { key: 'overview', label: 'Overview', href: href('overview') },
-          { key: 'plan', label: 'Plan', href: href('plan'), count: totalDeliverables - doneDeliverables },
+          {
+            key: 'plan',
+            label: 'Plan',
+            href: href('plan'),
+            count: totalDeliverables - doneDeliverables,
+          },
           ...(mayFees || mayMoney
             ? [
                 {
@@ -464,8 +546,18 @@ export default async function ProjectPage({
                 },
               ]
             : []),
-          { key: 'documents', label: 'Documents', href: href('documents'), count: project.documents.length },
-          { key: 'updates', label: 'Updates', href: href('updates'), count: project.updates.length },
+          {
+            key: 'documents',
+            label: 'Documents',
+            href: href('documents'),
+            count: project.documents.length,
+          },
+          {
+            key: 'updates',
+            label: 'Updates',
+            href: href('updates'),
+            count: project.updates.length,
+          },
           { key: 'activity', label: 'Activity', href: href('activity') },
         ]}
       />
@@ -493,6 +585,48 @@ export default async function ProjectPage({
 
             <section className={forms.card}>
               <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>From the client</h2>
+                <span className={forms.cardMeta}>
+                  {outstandingAssets === 0
+                    ? 'Nothing outstanding'
+                    : `${outstandingAssets} outstanding`}
+                </span>
+              </div>
+              {project.assetRequests.length === 0 ? (
+                <p className={styles.note}>Nothing asked of the client yet.</p>
+              ) : (
+                <div className={styles.assetList}>
+                  {project.assetRequests.map((request) => (
+                    <AssetRequestRow
+                      key={request.id}
+                      id={request.id}
+                      title={request.title}
+                      detail={request.detail}
+                      status={request.status}
+                      response={request.response}
+                      assigneeId={request.assigneeId ?? ''}
+                      contacts={theirPeople}
+                      editable={mayRun}
+                      files={request.uploads.map((file) => ({
+                        id: file.id,
+                        filename: file.filename,
+                        size: fileSize(file.sizeBytes),
+                        when: formatRelative(file.createdAt, now),
+                      }))}
+                    />
+                  ))}
+                </div>
+              )}
+              {mayRun && (
+                <AskForSomething
+                  projectId={project.id}
+                  first={project.assetRequests.length === 0}
+                />
+              )}
+            </section>
+
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>At a glance</h2>
               </div>
               <ul className={styles.glance}>
@@ -506,15 +640,17 @@ export default async function ProjectPage({
                   </Link>
                 </li>
                 {(mayFees || mayMoney) && (
-                <li>
-                  <Link href={href('fees')}>
-                    {fees.length === 0
-                      ? 'No fees set yet'
-                      : unpriced > 0
-                        ? `${unpriced} ${unpriced === 1 ? 'fee needs' : 'fees need'} a price`
-                        : `${fees.length} ${fees.length === 1 ? 'fee' : 'fees'} set, ${formatMoney(committed, project.currency)}`}
-                  </Link>
-                </li>
+                  <li>
+                    <Link href={href('fees')}>
+                      {fees.length === 0
+                        ? 'No fees set yet'
+                        : unpriced > 0
+                          ? `${unpriced} ${unpriced === 1 ? 'fee needs' : 'fees need'} a price`
+                          : agreedParts.length > 0
+                            ? `${agreed.length} ${agreed.length === 1 ? 'fee' : 'fees'} agreed: ${agreedParts.join(' and ')}`
+                            : `${fees.length} ${fees.length === 1 ? 'fee' : 'fees'}, none charged for now`}
+                    </Link>
+                  </li>
                 )}
                 <li>
                   <Link href={href('documents')}>
@@ -532,42 +668,54 @@ export default async function ProjectPage({
                 </li>
               </ul>
             </section>
+
+            <ProjectDetailsCard
+              editable={mayRun}
+              details={{
+                id: project.id,
+                name: project.name,
+                summary: project.summary ?? '',
+                serviceLine: project.serviceLine,
+                engagementType: project.engagementType,
+                currency: project.currency,
+                startDate: toDateInputValue(project.startDate),
+                targetDate: toDateInputValue(project.targetDate),
+                currencyFixed:
+                  project.invoices.length > 0
+                    ? 'Stays as it is now that the project has invoices.'
+                    : project.lineItems.some((line) => line.amountMinor > 0)
+                      ? 'Stays as it is while fees have prices. Clear the prices first to change it.'
+                      : null,
+              }}
+            >
+              <dl className={styles.details}>
+                <div className={styles.detailsWide}>
+                  <dt>What the work is</dt>
+                  <dd>{project.summary || 'Not written yet'}</dd>
+                </div>
+                <div>
+                  <dt>Service</dt>
+                  <dd>{SERVICE_LINES.find((line) => line.value === project.serviceLine)?.label}</dd>
+                </div>
+                <div>
+                  <dt>How it is billed</dt>
+                  <dd>
+                    {ENGAGEMENTS.find((kind) => kind.value === project.engagementType)?.label}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Currency</dt>
+                  <dd>{currencyLabel(project.currency)}</dd>
+                </div>
+                <div>
+                  <dt>Runs</dt>
+                  <dd>{dateRange(project.startDate, project.targetDate)}</dd>
+                </div>
+              </dl>
+            </ProjectDetailsCard>
           </div>
 
           <div className={styles.stack}>
-            <section className={forms.card}>
-              <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>From the client</h2>
-                <span className={forms.cardMeta}>
-                  {outstandingAssets === 0 ? 'Nothing outstanding' : `${outstandingAssets} outstanding`}
-                </span>
-              </div>
-              {project.assetRequests.length === 0 ? (
-                <p className={styles.note}>Nothing requested from the client.</p>
-              ) : (
-                <div className={styles.assetList}>
-                  {project.assetRequests.map((request) => (
-                    <AssetRequestRow
-                      key={request.id}
-                      id={request.id}
-                      title={request.title}
-                      detail={request.detail}
-                      status={request.status}
-                      response={request.response}
-                      assigneeId={request.assigneeId ?? ''}
-                      contacts={theirPeople}
-                      files={request.uploads.map((file) => ({
-                        id: file.id,
-                        filename: file.filename,
-                        size: fileSize(file.sizeBytes),
-                        when: formatRelative(file.createdAt, now),
-                      }))}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
             <section className={forms.card}>
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>People</h2>
@@ -585,10 +733,18 @@ export default async function ProjectPage({
                       {contact.name}
                       <span
                         className={`${forms.badge} ${
-                          contact.activatedAt ? forms.badgeGood : contact.canSignIn ? forms.badgeWarn : ''
+                          contact.activatedAt
+                            ? forms.badgeGood
+                            : contact.canSignIn
+                              ? forms.badgeWarn
+                              : ''
                         }`}
                       >
-                        {contact.activatedAt ? 'In the portal' : contact.canSignIn ? 'Invited' : 'No portal'}
+                        {contact.activatedAt
+                          ? 'In the portal'
+                          : contact.canSignIn
+                            ? 'Invited'
+                            : 'No portal'}
                       </span>
                     </span>
                     <span className={styles.personMeta}>
@@ -615,7 +771,9 @@ export default async function ProjectPage({
                 </div>
                 <div>
                   <dt>Agreement signed</dt>
-                  <dd>{signedAgreement ? formatShortDate(signedAgreement.updatedAt) : 'Not yet'}</dd>
+                  <dd>
+                    {signedAgreement ? formatShortDate(signedAgreement.updatedAt) : 'Not yet'}
+                  </dd>
                 </div>
                 <div>
                   <dt>Target</dt>
@@ -652,34 +810,59 @@ export default async function ProjectPage({
               {project.targetDate ? ` to ${formatShortDate(project.targetDate)}` : ''}
             </span>
           </div>
-          {project.phases.length === 0 ? (
-            <p className={styles.note}>This project has no plan yet.</p>
-          ) : (
-            project.phases.map((phase) => (
-              <div key={phase.id} className={styles.phase}>
-                <div className={styles.phaseHead}>
-                  <h3 className={styles.phaseName}>{phase.name}</h3>
-                  <span className={forms.cardMeta}>
-                    {phase.deliverables.filter((d) => d.isComplete).length} of {phase.deliverables.length}
-                  </span>
-                </div>
-                {phase.goal && <p className={styles.phaseGoal}>{phase.goal}</p>}
-                <div className={styles.taskList}>
-                  {phase.deliverables.map((deliverable) => (
-                    <TaskRow
-                      key={deliverable.id}
-                      id={deliverable.id}
-                      title={deliverable.title}
-                      complete={deliverable.isComplete}
-                      dueAt={toDateInputValue(deliverable.dueAt)}
-                      assigneeId={deliverable.assigneeId ?? ''}
-                      people={people}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
+          {project.phases.length === 0 && (
+            <p className={styles.note}>
+              {mayRun
+                ? 'No plan yet. Start with the first phase, then add its tasks.'
+                : 'This project has no plan yet.'}
+            </p>
           )}
+          {project.phases.map((phase) => (
+            <div key={phase.id} className={styles.phase}>
+              <PhaseHead
+                editable={mayRun}
+                taskCount={phase.deliverables.length}
+                phase={{
+                  id: phase.id,
+                  name: phase.name,
+                  goal: phase.goal ?? '',
+                  startDate: toDateInputValue(phase.startDate),
+                  endDate: toDateInputValue(phase.endDate),
+                }}
+              >
+                <span className={styles.phaseTitle}>
+                  <h3 className={styles.phaseName}>{phase.name}</h3>
+                  {(phase.startDate || phase.endDate) && (
+                    <span className={styles.phaseDates}>
+                      {dateRange(phase.startDate, phase.endDate)}
+                    </span>
+                  )}
+                </span>
+                <span className={forms.cardMeta}>
+                  {phase.deliverables.filter((d) => d.isComplete).length} of{' '}
+                  {phase.deliverables.length}
+                </span>
+              </PhaseHead>
+              {phase.goal && <p className={styles.phaseGoal}>{phase.goal}</p>}
+              <div className={styles.taskList}>
+                {phase.deliverables.map((deliverable) => (
+                  <TaskRow
+                    key={deliverable.id}
+                    id={deliverable.id}
+                    title={deliverable.title}
+                    complete={deliverable.isComplete}
+                    dueAt={toDateInputValue(deliverable.dueAt)}
+                    assigneeId={deliverable.assigneeId ?? ''}
+                    people={people}
+                    teamOnly={!deliverable.isClientVisible}
+                    editable={mayRun}
+                  />
+                ))}
+              </div>
+              {mayRun && <AddTask phaseId={phase.id} />}
+            </div>
+          ))}
+          {mayRun && <AddPhase projectId={project.id} first={project.phases.length === 0} />}
         </section>
       )}
 
@@ -692,75 +875,99 @@ export default async function ProjectPage({
             </div>
             {unpriced > 0 && (
               <Callout kind="warn">
-                {unpriced === 1 ? 'One fee has' : `${unpriced} fees have`} no price yet. A contract cannot be
-                sent until every fee is priced.
+                {unpriced === 1 ? 'One fee has' : `${unpriced} fees have`} no price yet. A contract
+                cannot be sent until every fee is priced.
               </Callout>
             )}
-            <FeeEditor projectId={project.id} currency={project.currency} fees={fees} readOnly={!mayFees} />
+            <FeeEditor
+              projectId={project.id}
+              currency={project.currency}
+              fees={fees}
+              readOnly={!mayFees}
+            />
           </section>
 
           {mayMoney && (
-          <>
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>Raise an invoice</h2>
-              <span className={forms.cardMeta}>From fees not yet invoiced</span>
-            </div>
-            <RaiseInvoice projectId={project.id} lines={toBill} defaultDue={toDateInputValue(defaultDue)} />
-          </section>
+            <>
+              <section className={forms.card}>
+                <div className={forms.cardHeader}>
+                  <h2 className={forms.cardTitle}>Raise an invoice</h2>
+                  <span className={forms.cardMeta}>From fees not yet invoiced</span>
+                </div>
+                <RaiseInvoice
+                  projectId={project.id}
+                  lines={toBill}
+                  defaultDue={toDateInputValue(defaultDue)}
+                />
+              </section>
 
-          <div className={table.frame}>
-            <div className={table.toolbar}>
-              <div className={table.toolbarText}>
-                <h2 className={table.title}>Invoices</h2>
-                <span className={table.count}>{project.invoices.length}</span>
-              </div>
-            </div>
-            <div className={table.scroll}>
-              <table className={`${table.table} ${table.compact}`}>
-                <thead>
-                  <tr>
-                    <th className={table.th} scope="col">Number</th>
-                    <th className={table.th} scope="col">Status</th>
-                    <th className={table.th} scope="col">Due</th>
-                    <th className={`${table.th} ${table.numericHead}`} scope="col">Total</th>
-                    <th className={`${table.th} ${table.numericHead}`} scope="col">Unpaid</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {project.invoices.length === 0 ? (
-                    <tr>
-                      <td className={table.emptyCell} colSpan={5}>
-                        <p className={table.emptyTitle}>No invoices yet</p>
-                        <p className={table.emptyHint}>Raise one above once a fee is due.</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    project.invoices.map((invoice) => (
-                      <tr key={invoice.id} className={table.tr}>
-                        <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
-                          <Link href={`/invoices/${invoice.number}`} className={table.link}>
-                            {invoice.number}
-                          </Link>
-                        </td>
-                        <td className={table.td}>{INVOICE_STATUS_LABEL[invoice.status]}</td>
-                        <td className={`${table.td} ${table.nowrap}`}>{formatShortDate(invoice.dueAt)}</td>
-                        <td className={`${table.td} ${table.numeric}`}>
-                          {formatMoney(invoice.totalMinor, invoice.currency)}
-                        </td>
-                        <td className={`${table.td} ${table.numeric}`}>
-                          {invoice.totalMinor - invoice.paidMinor <= 0
-                            ? 'Paid'
-                            : formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)}
-                        </td>
+              <div className={table.frame}>
+                <div className={table.toolbar}>
+                  <div className={table.toolbarText}>
+                    <h2 className={table.title}>Invoices</h2>
+                    <span className={table.count}>{project.invoices.length}</span>
+                  </div>
+                </div>
+                <div className={table.scroll}>
+                  <table className={`${table.table} ${table.compact}`}>
+                    <thead>
+                      <tr>
+                        <th className={table.th} scope="col">
+                          Number
+                        </th>
+                        <th className={table.th} scope="col">
+                          Status
+                        </th>
+                        <th className={table.th} scope="col">
+                          Due
+                        </th>
+                        <th className={`${table.th} ${table.numericHead}`} scope="col">
+                          Total
+                        </th>
+                        <th className={`${table.th} ${table.numericHead}`} scope="col">
+                          Unpaid
+                        </th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          </>
+                    </thead>
+                    <tbody>
+                      {project.invoices.length === 0 ? (
+                        <tr>
+                          <td className={table.emptyCell} colSpan={5}>
+                            <p className={table.emptyTitle}>No invoices yet</p>
+                            <p className={table.emptyHint}>Raise one above once a fee is due.</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        project.invoices.map((invoice) => (
+                          <tr key={invoice.id} className={table.tr}>
+                            <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
+                              <Link href={`/invoices/${invoice.number}`} className={table.link}>
+                                {invoice.number}
+                              </Link>
+                            </td>
+                            <td className={table.td}>{INVOICE_STATUS_LABEL[invoice.status]}</td>
+                            <td className={`${table.td} ${table.nowrap}`}>
+                              {formatShortDate(invoice.dueAt)}
+                            </td>
+                            <td className={`${table.td} ${table.numeric}`}>
+                              {formatMoney(invoice.totalMinor, invoice.currency)}
+                            </td>
+                            <td className={`${table.td} ${table.numeric}`}>
+                              {invoice.totalMinor - invoice.paidMinor <= 0
+                                ? 'Paid'
+                                : formatMoney(
+                                    invoice.totalMinor - invoice.paidMinor,
+                                    invoice.currency,
+                                  )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -778,9 +985,15 @@ export default async function ProjectPage({
               <table className={`${table.table} ${table.compact}`}>
                 <thead>
                   <tr>
-                    <th className={table.th} scope="col">Document</th>
-                    <th className={table.th} scope="col">Status</th>
-                    <th className={table.th} scope="col">Updated</th>
+                    <th className={table.th} scope="col">
+                      Document
+                    </th>
+                    <th className={table.th} scope="col">
+                      Status
+                    </th>
+                    <th className={table.th} scope="col">
+                      Updated
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -788,7 +1001,9 @@ export default async function ProjectPage({
                     <tr>
                       <td className={table.emptyCell} colSpan={3}>
                         <p className={table.emptyTitle}>No documents yet</p>
-                        <p className={table.emptyHint}>Start a proposal or agreement on the right.</p>
+                        <p className={table.emptyHint}>
+                          Start a proposal or agreement on the right.
+                        </p>
                       </td>
                     </tr>
                   ) : (
@@ -803,11 +1018,15 @@ export default async function ProjectPage({
                           </span>
                         </td>
                         <td className={table.td}>
-                          <span className={`${forms.badge} ${document.status === 'signed' ? forms.badgeGood : document.status === 'declined' ? forms.badgeBad : ['sent', 'viewed', 'changes_requested'].includes(document.status) ? forms.badgeWarn : ''}`}>
+                          <span
+                            className={`${forms.badge} ${document.status === 'signed' ? forms.badgeGood : document.status === 'declined' ? forms.badgeBad : ['sent', 'viewed', 'changes_requested'].includes(document.status) ? forms.badgeWarn : ''}`}
+                          >
                             {DOCUMENT_STATUS_LABEL[document.status]}
                           </span>
                         </td>
-                        <td className={`${table.td} ${table.nowrap}`}>{formatRelative(document.updatedAt, now)}</td>
+                        <td className={`${table.td} ${table.nowrap}`}>
+                          {formatRelative(document.updatedAt, now)}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -838,22 +1057,30 @@ export default async function ProjectPage({
       )}
 
       {tab === 'activity' && (
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Stage history</h2>
-          </div>
-          <ul className={styles.history}>
-            {project.statusEvents.map((event) => (
-              <li key={event.id} className={styles.historyItem}>
-                {event.from
-                  ? `${STAFF_LABEL[event.from]} to ${STAFF_LABEL[event.to]}`
-                  : `Created as ${STAFF_LABEL[event.to]}`}
-                <span className={styles.rowLabel}> · {formatRelative(event.createdAt, now)}</span>
-                {event.note && <p className={styles.historyNote}>{event.note}</p>}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <div className={styles.columns}>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Everything that happened</h2>
+            </div>
+            <ActivityFeed items={recent} now={now} />
+          </section>
+          <section className={forms.card}>
+            <div className={forms.cardHeader}>
+              <h2 className={forms.cardTitle}>Stage history</h2>
+            </div>
+            <ul className={styles.history}>
+              {project.statusEvents.map((event) => (
+                <li key={event.id} className={styles.historyItem}>
+                  {event.from
+                    ? `${STAFF_LABEL[event.from]} to ${STAFF_LABEL[event.to]}`
+                    : `Created as ${STAFF_LABEL[event.to]}`}
+                  <span className={styles.rowLabel}> · {formatRelative(event.createdAt, now)}</span>
+                  {event.note && <p className={styles.historyNote}>{event.note}</p>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       )}
     </main>
   );

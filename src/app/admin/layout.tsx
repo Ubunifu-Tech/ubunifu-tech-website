@@ -60,22 +60,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <Link href="/" className={styles.brand}>
-          <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
-          <span className={styles.brandText}>
-            Ubunifu <span className={styles.brandRole}>Console</span>
-          </span>
-        </Link>
-
-        <ConsoleNav counts={counts} permissions={staff.permissions} />
-      </aside>
-
-      <div className={styles.work}>
-        <header className={styles.topbar}>
-          <div className={styles.topbarStart}>
-            <MobileNav counts={counts} permissions={staff.permissions} />
-          </div>
+      {/* One band across the top: where you are, and who you are signed in as. */}
+      <header className={styles.band}>
+        <div className={styles.bandStart}>
+          <MobileNav counts={counts} permissions={staff.permissions} />
+          <Link href="/" className={styles.brand}>
+            <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
+            <span className={styles.brandText}>
+              Ubunifu <span className={styles.brandRole}>Console</span>
+            </span>
+          </Link>
+        </div>
+        <div className={styles.bandEnd}>
           <ProfileMenu
             name={staff.name}
             email={staff.email}
@@ -83,9 +79,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             links={links}
             signOutAction="/sign-out"
           />
-        </header>
-        {children}
-      </div>
+        </div>
+      </header>
+
+      <aside className={styles.sidebar} aria-label="Console">
+        <ConsoleNav counts={counts} permissions={staff.permissions} />
+      </aside>
+
+      <div className={styles.work}>{children}</div>
     </div>
   );
 }

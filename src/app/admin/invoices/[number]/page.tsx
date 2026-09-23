@@ -7,7 +7,7 @@ import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-lab
 import {
   formatMoney,
   formatShortDate,
-  minorUnitScale,
+  moneyInput,
   toDateInputValue,
 } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
@@ -36,14 +36,6 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
   return { title: decodeURIComponent(number) };
 }
 
-/** Minor units back into something a person types, without touching a float. */
-function amountInput(amountMinor: number, currency: string): string {
-  const scale = minorUnitScale(currency);
-  if (scale === 0) return String(amountMinor);
-  const units = Math.trunc(amountMinor / 10 ** scale);
-  const fraction = Math.abs(amountMinor % 10 ** scale);
-  return `${units}.${String(fraction).padStart(scale, '0')}`;
-}
 
 export default async function InvoicePage({
   params,
@@ -346,7 +338,7 @@ export default async function InvoicePage({
                 ) : (
                   <RecordPaymentForm
                     invoiceId={invoice.id}
-                    outstanding={amountInput(outstanding, invoice.currency)}
+                    outstanding={moneyInput(outstanding, invoice.currency)}
                     currency={invoice.currency}
                     today={toDateInputValue(now)}
                   />

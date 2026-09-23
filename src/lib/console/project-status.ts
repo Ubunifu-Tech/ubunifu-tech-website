@@ -81,3 +81,24 @@ export const SERVICE_LABEL: Record<string, string> = {
   product: 'Product',
   other: 'Other',
 };
+
+/** The service lines in full, as the project forms offer them. */
+export const SERVICE_LINES = [
+  { value: 'web', label: 'Websites & custom platforms' },
+  { value: 'hosting', label: 'Hosting, domains & email' },
+  { value: 'branding', label: 'Brand identity & design' },
+  { value: 'data', label: 'Data & business intelligence' },
+  { value: 'ai', label: 'AI & automation' },
+  { value: 'strategy', label: 'Technology strategy & advisory' },
+  { value: 'product', label: 'Product subscription' },
+  { value: 'other', label: 'Something else' },
+];
+
+/** How a project is billed, as the project forms offer it. */
+export const ENGAGEMENTS = [
+  { value: 'fixed_price_project', label: 'Fixed price project' },
+  { value: 'retainer', label: 'Monthly retainer' },
+  { value: 'subscription', label: 'Subscription' },
+  { value: 'advisory', label: 'Advisory' },
+  { value: 'support_only', label: 'Support only' },
+];

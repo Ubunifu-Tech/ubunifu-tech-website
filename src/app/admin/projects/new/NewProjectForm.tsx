@@ -9,28 +9,12 @@ import {
   TextAreaField,
   TextField,
 } from '@/components/console/Fields';
+import { ENGAGEMENTS, SERVICE_LINES } from '@/lib/console/project-status';
+import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewProjectState = { status: 'idle' };
 
-const SERVICE_LINES = [
-  { value: 'web', label: 'Websites & custom platforms' },
-  { value: 'hosting', label: 'Hosting, domains & email' },
-  { value: 'branding', label: 'Brand identity & design' },
-  { value: 'data', label: 'Data & business intelligence' },
-  { value: 'ai', label: 'AI & automation' },
-  { value: 'strategy', label: 'Technology strategy & advisory' },
-  { value: 'product', label: 'Product subscription' },
-  { value: 'other', label: 'Something else' },
-];
-
-const ENGAGEMENTS = [
-  { value: 'fixed_price_project', label: 'Fixed price project' },
-  { value: 'retainer', label: 'Monthly retainer' },
-  { value: 'subscription', label: 'Subscription' },
-  { value: 'advisory', label: 'Advisory' },
-  { value: 'support_only', label: 'Support only' },
-];
 
 const STATUSES = [
   { value: 'lead', label: 'Lead' },
@@ -78,7 +62,7 @@ export function NewProjectForm({
               maxLength={160}
               invalid={invalid('name')}
               disabled={pending}
-              hint={`A reference is assigned automatically. Billed in ${currency}, like the rest of this client's work.`}
+              hint="A reference is assigned automatically."
             />
 
             <SelectField
@@ -106,6 +90,21 @@ export function NewProjectForm({
               {ENGAGEMENTS.map((engagement) => (
                 <option key={engagement.value} value={engagement.value}>
                   {engagement.label}
+                </option>
+              ))}
+            </SelectField>
+
+            <SelectField
+              name="currency"
+              label="Currency"
+              defaultValue={currency}
+              invalid={invalid('currency')}
+              disabled={pending}
+              hint="Fees and invoices on this project are charged in it."
+            >
+              {CURRENCIES.map((code) => (
+                <option key={code} value={code}>
+                  {currencyLabel(code)}
                 </option>
               ))}
             </SelectField>

@@ -17,6 +17,7 @@ import { clientInviteEmail } from '@/lib/emails';
 import { createClientRecord } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
+import { CURRENCIES } from '@/lib/console/currencies';
 
 /**
  * Everything the form posted, handed back on failure.
@@ -58,7 +59,6 @@ export type NewClientState = {
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const CURRENCIES = ['USD', 'TZS', 'EUR', 'GBP', 'KES'] as const;
 
 /**
  * Statuses a project can be created in.

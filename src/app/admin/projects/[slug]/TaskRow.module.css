@@ -10,6 +10,22 @@
   border-top: 1px solid var(--border);
 }
 
+.editable {
+  grid-template-columns: minmax(0, 1fr) 8.5rem 11rem auto;
+}
+
+.wide {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.teamOnly {
+  display: inline-block;
+  margin: 0.125rem 0 0 1.75rem;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
 .task {
   min-width: 0;
 }
@@ -41,5 +57,9 @@
 
   .task {
     grid-column: 1 / -1;
+  }
+
+  .editable {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   }
 }

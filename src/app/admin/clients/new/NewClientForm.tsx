@@ -6,6 +6,8 @@ import { DateField } from '@/components/console/Fields';
 import { Steps } from '@/components/console/Steps';
 import forms from '@/styles/forms.module.css';
 import { Select as ConsoleSelect, optionsFromChildren } from '@/components/console/Select';
+import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
+import { formatShortDate, parseDateInput } from '@/lib/console/money';
 
 const INITIAL: NewClientState = { status: 'idle' };
 
@@ -54,7 +56,6 @@ const STATUSES: { value: string; label: string }[] = [
   { value: 'proposal_accepted', label: 'Proposal accepted' },
 ];
 
-const CURRENCIES = ['USD', 'TZS', 'EUR', 'GBP', 'KES'];
 
 const STEPS = [
   { key: 'organisation', label: 'Organisation' },
@@ -302,11 +303,11 @@ export function NewClientForm({
               >
                 {CURRENCIES.map((code) => (
                   <option key={code} value={code}>
-                    {code}
+                    {currencyLabel(code)}
                   </option>
                 ))}
               </Select>
-              <p className={forms.hint}>Every invoice for this client is raised in it.</p>
+              <p className={forms.hint}>Their projects are charged in it unless you choose another.</p>
             </div>
 
             <div className={`${forms.field} ${forms.wide}`}>
@@ -658,7 +659,7 @@ function CheckStep({
         ['Registered name', v('legalName')],
         ['Website', v('website')],
         ['Country', v('country').toUpperCase()],
-        ['Billing currency', v('currency')],
+        ['Billing currency', currencyLabel(v('currency'))],
         ['Internal notes', v('notes')],
       ],
     },
@@ -690,8 +691,8 @@ function CheckStep({
             ['Billed as', labelOf(ENGAGEMENTS, v('engagementType'))],
             ['Stage', labelOf(STATUSES, v('status'))],
             ['Plan', plan?.name ?? 'Start empty'],
-            ['Start', v('startDate')],
-            ['Target', v('targetDate')],
+            ['Start', v('startDate') ? formatShortDate(parseDateInput(v('startDate'))) : ''],
+            ['Target', v('targetDate') ? formatShortDate(parseDateInput(v('targetDate'))) : ''],
             ['What the work is', v('summary')],
           ]
         : [['Project', 'None for now']],

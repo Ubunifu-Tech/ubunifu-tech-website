@@ -15,18 +15,43 @@ export function minorUnitScale(currency: string): number {
   return ZERO_DECIMAL.has(currency.toUpperCase()) ? 0 : 2;
 }
 
+/**
+ * Shillings are priced in whole amounts, so cents on every figure are noise:
+ * "TZS 350,000", not "TZS 350,000.00". They are still stored in cents like
+ * any two-decimal currency, and an amount that does have cents (VAT on an odd
+ * figure) still shows them.
+ */
+const WHOLE_UNLESS_CENTS = new Set(['TZS', 'KES']);
+
 export function formatMoney(amountMinor: number, currency: string): string {
   const fractionDigits = minorUnitScale(currency);
   const divisor = 10 ** fractionDigits;
+  const shown =
+    WHOLE_UNLESS_CENTS.has(currency.toUpperCase()) && amountMinor % divisor === 0 ? 0 : fractionDigits;
 
   // en-GB rather than the server's locale, so a build machine's settings
   // cannot change what an invoice says.
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency,
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: shown,
+    maximumFractionDigits: shown,
   }).format(amountMinor / divisor);
+}
+
+/**
+ * Minor units back into what a person types, without touching a float:
+ * 150000 USD is "1500.00", 35000000 TZS is "350000".
+ */
+export function moneyInput(amountMinor: number, currency: string): string {
+  const scale = minorUnitScale(currency);
+  if (scale === 0) return String(amountMinor);
+  const divisor = 10 ** scale;
+  const sign = amountMinor < 0 ? '-' : '';
+  const units = Math.trunc(Math.abs(amountMinor) / divisor);
+  const fraction = Math.abs(amountMinor) % divisor;
+  if (fraction === 0 && WHOLE_UNLESS_CENTS.has(currency.toUpperCase())) return `${sign}${units}`;
+  return `${sign}${units}.${String(fraction).padStart(scale, '0')}`;
 }
 
 /**

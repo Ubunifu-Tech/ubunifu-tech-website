@@ -11,20 +11,63 @@
    scrolling work area. Staff keep this open all day, so navigation is always
    visible and never costs a click to reach. */
 .shell {
+  --band-height: 3.75rem;
+  --sidebar-width: 15.5rem;
+
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 15.5rem minmax(0, 1fr);
+  grid-template-areas:
+    'band band'
+    'side work';
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   background: var(--app-bg);
+}
+
+/* The band across the top. Its first cell is exactly as wide as the sidebar,
+   so the brand sits over the navigation and the rule under the band runs
+   unbroken from edge to edge. */
+.band {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  height: var(--band-height);
+  grid-area: band;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.bandStart {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-right: 1px solid var(--border);
+}
+
+.bandEnd {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: 0 clamp(1.25rem, 3vw, 2.5rem);
 }
 
 .sidebar {
   position: sticky;
-  top: 0;
+  top: var(--band-height);
   display: flex;
-  height: 100vh;
+  height: calc(100vh - var(--band-height));
   flex-direction: column;
   gap: var(--space-5);
-  padding: var(--space-5) var(--space-3);
+  grid-area: side;
+  padding: var(--space-2) var(--space-3) var(--space-5);
   border-right: 1px solid var(--border);
   background: var(--surface);
   overflow-y: auto;
@@ -133,33 +176,12 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
+  grid-area: work;
+  padding-top: var(--space-5);
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  min-height: 3.75rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: 0.625rem clamp(1.25rem, 3vw, 2.5rem);
-  border-bottom: 1px solid transparent;
-  background: color-mix(in srgb, var(--app-bg) 88%, transparent);
-  backdrop-filter: saturate(1.4) blur(10px);
-}
-
-.topbarStart {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-/* Phone only: the menu button and the mark beside it. */
-.menuButton,
-.topBrand {
+/* Phone only: the button that opens the navigation. */
+.menuButton {
   display: none;
 }
 
@@ -233,7 +255,25 @@
 
 @media (max-width: 60rem) {
   .shell {
+    grid-template-areas:
+      'band'
+      'work';
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .band {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 var(--space-4);
+  }
+
+  .bandStart {
+    padding: 0;
+    border-right: 0;
+  }
+
+  .bandEnd {
+    padding: 0;
   }
 
   .sidebar {
@@ -244,13 +284,15 @@
     display: inline-flex;
   }
 
-  .topBrand {
-    display: inline-flex;
+  .work {
+    padding-top: var(--space-4);
   }
+}
 
-  .topbar {
-    padding: 0.625rem var(--space-4);
-    border-bottom-color: var(--border);
+/* A phone has room for the mark but not the words beside it. */
+@media (max-width: 30rem) {
+  .band .brandText {
+    display: none;
   }
 }
 
@@ -1139,7 +1181,7 @@
 /* Paper: the document, not the console. */
 @media print {
   .sidebar,
-  .topbar {
+  .band {
     display: none;
   }
 
@@ -1494,4 +1536,133 @@
   font-size: var(--font-size-caption);
   white-space: normal;
   text-align: right;
+}
+
+/* ── Building a project by hand ─────────────────── */
+
+/* A pencil and a bin at the end of a row. Quiet until the row is pointed at,
+   but always there for touch and keyboard. */
+.rowTools {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.iconAction {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.iconAction:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+.iconAction:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* A row turned into its question or its one-field form. */
+.confirmRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.5rem 0;
+}
+
+.confirmText {
+  flex: 1 1 14rem;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
+.confirmButtons {
+  display: inline-flex;
+  flex: none;
+  gap: var(--space-2);
+}
+
+.renameInput {
+  flex: 1 1 16rem;
+}
+
+.confirmRow > [role='alert'] {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* A form opened inside a card, set off from what is around it. */
+.planForm {
+  margin: var(--space-3) 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.addButton {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+}
+
+.addTask {
+  margin-top: var(--space-2);
+}
+
+.fixedValue {
+  margin: 0.25rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
+.phaseDates {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.phaseTitle {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* The project's own facts: what the work is, then the rest in pairs. */
+.details {
+  display: grid;
+  gap: var(--space-4) var(--space-5);
+  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+
+.details dt {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.details dd {
+  margin: 0.125rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
+.detailsWide {
+  grid-column: 1 / -1;
 }

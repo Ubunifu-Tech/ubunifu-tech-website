@@ -58,9 +58,6 @@ export function MobileNav({
       >
         <Menu size={20} strokeWidth={1.8} aria-hidden="true" />
       </button>
-      <Link href="/" className={styles.topBrand}>
-        <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
-      </Link>
 
       {/* Rendered into <body>: the top bar's blur would otherwise become the
           box a fixed drawer is positioned in, and clip it to the bar. */}

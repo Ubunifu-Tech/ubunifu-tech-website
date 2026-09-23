@@ -10,7 +10,7 @@ import {
   type FeeState,
 } from '@/app/admin/projects/[slug]/fee-actions';
 import { BILLING, BILLING_OPTIONS, FEE_STATUS_LABEL, isRecurring } from '@/lib/console/fee-labels';
-import { formatMoney, minorUnitScale } from '@/lib/console/money';
+import { formatMoney, moneyInput } from '@/lib/console/money';
 import { Steps } from './Steps';
 import { ChoiceCards } from './ChoiceCards';
 import { DatePicker } from './DatePicker';
@@ -39,12 +39,9 @@ const STEPS = [
   { key: 'price', label: 'Price' },
 ];
 
-/** Minor units back to what a person types: 150000 USD → "1500.00". */
+/** What a person types for a price; an unpriced fee is an empty box. */
 function toInput(minor: number, currency: string): string {
-  if (minor === 0) return '';
-  // minorUnitScale is the number of decimal places: 2 for USD, 0 for TZS.
-  const decimals = minorUnitScale(currency);
-  return decimals === 0 ? String(minor) : (minor / 10 ** decimals).toFixed(decimals);
+  return minor === 0 ? '' : moneyInput(minor, currency);
 }
 
 const FIELD_STEP: Record<NonNullable<FeeState['field']>, number> = {

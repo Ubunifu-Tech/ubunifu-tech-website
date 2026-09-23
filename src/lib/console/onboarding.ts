@@ -234,6 +234,12 @@ export type NewProjectInput = {
   summary?: string | null;
   startDate?: Date | null;
   targetDate?: Date | null;
+  /**
+   * What this project is priced and invoiced in. Defaults to the client's own
+   * currency; set when one piece of work is billed differently, such as local
+   * hosting paid in TZS by a client whose build was quoted in USD.
+   */
+  currency?: string;
   staffId: string;
 };
 
@@ -257,6 +263,7 @@ export async function createProjectForClient(
   const projectSlug = await freeSlug(slugify(input.name), projectSlugTaken);
   const reference = await nextProjectReference();
   const start = input.startDate ?? new Date();
+  const currency = input.currency ?? client.currency;
 
   return db.$transaction(async (tx) => {
     const project = await tx.project.create({
@@ -269,7 +276,7 @@ export async function createProjectForClient(
         engagementType: input.engagementType,
         status: input.status,
         summary: input.summary || null,
-        currency: client.currency,
+        currency,
         startDate: input.startDate ?? null,
         targetDate: input.targetDate ?? null,
         ownerId: input.staffId,
@@ -290,7 +297,7 @@ export async function createProjectForClient(
         projectId: project.id,
         templateId: input.templateId,
         start,
-        currency: client.currency,
+        currency,
       });
     }
 
@@ -394,7 +401,7 @@ export async function applyTemplate(
         label: line.label,
         description: line.description,
         billingKind: line.billingKind,
-        // The template's currency is a suggestion; the client's own currency
+        // The template's currency is a suggestion; the project's own currency
         // wins, because one project cannot be invoiced in two of them.
         amountMinor: line.amountMinor,
         currency: options.currency,

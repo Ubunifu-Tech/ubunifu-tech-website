@@ -1,0 +1,93 @@
+/* The overview band.
+ *
+ * One frame, split into cells by hairlines, rather than a row of separate
+ * cards each with its own coloured icon. The figures are read together, as
+ * one line of how things stand, so they sit together. Colour appears only in
+ * a note that asks for action, which is what keeps red meaning something. */
+
+.band {
+  display: grid;
+  gap: 1px;
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--border);
+  box-shadow: var(--app-shadow-card);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.link {
+  transition: background var(--transition-fast);
+}
+
+.link:hover {
+  background: color-mix(in srgb, var(--app-bg) 55%, white);
+  text-decoration: none;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.value {
+  margin-top: var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.valueBad {
+  color: var(--danger);
+}
+
+.note {
+  margin-top: var(--space-1);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.bad {
+  color: var(--danger);
+}
+
+.warn {
+  color: var(--tone-amber-fg);
+}
+
+.good {
+  color: var(--tone-green-fg);
+}
+
+/* Two to a row on a phone: a glance, not a scroll. */
+@media (max-width: 40rem) {
+  .band {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .figure {
+    padding: var(--space-4);
+  }
+}

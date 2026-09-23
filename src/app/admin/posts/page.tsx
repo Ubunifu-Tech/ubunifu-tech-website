@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { formatShortDate } from '@/lib/console/money';
 import { NewPostForm } from './PostForms';
+import { Figures } from '@/components/console/Figures';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -54,23 +55,13 @@ export default async function PostsPage() {
         </div>
       </div>
 
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Live</p>
-          <p className={styles.statValue}>{live}</p>
-          <p className={styles.statHint}>On the blog now</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Scheduled</p>
-          <p className={styles.statValue}>{scheduled}</p>
-          <p className={styles.statHint}>Published, dated ahead</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Drafts</p>
-          <p className={styles.statValue}>{drafts}</p>
-          <p className={styles.statHint}>Not on the site</p>
-        </div>
-      </div>
+      <Figures
+        items={[
+          { label: 'Live', value: live, note: 'On the blog now' },
+          { label: 'Scheduled', value: scheduled, note: 'Published, dated ahead' },
+          { label: 'Drafts', value: drafts, note: 'Not on the site' },
+        ]}
+      />
 
       <div className={styles.stack}>
         <section className={forms.card}>

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useActionState, useId, useState } from 'react';
+import React, { useActionState, useId, useRef, useState } from 'react';
 import { createClient, type NewClientState } from './actions';
 import { DateField } from '@/components/console/Fields';
+import { Steps } from '@/components/console/Steps';
 import forms from '@/styles/forms.module.css';
 import { Select as ConsoleSelect, optionsFromChildren } from '@/components/console/Select';
 
@@ -55,6 +56,39 @@ const STATUSES: { value: string; label: string }[] = [
 
 const CURRENCIES = ['USD', 'TZS', 'EUR', 'GBP', 'KES'];
 
+const STEPS = [
+  { key: 'organisation', label: 'Organisation' },
+  { key: 'contact', label: 'Contact' },
+  { key: 'project', label: 'First project' },
+  { key: 'check', label: 'Check and create' },
+];
+const CHECK = STEPS.length - 1;
+
+/** Which step each field is on, so an error from the server opens the right one. */
+const FIELD_STEP: Record<string, number> = {
+  name: 0,
+  legalName: 0,
+  website: 0,
+  country: 0,
+  currency: 0,
+  notes: 0,
+  contactName: 1,
+  contactEmail: 1,
+  contactRole: 1,
+  contactPhone: 1,
+  projectName: 2,
+  serviceLine: 2,
+  engagementType: 2,
+  status: 2,
+  templateId: 2,
+  startDate: 2,
+  targetDate: 2,
+  summary: 2,
+};
+
+const labelOf = (list: { value: string; label: string }[], value: string) =>
+  list.find((item) => item.value === value)?.label ?? value;
+
 /** The shared dropdown, taking <option> children as this form was written. */
 function Select({
   id,
@@ -96,7 +130,71 @@ export function NewClientForm({
   const [state, action, pending] = useActionState(createClient, INITIAL);
   const [startProject, setStartProject] = useState(true);
   const [serviceLine, setServiceLine] = useState(prefill?.serviceLine ?? 'web');
+  const [step, setStep] = useState(0);
+  const [reached, setReached] = useState(0);
+  const [review, setReview] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  const sections = useRef<(HTMLDivElement | null)[]>([]);
   const ids = useId();
+
+  // A problem the server found opens the step it is on. Done while rendering,
+  // the first time each answer from the server is seen.
+  const [answered, setAnswered] = useState(state);
+  if (state !== answered) {
+    setAnswered(state);
+    if (state.status === 'error') {
+      setStep(state.field ? (FIELD_STEP[state.field] ?? CHECK) : CHECK);
+    }
+  }
+
+  /** The first field on a step that the browser would refuse, if any. */
+  const firstInvalid = (index: number) => {
+    const section = sections.current[index];
+    if (!section) return null;
+    const fields = section.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea');
+    return [...fields].find((field) => !field.checkValidity()) ?? null;
+  };
+
+  /** Opens a step and shows the browser's own message on the field. */
+  const point = (index: number, field: HTMLInputElement | HTMLTextAreaElement) => {
+    setStep(index);
+    requestAnimationFrame(() => field.reportValidity());
+  };
+
+  const open = (index: number) => {
+    // Going back is always allowed. Going forward, every step on the way has
+    // to be complete.
+    for (let earlier = 0; earlier < Math.min(index, CHECK); earlier += 1) {
+      const invalid = firstInvalid(earlier);
+      if (invalid) return point(earlier, invalid);
+    }
+    if (index === CHECK && formRef.current) {
+      const data = new FormData(formRef.current);
+      setReview(
+        Object.fromEntries([...data.entries()].map(([key, value]) => [key, String(value)])),
+      );
+    }
+    setStep(index);
+    setReached((furthest) => Math.max(furthest, index));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    // Enter in a field moves on a step. Only the last step creates anything.
+    if (step < CHECK) {
+      event.preventDefault();
+      open(step + 1);
+      return;
+    }
+    for (let index = 0; index < CHECK; index += 1) {
+      const invalid = firstInvalid(index);
+      if (invalid) {
+        event.preventDefault();
+        point(index, invalid);
+        return;
+      }
+    }
+  };
 
   const field = (name: string) => `${ids}-${name}`;
   const invalid = (name: string) => (state.field === name ? true : undefined);
@@ -115,11 +213,14 @@ export function NewClientForm({
   const usable = templates.filter((template) => template.serviceLine === serviceLine);
 
   return (
-    <form action={action} className={forms.form}>
+    <form ref={formRef} action={action} onSubmit={onSubmit} className={forms.form} noValidate>
+      <Steps steps={STEPS} current={step} reachable={reached} onSelect={open} />
+
       {/* Carried through the post so the enquiry can be marked converted and
           linked to the client in the same transaction that creates it. */}
       {prefill && <input type="hidden" name="enquiryId" value={prefill.enquiryId} />}
 
+      <div hidden={step !== 0} ref={(node) => { sections.current[0] = node; }}>
       <div className={forms.card}>
         <fieldset className={forms.section}>
           <legend className={`${forms.sectionTitle} ${forms.hueBrand}`}>The organisation</legend>
@@ -227,7 +328,9 @@ export function NewClientForm({
           </div>
         </fieldset>
       </div>
+      </div>
 
+      <div hidden={step !== 1} ref={(node) => { sections.current[1] = node; }}>
       <div className={forms.card}>
         <fieldset className={forms.section}>
           <legend className={`${forms.sectionTitle} ${forms.huePrimary}`}>
@@ -314,7 +417,9 @@ export function NewClientForm({
           </div>
         </fieldset>
       </div>
+      </div>
 
+      <div hidden={step !== 2} ref={(node) => { sections.current[2] = node; }}>
       <div className={forms.card}>
         <fieldset className={forms.section}>
           <legend className={`${forms.sectionTitle} ${forms.hueAccent}`}>The first project</legend>
@@ -476,24 +581,138 @@ export function NewClientForm({
             )}
           </div>
         </fieldset>
+      </div>
+      </div>
 
-        <div className={forms.actions}>
-          <button type="submit" className={forms.button} disabled={pending}>
-            {pending ? 'Creating…' : 'Create client'}
-          </button>
-          <p className={forms.payoff}>
-            {startProject
-              ? 'Creates the client, their contact and the project.'
-              : 'Creates the organisation and the contact. You can add a project whenever one is agreed.'}
-          </p>
-        </div>
+      {step === CHECK && (
+        <CheckStep
+          values={review}
+          startProject={startProject}
+          templates={templates}
+          onEdit={(index) => setStep(index)}
+        />
+      )}
 
+      <div className={forms.card}>
         {state.message && (
           <p className={forms.error} role="alert">
             {state.message}
           </p>
         )}
+        <div className={`${forms.actions} ${forms.actionsBare}`}>
+          {step > 0 && (
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setStep(step - 1)}
+              disabled={pending}
+            >
+              Back
+            </button>
+          )}
+          {step < CHECK ? (
+            <button type="submit" className={forms.button}>
+              Continue
+            </button>
+          ) : (
+            <button type="submit" className={forms.button} disabled={pending}>
+              {pending ? 'Creating…' : 'Create client'}
+            </button>
+          )}
+          <p className={forms.payoff}>
+            {step < CHECK
+              ? `Step ${step + 1} of ${STEPS.length}. Nothing is saved until the last step.`
+              : startProject
+                ? 'Creates the client, their contact and the project.'
+                : 'Creates the organisation and the contact. You can add a project whenever one is agreed.'}
+          </p>
+        </div>
       </div>
     </form>
+  );
+}
+
+/** Everything entered, grouped as it was asked for, with a way back to each part. */
+function CheckStep({
+  values,
+  startProject,
+  templates,
+  onEdit,
+}: {
+  values: Record<string, string>;
+  startProject: boolean;
+  templates: TemplateOption[];
+  onEdit: (step: number) => void;
+}) {
+  const v = (key: string) => values[key]?.trim() ?? '';
+  const plan = templates.find((template) => template.id === v('templateId'));
+
+  const groups: { step: number; title: string; rows: [string, string][] }[] = [
+    {
+      step: 0,
+      title: 'Organisation',
+      rows: [
+        ['Name', v('name') || `${v('contactName') || 'The contact'}, working on their own`],
+        ['Registered name', v('legalName')],
+        ['Website', v('website')],
+        ['Country', v('country').toUpperCase()],
+        ['Billing currency', v('currency')],
+        ['Internal notes', v('notes')],
+      ],
+    },
+    {
+      step: 1,
+      title: 'Contact',
+      rows: [
+        ['Name', v('contactName')],
+        ['Email', v('contactEmail')],
+        ['Role', v('contactRole')],
+        ['Phone', v('contactPhone')],
+        ['Portal invitation', values.sendInvite ? 'Emailed when you create the client' : 'Not sent yet'],
+      ],
+    },
+    {
+      step: 2,
+      title: 'First project',
+      rows: startProject
+        ? [
+            ['Name', v('projectName') || 'Not named yet'],
+            ['Service', labelOf(SERVICE_LINES, v('serviceLine'))],
+            ['Billed as', labelOf(ENGAGEMENTS, v('engagementType'))],
+            ['Stage', labelOf(STATUSES, v('status'))],
+            ['Plan', plan?.name ?? 'Start empty'],
+            ['Start', v('startDate')],
+            ['Target', v('targetDate')],
+            ['What the work is', v('summary')],
+          ]
+        : [['Project', 'None for now']],
+    },
+  ];
+
+  return (
+    <div className={forms.card}>
+      <div className={forms.review}>
+        {groups.map((group) => (
+          <section key={group.title} className={forms.reviewGroup}>
+            <div className={forms.reviewHead}>
+              <h2 className={forms.cardTitle}>{group.title}</h2>
+              <button type="button" className={forms.link} onClick={() => onEdit(group.step)}>
+                Change
+              </button>
+            </div>
+            <dl className={forms.reviewList}>
+              {group.rows
+                .filter(([, value]) => value)
+                .map(([label, value]) => (
+                  <div key={label} className={forms.reviewRow}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+    </div>
   );
 }

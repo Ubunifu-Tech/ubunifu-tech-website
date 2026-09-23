@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
 import { formatShortDate } from '@/lib/console/money';
+import { Callout } from '@/components/console/Callout';
+import { ListToolbar } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -88,6 +90,23 @@ export default async function ActivityPage({
 
   const where = auditWhere(active);
   const wantsEmails = active === 'all' || active === 'emails' || active === 'failures';
+
+  const emailWhere = (key: string): Prisma.EmailLogWhereInput | null =>
+    key === 'failures' ? { status: 'failed' } : key === 'all' || key === 'emails' ? {} : null;
+
+  // How many entries each view holds, audit lines and emails together.
+  const viewCounts = await Promise.all(
+    FILTERS.map(async (filter) => {
+      const audit = auditWhere(filter.key);
+      const email = emailWhere(filter.key);
+      const [a, e] = await Promise.all([
+        audit === null ? 0 : db.auditEvent.count({ where: audit }),
+        email === null ? 0 : db.emailLog.count({ where: email }),
+      ]);
+      return a + e;
+    }),
+  );
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
 
   const [audits, emails, failedCount] = await Promise.all([
     where === null
@@ -181,42 +200,27 @@ export default async function ActivityPage({
         </div>
       </div>
 
-      {failedCount > 0 && (
-        <div className={styles.stats}>
-          <div className={`${styles.stat} ${styles.statAlert}`}>
-            <p className={styles.statLabel}>Emails that did not send</p>
-            <p className={styles.statValue}>{failedCount}</p>
-            <p className={styles.statHint}>
-              The record survived; the message did not. Worth chasing by hand.
-            </p>
-          </div>
-        </div>
+      {failedCount > 0 && active !== 'failures' && (
+        <Callout
+          kind="bad"
+          action={
+            <Link href="/activity?show=failures" className={table.action}>
+              See which ones
+            </Link>
+          }
+        >
+          {failedCount} {failedCount === 1 ? 'email' : 'emails'} did not send. The people they
+          were for have not heard from us.
+        </Callout>
       )}
 
-      <div className={styles.filters}>
-        {FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'all' ? '/activity' : `/activity?show=${filter.key}`}
-            className={styles.filter}
-            aria-current={filter.key === active}
-          >
-            {filter.label}
-          </Link>
-        ))}
-      </div>
-
       <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>
-              {FILTERS.find((f) => f.key === active)?.label ?? 'Everything'}
-            </h2>
-            <span className={table.count}>
-              {rows.length} {rows.length === 1 ? 'entry' : 'entries'}, newest first
-            </span>
-          </div>
-        </div>
+        <ListToolbar
+          path="/activity"
+          views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+          current={active}
+          defaultView="all"
+        />
 
         <div className={table.scroll}>
           <table className={table.table}>
@@ -280,10 +284,16 @@ export default async function ActivityPage({
             </tbody>
           </table>
         </div>
-        <div className={table.footer}>
-          <span>Showing the most recent {rows.length}.</span>
-          <span>Nothing here is ever edited or deleted.</span>
-        </div>
+        {rows.length > 0 && (
+          <div className={table.footer}>
+            <span>
+              {rows.length < total
+                ? `Showing the latest ${rows.length} of ${total}.`
+                : `${total} ${total === 1 ? 'entry' : 'entries'}.`}
+            </span>
+            <span>Nothing here is ever edited or deleted.</span>
+          </div>
+        )}
       </div>
     </main>
   );

@@ -708,3 +708,63 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* A form's buttons in a card of their own, with no rule above them. */
+.actionsBare {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* ── Checking before creating ──────────────────── */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.reviewGroup + .reviewGroup {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.reviewHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.reviewList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.reviewRow {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.reviewRow dt {
+  color: var(--text-tertiary);
+}
+
+.reviewRow dd {
+  margin: 0;
+  color: var(--text-primary);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 40rem) {
+  .reviewRow {
+    gap: 0;
+    grid-template-columns: 1fr;
+  }
+}

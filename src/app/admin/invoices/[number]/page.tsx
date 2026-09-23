@@ -17,6 +17,7 @@ import {
   SendInvoiceButton,
   VoidInvoiceForm,
 } from '../InvoiceControls';
+import { Figures } from '@/components/console/Figures';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -102,6 +103,11 @@ export default async function InvoicePage({
 
   const activity = await activityFor([invoice.id]);
   const outstanding = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  const pastDue =
+    invoice.status !== 'draft' &&
+    invoice.status !== 'void' &&
+    invoice.dueAt !== null &&
+    invoice.dueAt < new Date();
   const methodLabel = (value: string) =>
     PAYMENT_METHODS.find((method) => method.value === value)?.label ?? value;
 
@@ -149,28 +155,32 @@ export default async function InvoicePage({
         </div>
       </div>
 
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Total</p>
-          <p className={styles.statValue}>{formatMoney(invoice.totalMinor, invoice.currency)}</p>
-          <p className={styles.statHint}>{invoice.lines.length} line items</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Received</p>
-          <p className={styles.statValue}>{formatMoney(invoice.paidMinor, invoice.currency)}</p>
-          <p className={styles.statHint}>
-            {invoice.payments.length}{' '}
-            {invoice.payments.length === 1 ? 'payment' : 'payments'} recorded
-          </p>
-        </div>
-        <div className={`${styles.stat} ${outstanding > 0 ? styles.statAlert : ''}`}>
-          <p className={styles.statLabel}>Outstanding</p>
-          <p className={styles.statValue}>{formatMoney(outstanding, invoice.currency)}</p>
-          <p className={styles.statHint}>
-            {outstanding === 0 ? 'Settled in full' : 'Still to come in'}
-          </p>
-        </div>
-      </div>
+      <Figures
+        label="This invoice at a glance"
+        items={[
+          {
+            label: 'Total',
+            value: formatMoney(invoice.totalMinor, invoice.currency),
+            note: `${invoice.lines.length} ${invoice.lines.length === 1 ? 'line' : 'lines'}`,
+          },
+          {
+            label: 'Received',
+            value: formatMoney(invoice.paidMinor, invoice.currency),
+            note: `${invoice.payments.length} ${invoice.payments.length === 1 ? 'payment' : 'payments'} recorded`,
+          },
+          {
+            label: 'Outstanding',
+            value: formatMoney(outstanding, invoice.currency),
+            note:
+              outstanding === 0
+                ? 'Settled in full'
+                : pastDue
+                  ? `Past due since ${formatShortDate(invoice.dueAt)}`
+                  : 'Still to come in',
+            tone: outstanding > 0 && pastDue ? 'bad' : undefined,
+          },
+        ]}
+      />
 
       <div className={styles.stack}>
         <div className={table.frame}>

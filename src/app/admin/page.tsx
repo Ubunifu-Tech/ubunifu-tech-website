@@ -6,8 +6,8 @@ import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/mone
 import { recentActivity } from '@/lib/console/activity';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Avatar } from '@/components/console/Avatar';
-import { StatCard } from '@/components/console/StatCard';
-import { Briefcase, MailWarning, RefreshCw, Sparkles, UserPlus, Wallet } from 'lucide-react';
+import { Callout } from '@/components/console/Callout';
+import { Figures, type Figure } from '@/components/console/Figures';
 import styles from './Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -63,6 +63,8 @@ export default async function AdminHome() {
     enquiryCount,
     pipelineCount,
     myTasks,
+    enquiriesThisWeek,
+    enquiriesWeekBefore,
   ] = await Promise.all([
     db.enquiry.findMany({
       where: { status: 'new' },
@@ -73,10 +75,11 @@ export default async function AdminHome() {
     db.clientContact.count({
       where: { deletedAt: null, canSignIn: true, activatedAt: null, client: { deletedAt: null } },
     }),
+    // Every open invoice, not a capped list: the total owed is added up from
+    // these, and a total of the first ten would quietly be wrong.
     db.invoice.findMany({
       where: { status: { in: ['sent', 'part_paid', 'overdue'] } },
       orderBy: { dueAt: 'asc' },
-      take: 10,
       select: {
         id: true,
         number: true,
@@ -143,13 +146,37 @@ export default async function AdminHome() {
         phase: { select: { project: { select: { name: true, slug: true } } } },
       },
     }),
+    db.enquiry.count({
+      where: { createdAt: { gte: new Date(now.getTime() - 7 * 86_400_000) }, status: { not: 'spam' } },
+    }),
+    db.enquiry.count({
+      where: {
+        createdAt: {
+          gte: new Date(now.getTime() - 14 * 86_400_000),
+          lt: new Date(now.getTime() - 7 * 86_400_000),
+        },
+        status: { not: 'spam' },
+      },
+    }),
   ]);
 
   const owedByCurrency = new Map<string, number>();
+  const overdueByCurrency = new Map<string, number>();
+  let overdueCount = 0;
   for (const invoice of unpaidInvoices) {
     const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
     owedByCurrency.set(invoice.currency, (owedByCurrency.get(invoice.currency) ?? 0) + owed);
+    if (owed > 0 && invoice.dueAt && invoice.dueAt < now) {
+      overdueByCurrency.set(invoice.currency, (overdueByCurrency.get(invoice.currency) ?? 0) + owed);
+      overdueCount += 1;
+    }
   }
+  const amounts = (byCurrency: Map<string, number>) => {
+    const parts = [...byCurrency].filter(([, amount]) => amount > 0);
+    return parts.length === 0
+      ? formatMoney(0, 'USD')
+      : parts.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ');
+  };
 
   type Waiting = {
     id: string;
@@ -185,6 +212,7 @@ export default async function AdminHome() {
     })),
     ...(seesMoney ? unpaidInvoices : [])
       .filter((invoice) => invoice.dueAt !== null && invoice.dueAt.getTime() < now.getTime())
+      .slice(0, 10)
       .map((invoice) => ({
         id: `i-${invoice.id}`,
         what: `${invoice.number}: ${formatMoney(
@@ -199,9 +227,75 @@ export default async function AdminHome() {
       })),
   ].sort((a, b) => a.since.getTime() - b.since.getTime());
 
-  const owed = [...owedByCurrency].filter(([, amount]) => amount > 0);
-  const [firstCurrency, firstAmount] = owed[0] ?? ['USD', 0];
   const firstName = staff.name.split(' ')[0];
+
+  // Problems, not figures: each one is something that has already gone wrong.
+  const problems: React.ReactNode[] = [];
+  if (failedEmails > 0) {
+    problems.push(
+      <>
+        {failedEmails} {failedEmails === 1 ? 'email' : 'emails'} did not send.{' '}
+        <Link href="/activity?show=failures" className={styles.inlineLink}>
+          See which ones
+        </Link>
+      </>,
+    );
+  }
+  if (seesMoney && overdueCount > 0) {
+    problems.push(
+      <>
+        {overdueCount} {overdueCount === 1 ? 'invoice is' : 'invoices are'} past due,{' '}
+        {amounts(overdueByCurrency)} in all.{' '}
+        <Link href="/invoices" className={styles.inlineLink}>
+          Open invoices
+        </Link>
+      </>,
+    );
+  }
+
+  const figures: Figure[] = [
+    {
+      label: 'Active projects',
+      value: liveProjects,
+      note: `${pipelineCount} more in the pipeline`,
+      href: '/projects?view=list',
+    },
+  ];
+  if (seesMoney) {
+    figures.push({
+      label: 'Owed to us',
+      value: amounts(owedByCurrency),
+      note:
+        unpaidInvoices.length === 0
+          ? 'No invoices open'
+          : `${unpaidInvoices.length} ${unpaidInvoices.length === 1 ? 'invoice' : 'invoices'} open`,
+      href: '/invoices',
+    });
+  }
+  if (seesEnquiries) {
+    figures.push({
+      label: 'Unread enquiries',
+      value: enquiryCount,
+      note: `${enquiriesThisWeek} this week, ${enquiriesWeekBefore} the week before`,
+      href: '/enquiries',
+    });
+  }
+  if (seesMoney) {
+    figures.push({
+      label: 'Renewals due',
+      value: dueRenewals,
+      note: 'In the next 45 days',
+      href: '/renewals',
+    });
+  }
+  if (figures.length < 4) {
+    figures.push({
+      label: 'Not invited yet',
+      value: uninvited,
+      note: 'Contacts without portal access',
+      href: '/clients?show=portal',
+    });
+  }
 
   return (
     <main className={styles.page}>
@@ -223,72 +317,13 @@ export default async function AdminHome() {
         )}
       </div>
 
-      <div className={styles.stats}>
-        <StatCard
-          label="Active projects"
-          value={liveProjects}
-          hint={`${pipelineCount} more in the pipeline`}
-          icon={Briefcase}
-          tone="blue"
-          href="/projects"
-        />
-        {seesMoney && (
-          <StatCard
-            label="Unpaid"
-            value={formatMoney(firstAmount, firstCurrency)}
-            hint={
-              owed.length > 1
-                ? `Plus ${owed
-                    .slice(1)
-                    .map(([currency, amount]) => formatMoney(amount, currency))
-                    .join(' and ')}`
-                : `${unpaidInvoices.length} ${unpaidInvoices.length === 1 ? 'invoice' : 'invoices'} open`
-            }
-            icon={Wallet}
-            tone="amber"
-            href="/invoices"
-          />
-        )}
-        {seesEnquiries && (
-          <StatCard
-            label="New enquiries"
-            value={enquiryCount}
-            hint={enquiryCount === 0 ? 'Inbox is clear' : 'Waiting for a reply'}
-            icon={Sparkles}
-            tone="violet"
-            href="/enquiries"
-          />
-        )}
-        {seesMoney && (
-          <StatCard
-            label="Renewals due"
-            value={dueRenewals}
-            hint="In the next 45 days"
-            icon={RefreshCw}
-            tone="teal"
-            href="/renewals"
-          />
-        )}
-        {failedEmails > 0 ? (
-          <StatCard
-            label="Emails not sent"
-            value={failedEmails}
-            hint="See which ones"
-            icon={MailWarning}
-            tone="red"
-            href="/activity?show=failures"
-          />
-        ) : (
-          <StatCard
-            label="Not invited yet"
-            value={uninvited}
-            hint="Clients without portal access"
-            icon={UserPlus}
-            tone="orange"
-            href="/clients"
-          />
-        )}
-      </div>
+      {problems.length > 0 && (
+        <Callout kind="bad" items={problems.length > 1 ? problems : undefined}>
+          {problems.length === 1 ? problems[0] : undefined}
+        </Callout>
+      )}
+
+      <Figures items={figures} />
 
       <div className={styles.columns}>
         <div className={table.frame}>

@@ -8,6 +8,7 @@ import { transitionsFor } from '@/lib/console/transitions';
 import { Avatar } from '@/components/console/Avatar';
 import { Board, type BoardCard } from './Board';
 import { KanbanSquare, List } from 'lucide-react';
+import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -87,18 +88,39 @@ const SELECT = {
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; view?: string }>;
+  searchParams: Promise<{ show?: string; view?: string; q?: string }>;
 }) {
   const staff = await requireStaff();
   const canRun = can(staff, 'projects');
-  const { show, view } = await searchParams;
+  const { show, view, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
   const asList = view === 'list';
+  const query = searchText(q);
 
   if (!asList) return <BoardView canRun={canRun} />;
 
+  const now = new Date();
+  const matching: Prisma.ProjectWhereInput = query
+    ? {
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { reference: { contains: query, mode: 'insensitive' } },
+          { client: { name: { contains: query, mode: 'insensitive' } } },
+        ],
+      }
+    : {};
+
+  const viewCounts = await Promise.all(
+    FILTERS.map((filter) =>
+      db.project.count({
+        where: { AND: [{ deletedAt: null }, filterToWhere(filter.key), matching] },
+      }),
+    ),
+  );
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+
   const projects = await db.project.findMany({
-    where: { deletedAt: null, ...filterToWhere(active) },
+    where: { AND: [{ deletedAt: null }, filterToWhere(active), matching] },
     orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
     take: 200,
     select: SELECT,
@@ -108,30 +130,16 @@ export default async function ProjectsPage({
     <main className={styles.page}>
       <ProjectsHeader view="list" canRun={canRun} />
 
-      <div className={styles.filters}>
-        {FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'live' ? '/projects?view=list' : `/projects?view=list&show=${filter.key}`}
-            className={styles.filter}
-            aria-current={filter.key === active}
-          >
-            {filter.label}
-          </Link>
-        ))}
-      </div>
-
       <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>
-              {FILTERS.find((f) => f.key === active)?.label ?? 'Projects'}
-            </h2>
-            <span className={table.count}>
-              {projects.length} {projects.length === 1 ? 'project' : 'projects'}
-            </span>
-          </div>
-        </div>
+        <ListToolbar
+          path="/projects"
+          keep={{ view: 'list' }}
+          views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+          current={active}
+          defaultView="live"
+          query={query}
+          searchLabel="Search projects"
+        />
 
         <div className={table.scroll}>
           <table className={table.table}>
@@ -143,22 +151,25 @@ export default async function ProjectsPage({
                 <th className={table.th} scope="col">Progress</th>
                 <th className={table.th} scope="col">Target</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Value</th>
-                <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>Actions</span>
-                </th>
               </tr>
             </thead>
             <tbody>
               {projects.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={7}>
+                  <td className={table.emptyCell} colSpan={6}>
                     <p className={table.emptyTitle}>
-                      {active === 'live' ? 'Nothing in flight.' : 'Nothing here.'}
+                      {query
+                        ? `No projects match “${query}” here.`
+                        : active === 'live'
+                          ? 'Nothing in flight.'
+                          : 'Nothing here.'}
                     </p>
                     <p className={table.emptyHint}>
-                      {active === 'live'
-                        ? 'Everything is either still in the pipeline or already finished.'
-                        : 'Try another view.'}
+                      {query
+                        ? 'Try another view, or search for something else.'
+                        : active === 'live'
+                          ? 'Everything is either still in the pipeline or already finished.'
+                          : 'Try another view.'}
                     </p>
                   </td>
                 </tr>
@@ -170,6 +181,11 @@ export default async function ProjectsPage({
                     .filter((line) => line.currency === project.currency)
                     .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
                   const unpriced = project.lineItems.some((line) => line.amountMinor === 0);
+                  const finished = ['launched', 'handover', 'closed', 'cancelled'].includes(
+                    project.status,
+                  );
+                  const late =
+                    !finished && project.targetDate !== null && project.targetDate < now;
 
                   return (
                     <tr key={project.id} className={table.tr}>
@@ -203,7 +219,15 @@ export default async function ProjectsPage({
                         {deliverables.length === 0 ? (
                           <span className={table.muted}>No plan</span>
                         ) : (
-                          `${done}/${deliverables.length}`
+                          <span className={table.progress}>
+                            <span className={table.progressTrack} aria-hidden="true">
+                              <span
+                                className={table.progressFill}
+                                style={{ width: `${Math.round((done / deliverables.length) * 100)}%` }}
+                              />
+                            </span>
+                            {done} of {deliverables.length}
+                          </span>
                         )}
                         {project.assetRequests.length > 0 && (
                           <span className={table.sub}>
@@ -211,19 +235,13 @@ export default async function ProjectsPage({
                           </span>
                         )}
                       </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
+                      <td className={`${table.td} ${table.nowrap} ${late ? table.late : ''}`}>
                         {formatShortDate(project.targetDate)}
+                        {late && <span className={table.sub}>past target</span>}
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {formatMoney(committed, project.currency)}
                         {unpriced && <span className={table.sub}>some lines unpriced</span>}
-                      </td>
-                      <td className={`${table.td} ${table.actions}`}>
-                        <span className={table.actionGroup}>
-                          <Link href={`/projects/${project.slug}`} className={table.action}>
-                            Open
-                          </Link>
-                        </span>
                       </td>
                     </tr>
                   );
@@ -232,6 +250,7 @@ export default async function ProjectsPage({
             </tbody>
           </table>
         </div>
+        <ListFooter shown={projects.length} total={total} noun={['project', 'projects']} query={query} />
       </div>
     </main>
   );

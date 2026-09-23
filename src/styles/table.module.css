@@ -64,7 +64,154 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  margin-left: auto;
   flex-wrap: wrap;
+}
+
+/* Views: slices of one list, each with how many it holds, so you can see
+   where things are before opening any of them. */
+.views {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  max-width: 100%;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-control);
+  background: var(--surface-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.views::-webkit-scrollbar {
+  display: none;
+}
+
+.view {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.view:hover {
+  background: var(--tone-neutral-bg);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.view:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.view[aria-current='page'] {
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+  color: var(--text-primary);
+}
+
+.viewCount {
+  min-width: 1.25rem;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.view[aria-current='page'] .viewCount {
+  color: var(--text-primary);
+}
+
+/* Search sits with the list it searches, not at the top of the page. */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 17rem;
+  max-width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 2rem 0.5rem 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-control);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  transition: border-color var(--transition-fast);
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.searchInput:hover {
+  border-color: var(--border-hover);
+}
+
+.searchInput:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* The browser's own clear button would clear the box but not the results. */
+.searchInput::-webkit-search-cancel-button {
+  display: none;
+}
+
+.searchClear {
+  position: absolute;
+  right: 0.375rem;
+  display: inline-flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-tertiary);
+}
+
+.searchClear:hover {
+  background: var(--tone-neutral-bg);
+  color: var(--text-primary);
+}
+
+@media (max-width: 48rem) {
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbarActions,
+  .search {
+    width: 100%;
+  }
 }
 
 /* Horizontal scroll rather than a squeezed layout. A table that reflows into
@@ -340,4 +487,39 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
+}
+
+/* How far along something is: a short bar and the plain count beside it.
+   The count is what is read; the bar makes a column of them comparable. */
+.progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.progressTrack {
+  position: relative;
+  width: 4.5rem;
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--tone-neutral-bg);
+}
+
+.progressFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+/* A date that has passed while the work is still open. */
+.late {
+  color: var(--danger);
+}
+
+.late .sub {
+  color: var(--danger);
 }

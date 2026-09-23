@@ -4,6 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { formatShortDate } from '@/lib/console/money';
+import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -52,14 +53,33 @@ function filterToWhere(key: string): Prisma.DocumentWhereInput {
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>;
+  searchParams: Promise<{ show?: string; q?: string }>;
 }) {
   await requireStaff();
-  const { show } = await searchParams;
+  const { show, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
+  const query = searchText(q);
+
+  const matching: Prisma.DocumentWhereInput = query
+    ? {
+        OR: [
+          { reference: { contains: query, mode: 'insensitive' } },
+          { title: { contains: query, mode: 'insensitive' } },
+          { project: { name: { contains: query, mode: 'insensitive' } } },
+          { project: { client: { name: { contains: query, mode: 'insensitive' } } } },
+        ],
+      }
+    : {};
+
+  const viewCounts = await Promise.all(
+    FILTERS.map((filter) =>
+      db.document.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+    ),
+  );
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
 
   const documents = await db.document.findMany({
-    where: filterToWhere(active),
+    where: { AND: [filterToWhere(active), matching] },
     orderBy: { updatedAt: 'desc' },
     take: 200,
     select: {
@@ -94,30 +114,15 @@ export default async function DocumentsPage({
         </div>
       </div>
 
-      <div className={styles.filters}>
-        {FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'open' ? '/documents' : `/documents?show=${filter.key}`}
-            className={styles.filter}
-            aria-current={filter.key === active}
-          >
-            {filter.label}
-          </Link>
-        ))}
-      </div>
-
       <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>
-              {FILTERS.find((f) => f.key === active)?.label ?? 'Documents'}
-            </h2>
-            <span className={table.count}>
-              {documents.length} {documents.length === 1 ? 'document' : 'documents'}
-            </span>
-          </div>
-        </div>
+        <ListToolbar
+          path="/documents"
+          views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+          current={active}
+          defaultView="open"
+          query={query}
+          searchLabel="Search documents"
+        />
         <div className={table.scroll}>
           <table className={table.table}>
             <thead>
@@ -130,20 +135,23 @@ export default async function DocumentsPage({
                 <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">State</th>
                 <th className={table.th} scope="col">Last touched</th>
-                <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>Actions</span>
-                </th>
               </tr>
             </thead>
             <tbody>
               {documents.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={6}>
+                  <td className={table.emptyCell} colSpan={5}>
                     <p className={table.emptyTitle}>
-                      {active === 'open' ? 'Nothing with a client.' : 'Nothing here.'}
+                      {query
+                        ? `No documents match “${query}” here.`
+                        : active === 'open'
+                          ? 'Nothing with a client.'
+                          : 'Nothing here.'}
                     </p>
                     <p className={table.emptyHint}>
-                      Start one from a project&rsquo;s Documents tab.
+                      {query
+                        ? 'Try another view, or search for something else.'
+                        : 'Start one from a project’s Documents tab.'}
                     </p>
                   </td>
                 </tr>
@@ -190,13 +198,6 @@ export default async function DocumentsPage({
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(document.updatedAt)}
                       </td>
-                      <td className={`${table.td} ${table.actions}`}>
-                        <span className={table.actionGroup}>
-                          <Link href={`/documents/${document.reference}`} className={table.action}>
-                            Open
-                          </Link>
-                        </span>
-                      </td>
                     </tr>
                   );
                 })
@@ -204,6 +205,7 @@ export default async function DocumentsPage({
             </tbody>
           </table>
         </div>
+        <ListFooter shown={documents.length} total={total} noun={['document', 'documents']} query={query} />
       </div>
     </main>
   );

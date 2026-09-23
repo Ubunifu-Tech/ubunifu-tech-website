@@ -7,6 +7,7 @@ import {
   periodLabel,
 } from '@/lib/console/renewals';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { Figures } from '@/components/console/Figures';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -96,6 +97,16 @@ export default async function RenewalsPage() {
   );
   const handled = renewals.filter((renewal) => renewal.status !== 'pending');
 
+  /** What a set of renewals comes to, per currency, never added across them. */
+  const toInvoice = (rows: typeof renewals) => {
+    const sums = new Map<string, number>();
+    for (const row of rows) {
+      const { currency, amountMinor, quantity } = row.lineItem;
+      sums.set(currency, (sums.get(currency) ?? 0) + amountMinor * quantity);
+    }
+    return [...sums].map(([currency, amount]) => formatMoney(amount, currency)).join(' + ');
+  };
+
   const groups = [
     {
       key: 'overdue',
@@ -137,34 +148,40 @@ export default async function RenewalsPage() {
         </div>
       </div>
 
-      <div className={styles.stats}>
-        <div className={`${styles.stat} ${overdue.length > 0 ? styles.statAlert : ''}`}>
-          <p className={styles.statLabel}>Past their date</p>
-          <p className={styles.statValue}>{overdue.length}</p>
-          <p className={styles.statHint}>
-            {overdue.length === 0 ? 'Nothing has slipped' : 'Check these first'}
-          </p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Due soon</p>
-          <p className={styles.statValue}>{soon.length}</p>
-          <p className={styles.statHint}>Within the lead time</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Further out</p>
-          <p className={styles.statValue}>{later.length}</p>
-          <p className={styles.statHint}>Nothing to do yet</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Invoiced</p>
-          <p className={styles.statValue}>{handled.length}</p>
-          <p className={styles.statHint}>Periods already billed</p>
-        </div>
-      </div>
+      <Figures
+        items={[
+          {
+            label: 'Past their date',
+            value: overdue.length,
+            note: overdue.length === 0 ? 'Nothing has slipped' : `${toInvoice(overdue)} not invoiced`,
+            tone: overdue.length > 0 ? 'bad' : undefined,
+            href: overdue.length > 0 ? '#overdue' : undefined,
+          },
+          {
+            label: 'Due soon',
+            value: soon.length,
+            note: soon.length === 0 ? 'Nothing to invoice yet' : `${toInvoice(soon)} to invoice`,
+            tone: soon.length > 0 ? 'warn' : undefined,
+            href: soon.length > 0 ? '#soon' : undefined,
+          },
+          {
+            label: 'Further out',
+            value: later.length,
+            note: 'Nothing to do yet',
+            href: later.length > 0 ? '#later' : undefined,
+          },
+          {
+            label: 'Invoiced',
+            value: handled.length,
+            note: 'Periods already billed',
+            href: handled.length > 0 ? '#handled' : undefined,
+          },
+        ]}
+      />
 
       <div className={styles.stack}>
         {groups.map((group) => (
-          <div key={group.key} className={table.frame}>
+          <div key={group.key} id={group.key} className={table.frame}>
             <div className={table.toolbar}>
               <div className={table.toolbarText}>
                 <h2 className={table.title}>{group.title}</h2>

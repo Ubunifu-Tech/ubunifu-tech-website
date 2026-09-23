@@ -4,6 +4,8 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { Figures } from '@/components/console/Figures';
+import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -39,45 +41,100 @@ function filterToWhere(key: string): Prisma.InvoiceWhereInput {
   }
 }
 
+/** Amounts in several currencies, side by side. Never added together. */
+function amounts(byCurrency: Map<string, number>): string {
+  const parts = [...byCurrency].filter(([, amount]) => amount > 0);
+  return parts.length === 0
+    ? formatMoney(0, 'USD')
+    : parts.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ');
+}
+
+function addTo(map: Map<string, number>, currency: string, amount: number) {
+  map.set(currency, (map.get(currency) ?? 0) + amount);
+}
+
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>;
+  searchParams: Promise<{ show?: string; q?: string }>;
 }) {
   await requirePermission('invoices');
-  const { show } = await searchParams;
+  const { show, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'owing';
+  const query = searchText(q);
   const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
 
-  const invoices = await db.invoice.findMany({
-    where: filterToWhere(active),
-    orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
-    take: 200,
-    select: {
-      id: true,
-      number: true,
-      status: true,
-      currency: true,
-      totalMinor: true,
-      paidMinor: true,
-      issuedAt: true,
-      dueAt: true,
-      client: { select: { name: true, slug: true } },
-      project: { select: { name: true, slug: true } },
-    },
-  });
+  const matching: Prisma.InvoiceWhereInput = query
+    ? {
+        OR: [
+          { number: { contains: query, mode: 'insensitive' } },
+          { client: { name: { contains: query, mode: 'insensitive' } } },
+          { client: { legalName: { contains: query, mode: 'insensitive' } } },
+          { project: { name: { contains: query, mode: 'insensitive' } } },
+        ],
+      }
+    : {};
+
+  const [invoices, viewCounts, open, drafts, payments] = await Promise.all([
+    db.invoice.findMany({
+      where: { AND: [filterToWhere(active), matching] },
+      orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
+      take: 200,
+      select: {
+        id: true,
+        number: true,
+        status: true,
+        currency: true,
+        totalMinor: true,
+        paidMinor: true,
+        issuedAt: true,
+        dueAt: true,
+        client: { select: { name: true, slug: true } },
+        project: { select: { name: true, slug: true } },
+      },
+    }),
+    Promise.all(
+      FILTERS.map((filter) =>
+        db.invoice.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+      ),
+    ),
+    // The figures describe the whole ledger, whichever view is open below.
+    db.invoice.findMany({
+      where: filterToWhere('owing'),
+      select: { currency: true, totalMinor: true, paidMinor: true, dueAt: true },
+    }),
+    db.invoice.count({ where: { status: 'draft' } }),
+    db.payment.findMany({
+      where: { receivedAt: { gte: lastMonthStart } },
+      select: { amountMinor: true, currency: true, receivedAt: true },
+    }),
+  ]);
 
   /**
    * Totalled per currency, never summed across them. There is no exchange rate
    * anywhere in this system, so one combined figure would be a number that does
    * not mean anything.
    */
-  const owedByCurrency = new Map<string, number>();
-  for (const invoice of invoices) {
-    if (invoice.status === 'void' || invoice.status === 'draft') continue;
-    const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
-    owedByCurrency.set(invoice.currency, (owedByCurrency.get(invoice.currency) ?? 0) + owed);
+  const owed = new Map<string, number>();
+  const overdue = new Map<string, number>();
+  let overdueCount = 0;
+  for (const invoice of open) {
+    const left = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+    addTo(owed, invoice.currency, left);
+    if (left > 0 && invoice.dueAt && invoice.dueAt < today) {
+      addTo(overdue, invoice.currency, left);
+      overdueCount += 1;
+    }
   }
+  const thisMonth = new Map<string, number>();
+  const lastMonth = new Map<string, number>();
+  for (const payment of payments) {
+    addTo(payment.receivedAt >= monthStart ? thisMonth : lastMonth, payment.currency, payment.amountMinor);
+  }
+
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? invoices.length;
 
   return (
     <main className={styles.page}>
@@ -92,60 +149,43 @@ export default async function InvoicesPage({
         </div>
       </div>
 
-      <div className={styles.stats}>
-        {owedByCurrency.size === 0 ? (
-          <div className={styles.stat}>
-            <p className={styles.statLabel}>Outstanding</p>
-            <p className={styles.statValue}>Nothing</p>
-            <p className={styles.statHint}>No unsettled invoices in this view</p>
-          </div>
-        ) : (
-          [...owedByCurrency].map(([currency, owed]) => (
-            <div key={currency} className={`${styles.stat} ${owed > 0 ? styles.statAlert : ''}`}>
-              <p className={styles.statLabel}>Outstanding in {currency}</p>
-              <p className={styles.statValue}>{formatMoney(owed, currency)}</p>
-              <p className={styles.statHint}>Invoiced and not settled</p>
-            </div>
-          ))
-        )}
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Overdue</p>
-          <p className={styles.statValue}>
-            {invoices.filter((i) => i.status === 'overdue').length}
-          </p>
-          <p className={styles.statHint}>Past their due date</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Drafts</p>
-          <p className={styles.statValue}>{invoices.filter((i) => i.status === 'draft').length}</p>
-          <p className={styles.statHint}>Raised but never sent</p>
-        </div>
-      </div>
-
-      <div className={styles.filters}>
-        {FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'owing' ? '/invoices' : `/invoices?show=${filter.key}`}
-            className={styles.filter}
-            aria-current={filter.key === active}
-          >
-            {filter.label}
-          </Link>
-        ))}
-      </div>
+      <Figures
+        items={[
+          {
+            label: 'Owed to us',
+            value: amounts(owed),
+            note: `${open.length} ${open.length === 1 ? 'invoice' : 'invoices'} open`,
+            href: '/invoices',
+          },
+          {
+            label: 'Overdue',
+            value: overdueCount,
+            note: overdueCount === 0 ? 'Nothing past its due date' : `${amounts(overdue)} past due`,
+            tone: overdueCount > 0 ? 'bad' : undefined,
+          },
+          {
+            label: 'Received this month',
+            value: amounts(thisMonth),
+            note: `Last month ${amounts(lastMonth)}`,
+          },
+          {
+            label: 'Drafts',
+            value: drafts,
+            note: drafts === 0 ? 'Nothing waiting to go out' : 'Not sent yet',
+            href: '/invoices?show=draft',
+          },
+        ]}
+      />
 
       <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>
-              {FILTERS.find((f) => f.key === active)?.label ?? 'Invoices'}
-            </h2>
-            <span className={table.count}>
-              {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'}
-            </span>
-          </div>
-        </div>
+        <ListToolbar
+          path="/invoices"
+          views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+          current={active}
+          defaultView="owing"
+          query={query}
+          searchLabel="Search invoices"
+        />
 
         <div className={table.scroll}>
           <table className={table.table}>
@@ -158,20 +198,23 @@ export default async function InvoicesPage({
                 <th className={table.th} scope="col">Due</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Total</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Outstanding</th>
-                <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>Actions</span>
-                </th>
               </tr>
             </thead>
             <tbody>
               {invoices.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={8}>
+                  <td className={table.emptyCell} colSpan={7}>
                     <p className={table.emptyTitle}>
-                      {active === 'owing' ? 'Nothing outstanding.' : 'No invoices here.'}
+                      {query
+                        ? `No invoices match “${query}” here.`
+                        : active === 'owing'
+                          ? 'Nothing outstanding.'
+                          : 'No invoices here.'}
                     </p>
                     <p className={table.emptyHint}>
-                      Raise one from a project&rsquo;s Fees tab.
+                      {query
+                        ? 'Try another view, or search for something else.'
+                        : 'Raise one from a project’s Fees tab.'}
                     </p>
                   </td>
                 </tr>
@@ -227,13 +270,6 @@ export default async function InvoicesPage({
                           formatMoney(owed, invoice.currency)
                         )}
                       </td>
-                      <td className={`${table.td} ${table.actions}`}>
-                        <span className={table.actionGroup}>
-                          <Link href={`/invoices/${invoice.number}`} className={table.action}>
-                            Open
-                          </Link>
-                        </span>
-                      </td>
                     </tr>
                   );
                 })
@@ -241,6 +277,7 @@ export default async function InvoicesPage({
             </tbody>
           </table>
         </div>
+        <ListFooter shown={invoices.length} total={total} noun={['invoice', 'invoices']} query={query} />
       </div>
     </main>
   );

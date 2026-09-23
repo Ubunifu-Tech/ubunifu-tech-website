@@ -9,6 +9,8 @@ import {
   TICKET_PRIORITY_LABEL,
 } from '@/lib/console/tickets';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
+import { Figures } from '@/components/console/Figures';
+import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -54,36 +56,66 @@ function filterToWhere(key: string): Prisma.TicketWhereInput {
 export default async function RequestsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>;
+  searchParams: Promise<{ show?: string; q?: string }>;
 }) {
   await requireStaff();
-  const { show } = await searchParams;
+  const { show, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'ours';
+  const query = searchText(q);
   const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
 
-  const tickets = await db.ticket.findMany({
-    where: filterToWhere(active),
-    // Oldest first: the one that has waited longest is the one that costs us.
-    orderBy: [{ priority: 'desc' }, { updatedAt: 'asc' }],
-    take: 200,
-    select: {
-      id: true,
-      reference: true,
-      subject: true,
-      kind: true,
-      status: true,
-      priority: true,
-      createdAt: true,
-      updatedAt: true,
-      client: { select: { name: true, slug: true } },
-      project: { select: { name: true, slug: true } },
-      openedBy: { select: { name: true } },
-      messages: { select: { id: true } },
-    },
-  });
+  const matching: Prisma.TicketWhereInput = query
+    ? {
+        OR: [
+          { reference: { contains: query, mode: 'insensitive' } },
+          { subject: { contains: query, mode: 'insensitive' } },
+          { client: { name: { contains: query, mode: 'insensitive' } } },
+          { project: { name: { contains: query, mode: 'insensitive' } } },
+        ],
+      }
+    : {};
 
-  const urgent = tickets.filter((ticket) => ticket.priority === 'urgent').length;
-  const unread = tickets.filter((ticket) => ticket.status === 'open').length;
+  const [tickets, viewCounts, unread, urgent, oldest, resolvedThisWeek] = await Promise.all([
+    db.ticket.findMany({
+      where: { AND: [filterToWhere(active), matching] },
+      // Oldest first: the one that has waited longest is the one that costs us.
+      orderBy: [{ priority: 'desc' }, { updatedAt: 'asc' }],
+      take: 200,
+      select: {
+        id: true,
+        reference: true,
+        subject: true,
+        kind: true,
+        status: true,
+        priority: true,
+        createdAt: true,
+        updatedAt: true,
+        client: { select: { name: true, slug: true } },
+        project: { select: { name: true, slug: true } },
+        openedBy: { select: { name: true } },
+        messages: { select: { id: true } },
+      },
+    }),
+    Promise.all(
+      FILTERS.map((filter) =>
+        db.ticket.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+      ),
+    ),
+    // The figures cover every request, whichever view is open below.
+    db.ticket.count({ where: { status: 'open' } }),
+    db.ticket.count({ where: { priority: 'urgent', status: { in: [...OPEN_TO_US] } } }),
+    db.ticket.findFirst({
+      where: { status: { in: [...OPEN_TO_US] } },
+      orderBy: { createdAt: 'asc' },
+      select: { reference: true, createdAt: true },
+    }),
+    db.ticket.count({ where: { resolvedAt: { gte: weekAgo } } }),
+  ]);
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const oldestDays = oldest
+    ? Math.floor((now.getTime() - oldest.createdAt.getTime()) / 86_400_000)
+    : 0;
 
   return (
     <main className={styles.page}>
@@ -98,48 +130,44 @@ export default async function RequestsPage({
         </div>
       </div>
 
-      <div className={styles.stats}>
-        <div className={`${styles.stat} ${unread > 0 ? styles.statAlert : ''}`}>
-          <p className={styles.statLabel}>Unread</p>
-          <p className={styles.statValue}>{unread}</p>
-          <p className={styles.statHint}>Nobody has looked at these</p>
-        </div>
-        <div className={`${styles.stat} ${urgent > 0 ? styles.statAlert : ''}`}>
-          <p className={styles.statLabel}>Urgent</p>
-          <p className={styles.statValue}>{urgent}</p>
-          <p className={styles.statHint}>As we ranked them</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>On us</p>
-          <p className={styles.statValue}>{tickets.length}</p>
-          <p className={styles.statHint}>In this view</p>
-        </div>
-      </div>
-
-      <div className={styles.filters}>
-        {FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'ours' ? '/requests' : `/requests?show=${filter.key}`}
-            className={styles.filter}
-            aria-current={filter.key === active}
-          >
-            {filter.label}
-          </Link>
-        ))}
-      </div>
+      <Figures
+        items={[
+          {
+            label: 'Unread',
+            value: unread,
+            note: unread === 0 ? 'Everything has been looked at' : 'Nobody has opened these yet',
+            tone: unread > 0 ? 'warn' : undefined,
+          },
+          {
+            label: 'Urgent',
+            value: urgent,
+            note: urgent === 0 ? 'None open' : 'Open and marked urgent',
+            tone: urgent > 0 ? 'bad' : undefined,
+          },
+          {
+            label: 'Longest wait',
+            value: oldest ? (oldestDays === 0 ? 'Today' : `${oldestDays} ${oldestDays === 1 ? 'day' : 'days'}`) : 'None',
+            note: oldest ? `${oldest.reference}, opened ${formatShortDate(oldest.createdAt)}` : 'Nothing waiting on us',
+            tone: oldestDays >= 7 ? 'warn' : undefined,
+            href: oldest ? `/requests/${oldest.reference}` : undefined,
+          },
+          {
+            label: 'Resolved this week',
+            value: resolvedThisWeek,
+            note: 'In the last seven days',
+          },
+        ]}
+      />
 
       <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>
-              {FILTERS.find((f) => f.key === active)?.label ?? 'Requests'}
-            </h2>
-            <span className={table.count}>
-              {tickets.length} {tickets.length === 1 ? 'request' : 'requests'}, longest wait first
-            </span>
-          </div>
-        </div>
+        <ListToolbar
+          path="/requests"
+          views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+          current={active}
+          defaultView="ours"
+          query={query}
+          searchLabel="Search requests"
+        />
         <div className={table.scroll}>
           <table className={table.table}>
             <thead>
@@ -150,22 +178,25 @@ export default async function RequestsPage({
                 <th className={table.th} scope="col">Priority</th>
                 <th className={table.th} scope="col">State</th>
                 <th className={table.th} scope="col">Last activity</th>
-                <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>Actions</span>
-                </th>
               </tr>
             </thead>
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={7}>
+                  <td className={table.emptyCell} colSpan={6}>
                     <p className={table.emptyTitle}>
-                      {active === 'ours' ? 'Nothing waiting on us.' : 'Nothing here.'}
+                      {query
+                        ? `No requests match “${query}” here.`
+                        : active === 'ours'
+                          ? 'Nothing waiting on us.'
+                          : 'Nothing here.'}
                     </p>
                     <p className={table.emptyHint}>
-                      {active === 'ours'
-                        ? 'Every request has been picked up or handed back.'
-                        : 'Try another view.'}
+                      {query
+                        ? 'Try another view, or search for something else.'
+                        : active === 'ours'
+                          ? 'Every request has been picked up or handed back.'
+                          : 'Try another view.'}
                     </p>
                   </td>
                 </tr>
@@ -207,19 +238,13 @@ export default async function RequestsPage({
                       {formatShortDate(ticket.updatedAt)}
                       <span className={table.sub}>{formatRelative(ticket.updatedAt, now)}</span>
                     </td>
-                    <td className={`${table.td} ${table.actions}`}>
-                      <span className={table.actionGroup}>
-                        <Link href={`/requests/${ticket.reference}`} className={table.action}>
-                          Open
-                        </Link>
-                      </span>
-                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+        <ListFooter shown={tickets.length} total={total} noun={['request', 'requests']} query={query} />
       </div>
     </main>
   );

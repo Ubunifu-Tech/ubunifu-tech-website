@@ -1,19 +1,83 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import type { Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
+import { Avatar } from '@/components/console/Avatar';
+import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Clients' };
 
-export default async function ClientsPage() {
+const VIEWS = [
+  { key: 'all', label: 'All' },
+  { key: 'live', label: 'With live work' },
+  { key: 'portal', label: 'Portal not set up' },
+  { key: 'idle', label: 'No projects' },
+] as const;
+
+function viewToWhere(key: string): Prisma.ClientWhereInput {
+  switch (key) {
+    case 'live':
+      return {
+        projects: { some: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } } },
+      };
+    case 'portal':
+      return {
+        contacts: {
+          some: { deletedAt: null, isPrimary: true, canSignIn: true, activatedAt: null },
+        },
+      };
+    case 'idle':
+      return { projects: { none: { deletedAt: null } } };
+    default:
+      return {};
+  }
+}
+
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ show?: string; q?: string }>;
+}) {
   await requireStaff();
+  const { show, q } = await searchParams;
+  const active = VIEWS.some((view) => view.key === show) ? show! : 'all';
+  const query = searchText(q);
   const now = new Date();
 
+  const matching: Prisma.ClientWhereInput = query
+    ? {
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { legalName: { contains: query, mode: 'insensitive' } },
+          {
+            contacts: {
+              some: {
+                deletedAt: null,
+                OR: [
+                  { name: { contains: query, mode: 'insensitive' } },
+                  { email: { contains: query, mode: 'insensitive' } },
+                ],
+              },
+            },
+          },
+        ],
+      }
+    : {};
+
+  const viewCounts = await Promise.all(
+    VIEWS.map((view) =>
+      db.client.count({ where: { AND: [{ deletedAt: null }, viewToWhere(view.key), matching] } }),
+    ),
+  );
+  const total = viewCounts[VIEWS.findIndex((view) => view.key === active)] ?? 0;
+
   const clients = await db.client.findMany({
-    where: { deletedAt: null },
+    where: { AND: [{ deletedAt: null }, viewToWhere(active), matching] },
+    take: 300,
     orderBy: { name: 'asc' },
     select: {
       id: true,
@@ -58,14 +122,14 @@ export default async function ClientsPage() {
       </div>
 
       <div className={table.frame}>
-        <div className={table.toolbar}>
-          <div className={table.toolbarText}>
-            <h2 className={table.title}>All clients</h2>
-            <span className={table.count}>
-              {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-            </span>
-          </div>
-        </div>
+        <ListToolbar
+          path="/clients"
+          views={VIEWS.map((view, index) => ({ ...view, count: viewCounts[index] ?? 0 }))}
+          current={active}
+          defaultView="all"
+          query={query}
+          searchLabel="Search clients or contacts"
+        />
 
         <div className={table.scroll}>
           <table className={table.table}>
@@ -77,18 +141,25 @@ export default async function ClientsPage() {
                 <th className={table.th} scope="col">Projects</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
                 <th className={table.th} scope="col">Added</th>
-                <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>Actions</span>
-                </th>
               </tr>
             </thead>
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={7}>
-                    <p className={table.emptyTitle}>No clients yet.</p>
+                  <td className={table.emptyCell} colSpan={6}>
+                    <p className={table.emptyTitle}>
+                      {query
+                        ? `No clients match “${query}” here.`
+                        : active === 'all'
+                          ? 'No clients yet.'
+                          : 'Nobody in this view.'}
+                    </p>
                     <p className={table.emptyHint}>
-                      Add one by hand, or onboard an enquiry that has come in through the website.
+                      {query
+                        ? 'Try another view, or search for something else.'
+                        : active === 'all'
+                          ? 'Add one by hand, or onboard an enquiry that has come in through the website.'
+                          : 'Try another view.'}
                     </p>
                   </td>
                 </tr>
@@ -118,10 +189,15 @@ export default async function ClientsPage() {
                   return (
                     <tr key={client.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
-                        <Link href={`/clients/${client.slug}`} className={table.link}>
-                          {client.name}
-                        </Link>
-                        <span className={table.sub}>{client.country}</span>
+                        <span className={table.who}>
+                          <Avatar name={client.name} size="sm" />
+                          <span className={table.whoText}>
+                            <Link href={`/clients/${client.slug}`} className={table.link}>
+                              {client.name}
+                            </Link>
+                            <span className={table.sub}>{client.country}</span>
+                          </span>
+                        </span>
                       </td>
                       <td className={table.td}>
                         {primary ? (
@@ -135,7 +211,7 @@ export default async function ClientsPage() {
                       </td>
                       <td className={table.td}>
                         {!primary || !primary.canSignIn ? (
-                          <span className={`${forms.badge} ${forms.badgeBad}`}>Off</span>
+                          <span className={forms.badge}>Off</span>
                         ) : primary.activatedAt ? (
                           <span className={`${forms.badge} ${forms.badgeGood}`}>Active</span>
                         ) : (
@@ -164,13 +240,6 @@ export default async function ClientsPage() {
                         {formatShortDate(client.createdAt)}
                         <span className={table.sub}>{formatRelative(client.createdAt, now)}</span>
                       </td>
-                      <td className={`${table.td} ${table.actions}`}>
-                        <span className={table.actionGroup}>
-                          <Link href={`/clients/${client.slug}`} className={table.action}>
-                            Open
-                          </Link>
-                        </span>
-                      </td>
                     </tr>
                   );
                 })
@@ -178,6 +247,7 @@ export default async function ClientsPage() {
             </tbody>
           </table>
         </div>
+        <ListFooter shown={clients.length} total={total} noun={['client', 'clients']} query={query} />
       </div>
     </main>
   );

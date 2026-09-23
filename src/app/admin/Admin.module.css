@@ -472,42 +472,6 @@
   flex-wrap: wrap;
 }
 
-.filters {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  margin-bottom: var(--space-5);
-  padding: 0.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--app-radius-control);
-  background: var(--surface);
-  flex-wrap: wrap;
-}
-
-.filter {
-  padding: 0.4375rem 0.875rem;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.4;
-  text-decoration: none;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.filter:hover {
-  background: var(--tone-neutral-bg);
-  color: var(--text-primary);
-}
-
-.filter[aria-current='true'] {
-  background: var(--text-primary);
-  color: var(--text-inverse);
-}
-
 /* ── Project detail ────────────────────────────── */
 
 .columns {
@@ -644,63 +608,6 @@
   .lineRow {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* ── Stat strip ────────────────────────────────── */
-
-/* The four or five numbers that describe a record at a glance, in one band
-   across the top. Deliberately not cards with shadows and icons — these are
-   read as a row of figures, and boxing each one makes the eye stop five times
-   to learn less. */
-.stats {
-  display: grid;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-  padding: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--app-radius-card);
-  background: var(--surface);
-  box-shadow: var(--app-shadow-card);
-}
-
-.stat:first-child {
-  border-left: 0;
-}
-
-.statLabel {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.4;
-}
-
-.statValue {
-  margin: var(--space-2) 0 0;
-  color: var(--text-primary);
-  font-family: var(--font-heading);
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-
-.statHint {
-  margin: var(--space-1) 0 0;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
-}
-
-.statAlert .statValue {
-  color: var(--danger);
 }
 
 /* ── Detail header ─────────────────────────────── */
@@ -925,47 +832,6 @@
   color: var(--text-secondary);
 }
 
-/* The coloured square beside a figure. The colour says what kind of number
-   it is — money, work, people, time — so a row of them can be read before a
-   single label is. */
-.statTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.statIcon {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 10px;
-  background: var(--tone-bg, var(--tone-neutral-bg));
-  color: var(--tone-fg, var(--tone-neutral-fg));
-}
-
-.statLink {
-  color: inherit;
-  text-decoration: none;
-  transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.statLink:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 1px 2px rgba(31, 26, 54, 0.04), 0 12px 28px -14px rgba(31, 26, 54, 0.2);
-}
-
-.statLink:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 /* The menu only scrolls on a short screen, so its scrollbar stays out of sight
    until the pointer is over it — and is neutral, not the site's violet. */
 .sidebar {
@@ -1139,6 +1005,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   padding: 0.75rem 0;
   color: var(--text-primary);
   font-size: var(--font-size-small);
@@ -1202,6 +1069,7 @@
 
 .taskText {
   display: flex;
+  flex: 1;
   min-width: 0;
   flex-direction: column;
   gap: 0.125rem;
@@ -1252,27 +1120,8 @@
   font-size: var(--font-size-caption);
 }
 
-/* A phone: figures two to a row, smaller, so the dashboard is a glance
-   rather than a scroll. */
+/* A phone: less room above the content. */
 @media (max-width: 40rem) {
-  .stats {
-    gap: var(--space-3);
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .stat {
-    padding: var(--space-4);
-  }
-
-  .statValue {
-    font-size: var(--font-size-title);
-  }
-
-  .statIcon {
-    width: 1.875rem;
-    height: 1.875rem;
-  }
-
   .pageHead {
     margin-bottom: var(--space-5);
   }

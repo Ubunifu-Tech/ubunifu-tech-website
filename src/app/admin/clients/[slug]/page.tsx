@@ -13,6 +13,7 @@ import {
   removeClientContact,
   setMainContact,
 } from '../actions';
+import { Figures } from '@/components/console/Figures';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -173,41 +174,40 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Projects</p>
-          <p className={styles.statValue}>{client.projects.length}</p>
-          <p className={styles.statHint}>{live} still open</p>
-        </div>
-        {seesMoney && (
-        <>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Committed</p>
-          <p className={styles.statValue}>{formatMoney(committed, client.currency)}</p>
-          <p className={styles.statHint}>Planned and active fee lines</p>
-        </div>
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>Received</p>
-          <p className={styles.statValue}>{formatMoney(received, client.currency)}</p>
-          <p className={styles.statHint}>Recorded against invoices</p>
-        </div>
-        <div className={`${styles.stat} ${outstanding > 0 ? styles.statAlert : ''}`}>
-          <p className={styles.statLabel}>Outstanding</p>
-          <p className={styles.statValue}>{formatMoney(outstanding, client.currency)}</p>
-          <p className={styles.statHint}>
-            {outstanding > 0 ? 'Invoiced and not settled' : 'Nothing owed'}
-          </p>
-        </div>
-        </>
-        )}
-        <div className={styles.stat}>
-          <p className={styles.statLabel}>People</p>
-          <p className={styles.statValue}>{client.contacts.length}</p>
-          <p className={styles.statHint}>
-            {client.contacts.filter((c) => c.activatedAt).length} with a portal account
-          </p>
-        </div>
-      </div>
+      <Figures
+        label="This client at a glance"
+        items={[
+          {
+            label: 'Projects',
+            value: client.projects.length,
+            note: `${live} still open`,
+          },
+          ...(seesMoney
+            ? [
+                {
+                  label: 'Committed',
+                  value: formatMoney(committed, client.currency),
+                  note: 'Planned and active fee lines',
+                },
+                {
+                  label: 'Received',
+                  value: formatMoney(received, client.currency),
+                  note: 'Recorded against invoices',
+                },
+                {
+                  label: 'Outstanding',
+                  value: formatMoney(outstanding, client.currency),
+                  note: outstanding > 0 ? 'Invoiced and not settled' : 'Nothing owed',
+                },
+              ]
+            : []),
+          {
+            label: 'People',
+            value: client.contacts.length,
+            note: `${client.contacts.filter((c) => c.activatedAt).length} with a portal account`,
+          },
+        ]}
+      />
 
       {mixed.length > 0 && (
         <p className={styles.note}>

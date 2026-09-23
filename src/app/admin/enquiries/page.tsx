@@ -4,6 +4,7 @@ import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { TriageControls } from './TriageControls';
+import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -65,15 +66,43 @@ function filterToWhere(key: string): Prisma.EnquiryWhereInput {
 export default async function EnquiriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; open?: string }>;
+  searchParams: Promise<{ show?: string; open?: string; q?: string }>;
 }) {
   await requirePermission('enquiries');
-  const { show, open } = await searchParams;
+  const { show, open, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
+  const query = searchText(q);
   const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 86_400_000);
+
+  const matching: Prisma.EnquiryWhereInput = query
+    ? {
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+          { subject: { contains: query, mode: 'insensitive' } },
+          { message: { contains: query, mode: 'insensitive' } },
+        ],
+      }
+    : {};
+
+  const [viewCounts, thisWeek, weekBefore] = await Promise.all([
+    Promise.all(
+      FILTERS.map((filter) =>
+        db.enquiry.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+      ),
+    ),
+    db.enquiry.count({ where: { createdAt: { gte: weekAgo }, status: { not: 'spam' } } }),
+    db.enquiry.count({
+      where: { createdAt: { gte: twoWeeksAgo, lt: weekAgo }, status: { not: 'spam' } },
+    }),
+  ]);
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const keepQuery = query ? `&q=${encodeURIComponent(query)}` : '';
 
   const enquiries = await db.enquiry.findMany({
-    where: filterToWhere(active),
+    where: { AND: [filterToWhere(active), matching] },
     orderBy: { createdAt: 'desc' },
     take: 100,
     select: {
@@ -124,36 +153,22 @@ export default async function EnquiriesPage({
             What has <span className={styles.headingAccent}>come in</span>
           </h1>
           <p className={styles.lead}>
-            Messages from the website form and the chat.
+            Messages from the website form and the chat. {thisWeek} this week,{' '}
+            {weekBefore} the week before.
           </p>
         </div>
       </div>
 
-      <div className={styles.filters}>
-        {FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={filter.key === 'open' ? '/enquiries' : `/enquiries?show=${filter.key}`}
-            className={styles.filter}
-            aria-current={filter.key === active}
-          >
-            {filter.label}
-          </Link>
-        ))}
-      </div>
-
       <div className={styles.stack}>
         <div className={table.frame}>
-          <div className={table.toolbar}>
-            <div className={table.toolbarText}>
-              <h2 className={table.title}>
-                {FILTERS.find((f) => f.key === active)?.label ?? 'Enquiries'}
-              </h2>
-              <span className={table.count}>
-                {enquiries.length} {enquiries.length === 1 ? 'enquiry' : 'enquiries'}
-              </span>
-            </div>
-          </div>
+          <ListToolbar
+            path="/enquiries"
+            views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+            current={active}
+            defaultView="open"
+            query={query}
+            searchLabel="Search enquiries"
+          />
 
           <div className={table.scroll}>
             <table className={table.table}>
@@ -174,12 +189,18 @@ export default async function EnquiriesPage({
                   <tr>
                     <td className={table.emptyCell} colSpan={6}>
                       <p className={table.emptyTitle}>
-                        {active === 'open' ? 'Nothing waiting.' : 'Nothing here.'}
+                        {query
+                          ? `No enquiries match “${query}” here.`
+                          : active === 'open'
+                            ? 'Nothing waiting.'
+                            : 'Nothing here.'}
                       </p>
                       <p className={table.emptyHint}>
-                        {active === 'open'
-                          ? 'Everything that has come in has been picked up.'
-                          : 'Try another view.'}
+                        {query
+                          ? 'Try another view, or search for something else.'
+                          : active === 'open'
+                            ? 'Everything that has come in has been picked up.'
+                            : 'Try another view.'}
                       </p>
                     </td>
                   </tr>
@@ -228,8 +249,8 @@ export default async function EnquiriesPage({
                               <Link
                                 href={
                                   expanded?.id === enquiry.id
-                                    ? `/enquiries?show=${active}`
-                                    : `/enquiries?show=${active}&open=${enquiry.id}`
+                                    ? `/enquiries?show=${active}${keepQuery}`
+                                    : `/enquiries?show=${active}&open=${enquiry.id}${keepQuery}`
                                 }
                                 className={table.action}
                                 scroll={false}
@@ -252,6 +273,7 @@ export default async function EnquiriesPage({
               </tbody>
             </table>
           </div>
+          <ListFooter shown={enquiries.length} total={total} noun={['enquiry', 'enquiries']} query={query} />
         </div>
 
         {/* Triage opens beneath the table rather than inside a row: a note box

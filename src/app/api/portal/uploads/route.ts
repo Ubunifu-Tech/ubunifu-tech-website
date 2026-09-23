@@ -92,9 +92,24 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(result);
   } catch (error) {
-    // Deliberately flat. "not-yours" and "not-signed-in" are the same answer
-    // to somebody probing, and the real reason is in the server log.
-    console.error('[uploads] token refused', error);
-    return NextResponse.json({ error: 'That upload is not allowed.' }, { status: 400 });
+    const refusal = error instanceof Error ? error.message : '';
+    if (refusal === 'too-many-uploads') {
+      return NextResponse.json(
+        { error: 'That is a lot of uploads in one go. Try again in an hour.' },
+        { status: 429 },
+      );
+    }
+    if (refusal === 'not-yours' || refusal === 'not-signed-in') {
+      // Deliberately the same answer for both: to somebody probing they are
+      // one and the same, and the real reason is in the server log.
+      console.error('[uploads] token refused:', refusal);
+      return NextResponse.json({ error: 'That upload is not allowed.' }, { status: 400 });
+    }
+    // Anything else is the storage service or our database, not the person.
+    console.error('[uploads] upload failed', error);
+    return NextResponse.json(
+      { error: 'Uploads are not working right now. Try again in a few minutes.' },
+      { status: 502 },
+    );
   }
 }

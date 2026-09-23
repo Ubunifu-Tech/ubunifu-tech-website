@@ -310,7 +310,10 @@ export async function askCopilot(
 
   revalidatePath(`/admin/documents/${document.reference}`);
 
-  if (!result.ok) return { status: 'error', message: result.error };
+  if (!result.ok) {
+    // Staff can see why: the API's own reason is on the activity record.
+    return { status: 'error', message: `${result.error} The reason is in Activity.` };
+  }
   return { status: 'done', message: result.reply };
 }
 

@@ -52,7 +52,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('[media] upload refused', error);
-    return NextResponse.json({ error: 'That upload is not allowed.' }, { status: 400 });
+    if (error instanceof Error && error.message === 'not-staff') {
+      console.error('[media] upload refused: not signed in as staff with journal access');
+      return NextResponse.json({ error: 'That upload is not allowed.' }, { status: 403 });
+    }
+    // Anything else is the storage service or our database, not the person.
+    console.error('[media] upload failed', error);
+    return NextResponse.json(
+      { error: 'Uploads are not working right now. Try again in a few minutes.' },
+      { status: 502 },
+    );
   }
 }

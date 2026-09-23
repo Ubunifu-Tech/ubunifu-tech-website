@@ -44,13 +44,20 @@ export async function sendConsoleEmail(options: {
     },
   });
 
+  /**
+   * The outcome, on the log row. A failure to write it is logged rather than
+   * thrown: the email has already gone (or not), and the caller still needs
+   * an answer about that.
+   */
+  const settle = (data: { status: 'sent' | 'failed'; error?: string; providerId?: string; sentAt?: Date }) =>
+    db.emailLog
+      .update({ where: { id: log.id }, data })
+      .catch((failure: unknown) => console.error(`[mailer] Could not update email log ${log.id}`, failure));
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     const error = 'RESEND_API_KEY is not set';
-    await db.emailLog.update({
-      where: { id: log.id },
-      data: { status: 'failed', error },
-    });
+    await settle({ status: 'failed', error });
 
     /**
      * In development, print the links so there is still a way in — but report
@@ -81,6 +88,7 @@ export async function sendConsoleEmail(options: {
       };
     }
 
+    console.error(`[mailer] ${options.template} not sent: ${error}`);
     return { ok: false, error };
   }
 
@@ -98,24 +106,18 @@ export async function sendConsoleEmail(options: {
     );
 
     if (response.error) {
-      await db.emailLog.update({
-        where: { id: log.id },
-        data: { status: 'failed', error: String(response.error.message ?? response.error) },
-      });
+      const reason = `${response.error.name ?? 'error'}: ${response.error.message ?? 'no message'}`;
+      console.error(`[mailer] ${options.template} rejected by Resend (log ${log.id}): ${reason}`);
+      await settle({ status: 'failed', error: reason });
       return { ok: false, error: 'The email provider rejected the message.' };
     }
 
-    await db.emailLog.update({
-      where: { id: log.id },
-      data: { status: 'sent', providerId: response.data?.id, sentAt: new Date() },
-    });
+    await settle({ status: 'sent', providerId: response.data?.id, sentAt: new Date() });
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    await db.emailLog.update({
-      where: { id: log.id },
-      data: { status: 'failed', error: message },
-    });
+    console.error(`[mailer] ${options.template} could not reach Resend (log ${log.id}): ${message}`);
+    await settle({ status: 'failed', error: message });
     return { ok: false, error: 'The email could not be sent.' };
   }
 }

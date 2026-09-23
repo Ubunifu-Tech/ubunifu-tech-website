@@ -32,7 +32,9 @@ export default async function TeamPage() {
       _count: {
         select: {
           ownedProjects: { where: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } } },
-          assignedTasks: { where: { isComplete: false } },
+          assignedTasks: {
+            where: { isComplete: false, phase: { project: { deletedAt: null } } },
+          },
         },
       },
     },

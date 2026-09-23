@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
+import { liveInvoice } from '@/lib/console/live';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import styles from '../Portal.module.css';
@@ -30,6 +31,7 @@ export default async function PortalInvoices() {
   const invoices = await db.invoice.findMany({
     where: {
       clientId: actor.clientId,
+      ...liveInvoice,
       status: { notIn: ['draft', 'void'] },
     },
     orderBy: [{ issuedAt: 'desc' }, { createdAt: 'desc' }],

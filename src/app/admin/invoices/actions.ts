@@ -335,7 +335,7 @@ export async function recordPayment(
   const invoiceId = String(formData.get('invoiceId') ?? '');
 
   const invoice = await db.invoice.findUnique({
-    where: { id: invoiceId },
+    where: { id: invoiceId, ...liveInvoice },
     select: {
       id: true,
       number: true,
@@ -556,7 +556,7 @@ export async function voidInvoice(
   }
 
   const invoice = await db.invoice.findUnique({
-    where: { id: invoiceId },
+    where: { id: invoiceId, ...liveInvoice },
     select: { id: true, number: true, status: true, paidMinor: true, notes: true },
   });
 

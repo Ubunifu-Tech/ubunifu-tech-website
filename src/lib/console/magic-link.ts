@@ -1,7 +1,7 @@
 import 'server-only';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
-import type { ActorType, MagicTokenPurpose } from '@/generated/prisma/client';
+import type { ActorType, MagicTokenPurpose, Prisma } from '@/generated/prisma/client';
 import { generateToken, hashToken } from './crypto';
 
 /**
@@ -139,6 +139,27 @@ export async function revokeMagicTokens(
 ): Promise<number> {
   const result = await db.magicToken.updateMany({
     where: { actorType, actorId, purpose, usedAt: null },
+    data: { usedAt: new Date() },
+  });
+  return result.count;
+}
+
+/**
+ * Burns every outstanding link, of every purpose, for these people at once.
+ *
+ * Takes the caller's transaction so removing a client ends its people's
+ * access in the same commit that removes it: a link issued a moment earlier
+ * cannot outlive the removal. The verify route re-checks the contact anyway;
+ * this makes the link itself dead rather than relying on that check alone.
+ */
+export async function revokeEveryMagicToken(
+  tx: Prisma.TransactionClient,
+  actorType: ActorType,
+  actorIds: string[],
+): Promise<number> {
+  if (actorIds.length === 0) return 0;
+  const result = await tx.magicToken.updateMany({
+    where: { actorType, actorId: { in: actorIds }, usedAt: null },
     data: { usedAt: new Date() },
   });
   return result.count;

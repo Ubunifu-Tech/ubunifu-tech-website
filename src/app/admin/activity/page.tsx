@@ -33,6 +33,10 @@ const FILTERS = [
 
 const ACTION_LABEL: Record<string, string> = {
   'client.created': 'Client created',
+  'client.removed': 'Client removed',
+  'project.removed': 'Project removed',
+  'enquiry.removed': 'Enquiry removed',
+  'document.withdrawn': 'Document withdrawn',
   'client.invite.sent': 'Portal invitation sent',
   'client.invite.send_failed': 'Invitation could not be sent',
   'client.invite.opened': 'Invitation opened',

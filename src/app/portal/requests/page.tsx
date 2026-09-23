@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
+import { liveTicket } from '@/lib/console/live';
 import { CLIENT_TICKET_STATUS, TICKET_KIND_LABEL } from '@/lib/console/tickets';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { RaiseRequestForm } from './RequestForms';
@@ -25,7 +26,7 @@ export default async function PortalRequests() {
 
   const [tickets, projects] = await Promise.all([
     db.ticket.findMany({
-      where: { clientId: actor.clientId },
+      where: { clientId: actor.clientId, ...liveTicket },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,

@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
+import { liveEnquiry } from '@/lib/console/live';
 
 /**
  * The address the team's email links to. It opens the enquiry, with its
@@ -10,7 +11,10 @@ import { requirePermission } from '@/lib/console/auth';
 export default async function EnquiryLink({ params }: { params: Promise<{ id: string }> }) {
   await requirePermission('enquiries');
   const { id } = await params;
-  const enquiry = await db.enquiry.findUnique({ where: { id }, select: { id: true, status: true } });
+  const enquiry = await db.enquiry.findFirst({
+    where: { id, ...liveEnquiry },
+    select: { id: true, status: true },
+  });
   if (!enquiry) notFound();
 
   const show =

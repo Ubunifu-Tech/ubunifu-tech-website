@@ -536,7 +536,7 @@ export async function withdrawDocument(
   if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const document = await db.document.findUnique({
-    where: { id: formText(formData, 'documentId') },
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
     select: { id: true, reference: true, project: { select: { slug: true } } },
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };

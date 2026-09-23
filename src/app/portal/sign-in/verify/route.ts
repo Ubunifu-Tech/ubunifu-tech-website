@@ -4,6 +4,7 @@ import { safePortalPath } from '@/lib/console/return-path';
 import { consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
+import { liveInvoice } from '@/lib/console/live';
 import type { MagicTokenPurpose } from '@/generated/prisma/client';
 
 /**
@@ -41,7 +42,7 @@ async function landingFor(
 
   if (claim.entityType === 'Invoice') {
     const invoice = await db.invoice.findFirst({
-      where: { id: claim.entityId, clientId },
+      where: { id: claim.entityId, clientId, ...liveInvoice },
       select: { number: true },
     });
     if (invoice) return `/portal/invoices/${encodeURIComponent(invoice.number)}`;
@@ -49,7 +50,7 @@ async function landingFor(
 
   if (claim.entityType === 'SignatureRequest') {
     const request = await db.signatureRequest.findFirst({
-      where: { id: claim.entityId, document: { project: { clientId } } },
+      where: { id: claim.entityId, document: { project: { clientId, deletedAt: null } } },
       select: { document: { select: { reference: true } } },
     });
     if (request) return `/portal/documents/${encodeURIComponent(request.document.reference)}`;

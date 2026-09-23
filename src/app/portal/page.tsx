@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, FileSignature, MessageSquare, Receipt, Upload } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
+import { liveInvoice, liveTicket } from '@/lib/console/live';
 import { CLIENT_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatDate, formatMoney } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
@@ -71,11 +72,14 @@ export default async function PortalHome() {
       },
     }),
     db.document.findMany({
-      where: { project: { clientId: actor.clientId }, status: { in: ['sent', 'viewed'] } },
+      where: {
+        project: { clientId: actor.clientId, deletedAt: null },
+        status: { in: ['sent', 'viewed'] },
+      },
       select: { reference: true, title: true },
     }),
     db.invoice.findMany({
-      where: { clientId: actor.clientId, status: { in: ['sent', 'overdue', 'part_paid'] } },
+      where: { clientId: actor.clientId, ...liveInvoice, status: { in: ['sent', 'overdue', 'part_paid'] } },
       orderBy: { dueAt: 'asc' },
       select: {
         number: true,
@@ -87,7 +91,7 @@ export default async function PortalHome() {
       },
     }),
     db.ticket.findMany({
-      where: { clientId: actor.clientId, status: 'waiting_on_client' },
+      where: { clientId: actor.clientId, ...liveTicket, status: 'waiting_on_client' },
       select: { reference: true, subject: true },
     }),
   ]);

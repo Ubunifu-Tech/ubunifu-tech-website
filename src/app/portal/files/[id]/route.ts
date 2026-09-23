@@ -1,6 +1,7 @@
 import { getClientActor } from '@/lib/console/auth';
 import { db } from '@/lib/db';
 import { streamUpload } from '@/lib/console/uploads';
+import { liveTicket } from '@/lib/console/live';
 
 /**
  * A client opening a file from their own work.
@@ -45,7 +46,7 @@ export async function GET(
         { update: { is: { ...mine, status: 'published' } } },
         {
           ticketMessage: {
-            is: { isInternal: false, ticket: { is: { clientId: actor.clientId } } },
+            is: { isInternal: false, ticket: { is: { clientId: actor.clientId, ...liveTicket } } },
           },
         },
       ],

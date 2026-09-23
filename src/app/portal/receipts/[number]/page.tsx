@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
 import { requireClient } from '@/lib/console/auth';
+import { liveInvoice } from '@/lib/console/live';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
@@ -35,7 +36,7 @@ export default async function PortalReceipt({
     where: {
       number: decodeURIComponent(number),
       // Scoped in the query: another client's receipt simply does not match.
-      payment: { invoice: { clientId: actor.clientId } },
+      payment: { invoice: { clientId: actor.clientId, ...liveInvoice } },
     },
     select: {
       number: true,

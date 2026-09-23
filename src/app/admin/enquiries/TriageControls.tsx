@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useActionState } from 'react';
-import { setEnquiryStatus, saveEnquiryNote, type TriageState } from './actions';
+import React, { useActionState, useState } from 'react';
+import { removeEnquiry, setEnquiryStatus, saveEnquiryNote, type TriageState } from './actions';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import { Select } from '@/components/console/Select';
@@ -81,6 +81,47 @@ export function TriageControls({
           </span>
         )}
       </form>
+
+      <RemoveEnquiry id={id} />
     </>
+  );
+}
+
+/** Taking an enquiry out of the console, behind a second press. */
+function RemoveEnquiry({ id }: { id: string }) {
+  const [state, action, pending] = useActionState(removeEnquiry, INITIAL);
+  const [confirming, setConfirming] = useState(false);
+
+  if (!confirming) {
+    return (
+      <div className={styles.inlineForm}>
+        <button type="button" className={forms.link} onClick={() => setConfirming(true)}>
+          Remove this enquiry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form action={action} className={styles.inlineForm}>
+      <input type="hidden" name="id" value={id} />
+      <span className={forms.hint}>It leaves every list and count. Nothing is sent to them.</span>
+      <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>
+        {pending ? 'Removing…' : 'Remove'}
+      </button>
+      <button
+        type="button"
+        className={`${forms.button} ${forms.quiet}`}
+        onClick={() => setConfirming(false)}
+        disabled={pending}
+      >
+        Keep
+      </button>
+      {state.status === 'error' && (
+        <span className={forms.error} role="status" aria-live="polite">
+          {state.message}
+        </span>
+      )}
+    </form>
   );
 }

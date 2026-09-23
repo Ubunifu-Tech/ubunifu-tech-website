@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { InvoiceSheet } from '@/components/documents/InvoiceSheet';
 import { INVOICE_SHEET_SELECT, toSheet } from '@/lib/console/invoice-sheet';
 import { requireClient } from '@/lib/console/auth';
+import { liveInvoice } from '@/lib/console/live';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
@@ -36,6 +37,7 @@ export default async function PortalInvoice({
     where: {
       number: decodeURIComponent(number),
       clientId: actor.clientId,
+      ...liveInvoice,
       status: { notIn: ['draft', 'void'] },
     },
     select: INVOICE_SHEET_SELECT,

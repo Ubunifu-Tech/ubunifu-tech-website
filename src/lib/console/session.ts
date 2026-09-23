@@ -1,7 +1,7 @@
 import 'server-only';
 import { cookies, headers } from 'next/headers';
 import { db } from '@/lib/db';
-import type { ActorType } from '@/generated/prisma/client';
+import type { ActorType, Prisma } from '@/generated/prisma/client';
 import { generateToken, hashToken } from './crypto';
 import { consoleEnv } from './env';
 
@@ -147,6 +147,24 @@ export async function revokeAllSessions(
 ): Promise<number> {
   const result = await db.session.updateMany({
     where: { actorType, actorId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  return result.count;
+}
+
+/**
+ * Ends every live session for these people, inside the caller's transaction.
+ * Used when a client is removed, so nobody stays signed in to a portal for an
+ * organisation that is no longer here.
+ */
+export async function revokeSessionsFor(
+  tx: Prisma.TransactionClient,
+  actorType: ActorType,
+  actorIds: string[],
+): Promise<number> {
+  if (actorIds.length === 0) return 0;
+  const result = await tx.session.updateMany({
+    where: { actorType, actorId: { in: actorIds }, revokedAt: null },
     data: { revokedAt: new Date() },
   });
   return result.count;

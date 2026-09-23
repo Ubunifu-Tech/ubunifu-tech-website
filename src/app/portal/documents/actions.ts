@@ -50,7 +50,7 @@ export async function signDocument(
       id: requestId,
       // Scoped in the query: a request belonging to another client does not
       // match, so a guessed id is indistinguishable from one that never existed.
-      document: { project: { clientId: actor.clientId } },
+      document: { project: { clientId: actor.clientId, deletedAt: null } },
     },
     select: {
       id: true,
@@ -303,7 +303,7 @@ export async function respondToDocument(
   }
 
   const request = await db.signatureRequest.findFirst({
-    where: { id: requestId, document: { project: { clientId: actor.clientId } } },
+    where: { id: requestId, document: { project: { clientId: actor.clientId, deletedAt: null } } },
     select: {
       id: true,
       status: true,

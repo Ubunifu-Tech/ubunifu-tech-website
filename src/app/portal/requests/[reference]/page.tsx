@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
+import { liveTicket } from '@/lib/console/live';
 import { CLIENT_TICKET_STATUS, TICKET_KIND_LABEL } from '@/lib/console/tickets';
 import { formatDate, formatRelative } from '@/lib/console/money';
 import { ReplyForm } from '../RequestForms';
@@ -33,7 +34,7 @@ export default async function PortalRequest({
 
   const ticket = await db.ticket.findFirst({
     // Scoped in the query, so another client's reference does not match.
-    where: { reference: decodeURIComponent(reference), clientId: actor.clientId },
+    where: { reference: decodeURIComponent(reference), clientId: actor.clientId, ...liveTicket },
     select: {
       id: true,
       reference: true,

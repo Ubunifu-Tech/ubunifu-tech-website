@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { BillingKind, Prisma, ProjectStatus } from '@/generated/prisma/client';
+import { slugify } from '@/lib/slug';
 
 /**
  * Creating a client by hand.
@@ -14,15 +15,7 @@ import type { BillingKind, Prisma, ProjectStatus } from '@/generated/prisma/clie
  */
 
 /** URL-safe, collision-checked outside this function. */
-export function slugify(value: string): string {
-  return value
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60);
-}
+export { slugify };
 
 /**
  * Appends -2, -3 … until the slug is free.

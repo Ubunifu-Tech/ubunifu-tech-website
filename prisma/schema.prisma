@@ -1105,6 +1105,9 @@ model Post {
   /// piece does not change when a staff member leaves.
   authorName   String?
   publishedAt  DateTime?
+  /// The first time it went live. Set once and never cleared, because from
+  /// then on people may have the link, so the address is fixed.
+  firstPublishedAt DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deletedAt    DateTime?

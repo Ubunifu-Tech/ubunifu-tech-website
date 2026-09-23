@@ -1,0 +1,34 @@
+/* The journal list: each post with a small copy of its cover, so a long list
+   is recognisable at a glance and a post still on the standard illustration
+   stands out from one with its own picture. */
+
+.post {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 18rem;
+}
+
+.thumb {
+  position: relative;
+  width: 4.5rem;
+  flex: none;
+  overflow: hidden;
+  aspect-ratio: 1.91 / 1;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.summary {
+  display: -webkit-box;
+  max-width: 28rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}

@@ -1,21 +1,22 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
-import { renderMarkdown } from '@/lib/console/markdown';
-import { formatShortDate, toDateInputValue } from '@/lib/console/money';
+import { toDateInputValue } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
-import { ArchiveControl, PostEditor, PublishControls, type PostDraft } from '../PostForms';
+import { PostStudio } from '../PostStudio';
 import styles from '../../Admin.module.css';
-import forms from '@/styles/forms.module.css';
-import { Callout } from '@/components/console/Callout';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await db.post.findUnique({ where: { slug }, select: { title: true } });
-  return { title: post?.title ?? 'Post' };
+  const post = await db.post.findFirst({
+    where: { OR: [{ id: slug }, { slug }] },
+    select: { title: true },
+  });
+  return { title: post?.title || 'New post' };
 }
+
+const COMPANY = 'Ubunifu Technologies';
 
 export default async function EditPostPage({
   params,
@@ -26,8 +27,11 @@ export default async function EditPostPage({
   const { slug } = await params;
   const now = new Date();
 
+  // Edited by its id, which never changes, so the address can follow the
+  // title while it is a draft without moving the editor. An address still
+  // works, for links made before.
   const post = await db.post.findFirst({
-    where: { slug, deletedAt: null },
+    where: { deletedAt: null, OR: [{ id: slug }, { slug }] },
     select: {
       id: true,
       slug: true,
@@ -40,111 +44,55 @@ export default async function EditPostPage({
       coverAlt: true,
       authorName: true,
       publishedAt: true,
-      createdAt: true,
+      firstPublishedAt: true,
       updatedAt: true,
-      author: { select: { name: true } },
     },
   });
 
   if (!post) notFound();
 
-  const activity = await activityFor([post.id]);
-  const scheduled =
-    post.status === 'published' && post.publishedAt !== null && post.publishedAt > now;
-  const live = post.status === 'published' && !scheduled;
+  const [activity, team, tagged] = await Promise.all([
+    activityFor([post.id]),
+    db.staffUser.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { name: true },
+    }),
+    // Every tag the journal already uses, most used first, so a new post
+    // picks up the existing spelling instead of starting a near-duplicate.
+    db.post.findMany({ where: { deletedAt: null }, select: { tags: true } }),
+  ]);
 
-  const draft: PostDraft = {
-    id: post.id,
-    slug: post.slug,
-    title: post.title,
-    excerpt: post.excerpt,
-    body: post.bodyMarkdown,
-    tags: post.tags,
-    coverImage: post.coverImage ?? '',
-    coverAlt: post.coverAlt ?? '',
-    publishedAt: toDateInputValue(post.publishedAt),
-    published: post.status === 'published',
-  };
+  const usage = new Map<string, number>();
+  for (const row of tagged) {
+    for (const tag of row.tags) usage.set(tag, (usage.get(tag) ?? 0) + 1);
+  }
+  const tagSuggestions = [...usage]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([tag]) => tag);
 
   return (
-    <main className={styles.page}>
-      <div className={styles.pageHead}>
-        <div className={styles.headText}>
-          <Link href="/posts" className={styles.backLink}>
-            ← Journal
-          </Link>
-          <h1 className={styles.heading}>{post.title}</h1>
-          <p className={styles.facts}>
-            <span>
-              <span className={styles.factLabel}>Address</span> /blog/{post.slug}
-            </span>
-            <span>
-              <span className={styles.factLabel}>Byline</span>{' '}
-              {post.authorName ?? 'Ubunifu Technologies'}
-            </span>
-            <span>
-              <span className={styles.factLabel}>Dated</span>{' '}
-              {formatShortDate(post.publishedAt)}
-            </span>
-            {post.author && (
-              <span>
-                <span className={styles.factLabel}>Written by</span> {post.author.name}
-              </span>
-            )}
-          </p>
-        </div>
-        <span
-          className={`${forms.badge} ${
-            scheduled ? forms.badgeWarn : live ? forms.badgeGood : ''
-          }`}
-        >
-          {scheduled ? 'Scheduled' : live ? 'Live' : 'Draft'}
-        </span>
-      </div>
-
-      {scheduled && (
-        <Callout kind="info">
-          Scheduled for {formatShortDate(post.publishedAt)}. It will appear on the site then.
-        </Callout>
-      )}
-
-      <div className={styles.columns}>
-        <PostEditor post={draft} />
-
-        <div className={styles.stack}>
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>{live ? 'It is live' : 'Publishing'}</h2>
-            </div>
-            <PublishControls postId={post.id} published={post.status === 'published'} />
-            <ArchiveControl postId={post.id} published={post.status === 'published'} />
-          </section>
-
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>How it reads</h2>
-              <span className={forms.cardMeta}>Saved version, as a reader sees it</span>
-            </div>
-            {post.bodyMarkdown.trim() ? (
-              <div
-                className={forms.prose}
-                // The renderer escapes everything first and reintroduces only
-                // the shapes it knows. Nothing here can become a script tag.
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(post.bodyMarkdown) }}
-              />
-            ) : (
-              <p className={styles.note}>Nothing written yet.</p>
-            )}
-          </section>
-
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>What has happened</h2>
-            </div>
-            <ActivityFeed items={activity} now={now} />
-          </section>
-        </div>
-      </div>
+    <main className={`${styles.page} ${styles.pageWide}`}>
+      <PostStudio
+        post={{
+          id: post.id,
+          slug: post.slug,
+          title: post.title,
+          excerpt: post.excerpt,
+          body: post.bodyMarkdown,
+          tags: post.tags,
+          coverImage: post.coverImage ?? '',
+          coverAlt: post.coverAlt ?? '',
+          authorName: post.authorName ?? COMPANY,
+          publishedAt: toDateInputValue(post.publishedAt),
+          status: post.status === 'published' ? 'published' : 'draft',
+          everPublished: post.firstPublishedAt !== null,
+          version: post.updatedAt.toISOString(),
+        }}
+        bylines={[COMPANY, ...team.map((member) => member.name)]}
+        tagSuggestions={tagSuggestions}
+        history={<ActivityFeed items={activity} now={now} />}
+      />
     </main>
   );
 }

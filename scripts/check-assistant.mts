@@ -22,16 +22,15 @@ if (!process.env.ANTHROPIC_API_KEY) {
   process.exit(0);
 }
 
-const { default: Anthropic } = await import('@anthropic-ai/sdk');
 const { db } = await import('../src/lib/db');
 const { ASSISTANT_SYSTEM, recordEnquiryTool } = await import('../src/lib/console/assistant');
 const { siteBrief } = await import('../src/lib/console/site-brief');
 const { PORTAL_SYSTEM, portalBrief, RAISE_REQUEST_SPEC } = await import(
   '../src/lib/console/portal-brief'
 );
-const { AGENT_MODEL } = await import('../src/lib/console/agent');
+const { AGENT_MODEL, anthropicClient } = await import('../src/lib/console/agent');
 
-const client = new Anthropic();
+const client = anthropicClient();
 
 type Tool = { name: string; description: string; inputSchema: Record<string, unknown> };
 type Reply = { text: string; handedOff: boolean };

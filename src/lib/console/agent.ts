@@ -22,6 +22,19 @@ import type { ConversationKind, MessageRole, Prisma } from '@/generated/prisma/c
 
 export const AGENT_MODEL = process.env.ANTHROPIC_AGENT_MODEL || 'claude-sonnet-5';
 
+/**
+ * The API client. A key that belongs to the organisation rather than to one
+ * workspace is refused unless each request names the workspace to bill, so
+ * ANTHROPIC_WORKSPACE_ID, when set, is sent with every call. A key created
+ * inside a workspace needs nothing extra.
+ */
+export function anthropicClient(): Anthropic {
+  const workspace = process.env.ANTHROPIC_WORKSPACE_ID?.trim();
+  return new Anthropic(
+    workspace ? { defaultHeaders: { 'anthropic-workspace-id': workspace } } : {},
+  );
+}
+
 /** Guard rails. A conversation is not allowed to run away, in turns or in size. */
 export const MAX_TURNS_PER_CONVERSATION = 40;
 const MAX_TOOL_ROUNDS = 4;
@@ -202,7 +215,7 @@ export async function runTurn<Context>(options: {
   const usedTools: string[] = [];
 
   try {
-    const client = new Anthropic();
+    const client = anthropicClient();
 
     /**
      * The system prompt and the per-conversation brief are stable for the whole

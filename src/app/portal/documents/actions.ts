@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireClient, recordAudit } from '@/lib/console/auth';
-import { DOCUMENT_KIND_LABEL, hashDocument } from '@/lib/console/documents';
+import { DOCUMENT_KIND_LABEL, hashDocument, renderMarkdown } from '@/lib/console/documents';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { consoleEnv } from '@/lib/console/env';
 import {
@@ -564,6 +564,20 @@ export async function suggestWording(
     return {
       status: 'error',
       message: 'That reads the same as the version we sent. Change the wording, then send it.',
+    };
+  }
+
+  // Pictures cannot come in this way. The editor offers none, so one here was
+  // written by hand, and it would load an address of their choosing on our
+  // screens and in the next version sent out. Judged on the rendered output,
+  // which is the only place the renderer decides what an image is; one that
+  // was already in the version we sent is theirs to keep.
+  const images = (markdown: string) => new Set(renderMarkdown(markdown).match(/<img\b[^>]*>/g) ?? []);
+  const sentImages = images(request.version.bodyMarkdown);
+  if ([...images(body)].some((tag) => !sentImages.has(tag))) {
+    return {
+      status: 'error',
+      message: 'Pictures cannot be added here. Describe what you want in words instead.',
     };
   }
 

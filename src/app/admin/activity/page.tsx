@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
 import { formatShortDate } from '@/lib/console/money';
+import { actionLabel } from '@/lib/console/activity';
 import { Callout } from '@/components/console/Callout';
 import { ListToolbar } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
@@ -31,72 +32,6 @@ const FILTERS = [
   { key: 'access', label: 'Sign-ins' },
 ] as const;
 
-const ACTION_LABEL: Record<string, string> = {
-  'client.created': 'Client created',
-  'client.removed': 'Client removed',
-  'project.removed': 'Project removed',
-  'enquiry.removed': 'Enquiry removed',
-  'document.withdrawn': 'Document withdrawn',
-  'client.invite.sent': 'Portal invitation sent',
-  'client.invite.send_failed': 'Invitation could not be sent',
-  'client.invite.opened': 'Invitation opened',
-  'client.invite.refused': 'Old setup link refused',
-  'client.account.activated': 'Client set up their account',
-  'client.sign_in.success': 'Client signed in',
-  'client.sign_in.failed': 'Failed client sign-in',
-  'client.sign_in.locked': 'Account locked',
-  'client.sign_in.throttled': 'Too many link requests',
-  'client.sign_in.link_sent': 'Sign-in link sent',
-  'client.sign_in.rejected_at_use': 'Link refused: access had been removed',
-  'client.sign_out': 'Client signed out',
-  'staff.sign_in.success': 'Staff signed in',
-  'staff.sign_in.link_sent': 'Staff link sent',
-  'staff.sign_out': 'Staff signed out',
-  'enquiry.status_changed': 'Enquiry moved',
-  'enquiry.note_saved': 'Enquiry note saved',
-  'project.status_changed': 'Project moved',
-  'line_item.saved': 'Fee line updated',
-  'deliverable.completed': 'Item ticked off',
-  'deliverable.reopened': 'Item reopened',
-  'asset_request.status_changed': 'Client request updated',
-  'asset_request.answered': 'Client answered',
-  'project.details_saved': 'Project details changed',
-  'phase.added': 'Phase added',
-  'phase.saved': 'Phase changed',
-  'phase.removed': 'Phase removed',
-  'deliverable.added': 'Task added',
-  'deliverable.renamed': 'Task renamed',
-  'deliverable.removed': 'Task removed',
-  'asset_request.added': 'Asked the client for something',
-  'asset_request.saved': 'Request to the client changed',
-  'asset_request.removed': 'Request to the client removed',
-  'brand_kit.saved': 'Brand kit saved',
-  'client.setup_link.created': 'Setup link made',
-  'invoice.created': 'Invoice raised',
-  'invoice.sent': 'Invoice sent',
-  'invoice.voided': 'Invoice voided',
-  'payment.recorded': 'Payment recorded',
-  'receipt.sent': 'Receipt sent',
-  'project_update.drafted': 'Update drafted',
-  'project_update.sent': 'Update sent to the client',
-  'project_update.send_failed': 'Update email did not send',
-  'project_update.published': 'Update published to the portal',
-  'document.signed_copy.send_failed': 'Signed copy did not send',
-  'settings.billing_saved': 'Billing details changed',
-  'document.wording_suggested': 'Client suggested wording',
-  'document.suggestion_used': 'Their wording used',
-  'document.suggestion_set_aside': 'Their wording set aside',
-  'assistant.failed': 'Assistant could not answer',
-  'writer.created': 'Writer added',
-  'writer.updated': 'Writer details changed',
-  'writer.archived': 'Writer taken off the list',
-  'post.created': 'Post started',
-  'post.saved': 'Post saved',
-  'post.published': 'Post published',
-  'post.scheduled': 'Post scheduled',
-  'post.unpublished': 'Post taken down',
-  'post.archived': 'Post archived',
-};
 
 function auditWhere(key: string): Prisma.AuditEventWhereInput | null {
   switch (key) {
@@ -192,7 +127,7 @@ export default async function ActivityPage({
     ...audits.map((audit) => ({
       id: `a-${audit.id}`,
       at: audit.createdAt,
-      what: ACTION_LABEL[audit.action] ?? audit.action.replace(/[._]/g, ' '),
+      what: actionLabel(audit.action),
       detail: audit.summary ?? audit.entityType,
       who:
         audit.actorType === 'staff'

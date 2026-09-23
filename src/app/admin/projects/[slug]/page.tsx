@@ -40,8 +40,9 @@ import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import { AddPhase, AddTask, AskForSomething, PhaseHead, ProjectDetailsCard } from './PlanEditor';
 import { BrandKitEditor } from './BrandKitEditor';
+import { RemoveProject } from './RemoveProject';
+import { ProjectDocuments } from '../../documents/ProjectDocuments';
 import { currencyLabel } from '@/lib/console/currencies';
-import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -64,8 +65,8 @@ function dateRange(start: Date | null, end: Date | null): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const project = await db.project.findUnique({
-    where: { slug },
+  const project = await db.project.findFirst({
+    where: { slug, deletedAt: null },
     select: { name: true, reference: true },
   });
   return { title: project ? `${project.reference} · ${project.name}` : 'Project' };
@@ -449,6 +450,11 @@ export default async function ProjectPage({
               ? (project.statusEvents.find((event) => event.to === project.status)?.from ?? null)
               : null
           }
+          heldFrom={
+            project.status === 'cancelled'
+              ? (project.statusEvents.find((event) => event.to === 'on_hold')?.from ?? null)
+              : null
+          }
         />
       </div>
 
@@ -746,16 +752,18 @@ export default async function ProjectPage({
                         className={`${forms.badge} ${
                           contact.activatedAt
                             ? forms.badgeGood
-                            : contact.canSignIn
+                            : contact.canSignIn && contact.email
                               ? forms.badgeWarn
                               : ''
                         }`}
                       >
                         {contact.activatedAt
                           ? 'In the portal'
-                          : contact.canSignIn
-                            ? 'Invited'
-                            : 'No portal'}
+                          : !contact.canSignIn
+                            ? 'No portal'
+                            : contact.email
+                              ? 'Invited'
+                              : 'Needs a setup link'}
                       </span>
                     </span>
                     <span className={styles.personMeta}>
@@ -808,6 +816,15 @@ export default async function ProjectPage({
               </div>
               <ActivityFeed items={recent} now={now} />
             </section>
+
+            {mayRun && (
+              <section className={forms.card}>
+                <div className={forms.cardHeader}>
+                  <h2 className={forms.cardTitle}>Remove this project</h2>
+                </div>
+                <RemoveProject projectId={project.id} projectName={project.name} />
+              </section>
+            )}
           </div>
         </div>
       )}
@@ -989,66 +1006,7 @@ export default async function ProjectPage({
 
       {tab === 'documents' && (
         <div className={styles.columns}>
-          <div className={table.frame}>
-            <div className={table.toolbar}>
-              <div className={table.toolbarText}>
-                <h2 className={table.title}>Documents</h2>
-                <span className={table.count}>{project.documents.length}</span>
-              </div>
-            </div>
-            <div className={table.scroll}>
-              <table className={`${table.table} ${table.compact}`}>
-                <thead>
-                  <tr>
-                    <th className={table.th} scope="col">
-                      Document
-                    </th>
-                    <th className={table.th} scope="col">
-                      Status
-                    </th>
-                    <th className={table.th} scope="col">
-                      Updated
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {project.documents.length === 0 ? (
-                    <tr>
-                      <td className={table.emptyCell} colSpan={3}>
-                        <p className={table.emptyTitle}>No documents yet</p>
-                        <p className={table.emptyHint}>
-                          Start a proposal or agreement on the right.
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    project.documents.map((document) => (
-                      <tr key={document.id} className={table.tr}>
-                        <td className={`${table.td} ${table.primary}`}>
-                          <Link href={`/documents/${document.reference}`} className={table.link}>
-                            {document.title}
-                          </Link>
-                          <span className={table.sub}>
-                            {DOCUMENT_KIND_LABEL[document.kind]} · {document.reference}
-                          </span>
-                        </td>
-                        <td className={table.td}>
-                          <span
-                            className={`${forms.badge} ${document.status === 'signed' ? forms.badgeGood : document.status === 'declined' ? forms.badgeBad : ['sent', 'viewed', 'changes_requested'].includes(document.status) ? forms.badgeWarn : ''}`}
-                          >
-                            {DOCUMENT_STATUS_LABEL[document.status]}
-                          </span>
-                        </td>
-                        <td className={`${table.td} ${table.nowrap}`}>
-                          {formatRelative(document.updatedAt, now)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ProjectDocuments projectId={project.id} now={now} staff={staff} />
 
           {mayDocs && (
             <section className={forms.card}>

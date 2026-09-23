@@ -147,7 +147,7 @@ export function UpdateComposer({
               disabled={pending}
             />
             <p className={forms.hint}>
-              This goes in the email itself.
+              They read this in their portal, and in the email to anyone with an address.
             </p>
           </div>
 

@@ -50,7 +50,7 @@ export default async function NewProjectPage({
 
   const enquiry = enquiryId
     ? await db.enquiry.findFirst({
-        where: { id: enquiryId, status: { not: 'converted' } },
+        where: { id: enquiryId, deletedAt: null, status: { not: 'converted' } },
         select: { id: true, subject: true, serviceLine: true },
       })
     : null;

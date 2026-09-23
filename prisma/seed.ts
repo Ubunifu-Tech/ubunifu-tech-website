@@ -448,7 +448,7 @@ async function seedNifuate(ownerId: string) {
   }> = [
     {
       label: 'Domain name',
-      description: 'pekuatanzania.com annual registration',
+      description: 'Annual registration of nifuateadventure.com or nifuatetanzania.com, whichever the founder chooses',
       billingKind: 'recurring_annual',
       status: 'active',
       amount: usd(15),
@@ -544,8 +544,8 @@ async function seedNifuate(ownerId: string) {
       projectId: project.id,
       lineItemId: domainLine?.id,
       kind: 'domain',
-      label: 'pekuatanzania.com',
-      identifier: 'pekuatanzania.com',
+      label: 'nifuatetanzania.com',
+      identifier: 'nifuatetanzania.com',
       isActive: true,
       autoRenew: false,
       startsAt: d('2026-09-21'),

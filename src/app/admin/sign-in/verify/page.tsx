@@ -4,7 +4,6 @@ import { AuthLayout } from '@/components/console/AuthLayout';
 import { ContinueButton } from '@/components/console/ContinueButton';
 import { isAdminHost } from '@/lib/console/env';
 import { checkMagicToken } from '@/lib/console/magic-link';
-import { continueStaffLink } from './actions';
 import auth from '@/styles/auth.module.css';
 
 export const metadata = { title: 'Continue' };
@@ -33,7 +32,7 @@ export default async function StaffVerifyLink({
       <div className={auth.panel}>
         <h1 className={auth.heading}>Sign in</h1>
         <div className={auth.card}>
-          <form action={continueStaffLink}>
+          <form method="post" action="/sign-in/continue">
             <input type="hidden" name="token" value={token} />
             <ContinueButton />
           </form>

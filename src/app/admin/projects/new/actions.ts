@@ -148,7 +148,7 @@ export async function createProject(
   const enquiryId = text(formData, 'enquiryId');
   if (enquiryId) {
     await db.enquiry.updateMany({
-      where: { id: enquiryId, status: { not: 'converted' } },
+      where: { id: enquiryId, deletedAt: null, status: { not: 'converted' } },
       data: { clientId: client.id, projectId: created.projectId, status: 'converted' },
     });
     revalidatePath('/admin/enquiries');

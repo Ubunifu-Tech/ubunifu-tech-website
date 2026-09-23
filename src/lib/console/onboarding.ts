@@ -171,7 +171,7 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
     const closeEnquiry = async (projectId: string | null) => {
       if (!input.enquiryId) return;
       await tx.enquiry.updateMany({
-        where: { id: input.enquiryId, clientId: null, status: { not: 'converted' } },
+        where: { id: input.enquiryId, clientId: null, deletedAt: null, status: { not: 'converted' } },
         data: { clientId: client.id, projectId, status: 'converted' },
       });
     };

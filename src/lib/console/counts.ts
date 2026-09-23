@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { NavCounts } from '@/app/admin/ConsoleNav';
+import { liveDocument, liveEnquiry, liveInvoice, liveTicket } from './live';
 
 /**
  * The numbers in the sidebar.
@@ -17,7 +18,7 @@ export async function navCounts(): Promise<NavCounts> {
   horizon.setDate(horizon.getDate() + 45);
 
   const [enquiries, projects, invoices, renewals, documents, requests] = await Promise.all([
-    db.enquiry.count({ where: { status: 'new' } }),
+    db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
     db.project.count({
       where: {
         deletedAt: null,
@@ -25,7 +26,7 @@ export async function navCounts(): Promise<NavCounts> {
       },
     }),
     // Money we have asked for and not been paid. Draft and void are neither.
-    db.invoice.count({ where: { status: { in: ['sent', 'part_paid', 'overdue'] } } }),
+    db.invoice.count({ where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] } } }),
     /**
      * Periods that are close enough to act on and have not been invoiced.
      * Counted from RenewalEvent rather than from the line's next date, so a
@@ -48,9 +49,11 @@ export async function navCounts(): Promise<NavCounts> {
      * that died stays declined for ever, and a badge that never clears is a
      * badge nobody reads. It has its own view on the documents list instead.
      */
-    db.document.count({ where: { status: { in: ['sent', 'viewed', 'changes_requested'] } } }),
+    db.document.count({
+      where: { ...liveDocument, status: { in: ['sent', 'viewed', 'changes_requested'] } },
+    }),
     // Waiting on us, not on them — a request handed back is not a task.
-    db.ticket.count({ where: { status: { in: ['open', 'triaged', 'in_progress'] } } }),
+    db.ticket.count({ where: { ...liveTicket, status: { in: ['open', 'triaged', 'in_progress'] } } }),
   ]);
 
   return { enquiries, projects, invoices, renewals, documents, requests };

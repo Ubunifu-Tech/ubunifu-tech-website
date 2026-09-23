@@ -10,6 +10,7 @@ import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketReplyEmail } from '@/lib/emails';
 import { CLIENT_TICKET_STATUS } from '@/lib/console/tickets';
 import { formText } from '@/lib/console/form';
+import { liveTicket } from '@/lib/console/live';
 
 export type TicketState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -38,7 +39,7 @@ export async function replyToTicket(
   }
 
   const ticket = await db.ticket.findUnique({
-    where: { id: ticketId },
+    where: { id: ticketId, ...liveTicket },
     select: {
       id: true,
       reference: true,
@@ -137,7 +138,7 @@ export async function triageTicket(
   }
 
   const ticket = await db.ticket.findUnique({
-    where: { id: ticketId },
+    where: { id: ticketId, ...liveTicket },
     select: { id: true, reference: true, status: true, priority: true, resolvedAt: true },
   });
   if (!ticket) return { status: 'error', message: 'That request no longer exists.' };

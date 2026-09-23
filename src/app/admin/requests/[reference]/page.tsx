@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
+import { liveTicket } from '@/lib/console/live';
 import {
   CLIENT_TICKET_STATUS,
   STAFF_TICKET_STATUS,
@@ -40,7 +41,7 @@ export default async function TicketPage({
   const now = new Date();
 
   const ticket = await db.ticket.findUnique({
-    where: { reference: decodeURIComponent(reference) },
+    where: { reference: decodeURIComponent(reference), ...liveTicket },
     select: {
       id: true,
       reference: true,

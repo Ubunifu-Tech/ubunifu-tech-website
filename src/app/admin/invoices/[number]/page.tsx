@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
+import { liveInvoice } from '@/lib/console/live';
 import { activityFor } from '@/lib/console/activity';
 import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import {
@@ -55,7 +56,7 @@ export default async function InvoicePage({
   const now = new Date();
 
   const invoice = await db.invoice.findUnique({
-    where: { number: decodeURIComponent(number) },
+    where: { number: decodeURIComponent(number), ...liveInvoice },
     select: {
       id: true,
       number: true,

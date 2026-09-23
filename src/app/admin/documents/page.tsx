@@ -4,6 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requireStaff } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { formatShortDate } from '@/lib/console/money';
+import { liveDocument } from '@/lib/console/live';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -73,13 +74,13 @@ export default async function DocumentsPage({
 
   const viewCounts = await Promise.all(
     FILTERS.map((filter) =>
-      db.document.count({ where: { AND: [filterToWhere(filter.key), matching] } }),
+      db.document.count({ where: { AND: [liveDocument, filterToWhere(filter.key), matching] } }),
     ),
   );
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
 
   const documents = await db.document.findMany({
-    where: { AND: [filterToWhere(active), matching] },
+    where: { AND: [liveDocument, filterToWhere(active), matching] },
     orderBy: { updatedAt: 'desc' },
     take: 200,
     select: {

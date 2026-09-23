@@ -341,6 +341,77 @@
   gap: var(--space-3);
 }
 
+/* About the writer: set apart by a rule, like the footer, not a card. */
+.authorRole {
+  color: var(--text-tertiary);
+}
+
+.writer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border-hover);
+}
+
+.writer + .articleFooter {
+  margin-top: var(--space-6);
+}
+
+.writerPhoto,
+.writerInitials {
+  width: 4rem;
+  height: 4rem;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.writerInitials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-dim, rgba(124, 58, 237, 0.1));
+  color: var(--brand-deep);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+}
+
+.writerText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.writerName {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+}
+
+.writerRole {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.writerBio {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+}
+
+.writerLink {
+  align-self: flex-start;
+  color: var(--brand-deep);
+  font-size: var(--font-size-caption);
+}
+
 /* ── Responsive ───────────────────────────────── */
 
 @media (max-width: 800px) {

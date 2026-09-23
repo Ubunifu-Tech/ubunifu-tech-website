@@ -1,0 +1,49 @@
+/* Writers: photos as small round marks, the same size as the initials they
+   replace, so a list mixing both lines up. */
+
+.thumb {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.photoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.photo {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.upload {
+  position: relative;
+  cursor: pointer;
+}
+
+.upload[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.confirmActions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}

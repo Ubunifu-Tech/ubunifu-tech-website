@@ -43,6 +43,7 @@ export default async function EditPostPage({
       coverImage: true,
       coverAlt: true,
       authorName: true,
+      writerId: true,
       publishedAt: true,
       firstPublishedAt: true,
       updatedAt: true,
@@ -51,17 +52,34 @@ export default async function EditPostPage({
 
   if (!post) notFound();
 
-  const [activity, team, tagged] = await Promise.all([
+  const [activity, writers, tagged] = await Promise.all([
     activityFor([post.id]),
-    db.staffUser.findMany({
-      where: { isActive: true },
+    db.writer.findMany({
+      where: { deletedAt: null },
       orderBy: { name: 'asc' },
-      select: { name: true },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        bio: true,
+        link: true,
+        email: true,
+        phone: true,
+        photo: true,
+      },
     }),
     // Every tag the journal already uses, most used first, so a new post
     // picks up the existing spelling instead of starting a near-duplicate.
     db.post.findMany({ where: { deletedAt: null }, select: { tags: true } }),
   ]);
+
+  // The writer the byline belongs to: the linked one while they are still on
+  // the list, or one whose name the byline already is, for posts written
+  // before writers existed.
+  const byline = (post.authorName ?? COMPANY).toLowerCase();
+  const linkedWriter =
+    writers.find((writer) => writer.id === post.writerId) ??
+    writers.find((writer) => writer.name.toLowerCase() === byline);
 
   const usage = new Map<string, number>();
   for (const row of tagged) {
@@ -84,12 +102,13 @@ export default async function EditPostPage({
           coverImage: post.coverImage ?? '',
           coverAlt: post.coverAlt ?? '',
           authorName: post.authorName ?? COMPANY,
+          writerId: linkedWriter?.id ?? null,
           publishedAt: toDateInputValue(post.publishedAt),
           status: post.status === 'published' ? 'published' : 'draft',
           everPublished: post.firstPublishedAt !== null,
           version: post.updatedAt.toISOString(),
         }}
-        bylines={[COMPANY, ...team.map((member) => member.name)]}
+        writers={writers}
         tagSuggestions={tagSuggestions}
         history={<ActivityFeed items={activity} now={now} />}
       />

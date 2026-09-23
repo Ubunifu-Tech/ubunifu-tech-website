@@ -1104,6 +1104,11 @@ model Post {
   /// person, and kept separately from authorId so the credit on a published
   /// piece does not change when a staff member leaves.
   authorName   String?
+  /// The writer's profile, when the byline is somebody in the writers list.
+  /// The byline text above is still what is printed; the profile adds their
+  /// role, a short bio and a link under the article.
+  writerId     String?
+  writer       Writer?    @relation(fields: [writerId], references: [id], onDelete: SetNull)
   publishedAt  DateTime?
   /// The first time it went live. Set once and never cleared, because from
   /// then on people may have the link, so the address is fixed.
@@ -1113,6 +1118,32 @@ model Post {
   deletedAt    DateTime?
 
   @@index([status, publishedAt])
+  @@index([writerId])
+}
+
+/// Somebody who writes for the journal: a colleague, a guest, a client. Not
+/// a console account. How to reach them (email, phone, notes) is for us and
+/// never shown; role, bio, link and photo appear with their articles.
+model Writer {
+  id        String    @id @default(cuid())
+  name      String
+  /// Shown beside the byline, e.g. "Data lead, Ubunifu Technologies".
+  role      String?
+  bio       String?
+  /// Their own site or profile, https only.
+  link      String?
+  /// A /media/ path from the console's uploads.
+  photo     String?
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  posts Post[]
+
+  @@index([name])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

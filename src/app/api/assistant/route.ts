@@ -44,6 +44,20 @@ function unavailable(error: string, status: number) {
   return NextResponse.json({ error, fallback: true }, { status });
 }
 
+/**
+ * A subject line from what somebody wrote: their first sentence when it is a
+ * reasonable length, otherwise the start of it, ended at a word.
+ */
+function headline(text: string, max = 80): string {
+  const first = text.split('\n')[0]?.trim() ?? '';
+  const sentence = first.match(/^.+?[.?!](?=\s|$)/)?.[0] ?? first;
+  const pick = sentence.length >= 12 ? sentence : first;
+  if (pick.length <= max) return pick;
+  const cut = pick.slice(0, max - 1);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).replace(/[\s,;:.-]+$/, '')}…`;
+}
+
 /** A site path, and nothing else, so it is safe to show the model. */
 function pagePath(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -234,7 +248,7 @@ async function handoff(request: NextRequest, raw: unknown) {
     conversationId: conversation?.id ?? null,
     name,
     email,
-    subject: details.split('\n')[0].slice(0, 80) || 'A message from the website chat',
+    subject: headline(details) || 'A message from the website chat',
     details,
     ip,
   });

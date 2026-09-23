@@ -64,6 +64,15 @@ const ACTION_LABEL: Record<string, string> = {
   'project_update.send_failed': 'Update email did not send',
   'settings.billing_saved': 'Billing details changed',
   'assistant.failed': 'Assistant could not answer',
+  'writer.created': 'Writer added',
+  'writer.updated': 'Writer details changed',
+  'writer.archived': 'Writer taken off the list',
+  'post.created': 'Post started',
+  'post.saved': 'Post saved',
+  'post.published': 'Post published',
+  'post.scheduled': 'Post scheduled',
+  'post.unpublished': 'Post taken down',
+  'post.archived': 'Post archived',
 };
 
 function auditWhere(key: string): Prisma.AuditEventWhereInput | null {

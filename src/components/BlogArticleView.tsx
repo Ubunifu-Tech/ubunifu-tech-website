@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import { ArrowLeft } from 'lucide-react';
@@ -11,6 +12,8 @@ export type ArticleContent = {
   title: string;
   excerpt: string;
   author: string;
+  /** The writer's public profile, when the byline has one. */
+  writer?: { role?: string; bio?: string; link?: string; photo?: string };
   /** A calendar date, YYYY-MM-DD. */
   date: string;
   readingTime: number;
@@ -61,7 +64,10 @@ export function BlogArticleView({
           {post.excerpt && <p className={styles.dek}>{post.excerpt}</p>}
 
           <div className={styles.meta}>
-            <span className={styles.author}>By {post.author}</span>
+            <span className={styles.author}>
+              By {post.author}
+              {post.writer?.role && <span className={styles.authorRole}>, {post.writer.role}</span>}
+            </span>
             <span className={styles.metaDot} aria-hidden="true" />
             <time className={styles.date} dateTime={post.date}>
               {formatDateLong(post.date)}
@@ -91,6 +97,41 @@ export function BlogArticleView({
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>
 
+        {post.writer && (post.writer.bio || post.writer.photo || post.writer.link) && (
+          <aside className={styles.writer} aria-label="About the writer">
+            {post.writer.photo ? (
+              <Image
+                src={post.writer.photo}
+                alt=""
+                width={64}
+                height={64}
+                className={styles.writerPhoto}
+              />
+            ) : (
+              <span className={styles.writerInitials} aria-hidden="true">
+                {initialsOf(post.author)}
+              </span>
+            )}
+            <div className={styles.writerText}>
+              <p className={styles.writerName}>
+                {post.author}
+                {post.writer.role && <span className={styles.writerRole}>{post.writer.role}</span>}
+              </p>
+              {post.writer.bio && <p className={styles.writerBio}>{post.writer.bio}</p>}
+              {post.writer.link && (
+                <a
+                  href={post.writer.link}
+                  className={styles.writerLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {hostOf(post.writer.link)}
+                </a>
+              )}
+            </div>
+          </aside>
+        )}
+
         <footer className={styles.articleFooter}>
           <div className={styles.tagList} aria-label="Article topics">
             {post.tags.map((tag) => (
@@ -102,4 +143,18 @@ export function BlogArticleView({
       </div>
     </article>
   );
+}
+
+function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return ((words[0]?.[0] ?? '') + (words.length > 1 ? words[words.length - 1]![0] : '')).toUpperCase();
+}
+
+/** "https://www.example.com/about" reads as "example.com". */
+function hostOf(link: string): string {
+  try {
+    return new URL(link).hostname.replace(/^www\./, '');
+  } catch {
+    return link;
+  }
 }

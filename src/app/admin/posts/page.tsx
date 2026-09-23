@@ -113,11 +113,16 @@ export default async function PostsPage({
           </h1>
           <p className={styles.lead}>Articles on the website, from first draft to published.</p>
         </div>
-        <form action={startPost}>
-          <button type="submit" className={forms.button}>
-            New post
-          </button>
-        </form>
+        <div className={styles.headActions}>
+          <Link href="/posts/writers" className={`${forms.button} ${forms.quiet}`}>
+            Writers
+          </Link>
+          <form action={startPost}>
+            <button type="submit" className={forms.button}>
+              New post
+            </button>
+          </form>
+        </div>
       </div>
 
       <Figures

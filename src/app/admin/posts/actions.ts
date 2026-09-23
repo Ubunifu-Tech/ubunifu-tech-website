@@ -7,7 +7,7 @@ import { db } from '@/lib/db';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { formatDate, parseDateInput } from '@/lib/console/money';
 import { SLUG_PATTERN } from '@/lib/slug';
-import { parseMediaFile } from '@/lib/console/media';
+import { uploadedImageExists } from '@/lib/console/media';
 import { formText } from '@/lib/console/form';
 import { isUniqueConflict } from '@/lib/console/conflict';
 
@@ -24,6 +24,8 @@ export type PostState = {
   /** The address the post now lives at, which can change while it is a draft. */
   slug?: string;
   published?: boolean;
+  /** The byline as saved: a linked writer's current name. */
+  byline?: string;
   /** Somebody else saved the post since this editor loaded it. */
   conflict?: boolean;
 };
@@ -156,6 +158,7 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   const coverImage = text(formData, 'coverImage');
   const coverAlt = text(formData, 'coverAlt');
   const authorName = text(formData, 'authorName') || COMPANY;
+  const wantedWriter = text(formData, 'writerId');
   const tags = text(formData, 'tags')
     .split(',')
     .map((tag) => tag.trim())
@@ -173,8 +176,9 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
     return { status: 'error', message: 'That summary is too long for a card.', field: 'excerpt' };
   }
   if (authorName.length < 2 || authorName.length > 120) {
-    return { status: 'error', message: 'Choose who the byline names.', field: 'authorName' };
+    return { status: 'error', message: 'Write who the byline names.', field: 'authorName' };
   }
+
   if (new Set(tags.map((tag) => tag.toLowerCase())).size !== tags.length) {
     return { status: 'error', message: 'The same tag is in there twice.', field: 'tags' };
   }
@@ -206,14 +210,7 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   // exists, so a mistyped or since-removed one would be saved and then shown
   // on the live site as a broken picture. Check it is really there.
   if (coverImage.startsWith('/media/')) {
-    const file = parseMediaFile(coverImage);
-    const exists =
-      file &&
-      (await db.mediaAsset.findFirst({
-        where: { id: file.id, extension: file.extension, deletedAt: null },
-        select: { id: true },
-      }));
-    if (!exists) {
+    if (!(await uploadedImageExists(coverImage))) {
       return {
         status: 'error',
         message: 'There is no uploaded image at that address. Upload it again, or clear the field.',
@@ -273,32 +270,59 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   const publishedAt =
     chosenDate ?? (intent === 'publish' && !post.publishedAt ? now : post.publishedAt);
 
-  let updated: { updatedAt: Date; publishedAt: Date | null; status: string };
+  let updated: {
+    updatedAt: Date;
+    publishedAt: Date | null;
+    status: string;
+    authorName: string | null;
+  };
   try {
-    // Written only if nobody has saved since this editor loaded the post.
-    const written = await db.post.updateMany({
-      where: { id: post.id, updatedAt: post.updatedAt, deletedAt: null },
-      data: {
-        title,
-        excerpt,
-        bodyMarkdown: body,
-        tags,
-        authorName,
-        coverImage: coverImage || null,
-        coverAlt: coverAlt || null,
-        slug,
-        publishedAt,
-        ...(intent === 'publish'
-          ? { status: 'published' as const, firstPublishedAt: post.firstPublishedAt ?? now }
-          : {}),
-      },
-    });
-    if (written.count === 0) return conflict();
-    updated = await db.post.findUniqueOrThrow({
-      where: { id: post.id },
-      select: { updatedAt: true, publishedAt: true, status: true },
+    updated = await db.$transaction(async (tx) => {
+      // The editor only sends a writer when the byline is theirs. The writer
+      // row is locked while the post is written, so a rename happening at the
+      // same moment cannot leave the byline and the profile disagreeing: the
+      // name printed is the writer's current one. A writer who has been taken
+      // off the list is simply not linked; the byline stands on its own.
+      let writerId: string | null = null;
+      let byline = authorName;
+      if (wantedWriter) {
+        const [writer] = await tx.$queryRaw<{ id: string; name: string }[]>`
+          SELECT id, name FROM "Writer"
+          WHERE id = ${wantedWriter} AND "deletedAt" IS NULL
+          FOR UPDATE`;
+        if (writer) {
+          writerId = writer.id;
+          byline = writer.name;
+        }
+      }
+
+      // Written only if nobody has saved since this editor loaded the post.
+      const written = await tx.post.updateMany({
+        where: { id: post.id, updatedAt: post.updatedAt, deletedAt: null },
+        data: {
+          title,
+          excerpt,
+          bodyMarkdown: body,
+          tags,
+          authorName: byline,
+          writerId,
+          coverImage: coverImage || null,
+          coverAlt: coverAlt || null,
+          slug,
+          publishedAt,
+          ...(intent === 'publish'
+            ? { status: 'published' as const, firstPublishedAt: post.firstPublishedAt ?? now }
+            : {}),
+        },
+      });
+      if (written.count === 0) throw new VersionConflict();
+      return tx.post.findUniqueOrThrow({
+        where: { id: post.id },
+        select: { updatedAt: true, publishedAt: true, status: true, authorName: true },
+      });
     });
   } catch (error) {
+    if (error instanceof VersionConflict) return conflict();
     if (isUniqueConflict(error)) {
       return {
         status: 'error',
@@ -351,8 +375,12 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
     version: updated.updatedAt.toISOString(),
     slug,
     published: updated.status === 'published',
+    byline: updated.authorName ?? COMPANY,
   };
 }
+
+/** Thrown inside the save transaction so it rolls back, then reported. */
+class VersionConflict extends Error {}
 
 function conflict(): PostState {
   return {
@@ -370,10 +398,7 @@ function conflict(): PostState {
  * a future date schedules it. Unpublishing takes it off the site immediately —
  * the pages are revalidated here rather than waiting for a rebuild.
  */
-export async function setPostStatus(
-  _previous: PostState,
-  formData: FormData,
-): Promise<PostState> {
+export async function setPostStatus(_previous: PostState, formData: FormData): Promise<PostState> {
   const staff = await requireStaff();
   if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 

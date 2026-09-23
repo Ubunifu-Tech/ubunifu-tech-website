@@ -7,6 +7,7 @@ import {
   resolveBlogCover,
   type BlogPost,
   type BlogPostMeta,
+  type BlogWriter,
 } from './blog-files';
 
 /**
@@ -40,7 +41,7 @@ import {
 
 export { defaultBlogCover, resolveBlogCover };
 export type { BlogCover } from '@/content/blog-covers';
-export type { BlogPost, BlogPostMeta };
+export type { BlogPost, BlogPostMeta, BlogWriter };
 
 function usingFiles(): boolean {
   return !process.env.DATABASE_URL;
@@ -61,12 +62,37 @@ type PostRow = {
   coverImage: string | null;
   coverAlt: string | null;
   authorName: string | null;
+  writer: {
+    name: string;
+    role: string | null;
+    bio: string | null;
+    link: string | null;
+    photo: string | null;
+    deletedAt: Date | null;
+  } | null;
   publishedAt: Date | null;
   createdAt: Date;
 };
 
+/**
+ * The public half of a writer's profile. Contact details are never selected
+ * for the site, so they cannot reach a page by accident. A writer taken off
+ * the list keeps the byline and loses the profile.
+ */
+function toBlogWriter(writer: PostRow['writer']): BlogWriter | undefined {
+  if (!writer || writer.deletedAt) return undefined;
+  const shown: BlogWriter = {
+    ...(writer.role ? { role: writer.role } : {}),
+    ...(writer.bio ? { bio: writer.bio } : {}),
+    ...(writer.link ? { link: writer.link } : {}),
+    ...(writer.photo ? { photo: writer.photo } : {}),
+  };
+  return Object.keys(shown).length > 0 ? shown : undefined;
+}
+
 function toBlogPost(row: PostRow): BlogPost {
   const published = row.publishedAt ?? row.createdAt;
+  const writer = toBlogWriter(row.writer);
   return {
     slug: row.slug,
     title: row.title,
@@ -74,6 +100,7 @@ function toBlogPost(row: PostRow): BlogPost {
     // that, so the same shape comes back rather than a timestamp.
     date: published.toISOString().slice(0, 10),
     author: row.authorName ?? 'Ubunifu Technologies',
+    ...(writer ? { writer } : {}),
     excerpt: row.excerpt,
     tags: row.tags,
     coverImage: row.coverImage ?? undefined,
@@ -92,6 +119,9 @@ const SELECT = {
   coverImage: true,
   coverAlt: true,
   authorName: true,
+  writer: {
+    select: { name: true, role: true, bio: true, link: true, photo: true, deletedAt: true },
+  },
   publishedAt: true,
   createdAt: true,
 } as const;

@@ -40,6 +40,21 @@ export function parseMediaFile(file: string): { id: string; extension: string } 
 }
 
 /**
+ * Whether a /media/ address points at an image that was uploaded and is
+ * still there. The address alone passes any pattern check, so a mistyped or
+ * since-removed one would otherwise be saved and shown on the site broken.
+ */
+export async function uploadedImageExists(path: string): Promise<boolean> {
+  const file = parseMediaFile(path);
+  if (!file || !path.startsWith('/media/')) return false;
+  const asset = await db.mediaAsset.findFirst({
+    where: { id: file.id, extension: file.extension, deletedAt: null },
+    select: { id: true },
+  });
+  return asset !== null;
+}
+
+/**
  * Writes the row for a finished upload, idempotent on the blob URL.
  *
  * Called by the console the moment the upload resolves and by the store's own

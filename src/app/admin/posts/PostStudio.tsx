@@ -4,8 +4,9 @@ import Link from 'next/link';
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Check, Circle, Eye, Monitor, Smartphone, TriangleAlert, X } from 'lucide-react';
 import { archivePost, savePost, setPostStatus, type PostState, type SaveIntent } from './actions';
+import { saveWriter, type WriterSummary } from './writers/actions';
 import { RichText } from '@/components/console/RichText';
-import { Select } from '@/components/console/Select';
+import { Avatar } from '@/components/console/Avatar';
 import { DateField } from '@/components/console/Fields';
 import { uploadWebsiteImage } from '@/components/console/uploadWebsiteImage';
 import { BlogArticleView } from '@/components/BlogArticleView';
@@ -27,6 +28,8 @@ export type StudioPost = {
   coverImage: string;
   coverAlt: string;
   authorName: string;
+  /** The writer profile the byline is linked to, if any. */
+  writerId: string | null;
   /** YYYY-MM-DD, or empty for "the day it is published". */
   publishedAt: string;
   status: 'draft' | 'published';
@@ -58,12 +61,12 @@ const words = (markdown: string) => markdown.trim().split(/\s+/).filter(Boolean)
  */
 export function PostStudio({
   post,
-  bylines,
+  writers,
   tagSuggestions,
   history,
 }: {
   post: StudioPost;
-  bylines: string[];
+  writers: WriterSummary[];
   tagSuggestions: string[];
   history: React.ReactNode;
 }) {
@@ -77,6 +80,8 @@ export function PostStudio({
   const [coverImage, setCoverImage] = useState(post.coverImage);
   const [coverAlt, setCoverAlt] = useState(post.coverAlt);
   const [authorName, setAuthorName] = useState(post.authorName);
+  const [writerId, setWriterId] = useState(post.writerId);
+  const [writerList, setWriterList] = useState(writers);
   const [publishedAt, setPublishedAt] = useState(post.publishedAt);
   const [slug, setSlug] = useState(post.slug);
   const [savedSlug, setSavedSlug] = useState(post.slug);
@@ -160,6 +165,7 @@ export function PostStudio({
       data.set('coverImage', coverImage);
       data.set('coverAlt', coverAlt);
       data.set('authorName', authorName);
+      data.set('writerId', writerId ?? '');
       data.set('publishedAt', publishedAt);
       data.set('slug', slug);
 
@@ -183,6 +189,8 @@ export function PostStudio({
           if (result.published) setEverPublished(true);
         }
         if (result.slug && result.slug !== savedSlug) setSavedSlug(result.slug);
+        // A linked writer renamed meanwhile: show the name the post now carries.
+        if (result.byline && result.byline !== authorName) setAuthorName(result.byline);
         if (revisionRef.current === startedAt) setDirty(false);
         setSave({ kind: 'saved', at: new Date(), message: intent === 'autosave' ? undefined : result.message });
       } else if (result.conflict) {
@@ -191,7 +199,7 @@ export function PostStudio({
         setSave({ kind: 'error', message: result.message ?? 'That did not save.', field: result.field });
       }
     },
-    [post.id, title, excerpt, body, tags, coverImage, coverAlt, authorName, publishedAt, slug, savedSlug],
+    [post.id, title, excerpt, body, tags, coverImage, coverAlt, authorName, writerId, publishedAt, slug, savedSlug],
   );
 
   // Drafts save themselves once typing stops. A live post never does.
@@ -238,6 +246,16 @@ export function PostStudio({
   };
 
   const busy = save.kind === 'saving';
+  // What the article will show about the writer: only the public fields.
+  const linkedWriter = writerList.find((writer) => writer.id === writerId);
+  const previewWriter = linkedWriter
+    ? {
+        ...(linkedWriter.role ? { role: linkedWriter.role } : {}),
+        ...(linkedWriter.bio ? { bio: linkedWriter.bio } : {}),
+        ...(linkedWriter.link ? { link: linkedWriter.link } : {}),
+        ...(linkedWriter.photo ? { photo: linkedWriter.photo } : {}),
+      }
+    : undefined;
   const errorField = save.kind === 'error' ? save.field : undefined;
   const cover = coverImage
     ? { image: coverImage, alt: coverAlt }
@@ -475,21 +493,25 @@ export function PostStudio({
                 touch();
               }}
             />
-            <div className={forms.field}>
-              <span className={forms.label} id={`${post.id}-byline`}>
-                Byline
-              </span>
-              <Select
-                aria-labelledby={`${post.id}-byline`}
-                options={[...new Set([authorName, ...bylines])].map((name) => ({ value: name, label: name }))}
-                value={authorName}
-                onValueChange={(value) => {
-                  setAuthorName(value);
-                  touch();
-                }}
-                invalid={errorField === 'authorName'}
-              />
-            </div>
+            <Byline
+              name={authorName}
+              writerId={writerId}
+              writers={writerList}
+              invalid={errorField === 'authorName'}
+              onChange={(name, id) => {
+                setAuthorName(name);
+                setWriterId(id);
+                touch();
+              }}
+              onAdded={(writer) => {
+                setWriterList((current) =>
+                  [...current, writer].sort((a, b) => a.name.localeCompare(b.name)),
+                );
+                setAuthorName(writer.name);
+                setWriterId(writer.id);
+                touch();
+              }}
+            />
           </Panel>
 
           <Panel title="Search and sharing">
@@ -542,6 +564,7 @@ export function PostStudio({
                     title: title || 'Untitled',
                     excerpt,
                     author: authorName,
+                    writer: previewWriter,
                     date: (date ?? new Date()).toISOString().slice(0, 10),
                     readingTime: minutes,
                     tags,
@@ -801,6 +824,161 @@ function TagInput({
             </button>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+const COMPANY = 'Ubunifu Technologies';
+
+/**
+ * Who the post is by. Any name can be typed. A name from the writers list
+ * links the post to that writer, whose role, bio and photo then show with
+ * the article; a new name can be added to the list from here.
+ */
+function Byline({
+  name,
+  writerId,
+  writers,
+  invalid,
+  onChange,
+  onAdded,
+}: {
+  name: string;
+  writerId: string | null;
+  writers: WriterSummary[];
+  invalid: boolean;
+  onChange: (name: string, writerId: string | null) => void;
+  onAdded: (writer: WriterSummary) => void;
+}) {
+  const inputId = useId();
+  const listId = useId();
+  const [adding, setAdding] = useState(false);
+  const [role, setRole] = useState('');
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  const linked = writers.find((writer) => writer.id === writerId) ?? null;
+  const typed = name.trim();
+  const isCompany = typed.toLowerCase() === COMPANY.toLowerCase();
+
+  const change = (value: string) => {
+    const match = writers.find((writer) => writer.name.toLowerCase() === value.trim().toLowerCase());
+    onChange(value, match?.id ?? null);
+  };
+
+  async function add() {
+    setBusy(true);
+    setProblem(null);
+    const data = new FormData();
+    data.set('name', typed);
+    data.set('role', role);
+    data.set('email', email);
+    const result = await saveWriter({ status: 'idle' }, data).catch(
+      () => ({ status: 'error', message: 'Could not reach the console.' }) as const,
+    );
+    setBusy(false);
+    if (result.status === 'done' && 'writer' in result && result.writer) {
+      onAdded(result.writer);
+      setAdding(false);
+      setRole('');
+      setEmail('');
+    } else {
+      setProblem(result.message ?? 'That did not work.');
+    }
+  }
+
+  return (
+    <div className={forms.field}>
+      <label className={forms.label} htmlFor={inputId}>
+        Byline
+      </label>
+      <input
+        id={inputId}
+        list={listId}
+        className={forms.control}
+        value={name}
+        onChange={(event) => change(event.target.value)}
+        onBlur={() => {
+          if (!typed) onChange(COMPANY, null);
+        }}
+        maxLength={120}
+        aria-invalid={invalid || undefined}
+        placeholder={COMPANY}
+      />
+      <datalist id={listId}>
+        <option value={COMPANY} />
+        {writers.map((writer) => (
+          <option key={writer.id} value={writer.name}>
+            {writer.role ?? ''}
+          </option>
+        ))}
+      </datalist>
+
+      {linked ? (
+        <div className={styles.writer}>
+          {linked.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a small console thumbnail of an uploaded photo.
+            <img src={linked.photo} alt="" className={styles.writerPhoto} />
+          ) : (
+            <Avatar name={linked.name} size="sm" />
+          )}
+          <span className={styles.writerText}>
+            <span>{linked.role ?? 'No role yet'}</span>
+            <span className={styles.writerContact}>
+              {[linked.email, linked.phone].filter(Boolean).join(' · ') || 'No contact details yet'}
+            </span>
+            <Link href={`/posts/writers/${linked.id}`} target="_blank" className={styles.writerEdit}>
+              Edit their details
+            </Link>
+          </span>
+        </div>
+      ) : isCompany || !typed ? (
+        <p className={forms.hint}>The company byline. Type a person&rsquo;s name to credit them.</p>
+      ) : adding ? (
+        <div className={styles.addWriter}>
+          <p className={forms.hint}>
+            Adds {typed} to the writers list, so their role shows with the article.
+          </p>
+          <input
+            className={forms.control}
+            value={role}
+            onChange={(event) => setRole(event.target.value)}
+            placeholder="Role, e.g. Data lead, Ubunifu Technologies"
+            aria-label="Role"
+            maxLength={120}
+          />
+          <input
+            className={forms.control}
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email, for us only"
+            aria-label="Email"
+            maxLength={254}
+          />
+          <div className={styles.confirmActions}>
+            <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={add} disabled={busy}>
+              {busy ? 'Adding…' : 'Add writer'}
+            </button>
+            <button type="button" className={forms.link} onClick={() => setAdding(false)} disabled={busy}>
+              Not now
+            </button>
+          </div>
+          {problem && (
+            <p className={forms.error} role="alert">
+              {problem}
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className={forms.hint}>
+          Not in the writers list, so only the name shows.{' '}
+          <button type="button" className={forms.link} onClick={() => setAdding(true)}>
+            Add {typed} as a writer
+          </button>
+        </p>
       )}
     </div>
   );

@@ -28,11 +28,20 @@ const coverImagePattern = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.(?:avif|jpe?g|png|w
  */
 export const defaultBlogCover = blogCovers[3]!;
 
+/** What an article shows about its writer, when the byline has a profile. */
+export interface BlogWriter {
+  role?: string;
+  bio?: string;
+  link?: string;
+  photo?: string;
+}
+
 export interface BlogPostMeta {
   slug: string;
   title: string;
   date: string;
   author: string;
+  writer?: BlogWriter;
   excerpt: string;
   tags: string[];
   readingTime: number;

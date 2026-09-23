@@ -65,6 +65,7 @@ const ACTION_LABEL: Record<string, string> = {
   'asset_request.added': 'Asked the client for something',
   'asset_request.saved': 'Request to the client changed',
   'asset_request.removed': 'Request to the client removed',
+  'brand_kit.saved': 'Brand kit saved',
   'client.setup_link.created': 'Setup link made',
   'invoice.created': 'Invoice raised',
   'invoice.sent': 'Invoice sent',

@@ -1,0 +1,148 @@
+.kit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.swatches {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  list-style: none;
+}
+
+.swatch {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+/* The colour itself, with a hairline so a pale sand still reads as a chip. */
+.chip {
+  display: block;
+  height: 4.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.swatchText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--space-3);
+}
+
+.colorName {
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
+.hex {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-caption);
+}
+
+.usage {
+  margin-top: 0.25rem;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.45;
+}
+
+.words {
+  display: grid;
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.words dt {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.words dd {
+  margin: 0.25rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ── Editing ─────────────────────────────────── */
+
+.colorRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.colorRow {
+  display: grid;
+  align-items: center;
+  gap: var(--space-2);
+  grid-template-columns: 2.25rem minmax(0, 1fr) 7.5rem minmax(0, 2fr) auto;
+}
+
+.colorHead {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.preview {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background:
+    repeating-linear-gradient(45deg, var(--surface-2) 0 4px, var(--surface) 4px 8px);
+}
+
+.hexInput {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.removeColor {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.removeColor:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+.removeColor:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (max-width: 40rem) {
+  .colorRow {
+    grid-template-columns: 2.25rem minmax(0, 1fr) 7rem auto;
+  }
+
+  .colorRow > :nth-child(4) {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+
+  .colorHead {
+    display: none;
+  }
+}

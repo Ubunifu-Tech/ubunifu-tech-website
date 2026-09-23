@@ -39,6 +39,7 @@ import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import { AddPhase, AddTask, AskForSomething, PhaseHead, ProjectDetailsCard } from './PlanEditor';
+import { BrandKitEditor } from './BrandKitEditor';
 import { currencyLabel } from '@/lib/console/currencies';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import styles from '../../Admin.module.css';
@@ -70,7 +71,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: project ? `${project.reference} · ${project.name}` : 'Project' };
 }
 
-const TABS = ['overview', 'plan', 'fees', 'documents', 'updates', 'activity'] as const;
+const TABS = ['overview', 'plan', 'brand', 'fees', 'documents', 'updates', 'activity'] as const;
 type Tab = (typeof TABS)[number];
 
 export default async function ProjectPage({
@@ -147,6 +148,15 @@ export default async function ProjectPage({
               isClientVisible: true,
             },
           },
+        },
+      },
+      brandKit: {
+        select: {
+          typography: true,
+          principles: true,
+          imageryDirection: true,
+          notes: true,
+          colors: { orderBy: { position: 'asc' }, select: { name: true, hex: true, usage: true } },
         },
       },
       assetRequests: {
@@ -536,6 +546,7 @@ export default async function ProjectPage({
             href: href('plan'),
             count: totalDeliverables - doneDeliverables,
           },
+          { key: 'brand', label: 'Brand', href: href('brand') },
           ...(mayFees || mayMoney
             ? [
                 {
@@ -864,6 +875,10 @@ export default async function ProjectPage({
           ))}
           {mayRun && <AddPhase projectId={project.id} first={project.phases.length === 0} />}
         </section>
+      )}
+
+      {tab === 'brand' && (
+        <BrandKitEditor projectId={project.id} kit={project.brandKit} editable={mayRun} />
       )}
 
       {tab === 'fees' && (mayFees || mayMoney) && (

@@ -389,6 +389,11 @@
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
 }
 
+/* A card that belongs under both columns, such as the brand kit. */
+.layoutWide {
+  grid-column: 1 / -1;
+}
+
 .stack {
   display: flex;
   min-width: 0;

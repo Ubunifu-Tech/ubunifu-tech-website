@@ -15,6 +15,7 @@ import { UploadBox } from './UploadBox';
 import { AnswerBox } from './AnswerBox';
 import { ItemOwner } from './ItemOwner';
 import { Avatar } from '@/components/console/Avatar';
+import { BrandKitView } from '@/components/console/BrandKitView';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -77,6 +78,15 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
             orderBy: { position: 'asc' },
             select: { id: true, title: true, isComplete: true },
           },
+        },
+      },
+      // The team's own notes on the kit stay with the team.
+      brandKit: {
+        select: {
+          typography: true,
+          principles: true,
+          imageryDirection: true,
+          colors: { orderBy: { position: 'asc' }, select: { name: true, hex: true, usage: true } },
         },
       },
       updates: {
@@ -174,9 +184,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
           </span>
         </div>
         <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>
-            {launched ? 'Launched' : 'Aiming for'}
-          </span>
+          <span className={styles.summaryLabel}>{launched ? 'Launched' : 'Aiming for'}</span>
           <span className={styles.summaryValue}>
             {launched
               ? formatDate(launched)
@@ -356,6 +364,19 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
             ))
           )}
         </section>
+
+        {project.brandKit &&
+          (project.brandKit.colors.length > 0 ||
+            project.brandKit.typography ||
+            project.brandKit.principles ||
+            project.brandKit.imageryDirection) && (
+            <section className={`${forms.card} ${styles.layoutWide}`}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Your brand kit</h2>
+              </div>
+              <BrandKitView kit={{ ...project.brandKit, notes: null }} />
+            </section>
+          )}
       </div>
     </main>
   );

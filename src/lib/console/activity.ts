@@ -84,6 +84,7 @@ function describeAudit(action: string, summary: string | null): string {
     'asset_request.added': 'Asked the client for something',
     'asset_request.saved': 'Request to the client changed',
     'asset_request.removed': 'Request to the client removed',
+    'brand_kit.saved': 'Brand kit saved',
     'client.setup_link.created': 'Setup link made',
     'asset.uploaded': 'Client sent a file',
     'invoice.created': 'Invoice created',

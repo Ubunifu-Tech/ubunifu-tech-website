@@ -63,6 +63,7 @@ const ACTION_LABEL: Record<string, string> = {
   'project_update.sent': 'Update sent to the client',
   'project_update.send_failed': 'Update email did not send',
   'settings.billing_saved': 'Billing details changed',
+  'assistant.failed': 'Assistant could not answer',
 };
 
 function auditWhere(key: string): Prisma.AuditEventWhereInput | null {

@@ -319,6 +319,11 @@ export async function runTurn<Context>(options: {
       error: 'The assistant got stuck going round in circles. A person can help instead.',
     };
   } catch (error) {
+    if (error instanceof Anthropic.APIError) {
+      await recordApiFailure(error, options.conversationId, options.kind);
+    } else {
+      console.error('Agent turn failed', error);
+    }
     if (error instanceof Anthropic.AuthenticationError) {
       return { ok: false, error: 'The assistant is not configured here.' };
     }
@@ -326,9 +331,45 @@ export async function runTurn<Context>(options: {
       return { ok: false, error: 'Too many people are asking at once. Try again in a moment.' };
     }
     if (error instanceof Anthropic.APIError) {
-      return { ok: false, error: `The assistant could not be reached (${error.status}).` };
+      return { ok: false, error: 'The assistant could not answer just now.' };
     }
-    console.error('Agent turn failed', error);
     return { ok: false, error: 'The assistant could not be reached.' };
   }
+}
+
+const WHICH: Record<ConversationKind, string> = {
+  site_visitor: 'The website assistant',
+  portal_client: 'The portal assistant',
+  document_draft: 'The drafting assistant',
+};
+
+/**
+ * Why the API turned a turn down, in its own words: a low credit balance, a
+ * key without access, a parameter it rejects. Written to the server log and to
+ * the activity record, where staff can read it. Never sent to the person in
+ * the chat, who only needs to know a person will reply.
+ */
+async function recordApiFailure(
+  error: InstanceType<typeof Anthropic.APIError>,
+  conversationId: string,
+  kind: ConversationKind,
+) {
+  const body = error.error as { error?: { type?: string; message?: string } } | undefined;
+  const reason = body?.error?.message ?? error.message;
+  const type = body?.error?.type ?? 'unknown';
+  console.error(
+    `Anthropic API ${error.status ?? 'error'} ${type} (request ${error.requestID ?? 'unknown'}): ${reason}`,
+  );
+  await db.auditEvent
+    .create({
+      data: {
+        actorType: 'system',
+        action: 'assistant.failed',
+        entityType: 'conversation',
+        entityId: conversationId,
+        summary: `${WHICH[kind]} could not answer (${error.status ?? 'no status'}): ${reason}`.slice(0, 500),
+        metadata: { status: error.status ?? null, type, requestId: error.requestID ?? null },
+      },
+    })
+    .catch((failure: unknown) => console.error('Could not record the assistant failure', failure));
 }

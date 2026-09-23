@@ -20,6 +20,7 @@ import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Figures } from '@/components/console/Figures';
 import { StageCatchUp, StageTrack } from './StageTrack';
 import { billableLines } from '@/lib/console/billing';
+import { getOrg } from '@/lib/console/org';
 import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
@@ -28,6 +29,7 @@ import {
   formatRelative,
   formatShortDate,
   toDateInputValue,
+  todayInput,
 } from '@/lib/console/money';
 import { MoveControls, type StageAction } from './MoveControls';
 import { FeeEditor, type FeeRow } from '@/components/console/FeeEditor';
@@ -242,10 +244,11 @@ export default async function ProjectPage({
 
   if (!project) notFound();
 
-  const [transitions, facts, billable] = await Promise.all([
+  const [transitions, facts, billable, org] = await Promise.all([
     transitionsFor(project),
     loadGuardFacts(project.id),
     billableLines(project.id),
+    getOrg(),
   ]);
 
   const toBill: BillableLine[] = billable
@@ -939,7 +942,19 @@ export default async function ProjectPage({
                   <h2 className={forms.cardTitle}>Record a payment</h2>
                   <span className={forms.cardMeta}>Paid before an invoice or a signature</span>
                 </div>
-                <EarlyPayment projectId={project.id} lines={toBill} today={toDateInputValue(now)} />
+                <EarlyPayment
+                  projectId={project.id}
+                  lines={toBill}
+                  today={todayInput()}
+                  vatBps={org.chargesVat ? org.vatRateBps : 0}
+                  reason={
+                    fees.length === 0
+                      ? 'This project has no fees yet. Add the fee the money is for, then record it here.'
+                      : unpriced > 0 && toBill.length === 0
+                        ? 'The fees still need prices. Price the one the money is for, then record it here.'
+                        : 'Everything due now is already on an invoice. Record the payment on that invoice.'
+                  }
+                />
               </section>
 
               <div className={table.frame}>

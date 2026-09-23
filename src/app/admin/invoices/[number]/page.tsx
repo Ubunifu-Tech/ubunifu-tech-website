@@ -5,7 +5,7 @@ import { requirePermission } from '@/lib/console/auth';
 import { liveInvoice } from '@/lib/console/live';
 import { activityFor } from '@/lib/console/activity';
 import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate, moneyInput, toDateInputValue } from '@/lib/console/money';
+import { formatMoney, formatShortDate, moneyInput, todayInput } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
   ReceiptMenu,
@@ -322,30 +322,25 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                   </span>
                 </div>
 
-                {invoice.status === 'draft' ? (
-                  <>
-                    <div className={forms.actions}>
-                      <SendInvoiceButton invoiceId={invoice.id} sent={false} />
-                      <p className={forms.payoff}>Or, if they have paid already, record it here.</p>
-                    </div>
-                    <RecordPaymentForm
-                      invoiceId={invoice.id}
-                      outstanding={moneyInput(outstanding, invoice.currency)}
-                      currency={invoice.currency}
-                      today={toDateInputValue(now)}
-                    />
-                  </>
-                ) : outstanding === 0 ? (
-                  <p className={styles.note}>
-                    Nothing is owed. The receipts are listed above, ready to email or print.
-                  </p>
-                ) : (
+                {invoice.status === 'draft' && (
+                  <div className={forms.actions}>
+                    <SendInvoiceButton invoiceId={invoice.id} sent={false} />
+                    <p className={forms.payoff}>Or, if they have paid already, record it here.</p>
+                  </div>
+                )}
+                {/* One place in the tree for the form, draft or not, so the
+                    message it shows after issuing a draft survives the refresh. */}
+                {outstanding > 0 ? (
                   <RecordPaymentForm
                     invoiceId={invoice.id}
                     outstanding={moneyInput(outstanding, invoice.currency)}
                     currency={invoice.currency}
-                    today={toDateInputValue(now)}
+                    today={todayInput()}
                   />
+                ) : (
+                  <p className={styles.note}>
+                    Nothing is owed. The receipts are listed above, ready to email or print.
+                  </p>
                 )}
               </section>
             )}
@@ -357,7 +352,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               {invoice.notes && <p className={styles.quote}>{invoice.notes}</p>}
               <div className={forms.actions}>
                 {invoice.status !== 'draft' && invoice.status !== 'void' && (
-                  <SendInvoiceButton invoiceId={invoice.id} sent={emailed > 0} />
+                  <SendInvoiceButton
+                    invoiceId={invoice.id}
+                    sent={emailed > 0}
+                    label={outstanding === 0 ? 'Email a copy' : undefined}
+                  />
                 )}
                 {invoice.status !== 'void' && invoice.paidMinor === 0 && (
                   <VoidInvoiceForm invoiceId={invoice.id} />

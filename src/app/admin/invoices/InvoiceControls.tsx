@@ -31,7 +31,16 @@ function Result({ state }: { state: BillingState }) {
   );
 }
 
-export function SendInvoiceButton({ invoiceId, sent }: { invoiceId: string; sent: boolean }) {
+export function SendInvoiceButton({
+  invoiceId,
+  sent,
+  label,
+}: {
+  invoiceId: string;
+  sent: boolean;
+  /** In place of Send / Send again, e.g. for a copy of a paid invoice. */
+  label?: string;
+}) {
   const [state, action, pending] = useActionState(sendInvoice, INITIAL);
 
   return (
@@ -39,10 +48,10 @@ export function SendInvoiceButton({ invoiceId, sent }: { invoiceId: string; sent
       <input type="hidden" name="invoiceId" value={invoiceId} />
       <button
         type="submit"
-        className={`${forms.button} ${sent ? forms.quiet : ''}`}
+        className={`${forms.button} ${sent || label ? forms.quiet : ''}`}
         disabled={pending}
       >
-        {pending ? 'Sending…' : sent ? 'Send again' : 'Send to the client'}
+        {pending ? 'Sending…' : (label ?? (sent ? 'Send again' : 'Send to the client'))}
       </button>
       <Result state={state} />
     </form>

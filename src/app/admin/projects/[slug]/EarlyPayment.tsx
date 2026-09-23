@@ -8,7 +8,7 @@ import {
   type BillingState,
   type EarlyPaymentState,
 } from '../../invoices/actions';
-import { formatMoney, moneyInput } from '@/lib/console/money';
+import { formatMoney, moneyInput, parseMoney } from '@/lib/console/money';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { DateField, SelectField, TextField } from '@/components/console/Fields';
 import type { BillableLine } from './RaiseInvoice';
@@ -27,15 +27,25 @@ export function EarlyPayment({
   projectId,
   lines,
   today,
+  vatBps,
+  reason,
 }: {
   projectId: string;
   lines: BillableLine[];
   today: string;
+  /** The VAT added on top, in basis points; 0 when none is charged. */
+  vatBps: number;
+  /** Why nothing can take a payment, when that is the case. */
+  reason: string;
 }) {
   const [state, action, pending] = useActionState(recordEarlyPayment, INITIAL);
   const [chosen, setChosen] = useState<string[]>([]);
   // The amount follows the fees picked until someone types their own.
   const [typed, setTyped] = useState<string | null>(null);
+  // Kept in state so a refused submission does not wipe them: React resets a
+  // form after its action runs, error or not.
+  const [method, setMethod] = useState('mobile_money');
+  const [reference, setReference] = useState('');
   const [done, setDone] = useState<EarlyPaymentState | null>(null);
   const [seen, setSeen] = useState(state);
   if (state !== seen) {
@@ -44,6 +54,7 @@ export function EarlyPayment({
       setDone(state);
       setChosen([]);
       setTyped(null);
+      setReference('');
     }
   }
 
@@ -51,25 +62,30 @@ export function EarlyPayment({
     return <Recorded state={done} onAnother={() => setDone(null)} />;
   }
 
-  if (lines.length === 0) {
-    return (
-      <p className={styles.note}>
-        Every priced fee is already on an invoice. Record the payment on that invoice instead.
-      </p>
-    );
-  }
+  if (lines.length === 0) return <p className={styles.note}>{reason}</p>;
 
   const picked = lines.filter((line) => chosen.includes(line.key));
   const currencies = [...new Set(picked.map((line) => line.currency))];
   const currency = currencies[0] ?? lines[0]!.currency;
-  const total = picked.reduce((sum, line) => sum + line.amountMinor, 0);
   const mixed = currencies.length > 1;
+  // The same sum and rounding the server uses, so the figure here is the
+  // invoice's total and a full payment is recorded as one.
+  const subtotal = mixed ? 0 : picked.reduce((sum, line) => sum + line.amountMinor, 0);
+  const vat = vatBps > 0 ? Math.round((subtotal * vatBps) / 10_000) : 0;
+  const total = subtotal + vat;
   const amount = typed ?? (total > 0 ? moneyInput(total, currency) : '');
+  const typedMinor = parseMoney(amount, currency);
+  const partial = total > 0 && typedMinor !== null && typedMinor > 0 && typedMinor < total;
 
-  const toggle = (key: string) =>
-    setChosen((current) =>
-      current.includes(key) ? current.filter((value) => value !== key) : [...current, key],
+  const toggle = (key: string) => {
+    const next = chosen.includes(key) ? chosen.filter((value) => value !== key) : [...chosen, key];
+    // A typed amount belongs to the fees it was typed for.
+    const nextCurrencies = new Set(
+      lines.filter((l) => next.includes(l.key)).map((l) => l.currency),
     );
+    if (!nextCurrencies.has(currency) || nextCurrencies.size !== 1) setTyped(null);
+    setChosen(next);
+  };
 
   return (
     <form action={action} className={forms.form}>
@@ -128,7 +144,7 @@ export function EarlyPayment({
           disabled={pending}
           hint={
             total > 0
-              ? `Those fees come to ${formatMoney(total, currency)}. Less is fine; the rest stays owed.`
+              ? `Those fees come to ${formatMoney(total, currency)}${vat > 0 ? `, with ${formatMoney(vat, currency)} VAT` : ''}. Less is fine; the rest stays owed.`
               : undefined
           }
         />
@@ -143,7 +159,8 @@ export function EarlyPayment({
         <SelectField
           name="method"
           label="How it arrived"
-          defaultValue="mobile_money"
+          value={method}
+          onChange={setMethod}
           disabled={pending}
         >
           {PAYMENT_METHODS.map((method) => (
@@ -158,6 +175,8 @@ export function EarlyPayment({
           optional
           maxLength={120}
           placeholder="M-Pesa transaction id or bank reference"
+          value={reference}
+          onChange={(event) => setReference(event.target.value)}
           disabled={pending}
         />
       </div>
@@ -179,7 +198,9 @@ export function EarlyPayment({
         <p className={forms.payoff}>
           {picked.length === 0
             ? 'Tick what the money is for.'
-            : 'Makes an invoice for these fees, marked paid, and a receipt you can send.'}
+            : partial
+              ? 'Makes an invoice for these fees, part paid, and a receipt you can send.'
+              : 'Makes an invoice for these fees, marked paid, and a receipt you can send.'}
         </p>
       </div>
 

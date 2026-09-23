@@ -35,6 +35,9 @@ class Overpaid extends Error {}
 /** Thrown inside the transaction when the invoice was voided while the form was open. */
 class Voided extends Error {}
 
+/** Thrown inside the transaction when the project or its client was removed meanwhile. */
+class Gone extends Error {}
+
 /**
  * Writes an invoice for fee lines, inside the caller's transaction.
  *
@@ -80,10 +83,7 @@ async function invoiceForBillables(
     });
     for (const line of oneOff) {
       const fee = current.find((row) => row.id === line.lineItemId);
-      const billed = (fee?.invoiceLines ?? []).reduce(
-        (t, l) => t + l.amountMinor * l.quantity,
-        0,
-      );
+      const billed = (fee?.invoiceLines ?? []).reduce((t, l) => t + l.amountMinor * l.quantity, 0);
       const left = fee ? fee.amountMinor * fee.quantity - billed : 0;
       if (line.amountMinor > left) throw new AlreadyBilled();
     }
@@ -150,11 +150,14 @@ async function pickBillables(projectId: string, chosen: string[]) {
 
   if (lines.length !== chosen.length) {
     return {
-      error: 'One of those can no longer be billed. It may have been invoiced already. Reload and try again.',
+      error:
+        'One of those can no longer be billed. It may have been invoiced already. Reload and try again.',
     } as const;
   }
   if (lines.some((line) => line.amountMinor === 0)) {
-    return { error: 'One of those lines has no price. An invoice cannot carry a blank amount.' } as const;
+    return {
+      error: 'One of those lines has no price. An invoice cannot carry a blank amount.',
+    } as const;
   }
 
   const currencies = [...new Set(lines.map((line) => line.currency))];
@@ -171,7 +174,13 @@ async function pickBillables(projectId: string, chosen: string[]) {
   const taxMinor =
     org.chargesVat && org.vatRateBps > 0 ? Math.round((subtotal * org.vatRateBps) / 10_000) : 0;
 
-  return { project, lines, currency: currencies[0]!, taxMinor, totalMinor: subtotal + taxMinor } as const;
+  return {
+    project,
+    lines,
+    currency: currencies[0]!,
+    taxMinor,
+    totalMinor: subtotal + taxMinor,
+  } as const;
 }
 
 /**
@@ -264,6 +273,7 @@ export async function sendInvoice(
       number: true,
       status: true,
       totalMinor: true,
+      paidMinor: true,
       currency: true,
       dueAt: true,
       client: {
@@ -314,6 +324,11 @@ export async function sendInvoice(
       clientName: invoice.client.name,
       number: invoice.number,
       total: formatMoney(invoice.totalMinor, invoice.currency),
+      paid: invoice.paidMinor > 0 ? formatMoney(invoice.paidMinor, invoice.currency) : null,
+      outstanding:
+        invoice.totalMinor - invoice.paidMinor > 0
+          ? formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)
+          : null,
       dueAt: invoice.dueAt,
       url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
     }),
@@ -323,14 +338,13 @@ export async function sendInvoice(
   });
 
   await db.$transaction(async (tx) => {
-    await tx.invoice.update({
-      where: { id: invoice.id },
-      // issuedAt is write-once: resending must not move the date the client was
-      // first asked, which is what any payment-terms calculation runs from.
-      data: {
-        status: invoice.status === 'draft' ? 'sent' : invoice.status,
-        issuedAt: invoice.status === 'draft' ? new Date() : undefined,
-      },
+    // Only a draft is issued here, judged at the moment of writing: the email
+    // took a while, and the invoice may have been voided or paid meanwhile. A
+    // void stays void, and issuedAt is write-once, because the date the client
+    // was first asked is what payment terms run from.
+    await tx.invoice.updateMany({
+      where: { id: invoice.id, status: 'draft' },
+      data: { status: 'sent', issuedAt: new Date() },
     });
     await recomputeInvoice(tx, invoice.id);
   });
@@ -375,7 +389,9 @@ function readPayment(formData: FormData, currency: string) {
     amountMinor,
     receivedAt,
     method: method as PaymentMethod,
-    reference: String(formData.get('reference') ?? '').trim().slice(0, 120),
+    reference: String(formData.get('reference') ?? '')
+      .trim()
+      .slice(0, 120),
     note: formText(formData, 'note').slice(0, 500),
   } as const;
 }
@@ -468,6 +484,14 @@ export async function recordEarlyPayment(
   try {
     result = await retryOnConflict(() =>
       db.$transaction(async (tx) => {
+        // Held until this commits, so removing the client or project waits
+        // for the payment, or the payment sees the removal and stops.
+        const live = await tx.$queryRaw<{ id: string }[]>`
+          SELECT p.id FROM "Project" p JOIN "Client" c ON c.id = p."clientId"
+          WHERE p.id = ${project.id} AND p."deletedAt" IS NULL AND c."deletedAt" IS NULL
+          FOR SHARE OF p, c`;
+        if (live.length === 0) throw new Gone();
+
         const invoice = await invoiceForBillables(tx, {
           project,
           lines,
@@ -494,10 +518,14 @@ export async function recordEarlyPayment(
         message: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.',
       };
     }
+    if (error instanceof Gone) {
+      return { status: 'error', message: 'That project was removed a moment ago.' };
+    }
     throw error;
   }
 
   const amount = formatMoney(read.amountMinor, currency);
+  const left = totalMinor - read.amountMinor;
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
@@ -521,7 +549,10 @@ export async function recordEarlyPayment(
   revalidatePath(`/admin/projects/${project.slug}`);
   return {
     status: 'done',
-    message: `${amount} recorded on ${result.invoice.number}. Receipt ${result.receipt.number} is ready.`,
+    message:
+      left > 0
+        ? `${amount} recorded on ${result.invoice.number}, with ${formatMoney(left, currency)} still owed on it. Receipt ${result.receipt.number} is ready.`
+        : `${amount} recorded on ${result.invoice.number}, paid in full. Receipt ${result.receipt.number} is ready.`,
     receipt: result.receipt,
     invoiceNumber: result.invoice.number,
   };
@@ -574,7 +605,7 @@ export async function recordPayment(
     };
   }
 
-  let receipt: { id: string; number: string };
+  let receipt: { id: string; number: string; wasDraft: boolean };
   try {
     receipt = await retryOnConflict(() =>
       db.$transaction(async (tx) => {
@@ -590,11 +621,26 @@ export async function recordPayment(
         if (amountMinor > fresh.totalMinor - fresh.paidMinor) throw new Overpaid();
 
         // Paid before it was sent: the payment is what issues it. A draft
-        // otherwise stays a draft whatever is paid against it.
-        if (fresh.status === 'draft') {
+        // otherwise stays a draft whatever is paid against it. What is left
+        // falls due in the usual fourteen days if its date has already gone.
+        const wasDraft = fresh.status === 'draft';
+        if (wasDraft) {
+          const leftOver = fresh.totalMinor - fresh.paidMinor - amountMinor > 0;
+          const fortnight = new Date();
+          fortnight.setDate(fortnight.getDate() + 14);
+          const current = await tx.invoice.findUniqueOrThrow({
+            where: { id: invoice.id },
+            select: { dueAt: true },
+          });
           await tx.invoice.update({
             where: { id: invoice.id },
-            data: { status: 'sent', issuedAt: fresh.issuedAt ?? new Date() },
+            data: {
+              status: 'sent',
+              issuedAt: fresh.issuedAt ?? new Date(),
+              ...(leftOver && (!current.dueAt || current.dueAt.getTime() < Date.now())
+                ? { dueAt: fortnight }
+                : {}),
+            },
           });
         }
 
@@ -609,7 +655,7 @@ export async function recordPayment(
           staffId: staff.id,
         });
         await recomputeInvoice(tx, invoice.id);
-        return created;
+        return { ...created, wasDraft };
       }),
     );
   } catch (error) {
@@ -635,15 +681,24 @@ export async function recordPayment(
     summary: `${formatMoney(amountMinor, invoice.currency)}, receipt ${receipt.number}`,
     metadata: { method, reference: reference || null },
   });
+  if (receipt.wasDraft) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'invoice.issued',
+      entityType: 'Invoice',
+      entityId: invoice.id,
+      summary: `${invoice.number}, issued by recording a payment`,
+    });
+  }
 
   revalidatePath(`/admin/invoices/${invoice.number}`);
   revalidatePath('/admin/invoices');
   return {
     status: 'done',
-    message:
-      invoice.status === 'draft'
-        ? `Recorded. The invoice is issued and receipt ${receipt.number} is ready.`
-        : `Recorded. Receipt ${receipt.number} issued.`,
+    message: receipt.wasDraft
+      ? `Recorded. The invoice is issued and receipt ${receipt.number} is ready.`
+      : `Recorded. Receipt ${receipt.number} issued.`,
   };
 }
 
@@ -697,16 +752,6 @@ export async function emailReceipt(
     };
   }
 
-  // Opens the receipt without a password, like an invoice link, because
-  // someone who paid before setting up their account has no way to sign in.
-  const { token } = await issueMagicToken({
-    purpose: 'invoice_access',
-    actorType: 'client_contact',
-    actorId: contact.id,
-    entityType: 'Path',
-    entityId: `/portal/receipts/${encodeURIComponent(receipt.number)}`,
-  });
-
   const sent = await sendConsoleEmail({
     to: contact.email,
     subject: `Receipt ${receipt.number} from Ubunifu Technologies`,
@@ -716,7 +761,10 @@ export async function emailReceipt(
       invoiceNumber: receipt.payment.invoice.number,
       amount: formatMoney(receipt.payment.amountMinor, receipt.payment.currency),
       issuedAt: receipt.issuedAt,
-      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      // The plain address, not a one-time sign-in: a receipt is kept and
+      // opened again, and forwarded to whoever keeps the books, and neither
+      // should hand them a session in the client's portal.
+      url: `${consoleEnv.publicOrigin}/portal/receipts/${encodeURIComponent(receipt.number)}`,
     }),
     template: 'receipt_sent',
     entityType: 'Receipt',
@@ -726,10 +774,12 @@ export async function emailReceipt(
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: 'receipt.sent',
+    action: sent.ok ? 'receipt.sent' : 'receipt.send_failed',
     entityType: 'Receipt',
     entityId: receipt.id,
-    summary: `${receipt.number} to ${contact.email}`,
+    summary: sent.ok
+      ? `${receipt.number} to ${contact.email}`
+      : `${receipt.number} to ${contact.email}: ${sent.error}`,
   });
 
   if (!sent.ok) {
@@ -776,14 +826,51 @@ export async function voidInvoice(
     };
   }
 
-  await db.invoice.update({
-    where: { id: invoice.id },
-    data: {
-      status: 'void',
-      voidedAt: new Date(),
-      notes: [invoice.notes, `Voided: ${reason}`].filter(Boolean).join('\n\n'),
-    },
+  const voided = await db.$transaction(async (tx) => {
+    // Conditional on nothing being paid at the moment of writing: a payment
+    // recorded while this form was open must not end up on a void invoice.
+    const { count } = await tx.invoice.updateMany({
+      where: { id: invoice.id, paidMinor: 0, status: { not: 'void' } },
+      data: {
+        status: 'void',
+        voidedAt: new Date(),
+        notes: [invoice.notes, `Voided: ${reason}`].filter(Boolean).join('\n\n'),
+      },
+    });
+    if (count === 0) return false;
+
+    // Renewal periods it billed can be billed again, and each line's next due
+    // date goes back to the period that is owed once more.
+    const periods = await tx.renewalEvent.findMany({
+      where: { invoiceId: invoice.id },
+      select: {
+        id: true,
+        periodStart: true,
+        periodEnd: true,
+        lineItem: { select: { id: true, nextDueAt: true } },
+      },
+    });
+    for (const period of periods) {
+      await tx.renewalEvent.update({
+        where: { id: period.id },
+        data: { status: 'pending', invoiceId: null },
+      });
+      if (period.lineItem.nextDueAt?.getTime() === period.periodEnd.getTime()) {
+        await tx.lineItem.update({
+          where: { id: period.lineItem.id },
+          data: { nextDueAt: period.periodStart },
+        });
+      }
+    }
+    return true;
   });
+  if (!voided) {
+    return {
+      status: 'error',
+      message:
+        'A payment was recorded on it a moment ago, so it cannot be voided. Reload to see it.',
+    };
+  }
 
   await recordAudit({
     actorType: 'staff',

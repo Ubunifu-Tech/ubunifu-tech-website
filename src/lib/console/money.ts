@@ -138,6 +138,16 @@ export function parseDateInput(value: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/**
+ * Today's date where the business is, for a date field's default and limit.
+ * The server runs in UTC, and in the first three hours of a Tanzanian morning
+ * UTC is still yesterday, so a payment that arrived at 1 a.m. would default to
+ * the day before and could not be dated today.
+ */
+export function todayInput(timeZone = 'Africa/Dar_es_Salaam'): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
+}
+
 /** For <input type="date">, which only ever speaks YYYY-MM-DD. */
 export function toDateInputValue(value: Date | null | undefined): string {
   if (!value) return '';

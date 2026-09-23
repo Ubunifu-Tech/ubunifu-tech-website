@@ -385,11 +385,16 @@ export function invoiceEmail(input: {
   clientName: string;
   number: string;
   total: string;
+  /** What has been received against it, or null when nothing has. */
+  paid?: string | null;
+  /** What is still owed, or null when it is settled. */
+  outstanding?: string | null;
   dueAt: Date | null;
   url: string;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
   const org = escapeHtml(input.clientName);
+  const strong = (value: string) => `<strong style="color:#1D1B22;">${escapeHtml(value)}</strong>`;
   const due = input.dueAt
     ? new Intl.DateTimeFormat('en-GB', {
         day: 'numeric',
@@ -398,17 +403,28 @@ export function invoiceEmail(input: {
         timeZone: 'UTC',
       }).format(input.dueAt)
     : null;
+  const settled = input.outstanding === null && Boolean(input.paid);
+
+  // Settled, part paid or not paid yet: each says only what is true of it. A
+  // copy of a paid invoice must not ask for the money again.
+  const standing = settled
+    ? `It is paid in full. This copy is for your records.`
+    : input.paid && input.outstanding
+      ? `We have received ${strong(input.paid)}, and ${strong(input.outstanding)} is still due${due ? ` by ${strong(due)}` : ''}.`
+      : due
+        ? `It is due by ${strong(due)}.`
+        : '';
+  const next = settled
+    ? 'Open it in your portal to see what it covered and the receipts for it.'
+    : 'Open it in your portal to see what it covers and how to pay. We will send a receipt as soon as the payment reaches us.';
 
   const body = `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Invoice ${escapeHtml(input.number)}</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. Here is invoice <strong style="color:#1D1B22;">${escapeHtml(input.number)}</strong>
-      for <strong style="color:#1D1B22;">${org}</strong>, for
-      <strong style="color:#1D1B22;">${escapeHtml(input.total)}</strong>${due ? `, due by <strong style="color:#1D1B22;">${escapeHtml(due)}</strong>` : ''}.
+      Hello ${name}. Here is invoice ${strong(input.number)} for ${org}, for ${strong(input.total)}. ${standing}
     </p>
     <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Open it in your portal to see what it covers and how to pay. We will send a
-      receipt as soon as the payment reaches us.
+      ${next}
     </p>
     ${button(input.url, 'View the invoice')}
     ${securityNote('30 days')}`;

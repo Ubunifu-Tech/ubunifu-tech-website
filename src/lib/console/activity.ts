@@ -130,6 +130,8 @@ const ACTION_LABELS: Record<string, string> = {
   'writer.updated': 'Writer details changed',
   'writer.archived': 'Writer taken off the list',
   'receipt.sent': 'Receipt sent',
+  'receipt.send_failed': 'Receipt email failed to send',
+  'invoice.issued': 'Invoice issued',
   'project.created': 'Project started',
   'staff.owner_created': 'Owner account created',
   'staff.sign_in.refused': 'Sign-in refused',

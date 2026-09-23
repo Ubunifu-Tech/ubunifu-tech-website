@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
+import { revokeAllSessions } from '@/lib/console/session';
 import {
   addContact,
   invitePerson,
@@ -154,8 +155,9 @@ export type SetupLinkState = {
  * known or not confirmed yet. It is the same one-time invitation the email
  * carries: it works once, lasts fourteen days, and asks them for their name,
  * email, phone and a password. Shown once here and never stored readable,
- * so a new one is made each time, and making one retires the earlier ones:
- * a link sent to a wrong number, or left in an old chat, stops working.
+ * so a new one is made each time, and making one retires the earlier ones
+ * and ends any setup they opened: a link sent to a wrong number, or left in
+ * an old chat, stops working even if it was already opened.
  */
 export async function createSetupLink(
   _previous: SetupLinkState,
@@ -187,8 +189,12 @@ export async function createSetupLink(
     return { status: 'error', message: 'Several links were made in the last hour. Try again later.' };
   }
 
-  // Only the newest link works, including over an emailed invitation.
-  await revokeMagicTokens('client_contact', contact.id, 'invite');
+  // Only the newest link works, including over an emailed invitation. They
+  // have not finished setup, so every session they hold was opened from an
+  // earlier link; ending those stops a link that was opened and left (or
+  // opened by whoever it reached by mistake) from finishing setup later.
+  await revokeMagicTokens('client_contact', contact.id, ['invite', 'sign_in']);
+  await revokeAllSessions('client_contact', contact.id);
   const { token } = await issueMagicToken({
     purpose: 'invite',
     actorType: 'client_contact',

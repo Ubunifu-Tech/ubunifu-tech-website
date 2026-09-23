@@ -3,8 +3,10 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getPendingContact, recordAudit } from '@/lib/console/auth';
+import { isUniqueConflict } from '@/lib/console/conflict';
 import { hashPassword, passwordProblem } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
+import { readSession, revokeAllSessions } from '@/lib/console/session';
 
 export type ActivateState = { status: 'idle' | 'error'; message?: string };
 
@@ -44,6 +46,9 @@ export async function activateAccount(
   }
   if (!actor.email) {
     // One portal account per address, so signing in is never ambiguous.
+    // Removed contacts do not count: they can no longer sign in. A removed
+    // contact on this same client still holds its address in the database,
+    // which the update below reports as a conflict.
     const taken = await db.clientContact.findFirst({
       where: { email, deletedAt: null, NOT: { id: actor.id } },
       select: { id: true },
@@ -63,23 +68,45 @@ export async function activateAccount(
     return { status: 'error', message: 'The two passwords do not match.' };
   }
 
-  await db.clientContact.update({
-    where: { id: actor.id },
-    data: {
-      name,
-      email,
-      phone: phone || null,
-      passwordHash: await hashPassword(password),
-      passwordSetAt: new Date(),
-      activatedAt: new Date(),
-      failedSignIns: 0,
-      lockedUntil: null,
-    },
-  });
+  let activated: number;
+  try {
+    // Conditional on setup not being finished, so two tabs or two devices on
+    // the same link cannot both choose the email and password.
+    const result = await db.clientContact.updateMany({
+      where: { id: actor.id, activatedAt: null, deletedAt: null, canSignIn: true },
+      data: {
+        name,
+        email,
+        phone: phone || null,
+        passwordHash: await hashPassword(password),
+        passwordSetAt: new Date(),
+        activatedAt: new Date(),
+        failedSignIns: 0,
+        lockedUntil: null,
+      },
+    });
+    activated = result.count;
+  } catch (error) {
+    if (!isUniqueConflict(error)) throw error;
+    return {
+      status: 'error',
+      message: 'That email belongs to someone else on your account. Use another, or ask us to sort it out.',
+    };
+  }
+  if (activated !== 1) {
+    return {
+      status: 'error',
+      message: 'This account has already been set up. Sign in to continue.',
+    };
+  }
 
-  // Any other invitation links still outstanding are now spent. An invitation
-  // that survives activation is a second way into an account with a password.
-  await revokeMagicTokens('client_contact', actor.id, 'sign_in');
+  // Any other setup, invitation or sign-in links still outstanding are now
+  // spent, and any other session opened from one of them ends here. Either
+  // would otherwise be a second way into an account that now has a password.
+  // The session that finished setup is the one kept.
+  await revokeMagicTokens('client_contact', actor.id, ['invite', 'sign_in']);
+  const session = await readSession('portal');
+  await revokeAllSessions('client_contact', actor.id, session?.sessionId);
 
   await recordAudit({
     actorType: 'client_contact',

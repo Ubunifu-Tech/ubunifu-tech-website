@@ -7,9 +7,10 @@
  *   CHECK_BASE=http://localhost:3000 npm run check:links
  *
  * It needs a running server and the database that server uses. It signs in
- * the way a person does, by following a one-time link: one for the first
+ * with a short session written straight to the database: one for the first
  * active owner, and one for the first client contact who has a portal
- * account. Those links are written straight to the database and used at once.
+ * account. A one-time link no longer signs anyone in on a GET (a link preview
+ * would spend it), so following one would not give this script a cookie.
  *
  * Only GET requests are made, and only to links that appear on pages. Sign-in
  * and sign-out routes are never followed.
@@ -42,26 +43,23 @@ const SKIP = [
   /\/api\//,
 ];
 
-async function mint(actorType: 'staff' | 'client_contact', actorId: string) {
+/** The cookie names in src/lib/console/session.ts, which cannot be imported outside Next. */
+const COOKIE = { admin: 'ubu_console_staff', portal: 'ubu_portal_client' } as const;
+
+/** A session that lasts long enough for one crawl, as a Cookie header. */
+async function signIn(actorType: 'staff' | 'client_contact', actorId: string, audience: 'admin' | 'portal') {
   const token = generateToken();
-  await db.magicToken.create({
+  await db.session.create({
     data: {
       tokenHash: hashToken(token),
-      purpose: 'sign_in',
       actorType,
       actorId,
-      expiresAt: new Date(Date.now() + 5 * 60_000),
+      audience,
+      userAgent: 'check-links',
+      expiresAt: new Date(Date.now() + 30 * 60_000),
     },
   });
-  return token;
-}
-
-/** Follows a sign-in link without following its redirect, and keeps the cookie. */
-async function signIn(url: string): Promise<string> {
-  const response = await fetch(url, { redirect: 'manual' });
-  const cookies = response.headers.getSetCookie().map((cookie) => cookie.split(';')[0]);
-  if (cookies.length === 0) throw new Error(`No session from ${url} (status ${response.status})`);
-  return cookies.join('; ');
+  return `${COOKIE[audience]}=${token}`;
 }
 
 type Result = { url: string; status: number; from: string; problem?: string };
@@ -130,14 +128,14 @@ const broken: Result[] = [];
 broken.push(...(await crawl(PUBLIC, ['/', '/contact', '/blog', '/build', '/work', '/about'], null, 'Website')));
 
 if (owner) {
-  const cookie = await signIn(`${ADMIN}/sign-in/verify?token=${await mint('staff', owner.id)}`);
+  const cookie = await signIn('staff', owner.id, 'admin');
   broken.push(...(await crawl(ADMIN, ['/'], cookie, 'Console')));
 } else {
   console.log('Console: skipped, no active owner in this database.');
 }
 
 if (client) {
-  const cookie = await signIn(`${PUBLIC}/portal/sign-in/verify?token=${await mint('client_contact', client.id)}`);
+  const cookie = await signIn('client_contact', client.id, 'portal');
   broken.push(...(await crawl(PUBLIC, ['/portal'], cookie, 'Portal')));
 } else {
   console.log('Portal: skipped, no client with a portal account in this database.');

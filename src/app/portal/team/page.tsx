@@ -83,8 +83,10 @@ export default async function PortalTeam() {
                           <span className={table.sub}>Last in {formatDate(person.lastSeenAt)}</span>
                         )}
                       </>
-                    ) : (
+                    ) : person.email ? (
                       <span className={`${forms.badge} ${forms.badgeWarn}`}>Invited</span>
+                    ) : (
+                      <span className={forms.badge}>No email yet</span>
                     )}
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
@@ -95,7 +97,8 @@ export default async function PortalTeam() {
                         activated={person.activatedAt !== null}
                         canSignIn={person.canSignIn && !person.activatedAt}
                         hidden={{}}
-                        invite={resendColleagueInvite}
+                        // Nothing to send an invitation to until they have an email.
+                        invite={person.email ? resendColleagueInvite : undefined}
                         makeMain={iAmMain ? handOverMain : undefined}
                         remove={iAmMain ? removeColleague : undefined}
                       />

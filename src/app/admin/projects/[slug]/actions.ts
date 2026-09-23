@@ -379,11 +379,17 @@ export async function publishUpdate(
   });
 
   const recipients = update.project.client.contacts;
+  // Somebody still setting up from a shared link has no email yet. They are
+  // not a failed send: nothing was tried, and they see it in the portal once
+  // they are in. Counting them as recipients reported an email failure with
+  // no reason anywhere.
+  const emailable = recipients.flatMap((contact) =>
+    contact.email ? [{ ...contact, email: contact.email }] : [],
+  );
+  const noEmail = recipients.filter((contact) => !contact.email).map((contact) => contact.name);
   let delivered = 0;
 
-  for (const contact of recipients) {
-    // Somebody still setting up from a shared link sees it in the portal.
-    if (!contact.email) continue;
+  for (const contact of emailable) {
     const sent = await sendConsoleEmail({
       to: contact.email,
       subject: `${update.project.name}: ${update.title}`,
@@ -409,16 +415,28 @@ export async function publishUpdate(
     });
   }
 
+  const unreached =
+    noEmail.length > 0
+      ? `${listNames(noEmail)} ${noEmail.length === 1 ? 'has' : 'have'} no email yet`
+      : null;
+
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: delivered === recipients.length ? 'project_update.sent' : 'project_update.send_failed',
+    action:
+      emailable.length === 0
+        ? 'project_update.published'
+        : delivered === emailable.length
+          ? 'project_update.sent'
+          : 'project_update.send_failed',
     entityType: 'ProjectUpdate',
     entityId: update.id,
     summary:
       recipients.length === 0
-        ? `${update.title}: published, but this client has nobody to email`
-        : `${update.title}: emailed ${delivered} of ${recipients.length}`,
+        ? `${update.title}: nobody on this client can receive email`
+        : emailable.length === 0
+          ? `${update.title}: nobody was emailed, ${unreached}`
+          : `${update.title}: emailed ${delivered} of ${emailable.length}${unreached ? `; ${unreached}` : ''}`,
   });
 
   revalidatePath(`/admin/projects/${update.project.slug}`);
@@ -429,13 +447,26 @@ export async function publishUpdate(
       message: 'Published to the portal. Nobody on this client can receive email, so nothing was sent.',
     };
   }
-  if (delivered < recipients.length) {
+  if (emailable.length === 0) {
     return {
-      status: 'error',
-      message: `Published and in their portal, but only ${delivered} of ${recipients.length} emails went out. See Activity for why.`,
+      status: 'done',
+      message: `Published to their portal. Nobody was emailed: ${unreached}.`,
     };
   }
-  return { status: 'done', message: `Published and emailed to ${delivered}.` };
+  const alsoUnreached = unreached ? ` ${unreached}, so ${noEmail.length === 1 ? 'was' : 'were'} not emailed.` : '';
+  if (delivered < emailable.length) {
+    return {
+      status: 'error',
+      message: `Published and in their portal, but only ${delivered} of ${emailable.length} emails went out. See Activity for why.${alsoUnreached}`,
+    };
+  }
+  return { status: 'done', message: `Published and emailed to ${delivered}.${alsoUnreached}` };
+}
+
+/** "Asha", "Asha and Baraka", "Asha, Baraka and Juma". */
+function listNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
 /**

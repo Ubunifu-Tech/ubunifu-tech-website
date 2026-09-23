@@ -1,6 +1,9 @@
-import { NextResponse, type NextRequest } from 'next/server';
+'use server';
+
+import { headers } from 'next/headers';
+import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { consoleEnv, isAdminHost, isStaffEmailAllowed } from '@/lib/console/env';
+import { isAdminHost, isStaffEmailAllowed } from '@/lib/console/env';
 import { consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
@@ -8,42 +11,29 @@ import { recordAudit } from '@/lib/console/auth';
 /**
  * Burns a staff sign-in link and starts a session.
  *
- * A GET that changes state is unusual, and deliberate: the link is followed
- * from an email client, which cannot POST. The protections that matter are that
- * the token is single-use, short-lived, and useless once consumed — so a link
- * sitting in an inbox or a proxy log cannot be replayed.
+ * Reached from the Continue button on the link's page, never from the link
+ * itself, so a mail scanner or a chat preview that fetches the URL cannot
+ * spend it first. The protections that matter are that the token is
+ * single-use, short-lived, and useless once consumed, so a link sitting in an
+ * inbox or a proxy log cannot be replayed.
  */
-export async function GET(request: NextRequest) {
-  // Defence in depth. Middleware only rewrites this path on the admin host, but
+export async function continueStaffLink(formData: FormData): Promise<void> {
+  // Defence in depth. The proxy only rewrites this path on the admin host, but
   // a session must never be mintable from the public origin.
-  if (!isAdminHost(request.headers.get('host'))) {
-    return new NextResponse(null, { status: 404 });
-  }
+  if (!isAdminHost((await headers()).get('host'))) notFound();
 
-  const token = request.nextUrl.searchParams.get('token');
-  const signIn = new URL('/sign-in', consoleEnv.adminOrigin);
-
-  if (!token) {
-    signIn.searchParams.set('error', 'missing');
-    return NextResponse.redirect(signIn);
-  }
+  const token = String(formData.get('token') ?? '');
+  if (!token) redirect('/sign-in?error=missing');
 
   // An invitation is a first sign-in with a longer life, so both are accepted.
   const claim = await consumeMagicToken(token, ['sign_in', 'invite']);
-  if (!claim || claim.actorType !== 'staff') {
-    signIn.searchParams.set('error', 'expired');
-    return NextResponse.redirect(signIn);
-  }
+  if (!claim || claim.actorType !== 'staff') redirect('/sign-in?error=expired');
 
   const staff = await db.staffUser.findUnique({ where: { id: claim.actorId } });
 
   // Re-checked at the moment of use, not only when the link was sent. An
   // address removed from the allowlist in the meantime cannot still walk in.
-  if (
-    !staff ||
-    !staff.isActive ||
-    !isStaffEmailAllowed(staff.email)
-  ) {
+  if (!staff || !staff.isActive || !isStaffEmailAllowed(staff.email)) {
     await recordAudit({
       actorType: 'system',
       action: 'staff.sign_in.rejected_at_use',
@@ -51,8 +41,7 @@ export async function GET(request: NextRequest) {
       entityId: claim.actorId,
       summary: 'Account inactive or no longer on the allowlist',
     });
-    signIn.searchParams.set('error', 'expired');
-    return NextResponse.redirect(signIn);
+    redirect('/sign-in?error=expired');
   }
 
   await createSession({ actorType: 'staff', actorId: staff.id, audience: 'admin' });
@@ -68,5 +57,5 @@ export async function GET(request: NextRequest) {
     entityId: staff.id,
   });
 
-  return NextResponse.redirect(new URL('/', consoleEnv.adminOrigin));
+  redirect('/');
 }

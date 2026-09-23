@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getClientActor } from '@/lib/console/auth';
+import { getClientActor, getPendingContact } from '@/lib/console/auth';
 import { AuthLayout } from '@/components/console/AuthLayout';
 import { SignInForms } from './SignInForms';
 import { safePortalPath } from '@/lib/console/return-path';
@@ -17,6 +17,7 @@ const LINK_PROBLEM: Record<string, string> = {
     'That link has expired or was already used. Sign in below, or get a new link.',
   missing:
     'That link was incomplete. Sign in below, or get a new link.',
+  'set-up': 'Your account is already set up. Sign in below.',
 };
 
 export default async function PortalSignIn({
@@ -31,6 +32,10 @@ export default async function PortalSignIn({
   if (actor) {
     redirect(actor.isActivated ? (next ?? '/portal') : '/portal/activate');
   }
+  // Somebody part way through setting up from a shared link may have no email
+  // yet, so this form is no use to them; their session can still finish it.
+  const pending = await getPendingContact();
+  if (pending && !pending.isActivated) redirect('/portal/activate');
 
   const problem = error ? LINK_PROBLEM[error] : undefined;
 

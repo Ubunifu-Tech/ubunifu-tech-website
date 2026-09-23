@@ -38,24 +38,29 @@ export function ActivateForm({
         </div>
 
         <div className={forms.field}>
-          <label htmlFor="email" className={forms.label}>
-            Email
-          </label>
+          {/* A label only when there is a field to fill in; a known address
+              is plain text, and a label pointing at it would name nothing. */}
           {email ? (
-            <p className={forms.hint} id="email">
-              You will sign in with {email}.
-            </p>
+            <>
+              <span className={forms.label}>Email</span>
+              <p className={forms.hint}>You will sign in with {email}.</p>
+            </>
           ) : (
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              maxLength={254}
-              disabled={pending}
-              className={forms.control}
-            />
+            <>
+              <label htmlFor="email" className={forms.label}>
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                maxLength={254}
+                disabled={pending}
+                className={forms.control}
+              />
+            </>
           )}
         </div>
 

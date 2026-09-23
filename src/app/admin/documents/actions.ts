@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { advanceForDocument } from '@/lib/console/transitions';
-import { DocumentKind } from '@/generated/prisma/client';
+import { DocumentKind, type ProjectStatus } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
@@ -396,6 +396,9 @@ export async function sendForSignature(
   const documentHash = hashDocument(prepared.final);
 
   let request: { id: string; version: number };
+  // Set inside the transaction below; the cast stops TypeScript assuming it
+  // stays null, since it cannot see assignments made in a callback.
+  let moved = null as { from: ProjectStatus; to: ProjectStatus } | null;
   try {
     request = await db.$transaction(async (tx) => {
     // One send at a time per document, and against the version that was
@@ -452,7 +455,7 @@ export async function sendForSignature(
     });
 
     // A proposal or agreement going out moves the project on to match.
-    await advanceForDocument(tx, {
+    moved = await advanceForDocument(tx, {
       projectId: document.project.id,
       kind: document.kind,
       milestone: 'sent',
@@ -471,6 +474,17 @@ export async function sendForSignature(
       };
     }
     throw error;
+  }
+
+  if (moved) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'project.status_changed',
+      entityType: 'Project',
+      entityId: document.project.id,
+      summary: `${moved.from} → ${moved.to}, when ${document.reference} was sent`,
+    });
   }
 
   const { token } = await issueMagicToken({

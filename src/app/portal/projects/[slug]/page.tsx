@@ -219,62 +219,75 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
                 </span>
               </div>
               <ul className={styles.needList}>
-                {project.assetRequests.map((request) => (
-                  <li key={request.id} className={styles.needItem}>
-                    <span className={styles.itemStatus}>
-                      <span className={styles.needTitle}>{request.title}</span>
-                      <span
-                        className={`${forms.badge} ${
-                          request.status === 'received'
-                            ? forms.badgeGood
+                {project.assetRequests.map((request) => {
+                  // Something that arrived as a file needs no empty answer
+                  // box. Something answered in writing can still take a file
+                  // ("the photo follows"), so it keeps the upload box.
+                  const showAnswer = request.status !== 'received' || request.response !== null;
+                  const showUpload = canUpload && showAnswer;
+                  return (
+                    <li key={request.id} className={styles.needItem}>
+                      <span className={styles.itemStatus}>
+                        <span className={styles.needTitle}>{request.title}</span>
+                        <span
+                          className={`${forms.badge} ${
+                            request.status === 'received'
+                              ? forms.badgeGood
+                              : request.status === 'blocked'
+                                ? forms.badgeBad
+                                : forms.badgeWarn
+                          }`}
+                        >
+                          {request.status === 'received'
+                            ? 'Received'
                             : request.status === 'blocked'
-                              ? forms.badgeBad
-                              : forms.badgeWarn
-                        }`}
-                      >
-                        {request.status === 'received'
-                          ? 'Received'
-                          : request.status === 'blocked'
-                            ? 'On hold'
-                            : 'Needed'}
+                              ? 'On hold'
+                              : 'Needed'}
+                        </span>
                       </span>
-                    </span>
-                    {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
+                      {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
 
-                    <AnswerBox assetRequestId={request.id} response={request.response} />
+                      {showAnswer && (
+                        <AnswerBox
+                          assetRequestId={request.id}
+                          response={request.response}
+                          canAttach={showUpload}
+                        />
+                      )}
 
-                    {request.uploads.length > 0 && (
-                      <ul className={styles.fileList}>
-                        {request.uploads.map((file) => (
-                          <li key={file.id} className={styles.fileRow}>
-                            <a href={`/portal/files/${file.id}`}>{file.filename}</a>
-                            <span className={styles.fileMeta}>
-                              {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                      {request.uploads.length > 0 && (
+                        <ul className={styles.fileList}>
+                          {request.uploads.map((file) => (
+                            <li key={file.id} className={styles.fileRow}>
+                              <a href={`/portal/files/${file.id}`}>{file.filename}</a>
+                              <span className={styles.fileMeta}>
+                                {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
-                    {request.status !== 'received' && people.length > 2 && (
-                      <ItemOwner
-                        id={request.id}
-                        title={request.title}
-                        assigneeId={request.assigneeId ?? ''}
-                        people={people}
-                      />
-                    )}
+                      {request.status !== 'received' && people.length > 2 && (
+                        <ItemOwner
+                          id={request.id}
+                          title={request.title}
+                          assigneeId={request.assigneeId ?? ''}
+                          people={people}
+                        />
+                      )}
 
-                    {canUpload && request.status !== 'received' && (
-                      <UploadBox
-                        assetRequestId={request.id}
-                        accept={ALLOWED_CONTENT_TYPES.join(',')}
-                        maxBytes={MAX_UPLOAD_BYTES}
-                        hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)}.`}
-                      />
-                    )}
-                  </li>
-                ))}
+                      {showUpload && (
+                        <UploadBox
+                          assetRequestId={request.id}
+                          accept={ALLOWED_CONTENT_TYPES.join(',')}
+                          maxBytes={MAX_UPLOAD_BYTES}
+                          hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)}.`}
+                        />
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
               <p className={styles.note}>
                 {canUpload

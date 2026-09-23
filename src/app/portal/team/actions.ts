@@ -60,6 +60,9 @@ export async function resendColleagueInvite(_previous: TeamState, formData: Form
     select: { id: true, name: true, email: true, activatedAt: true },
   });
   if (!contact) return { status: 'error', message: 'They are not on your account.' };
+  if (!contact.email) {
+    return { status: 'error', message: `${contact.name} has no email yet. Ask us for their setup link.` };
+  }
   if (!(await allow('client-invite', contact.id, { limit: 3, windowMinutes: 60 }))) {
     return { status: 'error', message: 'A link went out recently. Give it a few minutes.' };
   }

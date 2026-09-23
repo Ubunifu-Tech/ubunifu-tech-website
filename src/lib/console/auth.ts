@@ -130,8 +130,9 @@ export async function requireStaffRole(minimum: StaffRole): Promise<StaffActor> 
 /**
  * The person on a portal session who has not finished setting up: from an
  * invitation or a setup link shared by hand, possibly with no email address
- * yet. Only the setup page and its action use this; everything else needs a
- * finished account and goes through getClientActor.
+ * yet. The setup page and its action use this, and the sign-in page and
+ * requireClient use it to send such a person back to setup; everything else
+ * needs a finished account and goes through getClientActor.
  */
 export async function getPendingContact(): Promise<{
   id: string;
@@ -205,6 +206,10 @@ export async function getClientActor(): Promise<ClientActor | null> {
 export async function requireClient(): Promise<ClientActor> {
   const client = await getClientActor();
   if (!client) {
+    // Part way through setting up, possibly with no email to sign in with:
+    // back to setup, which their session can still finish.
+    const pending = await getPendingContact();
+    if (pending && !pending.isActivated) redirect('/portal/activate');
     // Back to the page they asked for once they are in.
     const next = safePortalPath((await headers()).get('x-portal-path'));
     redirect(

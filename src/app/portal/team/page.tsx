@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { formatDate } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
-import { AddPerson, PersonActions } from '@/components/console/People';
+import { AddPerson, PersonMenu } from '@/components/console/People';
 import { handOverMain, inviteColleague, removeColleague, resendColleagueInvite } from './actions';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -51,8 +51,12 @@ export default async function PortalTeam() {
           <table className={table.table}>
             <thead>
               <tr>
-                <th className={table.th} scope="col">Person</th>
-                <th className={table.th} scope="col">Portal</th>
+                <th className={table.th} scope="col">
+                  Person
+                </th>
+                <th className={table.th} scope="col">
+                  Portal
+                </th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className="srOnly">Actions</span>
                 </th>
@@ -91,14 +95,20 @@ export default async function PortalTeam() {
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
                     {person.id !== actor.id && (
-                      <PersonActions
-                        contactId={person.id}
-                        isPrimary={person.isPrimary}
-                        activated={person.activatedAt !== null}
-                        canSignIn={person.canSignIn && !person.activatedAt}
+                      <PersonMenu
+                        contact={{
+                          id: person.id,
+                          name: person.name,
+                          email: person.email,
+                          role: person.role,
+                          phone: null,
+                          isPrimary: person.isPrimary,
+                          activated: person.activatedAt !== null,
+                          // Resending only makes sense before they have set up.
+                          canSignIn: person.canSignIn && !person.activatedAt,
+                        }}
                         hidden={{}}
-                        // Nothing to send an invitation to until they have an email.
-                        invite={person.email ? resendColleagueInvite : undefined}
+                        invite={resendColleagueInvite}
                         makeMain={iAmMain ? handOverMain : undefined}
                         remove={iAmMain ? removeColleague : undefined}
                       />
@@ -113,7 +123,9 @@ export default async function PortalTeam() {
 
       <p className={`${styles.note} ${styles.after}`}>
         The main contact signs agreements and receives invoices.
-        {iAmMain ? ' That is you.' : ' Ask them to add or remove people, or invite colleagues yourself.'}
+        {iAmMain
+          ? ' That is you.'
+          : ' Ask them to add or remove people, or invite colleagues yourself.'}
       </p>
     </main>
   );

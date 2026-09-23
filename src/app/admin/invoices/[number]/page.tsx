@@ -5,15 +5,10 @@ import { requirePermission } from '@/lib/console/auth';
 import { liveInvoice } from '@/lib/console/live';
 import { activityFor } from '@/lib/console/activity';
 import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-labels';
-import {
-  formatMoney,
-  formatShortDate,
-  moneyInput,
-  toDateInputValue,
-} from '@/lib/console/money';
+import { formatMoney, formatShortDate, moneyInput, toDateInputValue } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
-  EmailReceiptButton,
+  ReceiptMenu,
   RecordPaymentForm,
   SendInvoiceButton,
   VoidInvoiceForm,
@@ -37,12 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
   return { title: decodeURIComponent(number) };
 }
 
-
-export default async function InvoicePage({
-  params,
-}: {
-  params: Promise<{ number: string }>;
-}) {
+export default async function InvoicePage({ params }: { params: Promise<{ number: string }> }) {
   await requirePermission('invoices');
   const { number } = await params;
   const now = new Date();
@@ -122,9 +112,7 @@ export default async function InvoicePage({
             {invoice.project && (
               <span>
                 <span className={styles.factLabel}>Project</span>{' '}
-                <Link href={`/projects/${invoice.project.slug}`}>
-                  {invoice.project.reference}
-                </Link>
+                <Link href={`/projects/${invoice.project.slug}`}>{invoice.project.reference}</Link>
               </span>
             )}
             <span>
@@ -136,15 +124,18 @@ export default async function InvoicePage({
             </span>
           </p>
         </div>
-<div className={styles.headActions}>
+        <div className={styles.headActions}>
           {invoice.status !== 'void' && (
-            <Link href={`/invoices/${invoice.number}/print`} className={`${forms.button} ${forms.quiet}`}>
+            <Link
+              href={`/invoices/${invoice.number}/print`}
+              className={`${forms.button} ${forms.quiet}`}
+            >
               Print or save as PDF
             </Link>
           )}
-                  <span className={`${forms.badge} ${STATUS_BADGE[invoice.status]}`}>
-          {INVOICE_STATUS_LABEL[invoice.status]}
-        </span>
+          <span className={`${forms.badge} ${STATUS_BADGE[invoice.status]}`}>
+            {INVOICE_STATUS_LABEL[invoice.status]}
+          </span>
         </div>
       </div>
 
@@ -180,18 +171,22 @@ export default async function InvoicePage({
           <div className={table.toolbar}>
             <div className={table.toolbarText}>
               <h2 className={table.title}>What this covers</h2>
-              <span className={table.count}>
-                As raised
-              </span>
+              <span className={table.count}>As raised</span>
             </div>
           </div>
           <div className={table.scroll}>
             <table className={`${table.table} ${table.compact}`}>
               <thead>
                 <tr>
-                  <th className={table.th} scope="col">Item</th>
-                  <th className={`${table.th} ${table.numericHead}`} scope="col">Qty</th>
-                  <th className={`${table.th} ${table.numericHead}`} scope="col">Amount</th>
+                  <th className={table.th} scope="col">
+                    Item
+                  </th>
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">
+                    Qty
+                  </th>
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">
+                    Amount
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -224,21 +219,31 @@ export default async function InvoicePage({
           <div className={table.toolbar}>
             <div className={table.toolbarText}>
               <h2 className={table.title}>Payments and receipts</h2>
-              <span className={table.count}>
-                Every recorded payment issues a numbered receipt
-              </span>
+              <span className={table.count}>Every recorded payment issues a numbered receipt</span>
             </div>
           </div>
           <div className={table.scroll}>
             <table className={`${table.table} ${table.compact}`}>
               <thead>
                 <tr>
-                  <th className={table.th} scope="col">Receipt</th>
-                  <th className={table.th} scope="col">Received</th>
-                  <th className={table.th} scope="col">How</th>
-                  <th className={table.th} scope="col">Reference</th>
-                  <th className={table.th} scope="col">Recorded by</th>
-                  <th className={`${table.th} ${table.numericHead}`} scope="col">Amount</th>
+                  <th className={table.th} scope="col">
+                    Receipt
+                  </th>
+                  <th className={table.th} scope="col">
+                    Received
+                  </th>
+                  <th className={table.th} scope="col">
+                    How
+                  </th>
+                  <th className={table.th} scope="col">
+                    Reference
+                  </th>
+                  <th className={table.th} scope="col">
+                    Recorded by
+                  </th>
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">
+                    Amount
+                  </th>
                   <th className={`${table.th} ${table.actionsHead}`} scope="col">
                     <span className={table.muted}>Actions</span>
                   </th>
@@ -249,9 +254,7 @@ export default async function InvoicePage({
                   <tr>
                     <td className={table.emptyCell} colSpan={7}>
                       <p className={table.emptyTitle}>Nothing received yet.</p>
-                      <p className={table.emptyHint}>
-                        No payments recorded yet.
-                      </p>
+                      <p className={table.emptyHint}>No payments recorded yet.</p>
                     </td>
                   </tr>
                 ) : (
@@ -259,10 +262,7 @@ export default async function InvoicePage({
                     <tr key={payment.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
                         {payment.receipt ? (
-                          <Link
-                            href={`/receipts/${payment.receipt.number}`}
-                            className={table.link}
-                          >
+                          <Link href={`/receipts/${payment.receipt.number}`} className={table.link}>
                             {payment.receipt.number}
                           </Link>
                         ) : (
@@ -286,15 +286,10 @@ export default async function InvoicePage({
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
                         {payment.receipt && (
-                          <span className={table.actionGroup}>
-                            <Link
-                              href={`/receipts/${payment.receipt.number}`}
-                              className={table.action}
-                            >
-                              View
-                            </Link>
-                            <EmailReceiptButton receiptId={payment.receipt.id} />
-                          </span>
+                          <ReceiptMenu
+                            receiptId={payment.receipt.id}
+                            number={payment.receipt.number}
+                          />
                         )}
                       </td>
                     </tr>

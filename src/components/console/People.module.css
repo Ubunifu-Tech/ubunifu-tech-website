@@ -14,37 +14,7 @@
   background: color-mix(in srgb, var(--app-bg) 60%, white);
 }
 
-.actions {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  white-space: nowrap;
-}
-
-.inline {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.confirm {
-  color: var(--text-secondary);
-  font-size: var(--font-size-caption);
-}
-
-.danger {
-  color: var(--tone-red-fg);
-}
-
-/* The panel a person's details are corrected in, opened from their row. */
-.editPanel {
-  z-index: 80;
-  width: min(22rem, calc(100vw - 2rem));
-  padding: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--app-radius-card);
-  background: var(--surface);
-  box-shadow: var(--app-shadow-pop);
+/* Back to the list from a setup link. */
+.back {
+  margin-top: var(--space-3);
 }

@@ -8,7 +8,7 @@ import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/mone
 import { liveEnquiry } from '@/lib/console/live';
 import { clientRemovalCounts } from '@/lib/console/removal';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
-import { AddPerson, EditPerson, PersonActions } from '@/components/console/People';
+import { AddPerson, PersonMenu } from '@/components/console/People';
 import {
   addClientContact,
   inviteContact,
@@ -403,33 +403,24 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                       )}
                     </td>
                     <td className={`${table.td} ${table.actions}`}>
-                      {mayManage && !contact.activatedAt && contact.canSignIn && (
-                        <SetupLink contactId={contact.id} />
-                      )}
                       {mayManage && (
-                        <EditPerson
+                        <PersonMenu
                           contact={{
                             id: contact.id,
                             name: contact.name,
                             email: contact.email,
                             role: contact.role,
                             phone: contact.phone,
+                            isPrimary: contact.isPrimary,
                             activated: contact.activatedAt !== null,
+                            canSignIn: contact.canSignIn,
                           }}
                           hidden={{ clientId: client.id }}
-                          action={saveClientContact}
-                        />
-                      )}
-                      {mayManage && (
-                        <PersonActions
-                          contactId={contact.id}
-                          isPrimary={contact.isPrimary}
-                          activated={contact.activatedAt !== null}
-                          canSignIn={contact.canSignIn}
-                          hidden={{ clientId: client.id }}
-                          invite={contact.email ? inviteContact : undefined}
+                          edit={saveClientContact}
+                          invite={inviteContact}
                           makeMain={setMainContact}
                           remove={removeClientContact}
+                          setupLink={<SetupLink contactId={contact.id} name={contact.name} />}
                         />
                       )}
                     </td>

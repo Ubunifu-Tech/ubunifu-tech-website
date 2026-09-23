@@ -14,6 +14,7 @@ import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { Select } from '@/components/console/Select';
+import { MenuItem, MenuLink, MenuList, MenuNote, RowMenu } from '@/components/console/RowMenu';
 
 const INITIAL: BillingState = { status: 'idle' };
 
@@ -101,12 +102,12 @@ export function RecordPaymentForm({
             How it arrived
           </label>
           <Select
-              id="pay-method"
-              name="method"
-              defaultValue="bank_transfer"
-              options={PAYMENT_METHODS}
-              disabled={pending}
-            />
+            id="pay-method"
+            name="method"
+            defaultValue="bank_transfer"
+            options={PAYMENT_METHODS}
+            disabled={pending}
+          />
         </div>
 
         <div className={forms.field}>
@@ -131,9 +132,7 @@ export function RecordPaymentForm({
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Recording…' : 'Record the payment'}
         </button>
-        <p className={forms.payoff}>
-          Issues a numbered receipt straight away.
-        </p>
+        <p className={forms.payoff}>Issues a numbered receipt straight away.</p>
       </div>
       <Result state={state} />
     </form>
@@ -155,6 +154,27 @@ export function EmailReceiptButton({ receiptId }: { receiptId: string }) {
         </span>
       )}
     </form>
+  );
+}
+
+/** A payment's receipt, behind the "…" on its row: open it, or email it. */
+export function ReceiptMenu({ receiptId, number }: { receiptId: string; number: string }) {
+  const [state, action, pending] = useActionState(emailReceipt, INITIAL);
+  return (
+    <RowMenu label={`Receipt ${number}`}>
+      <MenuList>
+        <MenuLink href={`/receipts/${number}`}>View the receipt</MenuLink>
+        <form action={action}>
+          <input type="hidden" name="receiptId" value={receiptId} />
+          <MenuItem type="submit" disabled={pending}>
+            {pending ? 'Sending…' : 'Email the receipt'}
+          </MenuItem>
+        </form>
+      </MenuList>
+      {state.message && (
+        <MenuNote tone={state.status === 'error' ? 'bad' : 'quiet'}>{state.message}</MenuNote>
+      )}
+    </RowMenu>
   );
 }
 

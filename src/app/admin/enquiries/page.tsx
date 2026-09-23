@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
 import { TriageControls } from './TriageControls';
+import { MenuLink, MenuList, RowMenu } from '@/components/console/RowMenu';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -94,9 +95,15 @@ export default async function EnquiriesPage({
         db.enquiry.count({ where: { AND: [liveEnquiry, filterToWhere(filter.key), matching] } }),
       ),
     ),
-    db.enquiry.count({ where: { ...liveEnquiry, createdAt: { gte: weekAgo }, status: { not: 'spam' } } }),
     db.enquiry.count({
-      where: { ...liveEnquiry, createdAt: { gte: twoWeeksAgo, lt: weekAgo }, status: { not: 'spam' } },
+      where: { ...liveEnquiry, createdAt: { gte: weekAgo }, status: { not: 'spam' } },
+    }),
+    db.enquiry.count({
+      where: {
+        ...liveEnquiry,
+        createdAt: { gte: twoWeeksAgo, lt: weekAgo },
+        status: { not: 'spam' },
+      },
     }),
   ]);
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
@@ -156,8 +163,8 @@ export default async function EnquiriesPage({
             What has <span className={styles.headingAccent}>come in</span>
           </h1>
           <p className={styles.lead}>
-            Messages from the website form and the chat. {thisWeek} this week,{' '}
-            {weekBefore} the week before.
+            Messages from the website form and the chat. {thisWeek} this week, {weekBefore} the week
+            before.
           </p>
         </div>
       </div>
@@ -177,11 +184,21 @@ export default async function EnquiriesPage({
             <table className={table.table}>
               <thead>
                 <tr>
-                  <th className={table.th} scope="col">From</th>
-                  <th className={table.th} scope="col">About</th>
-                  <th className={table.th} scope="col">Message</th>
-                  <th className={table.th} scope="col">Stage</th>
-                  <th className={table.th} scope="col">Received</th>
+                  <th className={table.th} scope="col">
+                    From
+                  </th>
+                  <th className={table.th} scope="col">
+                    About
+                  </th>
+                  <th className={table.th} scope="col">
+                    Message
+                  </th>
+                  <th className={table.th} scope="col">
+                    Stage
+                  </th>
+                  <th className={table.th} scope="col">
+                    Received
+                  </th>
                   <th className={`${table.th} ${table.actionsHead}`} scope="col">
                     <span className={table.muted}>Actions</span>
                   </th>
@@ -243,36 +260,30 @@ export default async function EnquiriesPage({
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(enquiry.createdAt)}
-                        <span className={table.sub}>
-                          {formatRelative(enquiry.createdAt, now)}
-                        </span>
+                        <span className={table.sub}>{formatRelative(enquiry.createdAt, now)}</span>
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        <span className={table.actionGroup}>
-                          {enquiry.status === 'converted' ? (
-                            <span className={table.muted}>Onboarded</span>
-                          ) : (
-                            <>
-                              <Link
+                        {enquiry.status === 'converted' ? (
+                          <span className={table.muted}>Onboarded</span>
+                        ) : (
+                          <RowMenu label={`Actions for ${enquiry.name}`}>
+                            <MenuList>
+                              <MenuLink
                                 href={
                                   expanded?.id === enquiry.id
                                     ? `/enquiries?show=${active}${keepQuery}`
                                     : `/enquiries?show=${active}&open=${enquiry.id}${keepQuery}`
                                 }
-                                className={table.action}
                                 scroll={false}
                               >
-                                {expanded?.id === enquiry.id ? 'Close' : 'Triage'}
-                              </Link>
-                              <Link
-                                href={`/clients/new?enquiry=${enquiry.id}`}
-                                className={table.action}
-                              >
-                                Onboard
-                              </Link>
-                            </>
-                          )}
-                        </span>
+                                {expanded?.id === enquiry.id ? 'Close triage' : 'Triage'}
+                              </MenuLink>
+                              <MenuLink href={`/clients/new?enquiry=${enquiry.id}`}>
+                                Onboard as a client
+                              </MenuLink>
+                            </MenuList>
+                          </RowMenu>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -280,7 +291,12 @@ export default async function EnquiriesPage({
               </tbody>
             </table>
           </div>
-          <ListFooter shown={enquiries.length} total={total} noun={['enquiry', 'enquiries']} query={query} />
+          <ListFooter
+            shown={enquiries.length}
+            total={total}
+            noun={['enquiry', 'enquiries']}
+            query={query}
+          />
         </div>
 
         {/* Triage opens beneath the table rather than inside a row: a note box
@@ -300,9 +316,7 @@ export default async function EnquiriesPage({
               <>
                 <div className={`${forms.cardHeader} ${styles.spaced}`}>
                   <h3 className={forms.cardTitle}>What they said in the chat</h3>
-                  <span className={forms.cardMeta}>
-                    The whole conversation
-                  </span>
+                  <span className={forms.cardMeta}>The whole conversation</span>
                 </div>
                 <ul className={styles.thread}>
                   {expanded.conversations[0].messages
@@ -364,7 +378,10 @@ export default async function EnquiriesPage({
                 >
                   Start a project for {returning.client.name}
                 </Link>
-                <Link href={`/clients/new?enquiry=${expanded.id}`} className={`${forms.button} ${forms.quiet}`}>
+                <Link
+                  href={`/clients/new?enquiry=${expanded.id}`}
+                  className={`${forms.button} ${forms.quiet}`}
+                >
                   Add as a new client instead
                 </Link>
                 <p className={forms.payoff}>{expanded.email} is already one of their contacts.</p>
@@ -375,7 +392,8 @@ export default async function EnquiriesPage({
                   Make them a client
                 </Link>
                 <p className={forms.payoff}>
-                  Their name, email and message are filled in. You can start the project in the same step.
+                  Their name, email and message are filled in. You can start the project in the same
+                  step.
                 </p>
               </div>
             )}

@@ -14,23 +14,6 @@
   flex-wrap: wrap;
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.danger {
-  color: var(--tone-red-fg);
-}
-
-.confirmText {
-  color: var(--text-secondary);
-  font-size: var(--font-size-caption);
-}
-
 .person {
   display: flex;
   min-width: 0;

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useActionState, useState } from 'react';
-import * as Popover from '@radix-ui/react-popover';
 import { UserPlus } from 'lucide-react';
 import { TextField } from './Fields';
+import { MenuDivider, MenuItem, MenuList, MenuNote, MenuTitle, RowMenu } from './RowMenu';
 import forms from '@/styles/forms.module.css';
 import styles from './People.module.css';
 
@@ -144,105 +144,22 @@ export function AddPerson({
   );
 }
 
-export function PersonActions({
-  contactId,
-  isPrimary,
-  activated,
-  canSignIn,
+type PersonView = 'menu' | 'edit' | 'setup' | 'remove';
+
+/**
+ * Everything that can be done to one person, behind the "…" on their row:
+ * change their details, make a setup link, send an invitation or a sign-in
+ * link, make them the main contact, or remove them. Choices that need more
+ * than a press turn the panel into their form or question.
+ */
+export function PersonMenu({
+  contact,
   hidden,
   invite,
   makeMain,
   remove,
-}: {
-  contactId: string;
-  isPrimary: boolean;
-  activated: boolean;
-  canSignIn: boolean;
-  hidden: Record<string, string>;
-  invite?: Action;
-  makeMain?: Action;
-  remove?: Action;
-}) {
-  const [inviteState, inviteAction, inviting] = useActionState(
-    invite ?? (async () => INITIAL),
-    INITIAL,
-  );
-  const [mainState, mainAction, making] = useActionState(
-    makeMain ?? (async () => INITIAL),
-    INITIAL,
-  );
-  const [removeState, removeAction, removing] = useActionState(
-    remove ?? (async () => INITIAL),
-    INITIAL,
-  );
-  const [confirming, setConfirming] = useState(false);
-
-  const fields = (
-    <>
-      <input type="hidden" name="contactId" value={contactId} />
-      {Object.entries(hidden).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
-    </>
-  );
-
-  const shown = [removeState, mainState, inviteState].find((state) => state.message);
-
-  return (
-    <div className={styles.actions}>
-      {confirming ? (
-        <form action={removeAction} className={styles.inline}>
-          {fields}
-          <span className={styles.confirm}>Remove their access?</span>
-          <button type="submit" className={`${forms.link} ${styles.danger}`} disabled={removing}>
-            Remove
-          </button>
-          <button type="button" className={forms.link} onClick={() => setConfirming(false)}>
-            Keep
-          </button>
-        </form>
-      ) : (
-        <>
-          {invite && canSignIn && (
-            <form action={inviteAction}>
-              {fields}
-              <button type="submit" className={forms.link} disabled={inviting}>
-                {inviting ? 'Sending…' : activated ? 'Send sign-in link' : 'Send invitation'}
-              </button>
-            </form>
-          )}
-          {makeMain && !isPrimary && (
-            <form action={mainAction}>
-              {fields}
-              <button type="submit" className={forms.link} disabled={making}>
-                Make main contact
-              </button>
-            </form>
-          )}
-          {remove && !isPrimary && (
-            <button
-              type="button"
-              className={`${forms.link} ${styles.danger}`}
-              onClick={() => setConfirming(true)}
-            >
-              Remove
-            </button>
-          )}
-        </>
-      )}
-      {shown && <Message state={shown} />}
-    </div>
-  );
-}
-
-/**
- * Correcting someone's details, in a small panel from their row: a
- * placeholder name, the email they finally gave, a new job title.
- */
-export function EditPerson({
-  contact,
-  hidden,
-  action,
+  edit,
+  setupLink,
 }: {
   contact: {
     id: string;
@@ -250,95 +167,194 @@ export function EditPerson({
     email: string | null;
     role: string | null;
     phone: string | null;
+    isPrimary: boolean;
     activated: boolean;
+    canSignIn: boolean;
   };
   hidden: Record<string, string>;
-  action: Action;
+  invite?: Action;
+  makeMain?: Action;
+  remove?: Action;
+  edit?: Action;
+  /** Shown when "Make a setup link" is chosen, for someone not set up yet. */
+  setupLink?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, run, pending] = useActionState(
+  const [view, setView] = useState<PersonView>('menu');
+  const noop: Action = async () => INITIAL;
+  const [inviteState, inviteAction, inviting] = useActionState(invite ?? noop, INITIAL);
+  const [mainState, mainAction, making] = useActionState(makeMain ?? noop, INITIAL);
+  const [removeState, removeAction, removing] = useActionState(remove ?? noop, INITIAL);
+  const [editState, editAction, saving] = useActionState(
     async (previous: PeopleState, formData: FormData) => {
-      const result = await action(previous, formData);
-      if (result.status === 'done') setOpen(false);
+      const result = await (edit ?? noop)(previous, formData);
+      if (result.status === 'done') setView('menu');
       return result;
     },
     INITIAL,
   );
 
+  const fields = (
+    <>
+      <input type="hidden" name="contactId" value={contact.id} />
+      {Object.entries(hidden).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
+    </>
+  );
+
+  // The latest answer from any of the choices, shown under the list.
+  const said = [removeState, mainState, inviteState, editState].find((state) => state.message);
+  const canInvite = invite && contact.canSignIn && contact.email;
+  const canSetUp = setupLink && contact.canSignIn && !contact.activated;
+  const canRemove = remove && !contact.isPrimary;
+  const canMakeMain = makeMain && !contact.isPrimary;
+  if (!edit && !canSetUp && !canInvite && !canMakeMain && !canRemove) return null;
+
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger className={forms.link}>Change details</Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          className={styles.editPanel}
-          align="end"
-          sideOffset={8}
-          collisionPadding={12}
-        >
-          <form action={run} className={forms.form}>
-            <input type="hidden" name="contactId" value={contact.id} />
-            {Object.entries(hidden).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={value} />
-            ))}
-            <TextField
-              name="name"
-              label="Name"
-              defaultValue={contact.name}
-              required
-              maxLength={120}
-            />
-            {contact.activated ? (
-              <>
-                <input type="hidden" name="email" value={contact.email ?? ''} />
-                <TextField
-                  name="shownEmail"
-                  label="Email"
-                  defaultValue={contact.email ?? ''}
-                  disabled
-                  hint="They change it from their own profile."
-                />
-              </>
-            ) : (
-              <TextField
-                name="email"
-                label="Email"
-                type="email"
-                optional={!contact.email}
-                defaultValue={contact.email ?? ''}
-                maxLength={254}
-              />
+    <RowMenu
+      label={`Actions for ${contact.name}`}
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setView('menu');
+      }}
+      wide={view !== 'menu'}
+    >
+      {view === 'menu' && (
+        <>
+          <MenuList>
+            {edit && <MenuItem onClick={() => setView('edit')}>Change details</MenuItem>}
+            {canSetUp && <MenuItem onClick={() => setView('setup')}>Make a setup link</MenuItem>}
+            {canInvite && (
+              <form action={inviteAction}>
+                {fields}
+                <MenuItem type="submit" disabled={inviting}>
+                  {inviting
+                    ? 'Sending…'
+                    : contact.activated
+                      ? 'Email a sign-in link'
+                      : 'Email the invitation'}
+                </MenuItem>
+              </form>
             )}
+            {canMakeMain && (
+              <form action={mainAction}>
+                {fields}
+                <MenuItem type="submit" disabled={making}>
+                  Make main contact
+                </MenuItem>
+              </form>
+            )}
+            {canRemove && (
+              <>
+                <MenuDivider />
+                <MenuItem danger onClick={() => setView('remove')}>
+                  Remove
+                </MenuItem>
+              </>
+            )}
+          </MenuList>
+          {said?.message && (
+            <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
+          )}
+        </>
+      )}
+
+      {view === 'remove' && (
+        <form action={removeAction}>
+          {fields}
+          <MenuTitle>Remove {contact.name}? They lose access to the portal.</MenuTitle>
+          <div className={forms.actions}>
+            <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={removing}>
+              {removing ? 'Removing…' : 'Remove'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setView('menu')}
+            >
+              Keep
+            </button>
+          </div>
+          {removeState.status === 'error' && <Message state={removeState} />}
+        </form>
+      )}
+
+      {view === 'setup' && (
+        <>
+          {setupLink}
+          <button
+            type="button"
+            className={`${forms.link} ${styles.back}`}
+            onClick={() => setView('menu')}
+          >
+            Back
+          </button>
+        </>
+      )}
+
+      {view === 'edit' && (
+        <form action={editAction} className={forms.form}>
+          {fields}
+          <TextField
+            name="name"
+            label="Name"
+            defaultValue={contact.name}
+            required
+            maxLength={120}
+          />
+          {contact.activated ? (
+            <>
+              <input type="hidden" name="email" value={contact.email ?? ''} />
+              <TextField
+                name="shownEmail"
+                label="Email"
+                defaultValue={contact.email ?? ''}
+                disabled
+                hint="They change it from their own profile."
+              />
+            </>
+          ) : (
             <TextField
-              name="role"
-              label="Job title"
-              optional
-              defaultValue={contact.role ?? ''}
-              maxLength={80}
+              name="email"
+              label="Email"
+              type="email"
+              optional={!contact.email}
+              defaultValue={contact.email ?? ''}
+              maxLength={254}
             />
-            <TextField
-              name="phone"
-              label="Phone"
-              type="tel"
-              optional
-              defaultValue={contact.phone ?? ''}
-              maxLength={40}
-            />
-            <div className={forms.actions}>
-              <button type="submit" className={forms.button} disabled={pending}>
-                {pending ? 'Saving…' : 'Save'}
-              </button>
-              <button
-                type="button"
-                className={`${forms.button} ${forms.quiet}`}
-                onClick={() => setOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-            {state.status === 'error' && <Message state={state} />}
-          </form>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+          )}
+          <TextField
+            name="role"
+            label="Job title"
+            optional
+            defaultValue={contact.role ?? ''}
+            maxLength={80}
+          />
+          <TextField
+            name="phone"
+            label="Phone"
+            type="tel"
+            optional
+            defaultValue={contact.phone ?? ''}
+            maxLength={40}
+          />
+          <div className={forms.actions}>
+            <button type="submit" className={forms.button} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setView('menu')}
+            >
+              Cancel
+            </button>
+          </div>
+          {editState.status === 'error' && <Message state={editState} />}
+        </form>
+      )}
+    </RowMenu>
   );
 }

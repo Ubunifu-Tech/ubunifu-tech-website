@@ -72,10 +72,18 @@ export default async function TeamPage() {
           <table className={table.table}>
             <thead>
               <tr>
-                <th className={table.th} scope="col">Person</th>
-                <th className={table.th} scope="col">Role</th>
-                <th className={table.th} scope="col">Working on</th>
-                <th className={table.th} scope="col">Last signed in</th>
+                <th className={table.th} scope="col">
+                  Person
+                </th>
+                <th className={table.th} scope="col">
+                  Role
+                </th>
+                <th className={table.th} scope="col">
+                  Working on
+                </th>
+                <th className={table.th} scope="col">
+                  Last signed in
+                </th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className="srOnly">Actions</span>
                 </th>
@@ -110,9 +118,11 @@ export default async function TeamPage() {
                     <td className={`${table.td} ${table.nowrap}`}>
                       {person.isActive ? (
                         <>
-                          {person._count.ownedProjects} {person._count.ownedProjects === 1 ? 'project' : 'projects'}
+                          {person._count.ownedProjects}{' '}
+                          {person._count.ownedProjects === 1 ? 'project' : 'projects'}
                           <span className={table.sub}>
-                            {person._count.assignedTasks} open {person._count.assignedTasks === 1 ? 'task' : 'tasks'}
+                            {person._count.assignedTasks} open{' '}
+                            {person._count.assignedTasks === 1 ? 'task' : 'tasks'}
                           </span>
                         </>
                       ) : (
@@ -130,7 +140,12 @@ export default async function TeamPage() {
                     </td>
                     <td className={`${table.td} ${table.actions}`}>
                       {isOwner && !you && (
-                        <RowActions staffId={person.id} active={person.isActive} invited={invited} />
+                        <RowActions
+                          staffId={person.id}
+                          name={person.name}
+                          active={person.isActive}
+                          invited={invited}
+                        />
                       )}
                     </td>
                   </tr>

@@ -1519,11 +1519,8 @@
 /* A setup link, shown once where it was made. */
 .setupLink {
   display: flex;
-  min-width: 16rem;
   flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  gap: var(--space-3);
 }
 
 .setupUrl {
@@ -1532,10 +1529,11 @@
 }
 
 .setupHint {
-  color: var(--text-tertiary);
+  margin: 0;
+  color: var(--text-secondary);
   font-size: var(--font-size-caption);
+  line-height: 1.5;
   white-space: normal;
-  text-align: right;
 }
 
 /* ── Building a project by hand ─────────────────── */

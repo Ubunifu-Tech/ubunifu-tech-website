@@ -3,6 +3,14 @@
 import React, { useActionState, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { Select } from '@/components/console/Select';
+import {
+  MenuDivider,
+  MenuItem,
+  MenuList,
+  MenuNote,
+  MenuTitle,
+  RowMenu,
+} from '@/components/console/RowMenu';
 import { ROLE_OPTIONS } from '@/lib/console/people';
 import {
   changeRole,
@@ -21,7 +29,11 @@ const INITIAL: TeamState = { status: 'idle' };
 function Message({ state }: { state: TeamState }) {
   if (!state.message) return null;
   return (
-    <p className={state.status === 'error' ? forms.error : forms.hint} role="status" aria-live="polite">
+    <p
+      className={state.status === 'error' ? forms.error : forms.hint}
+      role="status"
+      aria-live="polite"
+    >
       {state.message}
     </p>
   );
@@ -48,7 +60,14 @@ export function InviteStaff({ domains }: { domains: string[] }) {
           <label className={forms.label} htmlFor="invite-name">
             Name
           </label>
-          <input id="invite-name" name="name" className={forms.control} required maxLength={120} autoComplete="off" />
+          <input
+            id="invite-name"
+            name="name"
+            className={forms.control}
+            required
+            maxLength={120}
+            autoComplete="off"
+          />
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="invite-email">
@@ -68,7 +87,13 @@ export function InviteStaff({ domains }: { domains: string[] }) {
           <label className={forms.label} htmlFor="invite-title">
             What they do <span className={forms.optional}>(optional)</span>
           </label>
-          <input id="invite-title" name="title" className={forms.control} maxLength={80} placeholder="Designer" />
+          <input
+            id="invite-title"
+            name="title"
+            className={forms.control}
+            maxLength={80}
+            placeholder="Designer"
+          />
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="invite-role">
@@ -81,7 +106,11 @@ export function InviteStaff({ domains }: { domains: string[] }) {
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Sending…' : 'Send invitation'}
         </button>
-        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setOpen(false)}>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setOpen(false)}
+        >
           Cancel
         </button>
         <Message state={state} />
@@ -95,57 +124,100 @@ export function RoleControl({ staffId, role }: { staffId: string; role: string }
   return (
     <form action={action} className={styles.inline}>
       <input type="hidden" name="staffId" value={staffId} />
-      <Select name="role" defaultValue={role} options={ROLE_OPTIONS} size="sm" autoSubmit aria-label="Role" />
+      <Select
+        name="role"
+        defaultValue={role}
+        options={ROLE_OPTIONS}
+        size="sm"
+        autoSubmit
+        aria-label="Role"
+      />
       {state.status === 'error' && <Message state={state} />}
     </form>
   );
 }
 
+/** A team member's actions, behind the "…" on their row. */
 export function RowActions({
   staffId,
+  name,
   active,
   invited,
 }: {
   staffId: string;
+  name: string;
   active: boolean;
   invited: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [resendState, resend, resending] = useActionState(resendInvite, INITIAL);
   const [activeState, toggle, toggling] = useActionState(setActive, INITIAL);
-  const [confirming, setConfirming] = useState(false);
+  const said = [activeState, resendState].find((state) => state.message);
 
   return (
-    <div className={styles.actions}>
-      {active && invited && (
-        <form action={resend}>
+    <RowMenu
+      label={`Actions for ${name}`}
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setConfirming(false);
+      }}
+      wide={confirming}
+    >
+      {confirming ? (
+        <form action={toggle}>
           <input type="hidden" name="staffId" value={staffId} />
-          <button type="submit" className={forms.link} disabled={resending}>
-            {resending ? 'Sending…' : 'Resend invitation'}
-          </button>
-        </form>
-      )}
-      {active && !confirming && (
-        <button type="button" className={`${forms.link} ${styles.danger}`} onClick={() => setConfirming(true)}>
-          Remove
-        </button>
-      )}
-      {(!active || confirming) && (
-        <form action={toggle} className={styles.inline}>
-          <input type="hidden" name="staffId" value={staffId} />
-          <input type="hidden" name="active" value={active ? 'false' : 'true'} />
-          {confirming && <span className={styles.confirmText}>Remove from the team?</span>}
-          <button type="submit" className={`${forms.link} ${active ? styles.danger : ''}`} disabled={toggling}>
-            {active ? 'Remove' : 'Restore'}
-          </button>
-          {confirming && (
-            <button type="button" className={forms.link} onClick={() => setConfirming(false)}>
+          <input type="hidden" name="active" value="false" />
+          <MenuTitle>Remove {name} from the team? They can no longer sign in.</MenuTitle>
+          <div className={forms.actions}>
+            <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={toggling}>
+              {toggling ? 'Removing…' : 'Remove'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setConfirming(false)}
+            >
               Keep
             </button>
-          )}
+          </div>
+          <Message state={activeState} />
         </form>
+      ) : (
+        <>
+          <MenuList>
+            {active && invited && (
+              <form action={resend}>
+                <input type="hidden" name="staffId" value={staffId} />
+                <MenuItem type="submit" disabled={resending}>
+                  {resending ? 'Sending…' : 'Resend the invitation'}
+                </MenuItem>
+              </form>
+            )}
+            {active ? (
+              <>
+                {invited && <MenuDivider />}
+                <MenuItem danger onClick={() => setConfirming(true)}>
+                  Remove from the team
+                </MenuItem>
+              </>
+            ) : (
+              <form action={toggle}>
+                <input type="hidden" name="staffId" value={staffId} />
+                <input type="hidden" name="active" value="true" />
+                <MenuItem type="submit" disabled={toggling}>
+                  {toggling ? 'Restoring…' : 'Restore to the team'}
+                </MenuItem>
+              </form>
+            )}
+          </MenuList>
+          {said?.message && (
+            <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
+          )}
+        </>
       )}
-      <Message state={resendState.status === 'idle' ? activeState : resendState} />
-    </div>
+    </RowMenu>
   );
 }
 
@@ -158,7 +230,14 @@ export function ProfileForm({ name, title }: { name: string; title: string | nul
           <label className={forms.label} htmlFor="profile-name">
             Name
           </label>
-          <input id="profile-name" name="name" className={forms.control} defaultValue={name} required maxLength={120} />
+          <input
+            id="profile-name"
+            name="name"
+            className={forms.control}
+            defaultValue={name}
+            required
+            maxLength={120}
+          />
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="profile-title">

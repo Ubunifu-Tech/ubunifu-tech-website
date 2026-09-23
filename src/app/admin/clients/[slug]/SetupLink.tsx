@@ -2,7 +2,6 @@
 
 import { useActionState, useState } from 'react';
 import { createSetupLink, type SetupLinkState } from '../actions';
-import table from '@/styles/table.module.css';
 import forms from '@/styles/forms.module.css';
 import styles from '../../Admin.module.css';
 
@@ -11,9 +10,9 @@ const INITIAL: SetupLinkState = { status: 'idle' };
 /**
  * Makes a one-time setup link for somebody who has not set up their account,
  * to send them by hand. The link is shown once, with a copy button and a
- * WhatsApp message already written.
+ * WhatsApp message already written. Lives in the person's row menu.
  */
-export function SetupLink({ contactId }: { contactId: string }) {
+export function SetupLink({ contactId, name }: { contactId: string; name: string }) {
   const [state, action, pending] = useActionState(createSetupLink, INITIAL);
   const [copied, setCopied] = useState(false);
 
@@ -27,10 +26,10 @@ export function SetupLink({ contactId }: { contactId: string }) {
           aria-label="Setup link"
           onFocus={(event) => event.currentTarget.select()}
         />
-        <span className={table.actionGroup}>
+        <div className={forms.actions}>
           <button
             type="button"
-            className={table.action}
+            className={forms.button}
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(state.url!);
@@ -42,29 +41,35 @@ export function SetupLink({ contactId }: { contactId: string }) {
           >
             {copied ? 'Copied' : 'Copy'}
           </button>
-          {/* Missing when their number could not be read with certainty: no
-              button rather than a guess at the country code, which could open
-              a stranger's chat with the link already in it. */}
           {state.whatsapp && (
-            <a href={state.whatsapp} target="_blank" rel="noopener noreferrer" className={table.action}>
+            <a
+              href={state.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${forms.button} ${forms.quiet}`}
+            >
               Send on WhatsApp
             </a>
           )}
-        </span>
-        <span className={styles.setupHint}>
-          Works once, for 14 days, and replaces any earlier link. Only send it to them.
-        </span>
+        </div>
+        <p className={styles.setupHint}>Works once, for 14 days. Only send it to {name}.</p>
       </div>
     );
   }
 
   return (
-    <form action={action} className={table.actionGroup}>
+    <form action={action} className={styles.setupLink}>
       <input type="hidden" name="contactId" value={contactId} />
-      <button type="submit" className={table.action} disabled={pending}>
-        {pending ? 'Making…' : 'Setup link'}
-      </button>
-      {state.status === 'error' && <span className={table.muted}>{state.message}</span>}
+      <p className={styles.setupHint}>
+        {name} opens it to set up their account and fill in anything missing, like their email. Any
+        earlier link stops working.
+      </p>
+      <div className={forms.actions}>
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Making…' : 'Make the link'}
+        </button>
+      </div>
+      {state.status === 'error' && <p className={forms.error}>{state.message}</p>}
     </form>
   );
 }

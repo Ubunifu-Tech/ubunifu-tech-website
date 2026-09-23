@@ -570,12 +570,17 @@ export async function suggestWording(
         where: {
           id: request.id,
           status: { in: ['sent', 'viewed'] },
-          // The answer as we read it. Writing a new respondedAt below means a
-          // second submission racing this one no longer matches.
+          // The answer as we read it. The note below always changes (the new
+          // line is added to it), so a second submission racing this one no
+          // longer matches, whether or not anyone had answered before.
           respondedAt: request.respondedAt,
+          responseNote: request.responseNote,
         },
         data: {
-          respondedAt: now,
+          // When and by whom changes were first asked for stay as they were:
+          // staff read them as "Changes asked for on 1 Sep by A", and a later
+          // suggestion from B, or from A again, must not rewrite that.
+          respondedAt: request.respondedAt ?? now,
           respondedById: request.respondedById ?? actor.id,
           responseNote: request.responseNote ? `${request.responseNote}\n\n${line}` : line,
         },

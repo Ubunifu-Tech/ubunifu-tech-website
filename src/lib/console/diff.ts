@@ -219,19 +219,40 @@ function escapeHtml(value: string): string {
 }
 
 /**
+ * Every image tag in rendered output. Rendered text is escaped, so a raw "<"
+ * or ">" can only belong to a tag the renderer added itself, and this catches
+ * each one it produces whatever its attributes.
+ */
+const IMAGE_TAG = /<img\b[^>]*>/g;
+const ALT = /\balt="([^"]*)"/;
+/**
+ * A marker the renderer parks lifted-out text behind (an escaped character,
+ * inline code, an image). It puts them back in one pass, so one nested inside
+ * another, as in an image's alt or an image inside a link, can survive into
+ * the output. Stored text cannot hold the character, so these are only ever
+ * the renderer's own.
+ */
+const PARKED = /\u0000\d*\u0000?/g;
+
+/**
  * One block as HTML.
  *
  * Through the document renderer, which escapes everything before it adds back
  * its fixed set of tags, so a table still reads as a table. Images are the one
  * exception: a picture in a client's text would be fetched from wherever they
  * point it the moment staff open the page, so it is shown as its description.
+ *
+ * Taken out of the OUTPUT, not the markdown. The renderer lifts escapes and
+ * inline code out before it looks for images, so "![a\]b](url)" is no image to
+ * a pattern run on the markdown and still one to the renderer. Whatever it
+ * decided was an image is what has to go.
  */
 function blockHtml(block: string): string {
-  const withoutImages = block.replace(
-    /!\[([^\]]*)\]\(([^)\s]+)\)/g,
-    (_match, alt: string) => `(image${alt.trim() ? `: ${alt.trim()}` : ''})`,
-  );
-  return renderMarkdown(withoutImages);
+  return renderMarkdown(block).replace(IMAGE_TAG, (tag) => {
+    // Already escaped by the renderer, so it goes back in as it is.
+    const alt = (ALT.exec(tag)?.[1] ?? '').replace(PARKED, '').replace(/\s+/g, ' ').trim();
+    return `(image${alt ? `: ${alt}` : ''})`;
+  }).replace(PARKED, '');
 }
 
 /** Unchanged blocks kept on each side of a change, so it can be read in place. */

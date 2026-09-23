@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { can, type StaffActor } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import forms from '@/styles/forms.module.css';
@@ -8,12 +9,30 @@ import table from '@/styles/table.module.css';
 /**
  * A project's documents, with what the client said about each.
  *
- * For the Documents tab of the project page. A document the client pushed
- * back on shows their words in the list, so nobody has to open each one to
- * find out which needs work and why. Fetches its own rows, because the
- * comment and the suggestions live on records the project page does not load.
+ * For the Documents tab of the project page, in place of its own table:
+ *
+ *   <ProjectDocuments projectId={project.id} now={now} staff={staff} />
+ *
+ * A document the client pushed back on shows their words in the list, so
+ * nobody has to open each one to find out which needs work and why. Fetches
+ * its own rows, because the comment and the suggestions live on records the
+ * project page does not load.
+ *
+ * The list itself is for anyone who can see the project, as the tab always
+ * was. What the client said is only for those who may open the document,
+ * which takes the documents permission, so the check is made here rather than
+ * left to each caller to remember.
  */
-export async function ProjectDocuments({ projectId, now }: { projectId: string; now: Date }) {
+export async function ProjectDocuments({
+  projectId,
+  now,
+  staff,
+}: {
+  projectId: string;
+  now: Date;
+  staff: Pick<StaffActor, 'permissions'>;
+}) {
+  const mayDocs = can(staff, 'documents');
   const documents = await db.document.findMany({
     where: { projectId },
     orderBy: { updatedAt: 'desc' },
@@ -68,13 +87,15 @@ export async function ProjectDocuments({ projectId, now }: { projectId: string; 
               <tr>
                 <td className={table.emptyCell} colSpan={3}>
                   <p className={table.emptyTitle}>No documents yet</p>
-                  <p className={table.emptyHint}>Start a proposal or agreement on the right.</p>
+                  {mayDocs && (
+                    <p className={table.emptyHint}>Start a proposal or agreement on the right.</p>
+                  )}
                 </td>
               </tr>
             ) : (
               documents.map((document) => {
                 // Once signed, what they raised earlier has been settled.
-                const open = document.status !== 'signed';
+                const open = mayDocs && document.status !== 'signed';
                 const answer = open ? document.signatureRequests[0] : undefined;
                 return (
                   <tr key={document.id} className={table.tr}>

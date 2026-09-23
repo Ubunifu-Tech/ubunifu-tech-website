@@ -2,7 +2,7 @@ import 'server-only';
 import type { DocumentKind } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { getOrg } from './org';
-import { carriesFees, feeProblems, feeSchedule, hasFeesToken, projectFees, withFees } from './fees';
+import { carriesFees, feeProblems, feeSchedule, hasFeesToken, projectFees, projectFeesLater, withFees } from './fees';
 
 /**
  * Whether a document can go to the client, and what it will say when it does.
@@ -30,7 +30,7 @@ export type Prepared = {
   withFeeTable: boolean;
   checks: ReadyCheck[];
   ready: boolean;
-  signer: { id: string; name: string; email: string } | null;
+  signer: { id: string; name: string; email: string | null } | null;
 };
 
 /** The text the author is working on: the source when a version kept one. */
@@ -46,8 +46,9 @@ export async function prepareDocument(document: {
   const { kind, source, project } = document;
   const withFeeTable = carriesFees(kind) || hasFeesToken(source);
 
-  const [lines, signer, org] = await Promise.all([
+  const [lines, later, signer, org] = await Promise.all([
     withFeeTable ? projectFees(project.id) : Promise.resolve([]),
+    withFeeTable ? projectFeesLater(project.id) : Promise.resolve([]),
     db.clientContact.findFirst({
       where: { clientId: project.clientId, deletedAt: null, canSignIn: true, isPrimary: true },
       select: { id: true, name: true, email: true },
@@ -57,7 +58,7 @@ export async function prepareDocument(document: {
   const vatBps = org.chargesVat ? org.vatRateBps : 0;
 
   const final = withFeeTable
-    ? withFees(source, feeSchedule(lines, project.currency, vatBps), kind)
+    ? withFees(source, feeSchedule(lines, project.currency, vatBps, later), kind)
     : source;
 
   const checks: ReadyCheck[] = [];
@@ -92,10 +93,12 @@ export async function prepareDocument(document: {
   }
 
   checks.push({
-    ok: signer !== null,
+    ok: signer !== null && signer.email !== null,
     label: signer ? `${signer.name} will sign` : 'Someone at the client can sign',
-    problem: 'The client has no main contact yet.',
-    fix: { href: `/clients/${project.clientSlug}`, text: 'Add a contact' },
+    problem: !signer
+      ? 'The client has no main contact yet.'
+      : `${signer.name} has not given an email address yet. Share their setup link first.`,
+    fix: { href: `/clients/${project.clientSlug}`, text: signer ? 'Open the client' : 'Add a contact' },
   });
 
   return {

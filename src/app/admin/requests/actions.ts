@@ -88,6 +88,10 @@ export async function replyToTicket(
     };
   }
 
+  if (!contact.email) {
+    return { status: 'done', message: 'Replied. They have no email address yet, so it waits in their portal.' };
+  }
+
   const sent = await sendConsoleEmail({
     to: contact.email,
     subject: `[${ticket.reference}] ${ticket.subject}`,

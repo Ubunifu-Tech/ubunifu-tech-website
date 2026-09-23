@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { getClientActor, recordAudit } from '@/lib/console/auth';
+import { getPendingContact, recordAudit } from '@/lib/console/auth';
 import { hashPassword, passwordProblem } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
 
@@ -19,7 +19,7 @@ export async function activateAccount(
   _previous: ActivateState,
   formData: FormData,
 ): Promise<ActivateState> {
-  const actor = await getClientActor();
+  const actor = await getPendingContact();
   if (!actor) {
     return {
       status: 'error',
@@ -29,12 +29,31 @@ export async function activateAccount(
   if (actor.isActivated) redirect('/portal');
 
   const name = String(formData.get('name') ?? '').trim();
-  const phone = String(formData.get('phone') ?? '').trim();
+  const phone = String(formData.get('phone') ?? '').trim().slice(0, 40);
+  // Asked for only when the link was shared by hand, before we had it.
+  const email = actor.email ?? String(formData.get('email') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
   const confirm = String(formData.get('confirm') ?? '');
 
   if (name.length < 2 || name.length > 120) {
     return { status: 'error', message: 'Enter the name you would like us to use.' };
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return { status: 'error', message: 'Enter the email address you would like to sign in with.' };
+  }
+  if (!actor.email) {
+    // One portal account per address, so signing in is never ambiguous.
+    const taken = await db.clientContact.findFirst({
+      where: { email, deletedAt: null, NOT: { id: actor.id } },
+      select: { id: true },
+    });
+    if (taken) {
+      return {
+        status: 'error',
+        message: 'That email already has a portal account. Use another, or ask us to link them.',
+      };
+    }
   }
 
   const problem = passwordProblem(password);
@@ -48,6 +67,7 @@ export async function activateAccount(
     where: { id: actor.id },
     data: {
       name,
+      email,
       phone: phone || null,
       passwordHash: await hashPassword(password),
       passwordSetAt: new Date(),

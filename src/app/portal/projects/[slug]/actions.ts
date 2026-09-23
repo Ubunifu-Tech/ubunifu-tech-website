@@ -105,3 +105,51 @@ export async function assignMyItem(
   revalidatePath(`/admin/projects/${item.project.slug}`);
   return { status: 'done' };
 }
+
+export type AnswerState = { status: 'idle' | 'done' | 'error'; message?: string };
+
+/**
+ * A written answer to something we asked for: a bio, a mission statement,
+ * which domain they want. Answering marks the item received; they can change
+ * the answer afterwards, and the latest one is what we see.
+ */
+export async function answerRequest(_previous: AnswerState, formData: FormData): Promise<AnswerState> {
+  const actor = await requireClient();
+  const item = await db.assetRequest.findFirst({
+    where: {
+      id: String(formData.get('assetRequestId') ?? ''),
+      project: { clientId: actor.clientId, deletedAt: null },
+    },
+    select: { id: true, title: true, status: true, project: { select: { slug: true } } },
+  });
+  if (!item) return { status: 'error', message: 'That item is not on your projects.' };
+  if (item.status === 'waived') return { status: 'error', message: 'We no longer need this one.' };
+
+  const response = String(formData.get('response') ?? '').trim();
+  if (!response) return { status: 'error', message: 'Write your answer first.' };
+  if (response.length > 8000) {
+    return { status: 'error', message: 'That is longer than this box takes. Attach it as a file instead.' };
+  }
+
+  await db.assetRequest.update({
+    where: { id: item.id },
+    data: {
+      response,
+      respondedAt: new Date(),
+      ...(item.status !== 'received' ? { status: 'received', receivedAt: new Date() } : {}),
+    },
+  });
+
+  await recordAudit({
+    actorType: 'client_contact',
+    actorId: actor.id,
+    action: 'asset_request.answered',
+    entityType: 'AssetRequest',
+    entityId: item.id,
+    summary: item.title,
+  });
+
+  revalidatePath(`/portal/projects/${item.project.slug}`);
+  revalidatePath(`/admin/projects/${item.project.slug}`);
+  return { status: 'done', message: 'Sent. You can change it here any time.' };
+}

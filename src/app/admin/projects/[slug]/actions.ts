@@ -381,6 +381,8 @@ export async function publishUpdate(
   let delivered = 0;
 
   for (const contact of recipients) {
+    // Somebody still setting up from a shared link sees it in the portal.
+    if (!contact.email) continue;
     const sent = await sendConsoleEmail({
       to: contact.email,
       subject: `${update.project.name}: ${update.title}`,

@@ -12,7 +12,7 @@ import {
   shortHash,
 } from '@/lib/console/documents';
 import { authorText, prepareDocument, type DocumentStep } from '@/lib/console/document-ready';
-import { editableFees, feeSchedule, projectFees } from '@/lib/console/fees';
+import { editableFees, feeSchedule, projectFees, projectFeesLater } from '@/lib/console/fees';
 import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
@@ -395,9 +395,10 @@ export default async function DocumentPage({
   }
 
   if (step === 'fees') {
-    const [fees, counted, org] = await Promise.all([
+    const [fees, counted, later, org] = await Promise.all([
       editableFees(document.project.id),
       projectFees(document.project.id),
+      projectFeesLater(document.project.id),
       getOrg(),
     ]);
     body = (
@@ -423,7 +424,12 @@ export default async function DocumentPage({
             className={`${forms.prose} ${page.feePreview}`}
             dangerouslySetInnerHTML={{
               __html: renderMarkdown(
-                feeSchedule(counted, document.project.currency, org.chargesVat ? org.vatRateBps : 0),
+                feeSchedule(
+                  counted,
+                  document.project.currency,
+                  org.chargesVat ? org.vatRateBps : 0,
+                  later,
+                ),
               ),
             }}
           />

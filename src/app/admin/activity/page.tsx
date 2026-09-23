@@ -54,6 +54,8 @@ const ACTION_LABEL: Record<string, string> = {
   'deliverable.completed': 'Item ticked off',
   'deliverable.reopened': 'Item reopened',
   'asset_request.status_changed': 'Client request updated',
+  'asset_request.answered': 'Client answered',
+  'client.setup_link.created': 'Setup link made',
   'invoice.created': 'Invoice raised',
   'invoice.sent': 'Invoice sent',
   'invoice.voided': 'Invoice voided',

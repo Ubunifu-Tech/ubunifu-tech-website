@@ -88,7 +88,7 @@ export async function addContact(input: {
     action: 'client.contact_added',
     entityType: 'ClientContact',
     entityId: person.id,
-    summary: `${person.name} (${person.email})`,
+    summary: person.email ? `${person.name} (${person.email})` : person.name,
   });
 
   if (!input.invite) return { ok: true, message: `${person.name} added.` };
@@ -111,11 +111,17 @@ export async function addContact(input: {
 
 /** An invitation to set up an account, or a sign-in link for someone who has one. */
 export async function invitePerson(input: {
-  contact: { id: string; name: string; email: string; activatedAt: Date | null };
+  contact: { id: string; name: string; email: string | null; activatedAt: Date | null };
   clientName: string;
   by: Actor;
 }) {
   const { contact, by } = input;
+  if (!contact.email) {
+    return {
+      ok: false as const,
+      error: `there is no email address for ${contact.name} yet. Share their setup link instead`,
+    };
+  }
   const { token } = await issueMagicToken({
     purpose: contact.activatedAt ? 'sign_in' : 'invite',
     actorType: 'client_contact',

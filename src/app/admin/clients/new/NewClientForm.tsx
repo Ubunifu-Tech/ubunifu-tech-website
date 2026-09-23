@@ -354,7 +354,7 @@ export function NewClientForm({
 
             <div className={forms.field}>
               <label className={forms.label} htmlFor={field('contactEmail')}>
-                Email
+                Email <span className={forms.optional}>(if you have it)</span>
               </label>
               <input
                 id={field('contactEmail')}
@@ -362,10 +362,12 @@ export function NewClientForm({
                 defaultValue={was('contactEmail', prefill?.contactEmail)}
                 type="email"
                 className={forms.control}
-                required
                 aria-invalid={invalid('contactEmail')}
               />
-              <p className={forms.hint}>Their sign-in address. Everything we send goes here.</p>
+              <p className={forms.hint}>
+                Their sign-in address. Without it, share a setup link from their client page, on
+                WhatsApp say, and they add it themselves.
+              </p>
             </div>
 
             <div className={forms.field}>
@@ -665,10 +667,17 @@ function CheckStep({
       title: 'Contact',
       rows: [
         ['Name', v('contactName')],
-        ['Email', v('contactEmail')],
+        ['Email', v('contactEmail') || 'They add it from their setup link'],
         ['Role', v('contactRole')],
         ['Phone', v('contactPhone')],
-        ['Portal invitation', values.sendInvite ? 'Emailed when you create the client' : 'Not sent yet'],
+        [
+          'Portal invitation',
+          !v('contactEmail')
+            ? 'A setup link to share yourself, from their client page'
+            : values.sendInvite
+              ? 'Emailed when you create the client'
+              : 'Not sent yet',
+        ],
       ],
     },
     {

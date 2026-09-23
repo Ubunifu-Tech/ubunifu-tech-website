@@ -135,7 +135,13 @@ async function run(label: string, system: string, brief: string, tool: Tool, cas
 await run('Website', ASSISTANT_SYSTEM, await siteBrief(), recordEnquiryTool, siteCases);
 
 const contact = await db.clientContact.findFirst({
-  where: { deletedAt: null, activatedAt: { not: null }, canSignIn: true, client: { deletedAt: null } },
+  where: {
+    deletedAt: null,
+    activatedAt: { not: null },
+    canSignIn: true,
+    email: { not: null },
+    client: { deletedAt: null },
+  },
   orderBy: { createdAt: 'asc' },
   select: {
     id: true,
@@ -158,7 +164,7 @@ const contact = await db.clientContact.findFirst({
   },
 });
 
-if (contact) {
+if (contact?.email) {
   const actor = {
     id: contact.id,
     email: contact.email,

@@ -126,6 +126,7 @@ export default async function ProjectPage({
           detail: true,
           status: true,
           assigneeId: true,
+          response: true,
           uploads: {
             where: { deletedAt: null },
             orderBy: { createdAt: 'asc' },
@@ -552,6 +553,7 @@ export default async function ProjectPage({
                       title={request.title}
                       detail={request.detail}
                       status={request.status}
+                      response={request.response}
                       assigneeId={request.assigneeId ?? ''}
                       contacts={theirPeople}
                       files={request.uploads.map((file) => ({
@@ -591,7 +593,11 @@ export default async function ProjectPage({
                     </span>
                     <span className={styles.personMeta}>
                       {[contact.role, project.client.name].filter(Boolean).join(', ')} ·{' '}
-                      <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                      {contact.email ? (
+                        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                      ) : (
+                        'no email yet'
+                      )}
                     </span>
                   </li>
                 ))}

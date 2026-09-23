@@ -127,6 +127,46 @@ export async function requireStaffRole(minimum: StaffRole): Promise<StaffActor> 
   return staff;
 }
 
+/**
+ * The person on a portal session who has not finished setting up: from an
+ * invitation or a setup link shared by hand, possibly with no email address
+ * yet. Only the setup page and its action use this; everything else needs a
+ * finished account and goes through getClientActor.
+ */
+export async function getPendingContact(): Promise<{
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  clientName: string;
+  isActivated: boolean;
+} | null> {
+  const session = await readSession('portal');
+  if (!session || session.actorType !== 'client_contact') return null;
+  const contact = await db.clientContact.findUnique({
+    where: { id: session.actorId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      canSignIn: true,
+      activatedAt: true,
+      deletedAt: true,
+      client: { select: { name: true, deletedAt: true } },
+    },
+  });
+  if (!contact || !contact.canSignIn || contact.deletedAt || contact.client.deletedAt) return null;
+  return {
+    id: contact.id,
+    name: contact.name,
+    email: contact.email,
+    phone: contact.phone,
+    clientName: contact.client.name,
+    isActivated: contact.activatedAt !== null,
+  };
+}
+
 export async function getClientActor(): Promise<ClientActor | null> {
   const session = await readSession('portal');
   if (!session || session.actorType !== 'client_contact') return null;
@@ -148,6 +188,9 @@ export async function getClientActor(): Promise<ClientActor | null> {
   if (!contact.canSignIn) return null;
   if (contact.deletedAt) return null;
   if (contact.client.deletedAt) return null;
+  // Somebody onboarding from a shared link has no address until they give
+  // one, and that same step is what signs them in.
+  if (!contact.email) return null;
 
   return {
     id: contact.id,

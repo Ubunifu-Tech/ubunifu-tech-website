@@ -162,9 +162,11 @@ export async function createClient(
     return fail('Enter the name of the person you deal with.', 'contactName');
   }
 
-  const email = values.contactEmail.toLowerCase();
-  if (!EMAIL_PATTERN.test(email)) {
-    return fail('Enter a valid email address for the contact.', 'contactEmail');
+  // Optional: somebody reached on WhatsApp may not have given one yet. They
+  // add it themselves from the setup link shared from their client page.
+  const email = values.contactEmail.toLowerCase() || null;
+  if (email && !EMAIL_PATTERN.test(email)) {
+    return fail('That email address does not look right. Leave it empty if you do not have it yet.', 'contactEmail');
   }
 
   // ── The first project, if there is one yet ────────────────────────────
@@ -269,7 +271,7 @@ export async function createClient(
   });
 
   // ── Invitation ────────────────────────────────────────────────────────
-  if (values.sendInvite) {
+  if (values.sendInvite && email) {
     const { token } = await issueMagicToken({
       purpose: 'invite',
       actorType: 'client_contact',

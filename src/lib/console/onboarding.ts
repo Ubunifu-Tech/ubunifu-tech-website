@@ -92,7 +92,8 @@ export type NewClientInput = {
   };
   contact: {
     name: string;
-    email: string;
+    /** Null when they will give it themselves, from a shared setup link. */
+    email: string | null;
     role?: string | null;
     phone?: string | null;
   };

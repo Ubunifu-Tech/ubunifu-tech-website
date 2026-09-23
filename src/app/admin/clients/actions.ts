@@ -3,7 +3,9 @@
 import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { can, requireStaff } from '@/lib/console/auth';
+import { can, recordAudit, requireStaff } from '@/lib/console/auth';
+import { consoleEnv } from '@/lib/console/env';
+import { issueMagicToken } from '@/lib/console/magic-link';
 import {
   addContact,
   invitePerson,
@@ -132,4 +134,93 @@ export async function removeClientContact(
   });
   revalidatePath(`/admin/clients/${client.slug}`);
   return { status: result.ok ? 'done' : 'error', message: result.message };
+}
+
+export type SetupLinkState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  url?: string;
+  /** A WhatsApp chat with the message written, to their number when we have it. */
+  whatsapp?: string;
+};
+
+/**
+ * A private link for somebody to set up their portal account themselves, for
+ * sending by hand (WhatsApp, a text message) when their email address is not
+ * known or not confirmed yet. It is the same one-time invitation the email
+ * carries: it works once, lasts fourteen days, and asks them for their name,
+ * email, phone and a password. Shown once here and never stored readable,
+ * so a new one is made each time.
+ */
+export async function createSetupLink(
+  _previous: SetupLinkState,
+  formData: FormData,
+): Promise<SetupLinkState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+
+  const contactId = formText(formData, 'contactId');
+  const contact = await db.clientContact.findFirst({
+    where: { id: contactId, deletedAt: null, client: { deletedAt: null } },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      canSignIn: true,
+      activatedAt: true,
+      client: { select: { name: true, slug: true } },
+    },
+  });
+  if (!contact) return { status: 'error', message: 'They are not on this client any more.' };
+  if (contact.activatedAt) {
+    return { status: 'error', message: 'They have set up their account already.' };
+  }
+  if (!contact.canSignIn) {
+    return { status: 'error', message: 'Portal access is turned off for this contact.' };
+  }
+  if (!(await allow('client-setup-link', contact.id, { limit: 10, windowMinutes: 60 }))) {
+    return { status: 'error', message: 'Several links were made in the last hour. Try again later.' };
+  }
+
+  const { token } = await issueMagicToken({
+    purpose: 'invite',
+    actorType: 'client_contact',
+    actorId: contact.id,
+  });
+  const url = `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`;
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'client.setup_link.created',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: `For ${contact.name}, to share by hand`,
+  });
+
+  const first = contact.name.split(' ')[0] ?? contact.name;
+  const message =
+    `Hello ${first}, this is Ubunifu Technologies. Here is your private link to set up ` +
+    `the ${contact.client.name} project portal, where you can see the work, send us what we ` +
+    `need and sign the agreement: ${url}\n\nIt works once and lasts 14 days. Please do not ` +
+    `forward it.`;
+
+  revalidatePath(`/admin/clients/${contact.client.slug}`);
+  return {
+    status: 'done',
+    url,
+    whatsapp: `https://wa.me/${whatsappNumber(contact.phone)}?text=${encodeURIComponent(message)}`,
+  };
+}
+
+/**
+ * A number as wa.me wants it: digits only, with the country code. A local
+ * Tanzanian number (0712 345 678) gets 255 in place of its leading zero. No
+ * number opens WhatsApp to choose the chat.
+ */
+function whatsappNumber(phone: string | null): string {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('0') && digits.length === 10) return `255${digits.slice(1)}`;
+  return digits;
 }

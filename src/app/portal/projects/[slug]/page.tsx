@@ -12,6 +12,7 @@ import {
   uploadsConfigured,
 } from '@/lib/console/uploads';
 import { UploadBox } from './UploadBox';
+import { AnswerBox } from './AnswerBox';
 import { ItemOwner } from './ItemOwner';
 import { Avatar } from '@/components/console/Avatar';
 import styles from '../../Portal.module.css';
@@ -101,6 +102,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
           detail: true,
           status: true,
           assigneeId: true,
+          response: true,
           uploads: {
             where: { deletedAt: null },
             orderBy: { createdAt: 'asc' },
@@ -231,6 +233,8 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
                     </span>
                     {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
 
+                    <AnswerBox assetRequestId={request.id} response={request.response} />
+
                     {request.uploads.length > 0 && (
                       <ul className={styles.fileList}>
                         {request.uploads.map((file) => (
@@ -266,8 +270,8 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
               </ul>
               <p className={styles.note}>
                 {canUpload
-                  ? 'Attach them here and they land against the right item.'
-                  : 'Send these by email, or ask in Help. We tick them off here as they arrive.'}
+                  ? 'Write your answer or attach a file on each item. They land against the right one.'
+                  : 'Write your answer on each item, or send files by email. We tick them off as they arrive.'}
               </p>
             </section>
           )}

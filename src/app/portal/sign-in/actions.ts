@@ -207,7 +207,8 @@ async function sendPortalLink(
   });
 
   await sendConsoleEmail({
-    to: contact.email,
+    // The address typed, which is the one this contact was found by.
+    to: email,
     subject: 'Sign in to your Ubunifu portal',
     html: clientSignInEmail({
       name: contact.name,

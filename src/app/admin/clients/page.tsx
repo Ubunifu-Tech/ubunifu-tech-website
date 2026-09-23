@@ -203,7 +203,7 @@ export default async function ClientsPage({
                         {primary ? (
                           <>
                             {primary.name}
-                            <span className={table.sub}>{primary.email}</span>
+                            <span className={table.sub}>{primary.email ?? 'No email yet'}</span>
                           </>
                         ) : (
                           <span className={table.muted}>No contact</span>

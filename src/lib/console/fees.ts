@@ -1,5 +1,5 @@
 import 'server-only';
-import type { BillingKind, DocumentKind } from '@/generated/prisma/client';
+import type { BillingKind, DocumentKind, LineItemStatus } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { formatMoney, toDateInputValue } from './money';
 import type { FeeRow } from '@/components/console/FeeEditor';
@@ -44,15 +44,32 @@ function cell(text: string): string {
   return text.replace(/([*_~`[\]\\|])/g, '\\$1').replace(/\s*\n\s*/g, ' ');
 }
 
-/** The table and totals, without a heading. withFees decides on the heading. */
+/** A fee that is part of the agreement but not charged for now. */
+export type LaterLine = ScheduleLine & { status: LineItemStatus };
+
+const LATER_LABEL: Partial<Record<LineItemStatus, string>> = {
+  deferred: 'Later',
+  paused: 'Paused',
+  waived: 'Waived',
+};
+
+/**
+ * The table and totals, without a heading. withFees decides on the heading.
+ *
+ * Fees agreed but not charged for now (deferred, paused, waived) follow in a
+ * table of their own, so the client sees them and why, and they never count
+ * towards a total. With none, the output is exactly what it always was.
+ */
 export function feeSchedule(
   lines: ScheduleLine[],
   currency: string,
   /** Basis points of VAT added on invoices, when the company charges it. */
   vatBps = 0,
+  later: LaterLine[] = [],
 ): string {
+  const notNow = laterSchedule(later);
   if (lines.length === 0) {
-    return 'No fees have been set for this work yet.';
+    return ['No fees have been set for this work yet.', notNow].filter(Boolean).join('\n\n');
   }
 
   const withTerms = lines.some((line) => line.terms?.trim());
@@ -94,7 +111,30 @@ export function feeSchedule(
   const vat =
     vatBps > 0 ? [`Prices exclude VAT at ${(vatBps / 100).toString()}%, which is added to each invoice.`] : [];
 
-  return [head, ...rows, '', ...totals.map((line) => `${line}\n`), ...vat].join('\n').trimEnd();
+  const schedule = [head, ...rows, '', ...totals.map((line) => `${line}\n`), ...vat]
+    .join('\n')
+    .trimEnd();
+  return notNow ? `${schedule}\n\n${notNow}` : schedule;
+}
+
+function laterSchedule(later: LaterLine[]): string {
+  if (later.length === 0) return '';
+  const withTerms = later.some((line) => line.terms?.trim());
+  const head = withTerms
+    ? '| Not charged for now | Status | Price | Terms |\n| --- | --- | --- | --- |'
+    : '| Not charged for now | Status | Price |\n| --- | --- | --- |';
+  const rows = later.map((line) => {
+    const billing = BILLING[line.billingKind];
+    const price =
+      line.amountMinor === 0
+        ? 'To be confirmed'
+        : `${formatMoney(line.amountMinor, line.currency)}${billing.per}`;
+    const item = line.description ? `${line.label}: ${line.description}` : line.label;
+    const cells = [cell(item), LATER_LABEL[line.status] ?? line.status, price];
+    if (withTerms) cells.push(cell(line.terms ?? ''));
+    return `| ${cells.join(' | ')} |`;
+  });
+  return [head, ...rows].join('\n');
 }
 
 const HEADING = /^#{1,3}[ \t]+\S/;
@@ -121,6 +161,24 @@ export function withFees(source: string, schedule: string, kind: DocumentKind): 
 /** True when the author has said where the fee table goes. */
 export function hasFeesToken(source: string): boolean {
   return new RegExp(TOKEN_LINE.source, 'm').test(source);
+}
+
+/** Fees agreed but not charged for now: deferred, paused or waived. */
+export async function projectFeesLater(projectId: string): Promise<LaterLine[]> {
+  return db.lineItem.findMany({
+    where: { projectId, status: { in: ['deferred', 'paused', 'waived'] } },
+    orderBy: { position: 'asc' },
+    select: {
+      label: true,
+      description: true,
+      billingKind: true,
+      amountMinor: true,
+      quantity: true,
+      currency: true,
+      terms: true,
+      status: true,
+    },
+  });
 }
 
 /** The project's counted fees, in order. */

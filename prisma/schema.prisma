@@ -100,7 +100,9 @@ model ClientContact {
   id        String    @id @default(cuid())
   clientId  String
   client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  email     String
+  /// Empty until the person fills it in themselves, from a link sent to them
+  /// another way (WhatsApp, say) when their address is not known yet.
+  email     String?
   name      String
   role      String?
   phone     String?
@@ -126,6 +128,7 @@ model ClientContact {
   signatures   Signature[]
   ticketsOpened Ticket[]
   documentResponses SignatureRequest[]
+  documentSuggestions DocumentSuggestion[]
   assignedRequests  AssetRequest[] @relation("AssetRequestAssignee")
 
   @@unique([clientId, email])
@@ -244,6 +247,8 @@ model Enquiry {
   submissionId String?      @unique
   ip          String?
   createdAt   DateTime      @default(now())
+  /// Removed from the console. Kept, so the record of who wrote in stays.
+  deletedAt   DateTime?
   updatedAt   DateTime      @updatedAt
 
   conversations Conversation[]
@@ -423,6 +428,10 @@ model AssetRequest {
   position    Int
   dueAt       DateTime?
   receivedAt  DateTime?
+  /// What the client wrote, for the things that are words rather than files:
+  /// a bio, a mission statement, which domain they want.
+  response    String?
+  respondedAt DateTime?
   /// Who at the client is sending it. Set by staff or by the client.
   assigneeId  String?
   assignee    ClientContact?     @relation("AssetRequestAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
@@ -758,6 +767,7 @@ model Document {
 
   versions          DocumentVersion[]
   signatureRequests SignatureRequest[]
+  suggestions       DocumentSuggestion[]
   conversations     Conversation[]
 
   @@index([projectId, kind])
@@ -1384,4 +1394,25 @@ model RateLimitHit {
 
   @@index([bucket, keyHash, createdAt])
   @@index([createdAt])
+}
+
+/// A client's own wording for a document they were sent: the whole text as
+/// they would have it, with a note. Staff compare it with what was sent and
+/// can start the next version from it. Never changes a signed version.
+model DocumentSuggestion {
+  id           String         @id @default(cuid())
+  documentId   String
+  document     Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  contactId    String?
+  contact      ClientContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  /// The version they were looking at when they suggested this.
+  basedOnVersion Int
+  bodyMarkdown String
+  note         String?
+  /// open, used (became a version), or set aside.
+  status       String         @default("open")
+  createdAt    DateTime       @default(now())
+  resolvedAt   DateTime?
+
+  @@index([documentId, status])
 }

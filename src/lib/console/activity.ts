@@ -73,6 +73,8 @@ function describeAudit(action: string, summary: string | null): string {
     'deliverable.completed': 'Task done',
     'deliverable.reopened': 'Task reopened',
     'asset_request.status_changed': 'Client item updated',
+    'asset_request.answered': 'Client answered',
+    'client.setup_link.created': 'Setup link made',
     'asset.uploaded': 'Client sent a file',
     'invoice.created': 'Invoice created',
     'invoice.sent': 'Invoice sent',

@@ -383,13 +383,13 @@ export async function sendForSignature(
   });
 
   const failing = prepared.checks.find((check) => !check.ok);
-  if (failing || !prepared.signer) {
+  if (failing || !prepared.signer || !prepared.signer.email) {
     return {
       status: 'error',
-      message: failing?.problem ?? 'The client has no main contact yet.',
+      message: failing?.problem ?? 'The client has no main contact with an email address yet.',
     };
   }
-  const contact = prepared.signer;
+  const contact = { ...prepared.signer, email: prepared.signer.email };
 
   const terms = await currentTerms();
   const documentHash = hashDocument(prepared.final);

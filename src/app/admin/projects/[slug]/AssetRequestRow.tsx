@@ -23,6 +23,7 @@ export function AssetRequestRow({
   title,
   detail,
   status,
+  response = null,
   files = [],
   assigneeId = '',
   contacts = [],
@@ -31,6 +32,8 @@ export function AssetRequestRow({
   title: string;
   detail: string | null;
   status: string;
+  /** What the client wrote back, when it was words rather than a file. */
+  response?: string | null;
   /** What the client attached. Reached at /files/<id> on this host. */
   files?: { id: string; filename: string; size: string; when: string }[];
   /** Who at the client is sending it, from their own people. */
@@ -45,6 +48,7 @@ export function AssetRequestRow({
       <div className={styles.text}>
         <span className={styles.title}>{title}</span>
         {detail && <span className={styles.detail}>{detail}</span>}
+        {response && <span className={styles.response}>{response}</span>}
         {files.length > 0 && (
           <span className={styles.files}>
             {files.map((file) => (

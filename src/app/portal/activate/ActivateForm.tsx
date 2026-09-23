@@ -6,7 +6,16 @@ import forms from '@/styles/forms.module.css';
 
 const INITIAL: ActivateState = { status: 'idle' };
 
-export function ActivateForm({ defaultName }: { defaultName: string }) {
+export function ActivateForm({
+  defaultName,
+  email,
+  defaultPhone,
+}: {
+  defaultName: string;
+  /** Known already, or null when they are giving it now. */
+  email: string | null;
+  defaultPhone: string;
+}) {
   const [state, action, pending] = useActionState(activateAccount, INITIAL);
 
   return (
@@ -29,6 +38,28 @@ export function ActivateForm({ defaultName }: { defaultName: string }) {
         </div>
 
         <div className={forms.field}>
+          <label htmlFor="email" className={forms.label}>
+            Email
+          </label>
+          {email ? (
+            <p className={forms.hint} id="email">
+              You will sign in with {email}.
+            </p>
+          ) : (
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              maxLength={254}
+              disabled={pending}
+              className={forms.control}
+            />
+          )}
+        </div>
+
+        <div className={forms.field}>
           <label htmlFor="phone" className={forms.label}>
             Phone <span className={forms.optional}>(optional)</span>
           </label>
@@ -37,6 +68,8 @@ export function ActivateForm({ defaultName }: { defaultName: string }) {
             name="phone"
             type="tel"
             autoComplete="tel"
+            defaultValue={defaultPhone}
+            maxLength={40}
             disabled={pending}
             className={forms.control}
           />

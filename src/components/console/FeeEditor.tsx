@@ -358,22 +358,22 @@ function FeeForm({
               placeholder="50% at the start, 50% on handover"
             />
           </div>
-          {fee && (
-            <div className={forms.field}>
-              <span className={forms.label} id="fee-status-label">
-                Status
-              </span>
-              <Select
-                aria-labelledby="fee-status-label"
-                value={status}
-                onValueChange={setStatus}
-                options={(['planned', 'active', 'deferred', 'paused', 'waived'] as const).map((value) => ({
-                  value,
-                  label: FEE_STATUS_LABEL[value],
-                }))}
-              />
-            </div>
-          )}
+          {/* On a new fee too: a line agreed now but charged later (email
+              set up next year, a feature paused) is added as such. */}
+          <div className={forms.field}>
+            <span className={forms.label} id="fee-status-label">
+              Status
+            </span>
+            <Select
+              aria-labelledby="fee-status-label"
+              value={status}
+              onValueChange={setStatus}
+              options={(['planned', 'active', 'deferred', 'paused', 'waived'] as const).map((value) => ({
+                value,
+                label: FEE_STATUS_LABEL[value],
+              }))}
+            />
+          </div>
         </div>
       )}
 

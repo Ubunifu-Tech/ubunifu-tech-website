@@ -251,6 +251,12 @@ export async function sendInvoice(
       message: 'This client has no main contact to send it to. Add one first.',
     };
   }
+  if (!contact.email) {
+    return {
+      status: 'error',
+      message: `There is no email address for ${contact.name} yet. Share their setup link first.`,
+    };
+  }
 
   const { token } = await issueMagicToken({
     purpose: 'invoice_access',
@@ -487,6 +493,12 @@ export async function emailReceipt(
 
   const contact = receipt.payment.invoice.client.contacts[0];
   if (!contact) return { status: 'error', message: 'This client has no main contact.' };
+  if (!contact.email) {
+    return {
+      status: 'error',
+      message: `There is no email address for ${contact.name} yet. Share their setup link first.`,
+    };
+  }
 
   const sent = await sendConsoleEmail({
     to: contact.email,

@@ -14,6 +14,7 @@ import {
   setMainContact,
 } from '../actions';
 import { Figures } from '@/components/console/Figures';
+import { SetupLink } from './SetupLink';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -340,7 +341,11 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                       </span>
                     </td>
                     <td className={table.td}>
-                      <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                      {contact.email ? (
+                        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                      ) : (
+                        'No email yet'
+                      )}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
                       {contact.phone ?? <span className={table.muted}>Not given</span>}
@@ -367,6 +372,9 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                       )}
                     </td>
                     <td className={`${table.td} ${table.actions}`}>
+                      {mayManage && !contact.activatedAt && contact.canSignIn && (
+                        <SetupLink contactId={contact.id} />
+                      )}
                       {mayManage && (
                       <PersonActions
                         contactId={contact.id}
@@ -374,7 +382,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                         activated={contact.activatedAt !== null}
                         canSignIn={contact.canSignIn}
                         hidden={{ clientId: client.id }}
-                        invite={inviteContact}
+                        invite={contact.email ? inviteContact : undefined}
                         makeMain={setMainContact}
                         remove={removeClientContact}
                       />

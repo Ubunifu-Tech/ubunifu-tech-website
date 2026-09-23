@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
 import { Avatar } from '@/components/console/Avatar';
@@ -23,16 +23,6 @@ const TONE_CLASS: Record<string, string> = {
   bad: forms.badgeBad,
 };
 
-const SERVICE_LABEL: Record<string, string> = {
-  web: 'Web',
-  hosting: 'Hosting',
-  branding: 'Branding',
-  data: 'Data',
-  ai: 'AI',
-  strategy: 'Strategy',
-  product: 'Product',
-  other: 'Other',
-};
 
 /**
  * "Live" is the default view, and it means work that is actually moving — not

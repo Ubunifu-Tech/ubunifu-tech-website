@@ -76,7 +76,7 @@ export function LeadSelect({
   const [, action] = useActionState(setProjectLead, INITIAL);
   return (
     <form action={action} className={styles.lead}>
-      <span className={styles.leadLabel}>Lead</span>
+      <span className={styles.leadLabel}>Owner</span>
       <input type="hidden" name="projectId" value={projectId} />
       <Select
         name="ownerId"
@@ -84,7 +84,7 @@ export function LeadSelect({
         options={people}
         size="sm"
         autoSubmit
-        aria-label="Project lead"
+        aria-label="Project owner"
       />
     </form>
   );

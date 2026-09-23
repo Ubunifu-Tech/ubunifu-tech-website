@@ -588,12 +588,18 @@ export default async function DocumentPage({
             {live && ['sent', 'viewed'].includes(live.status) && (
               <WithdrawDocument documentId={document.id} />
             )}
-            <SendForSignature
-              documentId={document.id}
-              alreadySent={Boolean(live)}
-              ready={prepared.ready}
-              signer={prepared.signer?.name ?? null}
-            />
+            {/* Once it is with them, sending again only makes sense for a newer
+                version; otherwise the choice is to wait or withdraw. */}
+            {(!live ||
+              !['sent', 'viewed'].includes(live.status) ||
+              (document.versions[0]?.version ?? 0) > live.version.version) && (
+              <SendForSignature
+                documentId={document.id}
+                alreadySent={Boolean(live)}
+                ready={prepared.ready}
+                signer={prepared.signer?.name ?? null}
+              />
+            )}
             {stepNav}
           </section>
           {versions}

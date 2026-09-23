@@ -23,7 +23,7 @@ export function NewDocument({ projectId, projectName }: { projectId: string; pro
     <form action={action} className={forms.form}>
       <input type="hidden" name="projectId" value={projectId} />
       <div className={forms.grid}>
-        <div className={forms.field}>
+        <div className={`${forms.field} ${forms.wide}`}>
           <label className={forms.label} htmlFor="doc-kind">
             Kind
           </label>
@@ -41,7 +41,7 @@ export function NewDocument({ projectId, projectName }: { projectId: string; pro
           />
         </div>
 
-        <div className={forms.field}>
+        <div className={`${forms.field} ${forms.wide}`}>
           <label className={forms.label} htmlFor="doc-title">
             Title
           </label>

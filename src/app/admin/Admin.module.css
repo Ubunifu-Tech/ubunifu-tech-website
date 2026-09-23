@@ -481,6 +481,15 @@
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 }
 
+/* The side column needs about 20rem to hold a row with a control in it, which
+   a laptop window with the sidebar open does not leave; below that the two
+   stack, the side column after the main one. */
+@media (max-width: 80rem) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .phase {
   padding: var(--space-5) 0;
   border-top: 1px solid var(--border);
@@ -1260,4 +1269,207 @@
   color: var(--text-secondary);
   font-size: var(--font-size-small);
   line-height: 1.5;
+}
+
+/* ── Project top ───────────────────────────────── */
+
+.projectTop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.projectTop .backLink {
+  margin-bottom: 0;
+}
+
+.projectTitleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-5);
+  flex-wrap: wrap;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  flex-wrap: wrap;
+}
+
+.projectMeta > span:not(:first-child)::before,
+.projectMeta > a + span::before {
+  content: '·';
+  margin-right: var(--space-3);
+  color: var(--border-active);
+}
+
+/* Where the project is: six stops on one line, done ones filled. */
+.track {
+  display: flex;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trackStep {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 1.375rem var(--space-2) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.35;
+}
+
+/* The line to the next stop. */
+.trackStep::before {
+  content: '';
+  position: absolute;
+  top: 0.4375rem;
+  left: 0.75rem;
+  right: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.trackStep:last-child::before {
+  display: none;
+}
+
+/* The stop itself. */
+.trackStep::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  box-sizing: border-box;
+  border: 2px solid var(--border-hover);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.trackDone {
+  color: var(--text-secondary);
+}
+
+.trackDone::before,
+.trackDone::after {
+  background: var(--accent);
+}
+
+.trackDone::after {
+  border-color: var(--accent);
+}
+
+.trackCurrent {
+  color: var(--text-primary);
+}
+
+.trackCurrent::after {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-dim);
+}
+
+.trackNow {
+  color: var(--accent-deep);
+}
+
+.trackStopped .trackCurrent::after {
+  border-color: var(--text-tertiary);
+  box-shadow: none;
+}
+
+.trackStopped .trackNow {
+  color: var(--text-tertiary);
+}
+
+.trackLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A phone: only the current stop is named. */
+@media (max-width: 40rem) {
+  .trackStep:not(.trackCurrent) .trackLabel {
+    visibility: hidden;
+  }
+
+  .trackCurrent {
+    overflow: visible;
+  }
+
+  .trackCurrent .trackLabel,
+  .trackCurrent .trackNow {
+    overflow: visible;
+    white-space: nowrap;
+  }
+}
+
+/* People and dates beside the overview. */
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.people li {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.personName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  flex-wrap: wrap;
+}
+
+.personMeta {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dates {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dates dt {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.dates dd {
+  margin: 0.125rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+}
+
+.dateLate {
+  color: var(--danger) !important;
 }

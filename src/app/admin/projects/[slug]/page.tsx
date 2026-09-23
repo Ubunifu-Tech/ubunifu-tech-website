@@ -2,8 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
-import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
+import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { documentStage, guardsFor, loadGuardFacts, transitionsFor } from '@/lib/console/transitions';
+import { activityFor } from '@/lib/console/activity';
+import { ActivityFeed } from '@/components/console/ActivityFeed';
+import { Figures } from '@/components/console/Figures';
+import { StageCatchUp, StageTrack } from './StageTrack';
 import { billableLines } from '@/lib/console/billing';
 import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
@@ -83,7 +87,14 @@ export default async function ProjectPage({
           contacts: {
             where: { deletedAt: null },
             orderBy: [{ isPrimary: 'desc' }, { name: 'asc' }],
-            select: { id: true, name: true },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              canSignIn: true,
+              activatedAt: true,
+            },
           },
         },
       },
@@ -282,74 +293,160 @@ export default async function ProjectPage({
     ...project.client.contacts.map((contact) => ({ value: contact.id, label: contact.name })),
   ];
 
+  // Documents already further on than the project: a signed agreement on a
+  // project that still reads "Lead", from before documents moved projects on.
+  const behind = documentStage(project.status, project.documents);
+
+  const overdue = project.invoices
+    .filter(
+      (invoice) =>
+        invoice.currency === project.currency &&
+        (invoice.status === 'sent' || invoice.status === 'part_paid' || invoice.status === 'overdue') &&
+        invoice.dueAt !== null &&
+        invoice.dueAt < now,
+    )
+    .reduce((total, invoice) => total + Math.max(0, invoice.totalMinor - invoice.paidMinor), 0);
+
+  const delivered = ['launched', 'handover', 'closed', 'cancelled'].includes(project.status);
+  const daysToTarget = project.targetDate
+    ? Math.ceil((project.targetDate.getTime() - now.getTime()) / 86_400_000)
+    : null;
+  const late = !delivered && daysToTarget !== null && daysToTarget < 0;
+  const targetNote =
+    daysToTarget === null
+      ? 'No date agreed yet'
+      : delivered
+        ? 'Delivered'
+        : late
+          ? `${-daysToTarget} ${daysToTarget === -1 ? 'day' : 'days'} late`
+          : daysToTarget === 0
+            ? 'Today'
+            : `In ${daysToTarget} ${daysToTarget === 1 ? 'day' : 'days'}`;
+
+  const signedAgreement = project.documents.find(
+    (document) =>
+      document.status === 'signed' && (document.kind === 'contract' || document.kind === 'statement_of_work'),
+  );
+  const recent = await activityFor(
+    [project.id, ...project.documents.map((d) => d.id), ...project.invoices.map((i) => i.id)],
+    6,
+  );
+
   const href = (key: Tab) => (key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`);
   const percent = totalDeliverables > 0 ? Math.round((doneDeliverables / totalDeliverables) * 100) : 0;
 
   return (
     <main className={styles.page}>
-      <div className={styles.pageHead}>
-        <div className={styles.headText}>
-          <Link href="/projects" className={styles.backLink}>
-            ← Projects
-          </Link>
-          <h1 className={styles.heading}>{project.name}</h1>
-          <p className={styles.lead}>
-            <Link href={`/clients/${project.client.slug}`} className={styles.inlineLink}>
-              {project.client.name}
-            </Link>
-            {' · '}
-            {project.reference}
-          </p>
+      <div className={styles.projectTop}>
+        <Link href="/projects" className={styles.backLink}>
+          ← Projects
+        </Link>
+        <div className={styles.projectTitleRow}>
+          <div className={styles.headText}>
+            <h1 className={styles.heading}>{project.name}</h1>
+            <p className={styles.projectMeta}>
+              <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
+                {STAFF_LABEL[project.status]}
+              </span>
+              <Link href={`/clients/${project.client.slug}`} className={styles.inlineLink}>
+                {project.client.name}
+              </Link>
+              <span>{project.reference}</span>
+              <span>{SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}</span>
+            </p>
+          </div>
+          <div className={styles.headActions}>
+            {mayRun ? (
+              <LeadSelect projectId={project.id} ownerId={project.ownerId ?? ''} people={people} />
+            ) : (
+              <span className={styles.leadRead}>
+                Owner: {team.find((person) => person.id === project.ownerId)?.name ?? 'nobody yet'}
+              </span>
+            )}
+          </div>
         </div>
-        <div className={styles.headActions}>
-          {mayRun ? (
-            <LeadSelect projectId={project.id} ownerId={project.ownerId ?? ''} people={people} />
-          ) : (
-            <span className={styles.leadRead}>
-              Lead: {team.find((person) => person.id === project.ownerId)?.name ?? 'nobody yet'}
-            </span>
-          )}
-          <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
-            {STAFF_LABEL[project.status]}
-          </span>
-        </div>
+        <StageTrack
+          status={project.status}
+          statusLabel={STAFF_LABEL[project.status]}
+          pausedAt={
+            project.status === 'on_hold' || project.status === 'cancelled'
+              ? (project.statusEvents.find((event) => event.to === project.status)?.from ?? null)
+              : null
+          }
+        />
       </div>
 
-      <div className={styles.summary}>
-        <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>Progress</span>
-          <span className={styles.summaryValue}>
-            {doneDeliverables}/{totalDeliverables} tasks
-          </span>
-          <span className={styles.summaryBar} aria-hidden="true">
-            <span style={{ width: `${percent}%` }} />
-          </span>
-        </div>
-        {(mayFees || mayMoney) && (
-          <div className={styles.summaryItem}>
-            <span className={styles.summaryLabel}>Agreed fees</span>
-            <span className={styles.summaryValue}>{formatMoney(committed, project.currency)}</span>
-          </div>
-        )}
-        {mayMoney && (
-          <>
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Invoiced</span>
-              <span className={styles.summaryValue}>{formatMoney(invoiced, project.currency)}</span>
-            </div>
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Paid</span>
-              <span className={styles.summaryValue}>{formatMoney(paid, project.currency)}</span>
-            </div>
-          </>
-        )}
-        <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>Target date</span>
-          <span className={styles.summaryValue}>
-            {project.targetDate ? formatShortDate(project.targetDate) : 'Not set'}
-          </span>
-        </div>
-      </div>
+      {mayRun && behind && (
+        <StageCatchUp
+          projectId={project.id}
+          reference={behind.reference}
+          what={behind.milestone === 'signed' ? 'signed' : 'with the client to sign'}
+          to={STAFF_LABEL[behind.to].toLowerCase()}
+        />
+      )}
+
+      <Figures
+        label="This project at a glance"
+        items={[
+          {
+            label: 'Progress',
+            value: totalDeliverables === 0 ? 'No plan yet' : `${doneDeliverables} of ${totalDeliverables}`,
+            note:
+              totalDeliverables === 0
+                ? 'Add phases and tasks on the Plan tab'
+                : `${percent}% of tasks done`,
+            href: href('plan'),
+          },
+          ...(mayFees || mayMoney
+            ? [
+                {
+                  label: 'Agreed fees',
+                  value: formatMoney(committed, project.currency),
+                  note:
+                    fees.length === 0
+                      ? 'No fees set yet'
+                      : unpriced > 0
+                        ? `${unpriced} ${unpriced === 1 ? 'fee needs' : 'fees need'} a price`
+                        : `${fees.length} ${fees.length === 1 ? 'fee' : 'fees'}`,
+                  tone: unpriced > 0 ? ('warn' as const) : undefined,
+                  href: href('fees'),
+                },
+              ]
+            : []),
+          ...(mayMoney
+            ? [
+                {
+                  label: 'Invoiced',
+                  value: formatMoney(invoiced, project.currency),
+                  note:
+                    project.invoices.length === 0
+                      ? 'Nothing invoiced yet'
+                      : `${project.invoices.length} ${project.invoices.length === 1 ? 'invoice' : 'invoices'}`,
+                  href: href('fees'),
+                },
+                {
+                  label: 'Paid',
+                  value: formatMoney(paid, project.currency),
+                  note:
+                    overdue > 0
+                      ? `${formatMoney(overdue, project.currency)} past due`
+                      : invoiced - paid > 0
+                        ? `${formatMoney(invoiced - paid, project.currency)} still to come in`
+                        : invoiced > 0
+                          ? 'All invoiced money is in'
+                          : 'Nothing to collect yet',
+                  tone: overdue > 0 ? ('bad' as const) : undefined,
+                },
+              ]
+            : []),
+          {
+            label: 'Target date',
+            value: project.targetDate ? formatShortDate(project.targetDate) : 'Not set',
+            note: targetNote,
+            tone: late ? ('bad' as const) : undefined,
+          },
+        ]}
+      />
 
       <Tabs
         current={tab}
@@ -400,9 +497,11 @@ export default async function ProjectPage({
               <ul className={styles.glance}>
                 <li>
                   <Link href={href('plan')}>
-                    {totalDeliverables - doneDeliverables === 0
-                      ? 'All tasks done'
-                      : `${totalDeliverables - doneDeliverables} tasks still to do`}
+                    {totalDeliverables === 0
+                      ? 'No plan yet'
+                      : totalDeliverables - doneDeliverables === 0
+                        ? 'All tasks done'
+                        : `${totalDeliverables - doneDeliverables} tasks still to do`}
                   </Link>
                 </li>
                 {(mayFees || mayMoney) && (
@@ -465,6 +564,74 @@ export default async function ProjectPage({
                   ))}
                 </div>
               )}
+            </section>
+
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>People</h2>
+              </div>
+              <ul className={styles.people}>
+                <li>
+                  <span className={styles.personName}>
+                    {team.find((person) => person.id === project.ownerId)?.name ?? 'Nobody yet'}
+                  </span>
+                  <span className={styles.personMeta}>Owner at Ubunifu</span>
+                </li>
+                {project.client.contacts.map((contact) => (
+                  <li key={contact.id}>
+                    <span className={styles.personName}>
+                      {contact.name}
+                      <span
+                        className={`${forms.badge} ${
+                          contact.activatedAt ? forms.badgeGood : contact.canSignIn ? forms.badgeWarn : ''
+                        }`}
+                      >
+                        {contact.activatedAt ? 'In the portal' : contact.canSignIn ? 'Invited' : 'No portal'}
+                      </span>
+                    </span>
+                    <span className={styles.personMeta}>
+                      {[contact.role, project.client.name].filter(Boolean).join(', ')} ·{' '}
+                      <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Dates</h2>
+              </div>
+              <dl className={styles.dates}>
+                <div>
+                  <dt>Started</dt>
+                  <dd>{project.startDate ? formatShortDate(project.startDate) : 'Not yet'}</dd>
+                </div>
+                <div>
+                  <dt>Agreement signed</dt>
+                  <dd>{signedAgreement ? formatShortDate(signedAgreement.updatedAt) : 'Not yet'}</dd>
+                </div>
+                <div>
+                  <dt>Target</dt>
+                  <dd className={late ? styles.dateLate : ''}>
+                    {project.targetDate ? formatShortDate(project.targetDate) : 'Not set'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Launched</dt>
+                  <dd>{project.launchedAt ? formatShortDate(project.launchedAt) : 'Not yet'}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Lately</h2>
+                <Link href={href('activity')} className={table.action}>
+                  All of it
+                </Link>
+              </div>
+              <ActivityFeed items={recent} now={now} />
             </section>
           </div>
         </div>

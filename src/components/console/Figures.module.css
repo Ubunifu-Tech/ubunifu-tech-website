@@ -6,7 +6,7 @@
  * a note that asks for action, which is what keeps red meaning something. */
 
 .band {
-  display: grid;
+  display: flex;
   gap: 1px;
   margin-bottom: var(--space-6);
   overflow: hidden;
@@ -14,11 +14,14 @@
   border-radius: var(--app-radius-card);
   background: var(--border);
   box-shadow: var(--app-shadow-card);
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  flex-wrap: wrap;
 }
 
+/* Flexible rather than a fixed grid: a last row with fewer figures stretches
+   across the band instead of leaving an empty grey cell. */
 .figure {
   display: flex;
+  flex: 1 1 12rem;
   flex-direction: column;
   min-width: 0;
   padding: var(--space-5);
@@ -83,8 +86,8 @@
 
 /* Two to a row on a phone: a glance, not a scroll. */
 @media (max-width: 40rem) {
-  .band {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .figure {
+    flex-basis: 40%;
   }
 
   .figure {

@@ -1,6 +1,6 @@
 import 'server-only';
 import { db } from '@/lib/db';
-import type { ProjectStatus } from '@/generated/prisma/client';
+import type { ActorType, DocumentKind, Prisma, ProjectStatus } from '@/generated/prisma/client';
 import { STAFF_LABEL } from './project-status';
 import { formatMoney } from './money';
 
@@ -183,6 +183,119 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
 
 /** Neither of these has any outgoing edge that is not a revival or a resume. */
 export const TERMINAL: ProjectStatus[] = ['closed', 'cancelled'];
+
+/**
+ * The deal, in order: from first contact to a signed agreement.
+ *
+ * Sending and signing documents moves a project along this line by itself,
+ * so a project whose agreement is signed does not still read "Lead" and
+ * offer to start a proposal. It only ever moves forward, and only while the
+ * project is still on this line: a project already in the work, on hold or
+ * cancelled is left where it is. Each move is recorded like any other, with
+ * the document that caused it.
+ */
+const DEAL: ProjectStatus[] = [
+  'lead',
+  'proposal_draft',
+  'proposal_sent',
+  'proposal_accepted',
+  'contract_sent',
+  'contract_signed',
+];
+
+export type DocumentMilestone = 'sent' | 'signed';
+
+/** Where a document's sending or signing puts the project, if anywhere. */
+export function stageAfterDocument(
+  current: ProjectStatus,
+  kind: DocumentKind,
+  milestone: DocumentMilestone,
+): ProjectStatus | null {
+  const target: ProjectStatus | null =
+    kind === 'proposal'
+      ? milestone === 'sent'
+        ? 'proposal_sent'
+        : 'proposal_accepted'
+      : kind === 'contract' || kind === 'statement_of_work'
+        ? milestone === 'sent'
+          ? 'contract_sent'
+          : 'contract_signed'
+        : null;
+  if (!target) return null;
+  const from = DEAL.indexOf(current);
+  const to = DEAL.indexOf(target);
+  return from !== -1 && to > from ? target : null;
+}
+
+/**
+ * The furthest stage a project's documents put it at, when that is ahead of
+ * where the project says it is: for projects whose documents went out before
+ * sending and signing moved them on. Null when it is up to date.
+ */
+export function documentStage(
+  status: ProjectStatus,
+  documents: { reference: string; kind: DocumentKind; status: string }[],
+): { reference: string; kind: DocumentKind; milestone: DocumentMilestone; to: ProjectStatus } | null {
+  let best: { reference: string; kind: DocumentKind; milestone: DocumentMilestone; to: ProjectStatus } | null =
+    null;
+  for (const document of documents) {
+    const milestone: DocumentMilestone | null =
+      document.status === 'signed'
+        ? 'signed'
+        : document.status === 'sent' || document.status === 'viewed'
+          ? 'sent'
+          : null;
+    if (!milestone) continue;
+    const to = stageAfterDocument(status, document.kind, milestone);
+    if (to && (!best || DEAL.indexOf(to) > DEAL.indexOf(best.to))) {
+      best = { reference: document.reference, kind: document.kind, milestone, to };
+    }
+  }
+  return best;
+}
+
+/**
+ * Moves the project on for a document, inside the caller's transaction, and
+ * records why. Returns the move, or null when there was nothing to move.
+ */
+export async function advanceForDocument(
+  tx: Prisma.TransactionClient,
+  input: {
+    projectId: string;
+    kind: DocumentKind;
+    milestone: DocumentMilestone;
+    reference: string;
+    actorType: ActorType;
+    actorId: string | null;
+  },
+): Promise<{ from: ProjectStatus; to: ProjectStatus } | null> {
+  const project = await tx.project.findUnique({
+    where: { id: input.projectId },
+    select: { status: true },
+  });
+  if (!project) return null;
+  const to = stageAfterDocument(project.status, input.kind, input.milestone);
+  if (!to) return null;
+
+  // Conditional on the status just read, like every other move.
+  const moved = await tx.project.updateMany({
+    where: { id: input.projectId, status: project.status },
+    data: { status: to },
+  });
+  if (moved.count !== 1) return null;
+
+  await tx.projectStatusEvent.create({
+    data: {
+      projectId: input.projectId,
+      from: project.status,
+      to,
+      actorType: input.actorType,
+      actorId: input.actorId,
+      note: `${input.reference} ${input.milestone === 'signed' ? 'signed' : 'sent for signature'}`,
+    },
+  });
+  return { from: project.status, to };
+}
 
 /**
  * Where a held project is allowed to resume to.

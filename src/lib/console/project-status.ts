@@ -69,3 +69,15 @@ export const STATUS_TONE: Record<ProjectStatus, StatusTone> = {
   on_hold: 'warn',
   cancelled: 'bad',
 };
+
+/** A project's service line, in a word. */
+export const SERVICE_LABEL: Record<string, string> = {
+  web: 'Web',
+  hosting: 'Hosting',
+  branding: 'Branding',
+  data: 'Data',
+  ai: 'AI',
+  strategy: 'Strategy',
+  product: 'Product',
+  other: 'Other',
+};

@@ -662,3 +662,66 @@ export function documentResponseEmail(input: {
 
   return shell(`${input.reference}: ${headline}`, body);
 }
+
+/** The signer's own copy: what they signed, when, and where it is kept. */
+export function documentSignedEmail(input: {
+  name: string;
+  clientName: string;
+  documentTitle: string;
+  kind: string;
+  reference: string;
+  initials: string;
+  signedOn: string;
+  fingerprint: string;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Signed: ${escapeHtml(input.documentTitle)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Thank you, ${name}. You signed this on behalf of
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>. The signed
+      copy stays in your portal, where you can read it or save it as a PDF at any time.
+    </p>
+    ${facts([
+      ['Signed by', escapeHtml(`${input.name} (${input.initials})`)],
+      ['Signed on', escapeHtml(input.signedOn)],
+      ['Fingerprint', escapeHtml(input.fingerprint)],
+    ])}
+    ${button(input.url, 'Open your signed copy')}
+    <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
+      The fingerprint identifies the exact text you signed. If the document were
+      ever changed, it would no longer match.
+    </p>`;
+
+  return shell(`You signed ${input.documentTitle}.`, body);
+}
+
+/** Our own notice that a client has signed. */
+export function documentSignedNoticeEmail(input: {
+  reference: string;
+  title: string;
+  clientName: string;
+  from: string;
+  fromEmail: string;
+  version: number;
+  projectMoved: string | null;
+  url: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">
+      ${escapeHtml(input.reference)} · version ${input.version}
+    </p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.from)} signed it</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      <strong style="color:#1D1B22;">${escapeHtml(input.title)}</strong>, for
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>, signed by
+      ${escapeHtml(input.from)} (${escapeHtml(input.fromEmail)}).
+      ${input.projectMoved ? `The project is now ${escapeHtml(input.projectMoved)}.` : ''}
+    </p>
+    ${button(input.url, 'Open it in the console')}`;
+
+  return shell(`${input.reference} is signed`, body);
+}

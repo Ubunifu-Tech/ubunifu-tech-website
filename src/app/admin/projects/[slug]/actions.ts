@@ -9,6 +9,8 @@ import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { projectUpdateEmail } from '@/lib/emails';
 import {
+  advanceForDocument,
+  documentStage,
   guardsFor,
   isAllowed,
   loadGuardFacts,
@@ -34,7 +36,8 @@ export type MoveState = {
 };
 
 /**
- * Moves a project, and is the only thing in the codebase that writes
+ * Moves a project. With advanceForDocument in transitions.ts, which moves a
+ * project on when its documents are sent and signed, this is all that writes
  * Project.status.
  *
  * Nothing about this is a dropdown-and-save. The status column is what the
@@ -430,4 +433,57 @@ export async function publishUpdate(
     };
   }
   return { status: 'done', message: `Published and emailed to ${delivered}.` };
+}
+
+/**
+ * Brings a project's stage up to where its documents already are: an
+ * agreement signed while the project still read "Lead", from before sending
+ * and signing moved projects on by themselves. Forward only, and recorded
+ * like any other move.
+ */
+export async function catchUpStage(_previous: MoveState, formData: FormData): Promise<MoveState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const projectId = formText(formData, 'projectId');
+  const project = await db.project.findFirst({
+    where: { id: projectId, deletedAt: null },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+      documents: { select: { reference: true, kind: true, status: true } },
+    },
+  });
+  if (!project) return { status: 'error', message: 'That project no longer exists.' };
+
+  const step = documentStage(project.status, project.documents);
+  if (!step) return { status: 'done', message: 'It is already up to date.' };
+
+  const moved = await db.$transaction((tx) =>
+    advanceForDocument(tx, {
+      projectId: project.id,
+      kind: step.kind,
+      milestone: step.milestone,
+      reference: step.reference,
+      actorType: 'staff',
+      actorId: staff.id,
+    }),
+  );
+  if (!moved) {
+    return { status: 'error', message: 'It moved a moment ago. Reload to see where it stands.' };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'project.status_changed',
+    entityType: 'Project',
+    entityId: project.id,
+    summary: `${moved.from} → ${moved.to}, to match ${step.reference}`,
+  });
+
+  revalidatePath(`/admin/projects/${project.slug}`);
+  revalidatePath('/portal', 'layout');
+  return { status: 'done' };
 }

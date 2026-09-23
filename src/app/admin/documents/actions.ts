@@ -4,6 +4,7 @@ import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
+import { advanceForDocument } from '@/lib/console/transitions';
 import { DocumentKind } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
@@ -447,6 +448,16 @@ export async function sendForSignature(
     await tx.document.update({
       where: { id: document.id },
       data: { status: 'sent' },
+    });
+
+    // A proposal or agreement going out moves the project on to match.
+    await advanceForDocument(tx, {
+      projectId: document.project.id,
+      kind: document.kind,
+      milestone: 'sent',
+      reference: document.reference,
+      actorType: 'staff',
+      actorId: staff.id,
     });
 
     return { id: created.id, version: version.version };

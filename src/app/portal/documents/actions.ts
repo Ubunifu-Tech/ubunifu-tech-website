@@ -4,10 +4,14 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireClient, recordAudit } from '@/lib/console/auth';
-import { hashDocument } from '@/lib/console/documents';
+import { DOCUMENT_KIND_LABEL, hashDocument } from '@/lib/console/documents';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { consoleEnv } from '@/lib/console/env';
-import { documentResponseEmail } from '@/lib/emails';
+import { documentResponseEmail, documentSignedEmail, documentSignedNoticeEmail } from '@/lib/emails';
+import { advanceForDocument } from '@/lib/console/transitions';
+import { STAFF_LABEL } from '@/lib/console/project-status';
+import { formatDate } from '@/lib/console/money';
+import type { ProjectStatus } from '@/generated/prisma/client';
 import { formText } from '@/lib/console/form';
 
 export type SignState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -56,7 +60,13 @@ export async function signDocument(
       termsVersionId: true,
       version: { select: { id: true, bodyMarkdown: true, version: true } },
       document: {
-        select: { id: true, reference: true, title: true, project: { select: { slug: true } } },
+        select: {
+          id: true,
+          reference: true,
+          title: true,
+          kind: true,
+          project: { select: { id: true, slug: true } },
+        },
       },
     },
   });
@@ -114,6 +124,9 @@ export async function signDocument(
    * signed: a double tap, or a decline in another tab a moment earlier, lost
    * the claim, and the record then said the opposite of what happened.
    */
+  // Set inside the transaction below; the cast stops TypeScript assuming it
+  // stays null, since it cannot see assignments made in a callback.
+  let moved = null as { from: ProjectStatus; to: ProjectStatus } | null;
   const signed = await db.$transaction(async (tx) => {
     // Conditional on the status we read, so two taps on a phone cannot record
     // two signatures against one request.
@@ -147,6 +160,17 @@ export async function signDocument(
       where: { id: request.document.id },
       data: { status: 'signed' },
     });
+
+    // A signed proposal or agreement moves the project on to match, in the
+    // same transaction, so the two can never disagree.
+    moved = await advanceForDocument(tx, {
+      projectId: request.document.project.id,
+      kind: request.document.kind,
+      milestone: 'signed',
+      reference: request.document.reference,
+      actorType: 'client_contact',
+      actorId: actor.id,
+    });
     return true;
   });
 
@@ -176,11 +200,66 @@ export async function signDocument(
     metadata: { version: request.version.version, documentHash: hashNow },
   });
 
+  if (moved) {
+    await recordAudit({
+      actorType: 'client_contact',
+      actorId: actor.id,
+      action: 'project.status_changed',
+      entityType: 'Project',
+      entityId: request.document.project.id,
+      summary: `${moved.from} → ${moved.to}, when ${request.document.reference} was signed`,
+    });
+  }
+
+  // Their copy, and our notice. Both after the signature is safely recorded:
+  // an email that fails costs promptness, never the signature.
+  const signedOn = formatDate(now);
+  const kindLabel = DOCUMENT_KIND_LABEL[request.document.kind];
+  await sendConsoleEmail({
+    to: actor.email,
+    subject: `Signed: ${request.document.title}`,
+    html: documentSignedEmail({
+      name: actor.name,
+      clientName: actor.clientName,
+      documentTitle: request.document.title,
+      kind: kindLabel,
+      reference: request.document.reference,
+      initials,
+      signedOn,
+      fingerprint: `${hashNow.slice(0, 8)}…${hashNow.slice(-8)}`,
+      url: `${consoleEnv.publicOrigin}/portal/documents/${request.document.reference}`,
+    }),
+    template: 'document_signed_copy',
+    entityType: 'Document',
+    entityId: request.document.id,
+  });
+  await sendConsoleEmail({
+    to: 'info@ubunifutech.com',
+    subject: `[${request.document.reference}] Signed by ${actor.name}`,
+    html: documentSignedNoticeEmail({
+      reference: request.document.reference,
+      title: request.document.title,
+      clientName: actor.clientName,
+      from: actor.name,
+      fromEmail: actor.email,
+      version: request.version.version,
+      projectMoved: moved ? STAFF_LABEL[moved.to].toLowerCase() : null,
+      url: `${consoleEnv.adminOrigin}/documents/${request.document.reference}`,
+    }),
+    template: 'document_signed_notice',
+    entityType: 'Document',
+    entityId: request.document.id,
+  });
+
   revalidatePath('/portal/documents');
+  revalidatePath('/portal', 'layout');
   revalidatePath(`/admin/documents/${request.document.reference}`);
   revalidatePath(`/admin/projects/${request.document.project.slug}`);
 
-  return { status: 'done', message: 'Signed. Thank you. We have a copy and so do you.' };
+  return {
+    status: 'done',
+    message: 'Signed. Thank you. A copy is on its way to your email, and it stays here.',
+  };
 }
 
 

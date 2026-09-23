@@ -113,6 +113,7 @@ export type NewClientInput = {
 
 export type NewClientResult = {
   clientId: string;
+  clientSlug: string;
   contactId: string;
   projectId: string | null;
   reference: string | null;

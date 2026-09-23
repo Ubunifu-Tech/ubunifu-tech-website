@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { recordAudit } from './auth';
 import { consoleEnv } from './env';
-import { issueMagicToken } from './magic-link';
+import { issueMagicToken, revokeMagicTokens } from './magic-link';
 import { sendConsoleEmail } from './mailer';
 import { clientInviteEmail, colleagueInviteEmail } from '@/lib/emails';
 import { isUniqueConflict } from './conflict';
@@ -22,8 +22,13 @@ export type NewContact = {
   phone: string | null;
 };
 
-export function readContact(formData: FormData): { ok: true; contact: NewContact } | { ok: false; message: string } {
-  const text = (key: string, max: number) => String(formData.get(key) ?? '').trim().slice(0, max);
+export function readContact(
+  formData: FormData,
+): { ok: true; contact: NewContact } | { ok: false; message: string } {
+  const text = (key: string, max: number) =>
+    String(formData.get(key) ?? '')
+      .trim()
+      .slice(0, max);
   const name = text('name', 120);
   const email = text('email', 254).toLowerCase();
   if (name.length < 2) return { ok: false, message: 'Add their name.' };
@@ -66,19 +71,20 @@ export async function addContact(input: {
 
   let person;
   try {
-  person = existing
-    ? await db.clientContact.update({
-        where: { id: existing.id },
-        data: { ...contact, deletedAt: null, canSignIn: true },
-        select: { id: true, name: true, email: true, activatedAt: true },
-      })
-    : await db.clientContact.create({
-        data: { clientId: input.clientId, ...contact },
-        select: { id: true, name: true, email: true, activatedAt: true },
-      });
+    person = existing
+      ? await db.clientContact.update({
+          where: { id: existing.id },
+          data: { ...contact, deletedAt: null, canSignIn: true },
+          select: { id: true, name: true, email: true, activatedAt: true },
+        })
+      : await db.clientContact.create({
+          data: { clientId: input.clientId, ...contact },
+          select: { id: true, name: true, email: true, activatedAt: true },
+        });
   } catch (error) {
     // Added by someone else in the same moment.
-    if (isUniqueConflict(error)) return { ok: false, message: 'Someone with that email is already here.' };
+    if (isUniqueConflict(error))
+      return { ok: false, message: 'Someone with that email is already here.' };
     throw error;
   }
 
@@ -107,6 +113,79 @@ export async function addContact(input: {
         ? `${person.name} added, but the invitation did not send: ${sent.error}`
         : `${person.name} added, but the invitation did not send. Use Send invitation to try again.`,
   };
+}
+
+/**
+ * Corrects a person's details: a placeholder name, a missing email, a new job
+ * title. The email can only change until they finish setting up; after that
+ * it is how they sign in, and theirs to change from their own profile.
+ */
+export async function updateContact(input: {
+  contactId: string;
+  clientId: string;
+  name: string;
+  email: string;
+  role: string | null;
+  phone: string | null;
+  by: Actor;
+}): Promise<{ ok: true; message: string } | { ok: false; message: string }> {
+  const name = input.name.trim().slice(0, 120);
+  const email = input.email.trim().toLowerCase().slice(0, 254);
+  if (name.length < 2) return { ok: false, message: 'Add their name.' };
+  if (email && !EMAIL.test(email)) return { ok: false, message: 'That email does not look right.' };
+
+  const contact = await db.clientContact.findFirst({
+    where: { id: input.contactId, clientId: input.clientId, deletedAt: null },
+    select: { id: true, email: true, activatedAt: true },
+  });
+  if (!contact) return { ok: false, message: 'That person is no longer here.' };
+
+  const emailChanged = (contact.email ?? '') !== email;
+  if (emailChanged && contact.activatedAt) {
+    return {
+      ok: false,
+      message: 'They have set up their account, so they change their email themselves.',
+    };
+  }
+  if (emailChanged && !email && contact.email) {
+    return { ok: false, message: 'Keep an email, or correct it.' };
+  }
+  if (emailChanged && email) {
+    // One portal account per address, the same rule setup applies.
+    const taken = await db.clientContact.findFirst({
+      where: { email, deletedAt: null, NOT: { id: contact.id } },
+      select: { id: true },
+    });
+    if (taken) return { ok: false, message: 'Someone else already uses that email.' };
+  }
+
+  try {
+    await db.clientContact.update({
+      where: { id: contact.id },
+      data: { name, email: email || null, role: input.role, phone: input.phone },
+    });
+  } catch (error) {
+    if (isUniqueConflict(error))
+      return { ok: false, message: 'Someone else already uses that email.' };
+    throw error;
+  }
+
+  // Links already emailed went to the old address; a wrong address is the
+  // usual reason for changing it, so those links stop working. A setup link
+  // shared by hand had no address behind it and keeps working.
+  if (emailChanged && contact.email) {
+    await revokeMagicTokens('client_contact', contact.id, ['invite', 'sign_in']);
+  }
+
+  await recordAudit({
+    actorType: input.by.type,
+    actorId: input.by.id,
+    action: 'client.contact_saved',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: emailChanged ? `${name}, email now ${email}` : name,
+  });
+  return { ok: true, message: 'Saved.' };
 }
 
 /** An invitation to set up an account, or a sign-in link for someone who has one. */
@@ -154,7 +233,9 @@ export async function invitePerson(input: {
     action: sent.ok ? 'client.invite.sent' : 'client.invite.send_failed',
     entityType: 'ClientContact',
     entityId: contact.id,
-    summary: sent.ok ? `Sent to ${contact.email}` : `Could not send to ${contact.email}: ${sent.error}`,
+    summary: sent.ok
+      ? `Sent to ${contact.email}`
+      : `Could not send to ${contact.email}: ${sent.error}`,
   });
 
   return sent;

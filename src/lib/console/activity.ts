@@ -73,6 +73,7 @@ const ACTION_LABELS: Record<string, string> = {
   'ticket.client_replied': 'Client replied to a request',
   'client.contact_added': 'Contact added',
   'client.contact_removed': 'Contact removed',
+  'client.contact_saved': 'Contact details changed',
   'client.profile_saved': 'Contact details updated',
   'deliverable.assigned': 'Task assigned',
   'asset_request.assigned': 'Client item assigned',

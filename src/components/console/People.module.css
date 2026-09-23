@@ -37,3 +37,14 @@
 .danger {
   color: var(--tone-red-fg);
 }
+
+/* The panel a person's details are corrected in, opened from their row. */
+.editPanel {
+  z-index: 80;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+  box-shadow: var(--app-shadow-pop);
+}

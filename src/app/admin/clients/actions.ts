@@ -6,7 +6,11 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
-import { issueMagicToken, revokeEveryMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
+import {
+  issueMagicToken,
+  revokeEveryMagicToken,
+  revokeMagicTokens,
+} from '@/lib/console/magic-link';
 import { revokeAllSessions, revokeSessionsFor } from '@/lib/console/session';
 import { namesMatch, type RemovalState } from '@/lib/console/confirm-name';
 import { withdrawOpenSignatures } from '@/lib/console/removal';
@@ -16,6 +20,7 @@ import {
   makeMainContact,
   readContact,
   removeContact,
+  updateContact,
 } from '@/lib/console/contacts';
 import { allow } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
@@ -62,7 +67,10 @@ export async function inviteContact(
     return { status: 'error', message: 'Portal access is turned off for this contact.' };
   }
   if (!(await allow('client-invite', contact.id, { limit: 5, windowMinutes: 60 }))) {
-    return { status: 'error', message: 'Several links went out in the last hour. Try again later.' };
+    return {
+      status: 'error',
+      message: 'Several links went out in the last hour. Try again later.',
+    };
   }
 
   const sent = await invitePerson({
@@ -89,7 +97,10 @@ export async function addClientContact(
   const read = readContact(formData);
   if (!read.ok) return { status: 'error', message: read.message };
   if (!(await allow('contact-add', staff.id, { limit: 40, windowMinutes: 24 * 60 }))) {
-    return { status: 'error', message: 'That is a lot of new people for one day. Try again tomorrow.' };
+    return {
+      status: 'error',
+      message: 'That is a lot of new people for one day. Try again tomorrow.',
+    };
   }
 
   const result = await addContact({
@@ -101,7 +112,37 @@ export async function addClientContact(
   });
 
   revalidatePath(`/admin/clients/${client.slug}`);
-  return result.ok ? { status: 'done', message: result.message } : { status: 'error', message: result.message };
+  return result.ok
+    ? { status: 'done', message: result.message }
+    : { status: 'error', message: result.message };
+}
+
+/** Corrects a contact's name, email, job title or phone. */
+export async function saveClientContact(
+  _previous: InviteState,
+  formData: FormData,
+): Promise<InviteState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const optional = (key: string, max: number) => formText(formData, key).slice(0, max) || null;
+  const result = await updateContact({
+    contactId: formText(formData, 'contactId'),
+    clientId: client.id,
+    name: formText(formData, 'name'),
+    email: formText(formData, 'email'),
+    role: optional('role', 80),
+    phone: optional('phone', 40),
+    by: { type: 'staff', id: staff.id, name: staff.name },
+  });
+
+  revalidatePath(`/admin/clients/${client.slug}`);
+  revalidatePath('/admin/projects', 'layout');
+  return result.ok
+    ? { status: 'done', message: result.message }
+    : { status: 'error', message: result.message };
 }
 
 export async function setMainContact(
@@ -189,7 +230,10 @@ export async function createSetupLink(
     return { status: 'error', message: 'Portal access is turned off for this contact.' };
   }
   if (!(await allow('client-setup-link', contact.id, { limit: 10, windowMinutes: 60 }))) {
-    return { status: 'error', message: 'Several links were made in the last hour. Try again later.' };
+    return {
+      status: 'error',
+      message: 'Several links were made in the last hour. Try again later.',
+    };
   }
 
   // Only the newest link works, including over an emailed invitation. They

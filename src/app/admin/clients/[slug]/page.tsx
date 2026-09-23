@@ -8,11 +8,12 @@ import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/mone
 import { liveEnquiry } from '@/lib/console/live';
 import { clientRemovalCounts } from '@/lib/console/removal';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
-import { AddPerson, PersonActions } from '@/components/console/People';
+import { AddPerson, EditPerson, PersonActions } from '@/components/console/People';
 import {
   addClientContact,
   inviteContact,
   removeClientContact,
+  saveClientContact,
   setMainContact,
 } from '../actions';
 import { Figures } from '@/components/console/Figures';
@@ -32,7 +33,10 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const client = await db.client.findFirst({ where: { slug, deletedAt: null }, select: { name: true } });
+  const client = await db.client.findFirst({
+    where: { slug, deletedAt: null },
+    select: { name: true },
+  });
   return { title: client?.name ?? 'Client' };
 }
 
@@ -149,9 +153,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
     ),
   ];
 
-  const live = client.projects.filter(
-    (p) => !['closed', 'cancelled'].includes(p.status),
-  ).length;
+  const live = client.projects.filter((p) => !['closed', 'cancelled'].includes(p.status)).length;
 
   return (
     <main className={styles.page}>
@@ -251,11 +253,21 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
             <table className={table.table}>
               <thead>
                 <tr>
-                  <th className={table.th} scope="col">Project</th>
-                  <th className={table.th} scope="col">Reference</th>
-                  <th className={table.th} scope="col">Stage</th>
-                  <th className={table.th} scope="col">Target</th>
-                  <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
+                  <th className={table.th} scope="col">
+                    Project
+                  </th>
+                  <th className={table.th} scope="col">
+                    Reference
+                  </th>
+                  <th className={table.th} scope="col">
+                    Stage
+                  </th>
+                  <th className={table.th} scope="col">
+                    Target
+                  </th>
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">
+                    Committed
+                  </th>
                   <th className={`${table.th} ${table.actionsHead}`} scope="col">
                     <span className={table.muted}>Actions</span>
                   </th>
@@ -293,10 +305,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {formatMoney(
-                          project.lineItems.reduce(
-                            (t, l) => t + l.amountMinor * l.quantity,
-                            0,
-                          ),
+                          project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
                           project.currency,
                         )}
                       </td>
@@ -331,11 +340,21 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
             <table className={table.table}>
               <thead>
                 <tr>
-                  <th className={table.th} scope="col">Name</th>
-                  <th className={table.th} scope="col">Email</th>
-                  <th className={table.th} scope="col">Phone</th>
-                  <th className={table.th} scope="col">Portal</th>
-                  <th className={table.th} scope="col">Last seen</th>
+                  <th className={table.th} scope="col">
+                    Name
+                  </th>
+                  <th className={table.th} scope="col">
+                    Email
+                  </th>
+                  <th className={table.th} scope="col">
+                    Phone
+                  </th>
+                  <th className={table.th} scope="col">
+                    Portal
+                  </th>
+                  <th className={table.th} scope="col">
+                    Last seen
+                  </th>
                   <th className={`${table.th} ${table.actionsHead}`} scope="col">
                     <span className={table.muted}>Actions</span>
                   </th>
@@ -347,8 +366,9 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                     <td className={`${table.td} ${table.primary}`}>
                       {contact.name}
                       <span className={table.sub}>
-                        {[contact.isPrimary ? 'Main contact' : null, contact.role].filter(Boolean).join(' · ') ||
-                          'No job title'}
+                        {[contact.isPrimary ? 'Main contact' : null, contact.role]
+                          .filter(Boolean)
+                          .join(' · ') || 'No job title'}
                       </span>
                     </td>
                     <td className={table.td}>
@@ -387,16 +407,30 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                         <SetupLink contactId={contact.id} />
                       )}
                       {mayManage && (
-                      <PersonActions
-                        contactId={contact.id}
-                        isPrimary={contact.isPrimary}
-                        activated={contact.activatedAt !== null}
-                        canSignIn={contact.canSignIn}
-                        hidden={{ clientId: client.id }}
-                        invite={contact.email ? inviteContact : undefined}
-                        makeMain={setMainContact}
-                        remove={removeClientContact}
-                      />
+                        <EditPerson
+                          contact={{
+                            id: contact.id,
+                            name: contact.name,
+                            email: contact.email,
+                            role: contact.role,
+                            phone: contact.phone,
+                            activated: contact.activatedAt !== null,
+                          }}
+                          hidden={{ clientId: client.id }}
+                          action={saveClientContact}
+                        />
+                      )}
+                      {mayManage && (
+                        <PersonActions
+                          contactId={contact.id}
+                          isPrimary={contact.isPrimary}
+                          activated={contact.activatedAt !== null}
+                          canSignIn={contact.canSignIn}
+                          hidden={{ clientId: client.id }}
+                          invite={contact.email ? inviteContact : undefined}
+                          makeMain={setMainContact}
+                          remove={removeClientContact}
+                        />
                       )}
                     </td>
                   </tr>
@@ -410,9 +444,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
           <section className={forms.card}>
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Everything that has happened</h2>
-              <span className={forms.cardMeta}>
-                Actions and emails, newest first
-              </span>
+              <span className={forms.cardMeta}>Actions and emails, newest first</span>
             </div>
             <ActivityFeed items={activity} now={now} />
           </section>

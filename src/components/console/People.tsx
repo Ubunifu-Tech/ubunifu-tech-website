@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useActionState, useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
 import { UserPlus } from 'lucide-react';
+import { TextField } from './Fields';
 import forms from '@/styles/forms.module.css';
 import styles from './People.module.css';
 
@@ -19,7 +21,11 @@ const INITIAL: PeopleState = { status: 'idle' };
 function Message({ state }: { state: PeopleState }) {
   if (!state.message) return null;
   return (
-    <p className={state.status === 'error' ? forms.error : forms.hint} role="status" aria-live="polite">
+    <p
+      className={state.status === 'error' ? forms.error : forms.hint}
+      role="status"
+      aria-live="polite"
+    >
       {state.message}
     </p>
   );
@@ -38,16 +44,23 @@ export function AddPerson({
   label?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(async (previous: PeopleState, formData: FormData) => {
-    const result = await action(previous, formData);
-    if (result.status !== 'error') setOpen(false);
-    return result;
-  }, INITIAL);
+  const [state, formAction, pending] = useActionState(
+    async (previous: PeopleState, formData: FormData) => {
+      const result = await action(previous, formData);
+      if (result.status !== 'error') setOpen(false);
+      return result;
+    },
+    INITIAL,
+  );
 
   if (!open) {
     return (
       <div className={styles.addClosed}>
-        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setOpen(true)}>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setOpen(true)}
+        >
           <UserPlus size={16} strokeWidth={1.8} aria-hidden="true" />
           {label}
         </button>
@@ -72,19 +85,38 @@ export function AddPerson({
           <label className={forms.label} htmlFor="person-email">
             Email
           </label>
-          <input id="person-email" name="email" type="email" className={forms.control} required maxLength={254} />
+          <input
+            id="person-email"
+            name="email"
+            type="email"
+            className={forms.control}
+            required
+            maxLength={254}
+          />
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="person-role">
             Job title <span className={forms.optional}>(optional)</span>
           </label>
-          <input id="person-role" name="role" className={forms.control} maxLength={80} placeholder="Marketing lead" />
+          <input
+            id="person-role"
+            name="role"
+            className={forms.control}
+            maxLength={80}
+            placeholder="Marketing lead"
+          />
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="person-phone">
             Phone <span className={forms.optional}>(optional)</span>
           </label>
-          <input id="person-phone" name="phone" type="tel" className={forms.control} maxLength={40} />
+          <input
+            id="person-phone"
+            name="phone"
+            type="tel"
+            className={forms.control}
+            maxLength={40}
+          />
         </div>
       </div>
       {canSkipInvite ? (
@@ -99,7 +131,11 @@ export function AddPerson({
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Adding…' : canSkipInvite ? 'Add' : 'Send invitation'}
         </button>
-        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setOpen(false)}>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setOpen(false)}
+        >
           Cancel
         </button>
         <Message state={state} />
@@ -127,9 +163,18 @@ export function PersonActions({
   makeMain?: Action;
   remove?: Action;
 }) {
-  const [inviteState, inviteAction, inviting] = useActionState(invite ?? (async () => INITIAL), INITIAL);
-  const [mainState, mainAction, making] = useActionState(makeMain ?? (async () => INITIAL), INITIAL);
-  const [removeState, removeAction, removing] = useActionState(remove ?? (async () => INITIAL), INITIAL);
+  const [inviteState, inviteAction, inviting] = useActionState(
+    invite ?? (async () => INITIAL),
+    INITIAL,
+  );
+  const [mainState, mainAction, making] = useActionState(
+    makeMain ?? (async () => INITIAL),
+    INITIAL,
+  );
+  const [removeState, removeAction, removing] = useActionState(
+    remove ?? (async () => INITIAL),
+    INITIAL,
+  );
   const [confirming, setConfirming] = useState(false);
 
   const fields = (
@@ -175,7 +220,11 @@ export function PersonActions({
             </form>
           )}
           {remove && !isPrimary && (
-            <button type="button" className={`${forms.link} ${styles.danger}`} onClick={() => setConfirming(true)}>
+            <button
+              type="button"
+              className={`${forms.link} ${styles.danger}`}
+              onClick={() => setConfirming(true)}
+            >
               Remove
             </button>
           )}
@@ -183,5 +232,113 @@ export function PersonActions({
       )}
       {shown && <Message state={shown} />}
     </div>
+  );
+}
+
+/**
+ * Correcting someone's details, in a small panel from their row: a
+ * placeholder name, the email they finally gave, a new job title.
+ */
+export function EditPerson({
+  contact,
+  hidden,
+  action,
+}: {
+  contact: {
+    id: string;
+    name: string;
+    email: string | null;
+    role: string | null;
+    phone: string | null;
+    activated: boolean;
+  };
+  hidden: Record<string, string>;
+  action: Action;
+}) {
+  const [open, setOpen] = useState(false);
+  const [state, run, pending] = useActionState(
+    async (previous: PeopleState, formData: FormData) => {
+      const result = await action(previous, formData);
+      if (result.status === 'done') setOpen(false);
+      return result;
+    },
+    INITIAL,
+  );
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger className={forms.link}>Change details</Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          className={styles.editPanel}
+          align="end"
+          sideOffset={8}
+          collisionPadding={12}
+        >
+          <form action={run} className={forms.form}>
+            <input type="hidden" name="contactId" value={contact.id} />
+            {Object.entries(hidden).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+            <TextField
+              name="name"
+              label="Name"
+              defaultValue={contact.name}
+              required
+              maxLength={120}
+            />
+            {contact.activated ? (
+              <>
+                <input type="hidden" name="email" value={contact.email ?? ''} />
+                <TextField
+                  name="shownEmail"
+                  label="Email"
+                  defaultValue={contact.email ?? ''}
+                  disabled
+                  hint="They change it from their own profile."
+                />
+              </>
+            ) : (
+              <TextField
+                name="email"
+                label="Email"
+                type="email"
+                optional={!contact.email}
+                defaultValue={contact.email ?? ''}
+                maxLength={254}
+              />
+            )}
+            <TextField
+              name="role"
+              label="Job title"
+              optional
+              defaultValue={contact.role ?? ''}
+              maxLength={80}
+            />
+            <TextField
+              name="phone"
+              label="Phone"
+              type="tel"
+              optional
+              defaultValue={contact.phone ?? ''}
+              maxLength={40}
+            />
+            <div className={forms.actions}>
+              <button type="submit" className={forms.button} disabled={pending}>
+                {pending ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                type="button"
+                className={`${forms.button} ${forms.quiet}`}
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+            {state.status === 'error' && <Message state={state} />}
+          </form>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

@@ -99,6 +99,10 @@ function describeAudit(action: string, summary: string | null): string {
     'post.archived': 'Post archived',
     'media.uploaded': 'Image uploaded',
     'settings.billing_saved': 'Billing details changed',
+    'assistant.failed': 'Assistant could not answer',
+    'writer.created': 'Writer added',
+    'writer.updated': 'Writer details changed',
+    'writer.archived': 'Writer taken off the list',
   };
   const base = said[action] ?? action.replace(/[._]/g, ' ');
   if (!summary) return base;

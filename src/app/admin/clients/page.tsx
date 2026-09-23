@@ -13,7 +13,7 @@ export const metadata = { title: 'Clients' };
 
 const VIEWS = [
   { key: 'all', label: 'All' },
-  { key: 'live', label: 'With live work' },
+  { key: 'live', label: 'With open projects' },
   { key: 'portal', label: 'Portal not set up' },
   { key: 'idle', label: 'No projects' },
 ] as const;
@@ -224,7 +224,7 @@ export default async function ClientsPage({
                         ) : (
                           <>
                             {client.projects.length}
-                            {live > 0 && <span className={table.sub}>{live} live</span>}
+                            {live > 0 && <span className={table.sub}>{live} open</span>}
                           </>
                         )}
                       </td>

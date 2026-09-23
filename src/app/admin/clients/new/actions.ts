@@ -307,6 +307,7 @@ export async function createClient(
   // Two different paths on purpose. The cache is keyed by the internal route,
   // /admin/clients, but the browser is on admin.ubunifutech.com/clients — the
   // /admin prefix only exists after the rewrite. A redirect written with the
-  // prefix would 404 on the public host.
-  redirect('/clients');
+  // prefix would 404 on the public host. It opens the new client, where the
+  // next step (their project, a proposal) starts.
+  redirect(`/clients/${created.clientSlug}`);
 }

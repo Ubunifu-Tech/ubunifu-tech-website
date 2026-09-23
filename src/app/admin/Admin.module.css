@@ -1173,7 +1173,9 @@
   gap: var(--space-4);
 }
 
-@media (max-width: 64rem) {
+/* 80rem of window is about 64rem of content once the sidebar is counted,
+   the least that holds a form and its context side by side. */
+@media (max-width: 80rem) {
   .split {
     grid-template-columns: minmax(0, 1fr);
   }

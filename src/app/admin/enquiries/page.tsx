@@ -213,8 +213,8 @@ export default async function EnquiriesPage({
                           <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
                         </span>
                       </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
-                        {enquiry.subject}
+                      <td className={`${table.td} ${table.name}`}>
+                        <span className={table.clamp}>{enquiry.subject}</span>
                         {enquiry.source === 'website_assistant' && (
                           <span className={table.sub}>via the assistant</span>
                         )}

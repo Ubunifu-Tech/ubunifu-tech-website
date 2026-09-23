@@ -14,9 +14,12 @@ const INITIAL: AnswerState = { status: 'idle' };
 export function AnswerBox({
   assetRequestId,
   response,
+  canAttach,
 }: {
   assetRequestId: string;
   response: string | null;
+  /** Whether a file box sits under this one, so the hint can point to it. */
+  canAttach: boolean;
 }) {
   const [state, action, pending] = useActionState(answerRequest, INITIAL);
   const [editing, setEditing] = useState(!response);
@@ -55,7 +58,7 @@ export function AnswerBox({
         onChange={(event) => setText(event.target.value)}
         maxLength={8000}
         rows={4}
-        placeholder="Write it here, or attach a file below."
+        placeholder={canAttach ? 'Write it here, or attach a file below.' : 'Write it here.'}
         aria-label="Your answer"
       />
       <div className={styles.answerActions}>

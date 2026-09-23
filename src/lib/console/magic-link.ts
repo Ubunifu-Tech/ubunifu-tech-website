@@ -107,6 +107,32 @@ export async function consumeMagicToken(
 }
 
 /**
+ * Whether a link would still sign someone in, without burning it.
+ *
+ * For the page a link opens on. Link previews in WhatsApp, iMessage and mail
+ * scanners fetch a URL before the person taps it, so opening the link must
+ * change nothing; the token is only consumed when the person presses Continue.
+ */
+export async function checkMagicToken(
+  rawToken: string,
+  expected: readonly MagicTokenPurpose[],
+): Promise<ConsumedToken | null> {
+  const token = await db.magicToken.findUnique({ where: { tokenHash: hashToken(rawToken) } });
+  if (!token) return null;
+  if (!expected.includes(token.purpose)) return null;
+  if (token.usedAt) return null;
+  if (token.expiresAt.getTime() <= Date.now()) return null;
+
+  return {
+    actorType: token.actorType,
+    actorId: token.actorId,
+    purpose: token.purpose,
+    entityType: token.entityType,
+    entityId: token.entityId,
+  };
+}
+
+/**
  * Checks a link without burning it, for the "view this document" case where a
  * client may open the same link more than once.
  */
@@ -131,14 +157,15 @@ export async function peekMagicToken(
   };
 }
 
-/** Invalidates outstanding links of one purpose, e.g. after a password change. */
+/** Invalidates outstanding links of one or more purposes, e.g. after a password change. */
 export async function revokeMagicTokens(
   actorType: ActorType,
   actorId: string,
-  purpose: MagicTokenPurpose,
+  purpose: MagicTokenPurpose | readonly MagicTokenPurpose[],
 ): Promise<number> {
+  const purposes: MagicTokenPurpose[] = typeof purpose === 'string' ? [purpose] : [...purpose];
   const result = await db.magicToken.updateMany({
-    where: { actorType, actorId, purpose, usedAt: null },
+    where: { actorType, actorId, purpose: { in: purposes }, usedAt: null },
     data: { usedAt: new Date() },
   });
   return result.count;

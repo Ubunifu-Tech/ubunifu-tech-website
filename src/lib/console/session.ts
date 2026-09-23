@@ -140,13 +140,22 @@ export async function destroySession(audience: Audience): Promise<void> {
   jar.delete(name);
 }
 
-/** Used when a password changes: every other session for that actor dies. */
+/**
+ * Used when a password is set or changes: every other session for that actor
+ * dies. Pass the current session to keep the person who made the change in.
+ */
 export async function revokeAllSessions(
   actorType: ActorType,
   actorId: string,
+  exceptSessionId?: string,
 ): Promise<number> {
   const result = await db.session.updateMany({
-    where: { actorType, actorId, revokedAt: null },
+    where: {
+      actorType,
+      actorId,
+      revokedAt: null,
+      ...(exceptSessionId ? { NOT: { id: exceptSessionId } } : {}),
+    },
     data: { revokedAt: new Date() },
   });
   return result.count;

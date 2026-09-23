@@ -44,6 +44,17 @@ function cell(text: string): string {
   return text.replace(/([*_~`[\]\\|])/g, '\\$1').replace(/\s*\n\s*/g, ' ');
 }
 
+/**
+ * The price cell for one fee, the same in both tables: the quantity when
+ * there is more than one, so a signed contract states what is actually owed.
+ */
+function priceCell(line: ScheduleLine): string {
+  if (line.amountMinor === 0) return 'To be confirmed';
+  const billing = BILLING[line.billingKind];
+  const each = formatMoney(line.amountMinor, line.currency);
+  return line.quantity > 1 ? `${line.quantity} × ${each}${billing.per}` : `${each}${billing.per}`;
+}
+
 /** A fee that is part of the agreement but not charged for now. */
 export type LaterLine = ScheduleLine & { status: LineItemStatus };
 
@@ -69,7 +80,9 @@ export function feeSchedule(
 ): string {
   const notNow = laterSchedule(later);
   if (lines.length === 0) {
-    return ['No fees have been set for this work yet.', notNow].filter(Boolean).join('\n\n');
+    // With fees agreed for later, "no fees have been set" would contradict
+    // the table right under it.
+    return notNow ? `Nothing is charged for now.\n\n${notNow}` : 'No fees have been set for this work yet.';
   }
 
   const withTerms = lines.some((line) => line.terms?.trim());
@@ -78,16 +91,8 @@ export function feeSchedule(
     : '| Item | Billing | Amount |\n| --- | --- | --- |';
 
   const rows = lines.map((line) => {
-    const billing = BILLING[line.billingKind];
-    const each = formatMoney(line.amountMinor, line.currency);
-    const amount =
-      line.amountMinor === 0
-        ? 'To be confirmed'
-        : line.quantity > 1
-          ? `${line.quantity} × ${each}${billing.per}`
-          : `${each}${billing.per}`;
     const item = line.description ? `${line.label}: ${line.description}` : line.label;
-    const cells = [cell(item), billing.label, amount];
+    const cells = [cell(item), BILLING[line.billingKind].label, priceCell(line)];
     if (withTerms) cells.push(cell(line.terms ?? ''));
     return `| ${cells.join(' | ')} |`;
   });
@@ -124,13 +129,8 @@ function laterSchedule(later: LaterLine[]): string {
     ? '| Not charged for now | Status | Price | Terms |\n| --- | --- | --- | --- |'
     : '| Not charged for now | Status | Price |\n| --- | --- | --- |';
   const rows = later.map((line) => {
-    const billing = BILLING[line.billingKind];
-    const price =
-      line.amountMinor === 0
-        ? 'To be confirmed'
-        : `${formatMoney(line.amountMinor, line.currency)}${billing.per}`;
     const item = line.description ? `${line.label}: ${line.description}` : line.label;
-    const cells = [cell(item), LATER_LABEL[line.status] ?? line.status, price];
+    const cells = [cell(item), LATER_LABEL[line.status] ?? line.status, priceCell(line)];
     if (withTerms) cells.push(cell(line.terms ?? ''));
     return `| ${cells.join(' | ')} |`;
   });
@@ -204,12 +204,18 @@ export function feeProblems(
   lines: ScheduleLine[],
   currency: string,
   kind?: DocumentKind,
+  /** How many fees are agreed but not charged for now. */
+  laterCount = 0,
 ): string[] {
   const problems: string[] = [];
   // A change order can genuinely cost nothing. A proposal or agreement with no
   // fees on it is a document sent too early.
   if (lines.length === 0 && kind && kind !== 'change_order' && carriesFees(kind)) {
-    problems.push('No fees have been added yet.');
+    problems.push(
+      laterCount > 0
+        ? 'Nothing would be charged: every fee is deferred, paused or waived.'
+        : 'No fees have been added yet.',
+    );
   }
   const unpriced = lines.filter((line) => line.amountMinor === 0).length;
   if (unpriced > 0) {

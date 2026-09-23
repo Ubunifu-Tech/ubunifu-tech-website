@@ -377,7 +377,7 @@ export default async function DocumentPage({
             <dt>Who signs</dt>
             <dd>
               {prepared.signer ? (
-                `${prepared.signer.name} (${prepared.signer.email})`
+                `${prepared.signer.name} (${prepared.signer.email ?? 'no email yet'})`
               ) : (
                 <Link
                   href={`/clients/${document.project.client.slug}`}
@@ -548,6 +548,14 @@ export default async function DocumentPage({
   }
 
   if (step === 'send') {
+    const open = live !== undefined && ['sent', 'viewed'].includes(live.status);
+    // Fees live on the project and are written in at send time, so a fee
+    // change makes no new version of the text. Comparing what would go now
+    // with what they have catches that as well as an edit.
+    const changedSince =
+      open &&
+      ((document.versions[0]?.version ?? 0) > live.version.version ||
+        prepared.final !== live.version.bodyMarkdown);
     body = (
       <div className={page.split}>
         <div className={styles.stack}>
@@ -591,14 +599,16 @@ export default async function DocumentPage({
                 {prepared.checks.find((check) => !check.ok)?.problem}
               </Callout>
             )}
-            {live && ['sent', 'viewed'].includes(live.status) && (
-              <WithdrawDocument documentId={document.id} />
+            {changedSince && live && (
+              <Callout kind="info" title={`This has changed since version ${live.version.version} went to them`}>
+                Send the new version to replace the one they have.
+              </Callout>
             )}
-            {/* Once it is with them, sending again only makes sense for a newer
-                version; otherwise the choice is to wait or withdraw. */}
-            {(!live ||
-              !['sent', 'viewed'].includes(live.status) ||
-              (document.versions[0]?.version ?? 0) > live.version.version) && (
+            {open && <WithdrawDocument documentId={document.id} />}
+            {/* Once it is with them, sending again only makes sense when what
+                would go now differs from what they have; otherwise the choice
+                is to wait or withdraw. */}
+            {(!open || changedSince) && (
               <SendForSignature
                 documentId={document.id}
                 alreadySent={Boolean(live)}

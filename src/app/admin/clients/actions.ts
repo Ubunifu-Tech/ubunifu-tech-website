@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
-import { issueMagicToken } from '@/lib/console/magic-link';
+import { issueMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
 import {
   addContact,
   invitePerson,
@@ -140,7 +140,11 @@ export type SetupLinkState = {
   status: 'idle' | 'done' | 'error';
   message?: string;
   url?: string;
-  /** A WhatsApp chat with the message written, to their number when we have it. */
+  /**
+   * A WhatsApp chat to their number with the message written. Left out when
+   * their number cannot be read with certainty, so the link never opens a
+   * stranger's chat.
+   */
   whatsapp?: string;
 };
 
@@ -150,7 +154,8 @@ export type SetupLinkState = {
  * known or not confirmed yet. It is the same one-time invitation the email
  * carries: it works once, lasts fourteen days, and asks them for their name,
  * email, phone and a password. Shown once here and never stored readable,
- * so a new one is made each time.
+ * so a new one is made each time, and making one retires the earlier ones:
+ * a link sent to a wrong number, or left in an old chat, stops working.
  */
 export async function createSetupLink(
   _previous: SetupLinkState,
@@ -168,7 +173,7 @@ export async function createSetupLink(
       phone: true,
       canSignIn: true,
       activatedAt: true,
-      client: { select: { name: true, slug: true } },
+      client: { select: { name: true, slug: true, country: true } },
     },
   });
   if (!contact) return { status: 'error', message: 'They are not on this client any more.' };
@@ -182,6 +187,8 @@ export async function createSetupLink(
     return { status: 'error', message: 'Several links were made in the last hour. Try again later.' };
   }
 
+  // Only the newest link works, including over an emailed invitation.
+  await revokeMagicTokens('client_contact', contact.id, 'invite');
   const { token } = await issueMagicToken({
     purpose: 'invite',
     actorType: 'client_contact',
@@ -205,22 +212,50 @@ export async function createSetupLink(
     `need and sign the agreement: ${url}\n\nIt works once and lasts 14 days. Please do not ` +
     `forward it.`;
 
+  const number = whatsappNumber(contact.phone, contact.client.country);
   revalidatePath(`/admin/clients/${contact.client.slug}`);
   return {
     status: 'done',
     url,
-    whatsapp: `https://wa.me/${whatsappNumber(contact.phone)}?text=${encodeURIComponent(message)}`,
+    whatsapp: number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : undefined,
   };
 }
 
 /**
- * A number as wa.me wants it: digits only, with the country code. A local
- * Tanzanian number (0712 345 678) gets 255 in place of its leading zero. No
- * number opens WhatsApp to choose the chat.
+ * Calling codes for the countries whose local numbers we rewrite. Both write
+ * a mobile as ten digits starting with 0 (0712 345 678), and so do Uganda and
+ * Rwanda, so a local number is only rewritten when the client's own country
+ * says which code it takes.
  */
-function whatsappNumber(phone: string | null): string {
-  const digits = (phone ?? '').replace(/\D/g, '');
+const CALLING_CODE: Record<string, string> = { TZ: '255', KE: '254' };
+
+/**
+ * A number as wa.me wants it: digits only, with the country code. Returns ''
+ * whenever the number cannot be read with certainty: a wrong guess would put
+ * the private link in a stranger's chat.
+ *
+ * Accepted: a number written with its country code (+255 712 345 678, or
+ * 00255...), and for a client in Tanzania or Kenya, a local number starting
+ * with 0 or one already starting with that country's code.
+ */
+function whatsappNumber(phone: string | null, country: string): string {
+  const written = (phone ?? '').trim();
+  const digits = written.replace(/\D/g, '');
   if (!digits) return '';
-  if (digits.startsWith('0') && digits.length === 10) return `255${digits.slice(1)}`;
-  return digits;
+
+  const international = written.startsWith('+')
+    ? digits
+    : digits.startsWith('00')
+      ? digits.slice(2)
+      : null;
+  if (international !== null) {
+    // E.164 allows up to 15 digits; anything under 8 is not a whole number.
+    return /^[1-9]\d{7,14}$/.test(international) ? international : '';
+  }
+
+  const code = CALLING_CODE[country.trim().toUpperCase()];
+  if (!code) return '';
+  if (/^0[1-9]\d{8}$/.test(digits)) return `${code}${digits.slice(1)}`;
+  if (digits.startsWith(code) && digits.length === code.length + 9) return digits;
+  return '';
 }

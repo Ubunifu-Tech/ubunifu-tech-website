@@ -80,7 +80,7 @@ export async function prepareDocument(document: {
   });
 
   if (withFeeTable) {
-    const problems = feeProblems(lines, project.currency, kind);
+    const problems = feeProblems(lines, project.currency, kind, later.length);
     checks.push({
       ok: problems.length === 0,
       label:

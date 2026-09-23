@@ -215,7 +215,7 @@ export async function signDocument(
   // an email that fails costs promptness, never the signature.
   const signedOn = formatDate(now);
   const kindLabel = DOCUMENT_KIND_LABEL[request.document.kind];
-  await sendConsoleEmail({
+  const copy = await sendConsoleEmail({
     to: actor.email,
     subject: `Signed: ${request.document.title}`,
     html: documentSignedEmail({
@@ -251,6 +251,17 @@ export async function signDocument(
     entityId: request.document.id,
   });
 
+  if (!copy.ok) {
+    // The signature stands either way; this is so we know to send their copy.
+    await recordAudit({
+      actorType: 'system',
+      action: 'document.signed_copy.send_failed',
+      entityType: 'Document',
+      entityId: request.document.id,
+      summary: `${request.document.reference}: could not email the signed copy to ${actor.email}: ${copy.error}`,
+    });
+  }
+
   revalidatePath('/portal/documents');
   revalidatePath('/portal', 'layout');
   revalidatePath(`/admin/documents/${request.document.reference}`);
@@ -258,7 +269,9 @@ export async function signDocument(
 
   return {
     status: 'done',
-    message: 'Signed. Thank you. A copy is on its way to your email, and it stays here.',
+    message: copy.ok
+      ? 'Signed. Thank you. A copy is on its way to your email, and it stays here.'
+      : 'Signed. Thank you. We could not email your copy just now. It stays here, and you can save it as a PDF from this page.',
   };
 }
 

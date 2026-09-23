@@ -25,15 +25,27 @@ export function StageTrack({
   status,
   statusLabel,
   pausedAt,
+  heldFrom = null,
 }: {
   status: ProjectStatus;
   statusLabel: string;
   /** For a project on hold or cancelled: the status it left from. */
   pausedAt: ProjectStatus | null;
+  /**
+   * For a project cancelled while on hold: the status it was held from.
+   * The hold is not a stop on the line, so that is where it stopped.
+   */
+  heldFrom?: ProjectStatus | null;
 }) {
-  const at = status === 'on_hold' || status === 'cancelled' ? pausedAt : status;
-  const current = at ? TRACK.findIndex((stop) => stop.statuses.includes(at)) : -1;
   const stopped = status === 'on_hold' || status === 'cancelled';
+  const left = pausedAt === 'on_hold' ? heldFrom : pausedAt;
+  const at = stopped ? left : status;
+  const current = at ? TRACK.findIndex((stop) => stop.statuses.includes(at)) : -1;
+
+  // Stopped somewhere we cannot place: no track rather than one with every
+  // stop still to come, which would read as never having started. The status
+  // itself is in the badge beside the project's name.
+  if (stopped && current === -1) return null;
 
   return (
     <ol className={`${styles.track} ${stopped ? styles.trackStopped : ''}`} aria-label="Where the project is">

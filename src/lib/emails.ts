@@ -692,9 +692,13 @@ export function documentSignedEmail(input: {
     ])}
     ${button(input.url, 'Open your signed copy')}
     <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
-      The fingerprint identifies the exact text you signed. If the document were
-      ever changed, it would no longer match.
+      Keep this email with your records. If a question about the document ever
+      comes up, quote the fingerprint above.
     </p>`;
+  // The fingerprint is a short form of the SHA-256 of exactly what was signed.
+  // Any change to the text would give a different one, which is why quoting it
+  // settles which version someone signed. The client needs what to do with
+  // it, not how it works.
 
   return shell(`You signed ${input.documentTitle}.`, body);
 }

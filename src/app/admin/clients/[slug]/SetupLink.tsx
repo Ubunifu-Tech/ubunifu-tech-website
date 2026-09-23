@@ -42,13 +42,18 @@ export function SetupLink({ contactId }: { contactId: string }) {
           >
             {copied ? 'Copied' : 'Copy'}
           </button>
+          {/* Missing when their number could not be read with certainty: no
+              button rather than a guess at the country code, which could open
+              a stranger's chat with the link already in it. */}
           {state.whatsapp && (
             <a href={state.whatsapp} target="_blank" rel="noopener noreferrer" className={table.action}>
               Send on WhatsApp
             </a>
           )}
         </span>
-        <span className={styles.setupHint}>Works once, for 14 days. Only send it to them.</span>
+        <span className={styles.setupHint}>
+          Works once, for 14 days, and replaces any earlier link. Only send it to them.
+        </span>
       </div>
     );
   }

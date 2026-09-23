@@ -13,6 +13,8 @@ import {
   shortHash,
 } from '@/lib/console/documents';
 import { authorText, prepareDocument, type DocumentStep } from '@/lib/console/document-ready';
+import { renderParagraphDiff } from '@/lib/console/diff';
+import { sourceFromSuggestion } from '@/lib/console/suggestions';
 import { editableFees, feeSchedule, projectFees, projectFeesLater } from '@/lib/console/fees';
 import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
@@ -28,6 +30,7 @@ import {
   WithdrawDocument,
   type CopilotTurn,
 } from '../DocumentEditor';
+import { SuggestedWording, type WordingSuggestion } from './SuggestedWording';
 import styles from '../../Admin.module.css';
 import page from './Document.module.css';
 import forms from '@/styles/forms.module.css';
@@ -141,7 +144,32 @@ export default async function DocumentPage({
     // dropping it would leave this page looking like nothing was ever sent.
     ['sent', 'viewed', 'signed', 'declined'].includes(request.status),
   );
-  const answered = live?.respondedAt ? live : null;
+  // Their answer to the most recent version we sent, even once that request
+  // has been withdrawn to make the changes: withdrawing is exactly when staff
+  // need to read what was asked for. A newer send is the answer to it, so from
+  // then on it lives in the versions list instead.
+  const lastSent = document.signatureRequests.find((request) => request.status !== 'draft');
+  const answered = lastSent?.respondedAt ? lastSent : null;
+
+  // What the client said about each version, for the versions list.
+  const answersByVersion = new Map<number, typeof document.signatureRequests>();
+  for (const request of document.signatureRequests) {
+    if (!request.respondedAt || !request.responseNote) continue;
+    const list = answersByVersion.get(request.version.version) ?? [];
+    list.push(request);
+    answersByVersion.set(request.version.version, list);
+  }
+
+  const theirComment = (request: NonNullable<typeof answered>) => (
+    <Callout
+      kind={request.status === 'declined' ? 'bad' : signed ? 'info' : 'warn'}
+      title={`${request.status === 'declined' ? 'Declined' : 'Changes asked for'} on ${formatShortDate(
+        request.respondedAt,
+      )}${request.respondedBy ? ` by ${request.respondedBy.name}` : ''}`}
+    >
+      <p className={page.said}>{request.responseNote}</p>
+    </Callout>
+  );
 
   const head = (
     <div className={styles.pageHead}>
@@ -205,6 +233,13 @@ export default async function DocumentPage({
                   {version.aiAssisted && (
                     <span className={table.sub}>Drafted with the assistant</span>
                   )}
+                  {answersByVersion.get(version.version)?.map((request) => (
+                    <span key={request.id} className={`${table.sub} ${page.said}`}>
+                      {request.status === 'declined' ? 'Declined' : 'Changes asked for'}
+                      {request.respondedBy ? ` by ${request.respondedBy.name}` : ''} on{' '}
+                      {formatShortDate(request.respondedAt)}: {request.responseNote}
+                    </span>
+                  ))}
                 </td>
                 <td className={`${table.td} ${table.nowrap}`}>
                   {version.createdBy?.name ?? <span className={table.muted}>Unknown</span>}
@@ -235,6 +270,9 @@ export default async function DocumentPage({
     return (
       <main className={styles.page}>
         {head}
+        {/* Asked for changes, then signed this version anyway: still worth
+            knowing what they raised. */}
+        {live.respondedAt && theirComment(live)}
         {signature && (
           <div className={styles.summary}>
             <div className={styles.summaryItem}>
@@ -295,15 +333,50 @@ export default async function DocumentPage({
   }
 
   // ── A draft, or sent and waiting: the steps ─────────────────────
-  const prepared = await prepareDocument({
-    kind: document.kind,
-    source,
-    project: {
-      id: document.project.id,
-      currency: document.project.currency,
-      clientId: document.project.client.id,
-      clientSlug: document.project.client.slug,
-    },
+  const [prepared, openSuggestions] = await Promise.all([
+    prepareDocument({
+      kind: document.kind,
+      source,
+      project: {
+        id: document.project.id,
+        currency: document.project.currency,
+        clientId: document.project.client.id,
+        clientSlug: document.project.client.slug,
+      },
+    }),
+    db.documentSuggestion.findMany({
+      where: { documentId: document.id, status: 'open' },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        basedOnVersion: true,
+        bodyMarkdown: true,
+        note: true,
+        createdAt: true,
+        contact: { select: { name: true } },
+      },
+    }),
+  ]);
+
+  // Each compared with the version that person was reading, which is not
+  // necessarily the latest.
+  const suggestions: WordingSuggestion[] = openSuggestions.flatMap((suggestion) => {
+    const seen = document.versions.find((version) => version.version === suggestion.basedOnVersion);
+    if (!seen) return [];
+    const diff = renderParagraphDiff(seen.bodyMarkdown, suggestion.bodyMarkdown);
+    return [
+      {
+        id: suggestion.id,
+        who: suggestion.contact?.name ?? document.project.client.name,
+        when: formatDate(suggestion.createdAt),
+        note: suggestion.note,
+        basedOnVersion: suggestion.basedOnVersion,
+        html: diff.html,
+        added: diff.added,
+        removed: diff.removed,
+        feesChanged: sourceFromSuggestion(seen, suggestion.bodyMarkdown).feesChanged,
+      },
+    ];
   });
 
   const order: DocumentStep[] = prepared.withFeeTable
@@ -630,19 +703,13 @@ export default async function DocumentPage({
     <main className={styles.page}>
       {head}
 
-      {answered && (
-        <Callout
-          kind={answered.status === 'declined' ? 'bad' : 'warn'}
-          title={
-            answered.status === 'declined'
-              ? `Declined on ${formatShortDate(answered.respondedAt)}`
-              : `Changes asked for on ${formatShortDate(answered.respondedAt)}`
-          }
-        >
-          {answered.respondedBy ? `${answered.respondedBy.name}: ` : ''}
-          &ldquo;{answered.responseNote}&rdquo;
-        </Callout>
-      )}
+      {answered && theirComment(answered)}
+
+      <SuggestedWording
+        reference={document.reference}
+        suggestions={suggestions}
+        latestVersion={latest?.version ?? 0}
+      />
 
       <div className={page.steps}>
         <Steps

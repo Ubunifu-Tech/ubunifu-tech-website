@@ -98,7 +98,28 @@ export default async function PortalDocument({
   // declining does close it, and so does the clock.
   const canSign = !signature && !expired && !declined;
 
-  const org = await getOrg();
+  // Wording they sent back for this version, while it is waiting with us or
+  // being made into the next version. One we set aside is not shown, so they
+  // can send another. Anyone at the client may have sent it.
+  const [suggestion, org] = await Promise.all([
+    db.documentSuggestion.findFirst({
+      where: {
+        documentId: document.id,
+        basedOnVersion: request.version.version,
+        status: { in: ['open', 'used'] },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        status: true,
+        createdAt: true,
+        note: true,
+        contact: { select: { id: true, name: true } },
+      },
+    }),
+    getOrg(),
+  ]);
+  const suggestedBy =
+    !suggestion?.contact || suggestion.contact.id === actor.id ? 'You' : suggestion.contact.name;
 
   return (
     <main className={styles.page}>
@@ -129,7 +150,24 @@ export default async function PortalDocument({
       <div className={sheet.toolbar}>
         {/* Not once it is signed: "we are working on a new version" is untrue the
             moment they decide this one is fine after all. */}
-        {request.respondedAt && !signature && (
+        {suggestion && !signature && !declined && (
+          <div className={styles.notice} role="status">
+            <p>
+              {suggestedBy} suggested new wording on {formatDate(suggestion.createdAt)}.{' '}
+              {suggestion.status === 'used'
+                ? 'We are making it into a new version for you to sign.'
+                : 'It is with us, and we will send you a new version to sign.'}
+            </p>
+            {suggestion.note && (
+              <p>
+                <strong>{suggestedBy === 'You' ? 'Your note:' : `${suggestedBy}'s note:`}</strong>{' '}
+                {suggestion.note}
+              </p>
+            )}
+          </div>
+        )}
+
+        {request.respondedAt && !signature && !(suggestion && !declined) && (
           <div className={styles.notice} role="status">
             <p>
               {declined
@@ -180,13 +218,21 @@ export default async function PortalDocument({
         </section>
       )}
 
-      {canSign && !request.respondedAt && (
+      {/* Still open after asking for changes, for their own wording; not while
+          wording they sent for this version is waiting with us. */}
+      {canSign && !suggestion && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
             <h2 className={forms.cardTitle}>Not ready to sign?</h2>
-            <span className={forms.cardMeta}>Neither of these signs anything</span>
+            <span className={forms.cardMeta}>
+              {request.respondedAt ? 'This does not sign anything' : 'None of these signs anything'}
+            </span>
           </div>
-          <RespondForm requestId={request.id} />
+          <RespondForm
+            requestId={request.id}
+            body={request.version.bodyMarkdown}
+            answered={Boolean(request.respondedAt)}
+          />
         </section>
       )}
       </div>

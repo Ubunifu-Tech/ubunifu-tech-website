@@ -663,6 +663,62 @@ export function documentResponseEmail(input: {
   return shell(`${input.reference}: ${headline}`, body);
 }
 
+/**
+ * A client sent back their own wording for a document.
+ *
+ * The wording itself stays in the console, where it can be compared with what
+ * was sent; an email is the wrong place to read a contract side by side. What
+ * comes here is who, which version, how much they changed and their note.
+ */
+export function documentWordingEmail(input: {
+  reference: string;
+  title: string;
+  clientName: string;
+  from: string;
+  fromEmail: string;
+  note: string | null;
+  version: number;
+  /** Paragraphs taken out and put in, from the comparison. */
+  removed: number;
+  added: number;
+  url: string;
+}): string {
+  const paragraphs = (input.note ?? '')
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(
+          block,
+        ).replace(/\n/g, '<br />')}</p>`,
+    )
+    .join('');
+
+  const headline = `${input.from} suggested new wording`;
+  const count = (n: number) => `${n} ${n === 1 ? 'paragraph' : 'paragraphs'}`;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">
+      ${escapeHtml(input.reference)} · version ${escapeHtml(String(input.version))}
+    </p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(headline)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      <strong style="color:#1D1B22;">${escapeHtml(input.title)}</strong>, sent to
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>
+      (${escapeHtml(input.fromEmail)}). Nothing has been signed and nothing has been charged.
+    </p>
+    ${facts([
+      ['Taken out', escapeHtml(count(input.removed))],
+      ['Put in', escapeHtml(count(input.added))],
+    ])}
+    <div style="height:18px;line-height:18px;">&nbsp;</div>
+    ${paragraphs}
+    ${button(escapeHtml(input.url), 'Compare it in the console')}`;
+
+  return shell(`${input.reference}: ${headline}`, body);
+}
+
 /** The signer's own copy: what they signed, when, and where it is kept. */
 export function documentSignedEmail(input: {
   name: string;

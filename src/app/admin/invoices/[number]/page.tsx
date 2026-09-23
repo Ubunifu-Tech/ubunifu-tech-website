@@ -84,7 +84,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
 
   if (!invoice) notFound();
 
-  const activity = await activityFor([invoice.id]);
+  const [activity, emailed] = await Promise.all([
+    activityFor([invoice.id]),
+    // An invoice issued with a payment already taken was never emailed, so its
+    // button says Send, not Send again.
+    db.emailLog.count({
+      where: { entityId: invoice.id, template: 'invoice_sent', status: 'sent' },
+    }),
+  ]);
   const outstanding = Math.max(0, invoice.totalMinor - invoice.paidMinor);
   const pastDue =
     invoice.status !== 'draft' &&
@@ -317,20 +324,21 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
 
                 {invoice.status === 'draft' ? (
                   <>
-                    <p className={styles.note}>
-                      Send the invoice before recording a payment against it.
-                    </p>
                     <div className={forms.actions}>
                       <SendInvoiceButton invoiceId={invoice.id} sent={false} />
+                      <p className={forms.payoff}>Or, if they have paid already, record it here.</p>
                     </div>
+                    <RecordPaymentForm
+                      invoiceId={invoice.id}
+                      outstanding={moneyInput(outstanding, invoice.currency)}
+                      currency={invoice.currency}
+                      today={toDateInputValue(now)}
+                    />
                   </>
                 ) : outstanding === 0 ? (
-                  <div className={forms.actions}>
-                    <SendInvoiceButton invoiceId={invoice.id} sent />
-                    <p className={forms.payoff}>
-                      Paid in full. Resend only if they ask for a copy.
-                    </p>
-                  </div>
+                  <p className={styles.note}>
+                    Nothing is owed. The receipts are listed above, ready to email or print.
+                  </p>
                 ) : (
                   <RecordPaymentForm
                     invoiceId={invoice.id}
@@ -349,7 +357,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               {invoice.notes && <p className={styles.quote}>{invoice.notes}</p>}
               <div className={forms.actions}>
                 {invoice.status !== 'draft' && invoice.status !== 'void' && (
-                  <SendInvoiceButton invoiceId={invoice.id} sent />
+                  <SendInvoiceButton invoiceId={invoice.id} sent={emailed > 0} />
                 )}
                 {invoice.status !== 'void' && invoice.paidMinor === 0 && (
                   <VoidInvoiceForm invoiceId={invoice.id} />

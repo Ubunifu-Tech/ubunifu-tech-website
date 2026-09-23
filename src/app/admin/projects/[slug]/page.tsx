@@ -36,6 +36,7 @@ import { Callout } from '@/components/console/Callout';
 import { LeadSelect, TaskRow } from './TaskRow';
 import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
+import { EarlyPayment } from './EarlyPayment';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import { AddPhase, AddTask, AskForSomething, PhaseHead, ProjectDetailsCard } from './PlanEditor';
@@ -931,6 +932,14 @@ export default async function ProjectPage({
                   lines={toBill}
                   defaultDue={toDateInputValue(defaultDue)}
                 />
+              </section>
+
+              <section className={forms.card}>
+                <div className={forms.cardHeader}>
+                  <h2 className={forms.cardTitle}>Record a payment</h2>
+                  <span className={forms.cardMeta}>Paid before an invoice or a signature</span>
+                </div>
+                <EarlyPayment projectId={project.id} lines={toBill} today={toDateInputValue(now)} />
               </section>
 
               <div className={table.frame}>

@@ -50,12 +50,34 @@ export default async function PortalRequest({
         // are never sent to the browser at all.
         where: { isInternal: false },
         orderBy: { createdAt: 'asc' },
-        select: { id: true, actorType: true, body: true, createdAt: true },
+        select: { id: true, actorType: true, actorId: true, body: true, createdAt: true },
       },
     },
   });
 
   if (!ticket) notFound();
+
+  // Each message under the name of whoever wrote it: colleagues at the same
+  // client can reply on one request. Looked up within this client only.
+  const writerIds = [
+    ...new Set(
+      ticket.messages.flatMap((m) => (m.actorType === 'client_contact' && m.actorId ? [m.actorId] : [])),
+    ),
+  ];
+  const writers = new Map(
+    (
+      await db.clientContact.findMany({
+        where: { id: { in: writerIds }, clientId: actor.clientId },
+        select: { id: true, name: true },
+      })
+    ).map((contact) => [contact.id, contact.name]),
+  );
+  const who = (message: { actorType: string; actorId: string | null }) =>
+    message.actorType === 'staff'
+      ? 'Ubunifu'
+      : message.actorId === actor.id
+        ? 'You'
+        : ((message.actorId && writers.get(message.actorId)) ?? ticket.openedBy?.name ?? 'Your team');
 
   return (
     <main className={`${styles.page} ${styles.medium}`}>
@@ -99,7 +121,7 @@ export default async function PortalRequest({
                 className={`${styles.message} ${fromUs ? styles.fromUs : ''}`}
               >
                 <p className={styles.messageWho}>
-                  {fromUs ? 'Ubunifu' : (ticket.openedBy?.name ?? 'You')} ·{' '}
+                  {who(message)} ·{' '}
                   {formatRelative(message.createdAt, now)}
                 </p>
                 <p className={styles.messageBody}>{message.body}</p>

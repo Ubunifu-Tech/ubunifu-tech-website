@@ -1,6 +1,6 @@
 import 'server-only';
 import { db } from '@/lib/db';
-import type { ActorType, DocumentKind, Prisma, ProjectStatus } from '@/generated/prisma/client';
+import type { ActorType, DocumentKind, DocumentStatus, Prisma, ProjectStatus } from '@/generated/prisma/client';
 import { STAFF_LABEL } from './project-status';
 import { formatMoney } from './money';
 
@@ -40,7 +40,7 @@ export type Guard = {
   severity: GuardSeverity;
   message: string;
   /** The project tab where it is put right, so every warning has a way forward. */
-  fix?: 'fees' | 'documents' | 'overview';
+  fix?: 'fees' | 'documents' | 'updates' | 'overview';
 };
 
 export type Transition = {
@@ -60,7 +60,7 @@ export type Transition = {
  */
 const TABLE: Record<ProjectStatus, Transition[]> = {
   lead: [
-    { to: 'proposal_draft', label: 'Start a proposal', tone: 'primary' },
+    { to: 'proposal_draft', label: 'Mark as writing the proposal', tone: 'quiet' },
     {
       to: 'proposal_sent',
       label: 'Record a proposal already sent',
@@ -70,7 +70,12 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     { to: 'cancelled', label: 'Mark as lost', tone: 'danger' },
   ],
   proposal_draft: [
-    { to: 'proposal_sent', label: 'Send the proposal', tone: 'primary' },
+    {
+      to: 'proposal_sent',
+      label: 'Record the proposal as sent',
+      detail: 'If it went by email or on paper.',
+      tone: 'quiet',
+    },
     { to: 'lead', label: 'Not ready for a proposal yet', tone: 'quiet' },
     { to: 'cancelled', label: 'Drop this before sending', tone: 'danger' },
   ],
@@ -85,7 +90,12 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     { to: 'cancelled', label: 'Mark the proposal lost', tone: 'danger' },
   ],
   proposal_accepted: [
-    { to: 'contract_sent', label: 'Send the agreement for signing', tone: 'primary' },
+    {
+      to: 'contract_sent',
+      label: 'Record the agreement as sent',
+      detail: 'If it went by email or on paper.',
+      tone: 'quiet',
+    },
     {
       to: 'in_progress',
       label: 'Start work without an agreement',
@@ -112,7 +122,12 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     { to: 'cancelled', label: 'Cancel the engagement', tone: 'danger' },
   ],
   in_progress: [
-    { to: 'client_review', label: 'Send for client review', tone: 'primary' },
+    {
+      to: 'client_review',
+      label: 'Mark as with the client for review',
+      detail: 'Post an update with the preview link so they know.',
+      tone: 'primary',
+    },
     { to: 'launch_ready', label: 'Mark ready to launch', tone: 'primary' },
     {
       to: 'handover',
@@ -179,6 +194,21 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
       tone: 'quiet',
     },
   ],
+};
+
+/**
+ * The real next step, where it happens somewhere other than a status change.
+ *
+ * Sending a proposal or an agreement is done from Documents, which creates the
+ * signature request, emails the client and moves the project on by itself. A
+ * status button labelled "Send" did none of that, so the send lives here as a
+ * link, and the status edges above are worded as records of something sent
+ * another way.
+ */
+export const NEXT_STEP: Partial<Record<ProjectStatus, { label: string; tab: 'documents' }>> = {
+  lead: { label: 'Write the proposal', tab: 'documents' },
+  proposal_draft: { label: 'Send the proposal', tab: 'documents' },
+  proposal_accepted: { label: 'Send the agreement for signing', tab: 'documents' },
 };
 
 /** Neither of these has any outgoing edge that is not a revival or a resume. */
@@ -371,6 +401,12 @@ export type GuardFacts = {
   liveRecurringLines: number;
   activeManagedServices: number;
   outstandingAssetRequests: number;
+  /** Proposals that went to the client from Documents, whatever became of them. */
+  sentProposals: number;
+  /** Agreements and statements of work that went to the client from Documents. */
+  sentAgreements: number;
+  /** Published updates that carry a preview link. */
+  previewUpdates: number;
 };
 
 export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
@@ -402,10 +438,16 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
       },
       documents: {
         select: {
+          kind: true,
+          status: true,
           signatureRequests: {
             select: { status: true, signatures: { select: { id: true } } },
           },
         },
+      },
+      updates: {
+        where: { status: 'published', previewUrl: { not: null } },
+        select: { id: true },
       },
       managedServices: { where: { isActive: true }, select: { id: true } },
       assetRequests: { where: { status: 'requested' }, select: { id: true } },
@@ -455,8 +497,18 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
     ).length,
     activeManagedServices: project.managedServices.length,
     outstandingAssetRequests: project.assetRequests.length,
+    sentProposals: project.documents.filter(
+      (d) => d.kind === 'proposal' && WENT_OUT.includes(d.status),
+    ).length,
+    sentAgreements: project.documents.filter(
+      (d) => (d.kind === 'contract' || d.kind === 'statement_of_work') && WENT_OUT.includes(d.status),
+    ).length,
+    previewUpdates: project.updates.length,
   };
 }
+
+/** Document statuses that mean it reached the client at some point. */
+const WENT_OUT: DocumentStatus[] = ['sent', 'viewed', 'changes_requested', 'signed', 'declined', 'expired'];
 
 /**
  * What must be true, and what merely ought to be.
@@ -485,6 +537,33 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       severity: 'block',
       message: `${facts.linesUnpriced} fee${facts.linesUnpriced === 1 ? ' has' : 's have'} no price yet. Price ${facts.linesUnpriced === 1 ? 'it' : 'them'} first.`,
         fix: 'fees',
+    });
+  }
+
+  if (to === 'proposal_sent' && facts.sentProposals === 0) {
+    guards.push({
+      severity: 'warn',
+      message:
+        'No proposal has gone to the client from Documents. If it went by email or on paper, say so in the note.',
+      fix: 'documents',
+    });
+  }
+
+  if (to === 'contract_sent' && facts.sentAgreements === 0) {
+    guards.push({
+      severity: 'warn',
+      message:
+        'No agreement has gone to the client from Documents. If it went by email or on paper, say so in the note.',
+      fix: 'documents',
+    });
+  }
+
+  if (to === 'client_review' && facts.previewUpdates === 0) {
+    guards.push({
+      severity: 'warn',
+      message:
+        'The client has not been sent anything to review. Post an update with the preview link so they know.',
+      fix: 'updates',
     });
   }
 
@@ -571,7 +650,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
   if (to === 'closed' && (facts.liveRecurringLines > 0 || facts.activeManagedServices > 0)) {
     guards.push({
       severity: 'warn',
-      message: `${facts.liveRecurringLines} recurring fee${facts.liveRecurringLines === 1 ? '' : 's'} and ${facts.activeManagedServices} service${facts.activeManagedServices === 1 ? '' : 's'} are still active. Closing does not stop them. Say in the note what happens to each.`,
+      message: `${facts.liveRecurringLines} recurring fee${facts.liveRecurringLines === 1 ? '' : 's'} and ${facts.activeManagedServices} service${facts.activeManagedServices === 1 ? '' : 's'} will keep renewing after it closes. To stop one, pause or cancel it on the Fees tab.`,
         fix: 'fees',
     });
   }

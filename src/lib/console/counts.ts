@@ -1,7 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { NavCounts } from '@/app/admin/ConsoleNav';
-import { liveDocument, liveEnquiry, liveInvoice, liveTicket } from './live';
+import { liveDocument, liveEnquiry, liveInvoice, liveTicket, renewingLine } from './live';
 
 /**
  * The numbers in the sidebar.
@@ -37,10 +37,7 @@ export async function navCounts(): Promise<NavCounts> {
       where: {
         status: 'pending',
         dueAt: { lte: horizon },
-        lineItem: {
-          status: { in: ['planned', 'active'] },
-          project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } },
-        },
+        lineItem: renewingLine,
       },
     }),
     /*

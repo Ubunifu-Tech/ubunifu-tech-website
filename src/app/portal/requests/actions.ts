@@ -103,14 +103,24 @@ export async function replyToRequest(
     };
   }
 
+  // A reply back on a request marked done means it is not done, so it goes
+  // back into the team's queue. resolvedAt is left alone: it records the first
+  // time it was resolved, which is what response figures are measured on.
+  const reopened = ticket.status === 'resolved';
   await db.$transaction(async (tx) => {
     await tx.ticketMessage.create({
       data: { ticketId: ticket.id, actorType: 'client_contact', actorId: actor.id, body },
     });
-    // A client replying is the client no longer being the blocker.
-    if (ticket.status === 'waiting_on_client') {
-      await tx.ticket.update({ where: { id: ticket.id }, data: { status: 'in_progress' } });
-    }
+    // Every reply is activity, so "last activity" and the order of the lists
+    // follow the conversation rather than the last change of status. A reply
+    // also means the client is no longer the one holding things up.
+    await tx.ticket.update({
+      where: { id: ticket.id },
+      data: {
+        updatedAt: new Date(),
+        ...(ticket.status === 'waiting_on_client' || reopened ? { status: 'in_progress' as const } : {}),
+      },
+    });
   });
 
   await recordAudit({
@@ -142,5 +152,6 @@ export async function replyToRequest(
   });
 
   revalidatePath(`/portal/requests/${ticket.reference}`);
-  return { status: 'done', message: 'Sent.' };
+  revalidatePath('/portal/requests');
+  return { status: 'done', message: reopened ? 'Sent. The request is open again.' : 'Sent.' };
 }

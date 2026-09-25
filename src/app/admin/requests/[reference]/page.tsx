@@ -51,17 +51,42 @@ export default async function TicketPage({
       priority: true,
       createdAt: true,
       resolvedAt: true,
+      clientId: true,
       client: { select: { name: true, slug: true } },
       project: { select: { name: true, slug: true, reference: true } },
       openedBy: { select: { name: true, email: true } },
       messages: {
         orderBy: { createdAt: 'asc' },
-        select: { id: true, actorType: true, body: true, isInternal: true, createdAt: true },
+        select: {
+          id: true,
+          actorType: true,
+          actorId: true,
+          body: true,
+          isInternal: true,
+          createdAt: true,
+        },
       },
     },
   });
 
   if (!ticket) notFound();
+
+  // Each message under the name of whoever wrote it: several people at a
+  // client can reply on one request, and so can several of us.
+  const ids = (type: string) => [
+    ...new Set(ticket.messages.flatMap((m) => (m.actorType === type && m.actorId ? [m.actorId] : []))),
+  ];
+  const [theirPeople, ourPeople] = await Promise.all([
+    db.clientContact.findMany({
+      where: { id: { in: ids('client_contact') }, clientId: ticket.clientId },
+      select: { id: true, name: true },
+    }),
+    db.staffUser.findMany({ where: { id: { in: ids('staff') } }, select: { id: true, name: true } }),
+  ]);
+  const names = new Map([...theirPeople, ...ourPeople].map((person) => [person.id, person.name]));
+  const writer = (message: { actorType: string; actorId: string | null }) =>
+    (message.actorId && names.get(message.actorId)) ??
+    (message.actorType === 'staff' ? 'Us' : (ticket.openedBy?.name ?? 'The client'));
 
   const activity = await activityFor([ticket.id]);
 
@@ -122,10 +147,8 @@ export default async function TicketPage({
                 >
                   <p className={styles.messageWho}>
                     {message.isInternal
-                      ? 'Internal note. The client cannot see this.'
-                      : fromUs
-                        ? 'Us'
-                        : (ticket.openedBy?.name ?? 'The client')}{' '}
+                      ? `Internal note from ${writer(message)}. The client cannot see this.`
+                      : writer(message)}{' '}
                     · {formatRelative(message.createdAt, now)}
                   </p>
                   <p className={styles.messageBody}>{message.body}</p>

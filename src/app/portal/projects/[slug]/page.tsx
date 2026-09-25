@@ -221,10 +221,11 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
               <ul className={styles.needList}>
                 {project.assetRequests.map((request) => {
                   // Something that arrived as a file needs no empty answer
-                  // box. Something answered in writing can still take a file
-                  // ("the photo follows"), so it keeps the upload box.
+                  // box. Files can always be added, though: what we ask for is
+                  // often a set of photographs, and the first one in is not
+                  // the last.
                   const showAnswer = request.status !== 'received' || request.response !== null;
-                  const showUpload = canUpload && showAnswer;
+                  const showUpload = canUpload;
                   return (
                     <li key={request.id} className={styles.needItem}>
                       <span className={styles.itemStatus}>
@@ -282,7 +283,8 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
                           assetRequestId={request.id}
                           accept={ALLOWED_CONTENT_TYPES.join(',')}
                           maxBytes={MAX_UPLOAD_BYTES}
-                          hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)}.`}
+                          hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)} each. You can choose several at once.`}
+                          more={request.uploads.length > 0}
                         />
                       )}
                     </li>

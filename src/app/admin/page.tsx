@@ -4,7 +4,7 @@ import { can, requireStaff } from '@/lib/console/auth';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { recentActivity } from '@/lib/console/activity';
-import { liveEnquiry, liveInvoice } from '@/lib/console/live';
+import { liveEnquiry, liveInvoice, renewingLine } from '@/lib/console/live';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Avatar } from '@/components/console/Avatar';
 import { Callout } from '@/components/console/Callout';
@@ -93,9 +93,8 @@ export default async function AdminHome() {
     }),
     db.lineItem.count({
       where: {
-        status: { in: ['planned', 'active'] },
+        ...renewingLine,
         nextDueAt: { not: null, lte: soon },
-        project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } },
       },
     }),
     db.emailLog.count({ where: { status: 'failed' } }),

@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
+import { renewingLine } from './live';
 
 /**
  * Renewals, one period at a time.
@@ -62,10 +63,9 @@ export async function ensureRenewalEvents(
   const lines = await db.lineItem.findMany({
     where: {
       ...where,
-      status: { in: ['planned', 'active'] },
+      ...renewingLine,
       nextDueAt: { not: null },
       billingKind: { in: ['recurring_monthly', 'recurring_annual'] },
-      project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } },
     },
     select: {
       id: true,

@@ -40,10 +40,17 @@ export const liveDocument = { project: liveProject } satisfies Prisma.DocumentWh
 /** A payment is shown where its invoice is. */
 export const livePayment = { invoice: liveInvoice } satisfies Prisma.PaymentWhereInput;
 
-/** A renewal period belongs to a fee line on a project. */
-export const liveRenewal = {
-  lineItem: { project: liveProject },
-} satisfies Prisma.RenewalEventWhereInput;
+/**
+ * A fee line that still renews. The line's own status decides it: closing a
+ * project ends the build, not the hosting or the domain the client goes on
+ * paying for, so a closed project's renewals keep coming. Only a cancelled or
+ * removed project stops them; pausing or cancelling the line itself is how a
+ * service that really ends is stopped.
+ */
+export const renewingLine = {
+  status: { in: ['planned', 'active'] },
+  project: { deletedAt: null, status: { not: 'cancelled' } },
+} satisfies Prisma.LineItemWhereInput;
 
 /** An enquiry that has not been removed from the console. */
 export const liveEnquiry = { deletedAt: null } satisfies Prisma.EnquiryWhereInput;

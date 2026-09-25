@@ -45,6 +45,7 @@ export async function replyToTicket(
       reference: true,
       subject: true,
       status: true,
+      clientId: true,
       openedBy: { select: { name: true, email: true, canSignIn: true, deletedAt: true } },
       client: { select: { name: true } },
     },
@@ -63,8 +64,14 @@ export async function replyToTicket(
     await tx.ticketMessage.create({
       data: { ticketId: ticket.id, actorType: 'staff', actorId: staff.id, body, isInternal },
     });
-    if (nextStatus) {
-      await tx.ticket.update({ where: { id: ticket.id }, data: { status: nextStatus } });
+    // A reply the client can see is activity on the request, so the lists'
+    // "last activity" follows it. An internal note is not: bumping the time
+    // would show the client that something happened they cannot read.
+    if (!isInternal) {
+      await tx.ticket.update({
+        where: { id: ticket.id },
+        data: { updatedAt: new Date(), ...(nextStatus ? { status: nextStatus } : {}) },
+      });
     }
   });
 
@@ -81,7 +88,20 @@ export async function replyToTicket(
 
   if (isInternal) return { status: 'done', message: 'Noted. The client cannot see this.' };
 
-  const contact = ticket.openedBy;
+  // The reply goes to whoever at the client wrote last, which is not always
+  // the person who raised it; the person who raised it when that is not known.
+  const lastWord = await db.ticketMessage.findFirst({
+    where: { ticketId: ticket.id, actorType: 'client_contact' },
+    orderBy: { createdAt: 'desc' },
+    select: { actorId: true },
+  });
+  const lastWriter = lastWord?.actorId
+    ? await db.clientContact.findFirst({
+        where: { id: lastWord.actorId, clientId: ticket.clientId, deletedAt: null, canSignIn: true },
+        select: { name: true, email: true, canSignIn: true, deletedAt: true },
+      })
+    : null;
+  const contact = lastWriter?.email ? lastWriter : ticket.openedBy;
   if (!contact || contact.deletedAt || !contact.canSignIn) {
     return {
       status: 'done',

@@ -11,6 +11,7 @@ import { Figures } from '@/components/console/Figures';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { renewingLine } from '@/lib/console/live';
 
 export const metadata = { title: 'Renewals' };
 
@@ -49,10 +50,7 @@ export default async function RenewalsPage() {
   const renewals = await db.renewalEvent.findMany({
     where: {
       status: { in: ['pending', 'drafted', 'invoiced'] },
-      lineItem: {
-        status: { in: ['planned', 'active'] },
-        project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } },
-      },
+      lineItem: renewingLine,
     },
     orderBy: { dueAt: 'asc' },
     take: 300,

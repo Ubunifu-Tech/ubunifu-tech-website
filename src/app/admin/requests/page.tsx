@@ -80,8 +80,10 @@ export default async function RequestsPage({
   const [tickets, viewCounts, unread, urgent, oldest, resolvedThisWeek] = await Promise.all([
     db.ticket.findMany({
       where: { AND: [liveTicket, filterToWhere(active), matching] },
-      // Oldest first: the one that has waited longest is the one that costs us.
-      orderBy: [{ priority: 'desc' }, { updatedAt: 'asc' }],
+      // Oldest first by when it was raised: the one that has waited longest is
+      // the one that costs us. Not by last activity, which every reply moves,
+      // or a request the client has just chased would drop to the bottom.
+      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
       take: 200,
       select: {
         id: true,

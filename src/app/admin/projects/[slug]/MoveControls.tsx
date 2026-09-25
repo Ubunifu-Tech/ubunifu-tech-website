@@ -20,11 +20,12 @@ export type StageAction = Transition & {
   blockedFix: FixTab | null;
 };
 
-type FixTab = 'fees' | 'documents' | 'overview';
+type FixTab = 'fees' | 'documents' | 'updates' | 'overview';
 
 const FIX_LABEL: Record<FixTab, string> = {
   fees: 'Go to fees',
   documents: 'Go to documents',
+  updates: 'Go to updates',
   overview: 'See what the client owes',
 };
 
@@ -42,11 +43,14 @@ export function MoveControls({
   projectSlug,
   status,
   actions,
+  next,
 }: {
   projectId: string;
   projectSlug: string;
   status: ProjectStatus;
   actions: StageAction[];
+  /** The real next step, when it happens on another tab rather than here. */
+  next?: { label: string; tab: 'documents' } | null;
 }) {
   const fixHref = (tab: FixTab) =>
     tab === 'overview' ? `/projects/${projectSlug}` : `/projects/${projectSlug}?tab=${tab}`;
@@ -66,7 +70,11 @@ export function MoveControls({
     <form action={action}>
       <input type="hidden" name="projectId" value={projectId} />
       <input type="hidden" name="expectedFrom" value={status} />
-      <input type="hidden" name="to" value={chosen?.to ?? ''} />
+      {/* The stage travels on the button pressed (its name and value), not in
+          state: a click sets state and submits in the same event, before any
+          re-render, so a hidden field filled from state would post empty. The
+          confirm step has no stage buttons, so it carries it here. */}
+      {confirming && <input type="hidden" name="to" value={chosen!.to} />}
 
       {confirming ? (
         <div className={styles.confirm}>
@@ -111,12 +119,19 @@ export function MoveControls({
         </div>
       ) : (
         <>
-          {primary.length > 0 && (
+          {(next || primary.length > 0) && (
             <div className={styles.primary}>
+              {next && (
+                <Link href={fixHref(next.tab)} className={forms.button}>
+                  {next.label}
+                </Link>
+              )}
               {primary.map((item) => (
                 <button
                   key={item.to}
                   type="submit"
+                  name="to"
+                  value={item.to}
                   className={forms.button}
                   disabled={pending}
                   onClick={() => setChosen(item)}
@@ -129,12 +144,16 @@ export function MoveControls({
 
           {others.length > 0 && (
             <div className={styles.others}>
-              <p className={styles.othersLabel}>{primary.length > 0 ? 'Other options' : 'Options'}</p>
+              <p className={styles.othersLabel}>
+                {next || primary.length > 0 ? 'Other options' : 'Options'}
+              </p>
               <ul className={styles.list}>
                 {others.map((item) => (
                   <li key={item.to}>
                     <button
                       type="submit"
+                      name="to"
+                      value={item.to}
                       className={`${styles.option} ${item.tone === 'danger' ? styles.optionDanger : ''}`}
                       disabled={pending || item.blocked !== null}
                       onClick={() => setChosen(item)}

@@ -10,6 +10,7 @@ import {
   STATUS_TONE,
 } from '@/lib/console/project-status';
 import {
+  NEXT_STEP,
   documentStage,
   guardsFor,
   loadGuardFacts,
@@ -596,6 +597,7 @@ export default async function ProjectPage({
                   projectSlug={project.slug}
                   status={project.status}
                   actions={actions}
+                  next={mayDocs ? (NEXT_STEP[project.status] ?? null) : null}
                 />
               ) : (
                 <p className={styles.note}>

@@ -10,6 +10,7 @@ import type {
 } from '@/generated/prisma/client';
 import { STAFF_LABEL } from './project-status';
 import { formatMoney } from './money';
+import { waitingOnClient } from './live';
 
 /**
  * The delivery state machine.
@@ -501,7 +502,7 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
         select: { round: true, status: true },
       },
       managedServices: { where: { isActive: true }, select: { id: true } },
-      assetRequests: { where: { status: 'requested' }, select: { id: true } },
+      assetRequests: { where: waitingOnClient, select: { id: true } },
     },
   });
 

@@ -659,6 +659,72 @@ export function reviewRequestEmail(input: {
   return shell(`${input.projectName}: ${input.title} is ready for your review.`, body);
 }
 
+/**
+ * What we still need from the client, as one list. Sent when staff choose,
+ * after adding what they need, so a client gets one email for five things
+ * rather than five emails.
+ */
+export function itemsNeededEmail(input: {
+  name: string;
+  projectName: string;
+  items: { title: string; detail: string | null; isNew: boolean }[];
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const rows = input.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #ECE9E4;vertical-align:top;">
+          <p style="margin:0;color:#1D1B22;font-size:15px;line-height:1.5;">
+            ${escapeHtml(item.title)}${item.isNew ? ' <span style="color:#A63A11;font-size:13px;">New</span>' : ''}
+          </p>
+          ${item.detail ? `<p style="margin:4px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">${escapeHtml(item.detail)}</p>` : ''}
+        </td>
+      </tr>`,
+    )
+    .join('');
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">What we need from you</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. To keep the work moving, we need the following. You can
+      write an answer or attach files against each one in your portal.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #ECE9E4;margin-bottom:24px;">${rows}</table>
+    ${button(input.url, 'Send them from your portal')}`;
+
+  return shell(`${input.projectName}: what we need from you.`, body);
+}
+
+/** Our own alert: a client answered something we asked for, or sent a file for it. */
+export function clientSentEmail(input: {
+  clientName: string;
+  from: string;
+  projectName: string;
+  itemTitle: string;
+  /** Their written answer, or null for a file. */
+  answer: string | null;
+  filename: string | null;
+  url: string;
+}): string {
+  const headline = input.answer
+    ? `${input.from} answered ${input.itemTitle}`
+    : `${input.from} sent a file for ${input.itemTitle}`;
+  const answer =
+    input.answer && input.answer.length > 1200 ? `${input.answer.slice(0, 1200)}…` : input.answer;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.clientName)} · ${escapeHtml(input.projectName)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(headline)}</h1>
+    ${answer ? paragraphsOf(answer, 14) : ''}
+    ${input.filename ? `<p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(input.filename)}</p>` : ''}
+    ${button(input.url, 'Open the project')}`;
+
+  return shell(`${input.projectName}: ${headline}`, body);
+}
+
 /** Our own alert: a client answered a review. */
 export function reviewAnsweredEmail(input: {
   clientName: string;

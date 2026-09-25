@@ -444,6 +444,10 @@ model AssetRequest {
   /// Who at the client is sending it. Set by staff or by the client.
   assigneeId  String?
   assignee    ClientContact?     @relation("AssetRequestAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  /// When the client was last emailed a list with this on it. Null means it
+  /// is in their portal but nobody has told them. Items asked for before
+  /// these emails existed were set to when they were asked for.
+  notifiedAt  DateTime?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 

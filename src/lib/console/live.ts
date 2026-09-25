@@ -72,3 +72,10 @@ export const renewingLine = {
 
 /** An enquiry that has not been removed from the console. */
 export const liveEnquiry = { deletedAt: null } satisfies Prisma.EnquiryWhereInput;
+
+/**
+ * Something we asked the client for that they still have to send: the one
+ * meaning of "waiting on you", for their portal, its assistant and our own
+ * screens alike. An item marked not available is on hold, not waiting.
+ */
+export const waitingOnClient = { status: 'requested' } satisfies Prisma.AssetRequestWhereInput;

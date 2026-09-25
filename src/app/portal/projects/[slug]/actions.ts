@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireClient, recordAudit } from '@/lib/console/auth';
 import { recordAssetUpload } from '@/lib/console/uploads';
+import { alertClientSent } from '@/lib/console/alerts';
 
 export type UploadState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -148,6 +149,12 @@ export async function answerRequest(_previous: AnswerState, formData: FormData):
     entityId: item.id,
     summary: item.title,
   });
+  await alertClientSent({
+    assetRequestId: item.id,
+    contactId: actor.id,
+    answer: response,
+    filename: null,
+  }).catch((error: unknown) => console.error('[portal] team alert failed', error));
 
   revalidatePath(`/portal/projects/${item.project.slug}`);
   revalidatePath(`/admin/projects/${item.project.slug}`);

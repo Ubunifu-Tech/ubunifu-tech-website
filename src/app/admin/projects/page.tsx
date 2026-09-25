@@ -5,6 +5,7 @@ import { can, requireStaff } from '@/lib/console/auth';
 import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
+import { waitingOnClient } from '@/lib/console/live';
 import { Avatar } from '@/components/console/Avatar';
 import { Board, type BoardCard } from './Board';
 import { KanbanSquare, List } from 'lucide-react';
@@ -71,7 +72,7 @@ const SELECT = {
     where: { status: { in: ['planned', 'active'] } },
     select: { amountMinor: true, quantity: true, currency: true },
   },
-  assetRequests: { where: { status: 'requested' }, select: { id: true } },
+  assetRequests: { where: waitingOnClient, select: { id: true } },
   phases: { select: { deliverables: { select: { isComplete: true } } } },
 } satisfies Prisma.ProjectSelect;
 

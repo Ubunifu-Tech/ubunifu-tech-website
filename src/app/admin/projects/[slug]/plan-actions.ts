@@ -8,6 +8,10 @@ import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
 import { parseDateInput } from '@/lib/console/money';
 import { isCurrency } from '@/lib/console/currencies';
+import { consoleEnv } from '@/lib/console/env';
+import { waitingOnClient } from '@/lib/console/live';
+import { sendConsoleEmail } from '@/lib/console/mailer';
+import { itemsNeededEmail } from '@/lib/emails';
 
 /**
  * Building a project by hand: its details, its plan (phases and tasks) and
@@ -437,7 +441,103 @@ export async function addAssetRequest(
     metadata: { assetRequestId: request.id },
   });
   refresh(project.slug);
-  return { status: 'done', message: `Asked for ${title.toLowerCase()}.` };
+  return {
+    status: 'done',
+    message: 'Added to their list in the portal. Email them when you have added everything.',
+  };
+}
+
+/**
+ * Emails the client everything still waiting on them, as one list, with what
+ * is new since they were last emailed marked as new. Staff send it when they
+ * have finished adding, or later as a reminder.
+ */
+export async function emailItemList(_previous: PlanState, formData: FormData): Promise<PlanState> {
+  const staff = await allowed();
+  if (!staff) return { status: 'error', message: NO_PERMISSION };
+
+  const project = await db.project.findFirst({
+    where: { id: formText(formData, 'projectId'), deletedAt: null },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      client: {
+        select: {
+          name: true,
+          contacts: {
+            where: { deletedAt: null, canSignIn: true },
+            select: { id: true, name: true, email: true },
+          },
+        },
+      },
+      assetRequests: {
+        where: waitingOnClient,
+        orderBy: { position: 'asc' },
+        select: { id: true, title: true, detail: true, notifiedAt: true },
+      },
+    },
+  });
+  if (!project) return { status: 'error', message: 'That project no longer exists.' };
+  if (project.assetRequests.length === 0) {
+    return { status: 'error', message: 'Nothing is waiting on them.' };
+  }
+  const emailable = project.client.contacts.flatMap((contact) =>
+    contact.email ? [{ ...contact, email: contact.email }] : [],
+  );
+  if (emailable.length === 0) {
+    return { status: 'error', message: `Nobody at ${project.client.name} has an email yet.` };
+  }
+
+  const items = project.assetRequests.map((item) => ({
+    title: item.title,
+    detail: item.detail,
+    isNew: item.notifiedAt === null,
+  }));
+  let delivered = 0;
+  for (const contact of emailable) {
+    const sent = await sendConsoleEmail({
+      to: contact.email,
+      subject: `${project.name}: what we need from you`,
+      html: itemsNeededEmail({
+        name: contact.name,
+        projectName: project.name,
+        items,
+        url: `${consoleEnv.publicOrigin}/portal/projects/${project.slug}`,
+      }),
+      template: 'items_needed',
+      entityType: 'Project',
+      entityId: project.id,
+    });
+    if (sent.ok) delivered += 1;
+  }
+
+  if (delivered > 0) {
+    await db.assetRequest.updateMany({
+      where: { id: { in: project.assetRequests.map((item) => item.id) } },
+      data: { notifiedAt: new Date() },
+    });
+  }
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: delivered === emailable.length ? 'asset_request.list_sent' : 'asset_request.list_send_failed',
+    entityType: 'Project',
+    entityId: project.id,
+    summary: `${items.length} ${items.length === 1 ? 'item' : 'items'}. Emailed ${delivered} of ${emailable.length}`,
+  });
+  refresh(project.slug);
+
+  if (delivered === 0) {
+    return { status: 'error', message: 'The email did not go out. See Activity for why.' };
+  }
+  if (delivered < emailable.length) {
+    return {
+      status: 'error',
+      message: `Only ${delivered} of ${emailable.length} emails went out. See Activity for why.`,
+    };
+  }
+  return { status: 'done', message: `Emailed to ${delivered}.` };
 }
 
 export async function updateAssetRequest(

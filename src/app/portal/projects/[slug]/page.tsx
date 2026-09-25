@@ -144,9 +144,13 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
 
   if (!project) notFound();
 
+  // Waiting means asked for and not sent, the same count as everywhere else.
+  // An item marked not available is on hold: still to come, but not theirs to
+  // act on now.
   const outstanding = project.assetRequests.filter(
-    (request) => request.status !== 'received',
+    (request) => request.status === 'requested',
   ).length;
+  const onHold = project.assetRequests.filter((request) => request.status === 'blocked').length;
   const [latestReview, ...earlierReviews] = project.reviews;
   const reviewOpen = latestReview?.status === 'open';
   const stage = clientStage(project.status, latestReview);
@@ -253,7 +257,8 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>What we still need from you</h2>
                 <span className={forms.cardMeta}>
-                  {outstanding} of {project.assetRequests.length} still to come
+                  {outstanding === 0 ? 'Nothing waiting on you' : `${outstanding} waiting on you`}
+                  {onHold > 0 ? `, ${onHold} on hold` : ''}
                 </span>
               </div>
               <ul className={styles.needList}>

@@ -42,7 +42,14 @@ import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import { EarlyPayment } from './EarlyPayment';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
-import { AddPhase, AddTask, AskForSomething, PhaseHead, ProjectDetailsCard } from './PlanEditor';
+import {
+  AddPhase,
+  AddTask,
+  AskForSomething,
+  EmailItemList,
+  PhaseHead,
+  ProjectDetailsCard,
+} from './PlanEditor';
 import { BrandKitEditor } from './BrandKitEditor';
 import { AskForReview } from './AskForReview';
 import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
@@ -176,6 +183,7 @@ export default async function ProjectPage({
           status: true,
           assigneeId: true,
           response: true,
+          notifiedAt: true,
           uploads: {
             where: { deletedAt: null },
             orderBy: { createdAt: 'asc' },
@@ -263,11 +271,16 @@ export default async function ProjectPage({
 
   if (!project) notFound();
 
-  const [transitions, facts, billable, org] = await Promise.all([
+  const [transitions, facts, billable, org, lastList] = await Promise.all([
     transitionsFor(project),
     loadGuardFacts(project.id),
     billableLines(project.id),
     getOrg(),
+    db.emailLog.findFirst({
+      where: { template: 'items_needed', entityType: 'Project', entityId: project.id, status: 'sent' },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    }),
   ]);
 
   const toBill: BillableLine[] = billable
@@ -358,6 +371,9 @@ export default async function ProjectPage({
   ).length;
   const outstandingAssets = project.assetRequests.filter(
     (request) => request.status === 'requested',
+  ).length;
+  const unsentAssets = project.assetRequests.filter(
+    (request) => request.status === 'requested' && request.notifiedAt === null,
   ).length;
 
   const totalDeliverables = project.phases.reduce((n, p) => n + p.deliverables.length, 0);
@@ -646,7 +662,7 @@ export default async function ProjectPage({
               </section>
             )}
 
-            <section className={forms.card}>
+            <section id="from-the-client" className={forms.card}>
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>From the client</h2>
                 <span className={forms.cardMeta}>
@@ -679,6 +695,13 @@ export default async function ProjectPage({
                     />
                   ))}
                 </div>
+              )}
+              {mayRun && outstandingAssets > 0 && (
+                <EmailItemList
+                  projectId={project.id}
+                  unsent={unsentAssets}
+                  lastEmailed={lastList ? formatRelative(lastList.createdAt, now) : null}
+                />
               )}
               {mayRun && (
                 <AskForSomething

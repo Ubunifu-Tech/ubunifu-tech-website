@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, Eye, FileSignature, MessageSquare, Receipt, Upload } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { liveInvoice, liveTicket } from '@/lib/console/live';
+import { liveInvoice, liveTicket, waitingOnClient } from '@/lib/console/live';
 import { clientStage } from '@/lib/console/project-status';
 import { formatDate, formatMoney } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
@@ -68,7 +68,7 @@ export default async function PortalHome() {
             deliverables: { where: { isClientVisible: true }, select: { isComplete: true } },
           },
         },
-        assetRequests: { where: { status: 'requested' }, select: { id: true } },
+        assetRequests: { where: waitingOnClient, select: { id: true } },
         reviews: {
           where: { status: { not: 'withdrawn' } },
           orderBy: { round: 'desc' },

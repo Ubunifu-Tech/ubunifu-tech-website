@@ -6,7 +6,7 @@ import { clientStage } from './project-status';
 import { INVOICE_STATUS_LABEL } from './billing-labels';
 import { CLIENT_TICKET_STATUS } from './tickets';
 import { formatDate, formatMoney } from './money';
-import { liveInvoice, liveTicket } from './live';
+import { liveInvoice, liveTicket, waitingOnClient } from './live';
 
 /**
  * What the portal assistant is told, and what it knows: its instructions, the
@@ -68,7 +68,7 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
           },
         },
         assetRequests: {
-          where: { status: 'requested' },
+          where: waitingOnClient,
           orderBy: { position: 'asc' },
           select: { title: true, dueAt: true, assignee: { select: { name: true } } },
         },

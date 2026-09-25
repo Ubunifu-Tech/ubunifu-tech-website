@@ -6,6 +6,7 @@ import {
   addAssetRequest,
   addPhase,
   addTask,
+  emailItemList,
   removePhase,
   renameTask,
   updateAssetRequest,
@@ -533,7 +534,7 @@ function AssetRequestForm({
       />
       {!request && state.status === 'done' && (
         <p className={forms.hint} role="status">
-          Added. Ask for something else, or press Done.
+          Added to their list. Add another, or press Done and email them the list.
         </p>
       )}
       <Problem state={state} />
@@ -553,6 +554,49 @@ export function AskForSomething({ projectId, first }: { projectId: string; first
       <Plus size={16} strokeWidth={2} aria-hidden="true" />
       {first ? 'Ask them for something' : 'Ask for something else'}
     </button>
+  );
+}
+
+/**
+ * Emailing the client what is still waiting on them. Adding something puts it
+ * in their portal; this is what tells them, once, for everything added.
+ */
+export function EmailItemList({
+  projectId,
+  unsent,
+  lastEmailed,
+}: {
+  projectId: string;
+  /** Waiting items they have not been emailed about. */
+  unsent: number;
+  /** When the list last went out, as words, or null. */
+  lastEmailed: string | null;
+}) {
+  const [state, action, pending] = useActionState(emailItemList, IDLE);
+  return (
+    <form action={action} className={forms.actions}>
+      <input type="hidden" name="projectId" value={projectId} />
+      <button
+        type="submit"
+        className={unsent > 0 ? forms.button : `${forms.button} ${forms.quiet}`}
+        disabled={pending}
+      >
+        {pending ? 'Sending…' : unsent > 0 ? 'Email them the list' : 'Email a reminder'}
+      </button>
+      {state.message ? (
+        <p className={state.status === 'error' ? forms.error : forms.hint} role="status">
+          {state.message}
+        </p>
+      ) : (
+        <p className={forms.hint}>
+          {unsent > 0
+            ? `${unsent} not emailed to them yet.`
+            : lastEmailed
+              ? `Last emailed ${lastEmailed}.`
+              : 'They can see everything in their portal.'}
+        </p>
+      )}
+    </form>
   );
 }
 

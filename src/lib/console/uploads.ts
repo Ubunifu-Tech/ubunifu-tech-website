@@ -3,6 +3,7 @@ import { head, get } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
 import type { ActorType } from '@/generated/prisma/client';
+import { alertClientSent } from './alerts';
 
 /**
  * Files a client sends us, stored outside the database.
@@ -178,6 +179,17 @@ export async function recordAssetUpload(input: {
     entityId: input.assetRequestId,
     summary: `${input.filename} sent${assetRequest ? ` for "${assetRequest.title}"` : ''}`,
   });
+
+  // The file is safely recorded by now, so a failed alert must not reach the
+  // client as a failed upload.
+  if (input.actor.type === 'client_contact' && input.actor.id) {
+    await alertClientSent({
+      assetRequestId: input.assetRequestId,
+      contactId: input.actor.id,
+      answer: null,
+      filename: input.filename,
+    }).catch((error: unknown) => console.error('[uploads] team alert failed', error));
+  }
 
   return { id: upload.id, created: true };
 }

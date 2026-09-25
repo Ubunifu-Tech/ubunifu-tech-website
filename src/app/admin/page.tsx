@@ -12,6 +12,7 @@ import { Figures, type Figure } from '@/components/console/Figures';
 import styles from './Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { unresolvedEmailFailures } from '@/lib/console/email-failures';
 
 // Absolute: a layout template does not apply to its own sibling page, so a
 // plain string here would inherit the marketing site's title template.
@@ -97,7 +98,8 @@ export default async function AdminHome() {
         nextDueAt: { not: null, lte: soon },
       },
     }),
-    db.emailLog.count({ where: { status: 'failed' } }),
+    // Only those not put right by sending again since.
+    unresolvedEmailFailures().then((rows) => rows.length),
     db.project.findMany({
       where: {
         deletedAt: null,

@@ -6,6 +6,7 @@ import {
   askCopilot,
   saveDetails,
   saveVersion,
+  resendSignatureLink,
   sendForSignature,
   setSuggestionAside,
   startFromSuggestion,
@@ -233,11 +234,14 @@ export function VersionEditor({
 export function SendForSignature({
   documentId,
   alreadySent,
+  again = false,
   ready,
   signer,
 }: {
   documentId: string;
   alreadySent: boolean;
+  /** The same version again, because the time to sign the last one ran out. */
+  again?: boolean;
   ready: boolean;
   signer: string | null;
 }) {
@@ -249,14 +253,34 @@ export function SendForSignature({
       {signer && ready && (
         <p className={styles.note}>
           {signer} gets an email with a link to read and sign it.
-          {alreadySent && ' The copy they have now is withdrawn.'}
+          {alreadySent && !again && ' The copy they have now is withdrawn.'}
         </p>
       )}
       <div className={forms.actions}>
         <button type="submit" className={forms.button} disabled={pending || !ready}>
-          {pending ? 'Sending…' : alreadySent ? 'Send the new version' : 'Send for signature'}
+          {pending
+            ? 'Sending…'
+            : again
+              ? 'Send it again'
+              : alreadySent
+                ? 'Send the new version'
+                : 'Send for signature'}
         </button>
       </div>
+      <Result state={state} />
+    </form>
+  );
+}
+
+/** The link again, for the version already with them. */
+export function ResendSignatureLink({ documentId }: { documentId: string }) {
+  const [state, action, pending] = useActionState(resendSignatureLink, INITIAL);
+  return (
+    <form action={action} className={forms.actions}>
+      <input type="hidden" name="documentId" value={documentId} />
+      <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
+        {pending ? 'Sending…' : 'Email the link again'}
+      </button>
       <Result state={state} />
     </form>
   );

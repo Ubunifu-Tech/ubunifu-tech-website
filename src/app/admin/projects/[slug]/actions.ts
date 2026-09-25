@@ -18,6 +18,7 @@ import {
   type Guard,
 } from '@/lib/console/transitions';
 import { formText } from '@/lib/console/form';
+import { emailedAddresses } from '@/lib/console/updates';
 import { withdrawOpenReviews } from '@/lib/console/reviews';
 
 const ASSET_STATUSES: AssetRequestStatus[] = [
@@ -284,32 +285,41 @@ export async function setAssetRequestStatus(
  * unsend an email — so it is saved first, read back on the page as the client
  * will see it, and sent only when somebody presses send.
  */
-export async function saveUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
-
-  const projectId = String(formData.get('projectId') ?? '');
+/** An update's words and link, checked the same way for a new one and an edit. */
+function readUpdate(
+  formData: FormData,
+):
+  | { ok: true; title: string; bodyMarkdown: string; previewUrl: string }
+  | { ok: false; message: string } {
   const title = String(formData.get('title') ?? '').trim();
   const bodyMarkdown = formText(formData, 'body');
   const previewUrl = String(formData.get('previewUrl') ?? '').trim();
 
   if (title.length < 3 || title.length > 160) {
-    return { status: 'error', message: 'Give the update a short title.' };
+    return { ok: false, message: 'Give the update a short title.' };
   }
   if (bodyMarkdown.length < 10 || bodyMarkdown.length > 8000) {
-    return { status: 'error', message: 'Write a little more than that.' };
+    return { ok: false, message: 'Write a little more than that.' };
   }
   if (previewUrl) {
     try {
       const parsed = new URL(previewUrl);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
     } catch {
-      return {
-        status: 'error',
-        message: 'The link should be a full address, starting with https://',
-      };
+      return { ok: false, message: 'The link should be a full address, starting with https://' };
     }
   }
+  return { ok: true, title, bodyMarkdown, previewUrl };
+}
+
+export async function saveUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const projectId = String(formData.get('projectId') ?? '');
+  const read = readUpdate(formData);
+  if (!read.ok) return { status: 'error', message: read.message };
+  const { title, bodyMarkdown, previewUrl } = read;
 
   const project = await db.project.findFirst({
     where: { id: projectId, deletedAt: null },
@@ -476,6 +486,163 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
     };
   }
   return { status: 'done', message: `Published and emailed to ${delivered}.${alsoUnreached}` };
+}
+
+/**
+ * Changes a draft. Only a draft: once an update is published it is what the
+ * client was told, and it stays as it was sent.
+ */
+export async function editUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const read = readUpdate(formData);
+  if (!read.ok) return { status: 'error', message: read.message };
+
+  const update = await db.projectUpdate.findFirst({
+    where: { id: formText(formData, 'updateId'), project: { deletedAt: null } },
+    select: { id: true, project: { select: { slug: true } } },
+  });
+  if (!update) return { status: 'error', message: 'That update no longer exists.' };
+
+  const changed = await db.projectUpdate.updateMany({
+    where: { id: update.id, status: 'draft' },
+    data: {
+      title: read.title,
+      bodyMarkdown: read.bodyMarkdown,
+      previewUrl: read.previewUrl || null,
+    },
+  });
+  if (changed.count === 0) {
+    return { status: 'error', message: 'It has been sent already, so it stays as it was sent.' };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'project_update.edited',
+    entityType: 'ProjectUpdate',
+    entityId: update.id,
+    summary: read.title,
+  });
+  revalidatePath(`/admin/projects/${update.project.slug}`);
+  return { status: 'done', message: 'Saved.' };
+}
+
+/** Throws a draft away. Nobody outside the team ever saw it. */
+export async function discardUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const update = await db.projectUpdate.findFirst({
+    where: { id: formText(formData, 'updateId'), project: { deletedAt: null } },
+    select: { id: true, title: true, project: { select: { slug: true } } },
+  });
+  if (!update) return { status: 'error', message: 'That update no longer exists.' };
+
+  const gone = await db.projectUpdate.deleteMany({ where: { id: update.id, status: 'draft' } });
+  if (gone.count === 0) {
+    return { status: 'error', message: 'It has been sent already, so it stays on record.' };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'project_update.discarded',
+    entityType: 'ProjectUpdate',
+    entityId: update.id,
+    summary: update.title,
+  });
+  revalidatePath(`/admin/projects/${update.project.slug}`);
+  return { status: 'done', message: 'Discarded.' };
+}
+
+/**
+ * Emails a published update to the people it has not reached yet: those
+ * whose email failed, and anyone given an address since. Nobody who already
+ * has it gets it twice.
+ */
+export async function emailUpdateToRest(
+  _previous: EditState,
+  formData: FormData,
+): Promise<EditState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const update = await db.projectUpdate.findFirst({
+    where: { id: formText(formData, 'updateId'), status: 'published', project: { deletedAt: null } },
+    select: {
+      id: true,
+      title: true,
+      bodyMarkdown: true,
+      previewUrl: true,
+      notifiedAt: true,
+      project: {
+        select: {
+          slug: true,
+          name: true,
+          client: {
+            select: {
+              contacts: {
+                where: { deletedAt: null, canSignIn: true },
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!update) return { status: 'error', message: 'That update is not in their portal yet.' };
+
+  const reached = await emailedAddresses([update.id]);
+  const already = reached.get(update.id) ?? new Set<string>();
+  const rest = update.project.client.contacts.flatMap((contact) =>
+    contact.email && !already.has(contact.email.toLowerCase())
+      ? [{ ...contact, email: contact.email }]
+      : [],
+  );
+  if (rest.length === 0) return { status: 'done', message: 'Everyone with an email has it.' };
+
+  let delivered = 0;
+  for (const contact of rest) {
+    const sent = await sendConsoleEmail({
+      to: contact.email,
+      subject: `${update.project.name}: ${update.title}`,
+      html: projectUpdateEmail({
+        name: contact.name,
+        projectName: update.project.name,
+        title: update.title,
+        body: update.bodyMarkdown,
+        previewUrl: update.previewUrl,
+        url: `${consoleEnv.publicOrigin}/portal/projects/${update.project.slug}`,
+      }),
+      template: 'project_update',
+      entityType: 'ProjectUpdate',
+      entityId: update.id,
+    });
+    if (sent.ok) delivered += 1;
+  }
+  if (delivered > 0 && !update.notifiedAt) {
+    await db.projectUpdate.update({ where: { id: update.id }, data: { notifiedAt: new Date() } });
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: delivered === rest.length ? 'project_update.sent' : 'project_update.send_failed',
+    entityType: 'ProjectUpdate',
+    entityId: update.id,
+    summary: `${update.title}: emailed ${delivered} of ${rest.length} not reached before`,
+  });
+  revalidatePath(`/admin/projects/${update.project.slug}`);
+
+  return delivered === rest.length
+    ? { status: 'done', message: `Emailed to ${delivered}.` }
+    : {
+        status: 'error',
+        message: `Only ${delivered} of ${rest.length} went out. See Activity for why.`,
+      };
 }
 
 /** "Asha", "Asha and Baraka", "Asha, Baraka and Juma". */

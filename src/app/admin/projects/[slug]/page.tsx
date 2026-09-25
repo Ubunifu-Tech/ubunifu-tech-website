@@ -54,6 +54,7 @@ import { BrandKitEditor } from './BrandKitEditor';
 import { AskForReview } from './AskForReview';
 import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
 import { REVIEWABLE } from '@/lib/console/reviews';
+import { emailedAddresses } from '@/lib/console/updates';
 import { RemoveProject } from './RemoveProject';
 import { ProjectDocuments } from '../../documents/ProjectDocuments';
 import { currencyLabel } from '@/lib/console/currencies';
@@ -302,15 +303,27 @@ export default async function ProjectPage({
   const defaultDue = new Date(now);
   defaultDue.setDate(defaultDue.getDate() + 14);
 
-  const updates: UpdateRow[] = project.updates.map((update) => ({
-    id: update.id,
-    title: update.title,
-    body: update.bodyMarkdown,
-    previewUrl: update.previewUrl,
-    published: update.status === 'published',
-    when: formatShortDate(update.publishedAt ?? update.createdAt),
-    notified: update.notifiedAt !== null,
-  }));
+  // Who each published update has reached, by address, against who could
+  // be emailed today: the difference is what Send to the rest would send.
+  const reachedBy = await emailedAddresses(
+    project.updates.filter((update) => update.status === 'published').map((update) => update.id),
+  );
+  const emailable = project.client.contacts.flatMap((person) =>
+    person.canSignIn && person.email ? [person.email.toLowerCase()] : [],
+  );
+  const updates: UpdateRow[] = project.updates.map((update) => {
+    const reached = reachedBy.get(update.id) ?? new Set<string>();
+    return {
+      id: update.id,
+      title: update.title,
+      body: update.bodyMarkdown,
+      previewUrl: update.previewUrl,
+      published: update.status === 'published',
+      when: formatShortDate(update.publishedAt ?? update.createdAt),
+      reached: reached.size,
+      unreached: emailable.filter((address) => !reached.has(address)).length,
+    };
+  });
 
   // Each next step carries its own blocker, shown greyed on the step itself,
   // rather than one warning box about steps nobody has tried to take.

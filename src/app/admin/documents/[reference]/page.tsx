@@ -24,6 +24,7 @@ import { Steps } from '@/components/console/Steps';
 import {
   Copilot,
   DetailsForm,
+  ResendSignatureLink,
   SendForSignature,
   VersionEditor,
   WithdrawDocument,
@@ -116,6 +117,7 @@ export default async function DocumentPage({
           documentHash: true,
           sentAt: true,
           viewedAt: true,
+          expiresAt: true,
           respondedAt: true,
           responseNote: true,
           respondedBy: { select: { name: true, email: true } },
@@ -671,6 +673,9 @@ export default async function DocumentPage({
 
   if (step === 'send') {
     const open = live !== undefined && ['sent', 'viewed'].includes(live.status);
+    // Still open on the record, but no longer signable: the portal refuses a
+    // signature once this passes, so the way on is to send it again.
+    const expired = open && live.expiresAt !== null && live.expiresAt.getTime() < now.getTime();
     // Fees live on the project and are written in at send time, so a fee
     // change makes no new version of the text. Comparing what would go now
     // with what they have catches that as well as an edit.
@@ -689,7 +694,9 @@ export default async function DocumentPage({
                   ? 'Not sent yet'
                   : live.status === 'declined'
                     ? `Version ${live.version.version} was declined`
-                    : `Version ${live.version.version} is with them`}
+                    : expired
+                      ? `The time to sign version ${live.version.version} ran out`
+                      : `Version ${live.version.version} is with them`}
               </span>
             </div>
             {live && (
@@ -702,6 +709,12 @@ export default async function DocumentPage({
                   <dt>Opened</dt>
                   <dd>{live.viewedAt ? formatDate(live.viewedAt) : 'Not yet'}</dd>
                 </div>
+                {open && live.expiresAt && (
+                  <div>
+                    <dt>{expired ? 'Signing closed' : 'Signing closes'}</dt>
+                    <dd>{formatDate(live.expiresAt)}</dd>
+                  </div>
+                )}
                 <div>
                   <dt>Fingerprint</dt>
                   <dd className={forms.fingerprint}>{shortHash(live.documentHash)}</dd>
@@ -726,14 +739,22 @@ export default async function DocumentPage({
                 Send the new version to replace the one they have.
               </Callout>
             )}
+            {expired && live && (
+              <Callout kind="warn" title="The time to sign has run out">
+                They can no longer sign version {live.version.version}. Send it again to give them a
+                new link and time to sign.
+              </Callout>
+            )}
+            {open && !expired && <ResendSignatureLink documentId={document.id} />}
             {open && <WithdrawDocument documentId={document.id} />}
             {/* Once it is with them, sending again only makes sense when what
-                would go now differs from what they have; otherwise the choice
-                is to wait or withdraw. */}
-            {(!open || changedSince) && (
+                would go now differs from what they have, or their time to sign
+                ran out; otherwise the choice is to wait or withdraw. */}
+            {(!open || changedSince || expired) && (
               <SendForSignature
                 documentId={document.id}
                 alreadySent={Boolean(live)}
+                again={expired && !changedSince}
                 ready={prepared.ready}
                 signer={prepared.signer?.name ?? null}
               />

@@ -24,6 +24,7 @@ import { liveDocument } from '@/lib/console/live';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { isUniqueConflict, retryOnConflict } from '@/lib/console/conflict';
 import { sourceFromSuggestion } from '@/lib/console/suggestions';
+import { allow } from '@/lib/console/rate-limit';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -535,6 +536,106 @@ export async function sendForSignature(
     };
   }
   return { status: 'done', message: `Sent to ${contact.name} (${contact.email}).` };
+}
+
+/**
+ * Emails the signing link again for the version already with them, when the
+ * first email was lost or never arrived. The same request, version and
+ * fingerprint; only the link is new, as the old one may have run out. Once
+ * the time to sign has passed this refuses, and sending again is the way.
+ */
+export async function resendSignatureLink(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const document = await db.document.findUnique({
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
+    select: {
+      id: true,
+      reference: true,
+      title: true,
+      kind: true,
+      project: {
+        select: {
+          slug: true,
+          client: {
+            select: {
+              name: true,
+              contacts: {
+                where: { deletedAt: null, isPrimary: true, canSignIn: true },
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!document) return { status: 'error', message: 'That document no longer exists.' };
+
+  const request = await db.signatureRequest.findFirst({
+    where: { documentId: document.id, status: { in: ['sent', 'viewed'] } },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, expiresAt: true, termsVersion: { select: { title: true } } },
+  });
+  if (!request) return { status: 'error', message: 'Nothing is waiting for a signature.' };
+  if (request.expiresAt && request.expiresAt.getTime() < Date.now()) {
+    return { status: 'error', message: 'The time to sign has run out. Send it again instead.' };
+  }
+
+  const signer = document.project.client.contacts[0];
+  if (!signer?.email) {
+    return {
+      status: 'error',
+      message: 'Their main contact has no email or no portal access, so there is nobody to send it to.',
+    };
+  }
+  if (!(await allow('signature-resend', document.id, { limit: 5, windowMinutes: 60 }))) {
+    return { status: 'error', message: 'It has gone out several times in the last hour. Try later.' };
+  }
+
+  const { token } = await issueMagicToken({
+    purpose: 'document_access',
+    actorType: 'client_contact',
+    actorId: signer.id,
+    entityType: 'SignatureRequest',
+    entityId: request.id,
+  });
+  const sent = await sendConsoleEmail({
+    to: signer.email,
+    subject: `${document.title}: ready for your signature`,
+    html: documentToSignEmail({
+      name: signer.name,
+      clientName: document.project.client.name,
+      documentTitle: document.title,
+      kind: DOCUMENT_KIND_LABEL[document.kind],
+      reference: document.reference,
+      termsTitle: request.termsVersion?.title ?? null,
+      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+    }),
+    template: 'document_to_sign',
+    entityType: 'Document',
+    entityId: document.id,
+  });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: sent.ok ? 'document.resent' : 'document.resend_failed',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: sent.ok
+      ? `${document.reference} to ${signer.email}`
+      : `${document.reference}: could not send to ${signer.email}: ${sent.error}`,
+  });
+  revalidatePath(`/admin/documents/${document.reference}`);
+
+  return sent.ok
+    ? { status: 'done', message: `Sent to ${signer.name} (${signer.email}).` }
+    : { status: 'error', message: `The email did not go: ${sent.error}` };
 }
 
 /**

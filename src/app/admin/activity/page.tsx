@@ -5,6 +5,8 @@ import { requireStaff } from '@/lib/console/auth';
 import { formatShortDate } from '@/lib/console/money';
 import { actionLabel } from '@/lib/console/activity';
 import { Callout } from '@/components/console/Callout';
+import { unresolvedEmailFailures } from '@/lib/console/email-failures';
+import { linkFor, recordLinks } from '@/lib/console/record-links';
 import { ListToolbar } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -59,8 +61,16 @@ export default async function ActivityPage({
   const where = auditWhere(active);
   const wantsEmails = active === 'all' || active === 'emails' || active === 'failures';
 
+  // Failed sends that have not been put right by sending again since.
+  const failures = await unresolvedEmailFailures();
+  const failureIds = failures.map((row) => row.id);
+
   const emailWhere = (key: string): Prisma.EmailLogWhereInput | null =>
-    key === 'failures' ? { status: 'failed' } : key === 'all' || key === 'emails' ? {} : null;
+    key === 'failures'
+      ? { id: { in: failureIds } }
+      : key === 'all' || key === 'emails'
+        ? {}
+        : null;
 
   // How many entries each view holds, audit lines and emails together.
   const viewCounts = await Promise.all(
@@ -76,7 +86,8 @@ export default async function ActivityPage({
   );
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
 
-  const [audits, emails, failedCount] = await Promise.all([
+  const failedCount = failures.length;
+  const [audits, emails] = await Promise.all([
     where === null
       ? Promise.resolve([])
       : db.auditEvent.findMany({
@@ -89,13 +100,14 @@ export default async function ActivityPage({
             summary: true,
             actorType: true,
             entityType: true,
+            entityId: true,
             ip: true,
             createdAt: true,
           },
         }),
     wantsEmails
       ? db.emailLog.findMany({
-          where: active === 'failures' ? { status: 'failed' } : {},
+          where: active === 'failures' ? { id: { in: failureIds } } : {},
           orderBy: { createdAt: 'desc' },
           take: 150,
           select: {
@@ -105,12 +117,14 @@ export default async function ActivityPage({
             template: true,
             status: true,
             error: true,
+            entityType: true,
+            entityId: true,
             createdAt: true,
           },
         })
       : Promise.resolve([]),
-    db.emailLog.count({ where: { status: 'failed' } }),
   ]);
+  const links = await recordLinks([...audits, ...emails]);
 
   type Row = {
     id: string;
@@ -121,6 +135,8 @@ export default async function ActivityPage({
     kind: 'Action' | 'Email';
     bad: boolean;
     note?: string | null;
+    /** The record the line is about, when it can still be opened. */
+    href: string | null;
   };
 
   const rows: Row[] = [
@@ -140,16 +156,25 @@ export default async function ActivityPage({
         audit.action.includes('failed') ||
         audit.action.includes('locked') ||
         audit.action.includes('voided'),
+      href: linkFor(links, audit),
     })),
     ...emails.map((email) => ({
       id: `e-${email.id}`,
       at: email.createdAt,
-      what: email.status === 'sent' ? 'Email delivered' : 'Email did not send',
+      // Sent means the mail service accepted it. Whether it then reached the
+      // inbox is not something we are told, so it is not claimed.
+      what:
+        email.status === 'sent'
+          ? 'Email sent'
+          : email.status === 'queued'
+            ? 'Email not sent yet'
+            : 'Email did not send',
       detail: `${email.subject} → ${email.toAddress}`,
       who: 'System',
       kind: 'Email' as const,
-      bad: email.status !== 'sent',
+      bad: email.status === 'failed',
       note: email.error,
+      href: linkFor(links, email),
     })),
   ]
     .sort((a, b) => b.at.getTime() - a.at.getTime())
@@ -177,8 +202,8 @@ export default async function ActivityPage({
             </Link>
           }
         >
-          {failedCount} {failedCount === 1 ? 'email' : 'emails'} did not send. The people they
-          were for have not heard from us.
+          {failedCount} {failedCount === 1 ? 'email' : 'emails'} did not send and{' '}
+          {failedCount === 1 ? 'has' : 'have'} not been sent since. Open each one to send it again.
         </Callout>
       )}
 
@@ -238,7 +263,13 @@ export default async function ActivityPage({
                       {row.note && <span className={table.sub}>{row.note}</span>}
                     </td>
                     <td className={table.td}>
-                      <span className={table.clamp}>{row.detail}</span>
+                      {row.href ? (
+                        <Link href={row.href} className={`${table.link} ${table.clamp}`}>
+                          {row.detail}
+                        </Link>
+                      ) : (
+                        <span className={table.clamp}>{row.detail}</span>
+                      )}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>{row.who}</td>
                     <td className={table.td}>

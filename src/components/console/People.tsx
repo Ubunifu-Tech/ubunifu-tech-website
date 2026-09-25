@@ -159,6 +159,7 @@ export function PersonMenu({
   makeMain,
   remove,
   edit,
+  access,
   setupLink,
 }: {
   contact: {
@@ -176,6 +177,8 @@ export function PersonMenu({
   makeMain?: Action;
   remove?: Action;
   edit?: Action;
+  /** Turns their portal access on or off, posting access=on or off. */
+  access?: Action;
   /** Shown when "Make a setup link" is chosen, for someone not set up yet. */
   setupLink?: React.ReactNode;
 }) {
@@ -185,6 +188,7 @@ export function PersonMenu({
   const [inviteState, inviteAction, inviting] = useActionState(invite ?? noop, INITIAL);
   const [mainState, mainAction, making] = useActionState(makeMain ?? noop, INITIAL);
   const [removeState, removeAction, removing] = useActionState(remove ?? noop, INITIAL);
+  const [accessState, accessAction, switching] = useActionState(access ?? noop, INITIAL);
   const [editState, editAction, saving] = useActionState(
     async (previous: PeopleState, formData: FormData) => {
       const result = await (edit ?? noop)(previous, formData);
@@ -204,12 +208,14 @@ export function PersonMenu({
   );
 
   // The latest answer from any of the choices, shown under the list.
-  const said = [removeState, mainState, inviteState, editState].find((state) => state.message);
+  const said = [removeState, mainState, inviteState, editState, accessState].find(
+    (state) => state.message,
+  );
   const canInvite = invite && contact.canSignIn && contact.email;
   const canSetUp = setupLink && contact.canSignIn && !contact.activated;
   const canRemove = remove && !contact.isPrimary;
   const canMakeMain = makeMain && !contact.isPrimary;
-  if (!edit && !canSetUp && !canInvite && !canMakeMain && !canRemove) return null;
+  if (!edit && !canSetUp && !canInvite && !canMakeMain && !canRemove && !access) return null;
 
   return (
     <RowMenu
@@ -243,6 +249,15 @@ export function PersonMenu({
                 {fields}
                 <MenuItem type="submit" disabled={making}>
                   Make main contact
+                </MenuItem>
+              </form>
+            )}
+            {access && (
+              <form action={accessAction}>
+                {fields}
+                <input type="hidden" name="access" value={contact.canSignIn ? 'off' : 'on'} />
+                <MenuItem type="submit" disabled={switching}>
+                  {contact.canSignIn ? 'Turn off portal access' : 'Turn on portal access'}
                 </MenuItem>
               </form>
             )}

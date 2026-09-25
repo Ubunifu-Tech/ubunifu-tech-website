@@ -1,7 +1,12 @@
 'use client';
 
 import React from 'react';
-import { ConfirmRemoval, onRecordLine, withdrawnLine } from '@/components/console/ConfirmRemoval';
+import {
+  ConfirmRemoval,
+  onRecordLine,
+  unpaidLine,
+  withdrawnLine,
+} from '@/components/console/ConfirmRemoval';
 import type { ClientRemovalCounts } from '@/lib/console/removal';
 import { removeClient } from '../actions';
 
@@ -25,6 +30,7 @@ export function RemoveClient({
       ? `${counts.people === 1 ? '1 person loses' : `${counts.people} people lose`} access to the portal.`
       : null,
     withdrawnLine(counts.waiting),
+    unpaidLine(counts.unpaid, counts.unpaidOwed),
     onRecordLine('Their', counts.invoices, counts.signed),
   ].filter((line): line is string => line !== null);
 

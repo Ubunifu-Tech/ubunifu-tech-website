@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ConfirmRemoval, onRecordLine, withdrawnLine } from '@/components/console/ConfirmRemoval';
+import {
+  ConfirmRemoval,
+  onRecordLine,
+  unpaidLine,
+  withdrawnLine,
+} from '@/components/console/ConfirmRemoval';
 import type { RemovalCounts } from '@/lib/console/removal';
 import { describeProjectRemoval, removeProject } from './remove-actions';
 
@@ -27,9 +32,10 @@ export function RemoveProject({ projectId, projectName }: { projectId: string; p
           counts
             ? withdrawnLine(counts.waiting)
             : 'Anything waiting for a signature is withdrawn.',
+          counts ? unpaidLine(counts.unpaid, counts.unpaidOwed) : null,
           counts
             ? onRecordLine('Its', counts.invoices, counts.signed)
-            : 'Its invoices and signed documents stay on record, out of sight.',
+            : 'Its invoices and signed documents stay on record. You can bring the project back from its client’s page.',
         ].filter((line): line is string => line !== null);
 
   return (

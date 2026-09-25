@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
 import { requirePermission } from '@/lib/console/auth';
-import { livePayment } from '@/lib/console/live';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
@@ -30,7 +29,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
   const org = await getOrg();
 
   const receipt = await db.receipt.findUnique({
-    where: { number: decodeURIComponent(number), payment: livePayment },
+    // A removed client's receipts stay readable: they are the record.
+    where: { number: decodeURIComponent(number) },
     select: {
       id: true,
       number: true,
@@ -56,7 +56,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
               totalMinor: true,
               paidMinor: true,
               currency: true,
-              client: { select: { name: true, legalName: true, slug: true, country: true } },
+              client: {
+                select: { name: true, legalName: true, slug: true, country: true, deletedAt: true },
+              },
               project: { select: { name: true, reference: true, slug: true } },
             },
           },
@@ -80,7 +82,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
           ← {invoice.number}
         </Link>
         <PrintButton />
-        {!payment.reversedAt && <EmailReceiptButton receiptId={receipt.id} />}
+        {!payment.reversedAt && !invoice.client.deletedAt && (
+          <EmailReceiptButton receiptId={receipt.id} />
+        )}
       </div>
 
       <article className={sheet.sheet}>

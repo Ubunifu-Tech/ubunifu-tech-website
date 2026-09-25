@@ -127,13 +127,34 @@ export function withdrawnLine(waiting: number): string | null {
     : `${waiting} documents waiting for a signature are withdrawn.`;
 }
 
-/** What stays on record after a removal. */
+/**
+ * What stays on record after a removal, and where to find it again: removed
+ * clients have their own list, and a removed project is listed on its
+ * client's page.
+ */
 export function onRecordLine(owner: 'Their' | 'Its', invoices: number, signed: number): string {
+  // Numbered whenever both are named: "their invoice and 2 signed documents"
+  // is fine alone, but "2 invoices and signed document" is not.
+  const both = invoices > 0 && signed > 0;
+  const say = (count: number, one: string, many: string) =>
+    both ? `${count} ${count === 1 ? one : many}` : counted(count, one, many);
   const parts = [
-    invoices > 0 ? counted(invoices, 'invoice', 'invoices') : null,
-    signed > 0 ? counted(signed, 'signed document', 'signed documents') : null,
+    invoices > 0 ? say(invoices, 'invoice', 'invoices') : null,
+    signed > 0 ? say(signed, 'signed document', 'signed documents') : null,
   ].filter((part): part is string => part !== null);
-  if (parts.length === 0) return `${owner} history stays on record, out of sight.`;
+  const place =
+    owner === 'Their'
+      ? 'You can find them, and bring the client back, under Removed clients.'
+      : 'You can bring the project back from its client’s page.';
+  if (parts.length === 0) return `${owner} history stays on record. ${place}`;
   const single = parts.length === 1 && invoices + signed === 1;
-  return `${owner} ${parts.join(' and ')} ${single ? 'stays' : 'stay'} on record, out of sight.`;
+  return `${owner} ${parts.join(' and ')} ${single ? 'stays' : 'stay'} on record. ${place}`;
+}
+
+/** Money still owing, which stops counting in what we are owed. */
+export function unpaidLine(unpaid: number, owed: string): string | null {
+  if (unpaid === 0) return null;
+  return unpaid === 1
+    ? `An unpaid invoice with ${owed} owing stops counting in what we are owed.`
+    : `${unpaid} unpaid invoices with ${owed} owing stop counting in what we are owed.`;
 }

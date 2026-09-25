@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, Check, CircleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
-import { liveDocument } from '@/lib/console/live';
 import {
   DOCUMENT_KIND_LABEL,
   DOCUMENT_STATUS_LABEL,
@@ -73,7 +72,10 @@ export default async function DocumentPage({
   const now = new Date();
 
   const document = await db.document.findUnique({
-    where: { reference: decodeURIComponent(reference), ...liveDocument },
+    // A removed project's documents stay readable, a signed one above all:
+    // it is the record of what was agreed. Nothing on a removed one can be
+    // changed; every action here refuses it.
+    where: { reference: decodeURIComponent(reference) },
     select: {
       id: true,
       reference: true,
@@ -88,7 +90,8 @@ export default async function DocumentPage({
           slug: true,
           reference: true,
           currency: true,
-          client: { select: { id: true, name: true, slug: true } },
+          deletedAt: true,
+          client: { select: { id: true, name: true, slug: true, deletedAt: true } },
         },
       },
       versions: {
@@ -171,16 +174,25 @@ export default async function DocumentPage({
     </Callout>
   );
 
+  const clientGone = document.project.client.deletedAt;
+  const removedAt = clientGone ?? document.project.deletedAt ?? null;
+  const clientHref = clientGone
+    ? `/removed/${document.project.client.slug}`
+    : `/clients/${document.project.client.slug}`;
+
   const head = (
     <div className={styles.pageHead}>
       <div className={styles.headText}>
-        <Link href={`/projects/${document.project.slug}?tab=documents`} className={styles.backLink}>
-          ← {document.project.name}
+        <Link
+          href={removedAt ? clientHref : `/projects/${document.project.slug}?tab=documents`}
+          className={styles.backLink}
+        >
+          ← {removedAt ? document.project.client.name : document.project.name}
         </Link>
         <h1 className={styles.heading}>{document.title}</h1>
         <p className={styles.lead}>
           {DOCUMENT_KIND_LABEL[document.kind]} · {document.reference} ·{' '}
-          <Link href={`/clients/${document.project.client.slug}`} className={styles.inlineLink}>
+          <Link href={clientHref} className={styles.inlineLink}>
             {document.project.client.name}
           </Link>
         </p>
@@ -197,6 +209,13 @@ export default async function DocumentPage({
   );
 
   const activity = await activityFor([document.id]);
+
+  const removedNote = removedAt ? (
+    <Callout kind="info">
+      {clientGone ? document.project.client.name : document.project.name} was removed on{' '}
+      {formatShortDate(removedAt)}. This document is kept for the record and cannot be changed.
+    </Callout>
+  ) : null;
 
   const versions = (
     <div className={table.frame}>
@@ -270,6 +289,7 @@ export default async function DocumentPage({
     return (
       <main className={styles.page}>
         {head}
+        {removedNote}
         {/* Asked for changes, then signed this version anyway: still worth
             knowing what they raised. */}
         {live.respondedAt && theirComment(live)}
@@ -324,6 +344,34 @@ export default async function DocumentPage({
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(live.version.bodyMarkdown) }}
               />
             </section>
+            {versions}
+          </div>
+          {activityCard}
+        </div>
+      </main>
+    );
+  }
+
+  // ── Removed, and never signed: what it said, and nothing to do ────
+  if (removedAt) {
+    return (
+      <main className={styles.page}>
+        {head}
+        {removedNote}
+        <div className={page.split}>
+          <div className={styles.stack}>
+            {latest && (
+              <section className={forms.card}>
+                <div className={forms.cardHeader}>
+                  <h2 className={forms.cardTitle}>The document</h2>
+                  <span className={forms.cardMeta}>Version {latest.version}</span>
+                </div>
+                <div
+                  className={forms.prose}
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(latest.bodyMarkdown) }}
+                />
+              </section>
+            )}
             {versions}
           </div>
           {activityCard}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
@@ -42,7 +42,7 @@ export default async function ClientsPage({
 }: {
   searchParams: Promise<{ show?: string; q?: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { show, q } = await searchParams;
   const active = VIEWS.some((view) => view.key === show) ? show! : 'all';
   const query = searchText(q);
@@ -74,6 +74,9 @@ export default async function ClientsPage({
     ),
   );
   const total = viewCounts[VIEWS.findIndex((view) => view.key === active)] ?? 0;
+  const removedCount = can(staff, 'clients')
+    ? await db.client.count({ where: { deletedAt: { not: null } } })
+    : 0;
 
   const clients = await db.client.findMany({
     where: { AND: [{ deletedAt: null }, viewToWhere(active), matching] },
@@ -249,6 +252,14 @@ export default async function ClientsPage({
         </div>
         <ListFooter shown={clients.length} total={total} noun={['client', 'clients']} query={query} />
       </div>
+      {removedCount > 0 && (
+        <p className={styles.note}>
+          <Link href="/removed" className={styles.inlineLink}>
+            {removedCount} removed {removedCount === 1 ? 'client' : 'clients'}
+          </Link>
+          , with their records.
+        </p>
+      )}
     </main>
   );
 }

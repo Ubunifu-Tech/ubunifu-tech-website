@@ -2,6 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { liveInvoice } from './live';
+import { formatMoney } from './money';
 
 /**
  * Removing a client or a project.
@@ -67,7 +68,33 @@ export type RemovalCounts = {
   signed: number;
   /** Invoices, which stay on record. */
   invoices: number;
+  /** Invoices with money still owing, which stop counting in what we are owed. */
+  unpaid: number;
+  /** What those still owe, per currency, in words: "TZS 350,000 + US$75.00". */
+  unpaidOwed: string;
 };
+
+const OWING = ['sent', 'part_paid', 'overdue'] as const;
+
+/** Unpaid invoices and what they still owe, per currency. */
+async function unpaidIn(where: Prisma.InvoiceWhereInput) {
+  const invoices = await db.invoice.findMany({
+    where: { AND: [where, { status: { in: [...OWING] } }] },
+    select: { totalMinor: true, paidMinor: true, currency: true },
+  });
+  const owed = new Map<string, number>();
+  let unpaid = 0;
+  for (const invoice of invoices) {
+    const left = invoice.totalMinor - invoice.paidMinor;
+    if (left <= 0) continue;
+    unpaid += 1;
+    owed.set(invoice.currency, (owed.get(invoice.currency) ?? 0) + left);
+  }
+  return {
+    unpaid,
+    unpaidOwed: [...owed].map(([currency, amount]) => formatMoney(amount, currency)).join(' + '),
+  };
+}
 
 export type ClientRemovalCounts = RemovalCounts & {
   projects: number;
@@ -78,7 +105,7 @@ export type ClientRemovalCounts = RemovalCounts & {
 /** What removing this client will touch, for the confirmation to say. */
 export async function clientRemovalCounts(clientId: string): Promise<ClientRemovalCounts> {
   const onLiveProjects = { project: { clientId, deletedAt: null } } satisfies Prisma.DocumentWhereInput;
-  const [projects, people, waiting, signed, invoices] = await Promise.all([
+  const [projects, people, waiting, signed, invoices, owing] = await Promise.all([
     db.project.count({ where: { clientId, deletedAt: null } }),
     db.clientContact.count({ where: { clientId, deletedAt: null, canSignIn: true } }),
     db.document.count({
@@ -86,18 +113,20 @@ export async function clientRemovalCounts(clientId: string): Promise<ClientRemov
     }),
     db.document.count({ where: { ...onLiveProjects, status: 'signed' } }),
     db.invoice.count({ where: { clientId, ...liveInvoice } }),
+    unpaidIn({ clientId, ...liveInvoice }),
   ]);
-  return { projects, people, waiting, signed, invoices };
+  return { projects, people, waiting, signed, invoices, ...owing };
 }
 
 /** What removing this project will touch, for the confirmation to say. */
 export async function projectRemovalCounts(projectId: string): Promise<RemovalCounts> {
-  const [waiting, signed, invoices] = await Promise.all([
+  const [waiting, signed, invoices, owing] = await Promise.all([
     db.document.count({
       where: { projectId, signatureRequests: { some: { status: { in: [...WAITING] } } } },
     }),
     db.document.count({ where: { projectId, status: 'signed' } }),
     db.invoice.count({ where: { projectId } }),
+    unpaidIn({ projectId }),
   ]);
-  return { waiting, signed, invoices };
+  return { waiting, signed, invoices, ...owing };
 }

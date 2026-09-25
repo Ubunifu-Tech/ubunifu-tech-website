@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { liveInvoice } from '@/lib/console/live';
+import { Callout } from '@/components/console/Callout';
 import { activityFor } from '@/lib/console/activity';
 import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate, moneyInput, todayInput } from '@/lib/console/money';
@@ -39,7 +39,9 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
   const now = new Date();
 
   const invoice = await db.invoice.findUnique({
-    where: { number: decodeURIComponent(number), ...liveInvoice },
+    // Removed clients' invoices too: staff with billing can always read the
+    // record, and every action on this page refuses a removed one anyway.
+    where: { number: decodeURIComponent(number) },
     select: {
       id: true,
       number: true,
@@ -55,8 +57,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
       dueAt: true,
       paidAt: true,
       voidedAt: true,
-      client: { select: { name: true, slug: true, legalName: true } },
-      project: { select: { name: true, slug: true, reference: true } },
+      client: { select: { name: true, slug: true, legalName: true, deletedAt: true } },
+      project: { select: { name: true, slug: true, reference: true, deletedAt: true } },
       lines: {
         orderBy: { position: 'asc' },
         select: {
@@ -112,6 +114,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
     }),
   ]);
   const outstanding = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  // Kept for the record, and read only, while its client or project is removed.
+  const removedAt = invoice.client.deletedAt ?? invoice.project?.deletedAt ?? null;
   const pastDue =
     invoice.status !== 'draft' &&
     invoice.status !== 'void' &&
@@ -139,14 +143,24 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           <p className={styles.facts}>
             <span>
               <span className={styles.factLabel}>For</span>{' '}
-              <Link href={`/clients/${invoice.client.slug}`}>
+              <Link
+                href={
+                  invoice.client.deletedAt
+                    ? `/removed/${invoice.client.slug}`
+                    : `/clients/${invoice.client.slug}`
+                }
+              >
                 {invoice.client.legalName ?? invoice.client.name}
               </Link>
             </span>
             {invoice.project && (
               <span>
                 <span className={styles.factLabel}>Project</span>{' '}
-                <Link href={`/projects/${invoice.project.slug}`}>{invoice.project.reference}</Link>
+                {invoice.project.deletedAt ? (
+                  invoice.project.reference
+                ) : (
+                  <Link href={`/projects/${invoice.project.slug}`}>{invoice.project.reference}</Link>
+                )}
               </span>
             )}
             <span>
@@ -172,6 +186,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           </span>
         </div>
       </div>
+
+      {removedAt && (
+        <Callout kind="info">
+          {invoice.client.deletedAt ? invoice.client.name : 'Its project'} was removed on{' '}
+          {formatShortDate(removedAt)}. This invoice is kept for the record. To work on it, bring{' '}
+          {invoice.client.deletedAt ? 'the client' : 'the project'} back first.
+        </Callout>
+      )}
 
       <Figures
         label="This invoice at a glance"
@@ -341,6 +363,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         )}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
+                        {removedAt ? (
+                          payment.receipt && (
+                            <Link href={`/receipts/${payment.receipt.number}`} className={table.action}>
+                              Receipt
+                            </Link>
+                          )
+                        ) : (
                         <PaymentMenu
                           paymentId={payment.id}
                           receipt={payment.receipt}
@@ -353,6 +382,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                           currency={payment.currency}
                           today={todayInput()}
                         />
+                        )}
                       </td>
                     </tr>
                   ))
@@ -426,7 +456,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         {formatMoney(refund.amountMinor, refund.currency)}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        <RefundMenu refundId={refund.id} number={refund.number} />
+                        {removedAt ? (
+                          <Link href={`/refunds/${refund.number}`} className={table.action}>
+                            Refund note
+                          </Link>
+                        ) : (
+                          <RefundMenu refundId={refund.id} number={refund.number} />
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -438,7 +474,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
 
         <div className={styles.columns}>
           <div className={styles.stack}>
-            {invoice.status !== 'void' && (
+            {!removedAt && invoice.status !== 'void' && (
               <section className={forms.card}>
                 <div className={forms.cardHeader}>
                   <h2 className={forms.cardTitle}>
@@ -480,16 +516,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               </div>
               {invoice.notes && <p className={styles.quote}>{invoice.notes}</p>}
               <div className={forms.actions}>
-                {invoice.status !== 'draft' && invoice.status !== 'void' && (
+                {!removedAt && invoice.status !== 'draft' && invoice.status !== 'void' && (
                   <SendInvoiceButton
                     invoiceId={invoice.id}
                     sent={emailed > 0}
                     label={outstanding === 0 ? 'Email a copy' : undefined}
                   />
                 )}
-                {invoice.status !== 'void' && invoice.paidMinor - invoice.refundedMinor === 0 && (
-                  <VoidInvoiceForm invoiceId={invoice.id} />
-                )}
+                {!removedAt &&
+                  invoice.status !== 'void' &&
+                  invoice.paidMinor - invoice.refundedMinor === 0 && (
+                    <VoidInvoiceForm invoiceId={invoice.id} />
+                  )}
                 {invoice.status === 'void' && (
                   <p className={styles.note}>
                     Voided{invoice.voidedAt ? ` on ${formatShortDate(invoice.voidedAt)}` : ''}. It

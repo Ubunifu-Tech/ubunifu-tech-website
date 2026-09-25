@@ -15,7 +15,10 @@ import {
   removeClientContact,
   saveClientContact,
   setMainContact,
+  setPortalAccess,
 } from '../actions';
+import { RestoreProject } from './RestoreProject';
+import { Callout } from '@/components/console/Callout';
 import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
 import { RemoveClient } from './RemoveClient';
@@ -48,7 +51,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
  * the screen someone opens when a client rings, so it answers the questions a
  * client asks on the phone rather than the ones a database would.
  */
-export default async function ClientPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ClientPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ restored?: string }>;
+}) {
+  const { restored } = await searchParams;
   const staff = await requireStaff();
   const mayManage = can(staff, 'clients');
   const seesMoney = can(staff, 'invoices');
@@ -119,9 +129,17 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
 
   if (!client) notFound();
 
-  const [activity, removal] = await Promise.all([
+  const mayRunProjects = can(staff, 'projects');
+  const [activity, removal, removedProjects] = await Promise.all([
     activityForClient(client.id),
     mayManage ? clientRemovalCounts(client.id) : null,
+    mayRunProjects
+      ? db.project.findMany({
+          where: { clientId: client.id, deletedAt: { not: null } },
+          orderBy: { deletedAt: 'desc' },
+          select: { id: true, name: true, reference: true, deletedAt: true },
+        })
+      : [],
   ]);
 
   /**
@@ -187,6 +205,13 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
           </p>
         </div>
       </div>
+
+      {restored && (
+        <Callout kind="good">
+          {client.name} is back. Portal access is off for each person until you turn it on from
+          their menu.
+        </Callout>
+      )}
 
       <Figures
         label="This client at a glance"
@@ -324,6 +349,50 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
           </div>
         </div>
 
+        {removedProjects.length > 0 && (
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Removed projects</h2>
+                <span className={table.count}>{removedProjects.length}</span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={table.table}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Project
+                    </th>
+                    <th className={table.th} scope="col">
+                      Removed
+                    </th>
+                    <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                      <span className={table.muted}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {removedProjects.map((project) => (
+                    <tr key={project.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        {project.name}
+                        <span className={table.sub}>{project.reference}</span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(project.deletedAt)}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <RestoreProject projectId={project.id} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         <div className={table.frame}>
           <div className={table.toolbar}>
             <div className={table.toolbarText}>
@@ -420,6 +489,7 @@ export default async function ClientPage({ params }: { params: Promise<{ slug: s
                           invite={inviteContact}
                           makeMain={setMainContact}
                           remove={removeClientContact}
+                          access={setPortalAccess}
                           setupLink={<SetupLink contactId={contact.id} name={contact.name} />}
                         />
                       )}

@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { liveInvoice } from '@/lib/console/live';
 import { getOrg } from '@/lib/console/org';
 import { InvoiceSheet } from '@/components/documents/InvoiceSheet';
 import { INVOICE_SHEET_SELECT, toSheet } from '@/lib/console/invoice-sheet';
@@ -22,7 +21,8 @@ export default async function PrintInvoice({ params }: { params: Promise<{ numbe
 
   const [invoice, org] = await Promise.all([
     db.invoice.findUnique({
-      where: { number: decodeURIComponent(number), ...liveInvoice },
+      // A removed client's invoice still prints: it is the record.
+      where: { number: decodeURIComponent(number) },
       select: INVOICE_SHEET_SELECT,
     }),
     getOrg(),

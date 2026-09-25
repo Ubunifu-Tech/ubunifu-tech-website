@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { livePayment } from '@/lib/console/live';
 import { getOrg } from '@/lib/console/org';
 import { EmailRefundButton } from '../../invoices/InvoiceControls';
 import { PrintButton } from '../../receipts/PrintButton';
@@ -22,7 +21,8 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
   const org = await getOrg();
 
   const refund = await db.refund.findFirst({
-    where: { number: decodeURIComponent(number), payment: livePayment },
+    // A removed client's refund notes stay readable: they are the record.
+    where: { number: decodeURIComponent(number) },
     select: {
       id: true,
       number: true,
@@ -41,7 +41,7 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
           invoice: {
             select: {
               number: true,
-              client: { select: { name: true, legalName: true, country: true } },
+              client: { select: { name: true, legalName: true, country: true, deletedAt: true } },
               project: { select: { name: true } },
             },
           },
@@ -59,7 +59,7 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
           ← {refund.payment.invoice.number}
         </Link>
         <PrintButton />
-        <EmailRefundButton refundId={refund.id} />
+        {!refund.payment.invoice.client.deletedAt && <EmailRefundButton refundId={refund.id} />}
       </div>
       <RefundNote refund={refund} org={org} />
     </main>

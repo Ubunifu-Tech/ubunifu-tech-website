@@ -429,3 +429,129 @@ export async function removeClient(
   revalidatePath('/portal', 'layout');
   redirect('/clients');
 }
+
+/**
+ * Brings back a removed client, with the projects and people removed along
+ * with it (they share its removal time; anything removed separately before
+ * stays removed). Portal access stays off for everyone: coming back to the
+ * books is not the same as being let back in, so staff turn it on person by
+ * person. Somebody whose address now belongs to a person at another client
+ * stays removed, because one address signs in to one account.
+ */
+export async function restoreClient(
+  _previous: RemovalState,
+  formData: FormData,
+): Promise<RemovalState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+
+  const client = await db.client.findFirst({
+    where: { id: formText(formData, 'clientId'), deletedAt: { not: null } },
+    select: { id: true, name: true, slug: true, deletedAt: true },
+  });
+  if (!client?.deletedAt) return { status: 'error', message: 'That client is not removed.' };
+  const removedAt = client.deletedAt;
+
+  const restored = await db.$transaction(async (tx) => {
+    const claimed = await tx.client.updateMany({
+      where: { id: client.id, deletedAt: removedAt },
+      data: { deletedAt: null },
+    });
+    if (claimed.count === 0) return null;
+
+    const projects = await tx.project.updateMany({
+      where: { clientId: client.id, deletedAt: removedAt },
+      data: { deletedAt: null },
+    });
+
+    const people = await tx.clientContact.findMany({
+      where: { clientId: client.id, deletedAt: removedAt },
+      select: { id: true, name: true, email: true },
+    });
+    const back: string[] = [];
+    const kept: string[] = [];
+    for (const person of people) {
+      const taken = person.email
+        ? await tx.clientContact.findFirst({
+            where: { email: person.email, deletedAt: null, NOT: { id: person.id } },
+            select: { id: true },
+          })
+        : null;
+      if (taken) {
+        kept.push(person.name);
+        continue;
+      }
+      await tx.clientContact.update({ where: { id: person.id }, data: { deletedAt: null } });
+      back.push(person.name);
+    }
+    return { projects: projects.count, back, kept };
+  });
+  if (!restored) return { status: 'error', message: 'That client is not removed.' };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'client.restored',
+    entityType: 'Client',
+    entityId: client.id,
+    summary: [
+      client.name,
+      `${restored.projects} ${restored.projects === 1 ? 'project' : 'projects'}`,
+      `${restored.back.length} ${restored.back.length === 1 ? 'person' : 'people'}, portal access off`,
+      restored.kept.length > 0
+        ? `not brought back, as their email is in use elsewhere: ${restored.kept.join(', ')}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join('; '),
+  });
+
+  revalidatePath('/admin', 'layout');
+  redirect(`/clients/${client.slug}?restored=1`);
+}
+
+/**
+ * Turns someone's portal access on or off without removing them. Off ends
+ * their sessions and unused links at once, for a lost phone or a person who
+ * has left; on lets them in again, after which a sign-in link or an
+ * invitation can be sent from the same menu.
+ */
+export async function setPortalAccess(
+  _previous: InviteState,
+  formData: FormData,
+): Promise<InviteState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const on = formText(formData, 'access') === 'on';
+  const contact = await db.clientContact.findFirst({
+    where: { id: formText(formData, 'contactId'), clientId: client.id, deletedAt: null },
+    select: { id: true, name: true, canSignIn: true },
+  });
+  if (!contact) return { status: 'error', message: 'They are not on this client any more.' };
+  if (contact.canSignIn === on) return { status: 'done' };
+
+  await db.clientContact.update({ where: { id: contact.id }, data: { canSignIn: on } });
+  if (!on) {
+    await revokeMagicTokens('client_contact', contact.id, ['invite', 'sign_in', 'password_reset']);
+    await revokeAllSessions('client_contact', contact.id);
+  }
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: on ? 'client.contact_access_on' : 'client.contact_access_off',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: contact.name,
+  });
+
+  revalidatePath(`/admin/clients/${client.slug}`);
+  return {
+    status: 'done',
+    message: on
+      ? `${contact.name} can use the portal again.`
+      : `${contact.name} is signed out and cannot use the portal.`,
+  };
+}

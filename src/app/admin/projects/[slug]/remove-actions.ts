@@ -94,3 +94,53 @@ export async function removeProject(
   revalidatePath('/portal', 'layout');
   redirect('/projects');
 }
+
+export type RestoreState = { status: 'idle' | 'error'; message?: string };
+
+/**
+ * Brings back a project removed on its own, for a client who is still here.
+ * It returns as it was left: the same stage, plan, fees and records.
+ * Documents withdrawn when it was removed stay withdrawn, to be sent again
+ * on purpose. A project removed with its client comes back with the client.
+ */
+export async function restoreProject(
+  _previous: RestoreState,
+  formData: FormData,
+): Promise<RestoreState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const project = await db.project.findFirst({
+    where: { id: formText(formData, 'projectId'), deletedAt: { not: null } },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      reference: true,
+      client: { select: { deletedAt: true } },
+    },
+  });
+  if (!project) return { status: 'error', message: 'That project is not removed.' };
+  if (project.client.deletedAt) {
+    return { status: 'error', message: 'Its client is removed. Bring the client back first.' };
+  }
+
+  const restored = await db.project.updateMany({
+    where: { id: project.id, deletedAt: { not: null } },
+    data: { deletedAt: null },
+  });
+  if (restored.count === 0) return { status: 'error', message: 'That project is not removed.' };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'project.restored',
+    entityType: 'Project',
+    entityId: project.id,
+    summary: `${project.reference} ${project.name}`,
+  });
+
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/portal', 'layout');
+  redirect(`/projects/${project.slug}`);
+}

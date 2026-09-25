@@ -147,3 +147,23 @@ if (drift.status !== 0) {
 }
 
 console.log('[migrate] Migrations are up to date, and DATABASE_URL matches the schema.');
+
+/**
+ * Then the reference data the console needs: the standard terms and a plan
+ * template per service line. The loader only adds what is missing, so this is
+ * a no-op on every deploy after the first. A failure stops the deploy for the
+ * same reason a migration failure does: the site would go live without data
+ * its pages expect.
+ */
+const reference = spawnSync('npx', ['tsx', 'scripts/load-reference-data.mts'], {
+  stdio: 'inherit',
+  env: process.env,
+});
+
+if (reference.status !== 0) {
+  console.error(
+    '\n[reference] Loading the standard terms and plan templates failed, so the' +
+      '\n[reference] deployment has been stopped. The previous deployment stays live.\n',
+  );
+  process.exit(reference.status ?? 1);
+}

@@ -29,7 +29,10 @@ async function staffMember(id: string) {
 }
 
 /** Who leads the project. */
-export async function setProjectLead(_previous: AssignState, formData: FormData): Promise<AssignState> {
+export async function setProjectLead(
+  _previous: AssignState,
+  formData: FormData,
+): Promise<AssignState> {
   const staff = await requireStaff();
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const project = await db.project.findFirst({
@@ -42,7 +45,10 @@ export async function setProjectLead(_previous: AssignState, formData: FormData)
   if (!lead.ok) return { status: 'error', message: 'Choose someone on the team.' };
   if ((lead.person?.id ?? null) === project.ownerId) return { status: 'done' };
 
-  await db.project.update({ where: { id: project.id }, data: { ownerId: lead.person?.id ?? null } });
+  await db.project.update({
+    where: { id: project.id },
+    data: { ownerId: lead.person?.id ?? null },
+  });
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
@@ -62,6 +68,7 @@ export async function setProjectLead(_previous: AssignState, formData: FormData)
  */
 export async function assignTask(_previous: AssignState, formData: FormData): Promise<AssignState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const task = await db.deliverable.findUnique({
     where: { id: formText(formData, 'deliverableId') },
     select: {
@@ -72,7 +79,8 @@ export async function assignTask(_previous: AssignState, formData: FormData): Pr
       phase: { select: { project: { select: { slug: true, name: true, deletedAt: true } } } },
     },
   });
-  if (!task || task.phase.project.deletedAt) return { status: 'error', message: 'That task no longer exists.' };
+  if (!task || task.phase.project.deletedAt)
+    return { status: 'error', message: 'That task no longer exists.' };
   const project = task.phase.project;
 
   const assignee = await staffMember(formText(formData, 'assigneeId'));
@@ -115,7 +123,8 @@ export async function assignTask(_previous: AssignState, formData: FormData): Pr
 }
 
 export async function setTaskDue(_previous: AssignState, formData: FormData): Promise<AssignState> {
-  await requireStaff();
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const raw = formText(formData, 'dueAt');
   const dueAt = raw ? parseDateInput(raw) : null;
   if (raw && !dueAt) return { status: 'error', message: 'That date could not be read.' };
@@ -137,6 +146,7 @@ export async function assignClientItem(
   formData: FormData,
 ): Promise<AssignState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const item = await db.assetRequest.findFirst({
     where: { id: formText(formData, 'assetRequestId'), project: { deletedAt: null } },
     select: {
@@ -158,7 +168,10 @@ export async function assignClientItem(
   if (contactId && !contact) return { status: 'error', message: 'Choose one of their people.' };
   if ((contact?.id ?? null) === item.assigneeId) return { status: 'done' };
 
-  await db.assetRequest.update({ where: { id: item.id }, data: { assigneeId: contact?.id ?? null } });
+  await db.assetRequest.update({
+    where: { id: item.id },
+    data: { assigneeId: contact?.id ?? null },
+  });
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,

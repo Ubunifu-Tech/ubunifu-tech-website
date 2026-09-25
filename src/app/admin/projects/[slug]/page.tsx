@@ -890,6 +890,7 @@ export default async function ProjectPage({
                     people={people}
                     teamOnly={!deliverable.isClientVisible}
                     editable={mayRun}
+                    mine={deliverable.assigneeId === staff.id}
                   />
                 ))}
               </div>

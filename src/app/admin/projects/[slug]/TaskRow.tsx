@@ -21,6 +21,7 @@ export function TaskRow({
   people,
   teamOnly = false,
   editable = false,
+  mine = false,
 }: {
   id: string;
   title: string;
@@ -30,8 +31,13 @@ export function TaskRow({
   people: readonly SelectOption[];
   /** Kept off the client's view of the plan. */
   teamOnly?: boolean;
-  /** Can be renamed or removed here. */
+  /**
+   * The viewer runs projects: the task can be renamed, removed, rescheduled
+   * and reassigned. Without it the row is read-only.
+   */
   editable?: boolean;
+  /** The viewer holds this task, so they can tick it done either way. */
+  mine?: boolean;
 }) {
   const [assignState, assign] = useActionState(assignTask, INITIAL);
   const [dueState, due] = useActionState(setTaskDue, INITIAL);
@@ -66,7 +72,12 @@ export function TaskRow({
   return (
     <div className={`${styles.row} ${editable ? styles.editable : ''}`}>
       <div className={styles.task}>
-        <DeliverableToggle id={id} title={title} complete={complete} />
+        <DeliverableToggle
+          id={id}
+          title={title}
+          complete={complete}
+          disabled={!editable && !mine}
+        />
         {teamOnly && <span className={styles.teamOnly}>Team only</span>}
         {problem && <p className={styles.problem}>{problem}</p>}
       </div>
@@ -78,6 +89,7 @@ export function TaskRow({
           size="sm"
           placeholder="Due date"
           aria-label={`Due date for ${title}`}
+          disabled={!editable}
           // The hidden input updates on the same render; submit after it has.
           onChange={() => requestAnimationFrame(() => dueForm.current?.requestSubmit())}
         />
@@ -91,6 +103,7 @@ export function TaskRow({
           size="sm"
           autoSubmit
           aria-label={`Who is doing ${title}`}
+          disabled={!editable}
         />
       </form>
       {editable && (

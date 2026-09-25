@@ -42,7 +42,10 @@ export function AssetRequestRow({
   /** Who at the client is sending it, from their own people. */
   assigneeId?: string;
   contacts?: readonly SelectOption[];
-  /** Can be reworded or removed here. */
+  /**
+   * The viewer runs projects: the request can be reworded, removed, marked
+   * received and handed to someone at the client. Without it the row is read-only.
+   */
   editable?: boolean;
 }) {
   const [state, action, pending] = useActionState(setAssetRequestStatus, INITIAL);
@@ -129,6 +132,7 @@ export function AssetRequestRow({
               options={contacts}
               size="sm"
               autoSubmit
+              disabled={!editable}
             />
           </form>
         )}
@@ -145,7 +149,7 @@ export function AssetRequestRow({
           aria-label={`${title} status`}
           defaultValue={status}
           options={STATUSES}
-          disabled={pending}
+          disabled={pending || !editable}
           size="sm"
           autoSubmit
         />

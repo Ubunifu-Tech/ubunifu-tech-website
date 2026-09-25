@@ -19,7 +19,6 @@ import {
 } from '@/lib/console/transitions';
 import { formText } from '@/lib/console/form';
 
-
 const ASSET_STATUSES: AssetRequestStatus[] = [
   AssetRequestStatus.requested,
   AssetRequestStatus.received,
@@ -46,10 +45,7 @@ export type MoveState = {
  * guards, written with the event that explains it, and refused outright if the
  * project moved underneath the person clicking.
  */
-export async function moveProject(
-  _previous: MoveState,
-  formData: FormData,
-): Promise<MoveState> {
+export async function moveProject(_previous: MoveState, formData: FormData): Promise<MoveState> {
   // A server action is a public endpoint; the form having been rendered proves
   // nothing about who is posting to it.
   const staff = await requireStaff();
@@ -158,7 +154,8 @@ export async function moveProject(
     if (error instanceof Error && error.message === 'concurrent-move') {
       return {
         status: 'error',
-        message: 'Somebody moved this project at the same moment. Nothing was changed. Reload and try again.',
+        message:
+          'Somebody moved this project at the same moment. Nothing was changed. Reload and try again.',
       };
     }
     console.error('Project move failed', error);
@@ -194,9 +191,19 @@ export async function toggleDeliverable(
 
   const deliverable = await db.deliverable.findFirst({
     where: { id, phase: { project: { deletedAt: null } } },
-    select: { id: true, title: true, phase: { select: { project: { select: { slug: true } } } } },
+    select: {
+      id: true,
+      title: true,
+      assigneeId: true,
+      phase: { select: { project: { select: { slug: true } } } },
+    },
   });
   if (!deliverable) return { status: 'error', message: 'That item no longer exists.' };
+  // Running projects, or it is your own task: anyone can be given a task, and
+  // whoever does the work should be able to say it is done.
+  if (!can(staff, 'projects') && deliverable.assigneeId !== staff.id) {
+    return { status: 'error', message: NO_PERMISSION };
+  }
 
   await db.deliverable.update({
     where: { id },
@@ -226,6 +233,7 @@ export async function setAssetRequestStatus(
   formData: FormData,
 ): Promise<EditState> {
   const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
   const id = String(formData.get('assetRequestId') ?? '');
   const next = String(formData.get('assetStatus') ?? '');
@@ -269,10 +277,7 @@ export async function setAssetRequestStatus(
  * unsend an email — so it is saved first, read back on the page as the client
  * will see it, and sent only when somebody presses send.
  */
-export async function saveUpdate(
-  _previous: EditState,
-  formData: FormData,
-): Promise<EditState> {
+export async function saveUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
   const staff = await requireStaff();
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
@@ -292,7 +297,10 @@ export async function saveUpdate(
       const parsed = new URL(previewUrl);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
     } catch {
-      return { status: 'error', message: 'The link should be a full address, starting with https://' };
+      return {
+        status: 'error',
+        message: 'The link should be a full address, starting with https://',
+      };
     }
   }
 
@@ -333,10 +341,7 @@ export async function saveUpdate(
  * must not hide an update that has been approved for them to see. The send
  * outcome is recorded separately, for exactly the same reason.
  */
-export async function publishUpdate(
-  _previous: EditState,
-  formData: FormData,
-): Promise<EditState> {
+export async function publishUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
   const staff = await requireStaff();
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const updateId = String(formData.get('updateId') ?? '');
@@ -444,7 +449,8 @@ export async function publishUpdate(
   if (recipients.length === 0) {
     return {
       status: 'done',
-      message: 'Published to the portal. Nobody on this client can receive email, so nothing was sent.',
+      message:
+        'Published to the portal. Nobody on this client can receive email, so nothing was sent.',
     };
   }
   if (emailable.length === 0) {
@@ -453,7 +459,9 @@ export async function publishUpdate(
       message: `Published to their portal. Nobody was emailed: ${unreached}.`,
     };
   }
-  const alsoUnreached = unreached ? ` ${unreached}, so ${noEmail.length === 1 ? 'was' : 'were'} not emailed.` : '';
+  const alsoUnreached = unreached
+    ? ` ${unreached}, so ${noEmail.length === 1 ? 'was' : 'were'} not emailed.`
+    : '';
   if (delivered < emailable.length) {
     return {
       status: 'error',

@@ -1,4 +1,4 @@
-import type { ProjectStatus } from '@/generated/prisma/client';
+import type { ProjectStatus, ReviewStatus } from '@/generated/prisma/client';
 
 /**
  * How a project's state is described to each audience.
@@ -69,6 +69,24 @@ export const STATUS_TONE: Record<ProjectStatus, StatusTone> = {
   on_hold: 'warn',
   cancelled: 'bad',
 };
+
+/**
+ * The stage as the client reads it. At review it depends on whether they
+ * have answered: once they have, the next move is ours, and "waiting on your
+ * review" would ask them for something they have already given.
+ */
+export function clientStage(
+  status: ProjectStatus,
+  latestReview?: { status: ReviewStatus } | null,
+): { label: string; tone: StatusTone } {
+  if (status === 'client_review' && latestReview?.status === 'approved') {
+    return { label: 'Approved, over to us', tone: 'live' };
+  }
+  if (status === 'client_review' && latestReview?.status === 'changes_requested') {
+    return { label: 'Making your changes', tone: 'live' };
+  }
+  return { label: CLIENT_LABEL[status], tone: STATUS_TONE[status] };
+}
 
 /** A project's service line, in a word. */
 export const SERVICE_LABEL: Record<string, string> = {

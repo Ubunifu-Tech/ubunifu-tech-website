@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { TicketKind } from '@/generated/prisma/client';
 import type { ClientActor } from './auth';
-import { CLIENT_LABEL } from './project-status';
+import { clientStage } from './project-status';
 import { INVOICE_STATUS_LABEL } from './billing-labels';
 import { CLIENT_TICKET_STATUS } from './tickets';
 import { formatDate, formatMoney } from './money';
@@ -78,6 +78,12 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
           take: 1,
           select: { title: true, publishedAt: true },
         },
+        reviews: {
+          where: { status: { not: 'withdrawn' } },
+          orderBy: { round: 'desc' },
+          take: 1,
+          select: { round: true, title: true, status: true },
+        },
       },
     }),
     db.document.findMany({
@@ -130,11 +136,17 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
       .slice(0, 3);
     lines.push(
       `- ${project.name} (${project.reference}), page /portal/projects/${project.slug}`,
-      `  Status: ${CLIENT_LABEL[project.status]}. Progress: ${done} of ${tasks.length} tasks done.${
+      `  Status: ${clientStage(project.status, project.reviews[0]).label}. Progress: ${done} of ${tasks.length} tasks done.${
         project.targetDate ? ` Target date: ${formatDate(project.targetDate)}.` : ''
       }${project.owner ? ` Led by ${project.owner.name}.` : ''}`,
     );
     if (project.summary) lines.push(`  About: ${project.summary}`);
+    const review = project.reviews[0];
+    if (review?.status === 'open') {
+      lines.push(
+        `  Ready for their review: round ${review.round}, ${review.title}. They approve it or ask for changes on the project page.`,
+      );
+    }
     if (next.length > 0) lines.push(`  Coming up: ${next.join('; ')}`);
     lines.push(
       project.assetRequests.length > 0

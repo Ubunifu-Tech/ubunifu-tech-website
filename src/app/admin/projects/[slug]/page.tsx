@@ -44,6 +44,9 @@ import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import { AddPhase, AddTask, AskForSomething, PhaseHead, ProjectDetailsCard } from './PlanEditor';
 import { BrandKitEditor } from './BrandKitEditor';
+import { AskForReview } from './AskForReview';
+import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
+import { REVIEWABLE } from '@/lib/console/reviews';
 import { RemoveProject } from './RemoveProject';
 import { ProjectDocuments } from '../../documents/ProjectDocuments';
 import { currencyLabel } from '@/lib/console/currencies';
@@ -207,6 +210,21 @@ export default async function ProjectPage({
           status: true,
           updatedAt: true,
           versions: { select: { id: true } },
+        },
+      },
+      reviews: {
+        orderBy: { round: 'desc' },
+        select: {
+          round: true,
+          title: true,
+          previewUrl: true,
+          note: true,
+          status: true,
+          createdAt: true,
+          answeredAt: true,
+          answer: true,
+          askedBy: { select: { name: true } },
+          answeredBy: { select: { name: true } },
         },
       },
       updates: {
@@ -605,6 +623,28 @@ export default async function ProjectPage({
                 </p>
               )}
             </section>
+
+            {(project.reviews.length > 0 || REVIEWABLE.includes(project.status)) && (
+              <section id="review" className={forms.card}>
+                <div className={forms.cardHeader}>
+                  <h2 className={forms.cardTitle}>Client review</h2>
+                  {project.reviews.length === 0 && (
+                    <span className={forms.cardMeta}>Nothing sent to review yet</span>
+                  )}
+                </div>
+                {project.reviews[0] && <ReviewRound review={project.reviews[0]} audience="staff" />}
+                {mayRun && REVIEWABLE.includes(project.status) && (
+                  <AskForReview
+                    projectId={project.id}
+                    first={project.reviews.length === 0}
+                    replacing={
+                      project.reviews[0]?.status === 'open' ? project.reviews[0].round : null
+                    }
+                  />
+                )}
+                <EarlierRounds reviews={project.reviews.slice(1)} audience="staff" />
+              </section>
+            )}
 
             <section className={forms.card}>
               <div className={forms.cardHeader}>

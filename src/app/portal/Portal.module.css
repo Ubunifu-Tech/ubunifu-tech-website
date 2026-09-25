@@ -382,6 +382,11 @@
   font-size: var(--font-size-body);
 }
 
+/* A long stage name wraps inside its cell instead of being cut off by it. */
+.summaryValue > span {
+  white-space: normal;
+}
+
 .layout {
   display: grid;
   gap: var(--space-5);

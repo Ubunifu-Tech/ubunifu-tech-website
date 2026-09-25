@@ -18,6 +18,7 @@ import {
   type Guard,
 } from '@/lib/console/transitions';
 import { formText } from '@/lib/console/form';
+import { withdrawOpenReviews } from '@/lib/console/reviews';
 
 const ASSET_STATUSES: AssetRequestStatus[] = [
   AssetRequestStatus.requested,
@@ -35,8 +36,9 @@ export type MoveState = {
 };
 
 /**
- * Moves a project. With advanceForDocument in transitions.ts, which moves a
- * project on when its documents are sent and signed, this is all that writes
+ * Moves a project. With advanceForDocument and advanceForReview in
+ * transitions.ts, which move a project on when its documents are sent and
+ * signed and when a review is asked for, this is all that writes
  * Project.status.
  *
  * Nothing about this is a dropdown-and-save. The status column is what the
@@ -149,6 +151,11 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
           note: recordedNote || null,
         },
       });
+
+      // A review is only open while the project is with the client for
+      // review. Moving on takes it back, so the client is not left being
+      // asked to approve work the team has moved past.
+      if (target !== 'client_review') await withdrawOpenReviews(tx, project.id);
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'concurrent-move') {

@@ -20,13 +20,14 @@ export type StageAction = Transition & {
   blockedFix: FixTab | null;
 };
 
-type FixTab = 'fees' | 'documents' | 'updates' | 'overview';
+type FixTab = 'fees' | 'documents' | 'updates' | 'overview' | 'review';
 
 const FIX_LABEL: Record<FixTab, string> = {
   fees: 'Go to fees',
   documents: 'Go to documents',
   updates: 'Go to updates',
   overview: 'See what the client owes',
+  review: 'Go to the review',
 };
 
 /**
@@ -53,7 +54,11 @@ export function MoveControls({
   next?: { label: string; tab: 'documents' } | null;
 }) {
   const fixHref = (tab: FixTab) =>
-    tab === 'overview' ? `/projects/${projectSlug}` : `/projects/${projectSlug}?tab=${tab}`;
+    tab === 'overview'
+      ? `/projects/${projectSlug}`
+      : tab === 'review'
+        ? `/projects/${projectSlug}#review`
+        : `/projects/${projectSlug}?tab=${tab}`;
   const [state, action, pending] = useActionState(moveProject, INITIAL);
   const [chosen, setChosen] = useState<StageAction | null>(null);
 

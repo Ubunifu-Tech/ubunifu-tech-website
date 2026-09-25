@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { ArrowRight, FileSignature, MessageSquare, Receipt, Upload } from 'lucide-react';
+import { ArrowRight, Eye, FileSignature, MessageSquare, Receipt, Upload } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, liveTicket } from '@/lib/console/live';
-import { CLIENT_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { clientStage } from '@/lib/console/project-status';
 import { formatDate, formatMoney } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
 import styles from './Portal.module.css';
@@ -69,6 +69,12 @@ export default async function PortalHome() {
           },
         },
         assetRequests: { where: { status: 'requested' }, select: { id: true } },
+        reviews: {
+          where: { status: { not: 'withdrawn' } },
+          orderBy: { round: 'desc' },
+          take: 1,
+          select: { round: true, title: true, status: true },
+        },
       },
     }),
     db.document.findMany({
@@ -107,6 +113,19 @@ export default async function PortalHome() {
       }`,
       urgent: invoice.status === 'overdue',
     })),
+    ...projects.flatMap((project) =>
+      project.reviews[0]?.status === 'open'
+        ? [
+            {
+              key: `review-${project.id}`,
+              href: `/portal/projects/${project.slug}#review`,
+              icon: Eye,
+              title: `Review round ${project.reviews[0].round} of ${project.name}`,
+              detail: project.reviews[0].title,
+            },
+          ]
+        : [],
+    ),
     ...documents.map((document) => ({
       key: `document-${document.reference}`,
       href: `/portal/documents/${document.reference}`,
@@ -204,12 +223,13 @@ export default async function PortalHome() {
             const tasks = project.phases.flatMap((phase) => phase.deliverables);
             const done = tasks.filter((task) => task.isComplete).length;
             const percent = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
+            const stage = clientStage(project.status, project.reviews[0]);
             return (
               <li key={project.id}>
                 <Link href={`/portal/projects/${project.slug}`} className={styles.project}>
                   <span className={styles.projectTop}>
-                    <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
-                      {CLIENT_LABEL[project.status]}
+                    <span className={`${forms.badge} ${TONE_CLASS[stage.tone]}`}>
+                      {stage.label}
                     </span>
                     <span className={styles.projectRef}>{project.reference}</span>
                   </span>

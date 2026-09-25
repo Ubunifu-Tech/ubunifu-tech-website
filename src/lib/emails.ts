@@ -613,6 +613,79 @@ export function projectUpdateEmail(input: {
   return shell(`${input.projectName}: ${input.title}`, body);
 }
 
+/** Written as short paragraphs; kept as short paragraphs. */
+function paragraphsOf(text: string, gap = 16): string {
+  return text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 ${gap}px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(
+          block,
+        ).replace(/\n/g, '<br />')}</p>`,
+    )
+    .join('');
+}
+
+/** A version of the work, ready for the client to approve or send back. */
+export function reviewRequestEmail(input: {
+  name: string;
+  projectName: string;
+  round: number;
+  title: string;
+  note: string | null;
+  previewUrl: string | null;
+  /** The review in their portal, where they answer. */
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)} · round ${input.round}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Ready for your review: ${escapeHtml(input.title)}</h1>
+    <p style="margin:0 0 16px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. Please take a look, then approve it or tell us what to change
+      from your portal.
+    </p>
+    ${input.note ? paragraphsOf(input.note) : ''}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+      <tr>
+        ${input.previewUrl ? `<td class="button-cell" style="padding:0 10px 0 0;">${buttonGhost(input.previewUrl, 'Open the preview')}</td>` : ''}
+        <td class="button-cell">${button(input.url, 'Approve or ask for changes')}</td>
+      </tr>
+    </table>`;
+
+  return shell(`${input.projectName}: ${input.title} is ready for your review.`, body);
+}
+
+/** Our own alert: a client answered a review. */
+export function reviewAnsweredEmail(input: {
+  clientName: string;
+  from: string;
+  projectName: string;
+  round: number;
+  title: string;
+  approved: boolean;
+  answer: string | null;
+  url: string;
+}): string {
+  const headline = input.approved
+    ? `${input.from} approved round ${input.round}`
+    : `${input.from} asked for changes to round ${input.round}`;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.clientName)} · ${escapeHtml(input.projectName)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(headline)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      <strong style="color:#1D1B22;">${escapeHtml(input.title)}</strong>
+    </p>
+    ${input.answer ? paragraphsOf(input.answer, 14) : ''}
+    ${button(input.url, 'Open the project')}`;
+
+  return shell(`${input.projectName}: ${headline}`, body);
+}
+
 /**
  * A document waiting for signature.
  *

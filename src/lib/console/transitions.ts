@@ -1,6 +1,13 @@
 import 'server-only';
 import { db } from '@/lib/db';
-import type { ActorType, DocumentKind, DocumentStatus, Prisma, ProjectStatus } from '@/generated/prisma/client';
+import type {
+  ActorType,
+  DocumentKind,
+  DocumentStatus,
+  Prisma,
+  ProjectStatus,
+  ReviewStatus,
+} from '@/generated/prisma/client';
 import { STAFF_LABEL } from './project-status';
 import { formatMoney } from './money';
 
@@ -40,7 +47,7 @@ export type Guard = {
   severity: GuardSeverity;
   message: string;
   /** The project tab where it is put right, so every warning has a way forward. */
-  fix?: 'fees' | 'documents' | 'updates' | 'overview';
+  fix?: 'fees' | 'documents' | 'updates' | 'overview' | 'review';
 };
 
 export type Transition = {
@@ -125,8 +132,8 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     {
       to: 'client_review',
       label: 'Mark as with the client for review',
-      detail: 'Post an update with the preview link so they know.',
-      tone: 'primary',
+      detail: 'When it went to them another way. Otherwise use Ask for a review, below.',
+      tone: 'quiet',
     },
     { to: 'launch_ready', label: 'Mark ready to launch', tone: 'primary' },
     {
@@ -328,6 +335,48 @@ export async function advanceForDocument(
 }
 
 /**
+ * Puts the project with the client for review when a review is asked for,
+ * inside the caller's transaction, and records why. Only along an edge the
+ * table already has; a project already at review stays there, because a new
+ * round is not a move. Returns the move, or null when there was none.
+ */
+export async function advanceForReview(
+  tx: Prisma.TransactionClient,
+  input: {
+    projectId: string;
+    round: number;
+    title: string;
+    actorType: ActorType;
+    actorId: string | null;
+  },
+): Promise<{ from: ProjectStatus; to: ProjectStatus } | null> {
+  const project = await tx.project.findUnique({
+    where: { id: input.projectId },
+    select: { status: true },
+  });
+  if (!project) return null;
+  if (!TABLE[project.status].some((edge) => edge.to === 'client_review')) return null;
+
+  const moved = await tx.project.updateMany({
+    where: { id: input.projectId, status: project.status },
+    data: { status: 'client_review' },
+  });
+  if (moved.count !== 1) return null;
+
+  await tx.projectStatusEvent.create({
+    data: {
+      projectId: input.projectId,
+      from: project.status,
+      to: 'client_review',
+      actorType: input.actorType,
+      actorId: input.actorId,
+      note: `Round ${input.round} sent for review: ${input.title}`,
+    },
+  });
+  return { from: project.status, to: 'client_review' };
+}
+
+/**
  * Where a held project is allowed to resume to.
  *
  * The held-from state is read back out of the event log rather than kept in a
@@ -405,8 +454,8 @@ export type GuardFacts = {
   sentProposals: number;
   /** Agreements and statements of work that went to the client from Documents. */
   sentAgreements: number;
-  /** Published updates that carry a preview link. */
-  previewUpdates: number;
+  /** The latest review the client was asked for, unless it was taken back. */
+  latestReview: { round: number; status: ReviewStatus } | null;
 };
 
 export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
@@ -445,9 +494,11 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
           },
         },
       },
-      updates: {
-        where: { status: 'published', previewUrl: { not: null } },
-        select: { id: true },
+      reviews: {
+        where: { status: { not: 'withdrawn' } },
+        orderBy: { round: 'desc' },
+        take: 1,
+        select: { round: true, status: true },
       },
       managedServices: { where: { isActive: true }, select: { id: true } },
       assetRequests: { where: { status: 'requested' }, select: { id: true } },
@@ -503,7 +554,7 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
     sentAgreements: project.documents.filter(
       (d) => (d.kind === 'contract' || d.kind === 'statement_of_work') && WENT_OUT.includes(d.status),
     ).length,
-    previewUpdates: project.updates.length,
+    latestReview: project.reviews[0] ?? null,
   };
 }
 
@@ -558,13 +609,31 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     });
   }
 
-  if (to === 'client_review' && facts.previewUpdates === 0) {
+  if (to === 'client_review' && facts.latestReview?.status !== 'open') {
     guards.push({
       severity: 'warn',
       message:
-        'The client has not been sent anything to review. Post an update with the preview link so they know.',
-      fix: 'updates',
+        'Nothing is out for the client to approve. Use Ask for a review so they can approve it or ask for changes.',
+      fix: 'review',
     });
+  }
+
+  // Keyed on where the project is going, like every guard: these are the
+  // stages that say the client is happy with the work.
+  if ((to === 'launch_ready' || to === 'handover') && facts.latestReview) {
+    const { round, status } = facts.latestReview;
+    if (status === 'open') {
+      guards.push({
+        severity: 'warn',
+        message: `Round ${round} is still with the client and has not been answered. Moving on takes it back from them.`,
+      });
+    } else if (status === 'changes_requested') {
+      guards.push({
+        severity: 'warn',
+        message: `The client asked for changes in round ${round} and has not approved a version since.`,
+        fix: 'review',
+      });
+    }
   }
 
   if (to === 'contract_signed' && facts.signatureCount === 0) {

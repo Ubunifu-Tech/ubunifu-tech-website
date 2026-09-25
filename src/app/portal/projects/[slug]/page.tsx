@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { CLIENT_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { clientStage } from '@/lib/console/project-status';
 import { formatDate } from '@/lib/console/money';
 import {
   ALLOWED_CONTENT_TYPES,
@@ -16,6 +16,8 @@ import { AnswerBox } from './AnswerBox';
 import { ItemOwner } from './ItemOwner';
 import { Avatar } from '@/components/console/Avatar';
 import { BrandKitView } from '@/components/console/BrandKitView';
+import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
+import { ReviewAnswer } from './ReviewAnswer';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -89,6 +91,23 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
           colors: { orderBy: { position: 'asc' }, select: { name: true, hex: true, usage: true } },
         },
       },
+      // A round the team took back was never theirs to answer.
+      reviews: {
+        where: { status: { not: 'withdrawn' } },
+        orderBy: { round: 'desc' },
+        select: {
+          id: true,
+          round: true,
+          title: true,
+          previewUrl: true,
+          note: true,
+          status: true,
+          createdAt: true,
+          answeredAt: true,
+          answer: true,
+          answeredBy: { select: { name: true } },
+        },
+      },
       updates: {
         where: { status: 'published' },
         orderBy: { publishedAt: 'desc' },
@@ -128,6 +147,13 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
   const outstanding = project.assetRequests.filter(
     (request) => request.status !== 'received',
   ).length;
+  const [latestReview, ...earlierReviews] = project.reviews;
+  const reviewOpen = latestReview?.status === 'open';
+  const stage = clientStage(project.status, latestReview);
+  const waitingOnYou = [
+    reviewOpen ? 'a review' : null,
+    outstanding > 0 ? `${outstanding} ${outstanding === 1 ? 'item' : 'items'}` : null,
+  ].filter(Boolean);
   // With no store configured the box is not shown at all, and the old
   // instruction stands on its own rather than sitting under a button that
   // would fail.
@@ -161,9 +187,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Stage</span>
           <span className={styles.summaryValue}>
-            <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
-              {CLIENT_LABEL[project.status]}
-            </span>
+            <span className={`${forms.badge} ${TONE_CLASS[stage.tone]}`}>{stage.label}</span>
           </span>
         </div>
         <div className={styles.summaryItem}>
@@ -178,9 +202,9 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Waiting on you</span>
           <span className={styles.summaryValue}>
-            {outstanding === 0
+            {waitingOnYou.length === 0
               ? 'Nothing'
-              : `${outstanding} ${outstanding === 1 ? 'item' : 'items'}`}
+              : waitingOnYou.join(' and ').replace(/^a/, 'A')}
           </span>
         </div>
         <div className={styles.summaryItem}>
@@ -206,10 +230,24 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
 
       <div
         className={
-          project.assetRequests.length + project.updates.length > 0 ? styles.layout : styles.stack
+          project.assetRequests.length + project.updates.length + project.reviews.length > 0
+            ? styles.layout
+            : styles.stack
         }
       >
         <div className={styles.stack}>
+          {reviewOpen && latestReview && (
+            <section id="review" className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Ready for your review</h2>
+              </div>
+              <ReviewRound review={latestReview} audience="client">
+                <ReviewAnswer reviewId={latestReview.id} />
+              </ReviewRound>
+              <EarlierRounds reviews={earlierReviews} audience="client" />
+            </section>
+          )}
+
           {project.assetRequests.length > 0 && (
             <section className={forms.card}>
               <div className={forms.cardHeader}>
@@ -338,6 +376,16 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+
+          {!reviewOpen && latestReview && (
+            <section id="review" className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Your reviews</h2>
+              </div>
+              <ReviewRound review={latestReview} audience="client" />
+              <EarlierRounds reviews={earlierReviews} audience="client" />
             </section>
           )}
         </div>

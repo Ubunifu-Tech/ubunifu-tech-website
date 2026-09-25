@@ -67,6 +67,7 @@ model StaffUser {
   posts           Post[]
   mediaAssets     MediaAsset[]
   assignedTasks   Deliverable[]    @relation("DeliverableAssignee")
+  reviewsAsked    ProjectReview[]
 
   @@index([isActive])
 }
@@ -132,6 +133,7 @@ model ClientContact {
   documentResponses SignatureRequest[]
   documentSuggestions DocumentSuggestion[]
   assignedRequests  AssetRequest[] @relation("AssetRequestAssignee")
+  reviewAnswers     ProjectReview[]
 
   @@unique([clientId, email])
   @@index([email])
@@ -331,6 +333,7 @@ model Project {
   phases          ProjectPhase[]
   assetRequests   AssetRequest[]
   updates         ProjectUpdate[]
+  reviews         ProjectReview[]
   lineItems       LineItem[]
   invoices        Invoice[]
   documents       Document[]
@@ -476,6 +479,45 @@ model ProjectUpdate {
   uploads FileUpload[]
 
   @@index([projectId, status])
+}
+
+enum ReviewStatus {
+  open
+  approved
+  changes_requested
+  /// Taken back before the client answered: a newer version replaced it, or
+  /// the project moved on without it.
+  withdrawn
+}
+
+/// One version of the work put in front of the client to approve or send
+/// back. Numbered per project, so "round 2" means the same thing to both
+/// sides, and never edited once answered: the answer is a record of what
+/// they agreed to.
+model ProjectReview {
+  id            String         @id @default(cuid())
+  projectId     String
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  round         Int
+  title         String
+  previewUrl    String?
+  /// What to look at, and what kind of feedback helps.
+  note          String?
+  status        ReviewStatus   @default(open)
+  askedById     String?
+  askedBy       StaffUser?     @relation(fields: [askedById], references: [id], onDelete: SetNull)
+  answeredById  String?
+  answeredBy    ClientContact? @relation(fields: [answeredById], references: [id], onDelete: SetNull)
+  answeredAt    DateTime?
+  /// The client's words: what to change, or anything said with an approval.
+  answer        String?
+  withdrawnAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([projectId, round])
+  @@index([projectId, status])
+  @@index([status])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

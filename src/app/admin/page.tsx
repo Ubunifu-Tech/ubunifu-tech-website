@@ -113,6 +113,12 @@ export default async function AdminHome() {
         status: true,
         updatedAt: true,
         client: { select: { name: true } },
+        reviews: {
+          where: { status: { not: 'withdrawn' } },
+          orderBy: { round: 'desc' },
+          take: 1,
+          select: { status: true, answeredAt: true },
+        },
       },
     }),
     db.project.count({
@@ -206,15 +212,28 @@ export default async function AdminHome() {
       badge: 'New enquiry',
       tone: forms.badgeWarn,
     })),
-    ...waitingProjects.map((project) => ({
-      id: `p-${project.id}`,
-      what: project.name,
-      who: project.client.name,
-      since: project.updatedAt,
-      href: `/projects/${project.slug}`,
-      badge: STAFF_LABEL[project.status],
-      tone: TONE_CLASS[STATUS_TONE[project.status]],
-    })),
+    ...waitingProjects.map((project) => {
+      // At review, the client's answer is the news: it is what moves next.
+      const review = project.status === 'client_review' ? project.reviews[0] : undefined;
+      const answeredAt = review && review.status !== 'open' ? review.answeredAt : null;
+      return {
+        id: `p-${project.id}`,
+        what: project.name,
+        who: project.client.name,
+        since: answeredAt ?? project.updatedAt,
+        href: `/projects/${project.slug}${review ? '#review' : ''}`,
+        badge: answeredAt
+          ? review!.status === 'approved'
+            ? 'Client approved'
+            : 'Changes asked for'
+          : STAFF_LABEL[project.status],
+        tone: answeredAt
+          ? review!.status === 'approved'
+            ? forms.badgeGood
+            : forms.badgeWarn
+          : TONE_CLASS[STATUS_TONE[project.status]],
+      };
+    }),
     ...(seesMoney ? unpaidInvoices : [])
       .filter((invoice) => invoice.dueAt !== null && invoice.dueAt.getTime() < now.getTime())
       .slice(0, 10)

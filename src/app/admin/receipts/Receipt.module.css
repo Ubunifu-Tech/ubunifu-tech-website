@@ -375,3 +375,41 @@
   width: 42%;
   color: var(--text-primary);
 }
+
+/* A receipt whose payment was reversed: said at the top, in words, before
+   anyone reads the amount as money that arrived. Printed too. */
+.cancelled {
+  margin: var(--space-6) 0 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  background: var(--danger-dim);
+  color: var(--tone-red-fg);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.cancelledTitle {
+  display: block;
+  font-weight: var(--font-weight-medium);
+}
+
+.amountBlockVoid {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.amountBlockVoid .amount {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+/* A refund note's amount: money going back, not money arriving. */
+.amountBlockOut {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.amountBlockOut .amount {
+  color: var(--text-primary);
+}

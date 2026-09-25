@@ -4,7 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
-import { liveInvoice, livePayment } from '@/lib/console/live';
+import { countedPayment, liveInvoice } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
@@ -78,7 +78,7 @@ export default async function InvoicesPage({
       }
     : {};
 
-  const [invoices, viewCounts, open, drafts, payments] = await Promise.all([
+  const [invoices, viewCounts, open, drafts, payments, refunds] = await Promise.all([
     db.invoice.findMany({
       where: { AND: [liveInvoice, filterToWhere(active), matching] },
       orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
@@ -108,8 +108,12 @@ export default async function InvoicesPage({
     }),
     db.invoice.count({ where: { ...liveInvoice, status: 'draft' } }),
     db.payment.findMany({
-      where: { ...livePayment, receivedAt: { gte: lastMonthStart } },
+      where: { ...countedPayment, receivedAt: { gte: lastMonthStart } },
       select: { amountMinor: true, currency: true, receivedAt: true },
+    }),
+    db.refund.findMany({
+      where: { refundedAt: { gte: lastMonthStart }, payment: countedPayment },
+      select: { amountMinor: true, currency: true, refundedAt: true },
     }),
   ]);
 
@@ -132,7 +136,19 @@ export default async function InvoicesPage({
   const thisMonth = new Map<string, number>();
   const lastMonth = new Map<string, number>();
   for (const payment of payments) {
-    addTo(payment.receivedAt >= monthStart ? thisMonth : lastMonth, payment.currency, payment.amountMinor);
+    addTo(
+      payment.receivedAt >= monthStart ? thisMonth : lastMonth,
+      payment.currency,
+      payment.amountMinor,
+    );
+  }
+  // Received means kept: money sent back comes off the month it went back in,
+  // so the figure matches what is in the bank.
+  const refundedThisMonth = new Map<string, number>();
+  for (const refund of refunds) {
+    const current = refund.refundedAt >= monthStart;
+    addTo(current ? thisMonth : lastMonth, refund.currency, -refund.amountMinor);
+    if (current) addTo(refundedThisMonth, refund.currency, refund.amountMinor);
   }
 
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? invoices.length;
@@ -167,7 +183,9 @@ export default async function InvoicesPage({
           {
             label: 'Received this month',
             value: amounts(thisMonth),
-            note: `Last month ${amounts(lastMonth)}`,
+            note: `${
+              refundedThisMonth.size > 0 ? `After ${amounts(refundedThisMonth)} refunded. ` : ''
+            }Last month ${amounts(lastMonth)}`,
           },
           {
             label: 'Drafts',
@@ -192,13 +210,27 @@ export default async function InvoicesPage({
           <table className={table.table}>
             <thead>
               <tr>
-                <th className={table.th} scope="col">Number</th>
-                <th className={table.th} scope="col">Client</th>
-                <th className={table.th} scope="col">Project</th>
-                <th className={table.th} scope="col">State</th>
-                <th className={table.th} scope="col">Due</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Total</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Outstanding</th>
+                <th className={table.th} scope="col">
+                  Number
+                </th>
+                <th className={table.th} scope="col">
+                  Client
+                </th>
+                <th className={table.th} scope="col">
+                  Project
+                </th>
+                <th className={table.th} scope="col">
+                  State
+                </th>
+                <th className={table.th} scope="col">
+                  Due
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Total
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Outstanding
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -278,7 +310,12 @@ export default async function InvoicesPage({
             </tbody>
           </table>
         </div>
-        <ListFooter shown={invoices.length} total={total} noun={['invoice', 'invoices']} query={query} />
+        <ListFooter
+          shown={invoices.length}
+          total={total}
+          noun={['invoice', 'invoices']}
+          query={query}
+        />
       </div>
     </main>
   );

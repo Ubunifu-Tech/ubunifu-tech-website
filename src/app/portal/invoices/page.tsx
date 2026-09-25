@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
@@ -52,7 +53,12 @@ export default async function PortalInvoices() {
           amountMinor: true,
           currency: true,
           receivedAt: true,
+          reversedAt: true,
           receipt: { select: { number: true } },
+          refunds: {
+            orderBy: { refundedAt: 'asc' },
+            select: { id: true, number: true, amountMinor: true, currency: true, refundedAt: true },
+          },
         },
       },
     },
@@ -93,14 +99,30 @@ export default async function PortalInvoices() {
           <table className={table.table}>
             <thead>
               <tr>
-                <th className={table.th} scope="col">Invoice</th>
-                <th className={table.th} scope="col">For</th>
-                <th className={table.th} scope="col">Issued</th>
-                <th className={table.th} scope="col">Due</th>
-                <th className={table.th} scope="col">State</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Total</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Outstanding</th>
-                <th className={table.th} scope="col">Receipts</th>
+                <th className={table.th} scope="col">
+                  Invoice
+                </th>
+                <th className={table.th} scope="col">
+                  For
+                </th>
+                <th className={table.th} scope="col">
+                  Issued
+                </th>
+                <th className={table.th} scope="col">
+                  Due
+                </th>
+                <th className={table.th} scope="col">
+                  State
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Total
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Outstanding
+                </th>
+                <th className={table.th} scope="col">
+                  Receipts
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -150,23 +172,39 @@ export default async function PortalInvoices() {
                         {formatMoney(invoice.totalMinor, invoice.currency)}
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
-                        {owed === 0 ? <span className={table.muted}>Nothing</span> : formatMoney(owed, invoice.currency)}
+                        {owed === 0 ? (
+                          <span className={table.muted}>Nothing</span>
+                        ) : (
+                          formatMoney(owed, invoice.currency)
+                        )}
                       </td>
                       <td className={table.td}>
                         {invoice.payments.length === 0 ? (
                           <span className={table.muted}>None yet</span>
                         ) : (
                           invoice.payments.map((payment) => (
-                            <span key={payment.id} className={table.sub}>
-                              {payment.receipt ? (
-                                <Link href={`/portal/receipts/${payment.receipt.number}`}>
-                                  {payment.receipt.number}
-                                </Link>
-                              ) : (
-                                formatMoney(payment.amountMinor, payment.currency)
-                              )}{' '}
-                              · {formatShortDate(payment.receivedAt)}
-                            </span>
+                            <React.Fragment key={payment.id}>
+                              <span className={table.sub}>
+                                {payment.receipt ? (
+                                  <Link href={`/portal/receipts/${payment.receipt.number}`}>
+                                    {payment.receipt.number}
+                                  </Link>
+                                ) : (
+                                  formatMoney(payment.amountMinor, payment.currency)
+                                )}{' '}
+                                · {formatShortDate(payment.receivedAt)}
+                                {payment.reversedAt ? ' · cancelled' : ''}
+                              </span>
+                              {payment.refunds.map((refund) => (
+                                <span key={refund.id} className={table.sub}>
+                                  <Link href={`/portal/refunds/${refund.number}`}>
+                                    {refund.number}
+                                  </Link>{' '}
+                                  · {formatMoney(refund.amountMinor, refund.currency)} sent back{' '}
+                                  {formatShortDate(refund.refundedAt)}
+                                </span>
+                              ))}
+                            </React.Fragment>
                           ))
                         )}
                       </td>

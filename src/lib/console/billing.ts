@@ -53,6 +53,22 @@ export async function nextReceiptNumber(
   return `${prefix}${String(next).padStart(3, '0')}`;
 }
 
+/** RFN-2026-003: refund notes, numbered on the same rule as receipts. */
+export async function nextRefundNumber(
+  tx: Prisma.TransactionClient,
+  now = new Date(),
+): Promise<string> {
+  const prefix = `RFN-${now.getFullYear()}-`;
+  const latest = await tx.refund.findFirst({
+    where: { number: { startsWith: prefix } },
+    orderBy: { number: 'desc' },
+    select: { number: true },
+  });
+  const previous = latest ? Number.parseInt(latest.number.slice(prefix.length), 10) : 0;
+  const next = Number.isFinite(previous) ? previous + 1 : 1;
+  return `${prefix}${String(next).padStart(3, '0')}`;
+}
+
 /**
  * Recomputes an invoice's totals from the rows that actually hold the money,
  * and moves its status to match.
@@ -76,7 +92,11 @@ export async function recomputeInvoice(
       issuedAt: true,
       paidAt: true,
       lines: { select: { amountMinor: true, quantity: true } },
-      payments: { select: { amountMinor: true, receivedAt: true } },
+      // A reversed payment stays on record but was never money received.
+      payments: {
+        where: { reversedAt: null },
+        select: { amountMinor: true, receivedAt: true, refunds: { select: { amountMinor: true } } },
+      },
     },
   });
 
@@ -86,6 +106,13 @@ export async function recomputeInvoice(
   );
   const totalMinor = subtotalMinor + invoice.taxMinor;
   const paidMinor = invoice.payments.reduce((total, payment) => total + payment.amountMinor, 0);
+  // What was paid stays paid, so status is not affected; this is only how much
+  // of it the client has been given back.
+  const refundedMinor = invoice.payments.reduce(
+    (total, payment) =>
+      total + payment.refunds.reduce((sum, refund) => sum + refund.amountMinor, 0),
+    0,
+  );
 
   // A void invoice stays void. It is a decision, not a balance.
   if (invoice.status === 'void') return;
@@ -111,16 +138,16 @@ export async function recomputeInvoice(
    */
   const settledOn =
     status === 'paid'
-      ? invoice.paidAt ??
+      ? (invoice.paidAt ??
         invoice.payments
           .map((payment) => payment.receivedAt)
           .sort((a, b) => b.getTime() - a.getTime())[0] ??
-        new Date()
+        new Date())
       : null;
 
   await tx.invoice.update({
     where: { id: invoiceId },
-    data: { subtotalMinor, totalMinor, paidMinor, status, paidAt: settledOn },
+    data: { subtotalMinor, totalMinor, paidMinor, refundedMinor, status, paidAt: settledOn },
   });
 }
 
@@ -241,4 +268,3 @@ export async function billableLines(projectId: string, horizonDays = 45): Promis
 
   return billable;
 }
-

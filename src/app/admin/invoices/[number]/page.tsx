@@ -8,7 +8,8 @@ import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-lab
 import { formatMoney, formatShortDate, moneyInput, todayInput } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
-  ReceiptMenu,
+  PaymentMenu,
+  RefundMenu,
   RecordPaymentForm,
   SendInvoiceButton,
   VoidInvoiceForm,
@@ -48,6 +49,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
       taxMinor: true,
       totalMinor: true,
       paidMinor: true,
+      refundedMinor: true,
       notes: true,
       issuedAt: true,
       dueAt: true,
@@ -77,6 +79,23 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           note: true,
           recordedBy: { select: { name: true } },
           receipt: { select: { id: true, number: true, issuedAt: true } },
+          reversedAt: true,
+          reversalReason: true,
+          reversedBy: { select: { name: true } },
+          refunds: {
+            orderBy: { refundedAt: 'asc' },
+            select: {
+              id: true,
+              number: true,
+              amountMinor: true,
+              currency: true,
+              method: true,
+              reference: true,
+              refundedAt: true,
+              reason: true,
+              recordedBy: { select: { name: true } },
+            },
+          },
         },
       },
     },
@@ -100,6 +119,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
     invoice.dueAt < new Date();
   const methodLabel = (value: string) =>
     PAYMENT_METHODS.find((method) => method.value === value)?.label ?? value;
+  const refunds = invoice.payments
+    .flatMap((payment) =>
+      payment.refunds.map((refund) => ({
+        ...refund,
+        receiptNumber: payment.receipt?.number ?? null,
+      })),
+    )
+    .sort((a, b) => a.refundedAt.getTime() - b.refundedAt.getTime());
 
   return (
     <main className={styles.page}>
@@ -157,7 +184,17 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           {
             label: 'Received',
             value: formatMoney(invoice.paidMinor, invoice.currency),
-            note: `${invoice.payments.length} ${invoice.payments.length === 1 ? 'payment' : 'payments'} recorded`,
+            note: (() => {
+              const counted = invoice.payments.filter((p) => !p.reversedAt).length;
+              const reversed = invoice.payments.length - counted;
+              return `${counted} ${counted === 1 ? 'payment' : 'payments'} recorded${
+                reversed > 0 ? `, ${reversed} reversed` : ''
+              }${
+                invoice.refundedMinor > 0
+                  ? `, ${formatMoney(invoice.refundedMinor, invoice.currency)} refunded`
+                  : ''
+              }`;
+            })(),
           },
           {
             label: 'Outstanding',
@@ -275,6 +312,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         ) : (
                           <span className={table.muted}>None</span>
                         )}
+                        {payment.reversedAt && (
+                          <span className={table.sub}>
+                            <span className={`${forms.badge} ${forms.badgeBad}`}>Reversed</span>{' '}
+                            {formatShortDate(payment.reversedAt)}
+                            {payment.reversedBy ? ` by ${payment.reversedBy.name}` : ''}:{' '}
+                            {payment.reversalReason}
+                          </span>
+                        )}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(payment.receivedAt)}
@@ -289,15 +334,25 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         {payment.recordedBy?.name ?? <span className={table.muted}>Unknown</span>}
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
-                        {formatMoney(payment.amountMinor, payment.currency)}
+                        {payment.reversedAt ? (
+                          <s>{formatMoney(payment.amountMinor, payment.currency)}</s>
+                        ) : (
+                          formatMoney(payment.amountMinor, payment.currency)
+                        )}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        {payment.receipt && (
-                          <ReceiptMenu
-                            receiptId={payment.receipt.id}
-                            number={payment.receipt.number}
-                          />
-                        )}
+                        <PaymentMenu
+                          paymentId={payment.id}
+                          receipt={payment.receipt}
+                          reversed={payment.reversedAt !== null}
+                          refunded={payment.refunds.length > 0}
+                          refundable={
+                            payment.amountMinor -
+                            payment.refunds.reduce((total, refund) => total + refund.amountMinor, 0)
+                          }
+                          currency={payment.currency}
+                          today={todayInput()}
+                        />
                       </td>
                     </tr>
                   ))
@@ -306,6 +361,80 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
             </table>
           </div>
         </div>
+
+        {refunds.length > 0 && (
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Refunds</h2>
+                <span className={table.count}>
+                  {formatMoney(invoice.refundedMinor, invoice.currency)} sent back
+                </span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={`${table.table} ${table.compact}`}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Refund note
+                    </th>
+                    <th className={table.th} scope="col">
+                      Sent back
+                    </th>
+                    <th className={table.th} scope="col">
+                      How
+                    </th>
+                    <th className={table.th} scope="col">
+                      Reference
+                    </th>
+                    <th className={table.th} scope="col">
+                      Recorded by
+                    </th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">
+                      Amount
+                    </th>
+                    <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                      <span className={table.muted}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {refunds.map((refund) => (
+                    <tr key={refund.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
+                        <Link href={`/refunds/${refund.number}`} className={table.link}>
+                          {refund.number}
+                        </Link>
+                        <span className={table.sub}>
+                          From {refund.receiptNumber ?? 'a payment'}: {refund.reason}
+                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(refund.refundedAt)}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {methodLabel(refund.method)}
+                      </td>
+                      <td className={table.td}>
+                        {refund.reference ?? <span className={table.muted}>None</span>}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {refund.recordedBy?.name ?? <span className={table.muted}>Unknown</span>}
+                      </td>
+                      <td className={`${table.td} ${table.numeric}`}>
+                        {formatMoney(refund.amountMinor, refund.currency)}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <RefundMenu refundId={refund.id} number={refund.number} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className={styles.columns}>
           <div className={styles.stack}>
@@ -358,7 +487,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                     label={outstanding === 0 ? 'Email a copy' : undefined}
                   />
                 )}
-                {invoice.status !== 'void' && invoice.paidMinor === 0 && (
+                {invoice.status !== 'void' && invoice.paidMinor - invoice.refundedMinor === 0 && (
                   <VoidInvoiceForm invoiceId={invoice.id} />
                 )}
                 {invoice.status === 'void' && (

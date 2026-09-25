@@ -23,11 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
  * one receipt is two things that can disagree, and this is the piece of paper
  * that proves they paid us.
  */
-export default async function PortalReceipt({
-  params,
-}: {
-  params: Promise<{ number: string }>;
-}) {
+export default async function PortalReceipt({ params }: { params: Promise<{ number: string }> }) {
   const actor = await requireClient();
   const { number } = await params;
   const org = await getOrg();
@@ -48,6 +44,12 @@ export default async function PortalReceipt({
           method: true,
           reference: true,
           receivedAt: true,
+          reversedAt: true,
+          reversalReason: true,
+          refunds: {
+            orderBy: { refundedAt: 'asc' },
+            select: { number: true, amountMinor: true, currency: true, refundedAt: true },
+          },
           invoice: {
             select: {
               number: true,
@@ -115,38 +117,65 @@ export default async function PortalReceipt({
           <div>
             <p className={sheet.partyLabel}>For</p>
             <p className={sheet.partyValue}>
-              {invoice.project ? (
-                invoice.project.name
-              ) : (
-                'Services rendered'
-              )}
+              {invoice.project ? invoice.project.name : 'Services rendered'}
             </p>
           </div>
         </div>
 
-        <div className={sheet.amountBlock}>
-          <p className={sheet.amountLabel}>Amount received, with thanks</p>
+        {payment.reversedAt && (
+          <p className={sheet.cancelled} role="note">
+            <span className={sheet.cancelledTitle}>
+              Cancelled on {formatDate(payment.reversedAt)}
+            </span>
+            This payment was reversed, so this receipt is no longer proof of payment.
+            {payment.reversalReason ? ` Reason: ${payment.reversalReason}` : ''}
+          </p>
+        )}
+
+        <div className={`${sheet.amountBlock} ${payment.reversedAt ? sheet.amountBlockVoid : ''}`}>
+          <p className={sheet.amountLabel}>
+            {payment.reversedAt ? 'Amount recorded, then reversed' : 'Amount received, with thanks'}
+          </p>
           <p className={sheet.amount}>{formatMoney(payment.amountMinor, payment.currency)}</p>
         </div>
 
         <table className={sheet.detailTable}>
           <tbody>
             <tr>
-              <th className={sheet.detailKey} scope="row">Date received</th>
+              <th className={sheet.detailKey} scope="row">
+                Date received
+              </th>
               <td className={sheet.detailValue}>{formatDate(payment.receivedAt)}</td>
             </tr>
             <tr>
-              <th className={sheet.detailKey} scope="row">Method</th>
+              <th className={sheet.detailKey} scope="row">
+                Method
+              </th>
               <td className={sheet.detailValue}>{methodLabel}</td>
             </tr>
             {payment.reference && (
               <tr>
-                <th className={sheet.detailKey} scope="row">Reference</th>
+                <th className={sheet.detailKey} scope="row">
+                  Reference
+                </th>
                 <td className={sheet.detailValue}>{payment.reference}</td>
               </tr>
             )}
+            {payment.refunds.map((refund) => (
+              <tr key={refund.number}>
+                <th className={sheet.detailKey} scope="row">
+                  Refunded, {refund.number}
+                </th>
+                <td className={sheet.detailValue}>
+                  {formatMoney(refund.amountMinor, refund.currency)} on{' '}
+                  {formatDate(refund.refundedAt)}
+                </td>
+              </tr>
+            ))}
             <tr>
-              <th className={sheet.detailKey} scope="row">Against invoice</th>
+              <th className={sheet.detailKey} scope="row">
+                Against invoice
+              </th>
               <td className={sheet.detailValue}>
                 <Link href={`/portal/invoices/${invoice.number}`}>{invoice.number}</Link>
               </td>
@@ -163,8 +192,8 @@ export default async function PortalReceipt({
         </table>
 
         <p className={sheet.foot}>
-          This receipt confirms a payment recorded against invoice {invoice.number}. It is issued
-          by {org.legalName} and is valid without a signature.
+          This receipt confirms a payment recorded against invoice {invoice.number}. It is issued by{' '}
+          {org.legalName} and is valid without a signature.
         </p>
       </article>
     </main>

@@ -32,6 +32,9 @@ export const INVOICE_SHEET_SELECT = {
     select: { id: true, label: true, description: true, amountMinor: true, quantity: true },
   },
   payments: {
+    // The invoice lists money received. A reversed payment was not, so it is
+    // left off here, as it is left out of paidMinor.
+    where: { reversedAt: null },
     orderBy: { receivedAt: 'asc' },
     select: {
       id: true,

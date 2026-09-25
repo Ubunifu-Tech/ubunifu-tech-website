@@ -39,7 +39,7 @@ function auditWhere(key: string): Prisma.AuditEventWhereInput | null {
     case 'failures':
       return null;
     case 'money':
-      return { OR: [{ action: { startsWith: 'invoice.' } }, { action: { startsWith: 'payment.' } }, { action: { startsWith: 'receipt.' } }, { action: { startsWith: 'line_item.' } }] };
+      return { OR: [{ action: { startsWith: 'invoice.' } }, { action: { startsWith: 'payment.' } }, { action: { startsWith: 'receipt.' } }, { action: { startsWith: 'refund.' } }, { action: { startsWith: 'line_item.' } }] };
     case 'access':
       return { action: { contains: 'sign_in' } };
     default:

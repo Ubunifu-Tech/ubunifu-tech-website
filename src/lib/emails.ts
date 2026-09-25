@@ -10,8 +10,7 @@ const INSIGHT = 'https://insight.ubunifutech.com';
 const SIFA = 'https://sifa.ubunifutech.com';
 const LOGO = `${SITE}/brand/png/ubunifu-lockup-1600.png`;
 
-const FONT =
-  "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 export function escapeHtml(str: string): string {
   return String(str)
@@ -48,8 +47,7 @@ function header(): string {
 
 /** Light footer with contact details and links. */
 function footer(): string {
-  const link =
-    'color:#A63A11;text-decoration:underline;font-weight:600;';
+  const link = 'color:#A63A11;text-decoration:underline;font-weight:600;';
   return `
   <tr>
     <td class="email-pad" style="background:#F7F5F2;border-top:1px solid #E4E0DA;padding:28px 32px;font-family:${FONT};">
@@ -178,7 +176,10 @@ export function notificationEmail(input: {
             `mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`,
             `Reply to ${name}`,
           )}`
-        : button(`mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`, `Reply to ${name}`)
+        : button(
+            `mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`,
+            `Reply to ${name}`,
+          )
     }</div>
     <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
 
@@ -191,7 +192,10 @@ export function notificationEmail(input: {
 const SUMMARY_LIMIT = 700;
 
 function summarise(message: string): { text: string; trimmed: boolean } {
-  const collapsed = message.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  const collapsed = message
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
   if (collapsed.length <= SUMMARY_LIMIT) return { text: collapsed, trimmed: false };
   // Cut on a word boundary so the excerpt does not end mid-word.
   const cut = collapsed.slice(0, SUMMARY_LIMIT);
@@ -463,6 +467,42 @@ export function receiptEmail(input: {
     <div style="margin-top:24px;">${button(input.url, 'View the receipt')}</div>`;
 
   return shell(`Receipt ${input.number} for ${input.amount}.`, body);
+}
+
+/** Money sent back, with the refund note to keep. */
+export function refundEmail(input: {
+  name: string;
+  number: string;
+  receiptNumber: string | null;
+  invoiceNumber: string;
+  amount: string;
+  refundedAt: Date;
+  /** The refund note in the portal. */
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const on = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(input.refundedAt);
+  const strong = (value: string) => `<strong style="color:#1D1B22;">${escapeHtml(value)}</strong>`;
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Your refund</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. We sent back ${strong(input.amount)} on ${escapeHtml(on)}, from your payment${
+        input.receiptNumber ? ` on receipt ${strong(input.receiptNumber)}` : ''
+      } for invoice ${strong(input.invoiceNumber)}.
+    </p>
+    <p style="margin:0 0 8px;color:#4A4753;font-size:15px;line-height:1.7;">
+      This is refund note ${strong(input.number)}. Keep it for your records. It is also in your
+      portal, ready to print or save as a PDF.
+    </p>
+    <div style="margin-top:24px;">${button(input.url, 'View the refund note')}</div>`;
+
+  return shell(`Refund ${input.number} for ${input.amount}.`, body);
 }
 
 /**

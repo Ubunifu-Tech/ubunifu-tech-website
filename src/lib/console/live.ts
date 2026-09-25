@@ -21,17 +21,26 @@ export const liveProject = { deletedAt: null } satisfies Prisma.ProjectWhereInpu
 
 /** Belongs to a client that is still here, and to no removed project. */
 export const liveInvoice = {
-  AND: [{ client: { deletedAt: null } }, { OR: [{ projectId: null }, { project: { deletedAt: null } }] }],
+  AND: [
+    { client: { deletedAt: null } },
+    { OR: [{ projectId: null }, { project: { deletedAt: null } }] },
+  ],
 } satisfies Prisma.InvoiceWhereInput;
 
 /** The same rule for a client request. */
 export const liveTicket = {
-  AND: [{ client: { deletedAt: null } }, { OR: [{ projectId: null }, { project: { deletedAt: null } }] }],
+  AND: [
+    { client: { deletedAt: null } },
+    { OR: [{ projectId: null }, { project: { deletedAt: null } }] },
+  ],
 } satisfies Prisma.TicketWhereInput;
 
 /** The same rule for a domain, a hosting plan or a mailbox we look after. */
 export const liveManagedService = {
-  AND: [{ client: { deletedAt: null } }, { OR: [{ projectId: null }, { project: { deletedAt: null } }] }],
+  AND: [
+    { client: { deletedAt: null } },
+    { OR: [{ projectId: null }, { project: { deletedAt: null } }] },
+  ],
 } satisfies Prisma.ManagedServiceWhereInput;
 
 /** A document always belongs to a project. */
@@ -39,6 +48,15 @@ export const liveDocument = { project: liveProject } satisfies Prisma.DocumentWh
 
 /** A payment is shown where its invoice is. */
 export const livePayment = { invoice: liveInvoice } satisfies Prisma.PaymentWhereInput;
+
+/**
+ * A payment that counts as money received: live, and not reversed. A reversed
+ * payment is still listed where it was recorded, marked, but no total includes it.
+ */
+export const countedPayment = {
+  reversedAt: null,
+  invoice: liveInvoice,
+} satisfies Prisma.PaymentWhereInput;
 
 /**
  * A fee line that still renews. The line's own status decides it: closing a

@@ -60,7 +60,9 @@ model StaffUser {
 
   ownedProjects   Project[]        @relation("ProjectOwner")
   documentVersions DocumentVersion[]
-  payments        Payment[]
+  payments        Payment[]        @relation("PaymentRecordedBy")
+  reversedPayments Payment[]       @relation("PaymentReversedBy")
+  refundsRecorded Refund[]         @relation("RefundRecordedBy")
   timeEntries     TimeEntry[]
   posts           Post[]
   mediaAssets     MediaAsset[]
@@ -617,6 +619,9 @@ model Invoice {
   taxMinor     Int           @default(0)
   totalMinor   Int           @default(0)
   paidMinor    Int           @default(0)
+  /// Sent back to the client against its payments. What was paid stays paid;
+  /// this is how much of it the client has back.
+  refundedMinor Int          @default(0)
   notes        String?
   issuedAt     DateTime?
   dueAt        DateTime?
@@ -672,13 +677,48 @@ model Payment {
   reference    String?
   receivedAt   DateTime
   recordedById String?
-  recordedBy   StaffUser?    @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  recordedBy   StaffUser?    @relation("PaymentRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
   note         String?
   createdAt    DateTime      @default(now())
 
+  /// Set when the payment is taken back: recorded by mistake, against the
+  /// wrong invoice, or for the wrong amount. Nothing is deleted. The payment
+  /// and its receipt stay, marked, and the invoice's balance leaves it out.
+  reversedAt     DateTime?
+  reversalReason String?
+  reversedById   String?
+  reversedBy     StaffUser?    @relation("PaymentReversedBy", fields: [reversedById], references: [id], onDelete: SetNull)
+
   receipt Receipt?
+  refunds Refund[]
 
   @@index([invoiceId])
+}
+
+/// Money sent back to a client, against the payment it came from.
+///
+/// Unlike a reversal, the payment really arrived: its receipt stays valid,
+/// and the refund is a second record of money going the other way, with its
+/// own numbered refund note. What the client owes does not change.
+model Refund {
+  id           String        @id @default(cuid())
+  /// RFN-2026-001. One sequence, never reused, like receipts.
+  number       String        @unique
+  paymentId    String
+  payment      Payment       @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  amountMinor  Int
+  currency     String
+  method       PaymentMethod @default(mobile_money)
+  /// The bank or mobile-money reference for the money going back.
+  reference    String?
+  /// When the money went back.
+  refundedAt   DateTime
+  reason       String
+  recordedById String?
+  recordedBy   StaffUser?    @relation("RefundRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+
+  @@index([paymentId])
 }
 
 model Receipt {

@@ -11,12 +11,13 @@ import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
-import { invoiceEmail, receiptEmail } from '@/lib/emails';
+import { invoiceEmail, receiptEmail, refundEmail } from '@/lib/emails';
 import {
   billableLines,
   type Billable,
   nextInvoiceNumber,
   nextReceiptNumber,
+  nextRefundNumber,
   recomputeInvoice,
 } from '@/lib/console/billing';
 import { markRenewalInvoiced, periodLabel } from '@/lib/console/renewals';
@@ -371,19 +372,31 @@ export async function sendInvoice(
 }
 
 /** The payment fields a form sent, checked. */
-function readPayment(formData: FormData, currency: string) {
+function readPayment(formData: FormData, currency: string, direction: 'in' | 'out' = 'in') {
+  const said =
+    direction === 'in'
+      ? {
+          amount: 'Enter the amount that was received.',
+          date: 'Enter the date the money arrived.',
+          how: 'Choose how the money arrived.',
+        }
+      : {
+          amount: 'Enter the amount sent back.',
+          date: 'Enter the date the money went back.',
+          how: 'Choose how the money went back.',
+        };
   const amountMinor = parseMoney(String(formData.get('amount') ?? ''), currency);
   if (amountMinor === null || amountMinor <= 0) {
-    return { error: 'Enter the amount that was received.' } as const;
+    return { error: said.amount };
   }
   const receivedAt = parseDateInput(String(formData.get('receivedAt') ?? '').trim());
-  if (!receivedAt) return { error: 'Enter the date the money arrived.' } as const;
+  if (!receivedAt) return { error: said.date };
   if (receivedAt.getTime() > Date.now() + 86_400_000) {
-    return { error: 'That date is in the future.' } as const;
+    return { error: 'That date is in the future.' };
   }
   const method = String(formData.get('method') ?? '');
   if (!Object.values(PaymentMethod).includes(method as PaymentMethod)) {
-    return { error: 'Choose how the money arrived.' } as const;
+    return { error: said.how };
   }
   return {
     amountMinor,
@@ -721,6 +734,7 @@ export async function emailReceipt(
         select: {
           amountMinor: true,
           currency: true,
+          reversedAt: true,
           invoice: {
             select: {
               number: true,
@@ -742,6 +756,9 @@ export async function emailReceipt(
   });
 
   if (!receipt) return { status: 'error', message: 'That receipt no longer exists.' };
+  if (receipt.payment.reversedAt) {
+    return { status: 'error', message: 'This payment was reversed, so its receipt is cancelled.' };
+  }
 
   const contact = receipt.payment.invoice.client.contacts[0];
   if (!contact) return { status: 'error', message: 'This client has no main contact.' };
@@ -791,6 +808,328 @@ export async function emailReceipt(
   return { status: 'done', message: `Sent to ${contact.email}.` };
 }
 
+/** Thrown inside the transaction when a refund would give back more than was paid. */
+class OverRefunded extends Error {}
+
+export type RefundState = BillingState & { refund?: { id: string; number: string } };
+
+/**
+ * Money sent back to a client: a cancelled job, a reduced scope, a goodwill
+ * gesture. The payment it came from stays as it is, receipt and all, because
+ * that money did arrive. The refund is its own record, with a numbered refund
+ * note the client can keep, and it never makes the invoice owed again.
+ */
+export async function recordRefund(
+  _previous: RefundState,
+  formData: FormData,
+): Promise<RefundState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const payment = await db.payment.findFirst({
+    where: { id: String(formData.get('paymentId') ?? ''), ...livePayment },
+    select: {
+      id: true,
+      amountMinor: true,
+      currency: true,
+      receivedAt: true,
+      reversedAt: true,
+      refunds: { select: { amountMinor: true } },
+      invoice: { select: { id: true, number: true, project: { select: { slug: true } } } },
+    },
+  });
+  if (!payment) return { status: 'error', message: 'That payment no longer exists.' };
+  if (payment.reversedAt) {
+    return {
+      status: 'error',
+      message: 'That payment was reversed, so there is nothing to refund.',
+    };
+  }
+
+  // The same checks as money coming in, for money going out.
+  const read = readPayment(formData, payment.currency, 'out');
+  if ('error' in read) return { status: 'error', message: read.error };
+  const refundedAt = read.receivedAt;
+  if (refundedAt.getTime() < new Date(payment.receivedAt).setUTCHours(0, 0, 0, 0)) {
+    return {
+      status: 'error',
+      message: 'A refund cannot be dated before the payment it comes from.',
+    };
+  }
+  const reason = formText(formData, 'reason');
+  if (reason.length < 4) return { status: 'error', message: 'Say why the money is going back.' };
+  if (reason.length > 500)
+    return { status: 'error', message: 'Keep the reason to a sentence or two.' };
+
+  const refundable = payment.amountMinor - payment.refunds.reduce((t, r) => t + r.amountMinor, 0);
+  if (read.amountMinor > refundable) {
+    return {
+      status: 'error',
+      message: `That is more than the ${formatMoney(refundable, payment.currency)} left of this payment to refund.`,
+    };
+  }
+
+  let refund: { id: string; number: string };
+  try {
+    refund = await retryOnConflict(() =>
+      db.$transaction(async (tx) => {
+        // The invoice is locked, as payments lock it, and what is left to
+        // refund is read again under the lock, so two refunds made at once
+        // cannot together give back more than was paid.
+        await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${payment.invoice.id} FOR UPDATE`;
+        const fresh = await tx.payment.findUniqueOrThrow({
+          where: { id: payment.id },
+          select: {
+            amountMinor: true,
+            reversedAt: true,
+            refunds: { select: { amountMinor: true } },
+          },
+        });
+        const left = fresh.amountMinor - fresh.refunds.reduce((t, r) => t + r.amountMinor, 0);
+        if (fresh.reversedAt || read.amountMinor > left) throw new OverRefunded();
+
+        const number = await nextRefundNumber(tx);
+        const created = await tx.refund.create({
+          data: {
+            number,
+            paymentId: payment.id,
+            amountMinor: read.amountMinor,
+            currency: payment.currency,
+            method: read.method,
+            reference: read.reference || null,
+            refundedAt,
+            reason,
+            recordedById: staff.id,
+          },
+          select: { id: true, number: true },
+        });
+        await recomputeInvoice(tx, payment.invoice.id);
+        return created;
+      }),
+    );
+  } catch (error) {
+    if (error instanceof OverRefunded) {
+      return {
+        status: 'error',
+        message:
+          'Something changed on this payment a moment ago. Reload to see what is left to refund.',
+      };
+    }
+    throw error;
+  }
+
+  const amount = formatMoney(read.amountMinor, payment.currency);
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'refund.recorded',
+    entityType: 'Invoice',
+    entityId: payment.invoice.id,
+    summary: `${amount} sent back, ${refund.number}: ${reason}`,
+    metadata: { paymentId: payment.id, method: read.method, reference: read.reference || null },
+  });
+
+  revalidatePath(`/admin/invoices/${payment.invoice.number}`);
+  revalidatePath('/admin/invoices');
+  if (payment.invoice.project) revalidatePath(`/admin/projects/${payment.invoice.project.slug}`);
+  revalidatePath('/portal/invoices');
+
+  return {
+    status: 'done',
+    message: `${amount} refund recorded. Refund note ${refund.number} is ready.`,
+    refund,
+  };
+}
+
+/** Emails the client their refund note. */
+export async function emailRefund(
+  _previous: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const refund = await db.refund.findFirst({
+    where: { id: String(formData.get('refundId') ?? ''), payment: livePayment },
+    select: {
+      id: true,
+      number: true,
+      amountMinor: true,
+      currency: true,
+      refundedAt: true,
+      payment: {
+        select: {
+          receipt: { select: { number: true } },
+          invoice: {
+            select: {
+              number: true,
+              client: {
+                select: {
+                  contacts: {
+                    where: { deletedAt: null, isPrimary: true },
+                    select: { name: true, email: true },
+                    take: 1,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!refund) return { status: 'error', message: 'That refund no longer exists.' };
+
+  const contact = refund.payment.invoice.client.contacts[0];
+  if (!contact) return { status: 'error', message: 'This client has no main contact.' };
+  if (!contact.email) {
+    return {
+      status: 'error',
+      message: `There is no email address for ${contact.name} yet. Share their setup link first.`,
+    };
+  }
+
+  const sent = await sendConsoleEmail({
+    to: contact.email,
+    subject: `Refund ${refund.number} from Ubunifu Technologies`,
+    html: refundEmail({
+      name: contact.name,
+      number: refund.number,
+      receiptNumber: refund.payment.receipt?.number ?? null,
+      invoiceNumber: refund.payment.invoice.number,
+      amount: formatMoney(refund.amountMinor, refund.currency),
+      refundedAt: refund.refundedAt,
+      url: `${consoleEnv.publicOrigin}/portal/refunds/${encodeURIComponent(refund.number)}`,
+    }),
+    template: 'refund_sent',
+    entityType: 'Refund',
+    entityId: refund.id,
+  });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: sent.ok ? 'refund.sent' : 'refund.send_failed',
+    entityType: 'Refund',
+    entityId: refund.id,
+    summary: sent.ok
+      ? `${refund.number} to ${contact.email}`
+      : `${refund.number} to ${contact.email}: ${sent.error}`,
+  });
+
+  if (!sent.ok) {
+    return {
+      status: 'error',
+      message: `The attempt is logged, but the email did not go: ${sent.error}`,
+    };
+  }
+  return { status: 'done', message: `Sent to ${contact.email}.` };
+}
+
+/** Thrown inside the transaction when the payment was reversed meanwhile. */
+class AlreadyReversed extends Error {}
+
+/**
+ * Takes back a payment recorded by mistake: the wrong amount, the wrong
+ * invoice, or money that never arrived.
+ *
+ * Nothing is deleted. The payment keeps its row, its receipt keeps its
+ * number, and both are marked reversed with who did it, when and why, so the
+ * ledger shows the mistake and its correction rather than a gap. The invoice's
+ * balance is worked out again without it. A wrong amount is put right by
+ * reversing it and recording the right one, which issues a fresh receipt.
+ */
+export async function reversePayment(
+  _previous: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const reason = formText(formData, 'reason');
+  if (reason.length < 4) return { status: 'error', message: 'Say why it is being reversed.' };
+  if (reason.length > 500)
+    return { status: 'error', message: 'Keep the reason to a sentence or two.' };
+
+  const payment = await db.payment.findFirst({
+    where: { id: String(formData.get('paymentId') ?? ''), ...livePayment },
+    select: {
+      id: true,
+      amountMinor: true,
+      currency: true,
+      reversedAt: true,
+      invoice: {
+        select: { id: true, number: true, projectId: true, project: { select: { slug: true } } },
+      },
+      receipt: { select: { number: true } },
+      _count: { select: { refunds: true } },
+    },
+  });
+  if (!payment) return { status: 'error', message: 'That payment no longer exists.' };
+  if (payment.reversedAt) return { status: 'error', message: 'That payment was already reversed.' };
+  // A payment that was refunded really arrived, so it cannot also be a mistake.
+  if (payment._count.refunds > 0) {
+    return {
+      status: 'error',
+      message: 'Money was refunded against this payment, so it cannot be reversed.',
+    };
+  }
+
+  let owedAfter: { totalMinor: number; paidMinor: number };
+  try {
+    owedAfter = await db.$transaction(async (tx) => {
+      // The invoice is locked, as recordPayment locks it, so a payment being
+      // recorded at the same moment is counted before or after, never lost.
+      await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${payment.invoice.id} FOR UPDATE`;
+      const { count } = await tx.payment.updateMany({
+        where: { id: payment.id, reversedAt: null, refunds: { none: {} } },
+        data: { reversedAt: new Date(), reversalReason: reason, reversedById: staff.id },
+      });
+      if (count === 0) throw new AlreadyReversed();
+      await recomputeInvoice(tx, payment.invoice.id);
+      return tx.invoice.findUniqueOrThrow({
+        where: { id: payment.invoice.id },
+        select: { totalMinor: true, paidMinor: true },
+      });
+    });
+  } catch (error) {
+    if (error instanceof AlreadyReversed) {
+      return { status: 'error', message: 'That payment was already reversed.' };
+    }
+    throw error;
+  }
+
+  const amount = formatMoney(payment.amountMinor, payment.currency);
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'payment.reversed',
+    entityType: 'Invoice',
+    entityId: payment.invoice.id,
+    summary: `${amount}${payment.receipt ? `, receipt ${payment.receipt.number}` : ''}: ${reason}`,
+    metadata: { paymentId: payment.id },
+  });
+
+  revalidatePath(`/admin/invoices/${payment.invoice.number}`);
+  revalidatePath('/admin/invoices');
+  if (payment.receipt) {
+    revalidatePath(`/admin/receipts/${payment.receipt.number}`);
+    revalidatePath(`/portal/receipts/${payment.receipt.number}`);
+  }
+  if (payment.invoice.project) revalidatePath(`/admin/projects/${payment.invoice.project.slug}`);
+  revalidatePath('/portal/invoices');
+
+  const owed = owedAfter.totalMinor - owedAfter.paidMinor;
+  return {
+    status: 'done',
+    message: `Reversed.${payment.receipt ? ` Receipt ${payment.receipt.number} is marked cancelled.` : ''} ${
+      owed > 0
+        ? `${payment.invoice.number} now has ${formatMoney(owed, payment.currency)} owed.`
+        : `${payment.invoice.number} is still paid in full.`
+    }`,
+  };
+}
+
 /**
  * Voids an invoice.
  *
@@ -813,31 +1152,45 @@ export async function voidInvoice(
 
   const invoice = await db.invoice.findUnique({
     where: { id: invoiceId, ...liveInvoice },
-    select: { id: true, number: true, status: true, paidMinor: true, notes: true },
+    select: {
+      id: true,
+      number: true,
+      status: true,
+      paidMinor: true,
+      refundedMinor: true,
+      notes: true,
+    },
   });
 
   if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
   if (invoice.status === 'void') return { status: 'done' };
-  if (invoice.paidMinor > 0) {
+  // Voidable once nothing is held against it: no payments, or every payment
+  // refunded in full, as when a job is cancelled and the deposit goes back.
+  if (invoice.paidMinor - invoice.refundedMinor > 0) {
     return {
       status: 'error',
       message:
-        'Money has already been recorded against this invoice. Reverse the payment first, or raise a credit note instead.',
+        'Money is still held against this invoice. Refund or reverse its payments first, from the menu on each payment.',
     };
   }
 
   const voided = await db.$transaction(async (tx) => {
-    // Conditional on nothing being paid at the moment of writing: a payment
-    // recorded while this form was open must not end up on a void invoice.
-    const { count } = await tx.invoice.updateMany({
-      where: { id: invoice.id, paidMinor: 0, status: { not: 'void' } },
+    // Checked again under the lock payments and refunds take, so one recorded
+    // while this form was open cannot end up on a void invoice.
+    await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${invoice.id} FOR UPDATE`;
+    const fresh = await tx.invoice.findUniqueOrThrow({
+      where: { id: invoice.id },
+      select: { status: true, paidMinor: true, refundedMinor: true },
+    });
+    if (fresh.status === 'void' || fresh.paidMinor - fresh.refundedMinor > 0) return false;
+    await tx.invoice.update({
+      where: { id: invoice.id },
       data: {
         status: 'void',
         voidedAt: new Date(),
         notes: [invoice.notes, `Voided: ${reason}`].filter(Boolean).join('\n\n'),
       },
     });
-    if (count === 0) return false;
 
     // Renewal periods it billed can be billed again, and each line's next due
     // date goes back to the period that is owed once more.

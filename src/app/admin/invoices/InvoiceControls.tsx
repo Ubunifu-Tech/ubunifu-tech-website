@@ -3,18 +3,31 @@
 import React, { useActionState, useState } from 'react';
 import {
   emailReceipt,
+  emailRefund,
   recordPayment,
+  recordRefund,
+  reversePayment,
   sendInvoice,
   voidInvoice,
   type BillingState,
+  type RefundState,
 } from './actions';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
-import { DateField } from '@/components/console/Fields';
+import { DateField, SelectField, TextAreaField, TextField } from '@/components/console/Fields';
+import { formatMoney, moneyInput } from '@/lib/console/money';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { Select } from '@/components/console/Select';
-import { MenuItem, MenuLink, MenuList, MenuNote, RowMenu } from '@/components/console/RowMenu';
+import {
+  MenuDivider,
+  MenuItem,
+  MenuLink,
+  MenuList,
+  MenuNote,
+  MenuTitle,
+  RowMenu,
+} from '@/components/console/RowMenu';
 
 const INITIAL: BillingState = { status: 'idle' };
 
@@ -166,17 +179,230 @@ export function EmailReceiptButton({ receiptId }: { receiptId: string }) {
   );
 }
 
-/** A payment's receipt, behind the "…" on its row: open it, or email it. */
-export function ReceiptMenu({ receiptId, number }: { receiptId: string; number: string }) {
-  const [state, action, pending] = useActionState(emailReceipt, INITIAL);
+/** The refund note's own page offers to email it, like a receipt. */
+export function EmailRefundButton({ refundId }: { refundId: string }) {
+  const [state, action, pending] = useActionState(emailRefund, INITIAL);
+
   return (
-    <RowMenu label={`Receipt ${number}`}>
+    <form action={action} className={table.actionGroup}>
+      <input type="hidden" name="refundId" value={refundId} />
+      <button type="submit" className={table.action} disabled={pending}>
+        {pending ? 'Sending…' : 'Email it'}
+      </button>
+      {state.message && (
+        <span className={state.status === 'error' ? forms.error : table.muted}>
+          {state.message}
+        </span>
+      )}
+    </form>
+  );
+}
+
+/**
+ * A payment's actions, behind the "…" on its row: open or email its receipt,
+ * record money sent back, or reverse it when it was recorded by mistake. The
+ * two that need more than a press open their form in place.
+ */
+export function PaymentMenu({
+  paymentId,
+  receipt,
+  reversed,
+  refundable,
+  refunded,
+  currency,
+  today,
+}: {
+  paymentId: string;
+  receipt: { id: string; number: string } | null;
+  reversed: boolean;
+  /** What is left of this payment that can still be sent back, in minor units. */
+  refundable: number;
+  /** Some of it has been sent back already, so it cannot be a mistake. */
+  refunded: boolean;
+  currency: string;
+  today: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState<'menu' | 'reverse' | 'refund'>('menu');
+  const [emailState, email, emailing] = useActionState(emailReceipt, INITIAL);
+  const [reverseState, reverse, reversing] = useActionState(
+    async (previous: BillingState, formData: FormData) => {
+      const result = await reversePayment(previous, formData);
+      if (result.status === 'done') setView('menu');
+      return result;
+    },
+    INITIAL,
+  );
+  const [refundState, refund, refunding] = useActionState(
+    async (previous: RefundState, formData: FormData) => {
+      const result = await recordRefund(previous, formData);
+      if (result.status === 'done') setView('menu');
+      return result;
+    },
+    INITIAL as RefundState,
+  );
+  const [refundEmailState, emailTheRefund, emailingRefund] = useActionState(emailRefund, INITIAL);
+  const said = [refundEmailState, refundState, reverseState, emailState].find(
+    (state) => state.message,
+  );
+  const justRefunded = refundState.status === 'done' ? refundState.refund : undefined;
+
+  return (
+    <RowMenu
+      label={receipt ? `Payment with receipt ${receipt.number}` : 'Payment'}
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setView('menu');
+      }}
+      wide={view !== 'menu'}
+    >
+      {view === 'reverse' && (
+        <form action={reverse} className={forms.form}>
+          <input type="hidden" name="paymentId" value={paymentId} />
+          <MenuTitle>Reverse this payment?</MenuTitle>
+          <TextAreaField
+            name="reason"
+            label="Why"
+            rows={3}
+            required
+            maxLength={500}
+            placeholder="Recorded against the wrong invoice"
+            hint="For a payment recorded by mistake. Shown on the receipt, which the client can see. To fix an amount, reverse it, then record the right one."
+          />
+          <div className={forms.actions}>
+            <button
+              type="submit"
+              className={`${forms.button} ${forms.danger}`}
+              disabled={reversing}
+            >
+              {reversing ? 'Reversing…' : 'Reverse it'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setView('menu')}
+            >
+              Keep it
+            </button>
+          </div>
+          {reverseState.status === 'error' && <Result state={reverseState} />}
+        </form>
+      )}
+
+      {view === 'refund' && (
+        <form action={refund} className={forms.form}>
+          <input type="hidden" name="paymentId" value={paymentId} />
+          <MenuTitle>Record money sent back</MenuTitle>
+          <TextField
+            name="amount"
+            label={`Amount sent back (${currency})`}
+            inputMode="decimal"
+            required
+            defaultValue={moneyInput(refundable, currency)}
+            hint={`Up to ${formatMoney(refundable, currency)} from this payment.`}
+          />
+          <DateField
+            name="receivedAt"
+            label="Date it went back"
+            defaultValue={today}
+            max={today}
+            required
+          />
+          <SelectField name="method" label="How it went back" defaultValue="mobile_money">
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method.value} value={method.value}>
+                {method.label}
+              </option>
+            ))}
+          </SelectField>
+          <TextField
+            name="reference"
+            label="Reference"
+            optional
+            maxLength={120}
+            placeholder="M-Pesa transaction id or bank reference"
+          />
+          <TextAreaField
+            name="reason"
+            label="Why"
+            rows={2}
+            required
+            maxLength={500}
+            placeholder="Project cancelled before work started"
+            hint="Shown on the refund note, which the client can see."
+          />
+          <div className={forms.actions}>
+            <button type="submit" className={forms.button} disabled={refunding}>
+              {refunding ? 'Recording…' : 'Record the refund'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setView('menu')}
+            >
+              Cancel
+            </button>
+          </div>
+          {refundState.status === 'error' && <Result state={refundState} />}
+        </form>
+      )}
+
+      {view === 'menu' && (
+        <>
+          <MenuList>
+            {receipt && <MenuLink href={`/receipts/${receipt.number}`}>View the receipt</MenuLink>}
+            {receipt && !reversed && (
+              <form action={email}>
+                <input type="hidden" name="receiptId" value={receipt.id} />
+                <MenuItem type="submit" disabled={emailing}>
+                  {emailing ? 'Sending…' : 'Email the receipt'}
+                </MenuItem>
+              </form>
+            )}
+            {justRefunded && (
+              <>
+                <MenuLink href={`/refunds/${justRefunded.number}`}>
+                  View refund note {justRefunded.number}
+                </MenuLink>
+                <form action={emailTheRefund}>
+                  <input type="hidden" name="refundId" value={justRefunded.id} />
+                  <MenuItem type="submit" disabled={emailingRefund}>
+                    {emailingRefund ? 'Sending…' : 'Email the refund note'}
+                  </MenuItem>
+                </form>
+              </>
+            )}
+            {!reversed && (refundable > 0 || !refunded) && <MenuDivider />}
+            {!reversed && refundable > 0 && (
+              <MenuItem onClick={() => setView('refund')}>Record a refund</MenuItem>
+            )}
+            {!reversed && !refunded && (
+              <MenuItem danger onClick={() => setView('reverse')}>
+                Reverse this payment
+              </MenuItem>
+            )}
+          </MenuList>
+          {said?.message && (
+            <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
+          )}
+        </>
+      )}
+    </RowMenu>
+  );
+}
+
+/** A refund's actions, behind the "…" on its row: open or email its note. */
+export function RefundMenu({ refundId, number }: { refundId: string; number: string }) {
+  const [state, action, pending] = useActionState(emailRefund, INITIAL);
+  return (
+    <RowMenu label={`Refund ${number}`}>
       <MenuList>
-        <MenuLink href={`/receipts/${number}`}>View the receipt</MenuLink>
+        <MenuLink href={`/refunds/${number}`}>View the refund note</MenuLink>
         <form action={action}>
-          <input type="hidden" name="receiptId" value={receiptId} />
+          <input type="hidden" name="refundId" value={refundId} />
           <MenuItem type="submit" disabled={pending}>
-            {pending ? 'Sending…' : 'Email the receipt'}
+            {pending ? 'Sending…' : 'Email the refund note'}
           </MenuItem>
         </form>
       </MenuList>

@@ -18,6 +18,8 @@ const LINK_PROBLEM: Record<string, string> = {
   missing:
     'That link was incomplete. Sign in below, or get a new link.',
   'set-up': 'Your account is already set up. Sign in below.',
+  'reset-expired':
+    'That link to choose a new password has expired or was already used. Ask for a new one below.',
 };
 
 export default async function PortalSignIn({
@@ -50,7 +52,7 @@ export default async function PortalSignIn({
         ) : null}
 
         <div className={auth.card}>
-          <SignInForms next={next} />
+          <SignInForms next={next} startWith={error === 'reset-expired' ? 'reset' : 'password'} />
         </div>
         <p className={auth.foot}>
           No account yet? Email info@ubunifutech.com.

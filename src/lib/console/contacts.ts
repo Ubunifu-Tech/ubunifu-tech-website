@@ -4,7 +4,13 @@ import { recordAudit } from './auth';
 import { consoleEnv } from './env';
 import { issueMagicToken, revokeMagicTokens } from './magic-link';
 import { sendConsoleEmail } from './mailer';
-import { clientInviteEmail, colleagueInviteEmail } from '@/lib/emails';
+import {
+  clientInviteEmail,
+  colleagueInviteEmail,
+  passwordChangedEmail,
+  passwordResetEmail,
+  signInEmailChangedEmail,
+} from '@/lib/emails';
 import { isUniqueConflict } from './conflict';
 
 /**
@@ -117,8 +123,9 @@ export async function addContact(input: {
 
 /**
  * Corrects a person's details: a placeholder name, a missing email, a new job
- * title. The email can only change until they finish setting up; after that
- * it is how they sign in, and theirs to change from their own profile.
+ * title, or a new address for someone who has moved to one. For somebody set
+ * up, the email is how they sign in, so the old address hears about the
+ * change: if they did not ask for it, that note is how they find out.
  */
 export async function updateContact(input: {
   contactId: string;
@@ -141,12 +148,6 @@ export async function updateContact(input: {
   if (!contact) return { ok: false, message: 'That person is no longer here.' };
 
   const emailChanged = (contact.email ?? '') !== email;
-  if (emailChanged && contact.activatedAt) {
-    return {
-      ok: false,
-      message: 'They have set up their account, so they change their email themselves.',
-    };
-  }
   if (emailChanged && !email && contact.email) {
     return { ok: false, message: 'Keep an email, or correct it.' };
   }
@@ -174,7 +175,11 @@ export async function updateContact(input: {
   // usual reason for changing it, so those links stop working. A setup link
   // shared by hand had no address behind it and keeps working.
   if (emailChanged && contact.email) {
-    await revokeMagicTokens('client_contact', contact.id, ['invite', 'sign_in']);
+    await revokeMagicTokens('client_contact', contact.id, [
+      'invite',
+      'sign_in',
+      'password_reset',
+    ]);
   }
 
   await recordAudit({
@@ -185,7 +190,87 @@ export async function updateContact(input: {
     entityId: contact.id,
     summary: emailChanged ? `${name}, email now ${email}` : name,
   });
-  return { ok: true, message: 'Saved.' };
+
+  if (!emailChanged || !contact.email || !contact.activatedAt) {
+    return { ok: true, message: 'Saved.' };
+  }
+
+  const noted = await sendConsoleEmail({
+    to: contact.email,
+    subject: 'Your portal sign-in email has changed',
+    html: signInEmailChangedEmail({ name, newEmail: email }),
+    template: 'sign_in_email_changed',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+  });
+  await recordAudit({
+    actorType: input.by.type,
+    actorId: input.by.id,
+    action: noted.ok ? 'client.email_change.noted' : 'client.email_change.note_failed',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: noted.ok
+      ? `Told ${contact.email} it changed to ${email}`
+      : `Could not tell ${contact.email}: ${noted.error}`,
+  });
+  return {
+    ok: true,
+    message: noted.ok
+      ? `Saved. They sign in with ${email} now, and a note went to ${contact.email}.`
+      : `Saved. They sign in with ${email} now. The note to ${contact.email} did not send: ${noted.error}`,
+  };
+}
+
+/**
+ * Emails a link to choose a new password, and logs whether it went. Callers
+ * decide who may ask and how often.
+ */
+export async function sendPasswordLink(contact: { id: string; name: string; email: string }) {
+  const { token } = await issueMagicToken({
+    purpose: 'password_reset',
+    actorType: 'client_contact',
+    actorId: contact.id,
+  });
+  const sent = await sendConsoleEmail({
+    to: contact.email,
+    subject: 'Choose a new password for your Ubunifu portal',
+    html: passwordResetEmail({
+      name: contact.name,
+      url: `${consoleEnv.publicOrigin}/portal/reset?token=${encodeURIComponent(token)}`,
+    }),
+    template: 'password_reset',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+  });
+  await recordAudit({
+    actorType: 'client_contact',
+    actorId: contact.id,
+    action: sent.ok ? 'client.password_reset.sent' : 'client.password_reset.send_failed',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: sent.ok ? undefined : sent.error,
+  });
+  return sent;
+}
+
+/**
+ * Tells someone their password changed, at the address they sign in with. If
+ * it was not them, this is how they find out.
+ */
+export async function notePasswordChanged(contact: {
+  id: string;
+  name: string;
+  email: string | null;
+}) {
+  if (!contact.email) return;
+  await sendConsoleEmail({
+    to: contact.email,
+    subject: 'Your portal password was changed',
+    html: passwordChangedEmail({ name: contact.name, when: new Date() }),
+    template: 'password_changed',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+  });
 }
 
 /** An invitation to set up an account, or a sign-in link for someone who has one. */

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useActionState } from 'react';
-import { changePassword, saveMyDetails, type TeamState } from '../team/actions';
+import { changePassword, emailPasswordLink, saveMyDetails, type TeamState } from '../team/actions';
+import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: TeamState = { status: 'idle' };
@@ -49,7 +50,9 @@ export function DetailsForm({ name, role, phone }: { name: string; role: string 
 
 export function PasswordForm() {
   const [state, action, pending] = useActionState(changePassword, INITIAL);
+  const [linkState, linkAction, sending] = useActionState(emailPasswordLink, INITIAL);
   return (
+    <>
     <form action={action} className={forms.form}>
       <div className={forms.grid}>
         <div className={forms.field}>
@@ -58,7 +61,8 @@ export function PasswordForm() {
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="pw-next">New password</label>
-          <input id="pw-next" name="next" type="password" className={forms.control} required minLength={10} autoComplete="new-password" />
+          <input id="pw-next" name="next" type="password" className={forms.control} required minLength={12} autoComplete="new-password" />
+          <p className={forms.hint}>At least 12 characters.</p>
         </div>
       </div>
       <div className={forms.actions}>
@@ -68,5 +72,18 @@ export function PasswordForm() {
         <Message state={state} />
       </div>
     </form>
+    <form action={linkAction} className={styles.after}>
+      {linkState.status === 'sent' ? (
+        <Message state={linkState} />
+      ) : (
+        <>
+          <button type="submit" className={forms.link} disabled={sending}>
+            {sending ? 'Sending…' : 'Forgot your current password? Email me a link to choose a new one'}
+          </button>
+          <Message state={linkState} />
+        </>
+      )}
+    </form>
+    </>
   );
 }

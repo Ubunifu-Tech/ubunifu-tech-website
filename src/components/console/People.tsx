@@ -304,27 +304,17 @@ export function PersonMenu({
             required
             maxLength={120}
           />
-          {contact.activated ? (
-            <>
-              <input type="hidden" name="email" value={contact.email ?? ''} />
-              <TextField
-                name="shownEmail"
-                label="Email"
-                defaultValue={contact.email ?? ''}
-                disabled
-                hint="They change it from their own profile."
-              />
-            </>
-          ) : (
-            <TextField
-              name="email"
-              label="Email"
-              type="email"
-              optional={!contact.email}
-              defaultValue={contact.email ?? ''}
-              maxLength={254}
-            />
-          )}
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            optional={!contact.email}
+            required={contact.activated}
+            defaultValue={contact.email ?? ''}
+            maxLength={254}
+            hint={contact.activated ? 'They sign in with this address.' : undefined}
+          />
+
           <TextField
             name="role"
             label="Job title"

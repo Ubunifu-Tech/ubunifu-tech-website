@@ -2,6 +2,7 @@
 
 import React, { useActionState, useState } from 'react';
 import {
+  requestPasswordReset,
   requestPortalLink,
   signInWithPassword,
   type PortalSignInState,
@@ -11,10 +12,59 @@ import forms from '@/styles/forms.module.css';
 
 const INITIAL: PortalSignInState = { status: 'idle' };
 
-export function SignInForms({ next }: { next?: string | null }) {
-  const [mode, setMode] = useState<'password' | 'link'>('password');
+type Mode = 'password' | 'link' | 'reset';
+
+export function SignInForms({
+  next,
+  startWith = 'password',
+}: {
+  next?: string | null;
+  startWith?: Mode;
+}) {
+  const [mode, setMode] = useState<Mode>(startWith);
   const [pwState, pwAction, pwPending] = useActionState(signInWithPassword, INITIAL);
   const [linkState, linkAction, linkPending] = useActionState(requestPortalLink, INITIAL);
+  const [resetState, resetAction, resetPending] = useActionState(requestPasswordReset, INITIAL);
+
+  if (mode === 'reset') {
+    const waiting = resetPending || resetState.status === 'sent';
+    return (
+      <form action={resetAction} className={forms.form}>
+        <div className={forms.field}>
+          <label htmlFor="reset-email" className={forms.label}>
+            Email
+          </label>
+          <input
+            id="reset-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            disabled={waiting}
+            className={forms.control}
+          />
+        </div>
+
+        <button type="submit" className={forms.button} disabled={waiting}>
+          {resetPending ? 'Sending…' : 'Email me a reset link'}
+        </button>
+
+        <p
+          className={resetState.status === 'error' ? forms.error : forms.hint}
+          role="status"
+          aria-live="polite"
+        >
+          {resetState.message ?? 'We will email you a link to choose a new password.'}
+        </p>
+
+        <div className={styles.divider}>
+          <button type="button" className={forms.link} onClick={() => setMode('password')}>
+            Back to sign in
+          </button>
+        </div>
+      </form>
+    );
+  }
 
   if (mode === 'link') {
     const waiting = linkPending || linkState.status === 'sent';
@@ -102,11 +152,12 @@ export function SignInForms({ next }: { next?: string | null }) {
         </p>
       )}
 
-      {/* Doubles as password recovery: there is no separate reset flow, because
-          a link already proves the same thing a reset email would. */}
       <div className={styles.divider}>
+        <button type="button" className={forms.link} onClick={() => setMode('reset')}>
+          Forgot your password?
+        </button>
         <button type="button" className={forms.link} onClick={() => setMode('link')}>
-          Forgot your password? Email me a link
+          Email me a sign-in link
         </button>
       </div>
     </form>

@@ -173,6 +173,10 @@ enum MagicTokenPurpose {
   document_access
   invoice_access
   update_access
+  /// A link to choose a new password without knowing the old one. Its own
+  /// purpose so it opens the reset page and nothing else: it never signs
+  /// anyone in until the new password is chosen.
+  password_reset
 }
 
 /// Single-use, short-lived, hashed. Covers both passwordless sign-in and the

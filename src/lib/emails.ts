@@ -379,6 +379,70 @@ export function clientSignInEmail(input: { name: string; url: string }): string 
   return shell('Your link to sign in to the Ubunifu portal.', body);
 }
 
+export function passwordResetEmail(input: { name: string; url: string }): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Choose a new password</h1>
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. Use the button below to choose a new password for your
+      project portal. Your current password keeps working until you do.
+    </p>
+    ${button(input.url, 'Choose a new password')}
+    ${securityNote('30 minutes')}`;
+
+  return shell('Your link to choose a new portal password.', body);
+}
+
+/**
+ * Sent after a password changes, whichever way it changed. If it was not
+ * them, this is how they find out, so it says what to do about it.
+ */
+export function passwordChangedEmail(input: { name: string; when: Date }): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const when = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Africa/Dar_es_Salaam',
+    timeZoneName: 'short',
+  }).format(input.when);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Your password was changed</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. The password for your Ubunifu project portal was changed on
+      ${escapeHtml(when)}.
+    </p>
+    <p style="margin:0;color:#4A4753;font-size:15px;line-height:1.7;">
+      If that was you, there is nothing more to do. If it was not, reply to this
+      email straight away and we will help you secure the account.
+    </p>`;
+
+  return shell('The password for your Ubunifu portal was changed.', body);
+}
+
+/** Sent to the old address when we change the address someone signs in with. */
+export function signInEmailChangedEmail(input: { name: string; newEmail: string }): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Your sign-in email changed</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. You now sign in to your Ubunifu project portal with
+      <strong style="color:#1D1B22;">${escapeHtml(input.newEmail)}</strong>.
+      Your password is the same, and emails about your projects will go there
+      from now on.
+    </p>
+    <p style="margin:0;color:#4A4753;font-size:15px;line-height:1.7;">
+      If you did not ask for this, reply to this email and we will put it right.
+    </p>`;
+
+  return shell('The email you sign in to the Ubunifu portal with has changed.', body);
+}
+
 /**
  * An invoice, with the amount and due date in the body rather than only behind
  * the link. Someone deciding whether to open a payment email at 9pm wants to

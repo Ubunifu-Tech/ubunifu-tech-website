@@ -5,7 +5,9 @@ import { safePortalPath } from './return-path';
 import { liveInvoice } from './live';
 
 /**
- * Every link we email a client comes through /portal/sign-in/verify. They
+ * Every link that signs a client in comes through /portal/sign-in/verify.
+ * (A link to choose a new password is the exception: it opens its own page,
+ * /portal/reset, and signs nobody in until the new password is saved.) They
  * differ in how long they live — a sign-in link twenty minutes, an invitation
  * or a contract two weeks, an invoice thirty days — which is why they are
  * different purposes, and they differ in where they land. Before this list

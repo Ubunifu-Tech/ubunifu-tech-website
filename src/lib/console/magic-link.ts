@@ -24,6 +24,8 @@ const TTL_MINUTES: Record<MagicTokenPurpose, number> = {
   document_access: 60 * 24 * 14,
   invoice_access: 60 * 24 * 30,
   update_access: 60 * 24 * 30,
+  /** Short for the same reason as a sign-in link, with time to think of a password. */
+  password_reset: 30,
 };
 
 export type IssuedLink = {

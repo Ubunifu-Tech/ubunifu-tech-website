@@ -7,12 +7,15 @@ import {
   addContact,
   invitePerson,
   makeMainContact,
+  notePasswordChanged,
   readContact,
   removeContact,
+  sendPasswordLink,
 } from '@/lib/console/contacts';
 import { hashPassword, passwordProblem, verifyPassword } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
-import { allow } from '@/lib/console/rate-limit';
+import { readSession, revokeAllSessions } from '@/lib/console/session';
+import { allow, tooManyLinkRequests } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
 
 export type TeamState = { status: 'idle' | 'sent' | 'done' | 'error'; message?: string };
@@ -136,7 +139,10 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
     return { status: 'error', message: 'Too many tries. Wait a few minutes.' };
   }
 
-  const me = await db.clientContact.findUnique({ where: { id: actor.id }, select: { passwordHash: true } });
+  const me = await db.clientContact.findUnique({
+    where: { id: actor.id },
+    select: { id: true, name: true, email: true, passwordHash: true },
+  });
   if (!me?.passwordHash || !(await verifyPassword(current, me.passwordHash))) {
     return { status: 'error', message: 'Your current password is not right.' };
   }
@@ -147,8 +153,12 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
     where: { id: actor.id },
     data: { passwordHash: await hashPassword(next), passwordSetAt: new Date() },
   });
-  // Old links stop working once the password changes.
-  await revokeMagicTokens('client_contact', actor.id, 'sign_in');
+  // Old links stop working once the password changes, and so does every
+  // other session: whoever knew the old password is signed out. This one
+  // stays.
+  await revokeMagicTokens('client_contact', actor.id, ['sign_in', 'password_reset']);
+  const session = await readSession('portal');
+  await revokeAllSessions('client_contact', actor.id, session?.sessionId);
   await recordAudit({
     actorType: 'client_contact',
     actorId: actor.id,
@@ -156,6 +166,31 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
     entityType: 'ClientContact',
     entityId: actor.id,
   });
+  await notePasswordChanged(me);
 
   return { status: 'done', message: 'Password changed.' };
+}
+
+/** For someone signed in who has forgotten the password they would need to change it. */
+export async function emailPasswordLink(): Promise<TeamState> {
+  const actor = await requireClient();
+  const me = await db.clientContact.findUnique({
+    where: { id: actor.id },
+    select: { id: true, name: true, email: true },
+  });
+  if (!me?.email) return { status: 'error', message: 'There is no email on your account yet.' };
+  if (
+    await tooManyLinkRequests({
+      actorType: 'client_contact',
+      actorId: me.id,
+      purpose: 'password_reset',
+    })
+  ) {
+    return { status: 'error', message: 'A link went out recently. Check your inbox, or try again later.' };
+  }
+
+  const sent = await sendPasswordLink({ id: me.id, name: me.name, email: me.email });
+  return sent.ok
+    ? { status: 'sent', message: `Sent to ${me.email}. The link works for 30 minutes.` }
+    : { status: 'error', message: 'It did not send. Try again in a minute.' };
 }

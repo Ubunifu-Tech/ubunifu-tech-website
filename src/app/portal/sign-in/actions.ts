@@ -18,6 +18,7 @@ import {
 } from '@/lib/console/rate-limit';
 import { recordAudit } from '@/lib/console/auth';
 import { clientSignInEmail } from '@/lib/emails';
+import { sendPasswordLink } from '@/lib/console/contacts';
 import { safePortalPath } from '@/lib/console/return-path';
 
 export type PortalSignInState = {
@@ -133,9 +134,9 @@ async function passwordSignIn(
 }
 
 /**
- * The passwordless route, which doubles as password recovery. There is no
- * separate reset flow: a client who forgets their password asks for a link and
- * sets a new one from inside the portal.
+ * The passwordless route: a link that signs someone in without their
+ * password. Forgetting the password has its own route below, because a
+ * sign-in link alone leaves them unable to choose a new one.
  */
 export async function requestPortalLink(
   previous: PortalSignInState,
@@ -227,5 +228,77 @@ async function sendPortalLink(
     entityId: contact.id,
   });
 
+  return sameForEveryone;
+}
+
+/**
+ * Emails a link to choose a new password. Like the sign-in link, the answer
+ * is the same whether or not the address has an account, and the audit log
+ * keeps what really happened.
+ *
+ * Only for someone who has set up their account. Somebody still to finish
+ * setting up has no password to forget; their invitation, or a sign-in
+ * link, takes them to setup instead.
+ */
+export async function requestPasswordReset(
+  previous: PortalSignInState,
+  formData: FormData,
+): Promise<PortalSignInState> {
+  try {
+    return await sendPasswordReset(previous, formData);
+  } catch (error) {
+    console.error('[portal] password reset link failed', error);
+    return { status: 'error', message: 'The link could not be sent just now. Please try again in a minute.' };
+  }
+}
+
+async function sendPasswordReset(
+  _previous: PortalSignInState,
+  formData: FormData,
+): Promise<PortalSignInState> {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+
+  const sameForEveryone: PortalSignInState = {
+    status: 'sent',
+    message: 'If that address has a portal account, a link to choose a new password is on its way.',
+  };
+
+  if (!EMAIL_PATTERN.test(email)) {
+    return { status: 'error', message: 'Enter a valid email address.' };
+  }
+  if (!(await allow('portal-reset:ip', requestIp(await headers()), { limit: 10, windowMinutes: 15 }))) {
+    return sameForEveryone;
+  }
+
+  const contact = await db.clientContact.findFirst({
+    where: { email, deletedAt: null, canSignIn: true, activatedAt: { not: null } },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      client: { select: { deletedAt: true } },
+    },
+  });
+
+  if (!contact?.email || contact.client.deletedAt) return sameForEveryone;
+
+  if (
+    await tooManyLinkRequests({
+      actorType: 'client_contact',
+      actorId: contact.id,
+      purpose: 'password_reset',
+    })
+  ) {
+    await recordAudit({
+      actorType: 'client_contact',
+      actorId: contact.id,
+      action: 'client.password_reset.throttled',
+      entityType: 'ClientContact',
+      entityId: contact.id,
+    });
+    return sameForEveryone;
+  }
+
+  await sendPasswordLink({ id: contact.id, name: contact.name, email: contact.email });
   return sameForEveryone;
 }

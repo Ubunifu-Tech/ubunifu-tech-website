@@ -1,8 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireClient, recordAudit } from '@/lib/console/auth';
+import { requireClient, recordAudit, type ClientActor } from '@/lib/console/auth';
+import { mainContactOf } from '@/lib/console/contacts';
 import { renderMarkdown } from '@/lib/console/documents';
 import { alertTeam } from '@/lib/console/alerts';
 import { consoleEnv } from '@/lib/console/env';
@@ -14,12 +16,19 @@ import { diffParagraphs } from '@/lib/console/diff';
 
 export type SignState = { status: 'idle' | 'done' | 'error'; message?: string };
 
+/** The main contact signs and declines for the client; nobody else. */
+async function signerOnly(actor: ClientActor): Promise<string> {
+  const main = await mainContactOf(actor.clientId);
+  return `${main?.name ?? 'Your main contact'} signs for ${actor.clientName}. Ask them to answer this one.`;
+}
+
 /** Signing from the portal, as the person signed in. See recordSignature. */
 export async function signDocument(
   _previous: SignState,
   formData: FormData,
 ): Promise<SignState> {
   const actor = await requireClient();
+  if (!actor.isPrimary) return { status: 'error', message: await signerOnly(actor) };
   return recordSignature({
     requestId: String(formData.get('requestId') ?? ''),
     signer: {
@@ -42,7 +51,10 @@ export async function respondToDocument(
   formData: FormData,
 ): Promise<SignState> {
   const actor = await requireClient();
-  return recordDocumentAnswer({
+  if (formText(formData, 'intent') === 'decline' && !actor.isPrimary) {
+    return { status: 'error', message: await signerOnly(actor) };
+  }
+  const answered = await recordDocumentAnswer({
     requestId: String(formData.get('requestId') ?? ''),
     person: {
       id: actor.id,
@@ -55,6 +67,16 @@ export async function respondToDocument(
     note: formText(formData, 'note'),
     via: 'portal',
   });
+  if (answered.status !== 'done') return answered;
+  // Back to the top of the document, where their answer now shows.
+  const request = await db.signatureRequest.findFirst({
+    where: {
+      id: String(formData.get('requestId') ?? ''),
+      document: { project: { clientId: actor.clientId } },
+    },
+    select: { document: { select: { reference: true } } },
+  });
+  redirect(request ? `/portal/documents/${encodeURIComponent(request.document.reference)}` : '/portal/documents');
 }
 
 /** The time to sign ran out: asking us to send it again. */
@@ -329,8 +351,7 @@ export async function suggestWording(
   revalidatePath(`/admin/documents/${request.document.reference}`);
   revalidatePath(`/admin/projects/${request.document.project.slug}`);
 
-  return {
-    status: 'done',
-    message: 'Sent. We will read your wording and send you a new version to sign.',
-  };
+  // Back to the top of the document, where it now says their wording is
+  // with us, rather than leaving them at a form that is no longer there.
+  redirect(`/portal/documents/${encodeURIComponent(request.document.reference)}`);
 }

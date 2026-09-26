@@ -7,6 +7,7 @@ import { isUniqueConflict } from '@/lib/console/conflict';
 import { hashPassword, passwordProblem } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
 import { readSession, revokeAllSessions } from '@/lib/console/session';
+import { safePortalPath } from '@/lib/console/return-path';
 
 export type ActivateState = { status: 'idle' | 'error'; message?: string };
 
@@ -116,5 +117,5 @@ export async function activateAccount(
     entityId: actor.id,
   });
 
-  redirect('/portal');
+  redirect(safePortalPath(formData.get('next')) ?? '/portal');
 }

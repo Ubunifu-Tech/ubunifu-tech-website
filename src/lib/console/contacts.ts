@@ -69,6 +69,25 @@ export async function emailTakenElsewhere(email: string, clientId: string): Prom
   return taken !== null;
 }
 
+/** Of these people, the ones who have been sent an invitation or a setup link. */
+export async function invitedAmong(contactIds: string[]): Promise<Set<string>> {
+  if (contactIds.length === 0) return new Set();
+  const sent = await db.magicToken.findMany({
+    where: { purpose: 'invite', actorType: 'client_contact', actorId: { in: contactIds } },
+    distinct: ['actorId'],
+    select: { actorId: true },
+  });
+  return new Set(sent.map((token) => token.actorId));
+}
+
+/** Who signs for a client: its main contact. */
+export async function mainContactOf(clientId: string): Promise<{ id: string; name: string } | null> {
+  return db.clientContact.findFirst({
+    where: { clientId, isPrimary: true, deletedAt: null },
+    select: { id: true, name: true },
+  });
+}
+
 type Actor =
   | { type: 'staff'; id: string; name: string }
   | { type: 'client_contact'; id: string; name: string };
@@ -175,7 +194,7 @@ export async function addContact(input: {
     message:
       by.type === 'staff'
         ? `${person.name} added, but the invitation did not send: ${sent.error}`
-        : `${person.name} added, but the invitation did not send. Use Send invitation to try again.`,
+        : `${person.name} added, but the invitation did not send. Use Email the invitation to try again.`,
   };
 }
 
@@ -481,10 +500,14 @@ export async function removeContact(input: { contactId: string; clientId: string
 export async function makeMainContact(input: { contactId: string; clientId: string; by: Actor }) {
   const contact = await db.clientContact.findFirst({
     where: { id: input.contactId, clientId: input.clientId, deletedAt: null },
-    select: { id: true, name: true, isPrimary: true, canSignIn: true },
+    select: { id: true, name: true, email: true, isPrimary: true, canSignIn: true },
   });
   if (!contact) return { ok: false as const, message: 'They are not on this account.' };
   if (contact.isPrimary) return { ok: true as const, message: 'Already the main contact.' };
+  // Agreements and invoices go to the main contact by email.
+  if (!contact.email) {
+    return { ok: false as const, message: `Add ${contact.name}'s email first, so invoices can reach them.` };
+  }
   // The main contact signs, so it has to be someone who can sign in. Turning
   // access back on is ours to decide, not a side effect of this.
   if (!contact.canSignIn) {

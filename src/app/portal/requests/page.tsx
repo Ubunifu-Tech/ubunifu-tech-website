@@ -20,8 +20,13 @@ const STATUS_BADGE: Record<string, string> = {
   closed: '',
 };
 
-export default async function PortalRequests() {
+export default async function PortalRequests({
+  searchParams,
+}: {
+  searchParams: Promise<{ kind?: string; subject?: string; project?: string }>;
+}) {
   const actor = await requireClient();
+  const asked = await searchParams;
   const now = new Date();
 
   const [tickets, projects] = await Promise.all([
@@ -63,12 +68,19 @@ export default async function PortalRequests() {
         </p>
       </div>
 
-      <section className={forms.card}>
+      <section id="new-request" className={forms.card}>
         <div className={forms.cardHeader}>
           <h2 className={forms.cardTitle}>New request</h2>
           <span className={forms.cardMeta}>We read these every working day</span>
         </div>
-        <RaiseRequestForm projects={projects} />
+        <RaiseRequestForm
+          projects={projects}
+          defaults={{
+            kind: asked.kind,
+            subject: asked.subject?.slice(0, 160),
+            projectId: asked.project,
+          }}
+        />
       </section>
 
       <div className={table.frame}>

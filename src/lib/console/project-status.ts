@@ -73,12 +73,18 @@ export const STATUS_TONE: Record<ProjectStatus, StatusTone> = {
 /**
  * The stage as the client reads it. At review it depends on whether they
  * have answered: once they have, the next move is ours, and "waiting on your
- * review" would ask them for something they have already given.
+ * review" would ask them for something they have already given. The same
+ * goes for a proposal or agreement: once nothing is waiting for their
+ * signature (they answered, or the time ran out), it is back with us.
  */
 export function clientStage(
   status: ProjectStatus,
   latestReview?: { status: ReviewStatus } | null,
+  signing?: { waiting: boolean },
 ): { label: string; tone: StatusTone } {
+  if ((status === 'proposal_sent' || status === 'contract_sent') && signing?.waiting === false) {
+    return { label: 'Back with us', tone: 'live' };
+  }
   if (status === 'client_review' && latestReview?.status === 'approved') {
     return { label: 'Approved, over to us', tone: 'live' };
   }

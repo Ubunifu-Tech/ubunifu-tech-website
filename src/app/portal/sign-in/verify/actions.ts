@@ -2,13 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { consumeMagicToken } from '@/lib/console/magic-link';
+import { checkMagicToken, consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
-import { CLIENT_LINKS, landingFor } from '@/lib/console/client-links';
+import { CLIENT_LINKS, afterDeadLink, landingFor } from '@/lib/console/client-links';
 
 /**
- * Burns a client sign-in link and starts a portal session.
+ * Uses a client's link and starts a portal session.
  *
  * Only the Continue button on the link's page gets here, never the link
  * itself: a link preview fetching the URL must not spend a single-use link
@@ -19,15 +19,22 @@ import { CLIENT_LINKS, landingFor } from '@/lib/console/client-links';
  * sent to finish setting up, everyone else goes to the portal. That means an
  * invitation cannot be re-used as a way to skip activation, and a normal link
  * cannot drop someone back into the setup form.
+ *
+ * A setup link keeps working until setup is finished, which is what ends it.
+ * Somebody who opens one from a chat, stops, and comes back to the same
+ * message later still gets in. Every other link is used up here.
  */
 export async function continueWithLink(formData: FormData): Promise<void> {
   const token = String(formData.get('token') ?? '');
   if (!token) redirect('/portal/sign-in?error=missing');
 
-  const claim = await consumeMagicToken(token, CLIENT_LINKS);
-  if (!claim || claim.actorType !== 'client_contact') {
-    redirect('/portal/sign-in?error=expired');
-  }
+  const seen = await checkMagicToken(token, CLIENT_LINKS);
+  if (!seen || seen.actorType !== 'client_contact') redirect(await afterDeadLink(token));
+  const pendingSetup =
+    seen.purpose === 'invite' &&
+    (await db.clientContact.count({ where: { id: seen.actorId, activatedAt: null } })) > 0;
+  const claim = pendingSetup ? seen : await consumeMagicToken(token, CLIENT_LINKS);
+  if (!claim || claim.actorType !== 'client_contact') redirect(await afterDeadLink(token));
 
   const contact = await db.clientContact.findUnique({
     where: { id: claim.actorId },
@@ -86,6 +93,13 @@ export async function continueWithLink(formData: FormData): Promise<void> {
   });
 
   // Someone who has not set a password finishes that first, whatever the link
-  // was for; the thing it pointed at is one click away from the portal home.
-  redirect(contact.activatedAt ? await landingFor(claim, contact.clientId) : '/portal/activate');
+  // was for, and then lands where it pointed.
+  const landing = await landingFor(claim, contact.clientId);
+  redirect(
+    contact.activatedAt
+      ? landing
+      : landing === '/portal'
+        ? '/portal/activate'
+        : `/portal/activate?next=${encodeURIComponent(landing)}`,
+  );
 }

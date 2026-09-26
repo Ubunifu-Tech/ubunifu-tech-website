@@ -62,6 +62,8 @@ export type ClientActor = {
   clientId: string;
   clientName: string;
   isActivated: boolean;
+  /** The main contact: the one who signs for the client and gets billing. */
+  isPrimary: boolean;
 };
 
 /**
@@ -178,6 +180,7 @@ export async function getClientActor(): Promise<ClientActor | null> {
       id: true,
       email: true,
       name: true,
+      isPrimary: true,
       canSignIn: true,
       activatedAt: true,
       deletedAt: true,
@@ -200,6 +203,7 @@ export async function getClientActor(): Promise<ClientActor | null> {
     clientId: contact.client.id,
     clientName: contact.client.name,
     isActivated: contact.activatedAt !== null,
+    isPrimary: contact.isPrimary,
   };
 }
 

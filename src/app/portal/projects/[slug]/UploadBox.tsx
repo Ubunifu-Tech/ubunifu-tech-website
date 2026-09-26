@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
-import { confirmUpload } from './actions';
+import { confirmUpload, stillSignedIn } from './actions';
 import forms from '@/styles/forms.module.css';
 import styles from '../../Portal.module.css';
 
@@ -29,12 +29,15 @@ export function UploadBox({
   accept,
   maxBytes,
   hint,
+  email,
   more = false,
 }: {
   assetRequestId: string;
   accept: string;
   maxBytes: number;
   hint: string;
+  /** Where to send a file that cannot go here. */
+  email: string;
   /** Something is already attached, so the button offers more. */
   more?: boolean;
 }) {
@@ -47,9 +50,16 @@ export function UploadBox({
     if (files.length === 0) return;
 
     const problems: string[] = [];
+    const types = accept.split(',');
+    const wrongKind = (name: string) =>
+      `${name} is a kind of file that cannot go here. Put it in a zip file and attach that, or email it to ${email}.`;
     const sendable = files.filter((file) => {
+      if (!types.includes(file.type)) {
+        problems.push(wrongKind(file.name));
+        return false;
+      }
       if (file.size <= maxBytes) return true;
-      problems.push(`${file.name} is too big to send here. Email it over and we will add it.`);
+      problems.push(`${file.name} is too big to send here. Email it to ${email} and we will add it.`);
       return false;
     });
 
@@ -81,11 +91,15 @@ export function UploadBox({
           sent += 1;
         }
       } catch (error) {
-        problems.push(
-          error instanceof Error && error.message.includes('not allowed')
-            ? `${file.name} is a kind of file that cannot go here.`
-            : `${file.name} did not go through. Try it again.`,
-        );
+        if (error instanceof Error && error.message.includes('not allowed')) {
+          problems.push(wrongKind(file.name));
+        } else if (!(await stillSignedIn())) {
+          // Every file after this one would fail the same way.
+          problems.push('You were signed out. Sign in again, then attach your files.');
+          break;
+        } else {
+          problems.push(`${file.name} did not go through. Try it again, or email it to ${email}.`);
+        }
       }
     }
 

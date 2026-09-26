@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
-import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
+import { portalInvoiceState } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -11,11 +11,11 @@ import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Invoices and receipts' };
 
-const STATUS_BADGE: Record<string, string> = {
-  sent: forms.badgeLive,
-  part_paid: forms.badgeWarn,
-  paid: forms.badgeGood,
-  overdue: forms.badgeBad,
+const TONE_CLASS: Record<string, string> = {
+  neutral: '',
+  good: forms.badgeGood,
+  bad: forms.badgeBad,
+  warn: forms.badgeWarn,
 };
 
 /**
@@ -149,6 +149,7 @@ export default async function PortalInvoices() {
               ) : (
                 invoices.map((invoice) => {
                   const owed = owedOn(invoice);
+                  const state = portalInvoiceState(invoice, now);
                   return (
                     <tr key={invoice.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
@@ -175,12 +176,8 @@ export default async function PortalInvoices() {
                         {formatShortDate(invoice.dueAt)}
                       </td>
                       <td className={table.td}>
-                        <span
-                          className={`${forms.badge} ${STATUS_BADGE[invoiceStanding(invoice, now)] ?? ''}`}
-                        >
-                          {invoice.status === 'void'
-                            ? 'Cancelled'
-                            : INVOICE_STATUS_LABEL[invoiceStanding(invoice, now)]}
+                        <span className={`${forms.badge} ${TONE_CLASS[state.tone]}`}>
+                          {state.label}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>

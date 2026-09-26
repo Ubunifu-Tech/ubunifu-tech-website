@@ -468,6 +468,51 @@
   line-height: 1.5;
 }
 
+/* A project's documents and invoices: title and detail, state on the right. */
+.paperList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paperItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.paperItem:first-child {
+  padding-top: 0;
+}
+
+.paperItem:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.paperText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.paperTitle {
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.paperTitle:hover {
+  color: var(--brand-deep);
+}
+
 /* ── Progress ──────────────────────────────────── */
 
 .stage {

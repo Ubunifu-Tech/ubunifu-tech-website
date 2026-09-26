@@ -2,8 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
+import { mainContactOf } from '@/lib/console/contacts';
+import { getOrg } from '@/lib/console/org';
 import { clientStage } from '@/lib/console/project-status';
-import { formatDate } from '@/lib/console/money';
+import { formatDate, formatMoney, formatShortDate } from '@/lib/console/money';
+import { DOCUMENT_KIND_LABEL, portalDocumentState } from '@/lib/console/documents';
+import { portalInvoiceState } from '@/lib/console/billing-labels';
+import { liveInvoice, sentToClient } from '@/lib/console/live';
 import {
   ALLOWED_CONTENT_TYPES,
   ALLOWED_LABEL,
@@ -19,6 +24,13 @@ import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
 import { ReviewAnswer } from './ReviewAnswer';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
+
+/** "A, B and C", starting with a capital. */
+function sayList(parts: string[]): string {
+  const text =
+    parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 const TONE_CLASS: Record<string, string> = {
   neutral: '',
@@ -38,9 +50,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: project?.name ?? 'Project' };
 }
 
-export default async function PortalProject({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PortalProject({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ answered?: string }>;
+}) {
   const actor = await requireClient();
   const { slug } = await params;
+  const { answered } = await searchParams;
 
   /**
    * Scoped by clientId in the query itself, not checked afterwards. A slug
@@ -142,6 +161,70 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
   });
 
   if (!project) notFound();
+  const now = new Date();
+
+  // What has gone to them for this project: documents to read and sign, and
+  // invoices, each as they would put it.
+  const [documents, invoices] = await Promise.all([
+    db.document.findMany({
+      where: { projectId: project.id, signatureRequests: { some: { sentAt: { not: null } } } },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        reference: true,
+        title: true,
+        kind: true,
+        status: true,
+        signatureRequests: {
+          where: { status: { in: ['sent', 'viewed', 'signed', 'declined'] } },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            status: true,
+            expiresAt: true,
+            respondedAt: true,
+            respondedBy: { select: { id: true, name: true } },
+            signatures: { select: { signedAt: true } },
+          },
+        },
+      },
+    }),
+    db.invoice.findMany({
+      where: { projectId: project.id, clientId: actor.clientId, ...liveInvoice, ...sentToClient },
+      orderBy: [{ issuedAt: 'desc' }, { createdAt: 'desc' }],
+      select: { id: true, number: true, status: true, dueAt: true, totalMinor: true, paidMinor: true, currency: true },
+    }),
+  ]);
+  const [main, org] = await Promise.all([mainContactOf(actor.clientId), getOrg()]);
+  const viewer = { id: actor.id, signs: actor.isPrimary, signerName: main?.name ?? null };
+  const papers = [
+    ...documents.map((document) => ({
+      key: document.id,
+      href: `/portal/documents/${document.reference}`,
+      title: document.title,
+      detail: `${DOCUMENT_KIND_LABEL[document.kind]} · ${document.reference}`,
+      state: portalDocumentState(document.status, document.signatureRequests[0], viewer, now),
+      toPay: false,
+    })),
+    ...invoices.map((invoice) => {
+      const state = portalInvoiceState(invoice, now);
+      return {
+        key: invoice.id,
+        href: `/portal/invoices/${invoice.number}`,
+        title: `Invoice ${invoice.number}`,
+        detail: state.owing
+          ? `${formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)} to pay${
+              invoice.dueAt ? `, due ${formatShortDate(invoice.dueAt)}` : ''
+            }`
+          : formatMoney(invoice.totalMinor, invoice.currency),
+        state: { ...state, waiting: false },
+        toPay: state.owing,
+      };
+    }),
+  ];
+  // Only a document's state says "waiting" when it is theirs to sign.
+  const toSign = papers.filter((paper) => paper.state.waiting).length;
+  const toPay = papers.filter((paper) => paper.toPay).length;
 
   // Waiting means asked for and not sent, the same count as everywhere else.
   // An item marked not available is on hold: still to come, but not theirs to
@@ -152,11 +235,13 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
   const onHold = project.assetRequests.filter((request) => request.status === 'blocked').length;
   const [latestReview, ...earlierReviews] = project.reviews;
   const reviewOpen = latestReview?.status === 'open';
-  const stage = clientStage(project.status, latestReview);
+  const stage = clientStage(project.status, latestReview, { waiting: toSign > 0 });
   const waitingOnYou = [
     reviewOpen ? 'a review' : null,
+    toSign > 0 ? (toSign === 1 ? 'a document to sign' : `${toSign} documents to sign`) : null,
     outstanding > 0 ? `${outstanding} ${outstanding === 1 ? 'item' : 'items'}` : null,
-  ].filter(Boolean);
+    toPay > 0 ? (toPay === 1 ? 'an invoice to pay' : `${toPay} invoices to pay`) : null,
+  ].filter((part): part is string => part !== null);
   // With no store configured the box is not shown at all, and the old
   // instruction stands on its own rather than sitting under a button that
   // would fail.
@@ -169,7 +254,9 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
   );
 
   // A launch date only counts once the project is actually live.
-  const launched = ['live', 'closed'].includes(project.status) ? project.launchedAt : null;
+  const launched = ['launched', 'handover', 'closed'].includes(project.status)
+    ? project.launchedAt
+    : null;
   const percent = total > 0 ? Math.round((done / total) * 100) : 0;
   const people = [
     { value: '', label: 'Anyone on the team' },
@@ -205,9 +292,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Waiting on you</span>
           <span className={styles.summaryValue}>
-            {waitingOnYou.length === 0
-              ? 'Nothing'
-              : waitingOnYou.join(' and ').replace(/^a/, 'A')}
+            {waitingOnYou.length === 0 ? 'Nothing' : sayList(waitingOnYou)}
           </span>
         </div>
         <div className={styles.summaryItem}>
@@ -230,7 +315,11 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
 
       <div
         className={
-          project.assetRequests.length + project.updates.length + project.reviews.length > 0
+          project.assetRequests.length +
+            project.updates.length +
+            project.reviews.length +
+            papers.length >
+          0
             ? styles.layout
             : styles.stack
         }
@@ -323,6 +412,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
                           accept={ALLOWED_CONTENT_TYPES.join(',')}
                           maxBytes={MAX_UPLOAD_BYTES}
                           hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)} each. You can choose several at once.`}
+                          email={org.email}
                           more={request.uploads.length > 0}
                         />
                       )}
@@ -335,6 +425,32 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
                   ? 'Write your answer or attach a file on each item. They land against the right one.'
                   : 'Write your answer on each item, or send files by email. We tick them off as they arrive.'}
               </p>
+            </section>
+          )}
+
+          {papers.length > 0 && (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Documents and invoices</h2>
+                <span className={forms.cardMeta}>
+                  {toSign + toPay === 0 ? 'Nothing waiting on you' : `${toSign + toPay} waiting on you`}
+                </span>
+              </div>
+              <ul className={styles.paperList}>
+                {papers.map((paper) => (
+                  <li key={paper.key} className={styles.paperItem}>
+                    <span className={styles.paperText}>
+                      <Link href={paper.href} className={styles.paperTitle}>
+                        {paper.title}
+                      </Link>
+                      <span className={styles.projectMeta}>{paper.detail}</span>
+                    </span>
+                    <span className={`${forms.badge} ${TONE_CLASS[paper.state.tone]}`}>
+                      {paper.state.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
@@ -385,6 +501,11 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>Your reviews</h2>
               </div>
+              {answered === 'review' && (
+                <p className={styles.notice} role="status">
+                  Thank you. We have your answer, and the next step is ours.
+                </p>
+              )}
               <ReviewRound review={latestReview} audience="client" />
               <EarlierRounds reviews={earlierReviews} audience="client" />
             </section>

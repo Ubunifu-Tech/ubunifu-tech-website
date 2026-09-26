@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import React, { useActionState, useState } from 'react';
 import { activateAccount, type ActivateState } from './actions';
 import forms from '@/styles/forms.module.css';
 
@@ -10,16 +10,25 @@ export function ActivateForm({
   defaultName,
   email,
   defaultPhone,
+  next,
 }: {
   defaultName: string;
   /** Known already, or null when they are giving it now. */
   email: string | null;
   defaultPhone: string;
+  /** Where to go once set up, when the link they came from pointed somewhere. */
+  next: string | null;
 }) {
   const [state, action, pending] = useActionState(activateAccount, INITIAL);
+  // Held here so what they typed is still there if the form comes back with
+  // a problem to fix.
+  const [name, setName] = useState(defaultName);
+  const [typedEmail, setTypedEmail] = useState('');
+  const [phone, setPhone] = useState(defaultPhone);
 
   return (
     <form action={action} className={forms.form}>
+      {next && <input type="hidden" name="next" value={next} />}
       <div className={forms.grid}>
         <div className={forms.field}>
           <label htmlFor="name" className={forms.label}>
@@ -29,7 +38,8 @@ export function ActivateForm({
             id="name"
             name="name"
             type="text"
-            defaultValue={defaultName}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
             autoComplete="name"
             required
             disabled={pending}
@@ -54,6 +64,8 @@ export function ActivateForm({
                 id="email"
                 name="email"
                 type="email"
+                value={typedEmail}
+                onChange={(event) => setTypedEmail(event.target.value)}
                 autoComplete="email"
                 required
                 maxLength={254}
@@ -73,7 +85,8 @@ export function ActivateForm({
             name="phone"
             type="tel"
             autoComplete="tel"
-            defaultValue={defaultPhone}
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
             maxLength={40}
             disabled={pending}
             className={forms.control}

@@ -200,6 +200,7 @@ export function RespondForm({
   respond = respondToDocument,
   hidden = {},
   wording = true,
+  decline = true,
 }: {
   requestId: string;
   /** The version they are reading, which the wording option starts from. */
@@ -210,6 +211,8 @@ export function RespondForm({
   hidden?: Record<string, string>;
   /** Whether to offer their own wording, which needs the portal. */
   wording?: boolean;
+  /** Whether they may decline it, which only the person who signs may. */
+  decline?: boolean;
 }) {
   const [state, action, pending] = useActionState(respond, INITIAL);
   const [intent, setIntent] = useState<Intent | 'wording' | null>(null);
@@ -251,7 +254,7 @@ export function RespondForm({
             Suggest your own wording
           </button>
         )}
-        {!answered && (
+        {!answered && decline && (
           <button
             type="button"
             className={`${forms.button} ${forms.quiet}`}

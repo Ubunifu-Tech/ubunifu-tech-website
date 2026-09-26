@@ -107,6 +107,18 @@
   text-align: center;
 }
 
+.foot + .foot {
+  margin-top: var(--space-2);
+}
+
+.foot a {
+  color: var(--brand-deep);
+}
+
+.foot a:hover {
+  color: var(--text-primary);
+}
+
 @media (max-width: 40rem) {
   .shell {
     justify-content: flex-start;

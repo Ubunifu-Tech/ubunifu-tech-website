@@ -137,21 +137,16 @@ export async function checkMagicToken(
 }
 
 /**
- * Checks a link without burning it, for the "view this document" case where a
- * client may open the same link more than once.
+ * What a link was for, even once it has been used or has run out. It grants
+ * nothing: it lets the page an old link opens send the person somewhere
+ * useful, rather than to a dead end.
  */
-export async function peekMagicToken(
+export async function readLink(
   rawToken: string,
-  expected: MagicTokenPurpose,
+  expected: readonly MagicTokenPurpose[],
 ): Promise<ConsumedToken | null> {
-  const token = await db.magicToken.findUnique({
-    where: { tokenHash: hashToken(rawToken) },
-  });
-
-  if (!token) return null;
-  if (token.purpose !== expected) return null;
-  if (token.expiresAt.getTime() <= Date.now()) return null;
-
+  const token = await db.magicToken.findUnique({ where: { tokenHash: hashToken(rawToken) } });
+  if (!token || !expected.includes(token.purpose)) return null;
   return {
     actorType: token.actorType,
     actorId: token.actorId,

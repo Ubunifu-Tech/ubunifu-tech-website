@@ -1,13 +1,21 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { DOCUMENT_KIND_LABEL, PORTAL_DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
+import { mainContactOf } from '@/lib/console/contacts';
+import { DOCUMENT_KIND_LABEL, portalDocumentState } from '@/lib/console/documents';
 import { formatShortDate } from '@/lib/console/money';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Documents' };
+
+const TONE_CLASS: Record<string, string> = {
+  good: forms.badgeGood,
+  bad: forms.badgeBad,
+  warn: forms.badgeWarn,
+  live: forms.badgeLive,
+};
 
 export default async function PortalDocuments() {
   const actor = await requireClient();
@@ -37,27 +45,23 @@ export default async function PortalDocuments() {
           status: true,
           expiresAt: true,
           respondedAt: true,
+          respondedBy: { select: { id: true, name: true } },
           signatures: { select: { signedAt: true, initials: true } },
         },
       },
     },
   });
 
-  // Waiting on THEM. A document they have already answered — declined, or
-  // asked for changes on — is waiting on us, and telling somebody they owe us
+  // Waiting on THEM. A document they have already answered, declined or
+  // asked for changes on, is waiting on us, and telling somebody they owe us
   // a signature they have explicitly refused is the fastest way to be ignored.
-  const ranOut = (request: { expiresAt: Date | null } | undefined) =>
-    Boolean(request?.expiresAt && request.expiresAt.getTime() < now.getTime());
-  const waiting = documents.filter((document) => {
-    const request = document.signatureRequests[0];
-    return (
-      request !== undefined &&
-      request.signatures.length === 0 &&
-      request.respondedAt === null &&
-      request.status !== 'declined' &&
-      !ranOut(request)
-    );
-  }).length;
+  const main = await mainContactOf(actor.clientId);
+  const viewer = { id: actor.id, signs: actor.isPrimary, signerName: main?.name ?? null };
+  const rows = documents.map((document) => ({
+    ...document,
+    state: portalDocumentState(document.status, document.signatureRequests[0], viewer, now),
+  }));
+  const waiting = rows.filter((row) => row.state.waiting).length;
 
   return (
     <main className={styles.page}>
@@ -66,9 +70,11 @@ export default async function PortalDocuments() {
           Your <span className={styles.headingAccent}>documents</span>
         </h1>
         <p className={styles.lead}>
-          {waiting === 0
-            ? 'Nothing is waiting on you. Everything you have signed stays here.'
-            : `${waiting} ${waiting === 1 ? 'document is' : 'documents are'} waiting for your signature.`}
+          {waiting > 0
+            ? `${waiting} ${waiting === 1 ? 'document is' : 'documents are'} waiting for your signature.`
+            : actor.isPrimary
+              ? 'Nothing is waiting on you. Everything you have signed stays here.'
+              : `${main?.name ?? 'Your main contact'} signs for ${actor.clientName}. Everything signed stays here.`}
         </p>
       </div>
 
@@ -106,13 +112,9 @@ export default async function PortalDocuments() {
                   </td>
                 </tr>
               ) : (
-                documents.map((document) => {
+                rows.map((document) => {
                   const request = document.signatureRequests[0];
-                  const signature = request?.signatures[0];
-                  const answered = request?.respondedAt !== null && request?.respondedAt !== undefined;
-                  const declined = request?.status === 'declined';
-                  const revising = !request;
-                  const expired = !signature && !declined && ranOut(request);
+                  const { state } = document;
                   return (
                     <tr key={document.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
@@ -136,22 +138,8 @@ export default async function PortalDocuments() {
                         )}
                       </td>
                       <td className={table.td}>
-                        <span
-                          className={`${forms.badge} ${
-                            signature
-                              ? forms.badgeGood
-                              : declined
-                                ? forms.badgeBad
-                                : forms.badgeWarn
-                          }`}
-                        >
-                          {signature
-                            ? `Signed ${formatShortDate(signature.signedAt)}`
-                            : revising
-                              ? 'Being revised'
-                              : expired
-                                ? 'Time to sign ran out'
-                                : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
+                        <span className={`${forms.badge} ${TONE_CLASS[state.tone]}`}>
+                          {state.label}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
@@ -160,9 +148,7 @@ export default async function PortalDocuments() {
                             href={`/portal/documents/${document.reference}`}
                             className={table.action}
                           >
-                            {signature || answered || revising || expired || declined
-                              ? 'View'
-                              : 'Read and sign'}
+                            {state.waiting ? 'Read and sign' : 'View'}
                           </Link>
                         </span>
                       </td>

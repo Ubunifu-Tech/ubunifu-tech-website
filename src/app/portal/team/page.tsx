@@ -3,6 +3,7 @@ import { requireClient } from '@/lib/console/auth';
 import { formatDate } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
 import { AddPerson, PersonMenu } from '@/components/console/People';
+import { invitedAmong } from '@/lib/console/contacts';
 import {
   editColleague,
   handOverMain,
@@ -35,6 +36,9 @@ export default async function PortalTeam() {
     },
   });
   const iAmMain = people.some((person) => person.id === actor.id && person.isPrimary);
+  const invited = await invitedAmong(
+    people.filter((person) => !person.activatedAt && person.email).map((person) => person.id),
+  );
 
   return (
     <main className={styles.page}>
@@ -94,8 +98,13 @@ export default async function PortalTeam() {
                           <span className={table.sub}>Last in {formatDate(person.lastSeenAt)}</span>
                         )}
                       </>
-                    ) : person.email ? (
+                    ) : person.email && invited.has(person.id) ? (
                       <span className={`${forms.badge} ${forms.badgeWarn}`}>Invited</span>
+                    ) : person.email ? (
+                      <>
+                        <span className={forms.badge}>Not invited yet</span>
+                        <span className={table.sub}>Email the invitation from their menu.</span>
+                      </>
                     ) : (
                       <>
                         <span className={forms.badge}>No email yet</span>

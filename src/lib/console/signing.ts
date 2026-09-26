@@ -8,6 +8,7 @@ import { DOCUMENT_KIND_LABEL, hashDocument } from './documents';
 import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
 import { formatDate } from './money';
+import { issueMagicToken } from './magic-link';
 import { STAFF_LABEL } from './project-status';
 import { advanceForDocument } from './transitions';
 import { alertTeam } from './alerts';
@@ -223,7 +224,30 @@ export async function recordSignature(input: {
   // Their copy, and our notice. Both after the signature is safely recorded:
   // an email that fails costs promptness, never the signature.
   const kindLabel = DOCUMENT_KIND_LABEL[request.document.kind];
-  const copy = signer.email
+  // Someone with a portal account opens their copy there. Someone without
+  // one, most often a person who signed through a link shared by hand, gets
+  // a link that opens it and lets them set up an account on the way.
+  const account = await db.clientContact.findUnique({
+    where: { id: signer.id },
+    select: { activatedAt: true },
+  });
+  const inPortal = Boolean(account?.activatedAt);
+  const copyUrl = inPortal
+    ? `${consoleEnv.publicOrigin}/portal/documents/${request.document.reference}`
+    : signer.email
+      ? `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(
+          (
+            await issueMagicToken({
+              purpose: 'document_access',
+              actorType: 'client_contact',
+              actorId: signer.id,
+              entityType: 'SignatureRequest',
+              entityId: request.id,
+            })
+          ).token,
+        )}`
+      : null;
+  const copy = signer.email && copyUrl
     ? await sendConsoleEmail({
         to: signer.email,
         subject: `Signed: ${request.document.title}`,
@@ -236,7 +260,8 @@ export async function recordSignature(input: {
           initials,
           signedOn: formatDate(now),
           fingerprint: `${hashNow.slice(0, 8)}…${hashNow.slice(-8)}`,
-          url: `${consoleEnv.publicOrigin}/portal/documents/${request.document.reference}`,
+          url: copyUrl,
+          inPortal,
         }),
         template: 'document_signed_copy',
         entityType: 'Document',

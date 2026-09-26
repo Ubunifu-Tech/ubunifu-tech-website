@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { db } from '@/lib/db';
 import type { DocumentKind, Prisma } from '@/generated/prisma/client';
 import { renderMarkdown } from './markdown';
+import { formatShortDate } from './money';
 
 /**
  * Documents, versions and the hash that makes a signature mean something.
@@ -61,6 +62,55 @@ export const PORTAL_DOCUMENT_STATUS_LABEL: Record<string, string> = {
   expired: 'Expired',
   superseded: 'Replaced by a newer version',
 };
+
+/** The latest request on a document sent to the client, as the portal reads it. */
+export type PortalRequest = {
+  status: string;
+  expiresAt: Date | null;
+  respondedAt: Date | null;
+  respondedBy?: { id: string; name: string } | null;
+  signatures: { signedAt: Date }[];
+};
+
+/** Who is looking, and whether they are the one who signs for the client. */
+export type PortalViewer = { id: string; signs: boolean; signerName: string | null };
+
+/**
+ * A document's state as the person looking at it would put it: signed,
+ * waiting for them, with their main contact to sign, or back with us for one
+ * reason or another, naming a colleague when it was a colleague who answered.
+ * `waiting` is true only when the next move is theirs.
+ */
+export function portalDocumentState(
+  status: string,
+  request: PortalRequest | undefined,
+  viewer: PortalViewer,
+  now: Date,
+): { label: string; tone: 'good' | 'bad' | 'warn' | 'live'; waiting: boolean } {
+  const viewerId = viewer.id;
+  if (!request) return { label: 'Being revised', tone: 'live', waiting: false };
+  const signature = request.signatures[0];
+  if (signature) return { label: `Signed ${formatShortDate(signature.signedAt)}`, tone: 'good', waiting: false };
+  // Named when we know who answered; "you" only when it was them.
+  const who = request.respondedBy
+    ? request.respondedBy.id === viewerId
+      ? 'You'
+      : request.respondedBy.name
+    : null;
+  if (request.status === 'declined') {
+    return { label: who ? `${who} declined this` : 'Declined', tone: 'bad', waiting: false };
+  }
+  if (request.expiresAt && request.expiresAt.getTime() < now.getTime()) {
+    return { label: 'Time to sign ran out', tone: 'warn', waiting: false };
+  }
+  if (request.respondedAt) {
+    return { label: who ? `${who} asked for changes` : 'Changes asked for', tone: 'live', waiting: false };
+  }
+  if (!viewer.signs) {
+    return { label: `With ${viewer.signerName ?? 'your main contact'} to sign`, tone: 'live', waiting: false };
+  }
+  return { label: PORTAL_DOCUMENT_STATUS_LABEL[status] ?? 'Waiting for your signature', tone: 'warn', waiting: true };
+}
 
 /** AGR-2026-004. Per kind, per year, derived from the highest already issued. */
 export async function nextDocumentReference(

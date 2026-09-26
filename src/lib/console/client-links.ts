@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import type { MagicTokenPurpose } from '@/generated/prisma/client';
 import { safePortalPath } from './return-path';
 import { liveInvoice, sentToClient } from './live';
+import { readLink } from './magic-link';
+import { readSession } from './session';
 
 /**
  * Every link that signs a client in comes through /portal/sign-in/verify.
@@ -64,4 +66,32 @@ export async function landingFor(
   }
 
   return '/portal';
+}
+
+/**
+ * Where a link that no longer works should take someone, instead of a dead
+ * end. An old link still says who it was for and where it pointed: the same
+ * person, still signed in on this device, goes straight there; anyone else
+ * signs in first and lands there after. A setup link for someone who has not
+ * finished has a message of its own, since they have nothing to sign in with.
+ */
+export async function afterDeadLink(rawToken: string): Promise<string> {
+  const old = await readLink(rawToken, CLIENT_LINKS);
+  if (!old || old.actorType !== 'client_contact') return '/portal/sign-in?error=expired';
+  const contact = await db.clientContact.findUnique({
+    where: { id: old.actorId },
+    select: { clientId: true, activatedAt: true },
+  });
+  if (!contact) return '/portal/sign-in?error=expired';
+
+  const session = await readSession('portal');
+  const same = session?.actorType === 'client_contact' && session.actorId === old.actorId;
+  if (!contact.activatedAt) return same ? '/portal/activate' : '/portal/sign-in?error=setup-expired';
+
+  const landing = await landingFor(old, contact.clientId);
+  if (same) return landing;
+  if (old.purpose === 'invite') return '/portal/sign-in?error=set-up';
+  return landing === '/portal'
+    ? '/portal/sign-in?error=expired'
+    : `/portal/sign-in?error=expired&next=${encodeURIComponent(landing)}`;
 }

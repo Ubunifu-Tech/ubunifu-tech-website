@@ -18,11 +18,24 @@ const INITIAL: RequestState = { status: 'idle' };
  */
 export function RaiseRequestForm({
   projects,
+  defaults = {},
 }: {
   projects: { id: string; name: string }[];
+  /** Filled in already, when a page sent them here about something. */
+  defaults?: { kind?: string; subject?: string; projectId?: string };
 }) {
   const [state, action, pending] = useActionState(raiseRequest, INITIAL);
-  const [kind, setKind] = useState<string>(TICKET_KINDS[0].value);
+  const [kind, setKind] = useState<string>(
+    TICKET_KINDS.some((option) => option.value === defaults.kind)
+      ? (defaults.kind as string)
+      : TICKET_KINDS[0].value,
+  );
+  // Held here, so what they wrote is still there if sending it fails.
+  const [projectId, setProjectId] = useState(
+    projects.some((project) => project.id === defaults.projectId) ? (defaults.projectId as string) : '',
+  );
+  const [subject, setSubject] = useState(defaults.subject ?? '');
+  const [body, setBody] = useState('');
 
   const chosen = TICKET_KINDS.find((option) => option.value === kind);
 
@@ -52,7 +65,8 @@ export function RaiseRequestForm({
             <Select
                 id="req-project"
                 name="projectId"
-                defaultValue=""
+                value={projectId}
+                onValueChange={setProjectId}
                 options={[
                   { value: '', label: 'Not about a particular project' },
                   ...projects.map((project) => ({ value: project.id, label: project.name })),
@@ -70,6 +84,9 @@ export function RaiseRequestForm({
             id="req-subject"
             name="subject"
             className={forms.control}
+            value={subject}
+            onChange={(event) => setSubject(event.target.value)}
+            minLength={4}
             maxLength={160}
             required
             placeholder="The contact form is not reaching us"
@@ -85,6 +102,9 @@ export function RaiseRequestForm({
             id="req-body"
             name="body"
             className={`${forms.control} ${forms.textarea}`}
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+            minLength={10}
             maxLength={8000}
             required
             placeholder="What you expected, what happened instead, and when you first noticed. If it is a change you want, describe it as you would say it out loud."
@@ -118,6 +138,13 @@ export function RaiseRequestForm({
 
 export function ReplyForm({ ticketId, closed }: { ticketId: string; closed: boolean }) {
   const [state, action, pending] = useActionState(replyToRequest, INITIAL);
+  // Kept if sending fails; cleared once it is sent.
+  const [body, setBody] = useState('');
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
+    if (state.status === 'done') setBody('');
+  }
 
   if (closed) {
     return (
@@ -138,6 +165,9 @@ export function ReplyForm({ ticketId, closed }: { ticketId: string; closed: bool
           id="reply-body"
           name="body"
           className={`${forms.control} ${forms.textarea}`}
+          value={body}
+          onChange={(event) => setBody(event.target.value)}
+          minLength={2}
           maxLength={8000}
           required
           disabled={pending}

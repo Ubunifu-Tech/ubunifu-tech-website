@@ -5,12 +5,21 @@ import { InvoiceSheet } from '@/components/documents/InvoiceSheet';
 import { INVOICE_SHEET_SELECT, toSheet } from '@/lib/console/invoice-sheet';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
-import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
+import { portalInvoiceState } from '@/lib/console/billing-labels';
+import { formatDate } from '@/lib/console/money';
+import { ReachUs } from '@/components/console/ReachUs';
 import { getOrg } from '@/lib/console/org';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
+
+const TONE_CLASS: Record<string, string> = {
+  neutral: '',
+  good: forms.badgeGood,
+  bad: forms.badgeBad,
+  warn: forms.badgeWarn,
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -40,12 +49,23 @@ export default async function PortalInvoice({
       ...liveInvoice,
       ...sentToClient,
     },
-    select: INVOICE_SHEET_SELECT,
+    select: { ...INVOICE_SHEET_SELECT, projectId: true },
   });
 
   if (!invoice) notFound();
-  const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
-  const standing = invoiceStanding(invoice, new Date());
+  const state = portalInvoiceState(invoice, new Date());
+  const project = invoice.projectId
+    ? await db.project.findFirst({
+        where: { id: invoice.projectId, clientId: actor.clientId, deletedAt: null },
+        select: { id: true },
+      })
+    : null;
+  // Straight to a request with the invoice already named in it.
+  const tellUs = `/portal/requests?${new URLSearchParams({
+    kind: 'question',
+    subject: `Paid ${invoice.number}`,
+    ...(project ? { project: project.id } : {}),
+  })}#new-request`;
 
   return (
     <main className={styles.page}>
@@ -54,23 +74,39 @@ export default async function PortalInvoice({
           ← Invoices
         </Link>
         <PrintButton />
-        {invoice.status === 'void' ? (
-          <span className={forms.badge}>Cancelled</span>
-        ) : (
-          <span
-            className={`${forms.badge} ${
-              owed === 0 ? forms.badgeGood : standing === 'overdue' ? forms.badgeBad : forms.badgeWarn
-            }`}
-          >
-            {INVOICE_STATUS_LABEL[standing]}
-          </span>
-        )}
+        <span className={`${forms.badge} ${TONE_CLASS[state.tone]}`}>
+          {state.owing && state.label !== 'Overdue' && invoice.dueAt
+            ? `Due ${formatDate(invoice.dueAt)}`
+            : state.label}
+        </span>
       </div>
       <InvoiceSheet
         invoice={toSheet(invoice)}
         org={org}
         receiptHref={(receipt) => `/portal/receipts/${receipt}`}
       />
+      {state.owing && (
+        <section className={`${forms.card} ${sheet.noPrint}`}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>Paid already?</h2>
+          </div>
+          <p className={styles.note}>
+            Tell us when and how you paid, and we will send your receipt.
+          </p>
+          <div className={forms.actions}>
+            <Link href={tellUs} className={`${forms.button} ${forms.quiet}`}>
+              Tell us you have paid
+            </Link>
+          </div>
+          {!org.bankAccountNumber && !org.mobileMoneyNumber && (
+            <ReachUs
+              lead="Not sure how to pay?"
+              message={`Hello, how do I pay ${invoice.number}?`}
+              className={styles.note}
+            />
+          )}
+        </section>
+      )}
     </main>
   );
 }

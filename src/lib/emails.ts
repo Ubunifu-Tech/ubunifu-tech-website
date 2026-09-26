@@ -1023,6 +1023,8 @@ export function documentSignedEmail(input: {
   signedOn: string;
   fingerprint: string;
   url: string;
+  /** Whether they have a portal account to keep it in. */
+  inPortal: boolean;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
@@ -1031,8 +1033,11 @@ export function documentSignedEmail(input: {
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Signed: ${escapeHtml(input.documentTitle)}</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Thank you, ${name}. You signed this on behalf of
-      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>. The signed
-      copy stays in your portal, where you can read it or save it as a PDF at any time.
+      <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>. ${
+        input.inPortal
+          ? 'The signed copy stays in your portal, where you can read it or save it as a PDF at any time.'
+          : 'Use the button to open the signed copy and save it as a PDF. It also sets up your account, so the copy stays there for you.'
+      }
     </p>
     ${facts([
       ['Signed by', escapeHtml(`${input.name} (${input.initials})`)],

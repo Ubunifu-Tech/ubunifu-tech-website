@@ -90,7 +90,7 @@ export default async function PortalHome() {
         project: { clientId: actor.clientId, deletedAt: null },
         ...awaitingSignature(now),
       },
-      select: { reference: true, title: true },
+      select: { reference: true, title: true, projectId: true },
     }),
     db.invoice.findMany({
       where: { clientId: actor.clientId, ...liveInvoice, status: { in: ['sent', 'overdue', 'part_paid'] } },
@@ -134,7 +134,8 @@ export default async function PortalHome() {
           ]
         : [],
     ),
-    ...documents.map((document) => ({
+    // Signing is the main contact's to do, so only they are asked to.
+    ...(actor.isPrimary ? documents : []).map((document) => ({
       key: `document-${document.reference}`,
       href: `/portal/documents/${document.reference}`,
       icon: FileSignature,
@@ -231,7 +232,9 @@ export default async function PortalHome() {
             const tasks = project.phases.flatMap((phase) => phase.deliverables);
             const done = tasks.filter((task) => task.isComplete).length;
             const percent = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
-            const stage = clientStage(project.status, project.reviews[0]);
+            const stage = clientStage(project.status, project.reviews[0], {
+              waiting: documents.some((document) => document.projectId === project.id),
+            });
             return (
               <li key={project.id}>
                 <Link href={`/portal/projects/${project.slug}`} className={styles.project}>

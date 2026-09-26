@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { AuthLayout } from '@/components/console/AuthLayout';
 import { ContinueButton } from '@/components/console/ContinueButton';
-import { CLIENT_LINKS } from '@/lib/console/client-links';
+import { CLIENT_LINKS, afterDeadLink } from '@/lib/console/client-links';
 import { checkMagicToken } from '@/lib/console/magic-link';
 import { continueWithLink } from './actions';
 import auth from '@/styles/auth.module.css';
@@ -29,7 +29,7 @@ export default async function VerifyLink({
   if (!token) redirect('/portal/sign-in?error=missing');
 
   const claim = await checkMagicToken(token, CLIENT_LINKS);
-  if (!claim || claim.actorType !== 'client_contact') redirect('/portal/sign-in?error=expired');
+  if (!claim || claim.actorType !== 'client_contact') redirect(await afterDeadLink(token));
 
   return (
     <AuthLayout role="Portal">

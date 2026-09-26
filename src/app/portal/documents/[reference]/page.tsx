@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
+import { mainContactOf } from '@/lib/console/contacts';
 import {
   markSignatureRequestViewed,
   DOCUMENT_KIND_LABEL,
-  PORTAL_DOCUMENT_STATUS_LABEL,
+  portalDocumentState,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { AskAgain, RespondForm, SignForm } from '../SignForm';
@@ -15,6 +16,13 @@ import { getOrg } from '@/lib/console/org';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
+
+const TONE_CLASS: Record<string, string> = {
+  good: forms.badgeGood,
+  bad: forms.badgeBad,
+  warn: forms.badgeWarn,
+  live: forms.badgeLive,
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
@@ -76,7 +84,7 @@ export default async function PortalDocument({
           expiresAt: true,
           respondedAt: true,
           responseNote: true,
-          respondedBy: { select: { name: true } },
+          respondedBy: { select: { id: true, name: true } },
           version: { select: { bodyMarkdown: true, version: true } },
           termsVersion: {
             select: { id: true, version: true, title: true, bodyMarkdown: true },
@@ -146,7 +154,7 @@ export default async function PortalDocument({
   // Wording they sent back for this version, while it is waiting with us or
   // being made into the next version. One we set aside is not shown, so they
   // can send another. Anyone at the client may have sent it.
-  const [suggestion, org] = await Promise.all([
+  const [suggestion, org, main] = await Promise.all([
     db.documentSuggestion.findFirst({
       where: {
         documentId: document.id,
@@ -162,9 +170,23 @@ export default async function PortalDocument({
       },
     }),
     getOrg(),
+    mainContactOf(actor.clientId),
   ]);
+  const signerName = main?.name ?? 'Your main contact';
   const suggestedBy =
     !suggestion?.contact || suggestion.contact.id === actor.id ? 'You' : suggestion.contact.name;
+  // Named when we know who answered; "you" only when it was them.
+  const answeredBy = request.respondedBy
+    ? request.respondedBy.id === actor.id
+      ? 'You'
+      : request.respondedBy.name
+    : null;
+  const state = portalDocumentState(
+    document.status,
+    request,
+    { id: actor.id, signs: actor.isPrimary, signerName: main?.name ?? null },
+    now,
+  );
 
   return (
     <main className={styles.page}>
@@ -173,23 +195,7 @@ export default async function PortalDocument({
           ← Documents
         </Link>
         <PrintButton />
-        <span
-          className={`${forms.badge} ${
-            signature
-              ? forms.badgeGood
-              : declined
-                ? forms.badgeBad
-                : expired
-                  ? forms.badgeWarn
-                  : forms.badgeLive
-          }`}
-        >
-          {signature
-            ? `Signed ${formatDate(signature.signedAt)}`
-            : expired
-              ? 'This request has expired'
-              : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
-        </span>
+        <span className={`${forms.badge} ${TONE_CLASS[state.tone]}`}>{state.label}</span>
       </div>
 
       <div className={sheet.toolbar}>
@@ -216,15 +222,15 @@ export default async function PortalDocument({
           <div className={styles.notice} role="status">
             <p>
               {declined
-                ? `You declined this on ${formatDate(request.respondedAt)}. Nothing was signed and nothing has been charged.`
-                : `You asked for changes on ${formatDate(request.respondedAt)}. We are working on a new version.`}
+                ? `${answeredBy ?? 'It was'} declined ${answeredBy ? 'this ' : ''}on ${formatDate(request.respondedAt)}. Nothing was signed and nothing has been charged.`
+                : `${answeredBy ? `${answeredBy} asked for changes` : 'Changes were asked for'} on ${formatDate(request.respondedAt)}. We are working on a new version.`}
             </p>
-            <p>
-              <strong>
-                {request.respondedBy?.name ? `${request.respondedBy.name} wrote:` : 'You wrote:'}
-              </strong>{' '}
-              {request.responseNote}
-            </p>
+            {request.responseNote && (
+              <p>
+                <strong>{answeredBy ? `${answeredBy} wrote:` : 'The note:'}</strong>{' '}
+                {request.responseNote}
+              </p>
+            )}
           </div>
         )}
 
@@ -251,7 +257,19 @@ export default async function PortalDocument({
       />
 
       <div className={`${sheet.toolbar} ${sheet.noPrint} ${styles.signArea}`}>
-      {canSign && (
+      {canSign && !actor.isPrimary && (
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h2 className={forms.cardTitle}>With {signerName} to sign</h2>
+          </div>
+          <p className={styles.note}>
+            {signerName} signs for {actor.clientName} as your main contact.
+            {suggestion ? '' : ' If something should change first, you can ask for changes below.'}
+          </p>
+        </section>
+      )}
+
+      {canSign && actor.isPrimary && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
             <h2 className={forms.cardTitle}>Sign it</h2>
@@ -277,7 +295,9 @@ export default async function PortalDocument({
       {canSign && !suggestion && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Not ready to sign?</h2>
+            <h2 className={forms.cardTitle}>
+              {actor.isPrimary ? 'Not ready to sign?' : 'Something to change?'}
+            </h2>
             <span className={forms.cardMeta}>
               {request.respondedAt ? 'This does not sign anything' : 'None of these signs anything'}
             </span>
@@ -286,6 +306,7 @@ export default async function PortalDocument({
             requestId={request.id}
             body={request.version.bodyMarkdown}
             answered={Boolean(request.respondedAt)}
+            decline={actor.isPrimary}
           />
         </section>
       )}

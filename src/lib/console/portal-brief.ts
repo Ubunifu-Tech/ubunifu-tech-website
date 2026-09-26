@@ -3,10 +3,10 @@ import { db } from '@/lib/db';
 import type { TicketKind } from '@/generated/prisma/client';
 import type { ClientActor } from './auth';
 import { clientStage } from './project-status';
-import { INVOICE_STATUS_LABEL } from './billing-labels';
+import { portalInvoiceState } from './billing-labels';
 import { CLIENT_TICKET_STATUS } from './tickets';
 import { formatDate, formatMoney } from './money';
-import { liveInvoice, liveTicket, waitingOnClient } from './live';
+import { awaitingSignature, liveInvoice, liveTicket, waitingOnClient } from './live';
 
 /**
  * What the portal assistant is told, and what it knows: its instructions, the
@@ -44,11 +44,12 @@ export type PortalContext = {
 export async function portalBrief(actor: ClientActor): Promise<string> {
   const now = new Date();
 
-  const [projects, documents, invoices, tickets, colleagues] = await Promise.all([
+  const [projects, documents, revising, invoices, tickets, colleagues] = await Promise.all([
     db.project.findMany({
       where: { clientId: actor.clientId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: {
+        id: true,
         name: true,
         slug: true,
         reference: true,
@@ -86,12 +87,15 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
         },
       },
     }),
+    // Theirs to sign only while a request is open and inside its time: one
+    // that ran out, or that they answered, is not waiting on them.
     db.document.findMany({
-      where: {
-        project: { clientId: actor.clientId, deletedAt: null },
-        status: { in: ['sent', 'viewed', 'changes_requested'] },
-      },
-      select: { reference: true, title: true, status: true, updatedAt: true },
+      where: { project: { clientId: actor.clientId, deletedAt: null }, ...awaitingSignature(now) },
+      select: { reference: true, title: true, projectId: true },
+    }),
+    db.document.findMany({
+      where: { project: { clientId: actor.clientId, deletedAt: null }, status: 'changes_requested' },
+      select: { reference: true, title: true },
     }),
     db.invoice.findMany({
       where: { clientId: actor.clientId, ...liveInvoice, status: { notIn: ['draft', 'void', 'paid'] } },
@@ -136,7 +140,9 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
       .slice(0, 3);
     lines.push(
       `- ${project.name} (${project.reference}), page /portal/projects/${project.slug}`,
-      `  Status: ${clientStage(project.status, project.reviews[0]).label}. Progress: ${done} of ${tasks.length} tasks done.${
+      `  Status: ${clientStage(project.status, project.reviews[0], {
+        waiting: documents.some((document) => document.projectId === project.id),
+      }).label}. Progress: ${done} of ${tasks.length} tasks done.${
         project.targetDate ? ` Target date: ${formatDate(project.targetDate)}.` : ''
       }${project.owner ? ` Led by ${project.owner.name}.` : ''}`,
     );
@@ -169,13 +175,20 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
     }
   }
 
-  lines.push('', 'DOCUMENTS WAITING FOR THEM');
+  // The main contact signs for the client; a colleague is told who does.
+  const signer = colleagues.find((person) => person.isPrimary)?.name ?? 'their main contact';
+  lines.push('', 'DOCUMENTS WAITING FOR A SIGNATURE');
   if (documents.length === 0) lines.push('- None.');
   for (const document of documents) {
     lines.push(
-      `- ${document.title} (${document.reference}), page /portal/documents/${document.reference}${
-        document.status === 'changes_requested' ? '. They asked for changes; we are working on it.' : '. Ready to read and sign.'
+      `- ${document.title} (${document.reference}), page /portal/documents/${document.reference}. ${
+        actor.isPrimary ? 'Ready for them to read and sign.' : `Ready for ${signer} to sign; only the main contact signs.`
       }`,
+    );
+  }
+  for (const document of revising) {
+    lines.push(
+      `- ${document.title} (${document.reference}), page /portal/documents/${document.reference}. They asked for changes; we are working on it, so nothing to sign yet.`,
     );
   }
 
@@ -187,7 +200,7 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
       `- ${invoice.number}: ${formatMoney(owed, invoice.currency)} to pay of ${formatMoney(
         invoice.totalMinor,
         invoice.currency,
-      )}, ${INVOICE_STATUS_LABEL[invoice.status] ?? invoice.status}${
+      )}, ${portalInvoiceState(invoice, now).label.toLowerCase()}${
         invoice.dueAt ? `, due ${formatDate(invoice.dueAt)}` : ''
       }. Page /portal/invoices/${invoice.number}`,
     );

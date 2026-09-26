@@ -37,6 +37,24 @@ export function invoiceStanding(
   return invoice.status;
 }
 
+/**
+ * An invoice as the client reads it: what they have to do about it, not
+ * what we did with it. "Sent" is our side of the story; theirs is "to pay".
+ */
+export function portalInvoiceState(
+  invoice: { status: string; dueAt: Date | null; totalMinor: number; paidMinor: number },
+  now: Date,
+): { label: string; tone: 'good' | 'bad' | 'warn' | 'neutral'; owing: boolean } {
+  if (invoice.status === 'void') return { label: 'Cancelled', tone: 'neutral', owing: false };
+  const standing = invoiceStanding(invoice, now);
+  if (standing === 'paid' || invoice.paidMinor >= invoice.totalMinor) {
+    return { label: 'Paid', tone: 'good', owing: false };
+  }
+  if (standing === 'overdue') return { label: 'Overdue', tone: 'bad', owing: true };
+  const part = invoice.paidMinor > 0 ? 'Part paid' : 'To pay';
+  return { label: part, tone: 'warn', owing: true };
+}
+
 export const INVOICE_STATUS_LABEL: Record<string, string> = {
   draft: 'Draft',
   sent: 'Sent',

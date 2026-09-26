@@ -147,6 +147,7 @@ const contact = await db.clientContact.findFirst({
     id: true,
     name: true,
     email: true,
+    isPrimary: true,
     client: {
       select: {
         id: true,
@@ -172,6 +173,7 @@ if (contact?.email) {
     clientId: contact.client.id,
     clientName: contact.client.name,
     isActivated: true,
+    isPrimary: contact.isPrimary,
   };
   const project = contact.client.projects[0];
   const items = project?.assetRequests.map((item) => item.title) ?? [];

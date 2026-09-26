@@ -17,6 +17,7 @@ import {
   transitionsFor,
 } from '@/lib/console/transitions';
 import { activityFor } from '@/lib/console/activity';
+import { invitedAmong } from '@/lib/console/contacts';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Figures } from '@/components/console/Figures';
 import { StageCatchUp, StageTrack } from './StageTrack';
@@ -485,6 +486,11 @@ export default async function ProjectPage({
     ...(mayMoney ? project.invoices.map((i) => i.id) : []),
   ];
   const recent = await activityFor(staff, activityIds, tab === 'activity' ? 60 : 6);
+  const invited = await invitedAmong(
+    project.client.contacts
+      .filter((contact) => !contact.activatedAt && contact.email)
+      .map((contact) => contact.id),
+  );
 
   const href = (key: Tab) =>
     key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`;
@@ -883,7 +889,7 @@ export default async function ProjectPage({
                         className={`${forms.badge} ${
                           contact.activatedAt
                             ? forms.badgeGood
-                            : contact.canSignIn && contact.email
+                            : contact.canSignIn && contact.email && invited.has(contact.id)
                               ? forms.badgeWarn
                               : ''
                         }`}
@@ -893,7 +899,9 @@ export default async function ProjectPage({
                           : !contact.canSignIn
                             ? 'No portal'
                             : contact.email
-                              ? 'Invited'
+                              ? invited.has(contact.id)
+                                ? 'Invited'
+                                : 'Not invited yet'
                               : 'Needs a setup link'}
                       </span>
                     </span>

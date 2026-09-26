@@ -3,7 +3,15 @@
 import React, { useActionState, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { TextField } from './Fields';
-import { MenuDivider, MenuItem, MenuList, MenuNote, MenuTitle, RowMenu } from './RowMenu';
+import {
+  MenuDivider,
+  MenuItem,
+  MenuList,
+  MenuNote,
+  MenuTitle,
+  RowMenu,
+  useLastSaid,
+} from './RowMenu';
 import forms from '@/styles/forms.module.css';
 import styles from './People.module.css';
 
@@ -147,7 +155,7 @@ export function AddPerson({
   );
 }
 
-type PersonView = 'menu' | 'edit' | 'setup' | 'remove';
+type PersonView = 'menu' | 'edit' | 'setup' | 'remove' | 'main';
 
 /**
  * Everything that can be done to one person, behind the "…" on their row:
@@ -189,7 +197,14 @@ export function PersonMenu({
   const [view, setView] = useState<PersonView>('menu');
   const noop: Action = async () => INITIAL;
   const [inviteState, inviteAction, inviting] = useActionState(invite ?? noop, INITIAL);
-  const [mainState, mainAction, making] = useActionState(makeMain ?? noop, INITIAL);
+  const [mainState, mainAction, making] = useActionState(
+    async (previous: PeopleState, formData: FormData) => {
+      const result = await (makeMain ?? noop)(previous, formData);
+      if (result.status === 'done') setView('menu');
+      return result;
+    },
+    INITIAL,
+  );
   const [removeState, removeAction, removing] = useActionState(remove ?? noop, INITIAL);
   const [accessState, accessAction, switching] = useActionState(access ?? noop, INITIAL);
   const [editState, editAction, saving] = useActionState(
@@ -211,9 +226,7 @@ export function PersonMenu({
   );
 
   // The latest answer from any of the choices, shown under the list.
-  const said = [removeState, mainState, inviteState, editState, accessState].find(
-    (state) => state.message,
-  );
+  const said = useLastSaid(removeState, mainState, inviteState, editState, accessState);
   const canInvite = invite && contact.canSignIn && contact.email;
   const canSetUp = setupLink && contact.canSignIn && !contact.activated;
   const canRemove = remove && !contact.isPrimary;
@@ -248,12 +261,7 @@ export function PersonMenu({
               </form>
             )}
             {canMakeMain && (
-              <form action={mainAction}>
-                {fields}
-                <MenuItem type="submit" disabled={making}>
-                  Make main contact
-                </MenuItem>
-              </form>
+              <MenuItem onClick={() => setView('main')}>Make main contact</MenuItem>
             )}
             {access && (
               <form action={accessAction}>
@@ -296,6 +304,29 @@ export function PersonMenu({
             </button>
           </div>
           {removeState.status === 'error' && <Message state={removeState} />}
+        </form>
+      )}
+
+      {view === 'main' && (
+        <form action={mainAction}>
+          {fields}
+          <MenuTitle>
+            Make {contact.name} the main contact? They sign agreements and receive invoices
+            {contact.activated ? '' : ', once they have set up their account'}.
+          </MenuTitle>
+          <div className={forms.actions}>
+            <button type="submit" className={forms.button} disabled={making}>
+              {making ? 'Changing…' : 'Make main contact'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setView('menu')}
+            >
+              Cancel
+            </button>
+          </div>
+          {mainState.status === 'error' && <Message state={mainState} />}
         </form>
       )}
 

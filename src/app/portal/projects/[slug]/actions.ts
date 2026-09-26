@@ -2,11 +2,17 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { requireClient, recordAudit } from '@/lib/console/auth';
+import { getClientActor, requireClient, recordAudit } from '@/lib/console/auth';
 import { recordAssetUpload } from '@/lib/console/uploads';
 import { alertClientSent } from '@/lib/console/alerts';
 
 export type UploadState = { status: 'idle' | 'done' | 'error'; message?: string };
+
+/** Whether the person is still signed in, to explain an upload that failed. */
+export async function stillSignedIn(): Promise<boolean> {
+  const actor = await getClientActor();
+  return actor?.isActivated === true;
+}
 
 /**
  * Records an upload the browser has just finished.

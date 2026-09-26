@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getClientActor, getPendingContact } from '@/lib/console/auth';
 import { AuthLayout } from '@/components/console/AuthLayout';
+import { ReachUs } from '@/components/console/ReachUs';
 import { SignInForms } from './SignInForms';
 import { safePortalPath } from '@/lib/console/return-path';
 import auth from '@/styles/auth.module.css';
@@ -18,6 +19,8 @@ const LINK_PROBLEM: Record<string, string> = {
   missing:
     'That link was incomplete. Sign in below, or get a new link.',
   'set-up': 'Your account is already set up. Sign in below.',
+  'setup-expired':
+    'That setup link has run out. Ask us for a new one and we will send it the same way.',
   'reset-expired':
     'That link to choose a new password has expired or was already used. Ask for a new one below.',
 };
@@ -39,7 +42,13 @@ export default async function PortalSignIn({
   const pending = await getPendingContact();
   if (pending && !pending.isActivated) redirect('/portal/activate');
 
-  const problem = error ? LINK_PROBLEM[error] : undefined;
+  // An old link that pointed somewhere still takes them there once signed in.
+  const problem =
+    error === 'expired' && next
+      ? 'That link has been used or has run out. Sign in below and it opens where it pointed.'
+      : error
+        ? LINK_PROBLEM[error]
+        : undefined;
 
   return (
     <AuthLayout role="Portal">
@@ -54,9 +63,12 @@ export default async function PortalSignIn({
         <div className={auth.card}>
           <SignInForms next={next} startWith={error === 'reset-expired' ? 'reset' : 'password'} />
         </div>
-        <p className={auth.foot}>
-          No account yet? Email info@ubunifutech.com.
-        </p>
+        {error !== 'setup-expired' && (
+          <p className={auth.foot}>
+            First time here? Use Email me a sign-in link, then choose a password.
+          </p>
+        )}
+        <ReachUs lead="Need help?" className={auth.foot} />
       </div>
     </AuthLayout>
   );

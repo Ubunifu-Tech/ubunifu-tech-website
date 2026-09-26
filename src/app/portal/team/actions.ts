@@ -90,7 +90,7 @@ export async function editColleague(_previous: TeamState, formData: FormData): P
   }
   const contact = await db.clientContact.findFirst({
     where: { id: formText(formData, 'contactId'), clientId: actor.clientId, deletedAt: null },
-    select: { id: true, activatedAt: true },
+    select: { id: true, activatedAt: true, email: true, canSignIn: true },
   });
   if (!contact) return { status: 'error', message: 'They are not on your account.' };
   if (contact.activatedAt) {
@@ -107,7 +107,27 @@ export async function editColleague(_previous: TeamState, formData: FormData): P
     by: by(actor),
   });
   revalidatePath('/portal/team');
-  return { status: result.ok ? 'done' : 'error', message: result.message };
+  if (!result.ok) return { status: 'error', message: result.message };
+
+  // An address given for the first time, or a new one, is where their
+  // invitation goes, so it goes now.
+  const email = formText(formData, 'email').toLowerCase();
+  if (!email || email === (contact.email ?? '') || !contact.canSignIn) {
+    return { status: 'done', message: result.message };
+  }
+  const person = await db.clientContact.findUnique({
+    where: { id: contact.id },
+    select: { id: true, name: true, email: true, activatedAt: true },
+  });
+  const sent = person
+    ? await invitePerson({ contact: person, clientName: actor.clientName, by: by(actor) })
+    : { ok: false as const };
+  return {
+    status: 'done',
+    message: sent.ok
+      ? `Saved, and the invitation is on its way to ${email}.`
+      : 'Saved, but the invitation did not send. Use Email the invitation to try again.',
+  };
 }
 
 export async function removeColleague(_previous: TeamState, formData: FormData): Promise<TeamState> {

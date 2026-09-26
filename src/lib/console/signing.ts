@@ -69,7 +69,7 @@ export async function recordSignature(input: {
           title: true,
           kind: true,
           project: {
-            select: { id: true, slug: true, owner: { select: { email: true, isActive: true } } },
+            select: { id: true, slug: true, owner: { select: { email: true, isActive: true, role: true } } },
           },
         },
       },
@@ -245,6 +245,7 @@ export async function recordSignature(input: {
     : null;
   await alertTeam({
     owner: request.document.project.owner,
+    need: 'documents',
     subject: `[${request.document.reference}] Signed by ${signer.name}`,
     html: documentSignedNoticeEmail({
       reference: request.document.reference,

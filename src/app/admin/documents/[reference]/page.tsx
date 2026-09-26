@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, CircleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
-import { can, requireStaff } from '@/lib/console/auth';
+import { can, requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import {
   DOCUMENT_KIND_LABEL,
@@ -71,10 +71,8 @@ export default async function DocumentPage({
   params: Promise<{ reference: string }>;
   searchParams: Promise<{ step?: string }>;
 }) {
-  // The whole team can read documents. Writing and sending is for those who
-  // handle them; everyone else gets the read-only view.
-  const staff = await requireStaff();
-  const mayWrite = can(staff, 'documents');
+  // Documents carry the prices, so they are for those who handle them.
+  const staff = await requirePermission('documents');
   const [{ reference }, query] = await Promise.all([params, searchParams]);
   const now = new Date();
 
@@ -365,7 +363,7 @@ export default async function DocumentPage({
             {versions}
           </div>
           <div className={styles.stack}>
-            {mayWrite && !removedAt && signature?.contactId && (
+            {!removedAt && signature?.contactId && (
               <section className={forms.card}>
                 <div className={forms.cardHeader}>
                   <h2 className={forms.cardTitle}>Their copy</h2>
@@ -385,14 +383,12 @@ export default async function DocumentPage({
     );
   }
 
-  // ── Removed and never signed, or not ours to change: what it says ─
-  if (removedAt || !mayWrite) {
+  // ── Removed, and never signed: what it said, and nothing to do ────
+  if (removedAt) {
     return (
       <main className={styles.page}>
         {head}
-        {removedNote ?? (
-          <Callout kind="info">Someone who handles documents can change or send this.</Callout>
-        )}
+        {removedNote}
         <div className={page.split}>
           <div className={styles.stack}>
             {latest && (

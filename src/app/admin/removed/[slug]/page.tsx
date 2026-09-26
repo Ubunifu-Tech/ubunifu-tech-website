@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function RemovedClient({ params }: { params: Promise<{ slug: string }> }) {
   const staff = await requirePermission('clients');
   const seesMoney = can(staff, 'invoices');
+  const seesDocuments = can(staff, 'documents');
   const { slug } = await params;
 
   const client = await db.client.findFirst({
@@ -347,7 +348,7 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
           </div>
         )}
 
-        {documents.length > 0 && (
+        {seesDocuments && documents.length > 0 && (
           <div className={table.frame}>
             <div className={table.toolbar}>
               <div className={table.toolbarText}>

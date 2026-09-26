@@ -84,7 +84,13 @@ const GROUPS: { label?: string; items: Item[] }[] = [
   {
     label: 'Client care',
     items: [
-      { href: '/documents', label: 'Documents', icon: 'documents', count: 'documents' },
+      {
+        href: '/documents',
+        label: 'Documents',
+        icon: 'documents',
+        count: 'documents',
+        need: 'documents',
+      },
       { href: '/requests', label: 'Requests', icon: 'requests', count: 'requests' },
     ],
   },

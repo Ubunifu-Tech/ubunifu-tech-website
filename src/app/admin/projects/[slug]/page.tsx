@@ -106,9 +106,21 @@ export default async function ProjectPage({
   const mayMoney = can(staff, 'invoices');
   const mayDocs = can(staff, 'documents');
   const { tab: tabParam } = await searchParams;
-  const tab: Tab = (TABS as readonly string[]).includes(tabParam ?? '')
-    ? (tabParam as Tab)
-    : 'overview';
+  // A tab this person cannot open falls back to the overview, rather than an
+  // empty page under the tabs.
+  const opens: Record<Tab, boolean> = {
+    overview: true,
+    plan: true,
+    brand: true,
+    fees: mayFees || mayMoney,
+    documents: mayDocs,
+    updates: true,
+    activity: true,
+  };
+  const tab: Tab =
+    (TABS as readonly string[]).includes(tabParam ?? '') && opens[tabParam as Tab]
+      ? (tabParam as Tab)
+      : 'overview';
   const now = new Date();
 
   const project = await db.project.findFirst({
@@ -455,10 +467,11 @@ export default async function ProjectPage({
       document.status === 'signed' &&
       (document.kind === 'contract' || document.kind === 'statement_of_work'),
   );
-  // Invoice and payment lines only for those who handle money.
+  // Document lines only for those who handle documents, and invoice and
+  // payment lines only for those who handle money.
   const activityIds = [
     project.id,
-    ...project.documents.map((d) => d.id),
+    ...(mayDocs ? project.documents.map((d) => d.id) : []),
     ...(mayMoney ? project.invoices.map((i) => i.id) : []),
   ];
   const recent = await activityFor(activityIds, tab === 'activity' ? 60 : 6);
@@ -619,12 +632,16 @@ export default async function ProjectPage({
                 },
               ]
             : []),
-          {
-            key: 'documents',
-            label: 'Documents',
-            href: href('documents'),
-            count: project.documents.length,
-          },
+          ...(mayDocs
+            ? [
+                {
+                  key: 'documents',
+                  label: 'Documents',
+                  href: href('documents'),
+                  count: project.documents.length,
+                },
+              ]
+            : []),
           {
             key: 'updates',
             label: 'Updates',
@@ -771,13 +788,15 @@ export default async function ProjectPage({
                     </Link>
                   </li>
                 )}
-                <li>
-                  <Link href={href('documents')}>
-                    {project.documents.length === 0
-                      ? 'No proposal or agreement yet'
-                      : `${project.documents.length} ${project.documents.length === 1 ? 'document' : 'documents'}`}
-                  </Link>
-                </li>
+                {mayDocs && (
+                  <li>
+                    <Link href={href('documents')}>
+                      {project.documents.length === 0
+                        ? 'No proposal or agreement yet'
+                        : `${project.documents.length} ${project.documents.length === 1 ? 'document' : 'documents'}`}
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link href={href('updates')}>
                     {project.updates.length === 0

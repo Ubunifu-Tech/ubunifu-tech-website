@@ -137,7 +137,7 @@ export async function suggestWording(
           reference: true,
           title: true,
           status: true,
-          project: { select: { slug: true, owner: { select: { email: true, isActive: true } } } },
+          project: { select: { slug: true, owner: { select: { email: true, isActive: true, role: true } } } },
         },
       },
     },
@@ -292,6 +292,7 @@ export async function suggestWording(
   // promptness and nothing else, and the record below says which it was.
   const sent = await alertTeam({
     owner: request.document.project.owner,
+    need: 'documents',
     subject: `[${request.document.reference}] New wording suggested`,
     html: documentWordingEmail({
       reference: request.document.reference,

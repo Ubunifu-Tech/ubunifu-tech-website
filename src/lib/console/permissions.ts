@@ -4,9 +4,9 @@ import type { StaffRole } from '@/generated/prisma/client';
  * What a role may do. Client-safe: the settings screen and the navigation
  * read these lists, and the server enforces them in every page and action.
  *
- * Everyone on the team can see clients, projects, documents and requests,
- * and tick off the tasks they are given. These decide who can change things
- * and who can see money.
+ * Everyone on the team can see clients, projects and requests, and tick off
+ * the tasks they are given. These decide who can change things, and who can
+ * see money and documents, which carry the prices.
  */
 
 export const PERMISSIONS = [
@@ -38,7 +38,7 @@ export const PERMISSIONS = [
   {
     key: 'documents',
     label: 'Documents',
-    description: 'Write proposals and agreements and send them for signature.',
+    description: 'See, write and send proposals and agreements, prices included.',
   },
   {
     key: 'requests',

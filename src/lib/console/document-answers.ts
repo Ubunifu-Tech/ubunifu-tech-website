@@ -71,7 +71,7 @@ export async function recordDocumentAnswer(input: {
           id: true,
           reference: true,
           title: true,
-          project: { select: { slug: true, owner: { select: { email: true, isActive: true } } } },
+          project: { select: { slug: true, owner: { select: { email: true, isActive: true, role: true } } } },
         },
       },
     },
@@ -169,6 +169,7 @@ export async function recordDocumentAnswer(input: {
   // promptness and nothing else, which is why it is not in the transaction.
   await alertTeam({
     owner: request.document.project.owner,
+    need: 'documents',
     subject: `[${request.document.reference}] ${declined ? 'Declined' : 'Changes requested'}`,
     html: documentResponseEmail({
       reference: request.document.reference,
@@ -226,7 +227,7 @@ export async function askForFreshCopy(input: {
           id: true,
           reference: true,
           title: true,
-          project: { select: { owner: { select: { email: true, isActive: true } } } },
+          project: { select: { owner: { select: { email: true, isActive: true, role: true } } } },
         },
       },
     },
@@ -258,6 +259,7 @@ export async function askForFreshCopy(input: {
   });
   await alertTeam({
     owner: request.document.project.owner,
+    need: 'documents',
     subject: `[${request.document.reference}] Asked to send it again`,
     html: documentFreshCopyEmail({
       reference: request.document.reference,

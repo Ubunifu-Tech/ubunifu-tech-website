@@ -4,6 +4,7 @@ import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
 import { can, requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
+import { ENQUIRY_STATUS_LABEL } from '@/lib/console/enquiry-labels';
 import { StartForClient } from './StartForClient';
 import { TriageControls } from './TriageControls';
 import { MenuLink, MenuList, RowMenu } from '@/components/console/RowMenu';
@@ -13,16 +14,6 @@ import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Enquiries' };
-
-const STATUS_LABEL: Record<EnquiryStatus, string> = {
-  new: 'Unread',
-  triaged: 'Read',
-  in_conversation: 'Talking',
-  qualified: 'Worth a proposal',
-  converted: 'Became a client',
-  declined: 'Not for us',
-  spam: 'Spam',
-};
 
 const STATUS_BADGE: Record<EnquiryStatus, string> = {
   new: forms.badgeWarn,
@@ -290,7 +281,7 @@ export default async function EnquiriesPage({
                       </td>
                       <td className={table.td}>
                         <span className={`${forms.badge} ${STATUS_BADGE[enquiry.status]}`}>
-                          {STATUS_LABEL[enquiry.status]}
+                          {ENQUIRY_STATUS_LABEL[enquiry.status]}
                         </span>
                       </td>
                       <td className={table.td}>

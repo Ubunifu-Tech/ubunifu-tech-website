@@ -9,7 +9,7 @@ import {
   passToTeam,
   recordEnquiryTool,
 } from '@/lib/console/assistant';
-import { allow } from '@/lib/console/rate-limit';
+import { allow, requestIp } from '@/lib/console/rate-limit';
 import { siteBrief } from '@/lib/console/site-brief';
 
 /**
@@ -64,14 +64,6 @@ function pagePath(value: unknown): string | null {
   return /^\/[A-Za-z0-9/_#-]{0,120}$/.test(value) ? value : null;
 }
 
-function clientIp(request: NextRequest): string | null {
-  return (
-    request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    null
-  );
-}
-
 export async function POST(request: NextRequest) {
   try {
     return await handle(request);
@@ -115,25 +107,15 @@ async function handle(request: NextRequest) {
     ? existingKey
     : generateToken();
 
-  const ip = clientIp(request);
-  const since = new Date(Date.now() - 60 * 60 * 1000);
-
+  const ip = requestIp(request.headers);
+  // Counted before the model is asked, so messages sent together cannot all
+  // go through on the same count.
   const [byVisitor, byAddress] = await Promise.all([
-    db.conversationMessage.count({
-      where: {
-        role: 'user',
-        createdAt: { gte: since },
-        conversation: { visitorKey },
-      },
-    }),
-    ip
-      ? db.conversationMessage.count({
-          where: { role: 'user', createdAt: { gte: since }, conversation: { ip } },
-        })
-      : Promise.resolve(0),
+    allow('assistant:visitor', visitorKey, { limit: MAX_MESSAGES_PER_HOUR, windowMinutes: 60 }),
+    allow('assistant:ip', ip, { limit: MAX_MESSAGES_PER_IP_PER_HOUR, windowMinutes: 60 }),
   ]);
 
-  if (byVisitor >= MAX_MESSAGES_PER_HOUR || byAddress >= MAX_MESSAGES_PER_IP_PER_HOUR) {
+  if (!byVisitor || !byAddress) {
     return unavailable('That is a lot of questions for one hour. Leave us a message instead.', 429);
   }
 
@@ -222,7 +204,7 @@ async function handoff(request: NextRequest, raw: unknown) {
     return NextResponse.json({ error: 'Say a little about what you need.' }, { status: 400 });
   }
 
-  const ip = clientIp(request);
+  const ip = requestIp(request.headers);
   const [byAddress, byEmail] = await Promise.all([
     allow('site-handoff:ip', ip, { limit: 5, windowMinutes: 60 }),
     allow('site-handoff:email', email, { limit: 3, windowMinutes: 60 }),

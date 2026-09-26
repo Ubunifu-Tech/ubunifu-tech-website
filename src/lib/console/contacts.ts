@@ -2,7 +2,9 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { recordAudit } from './auth';
 import { consoleEnv } from './env';
-import { issueMagicToken, revokeMagicTokens } from './magic-link';
+import { issueMagicToken, revokeEveryMagicToken, revokeMagicTokens } from './magic-link';
+import { revokeSessionsFor } from './session';
+import { EMAILED_LINKS } from './client-links';
 import { sendConsoleEmail } from './mailer';
 import {
   clientInviteEmail,
@@ -93,6 +95,16 @@ export async function addContact(input: {
   if (existing && !existing.deletedAt) {
     return { ok: false, message: 'Someone with that email is already here.' };
   }
+  // Only the main contact removes people, so only they bring someone back.
+  if (existing && by.type === 'client_contact') {
+    const me = await db.clientContact.findUnique({ where: { id: by.id }, select: { isPrimary: true } });
+    if (!me?.isPrimary) {
+      return {
+        ok: false,
+        message: 'They were taken off your account. Your main contact can bring them back.',
+      };
+    }
+  }
   if (contact.email && (await emailTakenElsewhere(contact.email, input.clientId))) {
     return {
       ok: false,
@@ -102,11 +114,26 @@ export async function addContact(input: {
 
   let person;
   try {
+    // Someone brought back starts again from the invitation: whatever
+    // password, link or session they had before being removed stays dead.
     person = existing
-      ? await db.clientContact.update({
-          where: { id: existing.id },
-          data: { ...contact, deletedAt: null, canSignIn: true },
-          select: { id: true, name: true, email: true, activatedAt: true },
+      ? await db.$transaction(async (tx) => {
+          await revokeEveryMagicToken(tx, 'client_contact', [existing.id]);
+          await revokeSessionsFor(tx, 'client_contact', [existing.id]);
+          return tx.clientContact.update({
+            where: { id: existing.id },
+            data: {
+              ...contact,
+              deletedAt: null,
+              canSignIn: true,
+              activatedAt: null,
+              passwordHash: null,
+              passwordSetAt: null,
+              failedSignIns: 0,
+              lockedUntil: null,
+            },
+            select: { id: true, name: true, email: true, activatedAt: true },
+          });
         })
       : await db.clientContact.create({
           data: { clientId: input.clientId, ...contact },
@@ -202,15 +229,12 @@ export async function updateContact(input: {
     throw error;
   }
 
-  // Links already emailed went to the old address; a wrong address is the
-  // usual reason for changing it, so those links stop working. A setup link
-  // shared by hand had no address behind it and keeps working.
+  // Links already emailed went to the old address, documents and invoices
+  // included; a wrong address is the usual reason for changing it, so those
+  // links stop working. A setup link shared by hand had no address behind it
+  // and keeps working.
   if (emailChanged && contact.email) {
-    await revokeMagicTokens('client_contact', contact.id, [
-      'invite',
-      'sign_in',
-      'password_reset',
-    ]);
+    await revokeMagicTokens('client_contact', contact.id, EMAILED_LINKS);
   }
 
   await recordAudit({
@@ -416,10 +440,10 @@ export async function invitePerson(input: {
 }
 
 /**
- * Takes someone out. Their history stays; their access ends on their next
- * request, because every request re-checks. The main contact cannot be
- * removed until someone else is made main contact, so a client is never left
- * without a person who signs.
+ * Takes someone out. Their history stays; their access ends at once, with
+ * every session they hold and every link sent to them. The main contact
+ * cannot be removed until someone else is made main contact, so a client is
+ * never left without a person who signs.
  */
 export async function removeContact(input: { contactId: string; clientId: string; by: Actor }) {
   const contact = await db.clientContact.findFirst({
@@ -434,9 +458,13 @@ export async function removeContact(input: { contactId: string; clientId: string
     return { ok: false as const, message: 'You cannot remove yourself.' };
   }
 
-  await db.clientContact.update({
-    where: { id: contact.id },
-    data: { deletedAt: new Date(), canSignIn: false },
+  await db.$transaction(async (tx) => {
+    await tx.clientContact.update({
+      where: { id: contact.id },
+      data: { deletedAt: new Date(), canSignIn: false },
+    });
+    await revokeEveryMagicToken(tx, 'client_contact', [contact.id]);
+    await revokeSessionsFor(tx, 'client_contact', [contact.id]);
   });
   await recordAudit({
     actorType: input.by.type,
@@ -453,10 +481,21 @@ export async function removeContact(input: { contactId: string; clientId: string
 export async function makeMainContact(input: { contactId: string; clientId: string; by: Actor }) {
   const contact = await db.clientContact.findFirst({
     where: { id: input.contactId, clientId: input.clientId, deletedAt: null },
-    select: { id: true, name: true, isPrimary: true },
+    select: { id: true, name: true, isPrimary: true, canSignIn: true },
   });
   if (!contact) return { ok: false as const, message: 'They are not on this account.' };
   if (contact.isPrimary) return { ok: true as const, message: 'Already the main contact.' };
+  // The main contact signs, so it has to be someone who can sign in. Turning
+  // access back on is ours to decide, not a side effect of this.
+  if (!contact.canSignIn) {
+    return {
+      ok: false as const,
+      message:
+        input.by.type === 'staff'
+          ? `Turn on ${contact.name}'s portal access first.`
+          : `${contact.name} cannot sign in at the moment. Ask us to turn their access back on.`,
+    };
+  }
 
   // Locked on the client, so two people choosing at once cannot leave two
   // main contacts behind.
@@ -468,7 +507,7 @@ export async function makeMainContact(input: { contactId: string; clientId: stri
     });
     await tx.clientContact.update({
       where: { id: contact.id },
-      data: { isPrimary: true, canSignIn: true },
+      data: { isPrimary: true },
     });
   });
   await recordAudit({

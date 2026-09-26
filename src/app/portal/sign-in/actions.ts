@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect, unstable_rethrow } from 'next/navigation';
+import { after } from 'next/server';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { consoleEnv } from '@/lib/console/env';
@@ -13,7 +14,7 @@ import {
   clearFailedSignIns,
   isLocked,
   requestIp,
-  recordFailedSignIn,
+  takeSignInAttempt,
   tooManyLinkRequests,
 } from '@/lib/console/rate-limit';
 import { recordAudit } from '@/lib/console/auth';
@@ -81,14 +82,17 @@ async function passwordSignIn(
     },
   });
 
-  if (!contact || contact.client.deletedAt) {
-    // Still spend time hashing, so a missing account does not answer faster
-    // than a wrong password and become detectable by timing alone.
+  // Every refusal spends the time a password check takes, so no account, a
+  // locked one and one not set up yet all answer as slowly as a wrong
+  // password, and none can be told apart by timing.
+  const refuse = async () => {
     await verifyPassword(password, 'scrypt$32768$8$1$AAAAAAAAAAAAAAAAAAAAAA$AAAA');
     return refused;
-  }
+  };
 
-  if (isLocked(contact)) {
+  if (!contact || contact.client.deletedAt) return refuse();
+
+  if (isLocked(contact) || !(await takeSignInAttempt(contact.id))) {
     await recordAudit({
       actorType: 'client_contact',
       actorId: contact.id,
@@ -96,16 +100,13 @@ async function passwordSignIn(
       entityType: 'ClientContact',
       entityId: contact.id,
     });
-    return refused;
+    return refuse();
   }
 
-  if (!contact.passwordHash || !contact.activatedAt) {
-    // Invited but never activated. Saying so would confirm the address exists.
-    return refused;
-  }
+  // Invited but never activated. Saying so would confirm the address exists.
+  if (!contact.passwordHash || !contact.activatedAt) return refuse();
 
   if (!(await verifyPassword(password, contact.passwordHash))) {
-    await recordFailedSignIn(contact.id);
     await recordAudit({
       actorType: 'client_contact',
       actorId: contact.id,
@@ -168,6 +169,21 @@ async function sendPortalLink(
     return sameForEveryone;
   }
 
+  // What happens next depends on whether the address has a portal, so it
+  // happens after the answer has gone back: the answer, and how long it
+  // takes, are the same for every address.
+  const next = safePortalPath(formData.get('next'));
+  after(async () => {
+    try {
+      await deliverPortalLink(email, next);
+    } catch (error) {
+      console.error('[portal] sign-in link failed', error);
+    }
+  });
+  return sameForEveryone;
+}
+
+async function deliverPortalLink(email: string, next: string | null): Promise<void> {
   const contact = await db.clientContact.findFirst({
     where: { email, deletedAt: null, canSignIn: true },
     select: {
@@ -178,7 +194,7 @@ async function sendPortalLink(
     },
   });
 
-  if (!contact || contact.client.deletedAt) return sameForEveryone;
+  if (!contact || contact.client.deletedAt) return;
 
   if (
     await tooManyLinkRequests({
@@ -194,12 +210,11 @@ async function sendPortalLink(
       entityType: 'ClientContact',
       entityId: contact.id,
     });
-    return sameForEveryone;
+    return;
   }
 
   // The page they were trying to reach travels inside the token, so the link
   // lands there. The verify route checks it again before using it.
-  const next = safePortalPath(formData.get('next'));
   const { token } = await issueMagicToken({
     purpose: 'sign_in',
     actorType: 'client_contact',
@@ -207,7 +222,7 @@ async function sendPortalLink(
     ...(next ? { entityType: 'Path', entityId: next } : {}),
   });
 
-  await sendConsoleEmail({
+  const sent = await sendConsoleEmail({
     // The address typed, which is the one this contact was found by.
     to: email,
     subject: 'Sign in to your Ubunifu portal',
@@ -223,12 +238,11 @@ async function sendPortalLink(
   await recordAudit({
     actorType: 'client_contact',
     actorId: contact.id,
-    action: 'client.sign_in.link_sent',
+    action: sent.ok ? 'client.sign_in.link_sent' : 'client.sign_in.link_send_failed',
     entityType: 'ClientContact',
     entityId: contact.id,
+    summary: sent.ok ? undefined : sent.error,
   });
-
-  return sameForEveryone;
 }
 
 /**
@@ -270,6 +284,18 @@ async function sendPasswordReset(
     return sameForEveryone;
   }
 
+  // As with the sign-in link: the same answer, as fast, for every address.
+  after(async () => {
+    try {
+      await deliverPasswordReset(email);
+    } catch (error) {
+      console.error('[portal] password reset link failed', error);
+    }
+  });
+  return sameForEveryone;
+}
+
+async function deliverPasswordReset(email: string): Promise<void> {
   const contact = await db.clientContact.findFirst({
     where: { email, deletedAt: null, canSignIn: true },
     select: {
@@ -281,7 +307,7 @@ async function sendPasswordReset(
     },
   });
 
-  if (!contact?.email || contact.client.deletedAt) return sameForEveryone;
+  if (!contact?.email || contact.client.deletedAt) return;
 
   if (
     await tooManyLinkRequests({
@@ -297,7 +323,7 @@ async function sendPasswordReset(
       entityType: 'ClientContact',
       entityId: contact.id,
     });
-    return sameForEveryone;
+    return;
   }
 
   if (!contact.activatedAt) {
@@ -308,9 +334,8 @@ async function sendPasswordReset(
       email: contact.email,
       clientName: contact.client.name,
     });
-    return sameForEveryone;
+    return;
   }
 
   await sendPasswordLink({ id: contact.id, name: contact.name, email: contact.email });
-  return sameForEveryone;
 }

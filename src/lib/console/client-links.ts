@@ -23,6 +23,14 @@ export const CLIENT_LINKS: readonly MagicTokenPurpose[] = [
 ];
 
 /**
+ * Every link that went to a contact's inbox: the ones above, and a link to
+ * choose a new password. A new address, a new password or access turned off
+ * ends all of them at once, so no link sent before the change still opens
+ * the portal after it.
+ */
+export const EMAILED_LINKS: readonly MagicTokenPurpose[] = [...CLIENT_LINKS, 'password_reset'];
+
+/**
  * Where a link lands after it signs someone in.
  *
  * An email that says "view your invoice" should open the invoice, not a

@@ -15,6 +15,7 @@ import {
 } from '@/lib/console/contacts';
 import { hashPassword, passwordProblem, verifyPassword } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
+import { EMAILED_LINKS } from '@/lib/console/client-links';
 import { readSession, revokeAllSessions } from '@/lib/console/session';
 import { allow, tooManyLinkRequests } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
@@ -189,7 +190,7 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
   // Old links stop working once the password changes, and so does every
   // other session: whoever knew the old password is signed out. This one
   // stays.
-  await revokeMagicTokens('client_contact', actor.id, ['sign_in', 'password_reset']);
+  await revokeMagicTokens('client_contact', actor.id, EMAILED_LINKS);
   const session = await readSession('portal');
   await revokeAllSessions('client_contact', actor.id, session?.sessionId);
   await recordAudit({

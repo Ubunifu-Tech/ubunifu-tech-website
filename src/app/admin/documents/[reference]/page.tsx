@@ -215,7 +215,7 @@ export default async function DocumentPage({
     </div>
   );
 
-  const activity = await activityFor([document.id]);
+  const activity = await activityFor(staff, [document.id]);
 
   const removedNote = removedAt ? (
     <Callout kind="info">

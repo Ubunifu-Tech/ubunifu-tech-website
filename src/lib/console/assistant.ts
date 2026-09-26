@@ -4,7 +4,7 @@ import type { Prisma, ServiceLine } from '@/generated/prisma/client';
 import type { AgentTool } from './agent';
 import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
-import { allow } from './rate-limit';
+import { ACKNOWLEDGEMENTS_PER_DAY, allow } from './rate-limit';
 import { acknowledgementEmail, notificationEmail } from '@/lib/emails';
 
 /** Where new enquiries and requests are announced. */
@@ -255,7 +255,9 @@ export async function passToTeam(input: {
   }
 
   // The enquiry is safe in the console before anyone is emailed, so a mail
-  // outage delays the alert but never loses the lead.
+  // outage delays the alert but never loses the lead. The visitor's reply
+  // shares the site's daily ceiling with the contact form's.
+  const mayReply = await allow('acknowledgement', 'site', ACKNOWLEDGEMENTS_PER_DAY);
   await Promise.all([
     sendConsoleEmail({
       to: TEAM_INBOX,
@@ -275,19 +277,16 @@ export async function passToTeam(input: {
       entityId: enquiry.id,
       idempotencyKey: `assistant-notify-${enquiry.id}`,
     }),
-    sendConsoleEmail({
-      to: input.email,
-      subject: 'Thanks for reaching out | Ubunifu Technologies',
-      html: acknowledgementEmail({
-        name: input.name,
-        subject: input.subject,
-        message: input.details,
+    mayReply &&
+      sendConsoleEmail({
+        to: input.email,
+        subject: 'Thanks for reaching out | Ubunifu Technologies',
+        html: acknowledgementEmail(),
+        template: 'assistant_acknowledgement',
+        entityType: 'Enquiry',
+        entityId: enquiry.id,
+        idempotencyKey: `assistant-ack-${enquiry.id}`,
       }),
-      template: 'assistant_acknowledgement',
-      entityType: 'Enquiry',
-      entityId: enquiry.id,
-      idempotencyKey: `assistant-ack-${enquiry.id}`,
-    }),
   ]);
 
   return { enquiryId: enquiry.id, updated: false };

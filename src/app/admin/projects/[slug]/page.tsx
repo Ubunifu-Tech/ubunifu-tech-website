@@ -484,7 +484,7 @@ export default async function ProjectPage({
     ...(mayDocs ? project.documents.map((d) => d.id) : []),
     ...(mayMoney ? project.invoices.map((i) => i.id) : []),
   ];
-  const recent = await activityFor(activityIds, tab === 'activity' ? 60 : 6);
+  const recent = await activityFor(staff, activityIds, tab === 'activity' ? 60 : 6);
 
   const href = (key: Tab) =>
     key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`;

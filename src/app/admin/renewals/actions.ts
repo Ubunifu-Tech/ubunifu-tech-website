@@ -21,8 +21,12 @@ export async function skipRenewal(
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
 
-  const renewal = await db.renewalEvent.findUnique({
-    where: { id: formText(formData, 'renewalId') },
+  // Only on a project still here: a removed one's fees are out of sight.
+  const renewal = await db.renewalEvent.findFirst({
+    where: {
+      id: formText(formData, 'renewalId'),
+      lineItem: { project: { deletedAt: null, client: { deletedAt: null } } },
+    },
     select: {
       id: true,
       periodStart: true,
@@ -59,8 +63,11 @@ export async function bringBackRenewal(
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
 
-  const renewal = await db.renewalEvent.findUnique({
-    where: { id: formText(formData, 'renewalId') },
+  const renewal = await db.renewalEvent.findFirst({
+    where: {
+      id: formText(formData, 'renewalId'),
+      lineItem: { project: { deletedAt: null, client: { deletedAt: null } } },
+    },
     select: {
       id: true,
       periodStart: true,

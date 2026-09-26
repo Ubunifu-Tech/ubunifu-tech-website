@@ -94,7 +94,7 @@ export default async function TicketPage({
     (message.actorId && names.get(message.actorId)) ??
     (message.actorType === 'staff' ? 'Us' : (ticket.openedBy?.name ?? 'The client'));
 
-  const activity = await activityFor([ticket.id]);
+  const activity = await activityFor(staff, [ticket.id]);
 
   return (
     <main className={styles.page}>

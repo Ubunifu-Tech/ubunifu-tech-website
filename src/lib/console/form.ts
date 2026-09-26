@@ -34,3 +34,17 @@ export function formText(formData: FormData, key: string): string {
 export function formTextExact(formData: FormData, key: string): string {
   return read(formData, key);
 }
+
+/**
+ * A web address typed into a form, as the browser would read it, or null
+ * when it is not a full http(s) address. The cleaned form is what gets
+ * stored, so it can go into a link without carrying anything else along.
+ */
+export function webAddress(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}

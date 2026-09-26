@@ -15,6 +15,17 @@ const securityHeaders = [
     : []),
 ];
 
+/**
+ * The parts of a content policy that cannot break a page: no plugins, no
+ * rewriting where relative links point, and no framing by other sites. Not on
+ * stored files, which carry a stricter policy of their own that this would
+ * replace.
+ */
+const pagePolicy = {
+  key: 'Content-Security-Policy',
+  value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'",
+};
+
 const nextConfig: NextConfig = {
   // Keep framework-generated AI instruction files out of the project root.
   agentRules: false,
@@ -23,6 +34,10 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: securityHeaders,
+      },
+      {
+        source: '/:path((?!files/|media/|portal/files/|admin/files/|admin/media/).*)',
+        headers: [pagePolicy],
       },
     ];
   },

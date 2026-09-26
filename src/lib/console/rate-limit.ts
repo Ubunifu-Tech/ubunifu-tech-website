@@ -49,24 +49,30 @@ export function isLocked(contact: {
   return contact.lockedUntil !== null && contact.lockedUntil.getTime() > Date.now();
 }
 
-export async function recordFailedSignIn(contactId: string): Promise<void> {
-  const contact = await db.clientContact.findUnique({
+/**
+ * Takes one password attempt for this account before the password is checked,
+ * and says whether it may be checked at all. Taken first, and counted in one
+ * statement, so guesses sent all at once are each counted before any of them
+ * is tried: no more than the limit get through however many arrive together.
+ * The last one allowed locks the account behind it. A lock that has run its
+ * course starts the count again, and a right password clears it.
+ */
+export async function takeSignInAttempt(contactId: string): Promise<boolean> {
+  await db.clientContact.updateMany({
+    where: { id: contactId, lockedUntil: { lte: new Date() } },
+    data: { failedSignIns: 0, lockedUntil: null },
+  });
+  const { failedSignIns } = await db.clientContact.update({
     where: { id: contactId },
+    data: { failedSignIns: { increment: 1 } },
     select: { failedSignIns: true },
   });
-  if (!contact) return;
-
-  const failed = contact.failedSignIns + 1;
-  await db.clientContact.update({
-    where: { id: contactId },
-    data: {
-      failedSignIns: failed,
-      lockedUntil:
-        failed >= MAX_FAILED_SIGN_INS
-          ? new Date(Date.now() + LOCK_MINUTES * 60_000)
-          : null,
-    },
+  if (failedSignIns < MAX_FAILED_SIGN_INS) return true;
+  await db.clientContact.updateMany({
+    where: { id: contactId, lockedUntil: null },
+    data: { lockedUntil: new Date(Date.now() + LOCK_MINUTES * 60_000) },
   });
+  return failedSignIns === MAX_FAILED_SIGN_INS;
 }
 
 export async function clearFailedSignIns(contactId: string): Promise<void> {
@@ -95,13 +101,15 @@ export async function allow(
     .digest('hex');
 
   try {
+    // Recorded before counting, so attempts arriving together each see the
+    // others: whichever lands past the limit is refused, rather than all of
+    // them counting the same few rows and going through.
+    await db.rateLimitHit.create({ data: { bucket, keyHash } });
     const since = new Date(Date.now() - windowMinutes * 60_000);
     const recent = await db.rateLimitHit.count({
       where: { bucket, keyHash, createdAt: { gte: since } },
     });
-    if (recent >= limit) return false;
-
-    await db.rateLimitHit.create({ data: { bucket, keyHash } });
+    if (recent > limit) return false;
 
     // Old rows are swept now and then rather than by a cron job.
     if (Math.random() < 0.02) {
@@ -116,12 +124,39 @@ export async function allow(
   }
 }
 
-/** The caller's address, as Vercel reports it. */
+/**
+ * How many "we have your message" replies the website sends in a day, from
+ * the contact form and the chat together.
+ */
+export const ACKNOWLEDGEMENTS_PER_DAY = { limit: 150, windowMinutes: 24 * 60 };
+
+/**
+ * The caller's address, as Vercel reports it, for counting. An IPv6 address
+ * is cut to its /64, the block one connection is usually handed, so moving
+ * around inside it does not count as a new caller.
+ */
 export function requestIp(headers: Headers): string | null {
-  return (
+  const ip =
     headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
     headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     headers.get('x-real-ip')?.trim() ??
-    null
-  );
+    null;
+  return ip ? networkOf(ip) : null;
+}
+
+/**
+ * An IPv4 address as it is, including one written the IPv6 way
+ * (::ffff:203.0.113.9); an IPv6 one as its first four groups.
+ */
+function networkOf(ip: string): string {
+  const v4 = /(?:^|:)((?:\d{1,3}\.){3}\d{1,3})$/.exec(ip);
+  if (v4) return v4[1];
+  if (!ip.includes(':')) return ip;
+  const [head, tail = ''] = ip.toLowerCase().split('::');
+  const front = head ? head.split(':') : [];
+  const back = tail ? tail.split(':') : [];
+  const groups = ip.includes('::')
+    ? [...front, ...Array(Math.max(0, 8 - front.length - back.length)).fill('0'), ...back]
+    : front;
+  return `${groups.slice(0, 4).map((group) => group.replace(/^0+(?=.)/, '')).join(':')}::/64`;
 }

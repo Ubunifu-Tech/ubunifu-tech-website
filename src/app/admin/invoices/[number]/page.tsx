@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
 }
 
 export default async function InvoicePage({ params }: { params: Promise<{ number: string }> }) {
-  await requirePermission('invoices');
+  const staff = await requirePermission('invoices');
   const { number } = await params;
   const now = new Date();
 
@@ -109,7 +109,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
   if (!invoice) notFound();
 
   const [activity, emailed] = await Promise.all([
-    activityFor([invoice.id]),
+    activityFor(staff, [invoice.id]),
     // An invoice issued with a payment already taken was never emailed, so its
     // button says Send, not Send again.
     db.emailLog.count({

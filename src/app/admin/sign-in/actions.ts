@@ -1,5 +1,6 @@
 'use server';
 
+import { after } from 'next/server';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { consoleEnv, isStaffEmailAllowed } from '@/lib/console/env';
@@ -54,6 +55,20 @@ async function sendStaffLink(email: string): Promise<SignInState> {
     return sameForEveryone;
   }
 
+  // What happens next depends on who is asking, so it happens after the
+  // answer has gone back: the answer, and how long it takes, are the same for
+  // every address.
+  after(async () => {
+    try {
+      await deliverStaffLink(email);
+    } catch (error) {
+      console.error('[console] sign-in link failed', error);
+    }
+  });
+  return sameForEveryone;
+}
+
+async function deliverStaffLink(email: string): Promise<void> {
   const allowed = isStaffEmailAllowed(email);
   let staff = await db.staffUser.findUnique({ where: { email } });
 
@@ -89,7 +104,7 @@ async function sendStaffLink(email: string): Promise<SignInState> {
           ? 'Removed from the team'
           : 'Address not allowed by CONSOLE_STAFF_EMAILS',
     });
-    return sameForEveryone;
+    return;
   }
 
   if (await tooManyLinkRequests({ actorType: 'staff', actorId: staff.id, purpose: 'sign_in' })) {
@@ -100,7 +115,7 @@ async function sendStaffLink(email: string): Promise<SignInState> {
       entityType: 'StaffUser',
       entityId: staff.id,
     });
-    return sameForEveryone;
+    return;
   }
 
   const { token } = await issueMagicToken({
@@ -128,6 +143,4 @@ async function sendStaffLink(email: string): Promise<SignInState> {
     entityId: staff.id,
     summary: sent.ok ? undefined : sent.error,
   });
-
-  return sameForEveryone;
 }

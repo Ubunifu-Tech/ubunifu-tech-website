@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
-import { formText } from '@/lib/console/form';
+import { formText, webAddress } from '@/lib/console/form';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { NO_PERMISSION } from '@/lib/console/permissions';
 import { STAFF_LABEL } from '@/lib/console/project-status';
@@ -37,7 +37,8 @@ export async function askForReview(
 
   const projectId = formText(formData, 'projectId');
   const title = formText(formData, 'title').slice(0, 160);
-  const previewUrl = formText(formData, 'previewUrl');
+  const typedUrl = formText(formData, 'previewUrl');
+  const previewUrl = typedUrl ? webAddress(typedUrl) : '';
   const note = formText(formData, 'note').slice(0, 4000);
 
   if (title.length < 3) {
@@ -46,16 +47,11 @@ export async function askForReview(
       message: 'Say what they are looking at, like "The home and about pages".',
     };
   }
-  if (previewUrl) {
-    try {
-      const parsed = new URL(previewUrl);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
-    } catch {
-      return {
-        status: 'error',
-        message: 'The link should be a full address, starting with https://',
-      };
-    }
+  if (previewUrl === null) {
+    return {
+      status: 'error',
+      message: 'The link should be a full address, starting with https://',
+    };
   }
 
   const project = await db.project.findFirst({

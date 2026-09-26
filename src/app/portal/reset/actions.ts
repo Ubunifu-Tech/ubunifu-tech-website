@@ -6,6 +6,7 @@ import { recordAudit } from '@/lib/console/auth';
 import { notePasswordChanged } from '@/lib/console/contacts';
 import { hashPassword, passwordProblem } from '@/lib/console/crypto';
 import { consumeMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
+import { EMAILED_LINKS } from '@/lib/console/client-links';
 import { createSession, revokeAllSessions } from '@/lib/console/session';
 
 export type ResetState = {
@@ -20,8 +21,9 @@ export type ResetState = {
  *
  * The password is checked before the link is used, so a password that is too
  * short costs a retry rather than the link. Once it is saved, every way in
- * that existed before ends: other sessions, and sign-in or reset links still
- * unused. Whoever held the old password or an old link is out.
+ * that existed before ends: other sessions, and emailed links still unused,
+ * documents and invoices included. Whoever held the old password or an old
+ * link is out.
  */
 export async function resetPassword(
   _previous: ResetState,
@@ -75,7 +77,7 @@ export async function resetPassword(
     return expired;
   }
 
-  await revokeMagicTokens('client_contact', claim.actorId, ['sign_in', 'password_reset']);
+  await revokeMagicTokens('client_contact', claim.actorId, EMAILED_LINKS);
   await revokeAllSessions('client_contact', claim.actorId);
   await createSession({
     actorType: 'client_contact',

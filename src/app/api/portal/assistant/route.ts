@@ -123,15 +123,9 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ error: 'That is too long for the chat. Try a shorter message.' }, { status: 413 });
   }
 
-  const since = new Date(Date.now() - 60 * 60 * 1000);
-  const recent = await db.conversationMessage.count({
-    where: {
-      role: 'user',
-      createdAt: { gte: since },
-      conversation: { kind: 'portal_client', actorId: actor.id },
-    },
-  });
-  if (recent >= MAX_MESSAGES_PER_HOUR) {
+  // Counted before the model is asked, so messages sent together cannot all
+  // go through on the same count.
+  if (!(await allow('portal-assistant', actor.id, { limit: MAX_MESSAGES_PER_HOUR, windowMinutes: 60 }))) {
     return unavailable('That is a lot of questions for one hour. Send this to the team instead.', 429);
   }
 

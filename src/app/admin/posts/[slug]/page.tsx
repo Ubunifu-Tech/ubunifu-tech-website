@@ -23,7 +23,7 @@ export default async function EditPostPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requirePermission('journal');
+  const staff = await requirePermission('journal');
   const { slug } = await params;
   const now = new Date();
 
@@ -53,7 +53,7 @@ export default async function EditPostPage({
   if (!post) notFound();
 
   const [activity, writers, tagged] = await Promise.all([
-    activityFor([post.id]),
+    activityFor(staff, [post.id]),
     db.writer.findMany({
       where: { deletedAt: null },
       orderBy: { name: 'asc' },

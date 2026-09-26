@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 import { db } from '@/lib/db';
 import type { ServiceLine } from '@/generated/prisma/client';
 import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
-import { allow, requestIp } from '@/lib/console/rate-limit';
+import { ACKNOWLEDGEMENTS_PER_DAY, allow, requestIp } from '@/lib/console/rate-limit';
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -295,23 +295,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    try {
-      const acknowledgement = await resend.emails.send(
-        {
-          from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
-          to: email,
-          replyTo: 'info@ubunifutech.com',
-          subject: 'Thanks for reaching out | Ubunifu Technologies',
-          html: acknowledgementEmail({ name, subject, message }),
-        },
-        { idempotencyKey: `contact-ack-${submissionId}` },
-      );
+    // A ceiling on these replies across the whole site, whoever is asking,
+    // so the form cannot be used to mail a long list of strangers. Past it
+    // the enquiry still reaches us; only the reply is skipped.
+    if (await allow('acknowledgement', 'site', ACKNOWLEDGEMENTS_PER_DAY)) {
+      try {
+        const acknowledgement = await resend.emails.send(
+          {
+            from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
+            to: email,
+            replyTo: 'info@ubunifutech.com',
+            subject: 'Thanks for reaching out | Ubunifu Technologies',
+            // The subject is one of the form's own choices, checked above.
+            html: acknowledgementEmail({ topic: subject }),
+          },
+          { idempotencyKey: `contact-ack-${submissionId}` },
+        );
 
-      if (acknowledgement.error) {
-        console.warn('Contact form: acknowledgement email rejected:', acknowledgement.error);
+        if (acknowledgement.error) {
+          console.warn('Contact form: acknowledgement email rejected:', acknowledgement.error);
+        }
+      } catch (error) {
+        console.warn('Contact form: acknowledgement email failed:', error);
       }
-    } catch (error) {
-      console.warn('Contact form: acknowledgement email failed:', error);
     }
 
     return NextResponse.json({ success: true });

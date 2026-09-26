@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Console environment, read once and validated loudly.
  *

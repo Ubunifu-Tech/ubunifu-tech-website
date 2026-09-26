@@ -12,6 +12,7 @@ import {
   revokeMagicTokens,
 } from '@/lib/console/magic-link';
 import { revokeAllSessions, revokeSessionsFor } from '@/lib/console/session';
+import { EMAILED_LINKS } from '@/lib/console/client-links';
 import { namesMatch, type RemovalState } from '@/lib/console/confirm-name';
 import { withdrawOpenSignatures } from '@/lib/console/removal';
 import {
@@ -502,12 +503,7 @@ export async function setPortalAccess(
 
   await db.clientContact.update({ where: { id: contact.id }, data: { canSignIn: on } });
   if (!on) {
-    await revokeMagicTokens('client_contact', contact.id, [
-      'invite',
-      'sign_in',
-      'password_reset',
-      'shared_link',
-    ]);
+    await revokeMagicTokens('client_contact', contact.id, [...EMAILED_LINKS, 'shared_link']);
     await revokeAllSessions('client_contact', contact.id);
   }
   await recordAudit({

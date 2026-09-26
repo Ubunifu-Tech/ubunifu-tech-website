@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
+import { ENQUIRY_STATUS_LABEL } from '@/lib/console/enquiry-labels';
 import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
@@ -135,7 +136,7 @@ export default async function ClientPage({
 
   const mayRunProjects = can(staff, 'projects');
   const [activity, removal, removedProjects, removedPeople] = await Promise.all([
-    activityForClient(client.id),
+    activityForClient(staff, client.id),
     mayManage ? clientRemovalCounts(client.id) : null,
     mayRunProjects
       ? db.project.findMany({
@@ -589,7 +590,7 @@ export default async function ClientPage({
               <p className={styles.note}>Nothing noted about this client.</p>
             )}
 
-            {client.enquiries.length > 0 && (
+            {can(staff, 'enquiries') && client.enquiries.length > 0 && (
               <>
                 <div className={`${forms.cardHeader} ${styles.spaced}`}>
                   <h3 className={forms.cardTitle}>How they found us</h3>
@@ -597,9 +598,14 @@ export default async function ClientPage({
                 <ul className={styles.timeline}>
                   {client.enquiries.map((enquiry) => (
                     <li key={enquiry.id} className={styles.event}>
-                      <p className={styles.eventText}>{enquiry.subject}</p>
+                      <p className={styles.eventText}>
+                        <Link href={`/enquiries/${enquiry.id}`} className={styles.inlineLink}>
+                          {enquiry.subject}
+                        </Link>
+                      </p>
                       <p className={styles.eventMeta}>
-                        {formatRelative(enquiry.createdAt, now)} · {enquiry.status}
+                        {formatRelative(enquiry.createdAt, now)} ·{' '}
+                        {ENQUIRY_STATUS_LABEL[enquiry.status]}
                       </p>
                     </li>
                   ))}

@@ -70,6 +70,7 @@ const ACTION_LABELS: Record<string, string> = {
   'client.sign_out': 'Client signed out',
   'staff.sign_in.success': 'Signed in',
   'staff.sign_in.link_sent': 'Sign-in link sent',
+  'staff.sign_in.send_failed': 'Sign-in link failed to send',
   'staff.sign_out': 'Signed out',
   'enquiry.status_changed': 'Enquiry updated',
   'enquiry.note_saved': 'Note added to an enquiry',
@@ -241,13 +242,16 @@ function auditTone(action: string): ActivityTone {
  * history of its projects and people as well as of the client row itself.
  */
 export async function activityForClient(
+  staff: StaffActor,
   clientId: string,
   limit = 40,
 ): Promise<ActivityItem[]> {
   const [contacts, projects, invoices] = await Promise.all([
     db.clientContact.findMany({ where: { clientId }, select: { id: true } }),
     db.project.findMany({ where: { clientId }, select: { id: true } }),
-    db.invoice.findMany({ where: { clientId }, select: { id: true } }),
+    can(staff, 'invoices')
+      ? db.invoice.findMany({ where: { clientId }, select: { id: true } })
+      : [],
   ]);
 
   const ids = [
@@ -257,7 +261,7 @@ export async function activityForClient(
     ...invoices.map((i) => i.id),
   ];
 
-  return activityFor(ids, limit);
+  return activityFor(staff, ids, limit);
 }
 
 /** Lines about invoices and payments, about prices, and about costs. */
@@ -283,6 +287,12 @@ export const actionStartsWith = (prefixes: string[]): Prisma.AuditEventWhereInpu
   OR: prefixes.map((prefix) => ({ action: { startsWith: prefix } })),
 });
 
+/** Lines about documents, for those who do not handle them. */
+const DOCUMENT_ACTIONS = ['document.', 'document_defaults.'];
+/** Emails that carry amounts, and emails about documents, by template. */
+const MONEY_EMAILS = ['invoice_', 'receipt_', 'refund_'];
+const DOCUMENT_EMAILS = ['document_'];
+
 /** Who did each thing, by name: there is more than one of us. */
 async function whoDid(
   audits: { actorType: string; actorId: string | null }[],
@@ -302,12 +312,30 @@ async function whoDid(
         : 'System';
 }
 
-export async function activityFor(entityIds: string[], limit = 40): Promise<ActivityItem[]> {
+/**
+ * What happened to these records, and the emails sent about them. Lines this
+ * person may not see are left out: amounts without the money permissions,
+ * documents without the documents one.
+ */
+export async function activityFor(
+  staff: StaffActor,
+  entityIds: string[],
+  limit = 40,
+): Promise<ActivityItem[]> {
   if (entityIds.length === 0) return [];
+  const mayDocs = can(staff, 'documents');
+  const hidden = [...moneyActionsHiddenFrom(staff), ...(mayDocs ? [] : DOCUMENT_ACTIONS)];
+  const hiddenEmails = [
+    ...(can(staff, 'invoices') ? [] : MONEY_EMAILS),
+    ...(mayDocs ? [] : DOCUMENT_EMAILS),
+  ];
 
   const [audits, emails] = await Promise.all([
     db.auditEvent.findMany({
-      where: { entityId: { in: entityIds } },
+      where: {
+        entityId: { in: entityIds },
+        ...(hidden.length ? { NOT: actionStartsWith(hidden) } : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: {
@@ -320,7 +348,12 @@ export async function activityFor(entityIds: string[], limit = 40): Promise<Acti
       },
     }),
     db.emailLog.findMany({
-      where: { entityId: { in: entityIds } },
+      where: {
+        entityId: { in: entityIds },
+        ...(hiddenEmails.length
+          ? { NOT: { OR: hiddenEmails.map((prefix) => ({ template: { startsWith: prefix } })) } }
+          : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: {

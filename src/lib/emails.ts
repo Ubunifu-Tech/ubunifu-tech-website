@@ -115,11 +115,11 @@ ${preheader(preview)}
 /* Email cannot read CSS custom properties, so brand colours are literals here.
    They mirror globals.css. Change them together. */
 function button(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;padding:13px 24px;background:#A63A11;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;">${label}</a>`;
+  return `<a href="${escapeHtml(href)}" style="display:inline-block;padding:13px 24px;background:#A63A11;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;">${label}</a>`;
 }
 
 function buttonGhost(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;padding:12px 23px;background:#FDF3EE;color:#A63A11;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;border:1px solid #E9D3C6;">${label}</a>`;
+  return `<a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 23px;background:#FDF3EE;color:#A63A11;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;border:1px solid #E9D3C6;">${label}</a>`;
 }
 
 /** Label and value rows, for the facts an email is about. Values are HTML. */
@@ -188,52 +188,35 @@ export function notificationEmail(input: {
 
 /* ── Acknowledgement to the sender ────────────── */
 
-/** Longest excerpt echoed back before it is trimmed. */
-const SUMMARY_LIMIT = 700;
-
-function summarise(message: string): { text: string; trimmed: boolean } {
-  const collapsed = message
-    .replace(/\r\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-  if (collapsed.length <= SUMMARY_LIMIT) return { text: collapsed, trimmed: false };
-  // Cut on a word boundary so the excerpt does not end mid-word.
-  const cut = collapsed.slice(0, SUMMARY_LIMIT);
-  const lastSpace = cut.lastIndexOf(' ');
-  return { text: (lastSpace > 400 ? cut.slice(0, lastSpace) : cut).trimEnd(), trimmed: true };
-}
-
-export function acknowledgementEmail(input: {
-  name: string;
-  subject: string;
-  message: string;
-}): string {
-  const name = escapeHtml(input.name);
-  const subject = escapeHtml(input.subject);
-  const summary = summarise(input.message);
-  const message = escapeHtml(summary.text);
+/**
+ * The reply to someone who wrote in from the website. It repeats nothing
+ * they typed, not even their name: anyone can put any address in the form,
+ * so words echoed back would let a stranger send their own message from our
+ * domain. The topic is shown only when it is one of the form's own choices.
+ */
+export function acknowledgementEmail(input: { topic?: string } = {}): string {
+  const about = input.topic
+    ? ` about <strong style="color:#1D1B22;">${escapeHtml(input.topic)}</strong>`
+    : '';
 
   // Written in the first person throughout. This email comes FROM the team, so
   // it acknowledges receipt itself; it does not report that a message was
   // passed to somebody else.
   const body = `
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1D1B22;">Thanks for reaching out, ${name}.</h1>
-    <p style="margin:0 0 26px;color:#4A4753;font-size:15px;line-height:1.7;">
-      We have your message about <strong style="color:#1D1B22;">${subject}</strong>. We read everything that comes in, and we will reply to this address directly. If it is easier to talk, say so in a reply and we will suggest a time.
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1D1B22;">Thanks for reaching out.</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      We have your message${about}. We read everything that comes in, and we will reply to this address directly. If it is easier to talk, say so in a reply and we will suggest a time.
     </p>
-    <p style="margin:0 0 8px;color:#A63A11;font-size:14px;font-weight:700;">What you sent us</p>
-    <div style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px;color:#1D1B22;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}${
-      summary.trimmed
-        ? '<span style="color:#6D6975;"> …</span><div style="margin-top:10px;color:#6D6975;font-size:12px;">Trimmed for length. We have the whole message.</div>'
-        : ''
-    }</div>
-    <p style="margin:26px 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
+    <p style="margin:0 0 26px;color:#6D6975;font-size:13px;line-height:1.6;">
+      If you did not write to us, you can ignore this email.
+    </p>
+    <p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr>
       <td class="button-cell" style="padding-right:10px;">${button(INSIGHT, 'Try Ubunifu Insight')}</td>
       <td class="button-cell">${buttonGhost(SIFA, 'Try Ubunifu Sifa')}</td>
     </tr></table>`;
 
-  return shell(`We have your message about ${input.subject}. We will reply directly.`, body);
+  return shell('We have your message. We will reply directly.', body);
 }
 
 /* ── Console: sign-in and invitation ──────────── */

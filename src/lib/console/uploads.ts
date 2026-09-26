@@ -236,10 +236,15 @@ const BLOB_HOST = /(^|\.)blob\.vercel-storage\.com$/;
 export function storedUnder(url: string, folder: string): boolean {
   try {
     const parsed = new URL(url);
+    const path = parsed.pathname;
     return (
       parsed.protocol === 'https:' &&
       BLOB_HOST.test(parsed.hostname) &&
-      decodeURIComponent(parsed.pathname).startsWith(`/${folder}/`)
+      // Read as it is sent, which is how the file is fetched later. An
+      // encoded slash, backslash or dot could name another folder once
+      // decoded, and our own file names never contain one.
+      !/%2f|%5c|%2e|\\/i.test(path) &&
+      path.startsWith(`/${folder}/`)
     );
   } catch {
     return false;

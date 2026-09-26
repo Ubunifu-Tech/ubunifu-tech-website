@@ -17,7 +17,7 @@ import {
   transitionsFor,
   type Guard,
 } from '@/lib/console/transitions';
-import { formText } from '@/lib/console/form';
+import { formText, webAddress } from '@/lib/console/form';
 import { emailedAddresses } from '@/lib/console/updates';
 import { withdrawOpenReviews } from '@/lib/console/reviews';
 
@@ -293,7 +293,8 @@ function readUpdate(
   | { ok: false; message: string } {
   const title = String(formData.get('title') ?? '').trim();
   const bodyMarkdown = formText(formData, 'body');
-  const previewUrl = String(formData.get('previewUrl') ?? '').trim();
+  const typedUrl = String(formData.get('previewUrl') ?? '').trim();
+  const previewUrl = typedUrl ? webAddress(typedUrl) : '';
 
   if (title.length < 3 || title.length > 160) {
     return { ok: false, message: 'Give the update a short title.' };
@@ -301,13 +302,8 @@ function readUpdate(
   if (bodyMarkdown.length < 10 || bodyMarkdown.length > 8000) {
     return { ok: false, message: 'Write a little more than that.' };
   }
-  if (previewUrl) {
-    try {
-      const parsed = new URL(previewUrl);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
-    } catch {
-      return { ok: false, message: 'The link should be a full address, starting with https://' };
-    }
+  if (previewUrl === null) {
+    return { ok: false, message: 'The link should be a full address, starting with https://' };
   }
   return { ok: true, title, bodyMarkdown, previewUrl };
 }

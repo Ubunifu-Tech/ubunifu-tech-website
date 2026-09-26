@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { unstable_rethrow } from 'next/navigation';
 import { BrandMark } from '@/components/BrandMark';
 import { Assistant } from '@/components/Assistant';
 import { ProfileMenu } from '@/components/console/ProfileMenu';
@@ -49,6 +50,8 @@ async function countsFor(clientId: string): Promise<PortalCounts> {
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   // A database blip must not take the sign-in screen down with it.
   const actor = await getClientActor().catch((error: unknown) => {
+    // Next's own signals (this page is dynamic, a redirect) are not failures.
+    unstable_rethrow(error);
     console.error('[portal] could not read the session', error);
     return null;
   });

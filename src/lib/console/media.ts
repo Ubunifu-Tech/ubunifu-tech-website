@@ -2,7 +2,7 @@ import 'server-only';
 import { head } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
-import { safeFilename, streamBlob } from '@/lib/console/uploads';
+import { safeFilename, storedUnder, streamBlob } from '@/lib/console/uploads';
 import { EXTENSION_FOR, MAX_MEDIA_BYTES } from './media-rules';
 
 /**
@@ -67,6 +67,10 @@ export async function recordMediaAsset(input: {
   filename: string;
   staffId: string | null;
 }): Promise<{ id: string; path: string; created: boolean }> {
+  // Only an image uploaded for the website: a URL for a private file, such as
+  // a client's or a bill, must never become a public image.
+  if (!storedUnder(input.blobUrl, 'journal')) throw new Error('media-not-ours');
+
   const existing = await db.mediaAsset.findUnique({
     where: { storageKey: input.blobUrl },
     select: { id: true, extension: true },

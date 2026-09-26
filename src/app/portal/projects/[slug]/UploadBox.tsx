@@ -58,7 +58,8 @@ export function UploadBox({
       const at = { name: file.name, index: index + 1, count: sendable.length };
       setStage({ kind: 'sending', ...at, percent: 0 });
       try {
-        const blob = await upload(file.name, file, {
+        // Stored under the item it answers; the server only records it there.
+        const blob = await upload(`requests/${assetRequestId}/${file.name.replace(/[\\/]/g, '-')}`, file, {
           access: 'private',
           handleUploadUrl: '/api/portal/uploads',
           clientPayload: assetRequestId,

@@ -108,6 +108,12 @@ export async function recordAssetUpload(input: {
   /** Name as the person's own computer had it, before the key was made safe. */
   filename: string;
 }): Promise<{ id: string; created: boolean }> {
+  // Only a file stored under this very item: a URL for anything else in the
+  // store, however it was learned, is refused before anything is read.
+  if (!storedUnder(input.blobUrl, `requests/${input.assetRequestId}`)) {
+    throw new Error('upload-not-ours');
+  }
+
   const existing = await db.fileUpload.findUnique({
     where: { storageKey: input.blobUrl },
     select: { id: true },

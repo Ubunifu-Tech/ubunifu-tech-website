@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { unstable_rethrow } from 'next/navigation';
 import { BrandMark } from '@/components/BrandMark';
 import { getStaffActor } from '@/lib/console/auth';
 import { navCounts } from '@/lib/console/counts';
@@ -32,6 +33,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // taking the page down with it: the sign-in screen still loads, and any
   // other page reports the problem through its own error screen.
   const staff = await getStaffActor().catch((error: unknown) => {
+    // Next's own signals (this page is dynamic, a redirect) are not failures.
+    unstable_rethrow(error);
     console.error('[console] could not read the session', error);
     return null;
   });

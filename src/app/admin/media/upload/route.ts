@@ -26,9 +26,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     const result = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async () => {
+      onBeforeGenerateToken: async (pathname) => {
         const staff = await getStaffActor();
         if (!staff || !can(staff, 'journal')) throw new Error('not-staff');
+        if (!pathname.startsWith('journal/')) throw new Error('not-staff');
 
         return {
           allowedContentTypes: MEDIA_CONTENT_TYPES,

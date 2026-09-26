@@ -52,6 +52,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           select: { id: true, projectId: true },
         });
         if (!assetRequest) throw new Error('not-yours');
+        if (!pathname.startsWith(`requests/${assetRequest.id}/`)) throw new Error('not-yours');
 
         return {
           allowedContentTypes: ALLOWED_CONTENT_TYPES,

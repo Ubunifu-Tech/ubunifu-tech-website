@@ -1,7 +1,7 @@
-import { BrandMark } from '@/components/BrandMark';
 import type { Org } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
-import sheet from '@/app/admin/receipts/Receipt.module.css';
+import { MoneyBand, MoneyClosing, PageFurniture } from './MoneyParts';
+import money from './Money.module.css';
 
 /**
  * An invoice as the client receives it, on screen and on paper. The client's
@@ -38,178 +38,173 @@ export function InvoiceSheet({
   receiptHref?: (number: string) => string;
 }) {
   const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  const clientName = invoice.client.legalName ?? invoice.client.name;
 
   return (
-    <article className={sheet.sheet}>
-      <header className={sheet.head}>
-        <div className={sheet.issuer}>
-          <BrandMark className={sheet.mark} title="Ubunifu Technologies" />
-          <p className={sheet.issuerName}>
-            {org.legalName}
-            {org.addressLines && (
-              <span className={sheet.issuerLine}>{org.addressLines.split('\n').join(', ')}</span>
-            )}
-            <span className={sheet.issuerLine}>
-              {org.email}
-              {org.phone ? ` · ${org.phone}` : ''}
-            </span>
-            {org.tin && <span className={sheet.issuerLine}>TIN {org.tin}</span>}
-            {invoice.taxMinor > 0 && org.vrn && <span className={sheet.issuerLine}>VRN {org.vrn}</span>}
-          </p>
-        </div>
-        <div className={sheet.docType}>
-          <p className={sheet.docLabel}>Invoice</p>
-          <p className={sheet.docNumber}>{invoice.number}</p>
-        </div>
-      </header>
+    <article className={money.doc}>
+      <PageFurniture footer={`Invoice ${invoice.number} · ${org.legalName}`} />
+      <MoneyBand
+        kind="Invoice"
+        number={invoice.number}
+        title="Invoice for"
+        accent={clientName}
+        facts={[
+          [
+            'Billed to',
+            <>
+              {clientName}
+              {invoice.attention && (
+                <>
+                  <br />
+                  {invoice.attention}
+                </>
+              )}
+            </>,
+          ],
+          ['Issued', invoice.issuedAt ? formatDate(invoice.issuedAt) : 'Not sent yet'],
+          ['Due', invoice.dueAt ? formatDate(invoice.dueAt) : 'On receipt'],
+          ...(invoice.project ? [['For', invoice.project.name] as [string, string]] : []),
+        ]}
+      />
 
-      <div className={sheet.parties}>
-        <div>
-          <p className={sheet.partyLabel}>Billed to</p>
-          <p className={sheet.partyValue}>
-            {invoice.client.legalName ?? invoice.client.name}
-            {invoice.attention && (
-              <>
-                <br />
-                {invoice.attention}
-              </>
-            )}
-          </p>
-        </div>
-        <div>
-          <p className={sheet.partyLabel}>Issued</p>
-          <p className={sheet.partyValue}>{invoice.issuedAt ? formatDate(invoice.issuedAt) : 'Not sent yet'}</p>
-        </div>
-        <div>
-          <p className={sheet.partyLabel}>Due</p>
-          <p className={sheet.partyValue}>{invoice.dueAt ? formatDate(invoice.dueAt) : 'On receipt'}</p>
-        </div>
-        {invoice.project && (
-          <div>
-            <p className={sheet.partyLabel}>For</p>
-            <p className={sheet.partyValue}>{invoice.project.name}</p>
-          </div>
-        )}
-      </div>
-
-      <table className={sheet.lineTable}>
-        <thead>
-          <tr>
-            <th scope="col">Description</th>
-            <th scope="col" className={sheet.num}>
-              Amount
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoice.lines.map((line) => (
-            <tr key={line.id}>
-              <td>
-                {line.label}
-                {line.description && <span className={sheet.lineNote}>{line.description}</span>}
-              </td>
-              <td className={sheet.num}>
-                {line.quantity > 1 && (
-                  <span className={sheet.lineNote}>
-                    {line.quantity} × {formatMoney(line.amountMinor, invoice.currency)}
-                  </span>
-                )}
-                {formatMoney(line.amountMinor * line.quantity, invoice.currency)}
-              </td>
+      <div className={money.content}>
+        <table className={money.lines}>
+          <thead>
+            <tr>
+              <th scope="col">Description</th>
+              <th scope="col" className={money.num}>
+                Qty
+              </th>
+              <th scope="col" className={money.num}>
+                Amount
+              </th>
             </tr>
-          ))}
-        </tbody>
-        <tfoot>
+          </thead>
+          <tbody>
+            {invoice.lines.map((line) => (
+              <tr key={line.id}>
+                <td>
+                  {line.label}
+                  {line.description && <span className={money.lineNote}>{line.description}</span>}
+                </td>
+                <td className={money.num}>
+                  {line.quantity > 1
+                    ? `${line.quantity} × ${formatMoney(line.amountMinor, invoice.currency)}`
+                    : '1'}
+                </td>
+                <td className={money.num}>
+                  {formatMoney(line.amountMinor * line.quantity, invoice.currency)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className={money.totals}>
           {invoice.taxMinor > 0 && (
             <>
-              <tr>
-                <th scope="row">Subtotal</th>
-                <td className={sheet.num}>{formatMoney(invoice.subtotalMinor, invoice.currency)}</td>
-              </tr>
-              <tr>
-                <th scope="row">VAT</th>
-                <td className={sheet.num}>{formatMoney(invoice.taxMinor, invoice.currency)}</td>
-              </tr>
+              <p className={money.totalRow}>
+                <span>Subtotal</span>
+                <span>{formatMoney(invoice.subtotalMinor, invoice.currency)}</span>
+              </p>
+              <p className={money.totalRow}>
+                <span>VAT</span>
+                <span>{formatMoney(invoice.taxMinor, invoice.currency)}</span>
+              </p>
             </>
           )}
-          <tr className={sheet.totalRow}>
-            <th scope="row">Total</th>
-            <td className={sheet.num}>{formatMoney(invoice.totalMinor, invoice.currency)}</td>
-          </tr>
+          <p className={`${money.totalRow} ${money.grand}`}>
+            <span>Total</span>
+            <span>{formatMoney(invoice.totalMinor, invoice.currency)}</span>
+          </p>
           {invoice.payments.map((payment) => (
-            <tr key={payment.id}>
-              <th scope="row">
+            <p key={payment.id} className={money.totalRow}>
+              <span>
                 Paid {formatDate(payment.receivedAt)}
                 {payment.receipt && (
-                  <span className={sheet.lineNote}>
+                  <>
+                    {', '}
                     {receiptHref ? (
-                      <a href={receiptHref(payment.receipt.number)}>Receipt {payment.receipt.number}</a>
+                      <a href={receiptHref(payment.receipt.number)}>{payment.receipt.number}</a>
                     ) : (
-                      `Receipt ${payment.receipt.number}`
+                      payment.receipt.number
                     )}
-                  </span>
+                  </>
                 )}
-              </th>
-              <td className={sheet.num}>−{formatMoney(payment.amountMinor, payment.currency)}</td>
-            </tr>
+              </span>
+              <span>−{formatMoney(payment.amountMinor, payment.currency)}</span>
+            </p>
           ))}
-        </tfoot>
-      </table>
+        </div>
 
-      <div className={owed === 0 ? sheet.amountBlock : `${sheet.amountBlock} ${sheet.amountDue}`}>
-        <p className={sheet.amountLabel}>{owed === 0 ? 'Paid in full. Thank you.' : 'Amount due'}</p>
-        <p className={sheet.amount}>{formatMoney(owed, invoice.currency)}</p>
+        <div className={owed === 0 ? money.amount : `${money.amount} ${money.amountDue}`}>
+          <p className={money.amountLabel}>{owed === 0 ? 'Paid in full. Thank you.' : 'Amount due'}</p>
+          <p className={money.amountFigure}>{formatMoney(owed, invoice.currency)}</p>
+        </div>
+
+        {owed > 0 && (org.bankAccountNumber || org.mobileMoneyNumber) && (
+          <section className={money.pay}>
+            <h2 className={money.sectionTitle}>How to pay</h2>
+            <div className={money.payWays}>
+              {org.bankAccountNumber && (
+                <div className={money.payWay}>
+                  <p className={money.payWayTitle}>Bank transfer</p>
+                  <dl>
+                    {org.bankName && (
+                      <div>
+                        <dt>Bank</dt>
+                        <dd>{org.bankName}</dd>
+                      </div>
+                    )}
+                    <div>
+                      <dt>Account name</dt>
+                      <dd>{org.bankAccountName ?? org.legalName}</dd>
+                    </div>
+                    <div>
+                      <dt>Account number</dt>
+                      <dd>{org.bankAccountNumber}</dd>
+                    </div>
+                    {org.bankSwift && (
+                      <div>
+                        <dt>SWIFT</dt>
+                        <dd>{org.bankSwift}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              )}
+              {org.mobileMoneyNumber && (
+                <div className={money.payWay}>
+                  <p className={money.payWayTitle}>Mobile money</p>
+                  <dl>
+                    {org.mobileMoneyName && (
+                      <div>
+                        <dt>Name</dt>
+                        <dd>{org.mobileMoneyName}</dd>
+                      </div>
+                    )}
+                    <div>
+                      <dt>Number</dt>
+                      <dd>{org.mobileMoneyNumber}</dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+            </div>
+            <p className={money.note}>Please use {invoice.number} as the payment reference.</p>
+          </section>
+        )}
+
+        {(invoice.notes || org.invoiceFooter) && (
+          <p className={money.foot}>
+            {invoice.notes}
+            {invoice.notes && org.invoiceFooter ? ' ' : ''}
+            {org.invoiceFooter}
+          </p>
+        )}
+
+        <MoneyClosing org={org} />
       </div>
-
-      {owed > 0 && (org.bankAccountNumber || org.mobileMoneyNumber) && (
-        <section className={sheet.payBlock}>
-          <p className={sheet.partyLabel}>How to pay</p>
-          <dl className={sheet.payList}>
-            {org.bankAccountNumber && (
-              <>
-                {org.bankName && (
-                  <div>
-                    <dt>Bank</dt>
-                    <dd>{org.bankName}</dd>
-                  </div>
-                )}
-                <div>
-                  <dt>Account name</dt>
-                  <dd>{org.bankAccountName ?? org.legalName}</dd>
-                </div>
-                <div>
-                  <dt>Account number</dt>
-                  <dd>{org.bankAccountNumber}</dd>
-                </div>
-                {org.bankSwift && (
-                  <div>
-                    <dt>SWIFT</dt>
-                    <dd>{org.bankSwift}</dd>
-                  </div>
-                )}
-              </>
-            )}
-            {org.mobileMoneyNumber && (
-              <div>
-                <dt>Mobile money</dt>
-                <dd>
-                  {org.mobileMoneyName ? `${org.mobileMoneyName}, ` : ''}
-                  {org.mobileMoneyNumber}
-                </dd>
-              </div>
-            )}
-          </dl>
-          <p className={sheet.payNote}>Please use {invoice.number} as the payment reference.</p>
-        </section>
-      )}
-
-      {(invoice.notes || org.invoiceFooter) && (
-        <p className={sheet.foot}>
-          {invoice.notes}
-          {invoice.notes && org.invoiceFooter ? ' ' : ''}
-          {org.invoiceFooter}
-        </p>
-      )}
     </article>
   );
 }

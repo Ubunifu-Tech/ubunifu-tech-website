@@ -1,0 +1,451 @@
+/* Invoices, receipts and refund notes, in the same house style as the
+   proposals and agreements (see Document.module.css): a tinted band with the
+   lockup, the kind of document and its number, a two-tone title and a card
+   of facts; then the figures, with a dark-headed table and the amount that
+   matters set apart; then who it is from. One page each, on paper. */
+
+.doc {
+  --doc-tint: color-mix(in srgb, var(--primary) 5%, white);
+  --doc-row: color-mix(in srgb, var(--primary) 3%, white);
+
+  max-width: 50rem;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text-primary);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── The band ──────────────────────────────────── */
+
+.band {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  overflow: hidden;
+  padding: var(--space-8);
+  background: var(--doc-tint);
+}
+
+.bandTop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.kind {
+  margin: 0;
+  color: var(--brand-deep);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.number {
+  margin: 0.125rem 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.2;
+}
+
+.titleAccent {
+  display: block;
+  color: var(--primary);
+}
+
+.facts {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.fact dt {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.fact dd {
+  margin: 0.125rem 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  overflow-wrap: anywhere;
+}
+
+.watermark {
+  position: absolute;
+  right: -4rem;
+  bottom: -5rem;
+  width: 18rem;
+  height: 18rem;
+  pointer-events: none;
+}
+
+/* ── The figures ───────────────────────────────── */
+
+.content {
+  padding: var(--space-8);
+}
+
+.lines {
+  width: 100%;
+  margin: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--font-size-small);
+}
+
+.lines th {
+  padding: 0.75rem 0.875rem;
+  background: var(--text-primary);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+}
+
+.lines th:first-child {
+  border-top-left-radius: var(--radius-md);
+}
+
+.lines th:last-child {
+  border-top-right-radius: var(--radius-md);
+}
+
+.lines td {
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+.lines tbody tr:nth-child(odd) td {
+  background: var(--doc-row);
+}
+
+.lines tr {
+  break-inside: avoid;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.lineNote {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--text-secondary);
+}
+
+/* Label and value, for the details of one payment. */
+.details {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+.details th,
+.details td {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.details th {
+  width: 40%;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-regular);
+}
+
+.details td {
+  color: var(--text-primary);
+}
+
+.details a {
+  color: var(--primary);
+}
+
+.totals {
+  display: grid;
+  gap: 0.375rem;
+  width: min(100%, 22rem);
+  margin: var(--space-5) 0 0 auto;
+  font-size: var(--font-size-small);
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--text-secondary);
+}
+
+.totalRow span:last-child {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.totalRow a {
+  color: var(--primary);
+}
+
+.grand {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+/* The one figure a reader came for. */
+.amount {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+  margin: var(--space-6) 0 0;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--text-primary);
+  color: #fff;
+  break-inside: avoid;
+}
+
+.amountDue {
+  background: var(--brand-deep);
+}
+
+.amountVoid {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.amountVoid .amountFigure {
+  text-decoration: line-through;
+}
+
+.amountLabel {
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+
+.amountFigure {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.cancelled {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border-left: 3px solid var(--danger);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--danger-dim);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+  break-inside: avoid;
+}
+
+.cancelledTitle {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--danger);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ── How to pay ────────────────────────────────── */
+
+.pay {
+  margin-top: var(--space-6);
+  break-inside: avoid;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.payWays {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.payWay {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--brand);
+  border-radius: var(--radius-lg);
+}
+
+.payWay + .payWay {
+  border-top-color: var(--primary);
+}
+
+.payWayTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+}
+
+.payWay dl {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+
+.payWay dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.payWay dt {
+  color: var(--text-secondary);
+}
+
+.payWay dd {
+  margin: 0;
+  color: var(--text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--tone-violet-bg);
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+  break-inside: avoid;
+}
+
+.foot {
+  margin: var(--space-5) 0 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+/* ── Who it is from ────────────────────────────── */
+
+.closing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--doc-row);
+  break-inside: avoid;
+}
+
+.closingLockup {
+  margin-bottom: var(--space-3);
+}
+
+.closingText {
+  max-width: 22rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.closingContact {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.8;
+  text-align: right;
+}
+
+@media (max-width: 40rem) {
+  .band,
+  .content {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .kind,
+  .number,
+  .closingContact {
+    text-align: left;
+  }
+}
+
+@media print {
+  .doc {
+    max-width: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .band {
+    border-radius: var(--radius-lg);
+  }
+
+  .content {
+    padding: var(--space-6) 0 0;
+  }
+}

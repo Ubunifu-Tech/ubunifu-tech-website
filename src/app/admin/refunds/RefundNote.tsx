@@ -1,8 +1,8 @@
-import React from 'react';
-import { BrandMark } from '@/components/BrandMark';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { formatDate, formatMoney } from '@/lib/console/money';
-import sheet from '../receipts/Receipt.module.css';
+import type { Org } from '@/lib/console/org';
+import { MoneyBand, MoneyClosing, PageFurniture } from '@/components/documents/MoneyParts';
+import money from '@/components/documents/Money.module.css';
 
 export type RefundNoteData = {
   number: string;
@@ -37,111 +37,78 @@ export function RefundNote({
   org,
 }: {
   refund: RefundNoteData;
-  org: { legalName: string; addressLines: string | null; email: string; tin: string | null };
+  org: Org;
 }) {
   const { payment } = refund;
   const { invoice } = payment;
+  const clientName = invoice.client.legalName ?? invoice.client.name;
   const methodLabel =
     PAYMENT_METHODS.find((method) => method.value === refund.method)?.label ?? refund.method;
 
   return (
-    <article className={sheet.sheet}>
-      <header className={sheet.head}>
-        <div className={sheet.issuer}>
-          <BrandMark className={sheet.mark} title="Ubunifu Technologies" />
-          <p className={sheet.issuerName}>
-            {org.legalName}
-            {org.addressLines && (
-              <span className={sheet.issuerLine}>{org.addressLines.split('\n').join(', ')}</span>
-            )}
-            <span className={sheet.issuerLine}>{org.email}</span>
-            {org.tin && <span className={sheet.issuerLine}>TIN {org.tin}</span>}
-          </p>
-        </div>
-        <div className={sheet.docType}>
-          <p className={sheet.docLabel}>Refund note</p>
-          <p className={sheet.docNumber}>{refund.number}</p>
-        </div>
-      </header>
+    <article className={money.doc}>
+      <PageFurniture footer={`Refund note ${refund.number} · ${org.legalName}`} />
+      <MoneyBand
+        kind="Refund note"
+        number={refund.number}
+        title="Money sent back to"
+        accent={clientName}
+        facts={[
+          ['Refunded to', `${clientName}, ${invoice.client.country}`],
+          ['Date', formatDate(refund.refundedAt)],
+          ['For', invoice.project ? invoice.project.name : 'Services rendered'],
+        ]}
+      />
 
-      <div className={sheet.parties}>
-        <div>
-          <p className={sheet.partyLabel}>Refunded to</p>
-          <p className={sheet.partyValue}>
-            {invoice.client.legalName ?? invoice.client.name}
-            <br />
-            {invoice.client.country}
-          </p>
-        </div>
-        <div>
-          <p className={sheet.partyLabel}>Date</p>
-          <p className={sheet.partyValue}>{formatDate(refund.refundedAt)}</p>
-        </div>
-        <div>
-          <p className={sheet.partyLabel}>For</p>
-          <p className={sheet.partyValue}>
-            {invoice.project ? invoice.project.name : 'Services rendered'}
-          </p>
-        </div>
-      </div>
-
-      <div className={`${sheet.amountBlock} ${sheet.amountBlockOut}`}>
-        <p className={sheet.amountLabel}>Amount sent back</p>
-        <p className={sheet.amount}>{formatMoney(refund.amountMinor, refund.currency)}</p>
-      </div>
-
-      <table className={sheet.detailTable}>
-        <tbody>
-          <tr>
-            <th className={sheet.detailKey} scope="row">
-              Date sent back
-            </th>
-            <td className={sheet.detailValue}>{formatDate(refund.refundedAt)}</td>
-          </tr>
-          <tr>
-            <th className={sheet.detailKey} scope="row">
-              Method
-            </th>
-            <td className={sheet.detailValue}>{methodLabel}</td>
-          </tr>
-          {refund.reference && (
+      <div className={money.content}>
+        <table className={money.details}>
+          <tbody>
             <tr>
-              <th className={sheet.detailKey} scope="row">
-                Reference
-              </th>
-              <td className={sheet.detailValue}>{refund.reference}</td>
+              <th scope="row">Date sent back</th>
+              <td>{formatDate(refund.refundedAt)}</td>
             </tr>
-          )}
-          <tr>
-            <th className={sheet.detailKey} scope="row">
-              From the payment
-            </th>
-            <td className={sheet.detailValue}>
-              {formatMoney(payment.amountMinor, refund.currency)} received{' '}
-              {formatDate(payment.receivedAt)}
-              {payment.receipt ? `, receipt ${payment.receipt.number}` : ''}
-            </td>
-          </tr>
-          <tr>
-            <th className={sheet.detailKey} scope="row">
-              Against invoice
-            </th>
-            <td className={sheet.detailValue}>{invoice.number}</td>
-          </tr>
-          <tr>
-            <th className={sheet.detailKey} scope="row">
-              Reason
-            </th>
-            <td className={sheet.detailValue}>{refund.reason}</td>
-          </tr>
-        </tbody>
-      </table>
+            <tr>
+              <th scope="row">Method</th>
+              <td>{methodLabel}</td>
+            </tr>
+            {refund.reference && (
+              <tr>
+                <th scope="row">Reference</th>
+                <td>{refund.reference}</td>
+              </tr>
+            )}
+            <tr>
+              <th scope="row">From the payment</th>
+              <td>
+                {formatMoney(payment.amountMinor, refund.currency)} received{' '}
+                {formatDate(payment.receivedAt)}
+                {payment.receipt ? `, receipt ${payment.receipt.number}` : ''}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Against invoice</th>
+              <td>{invoice.number}</td>
+            </tr>
+            <tr>
+              <th scope="row">Reason</th>
+              <td>{refund.reason}</td>
+            </tr>
+          </tbody>
+        </table>
 
-      <p className={sheet.foot}>
-        This note confirms money sent back from a payment against invoice {invoice.number}. It is
-        issued by {org.legalName} and is valid without a signature.
-        {refund.recordedBy ? ` Recorded by ${refund.recordedBy.name}.` : ''}
-      </p>
+        <div className={`${money.amount} ${money.amountDue}`}>
+          <p className={money.amountLabel}>Amount sent back</p>
+          <p className={money.amountFigure}>{formatMoney(refund.amountMinor, refund.currency)}</p>
+        </div>
+
+        <p className={money.foot}>
+          This note confirms money sent back from a payment against invoice {invoice.number}. It is
+          issued by {org.legalName} and is valid without a signature.
+          {refund.recordedBy ? ` Recorded by ${refund.recordedBy.name}.` : ''}
+        </p>
+
+        <MoneyClosing org={org} />
+      </div>
     </article>
   );
 }

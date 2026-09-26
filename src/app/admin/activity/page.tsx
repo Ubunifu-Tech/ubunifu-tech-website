@@ -57,6 +57,8 @@ function auditWhere(key: string): Prisma.AuditEventWhereInput | null {
         'cost.',
         'regular_cost.',
         'exchange_rate.',
+        'income.',
+        'product.',
       ]);
     case 'access':
       return { action: { contains: 'sign_in' } };

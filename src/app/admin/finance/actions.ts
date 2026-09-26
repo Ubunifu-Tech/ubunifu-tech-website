@@ -25,6 +25,16 @@ function refresh() {
   revalidatePath('/admin/finance', 'layout');
 }
 
+/** The product money is for, checked to exist, or null. */
+async function readProduct(formData: FormData) {
+  const productId = formText(formData, 'productId') || null;
+  if (!productId) return { ok: true as const, productId: null };
+  const product = await db.product.findUnique({ where: { id: productId }, select: { id: true } });
+  return product
+    ? { ok: true as const, productId: product.id }
+    : { ok: false as const, message: 'That product no longer exists.' };
+}
+
 /** A client and project a cost is for, checked to exist and to belong together. */
 async function readFor(formData: FormData) {
   const clientId = formText(formData, 'clientId') || null;
@@ -94,6 +104,8 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
   }
   const forWhat = await readFor(formData);
   if (!forWhat.ok) return { status: 'error', message: forWhat.message, field: 'projectId' };
+  const product = await readProduct(formData);
+  if (!product.ok) return { status: 'error', message: product.message, field: 'productId' };
 
   const costId = formText(formData, 'costId');
   let regularId = formText(formData, 'regularId') || null;
@@ -111,6 +123,7 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
     currency: read.currency,
     clientId: forWhat.clientId,
     projectId: forWhat.projectId,
+    productId: product.productId,
   };
 
   if (costId) {
@@ -138,6 +151,7 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
         currency: read.currency,
         clientId: forWhat.clientId,
         projectId: forWhat.projectId,
+        productId: product.productId,
       },
       select: { id: true },
     });
@@ -198,6 +212,8 @@ export async function saveRegularCost(
   if (!read.ok) return { status: 'error', message: read.message, field: read.field };
   const forWhat = await readFor(formData);
   if (!forWhat.ok) return { status: 'error', message: forWhat.message, field: 'projectId' };
+  const product = await readProduct(formData);
+  if (!product.ok) return { status: 'error', message: product.message, field: 'productId' };
 
   const data = {
     vendor: read.vendor,
@@ -207,6 +223,7 @@ export async function saveRegularCost(
     currency: read.currency,
     clientId: forWhat.clientId,
     projectId: forWhat.projectId,
+    productId: product.productId,
   };
   const regularId = formText(formData, 'regularId');
   const saved = regularId
@@ -357,4 +374,79 @@ export async function removeBill(_previous: FinanceState, formData: FormData): P
   });
   refresh();
   return { status: 'done', message: 'Bill removed.' };
+}
+
+/**
+ * Money in that did not come through an invoice here, such as a month of a
+ * product's own subscriptions, or a change to one already added.
+ */
+export async function saveIncome(_previous: FinanceState, formData: FormData): Promise<FinanceState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
+
+  const source = formText(formData, 'source').slice(0, 120);
+  const currency = formText(formData, 'currency');
+  const description = formText(formData, 'description').slice(0, 500) || null;
+  if (source.length < 2) {
+    return { status: 'error', message: 'Say where it came from.', field: 'source' };
+  }
+  if (!isCurrency(currency)) return { status: 'error', message: 'Choose a currency.', field: 'currency' };
+  const amountMinor = parseMoney(formText(formData, 'amount'), currency);
+  if (amountMinor === null || amountMinor <= 0) {
+    return { status: 'error', message: 'Enter the amount that came in.', field: 'amount' };
+  }
+  const receivedOn = parseDateInput(formText(formData, 'receivedOn'));
+  if (!receivedOn) return { status: 'error', message: 'Choose the day it came in.', field: 'receivedOn' };
+  if (receivedOn.getTime() > Date.now() + 86_400_000) {
+    return { status: 'error', message: 'That day has not come yet.', field: 'receivedOn' };
+  }
+  const product = await readProduct(formData);
+  if (!product.ok) return { status: 'error', message: product.message, field: 'productId' };
+
+  const data = { receivedOn, source, description, amountMinor, currency, productId: product.productId };
+  const incomeId = formText(formData, 'incomeId');
+  if (incomeId) {
+    const changed = await db.income.updateMany({ where: { id: incomeId }, data });
+    if (changed.count === 0) return { status: 'error', message: 'That income no longer exists.' };
+  }
+  const saved = incomeId
+    ? { id: incomeId }
+    : await db.income.create({ data: { ...data, recordedById: staff.id }, select: { id: true } });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: incomeId ? 'income.changed' : 'income.recorded',
+    entityType: 'Income',
+    entityId: saved.id,
+    summary: `${source}, ${formatMoney(amountMinor, currency)}`,
+  });
+  refresh();
+  return { status: 'done', message: incomeId ? 'Saved.' : `${source} added.` };
+}
+
+/** Takes out income typed in by mistake. The record says who and what it was. */
+export async function removeIncome(_previous: FinanceState, formData: FormData): Promise<FinanceState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
+
+  const income = await db.income.findUnique({
+    where: { id: formText(formData, 'incomeId') },
+    select: { id: true, source: true, amountMinor: true, currency: true, receivedOn: true },
+  });
+  if (!income) return { status: 'error', message: 'That income no longer exists.' };
+
+  await db.income.delete({ where: { id: income.id } });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'income.removed',
+    entityType: 'Income',
+    entityId: income.id,
+    summary: `${income.source}, ${formatMoney(income.amountMinor, income.currency)} on ${income.receivedOn
+      .toISOString()
+      .slice(0, 10)}`,
+  });
+  refresh();
+  return { status: 'done', message: 'Removed.' };
 }

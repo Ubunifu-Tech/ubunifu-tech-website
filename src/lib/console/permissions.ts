@@ -38,7 +38,8 @@ export const PERMISSIONS = [
   {
     key: 'finance',
     label: 'Costs and reports',
-    description: 'Record what the business spends, and see the financial reports and profit.',
+    description:
+      'Record costs and income from our products, and see the financial reports and profit.',
   },
   {
     key: 'documents',

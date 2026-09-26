@@ -376,3 +376,20 @@ export async function loadTerms(db: PrismaClient, { effectiveFrom }: { effective
   });
   return { ...created, created: true };
 }
+
+/** The products we build and sell ourselves, as the site describes them. */
+const PRODUCTS = ['Insight', 'Sifa', 'Rafiki'];
+
+/**
+ * Adds the products, only when there are none at all. Once they exist they
+ * are the console's to rename, add to or stop, and a deploy never puts back
+ * a name somebody changed.
+ */
+export async function loadProducts(db: PrismaClient): Promise<number> {
+  if ((await db.product.count()) > 0) return 0;
+  const created = await db.product.createMany({
+    data: PRODUCTS.map((name) => ({ name })),
+    skipDuplicates: true,
+  });
+  return created.count;
+}

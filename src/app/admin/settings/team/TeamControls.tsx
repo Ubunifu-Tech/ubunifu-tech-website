@@ -10,6 +10,7 @@ import {
   MenuNote,
   MenuTitle,
   RowMenu,
+  useLastSaid,
 } from '@/components/console/RowMenu';
 import { ROLE_OPTIONS } from '@/lib/console/people';
 import {
@@ -169,7 +170,7 @@ export function RowActions({
     },
     INITIAL,
   );
-  const said = [activeState, resendState, detailsState].find((state) => state.message);
+  const said = useLastSaid(activeState, resendState, detailsState);
 
   return (
     <RowMenu

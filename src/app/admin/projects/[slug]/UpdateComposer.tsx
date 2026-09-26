@@ -19,6 +19,7 @@ import {
   MenuNote,
   MenuTitle,
   RowMenu,
+  useLastSaid,
 } from '@/components/console/RowMenu';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -83,7 +84,7 @@ function DraftMenu({ update }: { update: UpdateRow }) {
     INITIAL,
   );
   const [discardState, discardAction, discarding] = useActionState(discardUpdate, INITIAL);
-  const said = [sendState, editState, discardState].find((state) => state.message);
+  const said = useLastSaid(sendState, editState, discardState);
 
   return (
     <RowMenu
@@ -195,7 +196,7 @@ function SentMenu({ update }: { update: UpdateRow }) {
   const [backState, putBack, puttingBack] = useActionState(putBackUpdate, INITIAL);
   const [open, setOpen] = useState(false);
   const [asking, setAsking] = useState(false);
-  const said = [sendState, downState, backState].find((state) => state.message);
+  const said = useLastSaid(sendState, downState, backState);
 
   return (
     <RowMenu

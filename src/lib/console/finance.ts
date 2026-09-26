@@ -9,7 +9,8 @@ import { ensureRenewalEvents } from './renewals';
  * The money reports: what came in, what went out, and what is still to come.
  *
  * Cash, not promises. Money in is payments received less refunds sent back,
- * on the day each happened; money out is the costs typed in from bills. What
+ * plus other income typed in, such as a product's own sales, on the day each
+ * happened; money out is the costs typed in from bills. What
  * was invoiced is shown beside them but never counted as income, because an
  * invoice asks for money and is not money.
  *
@@ -110,14 +111,21 @@ export type Money = { month: string; currency: string; amountMinor: number };
 
 type Party = { id: string; name: string; removed: boolean } | null;
 type Work = { name: string; serviceLine: ServiceLine } | null;
+type Made = { id: string; name: string } | null;
 
 export type Line = Money & {
-  kind: 'received' | 'refunded' | 'cost' | 'invoiced';
+  /** Received and income are money in; refunded and cost are money out. */
+  kind: 'received' | 'refunded' | 'cost' | 'invoiced' | 'income';
   on: Date;
-  /** Receipt, refund note or invoice number, or who a cost was paid to. */
+  /**
+   * Receipt, refund note or invoice number, who a cost was paid to, or where
+   * other income came from.
+   */
   reference: string;
   client: Party;
   project: Work;
+  /** The product the money belongs to: its own, or its project's. */
+  product: Made;
   category: CostCategory | null;
   /** VAT on an invoice. */
   taxMinor: number;
@@ -127,12 +135,16 @@ const party = (client: { id: string; name: string; deletedAt: Date | null } | nu
   client ? { id: client.id, name: client.name, removed: client.deletedAt !== null } : null;
 
 const PARTY = { select: { id: true, name: true, deletedAt: true } } as const;
-const WORK = { select: { name: true, serviceLine: true } } as const;
+const MADE = { select: { id: true, name: true } } as const;
+const WORK = { select: { name: true, serviceLine: true, product: MADE } } as const;
+
+const work = (project: { name: string; serviceLine: ServiceLine } | null): Work =>
+  project ? { name: project.name, serviceLine: project.serviceLine } : null;
 
 /** Everything that moved money in the period, as one list. */
 export async function ledger(period: Period): Promise<Line[]> {
   const between = { gte: period.from, lt: period.to };
-  const [payments, refunds, costs, invoices] = await Promise.all([
+  const [payments, refunds, costs, invoices, income] = await Promise.all([
     db.payment.findMany({
       where: { ...countedPayment, receivedAt: between },
       select: {
@@ -163,6 +175,7 @@ export async function ledger(period: Period): Promise<Line[]> {
         incurredOn: true,
         client: PARTY,
         project: WORK,
+        product: MADE,
       },
     }),
     db.invoice.findMany({
@@ -177,6 +190,16 @@ export async function ledger(period: Period): Promise<Line[]> {
         project: WORK,
       },
     }),
+    db.income.findMany({
+      where: { receivedOn: between },
+      select: {
+        source: true,
+        amountMinor: true,
+        currency: true,
+        receivedOn: true,
+        product: MADE,
+      },
+    }),
   ]);
 
   return [
@@ -188,7 +211,8 @@ export async function ledger(period: Period): Promise<Line[]> {
       amountMinor: payment.amountMinor,
       reference: payment.receipt?.number ?? payment.invoice.number,
       client: party(payment.invoice.client),
-      project: payment.invoice.project,
+      project: work(payment.invoice.project),
+      product: payment.invoice.project?.product ?? null,
       category: null,
       taxMinor: 0,
     })),
@@ -200,7 +224,8 @@ export async function ledger(period: Period): Promise<Line[]> {
       amountMinor: refund.amountMinor,
       reference: refund.number,
       client: party(refund.payment.invoice.client),
-      project: refund.payment.invoice.project,
+      project: work(refund.payment.invoice.project),
+      product: refund.payment.invoice.project?.product ?? null,
       category: null,
       taxMinor: 0,
     })),
@@ -212,7 +237,8 @@ export async function ledger(period: Period): Promise<Line[]> {
       amountMinor: cost.amountMinor,
       reference: cost.vendor,
       client: party(cost.client),
-      project: cost.project,
+      project: work(cost.project),
+      product: cost.product ?? cost.project?.product ?? null,
       category: cost.category,
       taxMinor: 0,
     })),
@@ -227,13 +253,27 @@ export async function ledger(period: Period): Promise<Line[]> {
               amountMinor: invoice.totalMinor,
               reference: invoice.number,
               client: party(invoice.client),
-              project: invoice.project,
+              project: work(invoice.project),
+              product: invoice.project?.product ?? null,
               category: null,
               taxMinor: invoice.taxMinor,
             },
           ]
         : [],
     ),
+    ...income.map((entry) => ({
+      kind: 'income' as const,
+      on: entry.receivedOn,
+      month: monthKey(entry.receivedOn),
+      currency: entry.currency,
+      amountMinor: entry.amountMinor,
+      reference: entry.source,
+      client: null,
+      project: null,
+      product: entry.product,
+      category: null,
+      taxMinor: 0,
+    })),
   ].sort((a, b) => a.on.getTime() - b.on.getTime());
 }
 

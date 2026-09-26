@@ -139,6 +139,13 @@ const ACTION_LABELS: Record<string, string> = {
   'regular_cost.stopped': 'Regular cost stopped',
   'regular_cost.restarted': 'Regular cost started again',
   'exchange_rate.saved': 'Exchange rate saved',
+  'income.recorded': 'Income added',
+  'income.changed': 'Income changed',
+  'income.removed': 'Income removed',
+  'product.added': 'Product added',
+  'product.renamed': 'Product renamed',
+  'product.stopped': 'Product stopped',
+  'product.restarted': 'Product offered again',
   'renewal.skipped': 'Renewal period skipped',
   'renewal.brought_back': 'Skipped renewal brought back',
   'refund.sent': 'Refund note sent',
@@ -256,7 +263,7 @@ export async function activityForClient(
 /** Lines about invoices and payments, about prices, and about costs. */
 const BILLING_ACTIONS = ['invoice.', 'payment.', 'receipt.', 'refund.'];
 const FEE_ACTIONS = ['line_item.'];
-const FINANCE_ACTIONS = ['cost.', 'regular_cost.', 'exchange_rate.'];
+const FINANCE_ACTIONS = ['cost.', 'regular_cost.', 'exchange_rate.', 'income.', 'product.'];
 
 /**
  * The kinds of line that carry amounts this person is not allowed to see,

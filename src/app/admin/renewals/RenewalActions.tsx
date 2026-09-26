@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useActionState } from 'react';
-import { MenuItem, MenuLink, MenuList, MenuNote, RowMenu } from '@/components/console/RowMenu';
+import {
+  MenuItem,
+  MenuLink,
+  MenuList,
+  MenuNote,
+  RowMenu,
+  useLastSaid,
+} from '@/components/console/RowMenu';
 import { bringBackRenewal, skipRenewal, type RenewalState } from './actions';
 
 const INITIAL: RenewalState = { status: 'idle' };
@@ -22,7 +29,7 @@ export function RenewalActions({
 }) {
   const [skipState, skip, skipping] = useActionState(skipRenewal, INITIAL);
   const [backState, back, bringing] = useActionState(bringBackRenewal, INITIAL);
-  const said = [skipState, backState].find((state) => state.message);
+  const said = useLastSaid(skipState, backState);
 
   return (
     <RowMenu label={`Actions for ${label}`}>

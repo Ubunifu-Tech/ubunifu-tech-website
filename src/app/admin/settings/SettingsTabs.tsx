@@ -10,7 +10,7 @@ export function SettingsTabs({
   current,
   staff,
 }: {
-  current: 'team' | 'billing' | 'documents';
+  current: 'team' | 'billing' | 'documents' | 'products';
   staff: StaffActor;
 }) {
   const tabs = [
@@ -20,6 +20,9 @@ export function SettingsTabs({
       : []),
     ...(can(staff, 'documents')
       ? [{ key: 'documents', label: 'Documents', href: '/settings/documents' }]
+      : []),
+    ...(can(staff, 'finance')
+      ? [{ key: 'products', label: 'Products', href: '/settings/products' }]
       : []),
   ];
   return <Tabs tabs={tabs} current={current} />;

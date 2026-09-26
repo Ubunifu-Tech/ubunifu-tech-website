@@ -159,6 +159,8 @@ export default async function ProjectPage({
         },
       },
       ownerId: true,
+      productId: true,
+      product: { select: { name: true } },
       phases: {
         orderBy: { position: 'asc' },
         select: {
@@ -419,6 +421,12 @@ export default async function ProjectPage({
     select: { id: true, name: true, title: true, email: true },
   });
   const owner = team.find((person) => person.id === project.ownerId) ?? null;
+  // Offered products, and the project's own even if it has since stopped.
+  const products = await db.product.findMany({
+    where: { OR: [{ isActive: true }, { id: project.productId ?? '' }] },
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true },
+  });
   const people = [
     { value: '', label: 'Nobody yet' },
     ...team.map((person) => ({
@@ -811,6 +819,8 @@ export default async function ProjectPage({
                 currency: project.currency,
                 startDate: toDateInputValue(project.startDate),
                 targetDate: toDateInputValue(project.targetDate),
+                productId: project.productId ?? '',
+                products,
                 currencyFixed:
                   project.invoices.some((invoice) => invoice.status !== 'void')
                     ? 'Stays as it is now that the project has invoices.'
@@ -842,6 +852,12 @@ export default async function ProjectPage({
                   <dt>Runs</dt>
                   <dd>{dateRange(project.startDate, project.targetDate)}</dd>
                 </div>
+                {project.product && (
+                  <div>
+                    <dt>Our product</dt>
+                    <dd>{project.product.name}</dd>
+                  </div>
+                )}
               </dl>
             </ProjectDetailsCard>
 

@@ -19,6 +19,7 @@ import {
   MenuNote,
   MenuTitle,
   RowMenu,
+  useLastSaid,
 } from '@/components/console/RowMenu';
 import {
   attachBill,
@@ -38,6 +39,8 @@ const INITIAL: FinanceState = { status: 'idle' };
 export type Choices = {
   clients: { id: string; name: string }[];
   projects: { id: string; name: string; clientId: string }[];
+  /** Our own products, for a cost that keeps one running. */
+  products: { id: string; name: string }[];
   /** Everyone paid before, to pick from rather than retype. */
   vendors: string[];
 };
@@ -51,6 +54,7 @@ type Values = {
   currency?: string;
   clientId?: string | null;
   projectId?: string | null;
+  productId?: string | null;
   incurredOn?: string;
 };
 
@@ -204,6 +208,24 @@ function CostFields({
           invalid={invalid === 'projectId'}
         />
       </div>
+
+      {choices.products.length > 0 && (
+        <div className={forms.field}>
+          <label className={forms.label} htmlFor={`${prefix}-product`}>
+            For one of our products <span className={forms.optional}>(optional)</span>
+          </label>
+          <Select
+            id={`${prefix}-product`}
+            name="productId"
+            defaultValue={values.productId ?? ''}
+            options={[
+              { value: '', label: 'None' },
+              ...choices.products.map((product) => ({ value: product.id, label: product.name })),
+            ]}
+            invalid={invalid === 'productId'}
+          />
+        </div>
+      )}
 
       <TextField
         name="description"
@@ -364,7 +386,7 @@ export function CostMenu({
   );
   const [removeState, remove, removing] = useActionState(removeCost, INITIAL);
   const [billState, dropBill, droppingBill] = useActionState(removeBill, INITIAL);
-  const said = [saveState, removeState, billState].find((state) => state.message);
+  const said = useLastSaid(saveState, removeState, billState);
 
   return (
     <RowMenu
@@ -453,6 +475,7 @@ export function AddMonthOf({
     currency: string;
     clientId: string | null;
     projectId: string | null;
+    productId: string | null;
   };
   /** The date the entry starts from. */
   date: string;
@@ -469,6 +492,7 @@ export function AddMonthOf({
       <input type="hidden" name="currency" value={regular.currency} />
       <input type="hidden" name="clientId" value={regular.clientId ?? ''} />
       <input type="hidden" name="projectId" value={regular.projectId ?? ''} />
+      <input type="hidden" name="productId" value={regular.productId ?? ''} />
       <input type="hidden" name="incurredOn" value={date} />
       <input
         name="amount"
@@ -501,6 +525,7 @@ export function RegularMenu({
     currency: string;
     clientId: string | null;
     projectId: string | null;
+    productId: string | null;
     isActive: boolean;
   };
   choices: Choices;
@@ -516,7 +541,7 @@ export function RegularMenu({
     INITIAL,
   );
   const [activeState, setActive, switching] = useActionState(setRegularCostActive, INITIAL);
-  const said = [saveState, activeState].find((state) => state.message);
+  const said = useLastSaid(saveState, activeState);
 
   return (
     <RowMenu

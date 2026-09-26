@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { SERVICE_LABEL } from '@/lib/console/project-status';
@@ -59,10 +60,11 @@ export default async function ReportsPage({
   const params = await searchParams;
   const now = new Date();
   const period = periodFor(params.period, now);
-  const [lines, coming, rates] = await Promise.all([
+  const [lines, coming, rates, products] = await Promise.all([
     ledger(period),
     comingIn(now),
     ratesFor(period.months),
+    db.product.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, isActive: true } }),
   ]);
 
   const currencies = ordered([
@@ -79,13 +81,17 @@ export default async function ReportsPage({
   const of = (kind: Line['kind'], rows: Line[] = lines) => rows.filter((line) => line.kind === kind);
   const negative = (rows: Line[]): Money[] => rows.map((line) => ({ ...line, amountMinor: -line.amountMinor }));
 
-  const received = sum(of('received'));
+  /** Money that came in: payments and other income, less refunds. */
+  const inOf = (rows: Line[]) =>
+    sum([...of('received', rows), ...of('income', rows), ...negative(of('refunded', rows))]);
+
+  const otherIncome = sum(of('income'));
   const refunded = sum(of('refunded'));
   const spent = sum(of('cost'));
   const invoiced = sum(of('invoiced'));
   const vat = sum(of('invoiced').map((line) => ({ ...line, amountMinor: line.taxMinor })));
-  const moneyIn = less(received, refunded);
-  const left = less(received, refunded, spent);
+  const moneyIn = inOf(lines);
+  const left = less(moneyIn, spent);
 
   const shown = (value: Sum) =>
     value.complete ? formatMoney(value.total, view.currency) : 'Needs a rate';
@@ -103,7 +109,7 @@ export default async function ReportsPage({
   // ── Month by month ─────────────────────────────────────────────────────
   const months = period.months.map((month) => {
     const inMonth = lines.filter((line) => line.month === month);
-    const monthIn = less(sum(of('received', inMonth)), sum(of('refunded', inMonth)));
+    const monthIn = inOf(inMonth);
     const monthOut = sum(of('cost', inMonth));
     return {
       month,
@@ -121,14 +127,15 @@ export default async function ReportsPage({
   >();
   for (const line of lines) {
     if (line.kind === 'invoiced') continue;
-    const key = line.client?.id ?? 'none';
+    const key = line.kind === 'income' ? 'income' : (line.client?.id ?? 'none');
     const row = clients.get(key) ?? {
-      name: line.client?.name ?? 'Not for one client',
+      name:
+        line.kind === 'income' ? 'Other income' : (line.client?.name ?? 'Not for one client'),
       removed: line.client?.removed ?? false,
       incoming: [],
       outgoing: [],
     };
-    if (line.kind === 'received') row.incoming.push(line);
+    if (line.kind === 'received' || line.kind === 'income') row.incoming.push(line);
     if (line.kind === 'refunded') row.incoming.push(...negative([line]));
     if (line.kind === 'cost') row.outgoing.push(line);
     clients.set(key, row);
@@ -144,8 +151,8 @@ export default async function ReportsPage({
   // ── By service ─────────────────────────────────────────────────────────
   const services = new Map<string, Money[]>();
   for (const line of lines) {
-    if (line.kind !== 'received' && line.kind !== 'refunded') continue;
-    const key = line.project?.serviceLine ?? 'none';
+    if (line.kind !== 'received' && line.kind !== 'refunded' && line.kind !== 'income') continue;
+    const key = line.kind === 'income' ? 'income' : (line.project?.serviceLine ?? 'none');
     const list = services.get(key) ?? [];
     list.push(...(line.kind === 'refunded' ? negative([line]) : [line]));
     services.set(key, list);
@@ -153,10 +160,27 @@ export default async function ReportsPage({
   const byService = [...services.entries()]
     .map(([key, list]) => ({
       key,
-      label: key === 'none' ? 'Not on a project' : (SERVICE_LABEL[key] ?? key),
+      label:
+        key === 'none'
+          ? 'Not on a project'
+          : key === 'income'
+            ? 'Other income'
+            : (SERVICE_LABEL[key] ?? key),
       amount: sum(list),
     }))
     .sort((a, b) => b.amount.total - a.amount.total);
+
+  // ── By product ─────────────────────────────────────────────────────────
+  // Every product we make, with anything that has money against it even if
+  // it has since been stopped.
+  const byProduct = products
+    .map((product) => {
+      const mine = lines.filter((line) => line.product?.id === product.id);
+      const incoming = inOf(mine);
+      const outgoing = sum(of('cost', mine));
+      return { ...product, lines: mine.length, incoming, outgoing, left: less(incoming, outgoing) };
+    })
+    .filter((product) => product.isActive || product.lines > 0);
 
   // ── Costs by category ──────────────────────────────────────────────────
   const categories = new Map<string, Money[]>();
@@ -284,11 +308,17 @@ export default async function ReportsPage({
           {
             label: 'Money in',
             value: shown(moneyIn),
-            note: !refunded.complete
-              ? 'Payments, less refunds'
-              : refunded.total !== 0
-                ? `Payments, less ${shown(refunded)} refunded`
-                : 'Payments received',
+            note:
+              !refunded.complete || !otherIncome.complete
+                ? 'Payments and other income, less refunds'
+                : [
+                    otherIncome.total !== 0
+                      ? `Payments and ${shown(otherIncome)} other income`
+                      : 'Payments received',
+                    refunded.total !== 0 ? `less ${shown(refunded)} refunded` : '',
+                  ]
+                    .filter(Boolean)
+                    .join(', '),
           },
           {
             label: 'Money out',
@@ -467,6 +497,60 @@ export default async function ReportsPage({
             </div>
           </div>
         </div>
+
+        {byProduct.length > 0 && (
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Our products</h2>
+              </div>
+              <div className={table.toolbarActions}>
+                <Link href="/finance/income" className={table.action}>
+                  Add their income
+                </Link>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={table.table}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Product
+                    </th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">
+                      Money in
+                    </th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">
+                      Costs to run
+                    </th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">
+                      Left
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byProduct.map((product) => (
+                    <tr key={product.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        {product.name}
+                        {product.isActive ? null : <span className={table.muted}> (stopped)</span>}
+                      </td>
+                      <td className={`${table.td} ${table.numeric}`}>{cell(product.incoming)}</td>
+                      <td className={`${table.td} ${table.numeric}`}>{cell(product.outgoing)}</td>
+                      <td
+                        className={`${table.td} ${table.numeric} ${
+                          product.left.complete && product.left.total < 0 ? table.late : ''
+                        }`}
+                      >
+                        {cell(product.left)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className={table.frame}>
           <div className={table.toolbar}>

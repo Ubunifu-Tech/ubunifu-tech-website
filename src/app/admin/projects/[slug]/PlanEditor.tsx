@@ -160,6 +160,10 @@ export type ProjectDetails = {
   targetDate: string;
   /** Why the currency cannot change now, or null while it still can. */
   currencyFixed: string | null;
+  /** The product this project is a customer of, if any. */
+  productId: string;
+  /** Our products, when there are any to choose from. */
+  products: { id: string; name: string }[];
 };
 
 /** The project's own facts, read as a list and changed in place. */
@@ -259,6 +263,23 @@ export function ProjectDetailsCard({
                 {CURRENCIES.map((code) => (
                   <option key={code} value={code}>
                     {currencyLabel(code)}
+                  </option>
+                ))}
+              </SelectField>
+            )}
+            {details.products.length > 0 && (
+              <SelectField
+                name="productId"
+                label="One of our products"
+                optional
+                defaultValue={details.productId}
+                hint="Pick one when this client uses one of our products."
+                invalid={state.field === 'productId'}
+              >
+                <option value="">None</option>
+                {details.products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
                   </option>
                 ))}
               </SelectField>

@@ -75,6 +75,12 @@ export async function updateProjectDetails(
   const currency = formText(formData, 'currency') || project.currency;
   const startDate = optionalDate(formText(formData, 'startDate'));
   const targetDate = optionalDate(formText(formData, 'targetDate'));
+  // Only a form that offers products changes it.
+  const productId = formData.has('productId') ? formText(formData, 'productId') || null : undefined;
+  if (productId) {
+    const product = await db.product.findUnique({ where: { id: productId }, select: { id: true } });
+    if (!product) return { status: 'error', message: 'That product no longer exists.', field: 'productId' };
+  }
 
   if (name.length < 2 || name.length > 160)
     return { status: 'error', message: 'Give the project a name.', field: 'name' };
@@ -126,6 +132,7 @@ export async function updateProjectDetails(
     currency,
     startDate,
     targetDate,
+    ...(productId !== undefined ? { productId } : {}),
   };
   if (currency === project.currency) {
     await db.project.update({ where: { id: project.id }, data: details });

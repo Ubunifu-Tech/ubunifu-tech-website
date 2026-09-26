@@ -9,6 +9,7 @@ const KIND: Record<string, string> = {
   refunded: 'Refund sent',
   cost: 'Cost',
   invoiced: 'Invoice issued',
+  income: 'Other income',
 };
 
 /** A value for a CSV cell: quoted when it has to be, quotes doubled. */
@@ -35,13 +36,26 @@ export async function GET(request: Request): Promise<Response> {
   const lines = await ledger(period);
 
   const rows = [
-    ['Date', 'Type', 'Reference', 'Client', 'Project', 'Service', 'Spent on', 'Currency', 'Amount', 'VAT'],
+    [
+      'Date',
+      'Type',
+      'Reference',
+      'Client',
+      'Project',
+      'Product',
+      'Service',
+      'Spent on',
+      'Currency',
+      'Amount',
+      'VAT',
+    ],
     ...lines.map((line) => [
       toDateInputValue(line.on),
       KIND[line.kind] ?? line.kind,
       text(line.reference),
       text(line.client ? `${line.client.name}${line.client.removed ? ' (removed)' : ''}` : ''),
       text(line.project?.name ?? ''),
+      text(line.product?.name ?? ''),
       line.project ? (SERVICE_LABEL[line.project.serviceLine] ?? line.project.serviceLine) : '',
       line.category ? (COST_CATEGORY_LABEL[line.category] ?? line.category) : '',
       line.currency,

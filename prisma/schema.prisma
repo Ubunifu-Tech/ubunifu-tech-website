@@ -69,6 +69,7 @@ model StaffUser {
   assignedTasks    Deliverable[]     @relation("DeliverableAssignee")
   reviewsAsked     ProjectReview[]
   costsRecorded    Cost[]            @relation("CostRecordedBy")
+  incomeRecorded   Income[]          @relation("IncomeRecordedBy")
 
   @@index([isActive])
 }
@@ -352,6 +353,10 @@ model Project {
   enquiries       Enquiry[]
   costs           Cost[]
   regularCosts    RegularCost[]
+  /// The product this project is a customer of, when it is one: a client's
+  /// Sifa subscription, say. Its money counts towards the product.
+  productId       String?
+  product         Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([clientId])
   @@index([status])
@@ -1568,6 +1573,9 @@ model Cost {
   client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   projectId    String?
   project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  /// The product it keeps running, when it is one.
+  productId    String?
+  product      Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
   /// The regular cost this entry is a month of, when it is one.
   regularId    String?
   regular      RegularCost? @relation(fields: [regularId], references: [id], onDelete: SetNull)
@@ -1596,6 +1604,8 @@ model RegularCost {
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   projectId   String?
   project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  productId   String?
+  product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -1618,4 +1628,41 @@ model ExchangeRate {
   updatedAt   DateTime @updatedAt
 
   @@unique([month, base, quote])
+}
+
+/// Something we build and sell ourselves, like Sifa. The reports follow its
+/// money on its own: what it earns and what it costs to run.
+model Product {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects     Project[]
+  costs        Cost[]
+  regularCosts RegularCost[]
+  income       Income[]
+}
+
+/// Money in that did not come through an invoice here, such as a product's
+/// own subscriptions collected in the app. Typed in from the statement.
+model Income {
+  id           String     @id @default(cuid())
+  /// The day it reached us.
+  receivedOn   DateTime
+  /// Where it came from, in a few words.
+  source       String
+  description  String?
+  amountMinor  Int
+  currency     String
+  productId    String?
+  product      Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  recordedById String?
+  recordedBy   StaffUser? @relation("IncomeRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([receivedOn])
+  @@index([productId])
 }

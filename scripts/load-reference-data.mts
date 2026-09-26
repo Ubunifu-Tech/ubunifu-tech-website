@@ -1,6 +1,6 @@
 /**
  * Adds the console's reference data to a database that does not have it yet:
- * the standard terms and one starting plan per service line.
+ * the standard terms, one starting plan per service line, and our products.
  *
  *   npx tsx scripts/load-reference-data.mts
  *
@@ -29,15 +29,16 @@ if (!url) {
 // the app's @/ alias, which tsx does not resolve here.
 const { databaseTarget } = await import('../src/lib/db-connection');
 const { PrismaClient } = await import('../src/generated/prisma/client');
-const { loadTemplates, loadTerms } = await import('../prisma/reference-data');
+const { loadProducts, loadTemplates, loadTerms } = await import('../prisma/reference-data');
 
 const db = new PrismaClient({ adapter: new PrismaPg(databaseTarget(url)) });
 
 try {
   const templates = await loadTemplates(db, { rebuild: false });
   const terms = await loadTerms(db, { effectiveFrom: new Date() });
+  const products = await loadProducts(db);
   console.log(
-    `[reference] Plan templates added: ${templates}. ` +
+    `[reference] Plan templates added: ${templates}. Products added: ${products}. ` +
       (terms.created
         ? `Standard terms published as version ${terms.version}.`
         : `Standard terms already on version ${terms.version}, left as they are.`),

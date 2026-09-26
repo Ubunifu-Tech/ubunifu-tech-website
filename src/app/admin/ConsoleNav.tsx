@@ -7,6 +7,7 @@ import {
   Activity,
   BarChart3,
   Briefcase,
+  Coins,
   Building2,
   Inbox,
   LayoutDashboard,
@@ -46,6 +47,7 @@ const ICONS = {
   invoices: Receipt,
   renewals: RefreshCw,
   reports: BarChart3,
+  income: Coins,
   costs: Wallet,
   documents: FileText,
   requests: LifeBuoy,
@@ -83,8 +85,9 @@ const GROUPS: { label?: string; items: Item[] }[] = [
     items: [
       { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices', need: 'invoices' },
       { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals', need: 'invoices' },
-      { href: '/finance', label: 'Reports', icon: 'reports', need: 'finance' },
+      { href: '/finance/income', label: 'Income', icon: 'income', need: 'finance' },
       { href: '/finance/costs', label: 'Costs', icon: 'costs', need: 'finance' },
+      { href: '/finance', label: 'Reports', icon: 'reports', need: 'finance' },
     ],
   },
   {

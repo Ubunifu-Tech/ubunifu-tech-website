@@ -43,7 +43,7 @@ export default async function CostsPage({
   const from = monthDate(month);
   const to = monthDate(shift(month, 1));
 
-  const [costs, regulars, clients, projects, vendors] = await Promise.all([
+  const [costs, regulars, clients, projects, vendors, products] = await Promise.all([
     db.cost.findMany({
       where: { incurredOn: { gte: from, lt: to } },
       orderBy: [{ incurredOn: 'desc' }, { createdAt: 'desc' }],
@@ -58,6 +58,8 @@ export default async function CostsPage({
         regularId: true,
         clientId: true,
         projectId: true,
+        productId: true,
+        product: { select: { name: true } },
         client: { select: { name: true, deletedAt: true } },
         project: { select: { name: true, slug: true, deletedAt: true } },
         files: {
@@ -80,9 +82,11 @@ export default async function CostsPage({
         isActive: true,
         clientId: true,
         projectId: true,
+        productId: true,
         createdAt: true,
         client: { select: { name: true } },
         project: { select: { name: true } },
+        product: { select: { name: true } },
       },
     }),
     db.client.findMany({
@@ -96,11 +100,17 @@ export default async function CostsPage({
       select: { id: true, name: true, clientId: true },
     }),
     db.cost.findMany({ distinct: ['vendor'], orderBy: { vendor: 'asc' }, select: { vendor: true } }),
+    db.product.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const choices: Choices = {
     clients,
     projects,
+    products,
     vendors: [...new Set([...vendors.map((row) => row.vendor), ...regulars.map((r) => r.vendor)])].sort(),
   };
 
@@ -119,9 +129,15 @@ export default async function CostsPage({
   const forWhat = (row: {
     client: { name: string; deletedAt?: Date | null } | null;
     project: { name: string } | null;
+    product: { name: string } | null;
   }) =>
-    row.project?.name ??
-    (row.client ? `${row.client.name}${row.client.deletedAt ? ' (removed)' : ''}` : null);
+    [
+      row.project?.name ??
+        (row.client ? `${row.client.name}${row.client.deletedAt ? ' (removed)' : ''}` : null),
+      row.product?.name ?? null,
+    ]
+      .filter(Boolean)
+      .join(', ') || null;
 
   const regularValues = (regular: (typeof regulars)[number]) => ({
     id: regular.id,
@@ -132,6 +148,7 @@ export default async function CostsPage({
     currency: regular.currency,
     clientId: regular.clientId,
     projectId: regular.projectId,
+    productId: regular.productId,
     isActive: regular.isActive,
   });
 
@@ -344,6 +361,7 @@ export default async function CostsPage({
                             currency: cost.currency,
                             clientId: cost.clientId,
                             projectId: cost.projectId,
+                            productId: cost.productId,
                             incurredOn: toDateInputValue(cost.incurredOn),
                           }}
                         />

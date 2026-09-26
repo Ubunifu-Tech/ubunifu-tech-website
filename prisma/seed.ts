@@ -17,7 +17,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { databaseTarget } from '../src/lib/db-connection';
 import { PrismaClient, BillingKind, LineItemStatus } from '../src/generated/prisma/client';
-import { loadTemplates, loadTerms } from './reference-data';
+import { loadProducts, loadTemplates, loadTerms } from './reference-data';
 
 process.loadEnvFile('.env');
 
@@ -332,6 +332,7 @@ async function main() {
   const owner = await seedStaff();
   const templateCount = await loadTemplates(db, { rebuild: true });
   const terms = await loadTerms(db, { effectiveFrom: d('2026-09-21') });
+  await loadProducts(db);
   const { client, project } = await seedNifuate(owner.id);
 
   const [phases, deliverables, assets, lines] = await Promise.all([

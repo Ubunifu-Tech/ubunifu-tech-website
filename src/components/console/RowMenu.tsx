@@ -54,6 +54,22 @@ export function RowMenu({
   );
 }
 
+/**
+ * Of a menu's action results, the one that came back last, so the note under
+ * the list tells what was just done rather than what was done first.
+ */
+export function useLastSaid<T extends { message?: string }>(...states: T[]): T | undefined {
+  const [seen, setSeen] = useState(states);
+  const [last, setLast] = useState<T | undefined>(undefined);
+  const changed = states.find((state, index) => state !== seen[index]);
+  if (changed) {
+    setSeen(states);
+    setLast(changed);
+  }
+  const current = changed ?? last;
+  return current?.message ? current : undefined;
+}
+
 /** The list of choices in a row's menu. */
 export function MenuList({ children }: { children: React.ReactNode }) {
   return <div className={styles.list}>{children}</div>;

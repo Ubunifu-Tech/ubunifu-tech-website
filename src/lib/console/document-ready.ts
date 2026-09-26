@@ -65,17 +65,21 @@ export async function prepareDocument(document: {
   const { kind, source, project } = document;
   const withFeeTable = carriesFees(kind) || hasFeesToken(source);
 
-  const [lines, later, signer, org, standard] = await Promise.all([
+  const [lines, later, primary, org, standard] = await Promise.all([
     withFeeTable ? projectFees(project.id) : Promise.resolve([]),
     withFeeTable ? projectFeesLater(project.id) : Promise.resolve([]),
     db.clientContact.findFirst({
-      where: { clientId: project.clientId, deletedAt: null, canSignIn: true, isPrimary: true },
-      select: { id: true, name: true, email: true },
+      where: { clientId: project.clientId, deletedAt: null, isPrimary: true },
+      select: { id: true, name: true, email: true, canSignIn: true },
     }),
     getOrg(),
     db.documentDefault.findUnique({ where: { kind }, select: { bodyMarkdown: true } }),
   ]);
   const vatBps = org.chargesVat ? org.vatRateBps : 0;
+  // Their main contact signs, and only while they can open the portal.
+  const signer = primary?.canSignIn
+    ? { id: primary.id, name: primary.name, email: primary.email }
+    : null;
 
   const priced = withFeeTable
     ? withFees(source, feeSchedule(lines, project.currency, vatBps, later), kind)
@@ -116,10 +120,15 @@ export async function prepareDocument(document: {
   checks.push({
     ok: signer !== null && signer.email !== null,
     label: signer ? `${signer.name} will sign` : 'Someone at the client can sign',
-    problem: !signer
-      ? 'The client has no main contact yet.'
-      : `${signer.name} has no email address yet. Share a link for them to sign instead.`,
-    fix: { href: `/clients/${project.clientSlug}`, text: signer ? 'Open the client' : 'Add a contact' },
+    problem: primary && !primary.canSignIn
+      ? `${primary.name}'s portal access is off. Turn it on from their menu on the client page.`
+      : !signer
+        ? 'The client has no main contact yet.'
+        : `${signer.name} has no email address yet. Share a link for them to sign instead.`,
+    fix: {
+      href: `/clients/${project.clientSlug}`,
+      text: primary ? 'Open the client' : 'Add a contact',
+    },
     ...(signer ? { key: 'signer-email' as const } : {}),
   });
 

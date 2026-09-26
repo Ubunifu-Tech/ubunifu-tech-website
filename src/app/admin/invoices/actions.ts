@@ -282,7 +282,7 @@ export async function sendInvoice(
           name: true,
           contacts: {
             where: { deletedAt: null, isPrimary: true },
-            select: { id: true, name: true, email: true },
+            select: { id: true, name: true, email: true, canSignIn: true },
             take: 1,
           },
         },
@@ -300,6 +300,13 @@ export async function sendInvoice(
     return {
       status: 'error',
       message: 'This client has no main contact to send it to. Add one first.',
+    };
+  }
+  // Every link in these emails opens the portal, which is closed to them.
+  if (!contact.canSignIn) {
+    return {
+      status: 'error',
+      message: `${contact.name}'s portal access is off. Turn it on from their client page, then send.`,
     };
   }
   if (!contact.email) {
@@ -743,7 +750,7 @@ export async function emailReceipt(
                   name: true,
                   contacts: {
                     where: { deletedAt: null, isPrimary: true },
-                    select: { id: true, name: true, email: true },
+                    select: { id: true, name: true, email: true, canSignIn: true },
                     take: 1,
                   },
                 },
@@ -762,6 +769,12 @@ export async function emailReceipt(
 
   const contact = receipt.payment.invoice.client.contacts[0];
   if (!contact) return { status: 'error', message: 'This client has no main contact.' };
+  if (!contact.canSignIn) {
+    return {
+      status: 'error',
+      message: `${contact.name}'s portal access is off. Turn it on from their client page, then send.`,
+    };
+  }
   if (!contact.email) {
     return {
       status: 'error',
@@ -967,7 +980,7 @@ export async function emailRefund(
                 select: {
                   contacts: {
                     where: { deletedAt: null, isPrimary: true },
-                    select: { name: true, email: true },
+                    select: { name: true, email: true, canSignIn: true },
                     take: 1,
                   },
                 },
@@ -982,6 +995,12 @@ export async function emailRefund(
 
   const contact = refund.payment.invoice.client.contacts[0];
   if (!contact) return { status: 'error', message: 'This client has no main contact.' };
+  if (!contact.canSignIn) {
+    return {
+      status: 'error',
+      message: `${contact.name}'s portal access is off. Turn it on from their client page, then send.`,
+    };
+  }
   if (!contact.email) {
     return {
       status: 'error',

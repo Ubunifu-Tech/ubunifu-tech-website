@@ -106,6 +106,8 @@ export type NewClientInput = {
     summary?: string | null;
     startDate?: Date | null;
     targetDate?: Date | null;
+    /** Who leads it. Whoever creates it, unless they choose someone else. */
+    ownerId?: string | null;
   };
   /** Set when this client came from a website enquiry, to close the loop. */
   enquiryId?: string | null;
@@ -196,7 +198,7 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
         currency: input.client.currency,
         startDate: input.project.startDate ?? null,
         targetDate: input.project.targetDate ?? null,
-        ownerId: input.staffId,
+        ownerId: input.project.ownerId === undefined ? input.staffId : input.project.ownerId,
         statusEvents: {
           create: {
             to: input.project.status,

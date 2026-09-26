@@ -29,13 +29,18 @@ export default async function NewClientPage({
 }: {
   searchParams: Promise<{ enquiry?: string }>;
 }) {
-  await requirePermission('clients');
+  const staff = await requirePermission('clients');
   const { enquiry: enquiryId } = await searchParams;
 
-  const [templates, enquiry] = await Promise.all([
+  const [templates, team, enquiry] = await Promise.all([
     db.projectTemplate.findMany({
       orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
       select: { id: true, name: true, serviceLine: true, description: true, isDefault: true },
+    }),
+    db.staffUser.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
     }),
     enquiryId
       ? db.enquiry.findFirst({
@@ -89,7 +94,7 @@ export default async function NewClientPage({
 
       <div className={styles.split}>
         <div className={styles.splitMain}>
-          <NewClientForm templates={templates} prefill={prefill} />
+          <NewClientForm templates={templates} prefill={prefill} team={team} me={staff.id} />
         </div>
 
         <aside className={styles.splitAside}>

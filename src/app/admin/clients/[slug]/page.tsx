@@ -18,6 +18,8 @@ import {
   setPortalAccess,
 } from '../actions';
 import { RestoreProject } from './RestoreProject';
+import { ClientDetails } from './ClientDetails';
+import { BringBack } from './BringBack';
 import { Callout } from '@/components/console/Callout';
 import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
@@ -56,9 +58,10 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ restored?: string }>;
+  searchParams: Promise<{ restored?: string; kept?: string }>;
 }) {
-  const { restored } = await searchParams;
+  const { restored, kept } = await searchParams;
+  const leftOut = Number(kept) > 0 ? Number(kept) : 0;
   const staff = await requireStaff();
   const mayManage = can(staff, 'clients');
   const seesMoney = can(staff, 'invoices');
@@ -130,7 +133,7 @@ export default async function ClientPage({
   if (!client) notFound();
 
   const mayRunProjects = can(staff, 'projects');
-  const [activity, removal, removedProjects] = await Promise.all([
+  const [activity, removal, removedProjects, removedPeople] = await Promise.all([
     activityForClient(client.id),
     mayManage ? clientRemovalCounts(client.id) : null,
     mayRunProjects
@@ -138,6 +141,13 @@ export default async function ClientPage({
           where: { clientId: client.id, deletedAt: { not: null } },
           orderBy: { deletedAt: 'desc' },
           select: { id: true, name: true, reference: true, deletedAt: true },
+        })
+      : [],
+    mayManage
+      ? db.clientContact.findMany({
+          where: { clientId: client.id, deletedAt: { not: null } },
+          orderBy: { deletedAt: 'desc' },
+          select: { id: true, name: true, email: true, deletedAt: true },
         })
       : [],
   ]);
@@ -204,12 +214,19 @@ export default async function ClientPage({
             </span>
           </p>
         </div>
+        {mayManage && (
+          <div className={styles.headActions}>
+            <ClientDetails client={client} />
+          </div>
+        )}
       </div>
 
       {restored && (
         <Callout kind="good">
           {client.name} is back. Portal access is off for each person until you turn it on from
           their menu.
+          {leftOut > 0 &&
+            ` ${leftOut === 1 ? 'One person was' : `${leftOut} people were`} not brought back, because their email now belongs to someone at another client. They are under Removed people.`}
         </Callout>
       )}
 
@@ -500,6 +517,53 @@ export default async function ClientPage({
             </table>
           </div>
         </div>
+
+        {removedPeople.length > 0 && (
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Removed people</h2>
+                <span className={table.count}>{removedPeople.length}</span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={table.table}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Name
+                    </th>
+                    <th className={table.th} scope="col">
+                      Email
+                    </th>
+                    <th className={table.th} scope="col">
+                      Removed
+                    </th>
+                    <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                      <span className={table.muted}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {removedPeople.map((person) => (
+                    <tr key={person.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>{person.name}</td>
+                      <td className={table.td}>
+                        {person.email ?? <span className={table.muted}>None</span>}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(person.deletedAt)}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <BringBack clientId={client.id} contactId={person.id} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         <div className={styles.columns}>
           <section className={forms.card}>

@@ -83,16 +83,19 @@ export function AddPerson({
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="person-email">
-            Email
+            Email {canSkipInvite && <span className={forms.optional}>(optional)</span>}
           </label>
           <input
             id="person-email"
             name="email"
             type="email"
             className={forms.control}
-            required
+            required={!canSkipInvite}
             maxLength={254}
           />
+          {canSkipInvite && (
+            <p className={forms.hint}>Without one, send them a setup link from their menu.</p>
+          )}
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="person-role">

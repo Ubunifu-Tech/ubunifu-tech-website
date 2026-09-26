@@ -85,6 +85,7 @@ const FIELD_STEP: Record<string, number> = {
   startDate: 2,
   targetDate: 2,
   summary: 2,
+  ownerId: 2,
 };
 
 const labelOf = (list: { value: string; label: string }[], value: string) =>
@@ -124,9 +125,15 @@ function Select({
 export function NewClientForm({
   templates,
   prefill,
+  team,
+  me,
 }: {
   templates: TemplateOption[];
   prefill?: Prefill;
+  /** Who can lead the first project: the people on the team who can sign in. */
+  team: { id: string; name: string }[];
+  /** Whoever is creating it, who leads it unless they choose someone else. */
+  me: string;
 }) {
   const [state, action, pending] = useActionState(createClient, INITIAL);
   const [startProject, setStartProject] = useState(true);
@@ -499,6 +506,25 @@ export function NewClientForm({
                     {ENGAGEMENTS.map((engagement) => (
                       <option key={engagement.value} value={engagement.value}>
                         {engagement.label}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className={forms.field}>
+                  <label className={forms.label} htmlFor={field('ownerId')}>
+                    Owner
+                  </label>
+                  <Select
+                    id={field('ownerId')}
+                    name="ownerId"
+                    defaultValue={was('ownerId', me)}
+                    aria-invalid={invalid('ownerId')}
+                  >
+                    <option value="">Nobody yet</option>
+                    {team.map((person) => (
+                      <option key={person.id} value={person.id}>
+                        {person.name}
                       </option>
                     ))}
                   </Select>

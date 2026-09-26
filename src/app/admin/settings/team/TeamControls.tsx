@@ -143,12 +143,14 @@ export function RoleControl({ staffId, role }: { staffId: string; role: string }
 export function RowActions({
   staffId,
   name,
+  email,
   title,
   active,
   invited,
 }: {
   staffId: string;
   name: string;
+  email: string;
   title: string | null;
   active: boolean;
   invited: boolean;
@@ -186,6 +188,15 @@ export function RowActions({
         <form action={saveDetails} className={forms.form}>
           <input type="hidden" name="staffId" value={staffId} />
           <TextField name="name" label="Name" defaultValue={name} required maxLength={120} />
+          <TextField
+            name="email"
+            label="Email"
+            type="email"
+            defaultValue={email}
+            required
+            maxLength={254}
+            hint="They sign in with this address."
+          />
           <TextField
             name="title"
             label="Title"
@@ -230,7 +241,7 @@ export function RowActions({
       ) : (
         <>
           <MenuList>
-            <MenuItem onClick={() => setEditing(true)}>Change name or title</MenuItem>
+            <MenuItem onClick={() => setEditing(true)}>Change details</MenuItem>
             {active && invited && (
               <form action={resend}>
                 <input type="hidden" name="staffId" value={staffId} />

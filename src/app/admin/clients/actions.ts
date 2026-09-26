@@ -20,10 +20,12 @@ import {
   makeMainContact,
   readContact,
   removeContact,
+  restoreContact,
   updateContact,
 } from '@/lib/console/contacts';
 import { allow } from '@/lib/console/rate-limit';
-import { formText } from '@/lib/console/form';
+import { formText, formTextExact } from '@/lib/console/form';
+import { isCurrency } from '@/lib/console/currencies';
 import { whatsappNumber } from '@/lib/console/whatsapp';
 
 export type InviteState = { status: 'idle' | 'sent' | 'done' | 'error'; message?: string };
@@ -95,7 +97,7 @@ export async function addClientContact(
   const client = await clientFor({ id: formText(formData, 'clientId') });
   if (!client) return { status: 'error', message: 'That client no longer exists.' };
 
-  const read = readContact(formData);
+  const read = readContact(formData, { emailRequired: false });
   if (!read.ok) return { status: 'error', message: read.message };
   if (!(await allow('contact-add', staff.id, { limit: 40, windowMinutes: 24 * 60 }))) {
     return {
@@ -470,7 +472,9 @@ export async function restoreClient(
   });
 
   revalidatePath('/admin', 'layout');
-  redirect(`/clients/${client.slug}?restored=1`);
+  redirect(
+    `/clients/${client.slug}?restored=1${restored.kept.length > 0 ? `&kept=${restored.kept.length}` : ''}`,
+  );
 }
 
 /**
@@ -522,4 +526,89 @@ export async function setPortalAccess(
       ? `${contact.name} can use the portal again.`
       : `${contact.name} is signed out and cannot use the portal.`,
   };
+}
+
+export type ClientDetailsState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  field?: string;
+};
+
+/**
+ * Corrects a client's own details: the name we use, the registered name
+ * invoices carry, the country, the currency new work is billed in, the
+ * website and the notes. Projects already set up keep their own currency.
+ */
+export async function saveClientDetails(
+  _previous: ClientDetailsState,
+  formData: FormData,
+): Promise<ClientDetailsState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const name = formText(formData, 'name').slice(0, 160);
+  const legalName = formText(formData, 'legalName').slice(0, 200) || null;
+  const country = formText(formData, 'country').toUpperCase();
+  const currency = formText(formData, 'currency').toUpperCase();
+  const website = formText(formData, 'website').slice(0, 300) || null;
+  const notes = formTextExact(formData, 'notes').trim().slice(0, 4000) || null;
+
+  if (name.length < 2) return { status: 'error', message: 'Add their name.', field: 'name' };
+  if (!/^[A-Z]{2}$/.test(country)) {
+    return { status: 'error', message: 'Country is a two-letter code, such as TZ.', field: 'country' };
+  }
+  if (!isCurrency(currency)) {
+    return { status: 'error', message: 'Choose a currency.', field: 'currency' };
+  }
+  if (website) {
+    try {
+      const parsed = new URL(website);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
+    } catch {
+      return {
+        status: 'error',
+        message: 'The website should be a full address, starting with https://',
+        field: 'website',
+      };
+    }
+  }
+
+  await db.client.update({
+    where: { id: client.id },
+    data: { name, legalName, country, currency, website, notes },
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'client.details_saved',
+    entityType: 'Client',
+    entityId: client.id,
+    summary: name === client.name ? name : `${client.name} is now ${name}`,
+  });
+
+  revalidatePath(`/admin/clients/${client.slug}`);
+  revalidatePath('/admin/clients');
+  revalidatePath('/portal', 'layout');
+  return { status: 'done', message: 'Saved.' };
+}
+
+/** Brings back someone removed from a client. See restoreContact. */
+export async function bringBackContact(
+  _previous: InviteState,
+  formData: FormData,
+): Promise<InviteState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
+  const client = await clientFor({ id: formText(formData, 'clientId') });
+  if (!client) return { status: 'error', message: 'That client no longer exists.' };
+
+  const result = await restoreContact({
+    contactId: formText(formData, 'contactId'),
+    clientId: client.id,
+    by: { type: 'staff', id: staff.id, name: staff.name },
+  });
+  revalidatePath(`/admin/clients/${client.slug}`);
+  return { status: result.ok ? 'done' : 'error', message: result.message };
 }

@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { StaffRole } from '@/generated/prisma/client';
 import { requireStaff, requireStaffRole, recordAudit } from '@/lib/console/auth';
 import { consoleEnv, isStaffEmailAllowed, staffDomains } from '@/lib/console/env';
-import { issueMagicToken } from '@/lib/console/magic-link';
+import { issueMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { allow } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
@@ -220,29 +220,66 @@ export async function saveTeamMember(_previous: TeamState, formData: FormData): 
   const staff = await requireStaffRole('owner');
   const name = formText(formData, 'name').slice(0, 120);
   const title = formText(formData, 'title').slice(0, 80) || null;
+  const email = formText(formData, 'email').toLowerCase();
   if (name.length < 2) return { status: 'error', message: 'Add their name.' };
+  if (!EMAIL.test(email)) return { status: 'error', message: 'Add a valid email address.' };
 
   const person = await db.staffUser.findUnique({
     where: { id: formText(formData, 'staffId') },
-    select: { id: true, name: true, title: true },
+    select: { id: true, name: true, title: true, email: true, lastSeenAt: true, isActive: true },
   });
   if (!person) return { status: 'error', message: 'They are not on the team.' };
-  if (name === person.name && title === person.title) {
+  const emailChanged = email !== person.email;
+  if (name === person.name && title === person.title && !emailChanged) {
     return { status: 'done', message: 'Nothing changed.' };
   }
+  if (emailChanged && !isStaffEmailAllowed(email)) {
+    const domains = staffDomains();
+    return {
+      status: 'error',
+      message: domains.length
+        ? `Team members need an address ending ${domains.join(' or ')}.`
+        : 'That address cannot sign in yet. In Vercel, add it to CONSOLE_STAFF_EMAILS, then try again.',
+    };
+  }
 
-  await db.staffUser.update({ where: { id: person.id }, data: { name, title } });
+  try {
+    await db.staffUser.update({ where: { id: person.id }, data: { name, title, email } });
+  } catch (error) {
+    if (isUniqueConflict(error)) {
+      return { status: 'error', message: 'Someone on the team already uses that email.' };
+    }
+    throw error;
+  }
+  // Links already emailed went to the old address.
+  if (emailChanged) await revokeMagicTokens('staff', person.id, ['invite', 'sign_in']);
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
     action: 'staff.details_saved',
     entityType: 'StaffUser',
     entityId: person.id,
-    summary: title ? `${name}, ${title}` : name,
+    summary: [
+      name === person.name ? name : `${person.name} is now ${name}`,
+      title ? title : null,
+      emailChanged ? `email now ${email}` : null,
+    ]
+      .filter(Boolean)
+      .join(', '),
   });
 
+  // Someone who never signed in was waiting on an invitation to the old
+  // address; this one goes to the right place.
+  let note = '';
+  if (emailChanged && person.isActive && !person.lastSeenAt) {
+    const sent = await sendInvite({ id: person.id, name, email }, staff);
+    note = sent.ok ? ` A new invitation went to ${email}.` : ` The new invitation did not send: ${sent.error}`;
+  } else if (emailChanged) {
+    note = ` They sign in with ${email} from now on.`;
+  }
+
   refresh();
-  return { status: 'done', message: 'Saved.' };
+  return { status: 'done', message: `Saved.${note}` };
 }
 
 /** Anyone's own name and title. */

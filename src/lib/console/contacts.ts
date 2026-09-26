@@ -6,6 +6,7 @@ import { issueMagicToken, revokeMagicTokens } from './magic-link';
 import { sendConsoleEmail } from './mailer';
 import {
   clientInviteEmail,
+  clientSignInEmail,
   colleagueInviteEmail,
   passwordChangedEmail,
   passwordResetEmail,
@@ -23,13 +24,15 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type NewContact = {
   name: string;
-  email: string;
+  /** Null for someone we reach another way, who is sent a setup link by hand. */
+  email: string | null;
   role: string | null;
   phone: string | null;
 };
 
 export function readContact(
   formData: FormData,
+  { emailRequired = true }: { emailRequired?: boolean } = {},
 ): { ok: true; contact: NewContact } | { ok: false; message: string } {
   const text = (key: string, max: number) =>
     String(formData.get(key) ?? '')
@@ -38,16 +41,30 @@ export function readContact(
   const name = text('name', 120);
   const email = text('email', 254).toLowerCase();
   if (name.length < 2) return { ok: false, message: 'Add their name.' };
-  if (!EMAIL.test(email)) return { ok: false, message: 'Add a valid email address.' };
+  if (email ? !EMAIL.test(email) : emailRequired) {
+    return { ok: false, message: 'Add a valid email address.' };
+  }
   return {
     ok: true,
     contact: {
       name,
-      email,
+      email: email || null,
       role: text('role', 80) || null,
       phone: text('phone', 40) || null,
     },
   };
+}
+
+/**
+ * Whether an address already belongs to someone at another client. One
+ * address signs in to one account, so the same person cannot be added at two.
+ */
+export async function emailTakenElsewhere(email: string, clientId: string): Promise<boolean> {
+  const taken = await db.clientContact.findFirst({
+    where: { email, deletedAt: null, NOT: { clientId } },
+    select: { id: true },
+  });
+  return taken !== null;
 }
 
 type Actor =
@@ -67,12 +84,20 @@ export async function addContact(input: {
 }): Promise<{ ok: true; message: string } | { ok: false; message: string }> {
   const { contact, by } = input;
 
-  const existing = await db.clientContact.findUnique({
-    where: { clientId_email: { clientId: input.clientId, email: contact.email } },
-    select: { id: true, deletedAt: true },
-  });
+  const existing = contact.email
+    ? await db.clientContact.findUnique({
+        where: { clientId_email: { clientId: input.clientId, email: contact.email } },
+        select: { id: true, deletedAt: true },
+      })
+    : null;
   if (existing && !existing.deletedAt) {
     return { ok: false, message: 'Someone with that email is already here.' };
+  }
+  if (contact.email && (await emailTakenElsewhere(contact.email, input.clientId))) {
+    return {
+      ok: false,
+      message: 'Someone at another client already uses that email. One address signs in to one account.',
+    };
   }
 
   let person;
@@ -103,6 +128,12 @@ export async function addContact(input: {
     summary: person.email ? `${person.name} (${person.email})` : person.name,
   });
 
+  if (!person.email) {
+    return {
+      ok: true,
+      message: `${person.name} added. Make them a setup link from their menu to send by hand.`,
+    };
+  }
   if (!input.invite) return { ok: true, message: `${person.name} added.` };
 
   const sent = await invitePerson({
@@ -294,28 +325,46 @@ export async function invitePerson(input: {
   const url = `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`;
 
   const fromColleague = by.type === 'client_contact';
-  const sent = await sendConsoleEmail({
-    to: contact.email,
-    subject: fromColleague
-      ? `${by.name} invited you to the ${input.clientName} portal`
-      : 'Your Ubunifu project portal is ready',
-    html: fromColleague
-      ? colleagueInviteEmail({
-          name: contact.name,
-          invitedBy: by.name,
-          clientName: input.clientName,
-          url,
-        })
-      : clientInviteEmail({ name: contact.name, clientName: input.clientName, url }),
-    template: fromColleague ? 'colleague_invite' : 'client_invite',
-    entityType: 'ClientContact',
-    entityId: contact.id,
-  });
+  // Someone already set up gets a sign-in link, in the email that says so:
+  // the invitation promises two weeks and a password to choose, and a
+  // sign-in link lasts twenty minutes and needs neither.
+  const sent = contact.activatedAt
+    ? await sendConsoleEmail({
+        to: contact.email,
+        subject: 'Sign in to your Ubunifu portal',
+        html: clientSignInEmail({ name: contact.name, url }),
+        template: 'client_sign_in',
+        entityType: 'ClientContact',
+        entityId: contact.id,
+      })
+    : await sendConsoleEmail({
+        to: contact.email,
+        subject: fromColleague
+          ? `${by.name} invited you to the ${input.clientName} portal`
+          : 'Your Ubunifu project portal is ready',
+        html: fromColleague
+          ? colleagueInviteEmail({
+              name: contact.name,
+              invitedBy: by.name,
+              clientName: input.clientName,
+              url,
+            })
+          : clientInviteEmail({ name: contact.name, clientName: input.clientName, url }),
+        template: fromColleague ? 'colleague_invite' : 'client_invite',
+        entityType: 'ClientContact',
+        entityId: contact.id,
+      });
 
   await recordAudit({
     actorType: by.type,
     actorId: by.id,
-    action: sent.ok ? 'client.invite.sent' : 'client.invite.send_failed',
+    action: contact.activatedAt
+      ? sent.ok
+        ? 'client.sign_in.link_sent'
+        : 'client.sign_in.link_send_failed'
+      : sent.ok
+        ? 'client.invite.sent'
+        : 'client.invite.send_failed',
     entityType: 'ClientContact',
     entityId: contact.id,
     summary: sent.ok
@@ -391,4 +440,37 @@ export async function makeMainContact(input: { contactId: string; clientId: stri
     summary: contact.name,
   });
   return { ok: true as const, message: `${contact.name} is now the main contact.` };
+}
+
+/**
+ * Brings back someone who was removed. Their portal access stays off, as it
+ * does when a whole client comes back, until it is turned on for them. Not
+ * when their address now belongs to someone at another client.
+ */
+export async function restoreContact(input: { contactId: string; clientId: string; by: Actor }) {
+  const contact = await db.clientContact.findFirst({
+    where: { id: input.contactId, clientId: input.clientId, deletedAt: { not: null } },
+    select: { id: true, name: true, email: true },
+  });
+  if (!contact) return { ok: false as const, message: 'They are not removed.' };
+  if (contact.email && (await emailTakenElsewhere(contact.email, input.clientId))) {
+    return {
+      ok: false as const,
+      message: `${contact.email} now belongs to someone at another client, so ${contact.name} cannot come back with it.`,
+    };
+  }
+
+  await db.clientContact.update({ where: { id: contact.id }, data: { deletedAt: null } });
+  await recordAudit({
+    actorType: input.by.type,
+    actorId: input.by.id,
+    action: 'client.contact_restored',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: contact.name,
+  });
+  return {
+    ok: true as const,
+    message: `${contact.name} is back. Turn on their portal access when they need it.`,
+  };
 }

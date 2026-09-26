@@ -48,6 +48,7 @@ export type NewClientValues = {
   startDate: string;
   targetDate: string;
   summary: string;
+  ownerId: string;
 };
 
 export type NewClientState = {
@@ -119,6 +120,7 @@ export async function createClient(
     startDate: text(formData, 'startDate'),
     targetDate: text(formData, 'targetDate'),
     summary: text(formData, 'summary'),
+    ownerId: text(formData, 'ownerId'),
   };
 
   const fail = (message: string, field?: string): NewClientState => ({
@@ -167,6 +169,17 @@ export async function createClient(
   const email = values.contactEmail.toLowerCase() || null;
   if (email && !EMAIL_PATTERN.test(email)) {
     return fail('That email address does not look right. Leave it empty if you do not have it yet.', 'contactEmail');
+  }
+  // One address signs in to one account, so it cannot already be someone's
+  // at another client.
+  if (email) {
+    const taken = await db.clientContact.findFirst({
+      where: { email, deletedAt: null },
+      select: { client: { select: { name: true } } },
+    });
+    if (taken) {
+      return fail(`That email is already in use at ${taken.client.name}.`, 'contactEmail');
+    }
   }
 
   // ── The first project, if there is one yet ────────────────────────────
@@ -226,6 +239,15 @@ export async function createClient(
     };
   }
 
+  // Who leads the first project: someone on the team who can sign in, or nobody yet.
+  const ownerChoice = text(formData, 'ownerId');
+  const owner = ownerChoice
+    ? await db.staffUser.findFirst({ where: { id: ownerChoice, isActive: true }, select: { id: true } })
+    : null;
+  if (project && ownerChoice && !owner) {
+    return fail('Choose someone on the team to lead it.', 'ownerId');
+  }
+
   // ── Create ────────────────────────────────────────────────────────────
   let created;
   try {
@@ -244,7 +266,7 @@ export async function createClient(
         role: values.contactRole || null,
         phone: values.contactPhone || null,
       },
-      project,
+      project: project ? { ...project, ownerId: owner?.id ?? null } : undefined,
       enquiryId: text(formData, 'enquiryId') || null,
       staffId: staff.id,
     });

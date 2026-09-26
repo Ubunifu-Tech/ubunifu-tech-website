@@ -25,6 +25,8 @@ import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { isUniqueConflict, retryOnConflict } from '@/lib/console/conflict';
 import { sourceFromSuggestion } from '@/lib/console/suggestions';
 import { allow } from '@/lib/console/rate-limit';
+import { issueSharedLink } from '@/lib/console/shared-links';
+import { whatsappLink } from '@/lib/console/whatsapp';
 
 export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -321,24 +323,36 @@ export async function askCopilot(
   return { status: 'done', message: result.reply };
 }
 
-/**
- * Sends the document for signature.
- *
- * The fee table is filled in from the project's fees here, and the result is
- * saved as its own version, so the text the client signs, and the fingerprint
- * of it, include the exact amounts. Three things are then pinned and never
- * move again: that version, a SHA-256 of how it renders, and the terms in
- * force. The hash is recomputed when somebody signs and compared with this
- * one; that comparison is the whole proof.
- */
-export async function sendForSignature(
-  _previous: DocumentState,
-  formData: FormData,
-): Promise<DocumentState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
-  const documentId = String(formData.get('documentId') ?? '');
+/** A document checked and ready to go to be signed, with its fees filled in. */
+type ReadyDocument = {
+  document: {
+    id: string;
+    reference: string;
+    title: string;
+    kind: DocumentKind;
+    project: {
+      id: string;
+      name: string;
+      slug: string;
+      currency: string;
+      client: { id: string; name: string; slug: string; country: string };
+    };
+  };
+  latest: { id: string; version: number; bodyMarkdown: string; sourceMarkdown: string | null };
+  final: string;
+  source: string;
+  signer: { id: string; name: string; email: string | null };
+};
 
+/**
+ * Everything checked before a document can go to be signed. A link shared
+ * by hand needs no email, so for one the signer's missing email is not a
+ * reason to stop; everything else still is.
+ */
+async function readyToSend(
+  documentId: string,
+  forLink: boolean,
+): Promise<{ ok: false; message: string } | ({ ok: true } & ReadyDocument)> {
   const document = await db.document.findUnique({
     where: { id: documentId, ...liveDocument },
     select: {
@@ -358,20 +372,18 @@ export async function sendForSignature(
           name: true,
           slug: true,
           currency: true,
-          client: { select: { id: true, name: true, slug: true } },
+          client: { select: { id: true, name: true, slug: true, country: true } },
         },
       },
     },
   });
 
-  if (!document) return { status: 'error', message: 'That document no longer exists.' };
-  if (document.status === 'signed') {
-    return { status: 'error', message: 'This has already been signed.' };
-  }
+  if (!document) return { ok: false, message: 'That document no longer exists.' };
+  if (document.status === 'signed') return { ok: false, message: 'This has already been signed.' };
 
   const latest = document.versions[0];
   if (!latest) {
-    return { status: 'error', message: 'There is nothing to send. Write the document first.' };
+    return { ok: false, message: 'There is nothing to send. Write the document first.' };
   }
 
   const prepared = await prepareDocument({
@@ -384,18 +396,43 @@ export async function sendForSignature(
       clientSlug: document.project.client.slug,
     },
   });
-
-  const failing = prepared.checks.find((check) => !check.ok);
-  if (failing || !prepared.signer || !prepared.signer.email) {
-    return {
-      status: 'error',
-      message: failing?.problem ?? 'The client has no main contact with an email address yet.',
-    };
+  const failing = prepared.checks.find(
+    (check) => !check.ok && !(forLink && check.key === 'signer-email'),
+  );
+  if (failing || !prepared.signer) {
+    return { ok: false, message: failing?.problem ?? 'The client has no main contact yet.' };
   }
-  const contact = { ...prepared.signer, email: prepared.signer.email };
 
+  return {
+    ok: true,
+    document,
+    latest,
+    final: prepared.final,
+    source: prepared.source,
+    signer: prepared.signer,
+  };
+}
+
+/**
+ * Opens a signature request for the document as it would go now.
+ *
+ * The fee table is filled in from the project's fees, and the result is
+ * saved as its own version, so the text the client signs, and the
+ * fingerprint of it, include the exact amounts. Three things are then pinned
+ * and never move again: that version, a SHA-256 of how it renders, and the
+ * terms in force. The hash is recomputed when somebody signs and compared
+ * with this one; that comparison is the whole proof. Any earlier request is
+ * withdrawn, so nobody can sign a version we have moved on from.
+ *
+ * Returns null when the document changed after it was checked.
+ */
+async function openSignatureRequest(
+  ready: ReadyDocument,
+  staffId: string,
+): Promise<{ id: string; version: number; documentHash: string; termsTitle: string | null } | null> {
+  const { document, latest } = ready;
   const terms = await currentTerms();
-  const documentHash = hashDocument(prepared.final);
+  const documentHash = hashDocument(ready.final);
 
   let request: { id: string; version: number };
   // Set inside the transaction below; the cast stops TypeScript assuming it
@@ -403,90 +440,112 @@ export async function sendForSignature(
   let moved = null as { from: ProjectStatus; to: ProjectStatus } | null;
   try {
     request = await db.$transaction(async (tx) => {
-    // One send at a time per document, and against the version that was
-    // checked: a second click, or an edit saved in the same moment, waits
-    // here and then finds things have moved on.
-    await tx.$queryRaw`SELECT id FROM "Document" WHERE id = ${document.id} FOR UPDATE`;
-    const current = await tx.documentVersion.findFirst({
-      where: { documentId: document.id },
-      orderBy: { version: 'desc' },
-      select: { id: true },
-    });
-    if (current?.id !== latest.id) throw new MovedOn();
+      // One send at a time per document, and against the version that was
+      // checked: a second click, or an edit saved in the same moment, waits
+      // here and then finds things have moved on.
+      await tx.$queryRaw`SELECT id FROM "Document" WHERE id = ${document.id} FOR UPDATE`;
+      const current = await tx.documentVersion.findFirst({
+        where: { documentId: document.id },
+        orderBy: { version: 'desc' },
+        select: { id: true },
+      });
+      if (current?.id !== latest.id) throw new MovedOn();
 
-    // The copy with the fees filled in is a version of its own, unless the
-    // latest already is exactly that.
-    const version =
-      latest.bodyMarkdown === prepared.final
-        ? latest
-        : await tx.documentVersion.create({
-            data: {
-              documentId: document.id,
-              version: latest.version + 1,
-              bodyMarkdown: prepared.final,
-              sourceMarkdown: prepared.source,
-              changeNote: 'Fees filled in for sending',
-              createdById: staff.id,
-            },
-            select: { id: true, version: true },
-          });
+      // The copy with the fees filled in is a version of its own, unless the
+      // latest already is exactly that.
+      const version =
+        latest.bodyMarkdown === ready.final
+          ? latest
+          : await tx.documentVersion.create({
+              data: {
+                documentId: document.id,
+                version: latest.version + 1,
+                bodyMarkdown: ready.final,
+                sourceMarkdown: ready.source,
+                changeNote: 'Fees filled in for sending',
+                createdById: staffId,
+              },
+              select: { id: true, version: true },
+            });
 
-    // Any earlier request is withdrawn, so a client cannot sign a version we
-    // have moved on from.
-    await tx.signatureRequest.updateMany({
-      where: { documentId: document.id, status: { in: ['draft', 'sent', 'viewed'] } },
-      data: { status: 'cancelled' },
-    });
+      await tx.signatureRequest.updateMany({
+        where: { documentId: document.id, status: { in: ['draft', 'sent', 'viewed'] } },
+        data: { status: 'cancelled' },
+      });
 
-    const created = await tx.signatureRequest.create({
-      data: {
-        documentId: document.id,
-        versionId: version.id,
-        status: 'sent',
-        documentHash,
-        termsVersionId: terms?.id ?? null,
-        sentAt: new Date(),
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-      },
-      select: { id: true },
-    });
+      const created = await tx.signatureRequest.create({
+        data: {
+          documentId: document.id,
+          versionId: version.id,
+          status: 'sent',
+          documentHash,
+          termsVersionId: terms?.id ?? null,
+          sentAt: new Date(),
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+        },
+        select: { id: true },
+      });
 
-    await tx.document.update({
-      where: { id: document.id },
-      data: { status: 'sent' },
-    });
+      await tx.document.update({
+        where: { id: document.id },
+        data: { status: 'sent' },
+      });
 
-    // A proposal or agreement going out moves the project on to match.
-    moved = await advanceForDocument(tx, {
-      projectId: document.project.id,
-      kind: document.kind,
-      milestone: 'sent',
-      reference: document.reference,
-      actorType: 'staff',
-      actorId: staff.id,
-    });
+      // A proposal or agreement going out moves the project on to match.
+      moved = await advanceForDocument(tx, {
+        projectId: document.project.id,
+        kind: document.kind,
+        milestone: 'sent',
+        reference: document.reference,
+        actorType: 'staff',
+        actorId: staffId,
+      });
 
-    return { id: created.id, version: version.version };
+      return { id: created.id, version: version.version };
     });
   } catch (error) {
-    if (error instanceof MovedOn) {
-      return {
-        status: 'error',
-        message: 'This changed a moment ago, or was just sent. Reload and check it before sending.',
-      };
-    }
+    if (error instanceof MovedOn) return null;
     throw error;
   }
 
   if (moved) {
     await recordAudit({
       actorType: 'staff',
-      actorId: staff.id,
+      actorId: staffId,
       action: 'project.status_changed',
       entityType: 'Project',
       entityId: document.project.id,
       summary: `${moved.from} → ${moved.to}, when ${document.reference} was sent`,
     });
+  }
+  return { ...request, documentHash, termsTitle: terms?.title ?? null };
+}
+
+/** Sends the document for signature by email. See openSignatureRequest. */
+export async function sendForSignature(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const ready = await readyToSend(String(formData.get('documentId') ?? ''), false);
+  if (!ready.ok) return { status: 'error', message: ready.message };
+  const { document } = ready;
+  if (!ready.signer.email) {
+    return {
+      status: 'error',
+      message: `${ready.signer.name} has no email address yet. Share a link for them to sign instead.`,
+    };
+  }
+  const contact = { ...ready.signer, email: ready.signer.email };
+
+  const request = await openSignatureRequest(ready, staff.id);
+  if (!request) {
+    return {
+      status: 'error',
+      message: 'This changed a moment ago, or was just sent. Reload and check it before sending.',
+    };
   }
 
   const { token } = await issueMagicToken({
@@ -506,7 +565,7 @@ export async function sendForSignature(
       documentTitle: document.title,
       kind: DOCUMENT_KIND_LABEL[document.kind],
       reference: document.reference,
-      termsTitle: terms?.title ?? null,
+      termsTitle: request.termsTitle,
       url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
     }),
     template: 'document_to_sign',
@@ -523,7 +582,7 @@ export async function sendForSignature(
     summary: sent.ok
       ? `${document.reference} version ${request.version} to ${contact.email}`
       : `${document.reference}: could not send to ${contact.email}: ${sent.error}`,
-    metadata: { documentHash, version: request.version },
+    metadata: { documentHash: request.documentHash, version: request.version },
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
@@ -536,6 +595,90 @@ export async function sendForSignature(
     };
   }
   return { status: 'done', message: `Sent to ${contact.name} (${contact.email}).` };
+}
+
+export type ShareState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  url?: string;
+  whatsapp?: string;
+  /** Who the link is for. */
+  name?: string;
+};
+
+/**
+ * A link for the signer to open and sign without email or the portal, for
+ * sending by hand. When the version with them is still the one that would go
+ * now, the link is for that same request; otherwise this opens a new one,
+ * exactly as sending does, without the email. Any earlier shared link for
+ * the request stops working.
+ */
+export async function shareSigningLink(
+  _previous: ShareState,
+  formData: FormData,
+): Promise<ShareState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const ready = await readyToSend(formText(formData, 'documentId'), true);
+  if (!ready.ok) return { status: 'error', message: ready.message };
+  const { document, signer } = ready;
+
+  const signerRow = await db.clientContact.findFirst({
+    where: { id: signer.id, deletedAt: null, canSignIn: true },
+    select: { phone: true },
+  });
+  if (!signerRow) {
+    return { status: 'error', message: `${signer.name} has no portal access, so a link would not open.` };
+  }
+
+  const open = await db.signatureRequest.findFirst({
+    where: { documentId: document.id, status: { in: ['sent', 'viewed'] } },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, expiresAt: true, version: { select: { bodyMarkdown: true } } },
+  });
+  const reusable =
+    open &&
+    (!open.expiresAt || open.expiresAt.getTime() > Date.now()) &&
+    open.version.bodyMarkdown === ready.final;
+  const requestId = reusable
+    ? open.id
+    : (await openSignatureRequest(ready, staff.id))?.id;
+  if (!requestId) {
+    return {
+      status: 'error',
+      message: 'This changed a moment ago, or was just sent. Reload and check it first.',
+    };
+  }
+
+  const url = await issueSharedLink({
+    contactId: signer.id,
+    thing: 'SignatureRequest',
+    thingId: requestId,
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.link_shared',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: `${document.reference}: a link for ${signer.name} to sign, to share by hand`,
+  });
+
+  revalidatePath(`/admin/documents/${document.reference}`);
+  revalidatePath(`/admin/projects/${document.project.slug}`);
+
+  const first = signer.name.split(' ')[0] ?? signer.name;
+  const message =
+    `Hello ${first}, this is Ubunifu Technologies. Here is ${document.title} for you to read ` +
+    `and sign: ${url}\n\nIt opens on your phone, and there is nothing to set up. The link is ` +
+    `just for you and lasts 14 days, so please do not forward it.`;
+  return {
+    status: 'done',
+    url,
+    name: signer.name,
+    whatsapp: whatsappLink(signerRow.phone, document.project.client.country, message),
+  };
 }
 
 /**

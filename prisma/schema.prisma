@@ -179,6 +179,10 @@ enum MagicTokenPurpose {
   /// purpose so it opens the reset page and nothing else: it never signs
   /// anyone in until the new password is chosen.
   password_reset
+  /// A link staff send by hand (WhatsApp, a text) so one person can sign one
+  /// document or answer one review without an email or a portal account. It
+  /// opens that one thing and nothing else, and never starts a session.
+  shared_link
 }
 
 /// Single-use, short-lived, hashed. Covers both passwordless sign-in and the
@@ -978,7 +982,8 @@ model Signature {
   contactId   String?
   contact     ClientContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
   signerName  String
-  signerEmail String
+  /// Null when they signed through a link shared by hand and have no email.
+  signerEmail String?
   method      SignatureMethod  @default(initials)
   /// What the signer actually typed, e.g. "RP". Kept verbatim.
   initials    String?

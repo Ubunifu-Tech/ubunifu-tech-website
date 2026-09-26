@@ -24,6 +24,7 @@ import {
 } from '@/lib/console/contacts';
 import { allow } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
+import { whatsappNumber } from '@/lib/console/whatsapp';
 
 export type InviteState = { status: 'idle' | 'sent' | 'done' | 'error'; message?: string };
 
@@ -274,44 +275,6 @@ export async function createSetupLink(
   };
 }
 
-/**
- * Calling codes for the countries whose local numbers we rewrite. Both write
- * a mobile as ten digits starting with 0 (0712 345 678), and so do Uganda and
- * Rwanda, so a local number is only rewritten when the client's own country
- * says which code it takes.
- */
-const CALLING_CODE: Record<string, string> = { TZ: '255', KE: '254' };
-
-/**
- * A number as wa.me wants it: digits only, with the country code. Returns ''
- * whenever the number cannot be read with certainty: a wrong guess would put
- * the private link in a stranger's chat.
- *
- * Accepted: a number written with its country code (+255 712 345 678, or
- * 00255...), and for a client in Tanzania or Kenya, a local number starting
- * with 0 or one already starting with that country's code.
- */
-function whatsappNumber(phone: string | null, country: string): string {
-  const written = (phone ?? '').trim();
-  const digits = written.replace(/\D/g, '');
-  if (!digits) return '';
-
-  const international = written.startsWith('+')
-    ? digits
-    : digits.startsWith('00')
-      ? digits.slice(2)
-      : null;
-  if (international !== null) {
-    // E.164 allows up to 15 digits; anything under 8 is not a whole number.
-    return /^[1-9]\d{7,14}$/.test(international) ? international : '';
-  }
-
-  const code = CALLING_CODE[country.trim().toUpperCase()];
-  if (!code) return '';
-  if (/^0[1-9]\d{8}$/.test(digits)) return `${code}${digits.slice(1)}`;
-  if (digits.startsWith(code) && digits.length === code.length + 9) return digits;
-  return '';
-}
 
 /**
  * Removes a client: the client, every project and every person, in one
@@ -535,7 +498,12 @@ export async function setPortalAccess(
 
   await db.clientContact.update({ where: { id: contact.id }, data: { canSignIn: on } });
   if (!on) {
-    await revokeMagicTokens('client_contact', contact.id, ['invite', 'sign_in', 'password_reset']);
+    await revokeMagicTokens('client_contact', contact.id, [
+      'invite',
+      'sign_in',
+      'password_reset',
+      'shared_link',
+    ]);
     await revokeAllSessions('client_contact', contact.id);
   }
   await recordAudit({

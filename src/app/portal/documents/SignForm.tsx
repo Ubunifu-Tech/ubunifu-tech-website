@@ -32,13 +32,21 @@ export function SignForm({
   termsTitle,
   termsVersion,
   signerName,
+  sign = signDocument,
+  hidden = {},
+  viaLink = false,
 }: {
   requestId: string;
   termsTitle: string | null;
   termsVersion: number | null;
   signerName: string;
+  /** Where it posts: the portal's action, or the shared link's. */
+  sign?: (previous: SignState, formData: FormData) => Promise<SignState>;
+  hidden?: Record<string, string>;
+  /** Opened from a link shared by hand, with no portal behind it. */
+  viaLink?: boolean;
 }) {
-  const [state, action, pending] = useActionState(signDocument, INITIAL);
+  const [state, action, pending] = useActionState(sign, INITIAL);
   const [initials, setInitials] = useState('');
 
   if (state.status === 'done') {
@@ -52,6 +60,9 @@ export function SignForm({
   return (
     <form action={action} className={forms.form}>
       <input type="hidden" name="requestId" value={requestId} />
+      {Object.entries(hidden).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
 
       <div className={forms.field}>
         <label className={forms.label} htmlFor="initials">
@@ -75,8 +86,9 @@ export function SignForm({
             .toUpperCase()}
         />
         <p className={forms.hint}>
-          Typed by you, recorded against your name, your email and the time. That is what makes it
-          a signature.
+          {viaLink
+            ? 'Typed by you and recorded against your name and the time. That is what makes it a signature.'
+            : 'Typed by you, recorded against your name, your email and the time. That is what makes it a signature.'}
         </p>
       </div>
 
@@ -126,7 +138,9 @@ export function SignForm({
           {pending ? 'Signing…' : 'Sign it'}
         </button>
         <p className={forms.payoff}>
-          You will get a copy, and it stays in your portal.
+          {viaLink
+            ? 'You can save a copy as a PDF from this page.'
+            : 'You will get a copy, and it stays in your portal.'}
         </p>
       </div>
 

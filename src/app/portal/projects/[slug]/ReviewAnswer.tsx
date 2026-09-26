@@ -9,9 +9,18 @@ import styles from '@/components/console/Review.module.css';
 const INITIAL: AnswerState = { status: 'idle' };
 
 /** Approve, or say what should change. Two steps, so neither is a slip of the finger. */
-export function ReviewAnswer({ reviewId }: { reviewId: string }) {
+export function ReviewAnswer({
+  reviewId,
+  answer = answerReview,
+  hidden = {},
+}: {
+  reviewId: string;
+  /** Where it posts: the portal's action, or the shared link's. */
+  answer?: (previous: AnswerState, formData: FormData) => Promise<AnswerState>;
+  hidden?: Record<string, string>;
+}) {
   const [choice, setChoice] = useState<'approve' | 'changes' | null>(null);
-  const [state, action, pending] = useActionState(answerReview, INITIAL);
+  const [state, action, pending] = useActionState(answer, INITIAL);
 
   if (state.status === 'done') {
     return (
@@ -43,6 +52,9 @@ export function ReviewAnswer({ reviewId }: { reviewId: string }) {
     <form action={action} className={forms.form}>
       <input type="hidden" name="reviewId" value={reviewId} />
       <input type="hidden" name="decision" value={choice} />
+      {Object.entries(hidden).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
       <TextAreaField
         name="answer"
         label={approving ? 'Anything to add?' : 'What should change?'}

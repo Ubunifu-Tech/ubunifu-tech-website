@@ -19,6 +19,8 @@ export type ReadyCheck = {
   label: string;
   /** Shown when the check fails. */
   problem?: string;
+  /** Names the one check a link shared by hand can do without: an email. */
+  key?: 'signer-email';
   fix?: { step?: DocumentStep; href?: string; text: string };
 };
 
@@ -97,8 +99,9 @@ export async function prepareDocument(document: {
     label: signer ? `${signer.name} will sign` : 'Someone at the client can sign',
     problem: !signer
       ? 'The client has no main contact yet.'
-      : `${signer.name} has not given an email address yet. Share their setup link first.`,
+      : `${signer.name} has no email address yet. Share a link for them to sign instead.`,
     fix: { href: `/clients/${project.clientSlug}`, text: signer ? 'Open the client' : 'Add a contact' },
+    ...(signer ? { key: 'signer-email' as const } : {}),
   });
 
   return {

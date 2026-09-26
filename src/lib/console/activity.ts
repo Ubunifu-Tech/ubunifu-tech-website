@@ -130,6 +130,8 @@ const ACTION_LABELS: Record<string, string> = {
   'document.version_saved': 'Document edited',
   'document.sent': 'Sent for signature',
   'document.resent': 'Signing link emailed again',
+  'document.link_shared': 'Link to sign made, to share by hand',
+  'review.link_shared': 'Link to answer a review made, to share by hand',
   'document.resend_failed': 'Signing link failed to send again',
   'document.signed': 'Document signed',
   'document.signed_copy.send_failed': 'Signed copy failed to send',

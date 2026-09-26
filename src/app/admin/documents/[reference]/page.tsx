@@ -31,6 +31,8 @@ import {
   type CopilotTurn,
 } from '../DocumentEditor';
 import { SuggestedWording, type WordingSuggestion } from './SuggestedWording';
+import { ShareLink } from '@/components/console/ShareLink';
+import { shareSigningLink } from '../actions';
 import styles from '../../Admin.module.css';
 import page from './Document.module.css';
 import forms from '@/styles/forms.module.css';
@@ -309,7 +311,8 @@ export default async function DocumentPage({
               <span className={styles.summaryLabel}>Signed by</span>
               <span className={styles.summaryValue}>{signature.signerName}</span>
               <span className={styles.summaryLabel}>
-                Initials {signature.initials} · {signature.signerEmail}
+                Initials {signature.initials} ·{' '}
+                {signature.signerEmail ?? 'through a link shared by hand'}
               </span>
             </div>
             <div className={styles.summaryItem}>
@@ -767,6 +770,18 @@ export default async function DocumentPage({
                 signer={prepared.signer?.name ?? null}
               />
             )}
+            {/* The same request, or a new one exactly as sending makes it,
+                for someone who does not use email: all that differs is how
+                the link reaches them. */}
+            {prepared.signer &&
+              prepared.checks.every((check) => check.ok || check.key === 'signer-email') && (
+                <ShareLink
+                  action={shareSigningLink}
+                  hidden={{ documentId: document.id }}
+                  label="Share a link to sign"
+                  intro={`For ${prepared.signer.name} to read and sign on their phone, with no email or account.`}
+                />
+              )}
             {stepNav}
           </section>
           {versions}

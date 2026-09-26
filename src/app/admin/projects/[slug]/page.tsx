@@ -52,6 +52,8 @@ import {
 } from './PlanEditor';
 import { BrandKitEditor } from './BrandKitEditor';
 import { AskForReview } from './AskForReview';
+import { shareReviewLink } from './review-actions';
+import { ShareLink } from '@/components/console/ShareLink';
 import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
 import { REVIEWABLE } from '@/lib/console/reviews';
 import { emailedAddresses } from '@/lib/console/updates';
@@ -224,6 +226,7 @@ export default async function ProjectPage({
       reviews: {
         orderBy: { round: 'desc' },
         select: {
+          id: true,
           round: true,
           title: true,
           previewUrl: true,
@@ -662,6 +665,14 @@ export default async function ProjectPage({
                   )}
                 </div>
                 {project.reviews[0] && <ReviewRound review={project.reviews[0]} audience="staff" />}
+                {mayRun && project.reviews[0]?.status === 'open' && (
+                  <ShareLink
+                    action={shareReviewLink}
+                    hidden={{ reviewId: project.reviews[0].id }}
+                    label="Share a link to answer"
+                    intro="For their main contact to open on their phone and approve it or ask for changes, with no email or account."
+                  />
+                )}
                 {mayRun && REVIEWABLE.includes(project.status) && (
                   <AskForReview
                     projectId={project.id}

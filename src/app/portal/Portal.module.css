@@ -877,3 +877,12 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+
+/* ── A link shared by hand ─────────────────────── */
+
+.linkHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}

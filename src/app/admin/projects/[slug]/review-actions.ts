@@ -11,6 +11,8 @@ import { STAFF_LABEL } from '@/lib/console/project-status';
 import { REVIEWABLE, withdrawOpenReviews } from '@/lib/console/reviews';
 import { advanceForReview } from '@/lib/console/transitions';
 import { reviewRequestEmail } from '@/lib/emails';
+import { issueSharedLink } from '@/lib/console/shared-links';
+import { whatsappLink } from '@/lib/console/whatsapp';
 
 export type ReviewState = {
   status: 'idle' | 'done' | 'error';
@@ -189,5 +191,84 @@ export async function askForReview(
   return {
     status: 'done',
     message: `Round ${review.round} is with ${project.client.name}. Emailed to ${delivered}.`,
+  };
+}
+
+export type ShareReviewState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  url?: string;
+  whatsapp?: string;
+  /** Who the link is for. */
+  name?: string;
+};
+
+/**
+ * A link for their main contact to open the round and approve it or ask for
+ * changes, without email or the portal, for sending by hand. Any earlier
+ * shared link for the round stops working.
+ */
+export async function shareReviewLink(
+  _previous: ShareReviewState,
+  formData: FormData,
+): Promise<ShareReviewState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+
+  const review = await db.projectReview.findFirst({
+    where: { id: formText(formData, 'reviewId'), status: 'open', project: { deletedAt: null } },
+    select: {
+      id: true,
+      round: true,
+      title: true,
+      project: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          client: {
+            select: {
+              country: true,
+              contacts: {
+                where: { deletedAt: null, isPrimary: true, canSignIn: true },
+                select: { id: true, name: true, phone: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!review) return { status: 'error', message: 'That round is no longer waiting on them.' };
+  const person = review.project.client.contacts[0];
+  if (!person) {
+    return { status: 'error', message: 'Their main contact has no portal access, so a link would not open.' };
+  }
+
+  const url = await issueSharedLink({
+    contactId: person.id,
+    thing: 'ProjectReview',
+    thingId: review.id,
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'review.link_shared',
+    entityType: 'Project',
+    entityId: review.project.id,
+    summary: `Round ${review.round}: a link for ${person.name} to answer, to share by hand`,
+  });
+  revalidatePath(`/admin/projects/${review.project.slug}`);
+
+  const first = person.name.split(' ')[0] ?? person.name;
+  const message =
+    `Hello ${first}, this is Ubunifu Technologies. ${review.title} for ${review.project.name} ` +
+    `is ready for you to look at: ${url}\n\nOpen it to approve it or tell us what to change. ` +
+    `There is nothing to set up. The link is just for you and lasts 14 days.`;
+  return {
+    status: 'done',
+    url,
+    name: person.name,
+    whatsapp: whatsappLink(person.phone, review.project.client.country, message),
   };
 }

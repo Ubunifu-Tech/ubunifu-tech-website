@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requirePermission } from '@/lib/console/auth';
+import { can, requirePermission } from '@/lib/console/auth';
 import { ChevronRight } from 'lucide-react';
 import { Steps } from '@/components/console/Steps';
 import { NewProjectForm } from './NewProjectForm';
@@ -22,7 +22,7 @@ export default async function NewProjectPage({
 }) {
   const staff = await requirePermission('projects');
   const { client: slug, enquiry: enquiryId } = await searchParams;
-  if (!slug) return <ChooseClient />;
+  if (!slug) return <ChooseClient mayAddClients={can(staff, 'clients')} />;
 
   const [client, templates, team] = await Promise.all([
     db.client.findFirst({
@@ -137,7 +137,7 @@ export default async function NewProjectPage({
 }
 
 /** The first step: who the project is for. */
-async function ChooseClient() {
+async function ChooseClient({ mayAddClients }: { mayAddClients: boolean }) {
   const clients = await db.client.findMany({
     where: { deletedAt: null },
     orderBy: { name: 'asc' },
@@ -195,14 +195,22 @@ async function ChooseClient() {
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Someone new</h2>
             </div>
-            <p className={styles.note}>
-              Add them as a client first. Their first project can be set up in the same form.
-            </p>
-            <div className={forms.actions}>
-              <Link href="/clients/new" className={forms.button}>
-                Add a client
-              </Link>
-            </div>
+            {mayAddClients ? (
+              <>
+                <p className={styles.note}>
+                  Add them as a client first. Their first project can be set up in the same form.
+                </p>
+                <div className={forms.actions}>
+                  <Link href="/clients/new" className={forms.button}>
+                    Add a client
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <p className={styles.note}>
+                Someone who can add clients needs to add them first. Then start the project here.
+              </p>
+            )}
           </section>
         </aside>
       </div>

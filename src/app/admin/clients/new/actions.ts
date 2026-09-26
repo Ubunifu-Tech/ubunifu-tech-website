@@ -186,6 +186,10 @@ export async function createClient(
   const { startProject } = values;
   let project: Parameters<typeof createClientRecord>[0]['project'];
 
+  if (startProject && !can(staff, 'projects')) {
+    return fail('Someone who runs projects needs to start the project. Turn the project off to add the client.');
+  }
+
   if (startProject) {
     const { projectName } = values;
     if (projectName.length < 2 || projectName.length > 160) {

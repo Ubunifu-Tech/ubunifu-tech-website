@@ -134,3 +134,9 @@
   margin: 0 0 var(--space-2) 0.75rem;
   font-size: var(--font-size-caption);
 }
+
+/* In place of a fix link the person cannot follow: who can. */
+.handOff {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+}

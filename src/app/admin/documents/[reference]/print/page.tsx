@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requirePermission } from '@/lib/console/auth';
+import { requireStaff } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { getOrg } from '@/lib/console/org';
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ reference
  * with the fee table filled in as it would go.
  */
 export default async function PrintDocument({ params }: { params: Promise<{ reference: string }> }) {
-  await requirePermission('documents');
+  await requireStaff();
   const { reference } = await params;
 
   const [document, org] = await Promise.all([

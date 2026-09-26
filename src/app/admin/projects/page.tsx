@@ -82,12 +82,14 @@ export default async function ProjectsPage({
 }) {
   const staff = await requireStaff();
   const canRun = can(staff, 'projects');
+  // What a project is worth is the fees on it: shown to those who see fees.
+  const seesValue = can(staff, 'fees') || can(staff, 'invoices');
   const { show, view, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
   const asList = view === 'list';
   const query = searchText(q);
 
-  if (!asList) return <BoardView canRun={canRun} />;
+  if (!asList) return <BoardView canRun={canRun} seesValue={seesValue} />;
 
   const now = new Date();
   const matching: Prisma.ProjectWhereInput = query
@@ -142,13 +144,15 @@ export default async function ProjectsPage({
                 <th className={table.th} scope="col">Stage</th>
                 <th className={table.th} scope="col">Progress</th>
                 <th className={table.th} scope="col">Target</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Value</th>
+                {seesValue && (
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">Value</th>
+                )}
               </tr>
             </thead>
             <tbody>
               {projects.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={8}>
+                  <td className={table.emptyCell} colSpan={seesValue ? 8 : 7}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No projects match “${query}” here.`
@@ -223,12 +227,14 @@ export default async function ProjectsPage({
                       >
                         {formatShortDate(project.targetDate)}
                       </td>
-                      <td
-                        className={`${table.td} ${table.numeric}`}
-                        title={unpriced ? 'Some fee lines have no price yet' : undefined}
-                      >
-                        {formatMoney(committed, project.currency)}
-                      </td>
+                      {seesValue && (
+                        <td
+                          className={`${table.td} ${table.numeric}`}
+                          title={unpriced ? 'Some fee lines have no price yet' : undefined}
+                        >
+                          {formatMoney(committed, project.currency)}
+                        </td>
+                      )}
                     </tr>
                   );
                 })
@@ -282,7 +288,7 @@ function ProjectsHeader({ view, canRun }: { view: 'board' | 'list'; canRun: bool
  * from the last three months — a Done lane that keeps every project ever
  * closed stops being something anyone looks at.
  */
-async function BoardView({ canRun }: { canRun: boolean }) {
+async function BoardView({ canRun, seesValue }: { canRun: boolean; seesValue: boolean }) {
   const now = new Date();
   const recent = new Date(now);
   recent.setDate(recent.getDate() - 90);
@@ -321,7 +327,7 @@ async function BoardView({ canRun }: { canRun: boolean }) {
         done: deliverables.filter((deliverable) => deliverable.isComplete).length,
         total: deliverables.length,
         waitingOn: project.assetRequests.length,
-        committed: committed > 0 ? formatMoney(committed, project.currency) : null,
+        committed: seesValue && committed > 0 ? formatMoney(committed, project.currency) : null,
         allowed,
       };
     }),

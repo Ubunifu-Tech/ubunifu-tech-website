@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireClient, recordAudit } from '@/lib/console/auth';
 import { renderMarkdown } from '@/lib/console/documents';
-import { sendConsoleEmail } from '@/lib/console/mailer';
+import { alertTeam } from '@/lib/console/alerts';
 import { consoleEnv } from '@/lib/console/env';
 import { documentResponseEmail, documentWordingEmail } from '@/lib/emails';
 import { recordSignature } from '@/lib/console/signing';
@@ -87,7 +87,7 @@ export async function respondToDocument(
           id: true,
           reference: true,
           title: true,
-          project: { select: { slug: true } },
+          project: { select: { slug: true, owner: { select: { email: true, isActive: true } } } },
         },
       },
     },
@@ -179,8 +179,8 @@ export async function respondToDocument(
 
   // Our own alert. The answer is already recorded, so this failing costs us
   // promptness and nothing else — which is why it is not in the transaction.
-  await sendConsoleEmail({
-    to: 'info@ubunifutech.com',
+  await alertTeam({
+    owner: request.document.project.owner,
     subject: `[${request.document.reference}] ${declined ? 'Declined' : 'Changes requested'}`,
     html: documentResponseEmail({
       reference: request.document.reference,
@@ -196,6 +196,7 @@ export async function respondToDocument(
     template: declined ? 'document_declined' : 'document_changes_requested',
     entityType: 'Document',
     entityId: request.document.id,
+    replyTo: actor.email,
   });
 
   revalidatePath('/portal/documents');
@@ -272,7 +273,7 @@ export async function suggestWording(
           reference: true,
           title: true,
           status: true,
-          project: { select: { slug: true } },
+          project: { select: { slug: true, owner: { select: { email: true, isActive: true } } } },
         },
       },
     },
@@ -425,8 +426,8 @@ export async function suggestWording(
 
   // Our alert. The suggestion is already saved, so a failed email costs us
   // promptness and nothing else, and the record below says which it was.
-  const sent = await sendConsoleEmail({
-    to: 'info@ubunifutech.com',
+  const sent = await alertTeam({
+    owner: request.document.project.owner,
     subject: `[${request.document.reference}] New wording suggested`,
     html: documentWordingEmail({
       reference: request.document.reference,
@@ -443,6 +444,7 @@ export async function suggestWording(
     template: 'document_wording_suggested',
     entityType: 'Document',
     entityId: documentId,
+    replyTo: actor.email,
   });
 
   await recordAudit({

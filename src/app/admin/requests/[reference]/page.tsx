@@ -3,15 +3,15 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
-import { liveTicket } from '@/lib/console/live';
 import {
   CLIENT_TICKET_STATUS,
   STAFF_TICKET_STATUS,
   TICKET_KIND_LABEL,
   TICKET_PRIORITY_LABEL,
 } from '@/lib/console/tickets';
-import { formatDate, formatRelative } from '@/lib/console/money';
+import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
+import { Callout } from '@/components/console/Callout';
 import { ReplyBox, TriageBox } from '../TicketControls';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -40,8 +40,9 @@ export default async function TicketPage({
   const { reference } = await params;
   const now = new Date();
 
+  // A removed client's requests stay readable, like the rest of their record.
   const ticket = await db.ticket.findUnique({
-    where: { reference: decodeURIComponent(reference), ...liveTicket },
+    where: { reference: decodeURIComponent(reference) },
     select: {
       id: true,
       reference: true,
@@ -52,8 +53,8 @@ export default async function TicketPage({
       createdAt: true,
       resolvedAt: true,
       clientId: true,
-      client: { select: { name: true, slug: true } },
-      project: { select: { name: true, slug: true, reference: true } },
+      client: { select: { name: true, slug: true, deletedAt: true } },
+      project: { select: { name: true, slug: true, reference: true, deletedAt: true } },
       openedBy: { select: { name: true, email: true } },
       messages: {
         orderBy: { createdAt: 'asc' },
@@ -70,6 +71,11 @@ export default async function TicketPage({
   });
 
   if (!ticket) notFound();
+
+  const clientGone = ticket.client.deletedAt;
+  const removedAt = clientGone ?? ticket.project?.deletedAt ?? null;
+  const mayChange = mayReply && !removedAt;
+  const clientHref = clientGone ? `/removed/${ticket.client.slug}` : `/clients/${ticket.client.slug}`;
 
   // Each message under the name of whoever wrote it: several people at a
   // client can reply on one request, and so can several of us.
@@ -94,8 +100,8 @@ export default async function TicketPage({
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <Link href="/requests" className={styles.backLink}>
-            ← Requests
+          <Link href={clientGone ? clientHref : '/requests'} className={styles.backLink}>
+            ← {clientGone ? ticket.client.name : 'Requests'}
           </Link>
           <h1 className={styles.heading}>{ticket.subject}</h1>
           <p className={styles.facts}>
@@ -104,13 +110,17 @@ export default async function TicketPage({
             </span>
             <span>
               <span className={styles.factLabel}>From</span>{' '}
-              <Link href={`/clients/${ticket.client.slug}`}>{ticket.client.name}</Link>
+              <Link href={clientHref}>{ticket.client.name}</Link>
               {ticket.openedBy ? ` · ${ticket.openedBy.name}` : ''}
             </span>
             {ticket.project && (
               <span>
                 <span className={styles.factLabel}>Project</span>{' '}
-                <Link href={`/projects/${ticket.project.slug}`}>{ticket.project.reference}</Link>
+                {ticket.project.deletedAt ? (
+                  ticket.project.reference
+                ) : (
+                  <Link href={`/projects/${ticket.project.slug}`}>{ticket.project.reference}</Link>
+                )}
               </span>
             )}
             <span>
@@ -125,6 +135,13 @@ export default async function TicketPage({
           {STAFF_TICKET_STATUS[ticket.status]}
         </span>
       </div>
+
+      {removedAt && (
+        <Callout kind="info">
+          {clientGone ? ticket.client.name : ticket.project?.name} was removed on{' '}
+          {formatShortDate(removedAt)}. This request is kept for the record and cannot be changed.
+        </Callout>
+      )}
 
       <div className={styles.columns}>
         <section className={forms.card}>
@@ -157,7 +174,7 @@ export default async function TicketPage({
             })}
           </ul>
 
-          {mayReply && <ReplyBox ticketId={ticket.id} />}
+          {mayChange && <ReplyBox ticketId={ticket.id} />}
         </section>
 
         <div className={styles.stack}>
@@ -168,7 +185,7 @@ export default async function TicketPage({
                 They see &ldquo;{CLIENT_TICKET_STATUS[ticket.status]}&rdquo;
               </span>
             </div>
-            {mayReply && (
+            {mayChange && (
               <TriageBox ticketId={ticket.id} status={ticket.status} priority={ticket.priority} />
             )}
             {ticket.resolvedAt && (

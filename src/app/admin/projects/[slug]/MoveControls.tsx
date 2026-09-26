@@ -20,14 +20,25 @@ export type StageAction = Transition & {
   blockedFix: FixTab | null;
 };
 
-type FixTab = 'fees' | 'documents' | 'updates' | 'overview' | 'review';
+type FixTab = 'fees' | 'billing' | 'documents' | 'updates' | 'overview' | 'review';
 
 const FIX_LABEL: Record<FixTab, string> = {
   fees: 'Go to fees',
+  billing: 'Go to billing',
   documents: 'Go to documents',
   updates: 'Go to updates',
-  overview: 'See what the client owes',
+  overview: 'See what the client still has to send',
   review: 'Go to the review',
+};
+
+/** Said instead of a link when the person cannot open or change what it leads to. */
+const HAND_OFF: Record<FixTab, string> = {
+  fees: 'Someone who can set fees needs to do this.',
+  billing: 'Someone who handles invoices needs to do this.',
+  documents: 'Someone who handles documents needs to do this.',
+  updates: 'Someone who runs projects needs to do this.',
+  overview: 'Someone who runs projects needs to do this.',
+  review: 'Resume the work first to ask for a review.',
 };
 
 /**
@@ -45,6 +56,7 @@ export function MoveControls({
   status,
   actions,
   next,
+  canOpen = {},
 }: {
   projectId: string;
   projectSlug: string;
@@ -52,13 +64,16 @@ export function MoveControls({
   actions: StageAction[];
   /** The real next step, when it happens on another tab rather than here. */
   next?: { label: string; tab: 'documents' } | null;
+  /** Where a fix may be sent. Anything not allowed gets a hand-off line instead of a link. */
+  canOpen?: Partial<Record<FixTab, boolean>>;
 }) {
+  const fixable = (tab: FixTab) => canOpen[tab] !== false;
   const fixHref = (tab: FixTab) =>
     tab === 'overview'
       ? `/projects/${projectSlug}`
       : tab === 'review'
         ? `/projects/${projectSlug}#review`
-        : `/projects/${projectSlug}?tab=${tab}`;
+        : `/projects/${projectSlug}?tab=${tab === 'billing' ? 'fees' : tab}`;
   const [state, action, pending] = useActionState(moveProject, INITIAL);
   const [chosen, setChosen] = useState<StageAction | null>(null);
 
@@ -87,11 +102,17 @@ export function MoveControls({
           <Callout kind="warn" items={state.guards?.map((guard) => guard.message)} />
           {state.guards?.some((guard) => guard.fix) && (
             <p className={styles.fixes}>
-              {[...new Set(state.guards.flatMap((guard) => (guard.fix ? [guard.fix] : [])))].map((tab) => (
-                <Link key={tab} href={fixHref(tab)} className={forms.link}>
-                  {FIX_LABEL[tab]}
-                </Link>
-              ))}
+              {[...new Set(state.guards.flatMap((guard) => (guard.fix ? [guard.fix] : [])))].map((tab) =>
+                fixable(tab) ? (
+                  <Link key={tab} href={fixHref(tab)} className={forms.link}>
+                    {FIX_LABEL[tab]}
+                  </Link>
+                ) : (
+                  <span key={tab} className={styles.handOff}>
+                    {HAND_OFF[tab]}
+                  </span>
+                ),
+              )}
             </p>
           )}
 
@@ -173,11 +194,20 @@ export function MoveControls({
                         <ChevronRight size={16} strokeWidth={2} className={styles.optionIcon} aria-hidden="true" />
                       )}
                     </button>
-                    {item.blocked && item.blockedFix && (
-                      <Link href={fixHref(item.blockedFix)} className={`${forms.link} ${styles.fixLink}`}>
-                        {FIX_LABEL[item.blockedFix]}
-                      </Link>
-                    )}
+                    {item.blocked &&
+                      item.blockedFix &&
+                      (fixable(item.blockedFix) ? (
+                        <Link
+                          href={fixHref(item.blockedFix)}
+                          className={`${forms.link} ${styles.fixLink}`}
+                        >
+                          {FIX_LABEL[item.blockedFix]}
+                        </Link>
+                      ) : (
+                        <span className={`${styles.handOff} ${styles.fixLink}`}>
+                          {HAND_OFF[item.blockedFix]}
+                        </span>
+                      ))}
                   </li>
                 ))}
               </ul>

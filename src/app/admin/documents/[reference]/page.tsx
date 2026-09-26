@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, CircleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
-import { requirePermission } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import {
   DOCUMENT_KIND_LABEL,
@@ -70,7 +70,10 @@ export default async function DocumentPage({
   params: Promise<{ reference: string }>;
   searchParams: Promise<{ step?: string }>;
 }) {
-  await requirePermission('documents');
+  // The whole team can read documents. Writing and sending is for those who
+  // handle them; everyone else gets the read-only view.
+  const staff = await requireStaff();
+  const mayWrite = can(staff, 'documents');
   const [{ reference }, query] = await Promise.all([params, searchParams]);
   const now = new Date();
 
@@ -365,12 +368,14 @@ export default async function DocumentPage({
     );
   }
 
-  // ── Removed, and never signed: what it said, and nothing to do ────
-  if (removedAt) {
+  // ── Removed and never signed, or not ours to change: what it says ─
+  if (removedAt || !mayWrite) {
     return (
       <main className={styles.page}>
         {head}
-        {removedNote}
+        {removedNote ?? (
+          <Callout kind="info">Someone who handles documents can change or send this.</Callout>
+        )}
         <div className={page.split}>
           <div className={styles.stack}>
             {latest && (
@@ -548,6 +553,7 @@ export default async function DocumentPage({
             projectId={document.project.id}
             currency={document.project.currency}
             fees={fees}
+            readOnly={!can(staff, 'fees')}
           />
         </section>
 

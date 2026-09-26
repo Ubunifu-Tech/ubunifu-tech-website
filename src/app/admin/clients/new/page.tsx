@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { requirePermission } from '@/lib/console/auth';
+import { can, requirePermission } from '@/lib/console/auth';
 import { liveEnquiry } from '@/lib/console/live';
 import { formatDate } from '@/lib/console/money';
 import { NewClientForm, type Prefill } from './NewClientForm';
@@ -94,7 +94,13 @@ export default async function NewClientPage({
 
       <div className={styles.split}>
         <div className={styles.splitMain}>
-          <NewClientForm templates={templates} prefill={prefill} team={team} me={staff.id} />
+          <NewClientForm
+            templates={templates}
+            prefill={prefill}
+            team={team}
+            me={staff.id}
+            canStartProject={can(staff, 'projects')}
+          />
         </div>
 
         <aside className={styles.splitAside}>

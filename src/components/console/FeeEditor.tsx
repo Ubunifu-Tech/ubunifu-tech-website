@@ -171,6 +171,9 @@ export function FeeEditor({
             Add a fee
           </button>
         )}
+        {readOnly && fees.length > 0 && (
+          <p className={forms.hint}>Someone who can set fees can change these.</p>
+        )}
         {counted.length > 0 && (
           <dl className={styles.totals}>
             {once > 0 && (

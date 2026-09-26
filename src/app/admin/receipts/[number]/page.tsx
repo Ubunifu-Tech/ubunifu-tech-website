@@ -57,7 +57,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
               client: {
                 select: { name: true, legalName: true, slug: true, country: true, deletedAt: true },
               },
-              project: { select: { name: true, reference: true, slug: true } },
+              project: { select: { name: true, reference: true, slug: true, deletedAt: true } },
             },
           },
         },
@@ -77,7 +77,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
           ← {invoice.number}
         </Link>
         <PrintButton />
-        {!payment.reversedAt && !invoice.client.deletedAt && (
+        {!payment.reversedAt && !invoice.client.deletedAt && !invoice.project?.deletedAt && (
           <EmailReceiptButton receiptId={receipt.id} />
         )}
       </div>

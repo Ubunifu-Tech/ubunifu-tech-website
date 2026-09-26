@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
-import { requirePermission } from '@/lib/console/auth';
+import { can, requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
 import { TriageControls } from './TriageControls';
@@ -65,12 +65,43 @@ function filterToWhere(key: string): Prisma.EnquiryWhereInput {
   }
 }
 
+const ENQUIRY_ROW = {
+  id: true,
+  name: true,
+  email: true,
+  subject: true,
+  message: true,
+  status: true,
+  serviceLine: true,
+  internalNote: true,
+  source: true,
+  createdAt: true,
+  // Kept even when since removed: the enquiry still became them, but a
+  // link to a page that is gone would lead nowhere.
+  client: { select: { name: true, slug: true, deletedAt: true } },
+  project: { select: { name: true, slug: true, deletedAt: true } },
+  conversations: {
+    orderBy: { createdAt: 'desc' },
+    take: 1,
+    select: {
+      id: true,
+      messages: {
+        where: { role: { in: ['user', 'assistant'] } },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, role: true, content: true },
+      },
+    },
+  },
+} satisfies Prisma.EnquirySelect;
+
 export default async function EnquiriesPage({
   searchParams,
 }: {
   searchParams: Promise<{ show?: string; open?: string; q?: string }>;
 }) {
-  await requirePermission('enquiries');
+  const staff = await requirePermission('enquiries');
+  const mayOnboard = can(staff, 'clients');
+  const mayStart = can(staff, 'projects');
   const { show, open, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const query = searchText(q);
@@ -109,39 +140,23 @@ export default async function EnquiriesPage({
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
   const keepQuery = query ? `&q=${encodeURIComponent(query)}` : '';
 
-  const enquiries = await db.enquiry.findMany({
+  const listed = await db.enquiry.findMany({
     where: { AND: [liveEnquiry, filterToWhere(active), matching] },
     orderBy: { createdAt: 'desc' },
     take: 100,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      subject: true,
-      message: true,
-      status: true,
-      serviceLine: true,
-      internalNote: true,
-      source: true,
-      createdAt: true,
-      // Kept even when since removed: the enquiry still became them, but a
-      // link to a page that is gone would lead nowhere.
-      client: { select: { name: true, slug: true, deletedAt: true } },
-      project: { select: { name: true, slug: true, deletedAt: true } },
-      conversations: {
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        select: {
-          id: true,
-          messages: {
-            where: { role: { in: ['user', 'assistant'] } },
-            orderBy: { createdAt: 'asc' },
-            select: { id: true, role: true, content: true },
-          },
-        },
-      },
-    },
+    select: ENQUIRY_ROW,
   });
+
+  // An enquiry opened by link can be older than the first hundred; it is
+  // added to the list so the link still opens it.
+  const beyond =
+    open && !listed.some((enquiry) => enquiry.id === open)
+      ? await db.enquiry.findFirst({
+          where: { AND: [liveEnquiry, filterToWhere(active), matching, { id: open }] },
+          select: ENQUIRY_ROW,
+        })
+      : null;
+  const enquiries = beyond ? [...listed, beyond] : listed;
 
   /** One row is expanded at a time, chosen by ?open=. */
   const expanded = enquiries.find((enquiry) => enquiry.id === open);
@@ -289,9 +304,11 @@ export default async function EnquiriesPage({
                               >
                                 {expanded?.id === enquiry.id ? 'Close triage' : 'Triage'}
                               </MenuLink>
-                              <MenuLink href={`/clients/new?enquiry=${enquiry.id}`}>
-                                Onboard as a client
-                              </MenuLink>
+                              {mayOnboard && (
+                                <MenuLink href={`/clients/new?enquiry=${enquiry.id}`}>
+                                  Onboard as a client
+                                </MenuLink>
+                              )}
                             </MenuList>
                           </RowMenu>
                         )}
@@ -383,30 +400,42 @@ export default async function EnquiriesPage({
               </p>
             ) : returning ? (
               <div className={forms.actions}>
-                <Link
-                  href={`/projects/new?client=${returning.client.slug}&enquiry=${expanded.id}`}
-                  className={forms.button}
-                >
-                  Start a project for {returning.client.name}
-                </Link>
-                <Link
-                  href={`/clients/new?enquiry=${expanded.id}`}
-                  className={`${forms.button} ${forms.quiet}`}
-                >
-                  Add as a new client instead
-                </Link>
-                <p className={forms.payoff}>{expanded.email} is already one of their contacts.</p>
+                {mayStart && (
+                  <Link
+                    href={`/projects/new?client=${returning.client.slug}&enquiry=${expanded.id}`}
+                    className={forms.button}
+                  >
+                    Start a project for {returning.client.name}
+                  </Link>
+                )}
+                {mayOnboard && (
+                  <Link
+                    href={`/clients/new?enquiry=${expanded.id}`}
+                    className={`${forms.button} ${mayStart ? forms.quiet : ''}`}
+                  >
+                    Add as a new client instead
+                  </Link>
+                )}
+                <p className={forms.payoff}>
+                  {expanded.email} is already one of their contacts.
+                  {mayStart || mayOnboard
+                    ? ''
+                    : ' Someone who runs projects can start their next one.'}
+                </p>
               </div>
-            ) : (
+            ) : mayOnboard ? (
               <div className={forms.actions}>
                 <Link href={`/clients/new?enquiry=${expanded.id}`} className={forms.button}>
                   Make them a client
                 </Link>
                 <p className={forms.payoff}>
-                  Their name, email and message are filled in. You can start the project in the same
-                  step.
+                  {mayStart
+                    ? 'Their name, email and message are filled in. You can start the project in the same step.'
+                    : 'Their name, email and message are filled in.'}
                 </p>
               </div>
+            ) : (
+              <p className={forms.payoff}>Someone who can add clients needs to make them a client.</p>
             )}
           </section>
         )}

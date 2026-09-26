@@ -1,5 +1,6 @@
 import 'server-only';
 import { db } from '@/lib/db';
+import { can, type StaffActor } from '@/lib/console/auth';
 
 type Ref = { entityType: string | null; entityId: string | null };
 
@@ -9,14 +10,27 @@ const keyOf = (type: string, id: string) => `${type}:${id}`;
  * Where each record in a list of activity lines opens, keyed "Type:id", so a
  * line about an invoice or a failed email is one click from the thing it is
  * about. Looked up in one query per kind of record. Anything that cannot be
- * opened any more (a removed project, say) is simply left without a link.
+ * opened any more (a removed project, say), or that this person is not
+ * allowed to open, is simply left without a link.
  */
-export async function recordLinks(refs: Ref[]): Promise<Map<string, string>> {
-  const ids = (type: string) => [
-    ...new Set(
-      refs.flatMap((ref) => (ref.entityType === type && ref.entityId ? [ref.entityId] : [])),
-    ),
-  ];
+export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<string, string>> {
+  const allowed: Record<string, boolean> = {
+    Invoice: can(staff, 'invoices'),
+    Receipt: can(staff, 'invoices'),
+    Refund: can(staff, 'invoices'),
+    Document: can(staff, 'documents'),
+    Enquiry: can(staff, 'enquiries'),
+  };
+  const ids = (type: string) =>
+    allowed[type] === false
+      ? []
+      : [
+          ...new Set(
+            refs.flatMap((ref) =>
+              ref.entityType === type && ref.entityId ? [ref.entityId] : [],
+            ),
+          ),
+        ];
   const links = new Map<string, string>();
   const put = (type: string, id: string, href: string) => links.set(keyOf(type, id), href);
 
@@ -95,7 +109,8 @@ export async function recordLinks(refs: Ref[]): Promise<Map<string, string>> {
   for (const row of items) {
     put('AssetRequest', row.id, `/projects/${row.project.slug}#from-the-client`);
   }
-  for (const id of ids('Enquiry')) put('Enquiry', id, `/enquiries?open=${id}`);
+  for (const id of ids('Enquiry')) put('Enquiry', id, `/enquiries/${id}`);
+  for (const id of ids('StaffUser')) put('StaffUser', id, '/settings/team');
 
   return links;
 }

@@ -648,6 +648,14 @@ export default async function ProjectPage({
                   status={project.status}
                   actions={actions}
                   next={mayDocs ? (NEXT_STEP[project.status] ?? null) : null}
+                  canOpen={{
+                    fees: mayFees,
+                    billing: mayMoney,
+                    documents: mayDocs,
+                    updates: mayRun,
+                    overview: mayRun,
+                    review: mayRun && REVIEWABLE.includes(project.status),
+                  }}
                 />
               ) : (
                 <p className={styles.note}>
@@ -1039,9 +1047,13 @@ export default async function ProjectPage({
                   vatBps={org.chargesVat ? org.vatRateBps : 0}
                   reason={
                     fees.length === 0
-                      ? 'This project has no fees yet. Add the fee the money is for, then record it here.'
+                      ? mayFees
+                        ? 'This project has no fees yet. Add the fee the money is for, then record it here.'
+                        : 'This project has no fees yet. Someone who can set fees needs to add the one the money is for.'
                       : unpriced > 0 && toBill.length === 0
-                        ? 'The fees still need prices. Price the one the money is for, then record it here.'
+                        ? mayFees
+                          ? 'The fees still need prices. Price the one the money is for, then record it here.'
+                          : 'The fees still need prices. Someone who can set fees needs to price them.'
                         : 'Everything due now is already on an invoice. Record the payment on that invoice.'
                   }
                 />

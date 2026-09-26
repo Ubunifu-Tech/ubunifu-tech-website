@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { formatShortDate } from '@/lib/console/money';
-import { actionLabel } from '@/lib/console/activity';
+import { actionLabel, actionStartsWith, moneyActionsHiddenFrom } from '@/lib/console/activity';
 import { Callout } from '@/components/console/Callout';
 import { unresolvedEmailFailures } from '@/lib/console/email-failures';
 import { linkFor, recordLinks } from '@/lib/console/record-links';
@@ -48,7 +48,7 @@ function auditWhere(key: string): Prisma.AuditEventWhereInput | null {
     case 'failures':
       return null;
     case 'money':
-      return { OR: [{ action: { startsWith: 'invoice.' } }, { action: { startsWith: 'payment.' } }, { action: { startsWith: 'receipt.' } }, { action: { startsWith: 'refund.' } }, { action: { startsWith: 'line_item.' } }] };
+      return actionStartsWith(['invoice.', 'payment.', 'receipt.', 'refund.', 'line_item.']);
     case 'access':
       return { action: { contains: 'sign_in' } };
     default:
@@ -61,15 +61,25 @@ export default async function ActivityPage({
 }: {
   searchParams: Promise<{ show?: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { show } = await searchParams;
-  const active = FILTERS.some((f) => f.key === show) ? show! : 'all';
 
-  const where = auditWhere(active);
+  // Amounts are in these lines, so they are left out for anyone who cannot
+  // see money, the same as the pages they would link to.
+  const hidden = moneyActionsHiddenFrom(staff);
+  const seesMoney = can(staff, 'invoices') || can(staff, 'fees');
+  const filters = FILTERS.filter((filter) => filter.key !== 'money' || seesMoney);
+  const active = filters.some((f) => f.key === show) ? show! : 'all';
+
+  const visible = (where: Prisma.AuditEventWhereInput | null) =>
+    where === null || hidden.length === 0
+      ? where
+      : { AND: [where, { NOT: actionStartsWith(hidden) }] };
+  const where = visible(auditWhere(active));
   const wantsEmails = active === 'all' || active === 'emails' || active === 'failures';
 
   // Failed sends that have not been put right by sending again since.
-  const failures = await unresolvedEmailFailures();
+  const failures = await unresolvedEmailFailures(staff);
   const failureIds = failures.map((row) => row.id);
 
   const emailWhere = (key: string): Prisma.EmailLogWhereInput | null =>
@@ -81,8 +91,8 @@ export default async function ActivityPage({
 
   // How many entries each view holds, audit lines and emails together.
   const viewCounts = await Promise.all(
-    FILTERS.map(async (filter) => {
-      const audit = auditWhere(filter.key);
+    filters.map(async (filter) => {
+      const audit = visible(auditWhere(filter.key));
       const email = emailWhere(filter.key);
       const [a, e] = await Promise.all([
         audit === null ? 0 : db.auditEvent.count({ where: audit }),
@@ -91,7 +101,7 @@ export default async function ActivityPage({
       return a + e;
     }),
   );
-  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const total = viewCounts[filters.findIndex((f) => f.key === active)] ?? 0;
 
   const failedCount = failures.length;
   const [audits, emails] = await Promise.all([
@@ -131,7 +141,7 @@ export default async function ActivityPage({
         })
       : Promise.resolve([]),
   ]);
-  const links = await recordLinks([...audits, ...emails]);
+  const links = await recordLinks([...audits, ...emails], staff);
 
   type Row = {
     id: string;
@@ -217,7 +227,7 @@ export default async function ActivityPage({
       <div className={table.frame}>
         <ListToolbar
           path="/activity"
-          views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
+          views={filters.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
           current={active}
           defaultView="all"
         />

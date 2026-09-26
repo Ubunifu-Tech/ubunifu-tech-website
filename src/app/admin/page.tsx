@@ -73,8 +73,15 @@ export default async function AdminHome() {
       take: 10,
       select: { id: true, name: true, subject: true, createdAt: true },
     }),
-    db.clientContact.count({
-      where: { deletedAt: null, canSignIn: true, activatedAt: null, client: { deletedAt: null } },
+    // The same clients the "Portal not set up" list shows, so the figure and
+    // the list it opens always agree.
+    db.client.count({
+      where: {
+        deletedAt: null,
+        contacts: {
+          some: { deletedAt: null, isPrimary: true, canSignIn: true, activatedAt: null },
+        },
+      },
     }),
     // Every open invoice, not a capped list: the total owed is added up from
     // these, and a total of the first ten would quietly be wrong.
@@ -98,7 +105,7 @@ export default async function AdminHome() {
       },
     }),
     // Only those not put right by sending again since.
-    unresolvedEmailFailures().then((rows) => rows.length),
+    unresolvedEmailFailures(staff).then((rows) => rows.length),
     db.project.findMany({
       where: {
         deletedAt: null,
@@ -128,7 +135,7 @@ export default async function AdminHome() {
         status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] },
       },
     }),
-    recentActivity(8),
+    recentActivity(staff, 8),
     // Counted separately: the lists above are capped for the table, and a
     // capped length shown as a total would quietly read "10" when it is 14.
     db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
@@ -209,7 +216,7 @@ export default async function AdminHome() {
       what: enquiry.subject,
       who: enquiry.name,
       since: enquiry.createdAt,
-      href: `/enquiries?open=${enquiry.id}`,
+      href: `/enquiries/${enquiry.id}`,
       badge: 'New enquiry',
       tone: forms.badgeWarn,
     })),
@@ -315,9 +322,9 @@ export default async function AdminHome() {
   }
   if (figures.length < 4) {
     figures.push({
-      label: 'Not invited yet',
+      label: 'Portal not set up',
       value: uninvited,
-      note: 'Contacts without portal access',
+      note: 'Their main contact has not signed in yet',
       href: '/clients?show=portal',
     });
   }

@@ -42,6 +42,8 @@ export default async function ClientsPage({
   searchParams: Promise<{ show?: string; q?: string }>;
 }) {
   const staff = await requireStaff();
+  // What a client is worth is the fees on their projects: shown to those who see fees.
+  const seesValue = can(staff, 'fees') || can(staff, 'invoices');
   const { show, q } = await searchParams;
   const active = VIEWS.some((view) => view.key === show) ? show! : 'all';
   const query = searchText(q);
@@ -117,9 +119,11 @@ export default async function ClientsPage({
             Everyone we work for.
           </p>
         </div>
-        <Link href="/clients/new" className={forms.button}>
-          Add a client
-        </Link>
+        {can(staff, 'clients') && (
+          <Link href="/clients/new" className={forms.button}>
+            Add a client
+          </Link>
+        )}
       </div>
 
       <div className={table.frame}>
@@ -142,14 +146,16 @@ export default async function ClientsPage({
                 <th className={table.th} scope="col">Email</th>
                 <th className={table.th} scope="col">Portal</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Open projects</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
+                {seesValue && (
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
+                )}
                 <th className={table.th} scope="col">Added</th>
               </tr>
             </thead>
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={8}>
+                  <td className={table.emptyCell} colSpan={seesValue ? 8 : 7}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No clients match “${query}” here.`
@@ -215,16 +221,18 @@ export default async function ClientsPage({
                       <td className={`${table.td} ${table.numeric}`}>
                         {live > 0 ? live : <span className={table.muted}>None</span>}
                       </td>
-                      <td
-                        className={`${table.td} ${table.numeric}`}
-                        title={
-                          otherCurrencies.length > 0
-                            ? `Also has fees in ${otherCurrencies.join(', ')}, not added in`
-                            : undefined
-                        }
-                      >
-                        {formatMoney(committed, client.currency)}
-                      </td>
+                      {seesValue && (
+                        <td
+                          className={`${table.td} ${table.numeric}`}
+                          title={
+                            otherCurrencies.length > 0
+                              ? `Also has fees in ${otherCurrencies.join(', ')}, not added in`
+                              : undefined
+                          }
+                        >
+                          {formatMoney(committed, client.currency)}
+                        </td>
+                      )}
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(client.createdAt)}
                       </td>

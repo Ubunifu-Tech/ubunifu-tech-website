@@ -10,7 +10,7 @@ import { sendConsoleEmail } from './mailer';
 import { formatDate } from './money';
 import { STAFF_LABEL } from './project-status';
 import { advanceForDocument } from './transitions';
-import { TEAM_INBOX } from './alerts';
+import { alertTeam } from './alerts';
 import { documentSignedEmail, documentSignedNoticeEmail } from '@/lib/emails';
 
 export type SignOutcome = { status: 'done' | 'error'; message: string };
@@ -68,7 +68,9 @@ export async function recordSignature(input: {
           reference: true,
           title: true,
           kind: true,
-          project: { select: { id: true, slug: true } },
+          project: {
+            select: { id: true, slug: true, owner: { select: { email: true, isActive: true } } },
+          },
         },
       },
     },
@@ -241,8 +243,8 @@ export async function recordSignature(input: {
         entityId: request.document.id,
       })
     : null;
-  await sendConsoleEmail({
-    to: TEAM_INBOX,
+  await alertTeam({
+    owner: request.document.project.owner,
     subject: `[${request.document.reference}] Signed by ${signer.name}`,
     html: documentSignedNoticeEmail({
       reference: request.document.reference,
@@ -257,6 +259,7 @@ export async function recordSignature(input: {
     template: 'document_signed_notice',
     entityType: 'Document',
     entityId: request.document.id,
+    replyTo: signer.email,
   });
 
   if (copy && !copy.ok) {

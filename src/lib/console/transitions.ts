@@ -47,8 +47,12 @@ export type GuardSeverity = 'block' | 'warn';
 export type Guard = {
   severity: GuardSeverity;
   message: string;
-  /** The project tab where it is put right, so every warning has a way forward. */
-  fix?: 'fees' | 'documents' | 'updates' | 'overview' | 'review';
+  /**
+   * Where it is put right, so every warning has a way forward. `billing` is
+   * the Fees tab too, but for invoices and payments rather than prices, which
+   * not everyone who can price is allowed to touch.
+   */
+  fix?: 'fees' | 'billing' | 'documents' | 'updates' | 'overview' | 'review';
 };
 
 export type Transition = {
@@ -661,7 +665,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
         facts.invoicedMinor === 0
           ? `Nothing has been invoiced yet (${money(facts.committedMinor)} agreed). Consider sending the deposit invoice.`
           : `${money(facts.invoicedMinor)} is invoiced but no payment is recorded yet.`,
-        fix: 'fees',
+        fix: 'billing',
     });
   }
 
@@ -686,14 +690,14 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       guards.push({
         severity: 'warn',
         message: `${money(facts.outstandingMinor)} is still unpaid. It is harder to collect after handover.`,
-        fix: 'fees',
+        fix: 'billing',
       });
     }
     if (facts.uninvoicedOneOffMinor > 0) {
       guards.push({
         severity: 'warn',
         message: `${money(facts.uninvoicedOneOffMinor)} of fees has not been invoiced yet.`,
-        fix: 'fees',
+        fix: 'billing',
       });
     }
   }
@@ -729,7 +733,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     guards.push({
       severity: 'warn',
       message: `${money(facts.paidMinor)} has been paid. Cancelling does not refund it. Say in the note what happens to it.`,
-        fix: 'fees',
+        fix: 'billing',
     });
   }
 

@@ -1,5 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
+import type { Prisma } from '@/generated/prisma/client';
+import { can, type StaffActor } from './auth';
 
 /**
  * One history, assembled from the two places it is actually recorded.
@@ -231,6 +233,43 @@ export async function activityForClient(
   return activityFor(ids, limit);
 }
 
+/** Lines about invoices and payments, and lines about prices. */
+const BILLING_ACTIONS = ['invoice.', 'payment.', 'receipt.', 'refund.'];
+const FEE_ACTIONS = ['line_item.'];
+
+/**
+ * The kinds of line that carry amounts this person is not allowed to see,
+ * as action prefixes. Left out wherever the record is shown to them.
+ */
+export function moneyActionsHiddenFrom(staff: StaffActor): string[] {
+  const billing = can(staff, 'invoices');
+  const fees = billing || can(staff, 'fees');
+  return [...(billing ? [] : BILLING_ACTIONS), ...(fees ? [] : FEE_ACTIONS)];
+}
+
+export const actionStartsWith = (prefixes: string[]): Prisma.AuditEventWhereInput => ({
+  OR: prefixes.map((prefix) => ({ action: { startsWith: prefix } })),
+});
+
+/** Who did each thing, by name: there is more than one of us. */
+async function whoDid(
+  audits: { actorType: string; actorId: string | null }[],
+): Promise<(audit: { actorType: string; actorId: string | null }) => string> {
+  const ids = [
+    ...new Set(audits.flatMap((a) => (a.actorType === 'staff' && a.actorId ? [a.actorId] : []))),
+  ];
+  const people = ids.length
+    ? await db.staffUser.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })
+    : [];
+  const names = new Map(people.map((person) => [person.id, person.name]));
+  return (audit) =>
+    audit.actorType === 'staff'
+      ? ((audit.actorId && names.get(audit.actorId)) ?? 'Us')
+      : audit.actorType === 'client_contact'
+        ? 'Client'
+        : 'System';
+}
+
 export async function activityFor(entityIds: string[], limit = 40): Promise<ActivityItem[]> {
   if (entityIds.length === 0) return [];
 
@@ -244,6 +283,7 @@ export async function activityFor(entityIds: string[], limit = 40): Promise<Acti
         action: true,
         summary: true,
         actorType: true,
+        actorId: true,
         createdAt: true,
       },
     }),
@@ -263,12 +303,13 @@ export async function activityFor(entityIds: string[], limit = 40): Promise<Acti
     }),
   ]);
 
+  const who = await whoDid(audits);
   const items: ActivityItem[] = [
     ...audits.map((audit) => ({
       id: `audit-${audit.id}`,
       at: audit.createdAt,
       text: describeAudit(audit.action, audit.summary),
-      meta: audit.actorType === 'staff' ? 'You' : audit.actorType === 'client_contact' ? 'Client' : 'System',
+      meta: who(audit),
       tone: auditTone(audit.action),
     })),
     ...emails.map((email) => ({
@@ -293,19 +334,31 @@ export async function activityFor(entityIds: string[], limit = 40): Promise<Acti
 const QUIET = ['staff.sign_in.success', 'staff.sign_in.link_sent', 'staff.sign_out', 'client.sign_out'];
 
 /** The latest things that happened anywhere, for the overview. */
-export async function recentActivity(limit = 8): Promise<ActivityItem[]> {
+export async function recentActivity(staff: StaffActor, limit = 8): Promise<ActivityItem[]> {
+  const hidden = moneyActionsHiddenFrom(staff);
   const audits = await db.auditEvent.findMany({
-    where: { action: { notIn: QUIET } },
+    where: {
+      action: { notIn: QUIET },
+      ...(hidden.length ? { NOT: actionStartsWith(hidden) } : {}),
+    },
     orderBy: { createdAt: 'desc' },
     take: limit,
-    select: { id: true, action: true, summary: true, actorType: true, createdAt: true },
+    select: {
+      id: true,
+      action: true,
+      summary: true,
+      actorType: true,
+      actorId: true,
+      createdAt: true,
+    },
   });
 
+  const who = await whoDid(audits);
   return audits.map((audit) => ({
     id: `audit-${audit.id}`,
     at: audit.createdAt,
     text: describeAudit(audit.action, audit.summary),
-    meta: audit.actorType === 'staff' ? 'You' : audit.actorType === 'client_contact' ? 'Client' : 'System',
+    meta: who(audit),
     tone: auditTone(audit.action),
   }));
 }

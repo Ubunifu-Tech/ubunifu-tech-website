@@ -127,6 +127,7 @@ export function NewClientForm({
   prefill,
   team,
   me,
+  canStartProject,
 }: {
   templates: TemplateOption[];
   prefill?: Prefill;
@@ -134,9 +135,11 @@ export function NewClientForm({
   team: { id: string; name: string }[];
   /** Whoever is creating it, who leads it unless they choose someone else. */
   me: string;
+  /** Whether this person may start projects, which is a separate permission. */
+  canStartProject: boolean;
 }) {
   const [state, action, pending] = useActionState(createClient, INITIAL);
-  const [startProject, setStartProject] = useState(true);
+  const [startProject, setStartProject] = useState(canStartProject);
   const [serviceLine, setServiceLine] = useState(prefill?.serviceLine ?? 'web');
   const [step, setStep] = useState(0);
   const [reached, setReached] = useState(0);
@@ -435,7 +438,12 @@ export function NewClientForm({
           <legend className={`${forms.sectionTitle} ${forms.hueAccent}`}>The first project</legend>
 
           <div className={forms.grid}>
-            <div className={forms.wide}>
+            {!canStartProject && (
+              <p className={`${forms.hint} ${forms.wide}`}>
+                Someone who runs projects can start their first project from the client&rsquo;s page.
+              </p>
+            )}
+            <div className={forms.wide} hidden={!canStartProject}>
               <label className={forms.checkRow} htmlFor={field('startProject')}>
                 <input
                   id={field('startProject')}
@@ -653,7 +661,9 @@ export function NewClientForm({
               ? `Step ${step + 1} of ${STEPS.length}. Nothing is saved until the last step.`
               : startProject
                 ? 'Creates the client, their contact and the project.'
-                : 'Creates the organisation and the contact. You can add a project whenever one is agreed.'}
+                : canStartProject
+                  ? 'Creates the organisation and the contact. You can add a project whenever one is agreed.'
+                  : 'Creates the organisation and the contact.'}
           </p>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { STAFF_LABEL } from '@/lib/console/project-status';
+import { STAFF_TICKET_STATUS } from '@/lib/console/tickets';
 import { RestoreClient } from './RestoreClient';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -28,7 +29,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function RemovedClient({ params }: { params: Promise<{ slug: string }> }) {
   const staff = await requirePermission('clients');
   const seesMoney = can(staff, 'invoices');
-  const seesDocuments = can(staff, 'documents');
   const { slug } = await params;
 
   const client = await db.client.findFirst({
@@ -79,6 +79,16 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
       contacts: {
         orderBy: { name: 'asc' },
         select: { id: true, name: true, email: true, deletedAt: true },
+      },
+      tickets: {
+        orderBy: { createdAt: 'desc' },
+        select: {
+          reference: true,
+          subject: true,
+          status: true,
+          createdAt: true,
+          project: { select: { reference: true } },
+        },
       },
     },
   });
@@ -333,7 +343,7 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
           </div>
         )}
 
-        {seesDocuments && (
+        {documents.length > 0 && (
           <div className={table.frame}>
             <div className={table.toolbar}>
               <div className={table.toolbarText}>
@@ -390,6 +400,59 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                       </tr>
                     ))
                   )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {client.tickets.length > 0 && (
+          <div className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Requests</h2>
+                <span className={table.count}>{client.tickets.length}</span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={table.table}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Request
+                    </th>
+                    <th className={table.th} scope="col">
+                      Reference
+                    </th>
+                    <th className={table.th} scope="col">
+                      Project
+                    </th>
+                    <th className={table.th} scope="col">
+                      Status
+                    </th>
+                    <th className={table.th} scope="col">
+                      Raised
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {client.tickets.map((ticket) => (
+                    <tr key={ticket.reference} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>
+                        <Link href={`/requests/${ticket.reference}`} className={table.link}>
+                          {ticket.subject}
+                        </Link>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{ticket.reference}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {ticket.project?.reference ?? <span className={table.muted}>None</span>}
+                      </td>
+                      <td className={table.td}>{STAFF_TICKET_STATUS[ticket.status]}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {formatShortDate(ticket.createdAt)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

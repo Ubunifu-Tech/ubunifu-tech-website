@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { clientSentEmail } from '@/lib/emails';
 import { consoleEnv } from './env';
-import { sendConsoleEmail } from './mailer';
+import { sendConsoleEmail, type SendResult } from './mailer';
 import { allow } from './rate-limit';
 
 /** Where the team hears about what clients do. */
@@ -25,22 +25,27 @@ export async function alertTeam(input: {
   entityId: string;
   /** The client's address, so answering the alert answers them. */
   replyTo?: string | null;
-}) {
+}): Promise<SendResult> {
   const to = [TEAM_INBOX];
   if (input.owner?.isActive && input.owner.email.toLowerCase() !== TEAM_INBOX) {
     to.push(input.owner.email);
   }
+  const results: SendResult[] = [];
   for (const address of to) {
-    await sendConsoleEmail({
-      to: address,
-      subject: input.subject,
-      html: input.html,
-      template: input.template,
-      entityType: input.entityType,
-      entityId: input.entityId,
-      ...(input.replyTo ? { replyTo: input.replyTo } : {}),
-    });
+    results.push(
+      await sendConsoleEmail({
+        to: address,
+        subject: input.subject,
+        html: input.html,
+        template: input.template,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+      }),
+    );
   }
+  // What the team inbox got, which is what callers report.
+  return results[0]!;
 }
 
 /**

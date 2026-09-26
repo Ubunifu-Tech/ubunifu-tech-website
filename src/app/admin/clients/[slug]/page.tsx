@@ -65,6 +65,7 @@ export default async function ClientPage({
   const staff = await requireStaff();
   const mayManage = can(staff, 'clients');
   const seesMoney = can(staff, 'invoices');
+  const seesValue = seesMoney || can(staff, 'fees');
   const { slug } = await params;
   const now = new Date();
 
@@ -310,15 +311,17 @@ export default async function ClientPage({
                   <th className={table.th} scope="col">
                     Target
                   </th>
-                  <th className={`${table.th} ${table.numericHead}`} scope="col">
-                    Committed
-                  </th>
+                  {seesValue && (
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">
+                      Committed
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {client.projects.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={6}>
+                    <td className={table.emptyCell} colSpan={seesValue ? 6 : 5}>
                       <p className={table.emptyTitle}>No projects for this client yet.</p>
                       <p className={table.emptyHint}>
                         They are on the books, but nothing has been agreed.
@@ -347,12 +350,14 @@ export default async function ClientPage({
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(project.targetDate)}
                       </td>
-                      <td className={`${table.td} ${table.numeric}`}>
-                        {formatMoney(
-                          project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
-                          project.currency,
-                        )}
-                      </td>
+                      {seesValue && (
+                        <td className={`${table.td} ${table.numeric}`}>
+                          {formatMoney(
+                            project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
+                            project.currency,
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}

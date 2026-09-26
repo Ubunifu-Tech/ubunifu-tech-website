@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { requireStaff } from '@/lib/console/auth';
+import { can, requireStaff } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { formatShortDate } from '@/lib/console/money';
 import { liveDocument } from '@/lib/console/live';
@@ -56,7 +56,7 @@ export default async function DocumentsPage({
 }: {
   searchParams: Promise<{ show?: string; q?: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { show, q } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const query = searchText(q);
@@ -151,7 +151,9 @@ export default async function DocumentsPage({
                     <p className={table.emptyHint}>
                       {query
                         ? 'Try another view, or search for something else.'
-                        : 'Start one from a project’s Documents tab.'}
+                        : can(staff, 'documents')
+                          ? 'Start one from a project’s Documents tab.'
+                          : 'Someone who handles documents starts them from a project’s Documents tab.'}
                     </p>
                   </td>
                 </tr>

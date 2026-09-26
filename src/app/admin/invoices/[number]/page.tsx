@@ -296,6 +296,9 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                     Receipt
                   </th>
                   <th className={table.th} scope="col">
+                    State
+                  </th>
+                  <th className={table.th} scope="col">
                     Received
                   </th>
                   <th className={table.th} scope="col">
@@ -318,7 +321,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               <tbody>
                 {invoice.payments.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={7}>
+                    <td className={table.emptyCell} colSpan={8}>
                       <p className={table.emptyTitle}>Nothing received yet.</p>
                       <p className={table.emptyHint}>No payments recorded yet.</p>
                     </td>
@@ -334,13 +337,19 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         ) : (
                           <span className={table.muted}>None</span>
                         )}
-                        {payment.reversedAt && (
-                          <span className={table.sub}>
-                            <span className={`${forms.badge} ${forms.badgeBad}`}>Reversed</span>{' '}
-                            {formatShortDate(payment.reversedAt)}
-                            {payment.reversedBy ? ` by ${payment.reversedBy.name}` : ''}:{' '}
-                            {payment.reversalReason}
+                      </td>
+                      <td className={table.td}>
+                        {payment.reversedAt ? (
+                          <span
+                            className={`${forms.badge} ${forms.badgeBad}`}
+                            title={`Reversed ${formatShortDate(payment.reversedAt)}${
+                              payment.reversedBy ? ` by ${payment.reversedBy.name}` : ''
+                            }: ${payment.reversalReason ?? ''}`}
+                          >
+                            Reversed
                           </span>
+                        ) : (
+                          'Counted'
                         )}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
@@ -410,6 +419,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                       Refund note
                     </th>
                     <th className={table.th} scope="col">
+                      From receipt
+                    </th>
+                    <th className={table.th} scope="col">
+                      Reason
+                    </th>
+                    <th className={table.th} scope="col">
                       Sent back
                     </th>
                     <th className={table.th} scope="col">
@@ -436,9 +451,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         <Link href={`/refunds/${refund.number}`} className={table.link}>
                           {refund.number}
                         </Link>
-                        <span className={table.sub}>
-                          From {refund.receiptNumber ?? 'a payment'}: {refund.reason}
-                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {refund.receiptNumber ?? <span className={table.muted}>None</span>}
+                      </td>
+                      <td className={table.td}>
+                        <span className={table.clamp}>{refund.reason}</span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(refund.refundedAt)}

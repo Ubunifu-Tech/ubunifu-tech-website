@@ -168,10 +168,11 @@ export default async function PostsPage({
             <thead>
               <tr>
                 <th className={table.th} scope="col">Post</th>
+                <th className={table.th} scope="col">Summary</th>
                 <th className={table.th} scope="col">State</th>
                 <th className={table.th} scope="col">Dated</th>
                 <th className={table.th} scope="col">Tags</th>
-                <th className={`${table.th} ${table.numericHead}`} scope="col">Length</th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">Words</th>
                 <th className={table.th} scope="col">Edited</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className={table.muted}>On the site</span>
@@ -181,7 +182,7 @@ export default async function PostsPage({
             <tbody>
               {posts.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={7}>
+                  <td className={table.emptyCell} colSpan={8}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No posts match “${query}” here.`
@@ -213,15 +214,17 @@ export default async function PostsPage({
                           <span className={journal.thumb}>
                             <EditorialVisual src={cover.image} alt="" fill sizes="5rem" className={journal.thumbImage} />
                           </span>
-                          <span className={table.whoText}>
-                            <Link href={`/posts/${post.id}`} className={table.link}>
-                              {post.title || 'Untitled draft'}
-                            </Link>
-                            <span className={`${table.sub} ${journal.summary}`}>
-                              {post.excerpt || 'No summary yet'}
-                            </span>
-                          </span>
+                          <Link href={`/posts/${post.id}`} className={table.link}>
+                            {post.title || 'Untitled draft'}
+                          </Link>
                         </span>
+                      </td>
+                      <td className={table.td}>
+                        {post.excerpt ? (
+                          <span className={table.clamp}>{post.excerpt}</span>
+                        ) : (
+                          <span className={table.muted}>None yet</span>
+                        )}
                       </td>
                       <td className={table.td}>
                         <span
@@ -244,7 +247,6 @@ export default async function PostsPage({
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {words.toLocaleString('en-GB')}
-                        <span className={table.sub}>{Math.max(1, Math.round(words / 200))} min read</span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatRelative(post.updatedAt, now)}

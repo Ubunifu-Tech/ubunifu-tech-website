@@ -238,6 +238,12 @@ export default async function DocumentPage({
                 What changed
               </th>
               <th className={table.th} scope="col">
+                Assistant
+              </th>
+              <th className={table.th} scope="col">
+                The client said
+              </th>
+              <th className={table.th} scope="col">
                 By
               </th>
               <th className={table.th} scope="col">
@@ -251,16 +257,18 @@ export default async function DocumentPage({
                 <td className={`${table.td} ${table.numeric}`}>{version.version}</td>
                 <td className={`${table.td} ${table.primary}`}>
                   {version.changeNote ?? <span className={table.muted}>Edited</span>}
-                  {version.aiAssisted && (
-                    <span className={table.sub}>Drafted with the assistant</span>
-                  )}
+                </td>
+                <td className={table.td}>
+                  {version.aiAssisted ? 'Used' : <span className={table.muted}>No</span>}
+                </td>
+                <td className={table.td}>
                   {answersByVersion.get(version.version)?.map((request) => (
-                    <span key={request.id} className={`${table.sub} ${page.said}`}>
+                    <p key={request.id} className={page.said}>
                       {request.status === 'declined' ? 'Declined' : 'Changes asked for'}
-                      {request.respondedBy ? ` by ${request.respondedBy.name}` : ''} on{' '}
-                      {formatShortDate(request.respondedAt)}: {request.responseNote}
-                    </span>
-                  ))}
+                      {request.respondedBy ? ` by ${request.respondedBy.name}` : ''}:{' '}
+                      {request.responseNote}
+                    </p>
+                  )) ?? <span className={table.muted}>Nothing</span>}
                 </td>
                 <td className={`${table.td} ${table.nowrap}`}>
                   {version.createdBy?.name ?? <span className={table.muted}>Unknown</span>}

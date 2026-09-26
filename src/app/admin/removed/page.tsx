@@ -84,10 +84,19 @@ export default async function RemovedClients() {
                   Client
                 </th>
                 <th className={table.th} scope="col">
+                  Country
+                </th>
+                <th className={table.th} scope="col">
                   Removed
                 </th>
                 <th className={table.th} scope="col">
-                  On record
+                  Removed by
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Projects
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Invoices
                 </th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">
                   Unpaid
@@ -97,7 +106,7 @@ export default async function RemovedClients() {
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={4}>
+                  <td className={table.emptyCell} colSpan={7}>
                     <p className={table.emptyTitle}>No removed clients.</p>
                   </td>
                 </tr>
@@ -110,20 +119,16 @@ export default async function RemovedClients() {
                         <Link href={`/removed/${client.slug}`} className={table.link}>
                           {client.name}
                         </Link>
-                        <span className={table.sub}>{client.country}</span>
                       </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{client.country}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(client.deletedAt)}
-                        {removedBy.has(client.id) && (
-                          <span className={table.sub}>by {removedBy.get(client.id)}</span>
-                        )}
                       </td>
-                      <td className={table.td}>
-                        {client._count.projects}{' '}
-                        {client._count.projects === 1 ? 'project' : 'projects'},{' '}
-                        {client._count.invoices}{' '}
-                        {client._count.invoices === 1 ? 'invoice' : 'invoices'}
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {removedBy.get(client.id) ?? <span className={table.muted}>Unknown</span>}
                       </td>
+                      <td className={`${table.td} ${table.numeric}`}>{client._count.projects}</td>
+                      <td className={`${table.td} ${table.numeric}`}>{client._count.invoices}</td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {unpaid ? (
                           <span className={table.late}>{unpaid}</span>

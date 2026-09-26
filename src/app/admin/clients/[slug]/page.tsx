@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
-import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
 import { clientRemovalCounts } from '@/lib/console/removal';
@@ -282,7 +282,10 @@ export default async function ClientPage({
                     Project
                   </th>
                   <th className={table.th} scope="col">
-                    Reference
+                    Number
+                  </th>
+                  <th className={table.th} scope="col">
+                    Service
                   </th>
                   <th className={table.th} scope="col">
                     Stage
@@ -292,9 +295,6 @@ export default async function ClientPage({
                   </th>
                   <th className={`${table.th} ${table.numericHead}`} scope="col">
                     Committed
-                  </th>
-                  <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                    <span className={table.muted}>Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -315,9 +315,11 @@ export default async function ClientPage({
                         <Link href={`/projects/${project.slug}`} className={table.link}>
                           {project.name}
                         </Link>
-                        <span className={table.sub}>{project.serviceLine}</span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>{project.reference}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}
+                      </td>
                       <td className={table.td}>
                         <span
                           className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}
@@ -333,13 +335,6 @@ export default async function ClientPage({
                           project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
                           project.currency,
                         )}
-                      </td>
-                      <td className={`${table.td} ${table.actions}`}>
-                        <span className={table.actionGroup}>
-                          <Link href={`/projects/${project.slug}`} className={table.action}>
-                            Open
-                          </Link>
-                        </span>
                       </td>
                     </tr>
                   ))
@@ -365,6 +360,9 @@ export default async function ClientPage({
                       Project
                     </th>
                     <th className={table.th} scope="col">
+                      Number
+                    </th>
+                    <th className={table.th} scope="col">
                       Removed
                     </th>
                     <th className={`${table.th} ${table.actionsHead}`} scope="col">
@@ -375,10 +373,8 @@ export default async function ClientPage({
                 <tbody>
                   {removedProjects.map((project) => (
                     <tr key={project.id} className={table.tr}>
-                      <td className={`${table.td} ${table.primary}`}>
-                        {project.name}
-                        <span className={table.sub}>{project.reference}</span>
-                      </td>
+                      <td className={`${table.td} ${table.primary}`}>{project.name}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>{project.reference}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(project.deletedAt)}
                       </td>
@@ -413,6 +409,9 @@ export default async function ClientPage({
                     Name
                   </th>
                   <th className={table.th} scope="col">
+                    Job title
+                  </th>
+                  <th className={table.th} scope="col">
                     Email
                   </th>
                   <th className={table.th} scope="col">
@@ -434,17 +433,23 @@ export default async function ClientPage({
                   <tr key={contact.id} className={table.tr}>
                     <td className={`${table.td} ${table.primary}`}>
                       {contact.name}
-                      <span className={table.sub}>
-                        {[contact.isPrimary ? 'Main contact' : null, contact.role]
-                          .filter(Boolean)
-                          .join(' · ') || 'No job title'}
-                      </span>
+                      {contact.isPrimary && (
+                        <>
+                          {' '}
+                          <span className={forms.badge}>Main contact</span>
+                        </>
+                      )}
+                    </td>
+                    <td className={table.td}>
+                      {contact.role ?? <span className={table.muted}>None</span>}
                     </td>
                     <td className={table.td}>
                       {contact.email ? (
-                        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                        <a href={`mailto:${contact.email}`} className={table.link}>
+                          {contact.email}
+                        </a>
                       ) : (
-                        'No email yet'
+                        <span className={table.muted}>None yet</span>
                       )}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
@@ -461,12 +466,7 @@ export default async function ClientPage({
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
                       {contact.lastSeenAt ? (
-                        <>
-                          {formatShortDate(contact.lastSeenAt)}
-                          <span className={table.sub}>
-                            {formatRelative(contact.lastSeenAt, now)}
-                          </span>
-                        </>
+                        formatShortDate(contact.lastSeenAt)
                       ) : (
                         <span className={table.muted}>Never</span>
                       )}

@@ -97,7 +97,6 @@ export default async function RequestsPage({
         client: { select: { name: true, slug: true } },
         project: { select: { name: true, slug: true } },
         openedBy: { select: { name: true } },
-        messages: { select: { id: true } },
       },
     }),
     Promise.all(
@@ -176,7 +175,10 @@ export default async function RequestsPage({
             <thead>
               <tr>
                 <th className={table.th} scope="col">Request</th>
+                <th className={table.th} scope="col">Number</th>
+                <th className={table.th} scope="col">From</th>
                 <th className={table.th} scope="col">Client</th>
+                <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">Priority</th>
                 <th className={table.th} scope="col">State</th>
@@ -186,7 +188,7 @@ export default async function RequestsPage({
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={6}>
+                  <td className={table.emptyCell} colSpan={9}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No requests match “${query}” here.`
@@ -210,19 +212,18 @@ export default async function RequestsPage({
                       <Link href={`/requests/${ticket.reference}`} className={table.link}>
                         {ticket.subject}
                       </Link>
-                      <span className={table.sub}>
-                        {ticket.reference} · {ticket.openedBy?.name ?? 'unknown'} ·{' '}
-                        {ticket.messages.length}{' '}
-                        {ticket.messages.length === 1 ? 'message' : 'messages'}
-                      </span>
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`}>{ticket.reference}</td>
+                    <td className={`${table.td} ${table.nowrap}`}>
+                      {ticket.openedBy?.name ?? <span className={table.muted}>Unknown</span>}
                     </td>
                     <td className={`${table.td} ${table.name}`}>
                       <Link href={`/clients/${ticket.client.slug}`} className={table.link}>
                         {ticket.client.name}
                       </Link>
-                      {ticket.project && (
-                        <span className={table.sub}>{ticket.project.name}</span>
-                      )}
+                    </td>
+                    <td className={table.td}>
+                      {ticket.project?.name ?? <span className={table.muted}>None</span>}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
                       {TICKET_KIND_LABEL[ticket.kind]}
@@ -238,8 +239,7 @@ export default async function RequestsPage({
                       </span>
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
-                      {formatShortDate(ticket.updatedAt)}
-                      <span className={table.sub}>{formatRelative(ticket.updatedAt, now)}</span>
+                      {formatRelative(ticket.updatedAt, now)}
                     </td>
                   </tr>
                 ))

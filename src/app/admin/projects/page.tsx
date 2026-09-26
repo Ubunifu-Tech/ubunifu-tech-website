@@ -2,11 +2,10 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
 import { waitingOnClient } from '@/lib/console/live';
-import { Avatar } from '@/components/console/Avatar';
 import { Board, type BoardCard } from './Board';
 import { KanbanSquare, List } from 'lucide-react';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
@@ -137,7 +136,9 @@ export default async function ProjectsPage({
             <thead>
               <tr>
                 <th className={table.th} scope="col">Project</th>
+                <th className={table.th} scope="col">Number</th>
                 <th className={table.th} scope="col">Client</th>
+                <th className={table.th} scope="col">Owner</th>
                 <th className={table.th} scope="col">Stage</th>
                 <th className={table.th} scope="col">Progress</th>
                 <th className={table.th} scope="col">Target</th>
@@ -147,7 +148,7 @@ export default async function ProjectsPage({
             <tbody>
               {projects.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={6}>
+                  <td className={table.emptyCell} colSpan={8}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No projects match “${query}” here.`
@@ -184,20 +185,15 @@ export default async function ProjectsPage({
                         <Link href={`/projects/${project.slug}`} className={table.link}>
                           {project.name}
                         </Link>
-                        <span className={table.sub}>
-                          {project.reference} · {SERVICE_LABEL[project.serviceLine]} ·{' '}
-                          {/* The owner is a fact about the project, not a column
-                              anybody sorts by — it reads better under the name. */}
-                          {project.owner?.name ?? 'nobody yet'}
-                        </span>
                       </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{project.reference}</td>
                       <td className={`${table.td} ${table.name}`}>
-                        <span className={table.who}>
-                          <Avatar name={project.client.name} size="sm" />
-                          <Link href={`/clients/${project.client.slug}`} className={table.link}>
-                            {project.client.name}
-                          </Link>
-                        </span>
+                        <Link href={`/clients/${project.client.slug}`} className={table.link}>
+                          {project.client.name}
+                        </Link>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {project.owner?.name ?? <span className={table.muted}>Nobody yet</span>}
                       </td>
                       <td className={table.td}>
                         <span
@@ -220,19 +216,18 @@ export default async function ProjectsPage({
                             {done} of {deliverables.length}
                           </span>
                         )}
-                        {project.assetRequests.length > 0 && (
-                          <span className={table.sub}>
-                            waiting on {project.assetRequests.length} from them
-                          </span>
-                        )}
                       </td>
-                      <td className={`${table.td} ${table.nowrap} ${late ? table.late : ''}`}>
+                      <td
+                        className={`${table.td} ${table.nowrap} ${late ? table.late : ''}`}
+                        title={late ? 'Past its target date' : undefined}
+                      >
                         {formatShortDate(project.targetDate)}
-                        {late && <span className={table.sub}>past target</span>}
                       </td>
-                      <td className={`${table.td} ${table.numeric}`}>
+                      <td
+                        className={`${table.td} ${table.numeric}`}
+                        title={unpriced ? 'Some fee lines have no price yet' : undefined}
+                      >
                         {formatMoney(committed, project.currency)}
-                        {unpriced && <span className={table.sub}>some lines unpriced</span>}
                       </td>
                     </tr>
                   );

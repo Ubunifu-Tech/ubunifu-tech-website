@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, type StaffActor } from '@/lib/console/auth';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
-import { formatRelative, formatShortDate } from '@/lib/console/money';
+import { formatRelative } from '@/lib/console/money';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
@@ -75,7 +75,16 @@ export async function ProjectDocuments({
                 Document
               </th>
               <th className={table.th} scope="col">
+                Number
+              </th>
+              <th className={table.th} scope="col">
+                Kind
+              </th>
+              <th className={table.th} scope="col">
                 Status
+              </th>
+              <th className={table.th} scope="col">
+                From the client
               </th>
               <th className={table.th} scope="col">
                 Updated
@@ -85,7 +94,7 @@ export async function ProjectDocuments({
           <tbody>
             {documents.length === 0 ? (
               <tr>
-                <td className={table.emptyCell} colSpan={3}>
+                <td className={table.emptyCell} colSpan={6}>
                   <p className={table.emptyTitle}>No documents yet</p>
                   {mayDocs && (
                     <p className={table.emptyHint}>Start a proposal or agreement on the right.</p>
@@ -103,23 +112,10 @@ export async function ProjectDocuments({
                       <Link href={`/documents/${document.reference}`} className={table.link}>
                         {document.title}
                       </Link>
-                      <span className={table.sub}>
-                        {DOCUMENT_KIND_LABEL[document.kind]} · {document.reference}
-                      </span>
-                      {answer?.respondedAt && answer.responseNote && (
-                        <span className={`${table.sub} ${table.clamp}`}>
-                          {answer.status === 'declined' ? 'Declined' : 'Changes asked for'}
-                          {answer.respondedBy ? ` by ${answer.respondedBy.name}` : ''} on{' '}
-                          {formatShortDate(answer.respondedAt)}: &ldquo;{answer.responseNote}&rdquo;
-                        </span>
-                      )}
-                      {open && document._count.suggestions > 0 && (
-                        <span className={table.sub}>
-                          {document._count.suggestions === 1
-                            ? 'They suggested their own wording'
-                            : `${document._count.suggestions} suggestions of their own wording`}
-                        </span>
-                      )}
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`}>{document.reference}</td>
+                    <td className={`${table.td} ${table.nowrap}`}>
+                      {DOCUMENT_KIND_LABEL[document.kind]}
                     </td>
                     <td className={table.td}>
                       <span
@@ -135,6 +131,21 @@ export async function ProjectDocuments({
                       >
                         {DOCUMENT_STATUS_LABEL[document.status]}
                       </span>
+                    </td>
+                    <td className={table.td}>
+                      {answer?.respondedAt && answer.responseNote ? (
+                        <span className={table.clamp}>
+                          {answer.status === 'declined' ? 'Declined' : 'Changes asked for'}
+                          {answer.respondedBy ? ` by ${answer.respondedBy.name}` : ''}: &ldquo;
+                          {answer.responseNote}&rdquo;
+                        </span>
+                      ) : open && document._count.suggestions > 0 ? (
+                        document._count.suggestions === 1
+                          ? 'Their own wording'
+                          : `${document._count.suggestions} wordings of their own`
+                      ) : (
+                        <span className={table.muted}>Nothing</span>
+                      )}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
                       {formatRelative(document.updatedAt, now)}

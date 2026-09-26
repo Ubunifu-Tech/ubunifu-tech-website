@@ -71,6 +71,7 @@ export function RaiseInvoice({
             <tr>
               <th className={table.th} scope="col">Bill</th>
               <th className={table.th} scope="col">Item</th>
+              <th className={table.th} scope="col">Period or terms</th>
               <th className={table.th} scope="col">Due</th>
               <th className={`${table.th} ${table.numericHead}`} scope="col">Amount</th>
             </tr>
@@ -90,18 +91,14 @@ export function RaiseInvoice({
                     disabled={pending}
                   />
                 </td>
-                <td className={`${table.td} ${table.primary}`}>
-                  {line.label}
-                  {line.period && <span className={table.sub}>{line.period}</span>}
-                  {!line.period && line.terms && <span className={table.sub}>{line.terms}</span>}
+                <td className={`${table.td} ${table.primary}`}>{line.label}</td>
+                <td className={table.td}>
+                  {line.period ?? line.terms ?? <span className={table.muted}>None</span>}
                 </td>
                 <td className={`${table.td} ${table.nowrap}`}>
                   {line.due ?? <span className={table.muted}>On agreement</span>}
                 </td>
-                <td className={`${table.td} ${table.numeric}`}>
-                  {line.amount}
-                  <span className={table.sub}>{line.currency}</span>
-                </td>
+                <td className={`${table.td} ${table.numeric}`}>{line.amount}</td>
               </tr>
             ))}
           </tbody>

@@ -188,16 +188,10 @@
 }
 
 .client {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
+  overflow: hidden;
+  margin: 0;
   color: var(--text-secondary);
   font-size: var(--font-size-caption);
-}
-
-.client span:last-child {
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -230,15 +224,11 @@
   white-space: nowrap;
 }
 
-.cardFoot,
-.cardFootRow {
+.cardFoot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-}
-
-.cardFoot {
   padding-top: 0.75rem;
   border-top: 1px solid var(--border);
 }

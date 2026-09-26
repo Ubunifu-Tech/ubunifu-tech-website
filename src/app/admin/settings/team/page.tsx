@@ -3,7 +3,6 @@ import { requireStaff } from '@/lib/console/auth';
 import { staffDomains } from '@/lib/console/env';
 import { formatRelative } from '@/lib/console/money';
 import { ROLE_LABEL } from '@/lib/console/people';
-import { Avatar } from '@/components/console/Avatar';
 import { SettingsTabs } from '../SettingsTabs';
 import { InviteStaff, PermissionsGrid, RoleControl, RowActions } from './TeamControls';
 import { PERMISSIONS, readRolePermissions } from '@/lib/console/permissions';
@@ -76,10 +75,19 @@ export default async function TeamPage() {
                   Person
                 </th>
                 <th className={table.th} scope="col">
-                  Role
+                  Title
                 </th>
                 <th className={table.th} scope="col">
-                  Working on
+                  Email
+                </th>
+                <th className={table.th} scope="col">
+                  Role
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Projects
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Open tasks
                 </th>
                 <th className={table.th} scope="col">
                   Last signed in
@@ -96,18 +104,13 @@ export default async function TeamPage() {
                 return (
                   <tr key={person.id} className={table.tr}>
                     <td className={`${table.td} ${table.primary}`}>
-                      <span className={team.person}>
-                        <Avatar name={person.name} size="md" />
-                        <span className={team.personText}>
-                          {person.name}
-                          {you ? ' (you)' : ''}
-                          <span className={table.sub}>
-                            {person.title ? `${person.title} · ` : ''}
-                            {person.email}
-                          </span>
-                        </span>
-                      </span>
+                      {person.name}
+                      {you ? ' (you)' : ''}
                     </td>
+                    <td className={table.td}>
+                      {person.title ?? <span className={table.muted}>None</span>}
+                    </td>
+                    <td className={table.td}>{person.email}</td>
                     <td className={table.td}>
                       {isOwner && !you && person.isActive ? (
                         <RoleControl staffId={person.id} role={person.role} />
@@ -115,18 +118,18 @@ export default async function TeamPage() {
                         ROLE_LABEL[person.role]
                       )}
                     </td>
-                    <td className={`${table.td} ${table.nowrap}`}>
+                    <td className={`${table.td} ${table.numeric}`}>
                       {person.isActive ? (
-                        <>
-                          {person._count.ownedProjects}{' '}
-                          {person._count.ownedProjects === 1 ? 'project' : 'projects'}
-                          <span className={table.sub}>
-                            {person._count.assignedTasks} open{' '}
-                            {person._count.assignedTasks === 1 ? 'task' : 'tasks'}
-                          </span>
-                        </>
+                        person._count.ownedProjects
                       ) : (
-                        <span className={table.muted}>Removed</span>
+                        <span className={table.muted}>None</span>
+                      )}
+                    </td>
+                    <td className={`${table.td} ${table.numeric}`}>
+                      {person.isActive ? (
+                        person._count.assignedTasks
+                      ) : (
+                        <span className={table.muted}>None</span>
                       )}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>

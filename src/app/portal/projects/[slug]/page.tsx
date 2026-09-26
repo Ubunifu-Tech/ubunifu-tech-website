@@ -14,7 +14,6 @@ import {
 import { UploadBox } from './UploadBox';
 import { AnswerBox } from './AnswerBox';
 import { ItemOwner } from './ItemOwner';
-import { Avatar } from '@/components/console/Avatar';
 import { BrandKitView } from '@/components/console/BrandKitView';
 import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
 import { ReviewAnswer } from './ReviewAnswer';
@@ -224,10 +223,7 @@ export default async function PortalProject({ params }: { params: Promise<{ slug
         {project.owner && (
           <div className={styles.summaryItem}>
             <span className={styles.summaryLabel}>Your contact at Ubunifu</span>
-            <span className={styles.summaryValue}>
-              <Avatar name={project.owner.name} size="sm" />
-              {project.owner.name}
-            </span>
+            <span className={styles.summaryValue}>{project.owner.name}</span>
           </div>
         )}
       </div>

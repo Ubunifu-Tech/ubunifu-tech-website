@@ -109,7 +109,11 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
     ),
   );
   const refunds = receipts.flatMap((payment) =>
-    payment.refunds.map((refund) => ({ ...refund, currency: payment.currency })),
+    payment.refunds.map((refund) => ({
+      ...refund,
+      currency: payment.currency,
+      invoice: payment.invoice,
+    })),
   );
 
   return (
@@ -146,6 +150,9 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                     Project
                   </th>
                   <th className={table.th} scope="col">
+                    Number
+                  </th>
+                  <th className={table.th} scope="col">
                     Stage when removed
                   </th>
                   <th className={table.th} scope="col">
@@ -156,17 +163,15 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
               <tbody>
                 {client.projects.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={3}>
+                    <td className={table.emptyCell} colSpan={4}>
                       <p className={table.emptyTitle}>No projects.</p>
                     </td>
                   </tr>
                 ) : (
                   client.projects.map((project) => (
                     <tr key={project.id} className={table.tr}>
-                      <td className={`${table.td} ${table.primary}`}>
-                        {project.name}
-                        <span className={table.sub}>{project.reference}</span>
-                      </td>
+                      <td className={`${table.td} ${table.primary}`}>{project.name}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>{project.reference}</td>
                       <td className={table.td}>{STAFF_LABEL[project.status]}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {project.deletedAt?.getTime() === removedAt.getTime()
@@ -272,6 +277,12 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                       Number
                     </th>
                     <th className={table.th} scope="col">
+                      Kind
+                    </th>
+                    <th className={table.th} scope="col">
+                      Invoice
+                    </th>
+                    <th className={table.th} scope="col">
                       Date
                     </th>
                     <th className={`${table.th} ${table.numericHead}`} scope="col">
@@ -286,11 +297,11 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                         <Link href={`/receipts/${receipt.number}`} className={table.link}>
                           {receipt.number}
                         </Link>
-                        <span className={table.sub}>
-                          Receipt for {receipt.invoice}
-                          {receipt.reversedAt ? ', cancelled' : ''}
-                        </span>
                       </td>
+                      <td className={table.td}>
+                        {receipt.reversedAt ? 'Receipt, cancelled' : 'Receipt'}
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{receipt.invoice}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(receipt.receivedAt)}
                       </td>
@@ -305,8 +316,9 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                         <Link href={`/refunds/${refund.number}`} className={table.link}>
                           {refund.number}
                         </Link>
-                        <span className={table.sub}>Refund</span>
                       </td>
+                      <td className={table.td}>Refund</td>
+                      <td className={`${table.td} ${table.nowrap}`}>{refund.invoice}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(refund.refundedAt)}
                       </td>
@@ -337,6 +349,12 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                       Document
                     </th>
                     <th className={table.th} scope="col">
+                      Number
+                    </th>
+                    <th className={table.th} scope="col">
+                      Project
+                    </th>
+                    <th className={table.th} scope="col">
                       Kind
                     </th>
                     <th className={table.th} scope="col">
@@ -347,7 +365,7 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                 <tbody>
                   {documents.length === 0 ? (
                     <tr>
-                      <td className={table.emptyCell} colSpan={3}>
+                      <td className={table.emptyCell} colSpan={5}>
                         <p className={table.emptyTitle}>No documents.</p>
                       </td>
                     </tr>
@@ -358,10 +376,9 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                           <Link href={`/documents/${document.reference}`} className={table.link}>
                             {document.title}
                           </Link>
-                          <span className={table.sub}>
-                            {document.reference} · {document.project}
-                          </span>
                         </td>
+                        <td className={`${table.td} ${table.nowrap}`}>{document.reference}</td>
+                        <td className={`${table.td} ${table.nowrap}`}>{document.project}</td>
                         <td className={table.td}>{DOCUMENT_KIND_LABEL[document.kind]}</td>
                         <td className={table.td}>
                           {document.status === 'signed' ? (

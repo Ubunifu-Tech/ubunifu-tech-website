@@ -16,11 +16,10 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { CalendarDays, Clock, X } from 'lucide-react';
+import { CalendarDays, Clock, UserRound, X } from 'lucide-react';
 import type { ProjectStatus } from '@/generated/prisma/client';
 import { LANES, laneOf, targetIn, type Lane } from '@/lib/console/board';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { Avatar } from '@/components/console/Avatar';
 import { toneClass } from '@/components/console/Tone';
 import { moveProject } from './[slug]/actions';
 import forms from '@/styles/forms.module.css';
@@ -313,10 +312,7 @@ function CardBody({ card, lifted }: { card: BoardCard; lifted?: boolean }) {
         {card.name}
       </Link>
 
-      <div className={styles.client}>
-        <Avatar name={card.client} size="sm" />
-        <span>{card.client}</span>
-      </div>
+      <p className={styles.client}>{card.client}</p>
 
       {card.total > 0 && (
         <div className={styles.progress}>
@@ -341,19 +337,16 @@ function CardBody({ card, lifted }: { card: BoardCard; lifted?: boolean }) {
         {card.committed && <span className={styles.value}>{card.committed}</span>}
       </div>
 
-      {(card.waitingOn > 0 || card.owner) && (
-        <div className={styles.cardFootRow}>
-          {card.waitingOn > 0 ? (
-            <span className={`${styles.meta} ${styles.metaWaiting}`}>
-              <Clock size={14} strokeWidth={2} aria-hidden="true" />
-              Waiting on {card.waitingOn} from client
-            </span>
-          ) : (
-            <span />
-          )}
-          {card.owner && <Avatar name={card.owner} size="sm" />}
-        </div>
+      {card.waitingOn > 0 && (
+        <span className={`${styles.meta} ${styles.metaWaiting}`}>
+          <Clock size={14} strokeWidth={2} aria-hidden="true" />
+          Waiting on {card.waitingOn} from client
+        </span>
       )}
+      <span className={styles.meta}>
+        <UserRound size={14} strokeWidth={2} aria-hidden="true" />
+        {card.owner ?? 'Nobody leading yet'}
+      </span>
     </article>
   );
 }

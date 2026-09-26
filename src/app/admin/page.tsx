@@ -6,7 +6,6 @@ import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/mone
 import { recentActivity } from '@/lib/console/activity';
 import { liveEnquiry, liveInvoice, renewingLine } from '@/lib/console/live';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
-import { Avatar } from '@/components/console/Avatar';
 import { Callout } from '@/components/console/Callout';
 import { Figures, type Figure } from '@/components/console/Figures';
 import styles from './Admin.module.css';
@@ -396,15 +395,9 @@ export default async function AdminHome() {
                           {item.what}
                         </Link>
                       </td>
-                      <td className={table.td}>
-                        <span className={table.who}>
-                          <Avatar name={item.who} size="sm" />
-                          {item.who}
-                        </span>
-                      </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
+                      <td className={table.td}>{item.who}</td>
+                      <td className={`${table.td} ${table.nowrap}`} title={formatShortDate(item.since)}>
                         {formatRelative(item.since, now)}
-                        <span className={table.sub}>{formatShortDate(item.since)}</span>
                       </td>
                       <td className={table.td}>
                         <span className={`${forms.badge} ${item.tone}`}>{item.badge}</span>

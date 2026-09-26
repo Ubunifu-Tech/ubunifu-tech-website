@@ -214,6 +214,9 @@ export default async function InvoicesPage({
                   Number
                 </th>
                 <th className={table.th} scope="col">
+                  Issued
+                </th>
+                <th className={table.th} scope="col">
                   Client
                 </th>
                 <th className={table.th} scope="col">
@@ -236,7 +239,7 @@ export default async function InvoicesPage({
             <tbody>
               {invoices.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={7}>
+                  <td className={table.emptyCell} colSpan={8}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No invoices match “${query}” here.`
@@ -266,9 +269,13 @@ export default async function InvoicesPage({
                         <Link href={`/invoices/${invoice.number}`} className={table.link}>
                           {invoice.number}
                         </Link>
-                        <span className={table.sub}>
-                          {invoice.issuedAt ? formatShortDate(invoice.issuedAt) : 'Not sent'}
-                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {invoice.issuedAt ? (
+                          formatShortDate(invoice.issuedAt)
+                        ) : (
+                          <span className={table.muted}>Not sent</span>
+                        )}
                       </td>
                       <td className={`${table.td} ${table.name}`}>
                         <Link href={`/clients/${invoice.client.slug}`} className={table.link}>
@@ -289,9 +296,11 @@ export default async function InvoicesPage({
                           {INVOICE_STATUS_LABEL[invoice.status]}
                         </span>
                       </td>
-                      <td className={`${table.td} ${table.nowrap}`}>
+                      <td
+                        className={`${table.td} ${table.nowrap} ${late ? table.late : ''}`}
+                        title={late ? 'Past due' : undefined}
+                      >
                         {formatShortDate(invoice.dueAt)}
-                        {late && <span className={table.sub}>past due</span>}
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
                         {formatMoney(invoice.totalMinor, invoice.currency)}

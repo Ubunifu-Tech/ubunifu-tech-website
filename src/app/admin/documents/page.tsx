@@ -93,7 +93,6 @@ export default async function DocumentsPage({
       project: {
         select: { name: true, slug: true, client: { select: { name: true, slug: true } } },
       },
-      versions: { select: { id: true, aiAssisted: true } },
       signatureRequests: {
         orderBy: { createdAt: 'desc' },
         take: 1,
@@ -128,20 +127,20 @@ export default async function DocumentsPage({
           <table className={table.table}>
             <thead>
               <tr>
-                {/* Kind and the version count moved under the title: eight columns
-                    did not fit a laptop, and the two that were cut are the two
-                    nobody sorts or compares by. */}
                 <th className={table.th} scope="col">Document</th>
+                <th className={table.th} scope="col">Number</th>
+                <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">Client</th>
                 <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">State</th>
+                <th className={table.th} scope="col">Signed</th>
                 <th className={table.th} scope="col">Last touched</th>
               </tr>
             </thead>
             <tbody>
               {documents.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={5}>
+                  <td className={table.emptyCell} colSpan={8}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No documents match “${query}” here.`
@@ -159,19 +158,16 @@ export default async function DocumentsPage({
               ) : (
                 documents.map((document) => {
                   const request = document.signatureRequests[0];
-                  const aiUsed = document.versions.some((version) => version.aiAssisted);
                   return (
                     <tr key={document.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
                         <Link href={`/documents/${document.reference}`} className={table.link}>
                           {document.title}
                         </Link>
-                        <span className={table.sub}>
-                          {document.reference} · {DOCUMENT_KIND_LABEL[document.kind]} ·{' '}
-                          {document.versions.length}{' '}
-                          {document.versions.length === 1 ? 'version' : 'versions'}
-                          {aiUsed ? ' · drafted with help' : ''}
-                        </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{document.reference}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {DOCUMENT_KIND_LABEL[document.kind]}
                       </td>
                       <td className={`${table.td} ${table.name}`}>
                         <Link
@@ -190,10 +186,12 @@ export default async function DocumentsPage({
                         <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
                           {DOCUMENT_STATUS_LABEL[document.status]}
                         </span>
-                        {request?.signatures[0] && (
-                          <span className={table.sub}>
-                            {formatShortDate(request.signatures[0].signedAt)}
-                          </span>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {request?.signatures[0] ? (
+                          formatShortDate(request.signatures[0].signedAt)
+                        ) : (
+                          <span className={table.muted}>Not yet</span>
                         )}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>

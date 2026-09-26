@@ -134,6 +134,7 @@
 
 /* A client's own words, with their line breaks kept. */
 .said {
+  margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

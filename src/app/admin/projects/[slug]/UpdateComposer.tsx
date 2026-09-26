@@ -221,6 +221,9 @@ export function UpdateComposer({
                   Update
                 </th>
                 <th className={table.th} scope="col">
+                  Message
+                </th>
+                <th className={table.th} scope="col">
                   When
                 </th>
                 <th className={table.th} scope="col">
@@ -234,11 +237,9 @@ export function UpdateComposer({
             <tbody>
               {updates.map((update) => (
                 <tr key={update.id} className={table.tr}>
-                  <td className={`${table.td} ${table.primary}`}>
-                    {update.title}
-                    <span className={table.sub}>
-                      <span className={table.clamp}>{update.body}</span>
-                    </span>
+                  <td className={`${table.td} ${table.primary}`}>{update.title}</td>
+                  <td className={table.td}>
+                    <span className={table.clamp}>{update.body}</span>
                   </td>
                   <td className={`${table.td} ${table.nowrap}`}>{update.when}</td>
                   <td className={table.td}>

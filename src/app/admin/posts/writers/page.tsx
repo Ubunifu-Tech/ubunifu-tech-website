@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { Avatar } from '@/components/console/Avatar';
 import { ListFooter } from '@/components/console/ListToolbar';
 import { WriterForm } from './WriterForm';
 import styles from '../../Admin.module.css';
@@ -66,17 +65,29 @@ export default async function WritersPage() {
                     Writer
                   </th>
                   <th className={table.th} scope="col">
-                    Contact
+                    Role
+                  </th>
+                  <th className={table.th} scope="col">
+                    Email
+                  </th>
+                  <th className={table.th} scope="col">
+                    Phone
+                  </th>
+                  <th className={table.th} scope="col">
+                    Profile
                   </th>
                   <th className={`${table.th} ${table.numericHead}`} scope="col">
                     Articles
+                  </th>
+                  <th className={`${table.th} ${table.numericHead}`} scope="col">
+                    Live
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {list.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={3}>
+                    <td className={table.emptyCell} colSpan={7}>
                       <p className={table.emptyTitle}>Nobody yet.</p>
                       <p className={table.emptyHint}>
                         Add a writer here, or from a post&rsquo;s byline. Articles by the company
@@ -96,38 +107,39 @@ export default async function WritersPage() {
                       <tr key={writer.id} className={table.tr}>
                         <td className={`${table.td} ${table.primary}`}>
                           <span className={table.who}>
-                            {writer.photo ? (
+                            {writer.photo && (
                               // eslint-disable-next-line @next/next/no-img-element -- a small console thumbnail of an uploaded photo.
                               <img src={writer.photo} alt="" className={writers.thumb} />
-                            ) : (
-                              <Avatar name={writer.name} size="sm" />
                             )}
-                            <span className={table.whoText}>
-                              <Link href={`/posts/writers/${writer.id}`} className={table.link}>
-                                {writer.name}
-                              </Link>
-                              <span className={table.sub}>
-                                {[writer.role, missing.length > 0 && `No ${listOf(missing)} yet`]
-                                  .filter(Boolean)
-                                  .join(' · ')}
-                              </span>
-                            </span>
+                            <Link href={`/posts/writers/${writer.id}`} className={table.link}>
+                              {writer.name}
+                            </Link>
                           </span>
                         </td>
                         <td className={table.td}>
+                          {writer.role ?? <span className={table.muted}>None</span>}
+                        </td>
+                        <td className={table.td}>
                           {writer.email ? (
-                            <a href={`mailto:${writer.email}`}>{writer.email}</a>
+                            <a href={`mailto:${writer.email}`} className={table.link}>
+                              {writer.email}
+                            </a>
                           ) : (
-                            <span className={table.muted}>No email</span>
-                          )}
-                          {writer.phone && <span className={table.sub}>{writer.phone}</span>}
-                        </td>
-                        <td className={`${table.td} ${table.numeric}`}>
-                          {writer.posts.length}
-                          {writer.posts.length > 0 && (
-                            <span className={table.sub}>{live} live</span>
+                            <span className={table.muted}>None</span>
                           )}
                         </td>
+                        <td className={`${table.td} ${table.nowrap}`}>
+                          {writer.phone ?? <span className={table.muted}>None</span>}
+                        </td>
+                        <td className={table.td}>
+                          {missing.length > 0 ? (
+                            <span className={table.muted}>No {listOf(missing)} yet</span>
+                          ) : (
+                            'Complete'
+                          )}
+                        </td>
+                        <td className={`${table.td} ${table.numeric}`}>{writer.posts.length}</td>
+                        <td className={`${table.td} ${table.numeric}`}>{live}</td>
                       </tr>
                     );
                   })

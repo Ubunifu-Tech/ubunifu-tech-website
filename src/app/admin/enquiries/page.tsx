@@ -188,6 +188,9 @@ export default async function EnquiriesPage({
                     From
                   </th>
                   <th className={table.th} scope="col">
+                    Email
+                  </th>
+                  <th className={table.th} scope="col">
                     About
                   </th>
                   <th className={table.th} scope="col">
@@ -195,6 +198,9 @@ export default async function EnquiriesPage({
                   </th>
                   <th className={table.th} scope="col">
                     Stage
+                  </th>
+                  <th className={table.th} scope="col">
+                    Client
                   </th>
                   <th className={table.th} scope="col">
                     Received
@@ -207,7 +213,7 @@ export default async function EnquiriesPage({
               <tbody>
                 {enquiries.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={6}>
+                    <td className={table.emptyCell} colSpan={8}>
                       <p className={table.emptyTitle}>
                         {query
                           ? `No enquiries match “${query}” here.`
@@ -227,17 +233,21 @@ export default async function EnquiriesPage({
                 ) : (
                   enquiries.map((enquiry) => (
                     <tr key={enquiry.id} className={table.tr}>
-                      <td className={`${table.td} ${table.primary}`}>
-                        {enquiry.name}
-                        <span className={table.sub}>
-                          <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
-                        </span>
+                      <td className={`${table.td} ${table.primary}`}>{enquiry.name}</td>
+                      <td className={table.td}>
+                        <a href={`mailto:${enquiry.email}`} className={table.link}>
+                          {enquiry.email}
+                        </a>
                       </td>
-                      <td className={`${table.td} ${table.name}`}>
+                      <td
+                        className={`${table.td} ${table.name}`}
+                        title={
+                          enquiry.source === 'website_assistant'
+                            ? 'Came in through the website assistant'
+                            : undefined
+                        }
+                      >
                         <span className={table.clamp}>{enquiry.subject}</span>
-                        {enquiry.source === 'website_assistant' && (
-                          <span className={table.sub}>via the assistant</span>
-                        )}
                       </td>
                       <td className={table.td}>
                         <span className={table.clamp}>{enquiry.message}</span>
@@ -246,21 +256,22 @@ export default async function EnquiriesPage({
                         <span className={`${forms.badge} ${STATUS_BADGE[enquiry.status]}`}>
                           {STATUS_LABEL[enquiry.status]}
                         </span>
-                        {enquiry.client && (
-                          <span className={table.sub}>
-                            {enquiry.client.deletedAt ? (
-                              `${enquiry.client.name}, since removed`
-                            ) : (
-                              <Link href={`/clients/${enquiry.client.slug}`}>
-                                {enquiry.client.name}
-                              </Link>
-                            )}
-                          </span>
+                      </td>
+                      <td className={table.td}>
+                        {!enquiry.client ? (
+                          <span className={table.muted}>None</span>
+                        ) : enquiry.client.deletedAt ? (
+                          <Link href={`/removed/${enquiry.client.slug}`} className={table.link}>
+                            {enquiry.client.name}
+                          </Link>
+                        ) : (
+                          <Link href={`/clients/${enquiry.client.slug}`} className={table.link}>
+                            {enquiry.client.name}
+                          </Link>
                         )}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(enquiry.createdAt)}
-                        <span className={table.sub}>{formatRelative(enquiry.createdAt, now)}</span>
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
                         {enquiry.status === 'converted' ? (

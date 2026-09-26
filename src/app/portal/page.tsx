@@ -1,11 +1,18 @@
 import Link from 'next/link';
-import { ArrowRight, Eye, FileSignature, MessageSquare, Receipt, Upload } from 'lucide-react';
+import {
+  ArrowRight,
+  Eye,
+  FileSignature,
+  MessageSquare,
+  Receipt,
+  Upload,
+  UserRound,
+} from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, liveTicket, waitingOnClient } from '@/lib/console/live';
 import { clientStage } from '@/lib/console/project-status';
 import { formatDate, formatMoney } from '@/lib/console/money';
-import { Avatar } from '@/components/console/Avatar';
 import styles from './Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -245,7 +252,7 @@ export default async function PortalHome() {
                   <span className={styles.projectFoot}>
                     {project.owner ? (
                       <span className={styles.projectLead}>
-                        <Avatar name={project.owner.name} size="sm" />
+                        <UserRound size={14} strokeWidth={2} aria-hidden="true" />
                         {project.owner.name}
                       </span>
                     ) : (

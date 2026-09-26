@@ -14,6 +14,13 @@ import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Activity' };
 
+/** The time of day where the team works. */
+const TIME = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Africa/Dar_es_Salaam',
+});
+
 /**
  * The whole record, as a table rather than a stream.
  *
@@ -221,6 +228,11 @@ export default async function ActivityPage({
               <tr>
                 <th className={table.th} scope="col">When</th>
                 <th className={table.th} scope="col">What</th>
+                {active === 'failures' && (
+                  <th className={table.th} scope="col">
+                    Why
+                  </th>
+                )}
                 <th className={table.th} scope="col">Detail</th>
                 <th className={table.th} scope="col">By</th>
                 <th className={table.th} scope="col">Kind</th>
@@ -229,7 +241,7 @@ export default async function ActivityPage({
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={5}>
+                  <td className={table.emptyCell} colSpan={active === 'failures' ? 6 : 5}>
                     <p className={table.emptyTitle}>
                       {active === 'failures'
                         ? 'Every email has gone out.'
@@ -247,21 +259,20 @@ export default async function ActivityPage({
                   <tr key={row.id} className={table.tr}>
                     <td className={`${table.td} ${table.nowrap}`}>
                       <time dateTime={row.at.toISOString()} title={row.at.toISOString()}>
-                        {formatShortDate(row.at)}
+                        {formatShortDate(row.at)}, {TIME.format(row.at)}
                       </time>
-                      <span className={table.sub}>
-                        {new Intl.DateTimeFormat('en-GB', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          timeZone: 'UTC',
-                        }).format(row.at)}{' '}
-                        UTC
-                      </span>
                     </td>
-                    <td className={`${table.td} ${table.primary}`}>
+                    <td
+                      className={`${table.td} ${table.primary}`}
+                      title={active === 'failures' ? undefined : (row.note ?? undefined)}
+                    >
                       {row.what}
-                      {row.note && <span className={table.sub}>{row.note}</span>}
                     </td>
+                    {active === 'failures' && (
+                      <td className={table.td}>
+                        <span className={table.clamp}>{row.note ?? 'No reason given'}</span>
+                      </td>
+                    )}
                     <td className={table.td}>
                       {row.href ? (
                         <Link href={row.href} className={`${table.link} ${table.clamp}`}>

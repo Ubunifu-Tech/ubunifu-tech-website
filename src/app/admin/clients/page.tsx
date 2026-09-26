@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
-import { Avatar } from '@/components/console/Avatar';
+import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -46,7 +45,6 @@ export default async function ClientsPage({
   const { show, q } = await searchParams;
   const active = VIEWS.some((view) => view.key === show) ? show! : 'all';
   const query = searchText(q);
-  const now = new Date();
 
   const matching: Prisma.ClientWhereInput = query
     ? {
@@ -139,9 +137,11 @@ export default async function ClientsPage({
             <thead>
               <tr>
                 <th className={table.th} scope="col">Client</th>
+                <th className={table.th} scope="col">Country</th>
                 <th className={table.th} scope="col">Main contact</th>
+                <th className={table.th} scope="col">Email</th>
                 <th className={table.th} scope="col">Portal</th>
-                <th className={table.th} scope="col">Projects</th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">Open projects</th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Committed</th>
                 <th className={table.th} scope="col">Added</th>
               </tr>
@@ -149,7 +149,7 @@ export default async function ClientsPage({
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={6}>
+                  <td className={table.emptyCell} colSpan={8}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No clients match “${query}” here.`
@@ -192,25 +192,16 @@ export default async function ClientsPage({
                   return (
                     <tr key={client.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
-                        <span className={table.who}>
-                          <Avatar name={client.name} size="sm" />
-                          <span className={table.whoText}>
-                            <Link href={`/clients/${client.slug}`} className={table.link}>
-                              {client.name}
-                            </Link>
-                            <span className={table.sub}>{client.country}</span>
-                          </span>
-                        </span>
+                        <Link href={`/clients/${client.slug}`} className={table.link}>
+                          {client.name}
+                        </Link>
+                      </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{client.country}</td>
+                      <td className={table.td}>
+                        {primary ? primary.name : <span className={table.muted}>No contact</span>}
                       </td>
                       <td className={table.td}>
-                        {primary ? (
-                          <>
-                            {primary.name}
-                            <span className={table.sub}>{primary.email ?? 'No email yet'}</span>
-                          </>
-                        ) : (
-                          <span className={table.muted}>No contact</span>
-                        )}
+                        {primary?.email ?? <span className={table.muted}>None yet</span>}
                       </td>
                       <td className={table.td}>
                         {!primary || !primary.canSignIn ? (
@@ -221,27 +212,21 @@ export default async function ClientsPage({
                           <span className={`${forms.badge} ${forms.badgeWarn}`}>Not set up</span>
                         )}
                       </td>
-                      <td className={table.td}>
-                        {client.projects.length === 0 ? (
-                          <span className={table.muted}>None</span>
-                        ) : (
-                          <>
-                            {client.projects.length}
-                            {live > 0 && <span className={table.sub}>{live} open</span>}
-                          </>
-                        )}
-                      </td>
                       <td className={`${table.td} ${table.numeric}`}>
+                        {live > 0 ? live : <span className={table.muted}>None</span>}
+                      </td>
+                      <td
+                        className={`${table.td} ${table.numeric}`}
+                        title={
+                          otherCurrencies.length > 0
+                            ? `Also has fees in ${otherCurrencies.join(', ')}, not added in`
+                            : undefined
+                        }
+                      >
                         {formatMoney(committed, client.currency)}
-                        {otherCurrencies.length > 0 && (
-                          <span className={table.sub}>
-                            plus {otherCurrencies.join(', ')}
-                          </span>
-                        )}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(client.createdAt)}
-                        <span className={table.sub}>{formatRelative(client.createdAt, now)}</span>
                       </td>
                     </tr>
                   );

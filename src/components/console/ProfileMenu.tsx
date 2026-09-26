@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import * as Popover from '@radix-ui/react-popover';
 import { ChevronDown, LogOut, Settings, UserRound, Users } from 'lucide-react';
-import { Avatar } from './Avatar';
 import styles from './ProfileMenu.module.css';
 
 const ICONS = { profile: UserRound, team: Users, settings: Settings } as const;
@@ -14,6 +13,7 @@ export type ProfileLink = { href: string; label: string; icon: keyof typeof ICON
 /**
  * Who is signed in, top right, and everything about their own account in
  * one place: their profile, the people they work with, and signing out.
+ * The button is just their name; the role, email and choices are in the menu.
  */
 export function ProfileMenu({
   name,
@@ -34,23 +34,18 @@ export function ProfileMenu({
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger className={styles.pill} aria-label={`Account: ${name}`}>
-        <Avatar name={name} size="sm" />
-        <span className={styles.who}>
-          <span className={styles.name}>{name}</span>
-          <span className={styles.detail}>{detail}</span>
-        </span>
-        <ChevronDown size={15} strokeWidth={2} className={styles.chevron} aria-hidden="true" />
+      <Popover.Trigger className={styles.trigger} aria-label={`Account: ${name}`}>
+        <UserRound size={16} strokeWidth={1.8} className={styles.icon} aria-hidden="true" />
+        <span className={styles.name}>{name}</span>
+        <ChevronDown size={14} strokeWidth={2} className={styles.chevron} aria-hidden="true" />
       </Popover.Trigger>
 
       <Popover.Portal>
         <Popover.Content className={styles.menu} align="end" sideOffset={8} collisionPadding={12}>
           <div className={styles.menuHead}>
-            <Avatar name={name} size="md" />
-            <div className={styles.menuWho}>
-              <p className={styles.menuName}>{name}</p>
-              <p className={styles.menuEmail}>{email}</p>
-            </div>
+            <p className={styles.menuName}>{name}</p>
+            <p className={styles.menuEmail}>{detail}</p>
+            <p className={styles.menuEmail}>{email}</p>
           </div>
           <ul className={styles.items}>
             {links.map((link) => {

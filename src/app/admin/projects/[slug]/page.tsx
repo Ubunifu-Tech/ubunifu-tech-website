@@ -65,6 +65,7 @@ import { currencyLabel } from '@/lib/console/currencies';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { DOCUMENT_KINDS } from '../../documents/kinds';
 
 const TONE_CLASS: Record<string, string> = {
   neutral: '',
@@ -99,15 +100,17 @@ export default async function ProjectPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; kind?: string }>;
 }) {
   const staff = await requireStaff();
   const { slug } = await params;
   const mayRun = can(staff, 'projects');
   const mayFees = can(staff, 'fees');
   const mayMoney = can(staff, 'invoices');
+  // Amounts in a move's warnings, for those who handle invoices or fees.
+  const seesMoney = mayMoney || can(staff, 'fees');
   const mayDocs = can(staff, 'documents');
-  const { tab: tabParam } = await searchParams;
+  const { tab: tabParam, kind: kindParam } = await searchParams;
   // A tab this person cannot open falls back to the overview, rather than an
   // empty page under the tabs.
   const opens: Record<Tab, boolean> = {
@@ -345,12 +348,36 @@ export default async function ProjectPage({
     };
   });
 
+  // A proposal or agreement they sent back with changes comes first: the next
+  // move is reading them, not marking the deal done.
+  const changesAsked =
+    ['proposal_sent', 'contract_sent'].includes(project.status)
+      ? project.documents.find((document) => document.status === 'changes_requested')
+      : undefined;
+  const planned = NEXT_STEP[project.status];
+  // Out with the client by its stage, but nothing is waiting for them to sign,
+  // as after a project comes back from being removed: send it from Documents.
+  const nothingOut =
+    ['proposal_sent', 'contract_sent'].includes(project.status) &&
+    !changesAsked &&
+    !project.documents.some((document) => ['sent', 'viewed'].includes(document.status));
+  const nextStep = changesAsked
+    ? { label: 'Read their changes', href: `/documents/${changesAsked.reference}` }
+    : nothingOut
+      ? project.status === 'proposal_sent'
+        ? { label: 'Send the proposal', href: `/projects/${project.slug}?tab=documents&kind=proposal` }
+        : { label: 'Send the agreement', href: `/projects/${project.slug}?tab=documents&kind=contract` }
+      : planned
+        ? { label: planned.label, href: `/projects/${project.slug}?tab=documents&kind=${planned.kind}` }
+        : null;
+
   // Each next step carries its own blocker, shown greyed on the step itself,
   // rather than one warning box about steps nobody has tried to take.
   const actions: StageAction[] = transitions.map((transition) => ({
     ...transition,
     blocked:
-      guardsFor(transition.to, facts).find((guard) => guard.severity === 'block')?.message ?? null,
+      guardsFor(transition.to, facts, { seesMoney }).find((guard) => guard.severity === 'block')
+        ?.message ?? null,
     blockedFix:
       guardsFor(transition.to, facts).find((guard) => guard.severity === 'block')?.fix ?? null,
   }));
@@ -672,7 +699,8 @@ export default async function ProjectPage({
                   projectSlug={project.slug}
                   status={project.status}
                   actions={actions}
-                  next={mayDocs ? (NEXT_STEP[project.status] ?? null) : null}
+                  next={mayDocs ? nextStep : null}
+                  holdPrimary={Boolean(mayDocs && changesAsked)}
                   canOpen={{
                     fees: mayFees,
                     billing: mayMoney,
@@ -878,7 +906,10 @@ export default async function ProjectPage({
               <ul className={styles.people}>
                 {project.client.contacts.length === 0 && (
                   <li className={styles.personMeta}>
-                    Nobody at {project.client.name} yet. Add their people on the client page.
+                    Nobody at {project.client.name} yet.
+                    {can(staff, 'clients')
+                      ? ' Add their people on the client page.'
+                      : ' Someone who handles clients adds their people.'}
                   </li>
                 )}
                 {project.client.contacts.map((contact) => (
@@ -1047,8 +1078,8 @@ export default async function ProjectPage({
             </div>
             {unpriced > 0 && (
               <Callout kind="warn">
-                {unpriced === 1 ? 'One fee has' : `${unpriced} fees have`} no price yet. A contract
-                cannot be sent until every fee is priced.
+                {unpriced === 1 ? 'One fee has' : `${unpriced} fees have`} no price yet. Price every
+                fee before the agreement goes out.
               </Callout>
             )}
             <FeeEditor
@@ -1070,6 +1101,7 @@ export default async function ProjectPage({
                   projectId={project.id}
                   lines={toBill}
                   defaultDue={toDateInputValue(defaultDue)}
+                  termsDays={org.paymentTermsDays}
                 />
               </section>
 
@@ -1179,7 +1211,15 @@ export default async function ProjectPage({
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>New document</h2>
               </div>
-              <NewDocument projectId={project.id} projectName={project.name} />
+              <NewDocument
+                projectId={project.id}
+                projectName={project.name}
+                defaultKind={
+                  DOCUMENT_KINDS.some((option) => option.value === kindParam)
+                    ? kindParam
+                    : (NEXT_STEP[project.status]?.kind ?? 'proposal')
+                }
+              />
             </section>
           )}
         </div>

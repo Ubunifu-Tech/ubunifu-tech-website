@@ -56,21 +56,24 @@ export function MoveControls({
   status,
   actions,
   next,
+  holdPrimary = false,
   canOpen = {},
 }: {
   projectId: string;
   projectSlug: string;
   status: ProjectStatus;
   actions: StageAction[];
-  /** The real next step, when it happens on another tab rather than here. */
-  next?: { label: string; tab: 'documents' } | null;
+  /** The real next step, when it happens somewhere else rather than here. */
+  next?: { label: string; href: string } | null;
+  /** Keep every move under Other options, because the next step comes first. */
+  holdPrimary?: boolean;
   /** Where a fix may be sent. Anything not allowed gets a hand-off line instead of a link. */
   canOpen?: Partial<Record<FixTab, boolean>>;
 }) {
   const fixable = (tab: FixTab) => canOpen[tab] !== false;
   const fixHref = (tab: FixTab) =>
     tab === 'overview'
-      ? `/projects/${projectSlug}`
+      ? `/projects/${projectSlug}#from-the-client`
       : tab === 'review'
         ? `/projects/${projectSlug}#review`
         : `/projects/${projectSlug}?tab=${tab === 'billing' ? 'fees' : tab}`;
@@ -83,7 +86,9 @@ export function MoveControls({
     return <p className={styles.rest}>This project is finished. New work starts as a new project.</p>;
   }
 
-  const primary = actions.filter((item) => item.tone === 'primary' && !item.blocked);
+  const primary = holdPrimary
+    ? []
+    : actions.filter((item) => item.tone === 'primary' && !item.blocked);
   const others = actions.filter((item) => !primary.includes(item));
 
   return (
@@ -148,7 +153,7 @@ export function MoveControls({
           {(next || primary.length > 0) && (
             <div className={styles.primary}>
               {next && (
-                <Link href={fixHref(next.tab)} className={forms.button}>
+                <Link href={next.href} className={forms.button}>
                   {next.label}
                 </Link>
               )}

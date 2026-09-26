@@ -26,6 +26,13 @@ import { renewingLine } from './live';
 /** How far ahead periods are materialised by default. A year, plus slack. */
 export const HORIZON_DAYS = 400;
 
+/**
+ * How close a period's date has to be before it is invoiced. One number for
+ * the Renewals page, the sidebar badge, the overview, the reports and the
+ * invoice form, so they all agree on what is due.
+ */
+export const INVOICE_AHEAD_DAYS = 45;
+
 /** A guard against a bad interval turning one line into ten thousand rows. */
 const MAX_PERIODS_PER_LINE = 24;
 

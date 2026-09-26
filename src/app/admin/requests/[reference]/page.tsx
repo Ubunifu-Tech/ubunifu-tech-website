@@ -175,6 +175,9 @@ export default async function TicketPage({
           </ul>
 
           {mayChange && <ReplyBox ticketId={ticket.id} />}
+          {!mayReply && !removedAt && (
+            <p className={styles.note}>Someone who handles requests replies to these.</p>
+          )}
         </section>
 
         <div className={styles.stack}>
@@ -187,6 +190,9 @@ export default async function TicketPage({
             </div>
             {mayChange && (
               <TriageBox ticketId={ticket.id} status={ticket.status} priority={ticket.priority} />
+            )}
+            {!mayReply && !removedAt && (
+              <p className={styles.note}>Someone who handles requests sorts these.</p>
             )}
             {ticket.resolvedAt && (
               <p className={styles.note}>

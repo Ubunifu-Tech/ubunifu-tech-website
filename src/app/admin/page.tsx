@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
-import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { recentActivity } from '@/lib/console/activity';
 import { liveEnquiry, liveInvoice, renewingLine } from '@/lib/console/live';
@@ -12,6 +12,7 @@ import styles from './Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { unresolvedEmailFailures } from '@/lib/console/email-failures';
+import { INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
 
 // Absolute: a layout template does not apply to its own sibling page, so a
 // plain string here would inherit the marketing site's title template.
@@ -50,7 +51,7 @@ export default async function AdminHome() {
   const staff = await requireStaff();
   const now = new Date();
   const soon = new Date(now);
-  soon.setDate(soon.getDate() + 45);
+  soon.setDate(soon.getDate() + INVOICE_AHEAD_DAYS);
 
   const [
     newEnquiries,
@@ -98,21 +99,30 @@ export default async function AdminHome() {
         client: { select: { name: true } },
       },
     }),
-    db.lineItem.count({
-      where: {
-        ...renewingLine,
-        nextDueAt: { not: null, lte: soon },
-      },
+    // Counted as the sidebar badge counts them: periods not yet invoiced.
+    db.renewalEvent.count({
+      where: { status: 'pending', dueAt: { lte: soon }, lineItem: renewingLine },
     }),
     // Only those not put right by sending again since.
     unresolvedEmailFailures(staff).then((rows) => rows.length),
+    // Projects where the next move is ours; filtered below to drop those
+    // waiting on the client.
     db.project.findMany({
       where: {
         deletedAt: null,
-        status: { in: ['lead', 'proposal_draft', 'client_review', 'proposal_sent'] },
+        status: {
+          in: [
+            'lead',
+            'proposal_draft',
+            'proposal_sent',
+            'proposal_accepted',
+            'contract_sent',
+            'client_review',
+          ],
+        },
       },
       orderBy: { updatedAt: 'asc' },
-      take: 10,
+      take: 40,
       select: {
         id: true,
         name: true,
@@ -127,24 +137,20 @@ export default async function AdminHome() {
           take: 1,
           select: { status: true, answeredAt: true },
         },
+        documents: {
+          where: { status: 'changes_requested' },
+          orderBy: { updatedAt: 'desc' },
+          take: 1,
+          select: { reference: true, updatedAt: true },
+        },
       },
     }),
-    db.project.count({
-      where: {
-        deletedAt: null,
-        status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] },
-      },
-    }),
+    db.project.count({ where: { deletedAt: null, status: { in: LIVE_STATUSES } } }),
     recentActivity(staff, 8),
     // Counted separately: the lists above are capped for the table, and a
     // capped length shown as a total would quietly read "10" when it is 14.
     db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
-    db.project.count({
-      where: {
-        deletedAt: null,
-        status: { in: ['lead', 'proposal_draft', 'client_review', 'proposal_sent'] },
-      },
-    }),
+    db.project.count({ where: { deletedAt: null, status: { in: PIPELINE_STATUSES } } }),
     db.deliverable.findMany({
       where: {
         assigneeId: staff.id,
@@ -220,28 +226,49 @@ export default async function AdminHome() {
       badge: 'New enquiry',
       tone: forms.badgeWarn,
     })),
-    ...waitingProjects.map((project) => {
-      // At review, the client's answer is the news: it is what moves next.
-      const review = project.status === 'client_review' ? project.reviews[0] : undefined;
-      const answeredAt = review && review.status !== 'open' ? review.answeredAt : null;
-      return {
-        id: `p-${project.id}`,
-        what: project.name,
-        who: project.client.name,
-        since: answeredAt ?? project.updatedAt,
-        href: `/projects/${project.slug}${review ? '#review' : ''}`,
-        badge: answeredAt
-          ? review!.status === 'approved'
-            ? 'Client approved'
-            : 'Changes asked for'
-          : STAFF_LABEL[project.status],
-        tone: answeredAt
-          ? review!.status === 'approved'
-            ? forms.badgeGood
-            : forms.badgeWarn
-          : TONE_CLASS[STATUS_TONE[project.status]],
-      };
-    }),
+    // Only to those who move projects on, and only where the move is ours:
+    // a proposal, agreement or review still with the client is not.
+    ...(can(staff, 'projects') ? waitingProjects : [])
+      .filter((project) => {
+        if (project.status === 'client_review') {
+          const review = project.reviews[0];
+          return review !== undefined && review.status !== 'open';
+        }
+        if (project.status === 'proposal_sent' || project.status === 'contract_sent') {
+          return project.documents.length > 0;
+        }
+        return true;
+      })
+      .slice(0, 10)
+      .map((project) => {
+        // At review, the client's answer is the news: it is what moves next.
+        const review = project.status === 'client_review' ? project.reviews[0] : undefined;
+        const answeredAt = review && review.status !== 'open' ? review.answeredAt : null;
+        const changes = project.documents[0];
+        return {
+          id: `p-${project.id}`,
+          what: project.name,
+          who: project.client.name,
+          since: answeredAt ?? changes?.updatedAt ?? project.updatedAt,
+          href: changes
+            ? `/documents/${changes.reference}`
+            : `/projects/${project.slug}${review ? '#review' : ''}`,
+          badge: answeredAt
+            ? review!.status === 'approved'
+              ? 'Client approved'
+              : 'Changes asked for'
+            : changes
+              ? 'Changes asked for'
+              : STAFF_LABEL[project.status],
+          tone: answeredAt
+            ? review!.status === 'approved'
+              ? forms.badgeGood
+              : forms.badgeWarn
+            : changes
+              ? forms.badgeWarn
+              : TONE_CLASS[STATUS_TONE[project.status]],
+        };
+      }),
     ...(seesMoney ? unpaidInvoices : [])
       .filter((invoice) => invoice.dueAt !== null && invoice.dueAt.getTime() < now.getTime())
       .slice(0, 10)
@@ -306,17 +333,17 @@ export default async function AdminHome() {
   }
   if (seesEnquiries) {
     figures.push({
-      label: 'Unread enquiries',
+      label: 'New enquiries',
       value: enquiryCount,
       note: `${enquiriesThisWeek} this week, ${enquiriesWeekBefore} the week before`,
-      href: '/enquiries',
+      href: '/enquiries?show=new',
     });
   }
   if (seesMoney) {
     figures.push({
       label: 'Renewals due',
       value: dueRenewals,
-      note: 'In the next 45 days',
+      note: `In the next ${INVOICE_AHEAD_DAYS} days`,
       href: '/renewals',
     });
   }

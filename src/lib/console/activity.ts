@@ -2,6 +2,8 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, type StaffActor } from './auth';
+import { STAFF_LABEL } from './project-status';
+import { ENQUIRY_STATUS_LABEL } from './enquiry-labels';
 
 /**
  * One history, assembled from the two places it is actually recorded.
@@ -206,12 +208,29 @@ export function actionLabel(action: string): string {
   return ACTION_LABELS[action] ?? action.replace(/[._]/g, ' ');
 }
 
+/**
+ * Stage and state names as they are stored, read out as the pages name them.
+ * Summaries keep the stored names, which never change; the words can.
+ */
+const STATE_WORDS: Record<string, Record<string, string>> = {
+  'project.status_changed': STAFF_LABEL,
+  'enquiry.status_changed': ENQUIRY_STATUS_LABEL,
+};
+
+/** A line's summary with stored names read out, as a page shows it. */
+export function readableSummary(action: string, summary: string): string {
+  const words = STATE_WORDS[action];
+  const said = words
+    ? summary.replace(/\b[a-z]+(?:_[a-z]+)*\b/g, (word) => words[word] ?? word)
+    : summary;
+  // Older lines were written with dashes; they read the same with a colon.
+  return said.replace(/\s+[—–]\s+/g, ': ');
+}
+
 /** Enum-ish action strings turned into something a person would say. */
 function describeAudit(action: string, summary: string | null): string {
   const base = actionLabel(action);
-  if (!summary) return base;
-  // Older lines were written with dashes; they read the same with a colon.
-  return `${base}: ${summary.replace(/\s+[—–]\s+/g, ': ')}`;
+  return summary ? `${base}: ${readableSummary(action, summary)}` : base;
 }
 
 function auditTone(action: string): ActivityTone {
@@ -293,22 +312,34 @@ const DOCUMENT_ACTIONS = ['document.', 'document_defaults.'];
 const MONEY_EMAILS = ['invoice_', 'receipt_', 'refund_'];
 const DOCUMENT_EMAILS = ['document_'];
 
-/** Who did each thing, by name: there is more than one of us. */
-async function whoDid(
+/** Who did each thing, by name: there is more than one of us, and of them. */
+export async function whoDid(
   audits: { actorType: string; actorId: string | null }[],
 ): Promise<(audit: { actorType: string; actorId: string | null }) => string> {
-  const ids = [
-    ...new Set(audits.flatMap((a) => (a.actorType === 'staff' && a.actorId ? [a.actorId] : []))),
+  const idsOf = (type: string) => [
+    ...new Set(audits.flatMap((a) => (a.actorType === type && a.actorId ? [a.actorId] : []))),
   ];
-  const people = ids.length
-    ? await db.staffUser.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } })
-    : [];
-  const names = new Map(people.map((person) => [person.id, person.name]));
+  const [staffIds, contactIds] = [idsOf('staff'), idsOf('client_contact')];
+  const [staff, contacts] = await Promise.all([
+    staffIds.length
+      ? db.staffUser.findMany({ where: { id: { in: staffIds } }, select: { id: true, name: true } })
+      : [],
+    contactIds.length
+      ? db.clientContact.findMany({
+          where: { id: { in: contactIds } },
+          select: { id: true, name: true, client: { select: { name: true } } },
+        })
+      : [],
+  ]);
+  const names = new Map([
+    ...staff.map((person) => [person.id, person.name] as const),
+    ...contacts.map((person) => [person.id, `${person.name}, ${person.client.name}`] as const),
+  ]);
   return (audit) =>
     audit.actorType === 'staff'
-      ? ((audit.actorId && names.get(audit.actorId)) ?? 'Us')
+      ? ((audit.actorId && names.get(audit.actorId)) ?? 'Someone on the team')
       : audit.actorType === 'client_contact'
-        ? 'Client'
+        ? ((audit.actorId && names.get(audit.actorId)) ?? 'The client')
         : 'System';
 }
 

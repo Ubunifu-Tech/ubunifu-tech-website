@@ -266,7 +266,7 @@ export function NewClientForm({
                 maxLength={200}
               />
               <p className={forms.hint}>
-                Only if it differs. Contracts and invoices use this when it is set.
+                Only if it differs. Agreements and invoices use this when it is set.
               </p>
             </div>
 
@@ -521,7 +521,7 @@ export function NewClientForm({
 
                 <div className={forms.field}>
                   <label className={forms.label} htmlFor={field('ownerId')}>
-                    Owner
+                    Lead
                   </label>
                   <Select
                     id={field('ownerId')}

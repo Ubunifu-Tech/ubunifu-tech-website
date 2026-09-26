@@ -14,8 +14,8 @@ export const STAFF_LABEL: Record<ProjectStatus, string> = {
   proposal_draft: 'Writing the proposal',
   proposal_sent: 'Proposal sent',
   proposal_accepted: 'Proposal accepted',
-  contract_sent: 'Contract sent',
-  contract_signed: 'Contract signed',
+  contract_sent: 'Agreement sent',
+  contract_signed: 'Agreement signed',
   in_progress: 'In progress',
   client_review: 'With the client to review',
   launch_ready: 'Ready to launch',
@@ -125,4 +125,17 @@ export const ENGAGEMENTS = [
   { value: 'subscription', label: 'Subscription' },
   { value: 'advisory', label: 'Advisory' },
   { value: 'support_only', label: 'Support only' },
+];
+
+/**
+ * The groups the Projects list filters by, shared with the overview and the
+ * sidebar so a number there is the number of rows the list shows.
+ */
+export const LIVE_STATUSES: ProjectStatus[] = ['contract_signed', 'in_progress', 'client_review', 'launch_ready'];
+export const PIPELINE_STATUSES: ProjectStatus[] = [
+  'lead',
+  'proposal_draft',
+  'proposal_sent',
+  'proposal_accepted',
+  'contract_sent',
 ];

@@ -13,10 +13,19 @@ function titleFor(kind: string, projectName: string) {
   return `${label} for ${projectName}`;
 }
 
-export function NewDocument({ projectId, projectName }: { projectId: string; projectName: string }) {
+export function NewDocument({
+  projectId,
+  projectName,
+  defaultKind = 'proposal',
+}: {
+  projectId: string;
+  projectName: string;
+  /** The kind the project is ready for: an agreement once the proposal is accepted. */
+  defaultKind?: string;
+}) {
   const [state, action, pending] = useActionState(createDocument, INITIAL);
-  const [kind, setKind] = useState('proposal');
-  const [title, setTitle] = useState(() => titleFor('proposal', projectName));
+  const [kind, setKind] = useState(defaultKind);
+  const [title, setTitle] = useState(() => titleFor(defaultKind, projectName));
   const [edited, setEdited] = useState(false);
 
   return (

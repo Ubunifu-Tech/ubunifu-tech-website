@@ -111,6 +111,11 @@
   color: var(--text-secondary);
 }
 
+/* Said instead of a link, when the fix is someone else's to make. */
+.handOff {
+  color: var(--text-tertiary);
+}
+
 @media (max-width: 64rem) {
   .split {
     grid-template-columns: minmax(0, 1fr);

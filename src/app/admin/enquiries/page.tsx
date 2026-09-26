@@ -33,7 +33,7 @@ const STATUS_BADGE: Record<EnquiryStatus, string> = {
  */
 const FILTERS = [
   { key: 'open', label: 'Open' },
-  { key: 'new', label: 'Unread' },
+  { key: 'new', label: 'New' },
   { key: 'qualified', label: 'Worth a proposal' },
   { key: 'converted', label: 'Became clients' },
   { key: 'closed', label: 'Declined & spam' },

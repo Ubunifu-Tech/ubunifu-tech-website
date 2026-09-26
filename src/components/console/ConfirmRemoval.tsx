@@ -151,10 +151,14 @@ export function onRecordLine(owner: 'Their' | 'Its', invoices: number, signed: n
   return `${owner} ${parts.join(' and ')} ${single ? 'stays' : 'stay'} on record. ${place}`;
 }
 
-/** Money still owing, which stops counting in what we are owed. */
+/**
+ * Money still owing, which stops counting in what we are owed. The amount is
+ * left out (empty) for someone who does not handle invoices.
+ */
 export function unpaidLine(unpaid: number, owed: string): string | null {
   if (unpaid === 0) return null;
+  const owing = owed ? ` with ${owed} owing` : '';
   return unpaid === 1
-    ? `An unpaid invoice with ${owed} owing stops counting in what we are owed.`
-    : `${unpaid} unpaid invoices with ${owed} owing stop counting in what we are owed.`;
+    ? `An unpaid invoice${owing} stops counting in what we are owed.`
+    : `${unpaid} unpaid invoices${owing} stop counting in what we are owed.`;
 }

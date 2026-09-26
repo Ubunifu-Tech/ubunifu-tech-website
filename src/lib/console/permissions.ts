@@ -59,7 +59,7 @@ export const PERMISSIONS = [
   {
     key: 'billing_settings',
     label: 'Billing details',
-    description: 'Change the company details printed on invoices, receipts and contracts.',
+    description: 'Change the company details printed on invoices, receipts and agreements.',
   },
 ] as const;
 

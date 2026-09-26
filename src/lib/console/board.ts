@@ -27,15 +27,12 @@ export const LANES: Lane[] = [
     statuses: ['proposal_draft', 'proposal_sent', 'proposal_accepted'],
     tone: 'violet',
   },
-  { key: 'contract', label: 'Contract', statuses: ['contract_sent', 'contract_signed'], tone: 'amber' },
-  {
-    key: 'building',
-    label: 'In progress',
-    statuses: ['in_progress', 'client_review', 'launch_ready'],
-    tone: 'blue',
-  },
-  { key: 'live', label: 'Launched', statuses: ['launched', 'handover'], tone: 'green' },
-  { key: 'done', label: 'Done', statuses: ['closed'], tone: 'teal' },
+  { key: 'contract', label: 'Agreement', statuses: ['contract_sent', 'contract_signed'], tone: 'amber' },
+  // The same stops as the track on a project's page, so a lane and a stop
+  // with the same name hold the same projects.
+  { key: 'building', label: 'The work', statuses: ['in_progress', 'client_review'], tone: 'blue' },
+  { key: 'live', label: 'Launch', statuses: ['launch_ready', 'launched'], tone: 'green' },
+  { key: 'done', label: 'Handover', statuses: ['handover', 'closed'], tone: 'teal' },
   { key: 'hold', label: 'On hold', statuses: ['on_hold'], tone: 'orange' },
 ];
 

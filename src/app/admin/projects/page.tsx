@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
 import { waitingOnClient } from '@/lib/console/live';
@@ -40,11 +40,7 @@ const FILTERS = [
 function filterToWhere(key: string): Prisma.ProjectWhereInput {
   switch (key) {
     case 'pipeline':
-      return {
-        status: {
-          in: ['lead', 'proposal_draft', 'proposal_sent', 'proposal_accepted', 'contract_sent'],
-        },
-      };
+      return { status: { in: PIPELINE_STATUSES } };
     case 'waiting':
       return { status: { in: ['proposal_sent', 'contract_sent', 'client_review', 'on_hold'] } };
     case 'done':
@@ -52,7 +48,7 @@ function filterToWhere(key: string): Prisma.ProjectWhereInput {
     case 'all':
       return {};
     default:
-      return { status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] } };
+      return { status: { in: LIVE_STATUSES } };
   }
 }
 
@@ -73,6 +69,8 @@ const SELECT = {
   },
   assetRequests: { where: waitingOnClient, select: { id: true } },
   phases: { select: { deliverables: { select: { isComplete: true } } } },
+  // A proposal or agreement sent back with changes: the next move is ours.
+  documents: { where: { status: 'changes_requested' }, select: { id: true }, take: 1 },
 } satisfies Prisma.ProjectSelect;
 
 export default async function ProjectsPage({
@@ -140,7 +138,7 @@ export default async function ProjectsPage({
                 <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">Number</th>
                 <th className={table.th} scope="col">Client</th>
-                <th className={table.th} scope="col">Owner</th>
+                <th className={table.th} scope="col">Lead</th>
                 <th className={table.th} scope="col">Stage</th>
                 <th className={table.th} scope="col">Progress</th>
                 <th className={table.th} scope="col">Target</th>
@@ -203,7 +201,7 @@ export default async function ProjectsPage({
                         <span
                           className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}
                         >
-                          {STAFF_LABEL[project.status]}
+                          {project.documents.length > 0 ? 'Changes asked' : STAFF_LABEL[project.status]}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
@@ -329,6 +327,7 @@ async function BoardView({ canRun, seesValue }: { canRun: boolean; seesValue: bo
         waitingOn: project.assetRequests.length,
         committed: seesValue && committed > 0 ? formatMoney(committed, project.currency) : null,
         allowed,
+        changesAsked: project.documents.length > 0,
       };
     }),
   );

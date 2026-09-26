@@ -31,10 +31,13 @@ export function SuggestedWording({
   reference,
   suggestions,
   latestVersion,
+  maySetFees,
 }: {
   reference: string;
   suggestions: WordingSuggestion[];
   latestVersion: number;
+  /** Whether this person can change the fees, or hands it on. */
+  maySetFees: boolean;
 }) {
   if (suggestions.length === 0) return null;
 
@@ -63,10 +66,15 @@ export function SuggestedWording({
               <Callout
                 kind="info"
                 title="They changed the fees"
-                action={<Link href={`/documents/${reference}?step=fees`}>Open the Fees step</Link>}
+                action={
+                  maySetFees ? (
+                    <Link href={`/documents/${reference}?step=fees`}>Open the Fees step</Link>
+                  ) : undefined
+                }
               >
-                If you agree, change them in the Fees step. Their fee table is not carried into the
-                next version.
+                {maySetFees
+                  ? 'If you agree, change them in the Fees step. Their fee table is not carried into the next version.'
+                  : 'If you agree, someone who can set fees needs to change them. Their fee table is not carried into the next version.'}
               </Callout>
             )}
 

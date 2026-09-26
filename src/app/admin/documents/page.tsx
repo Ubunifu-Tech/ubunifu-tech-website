@@ -30,16 +30,19 @@ const STATUS_BADGE: Record<string, string> = {
    only useful if nothing on it is waiting on you. */
 const FILTERS = [
   { key: 'open', label: 'With the client' },
-  { key: 'back', label: 'Back to us' },
+  { key: 'back', label: 'Changes asked' },
   { key: 'drafts', label: 'Drafts' },
   { key: 'signed', label: 'Signed' },
+  { key: 'declined', label: 'Declined' },
   { key: 'all', label: 'Everything' },
 ] as const;
 
 function filterToWhere(key: string): Prisma.DocumentWhereInput {
   switch (key) {
     case 'back':
-      return { status: { in: ['changes_requested', 'declined'] } };
+      return { status: 'changes_requested' };
+    case 'declined':
+      return { status: 'declined' };
     case 'drafts':
       return { status: { in: ['draft', 'internal_review'] } };
     case 'signed':
@@ -58,7 +61,6 @@ export default async function DocumentsPage({
 }) {
   await requirePermission('documents');
   const { show, q } = await searchParams;
-  const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const query = searchText(q);
 
   const matching: Prisma.DocumentWhereInput = query
@@ -77,6 +79,10 @@ export default async function DocumentsPage({
       db.document.count({ where: { AND: [liveDocument, filterToWhere(filter.key), matching] } }),
     ),
   );
+  // Opens on the ones waiting for us, when there are any, as the badge that
+  // brought them here counts; otherwise on what is with the client.
+  const firstView = (viewCounts[FILTERS.findIndex((f) => f.key === 'back')] ?? 0) > 0 ? 'back' : 'open';
+  const active = FILTERS.some((f) => f.key === show) ? show! : firstView;
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
 
   const documents = await db.document.findMany({
@@ -119,7 +125,7 @@ export default async function DocumentsPage({
           path="/documents"
           views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
           current={active}
-          defaultView="open"
+          defaultView={firstView}
           query={query}
           searchLabel="Search documents"
         />

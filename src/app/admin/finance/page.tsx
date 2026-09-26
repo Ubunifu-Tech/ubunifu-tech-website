@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { requirePermission } from '@/lib/console/auth';
+import { can, requirePermission } from '@/lib/console/auth';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { SERVICE_LABEL } from '@/lib/console/project-status';
 import { COST_CATEGORY_LABEL } from '@/lib/console/cost-labels';
@@ -26,6 +26,7 @@ import finance from './Finance.module.css';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
 
 export const metadata = { title: 'Reports' };
 
@@ -56,7 +57,10 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ period?: string; in?: string }>;
 }) {
-  await requirePermission('finance');
+  const staff = await requirePermission('finance');
+  // Links go only where this person may follow them.
+  const mayInvoices = can(staff, 'invoices');
+  const mayFees = mayInvoices || can(staff, 'fees');
   const params = await searchParams;
   const now = new Date();
   const period = periodFor(params.period, now);
@@ -655,8 +659,8 @@ export default async function ReportsPage({
             {
               label: 'Renewals to invoice',
               value: sideBySide(pick(coming.renewals.byCurrency)),
-              note: 'In the next 45 days',
-              href: '/renewals',
+              note: `In the next ${INVOICE_AHEAD_DAYS} days`,
+              href: mayInvoices ? '/renewals' : undefined,
             },
             {
               label: 'Agreed, not invoiced',
@@ -711,9 +715,13 @@ export default async function ReportsPage({
                   owing.map((invoice) => (
                     <tr key={invoice.number} className={table.tr}>
                       <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
-                        <Link href={`/invoices/${invoice.number}`} className={table.link}>
-                          {invoice.number}
-                        </Link>
+                        {mayInvoices ? (
+                          <Link href={`/invoices/${invoice.number}`} className={table.link}>
+                            {invoice.number}
+                          </Link>
+                        ) : (
+                          invoice.number
+                        )}
                       </td>
                       <td className={`${table.td} ${table.name}`}>
                         <Link href={`/clients/${invoice.clientSlug}`} className={table.link}>
@@ -777,7 +785,10 @@ export default async function ReportsPage({
                   {agreedProjects.map((project) => (
                     <tr key={`${project.slug}|${project.currency}`} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
-                        <Link href={`/projects/${project.slug}?tab=fees`} className={table.link}>
+                        <Link
+                          href={`/projects/${project.slug}${mayFees ? '?tab=fees' : ''}`}
+                          className={table.link}
+                        >
                           {project.name}
                         </Link>
                       </td>

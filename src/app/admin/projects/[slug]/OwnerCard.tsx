@@ -41,11 +41,11 @@ export function OwnerCard({
   return (
     <section className={forms.card}>
       <div className={forms.cardHeader}>
-        <h2 className={forms.cardTitle}>Owner</h2>
+        <h2 className={forms.cardTitle}>Lead</h2>
         {editable && (
           <Popover.Root open={open} onOpenChange={setOpen}>
             <Popover.Trigger className={forms.link}>
-              {owner ? 'Reassign' : 'Choose an owner'}
+              {owner ? 'Reassign' : 'Choose a lead'}
             </Popover.Trigger>
             <Popover.Portal>
               <Popover.Content className={styles.panel} align="end" sideOffset={6} collisionPadding={12}>

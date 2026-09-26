@@ -57,8 +57,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const links: ProfileLink[] = [
     { href: '/profile', label: 'Your profile', icon: 'profile' },
-    { href: '/settings/team', label: 'Team', icon: 'team' },
-    { href: '/settings', label: 'Settings', icon: 'settings' },
+    // Settings opens on the Team tab, so one link covers both.
+    { href: '/settings', label: 'Settings and team', icon: 'settings' },
   ];
 
   return (

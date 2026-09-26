@@ -66,6 +66,8 @@ type Item = {
   quiet?: boolean;
   /** Shown only to roles that have this. */
   need?: Permission;
+  /** Open to everyone, but the badge only for those whose job it is. */
+  countNeed?: Permission;
 };
 
 const GROUPS: { label?: string; items: Item[] }[] = [
@@ -100,7 +102,13 @@ const GROUPS: { label?: string; items: Item[] }[] = [
         count: 'documents',
         need: 'documents',
       },
-      { href: '/requests', label: 'Requests', icon: 'requests', count: 'requests' },
+      {
+        href: '/requests',
+        label: 'Requests',
+        icon: 'requests',
+        count: 'requests',
+        countNeed: 'requests',
+      },
     ],
   },
   {
@@ -146,7 +154,10 @@ export function ConsoleNav({
           {group.items.map((item) => {
             const Icon = ICONS[item.icon];
             const current = matching?.href === item.href;
-            const count = item.count ? counts[item.count] : 0;
+            const count =
+              item.count && (!item.countNeed || permissions.includes(item.countNeed))
+                ? counts[item.count]
+                : 0;
 
             return (
               <Link

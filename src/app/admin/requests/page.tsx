@@ -135,9 +135,9 @@ export default async function RequestsPage({
       <Figures
         items={[
           {
-            label: 'Unread',
+            label: 'New',
             value: unread,
-            note: unread === 0 ? 'Everything has been looked at' : 'Nobody has opened these yet',
+            note: unread === 0 ? 'Everything has been picked up' : 'Nobody has picked these up yet',
             tone: unread > 0 ? 'warn' : undefined,
           },
           {

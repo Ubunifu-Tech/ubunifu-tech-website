@@ -2,6 +2,8 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { NavCounts } from '@/app/admin/ConsoleNav';
 import { liveDocument, liveEnquiry, liveInvoice, liveTicket, renewingLine } from './live';
+import { INVOICE_AHEAD_DAYS } from './renewals';
+import { LIVE_STATUSES } from './project-status';
 
 /**
  * The numbers in the sidebar.
@@ -15,16 +17,11 @@ import { liveDocument, liveEnquiry, liveInvoice, liveTicket, renewingLine } from
  */
 export async function navCounts(): Promise<NavCounts> {
   const horizon = new Date();
-  horizon.setDate(horizon.getDate() + 45);
+  horizon.setDate(horizon.getDate() + INVOICE_AHEAD_DAYS);
 
   const [enquiries, projects, invoices, renewals, documents, requests] = await Promise.all([
     db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
-    db.project.count({
-      where: {
-        deletedAt: null,
-        status: { in: ['contract_signed', 'in_progress', 'client_review', 'launch_ready'] },
-      },
-    }),
+    db.project.count({ where: { deletedAt: null, status: { in: LIVE_STATUSES } } }),
     // Money we have asked for and not been paid. Draft and void are neither.
     db.invoice.count({ where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] } } }),
     /**
@@ -41,14 +38,12 @@ export async function navCounts(): Promise<NavCounts> {
       },
     }),
     /*
-     * Documents where somebody is still waiting: out for signature, or handed
-     * back with changes to make. 'declined' is deliberately NOT here — a deal
-     * that died stays declined for ever, and a badge that never clears is a
-     * badge nobody reads. It has its own view on the documents list instead.
+     * Documents handed back with changes to make: the next move is ours, and
+     * the Documents page opens on them. One out for signature is waiting on
+     * the client, and 'declined' stays declined for ever; a badge that never
+     * clears is a badge nobody reads. Both have their own views instead.
      */
-    db.document.count({
-      where: { ...liveDocument, status: { in: ['sent', 'viewed', 'changes_requested'] } },
-    }),
+    db.document.count({ where: { ...liveDocument, status: 'changes_requested' } }),
     // Waiting on us, not on them — a request handed back is not a task.
     db.ticket.count({ where: { ...liveTicket, status: { in: ['open', 'triaged', 'in_progress'] } } }),
   ]);

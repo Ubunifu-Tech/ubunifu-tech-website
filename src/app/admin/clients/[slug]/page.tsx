@@ -137,7 +137,12 @@ export default async function ClientPage({
   const mayRunProjects = can(staff, 'projects');
   const [activity, removal, removedProjects, removedPeople] = await Promise.all([
     activityForClient(staff, client.id),
-    mayManage ? clientRemovalCounts(client.id) : null,
+    mayManage
+      ? clientRemovalCounts(client.id).then((counts) =>
+          // What is owed is named only to those who handle invoices.
+          can(staff, 'invoices') ? counts : { ...counts, unpaidOwed: '' },
+        )
+      : null,
     mayRunProjects
       ? db.project.findMany({
           where: { clientId: client.id, deletedAt: { not: null } },

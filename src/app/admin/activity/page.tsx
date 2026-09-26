@@ -3,7 +3,13 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
 import { formatShortDate } from '@/lib/console/money';
-import { actionLabel, actionStartsWith, moneyActionsHiddenFrom } from '@/lib/console/activity';
+import {
+  actionLabel,
+  actionStartsWith,
+  moneyActionsHiddenFrom,
+  readableSummary,
+  whoDid,
+} from '@/lib/console/activity';
 import { Callout } from '@/components/console/Callout';
 import { unresolvedEmailFailures } from '@/lib/console/email-failures';
 import { linkFor, recordLinks } from '@/lib/console/record-links';
@@ -127,6 +133,7 @@ export default async function ActivityPage({
             action: true,
             summary: true,
             actorType: true,
+            actorId: true,
             entityType: true,
             entityId: true,
             ip: true,
@@ -167,18 +174,14 @@ export default async function ActivityPage({
     href: string | null;
   };
 
+  const who = await whoDid(audits);
   const rows: Row[] = [
     ...audits.map((audit) => ({
       id: `a-${audit.id}`,
       at: audit.createdAt,
       what: actionLabel(audit.action),
-      detail: audit.summary ?? audit.entityType,
-      who:
-        audit.actorType === 'staff'
-          ? 'Us'
-          : audit.actorType === 'client_contact'
-            ? 'Client'
-            : 'System',
+      detail: audit.summary ? readableSummary(audit.action, audit.summary) : audit.entityType,
+      who: who(audit),
       kind: 'Action' as const,
       bad:
         audit.action.includes('failed') ||

@@ -41,6 +41,8 @@ export type BoardCard = {
   committed: string | null;
   /** Where the server says this project may go next. */
   allowed: ProjectStatus[];
+  /** A proposal or agreement came back with changes to make. */
+  changesAsked: boolean;
 };
 
 const BADGE: Record<string, string> = {
@@ -78,6 +80,7 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
   const [dragging, setDragging] = useState<BoardCard | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
+  const [confirmNote, setConfirmNote] = useState('');
   const [choice, setChoice] = useState<Choice | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -94,7 +97,7 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
     setItems((current) => current.map((card) => (card.id === id ? { ...card, status } : card)));
   }
 
-  function move(card: BoardCard, to: ProjectStatus, acknowledged: boolean) {
+  function move(card: BoardCard, to: ProjectStatus, acknowledged: boolean, note = '') {
     place(card.id, to);
     setNotice(null);
     startTransition(async () => {
@@ -103,6 +106,7 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
       form.set('to', to);
       form.set('expectedFrom', card.status);
       if (acknowledged) form.set('acknowledged', 'on');
+      if (note) form.set('note', note);
 
       const result = await moveProject({ status: 'idle' }, form);
 
@@ -282,6 +286,19 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
                 <li key={warning}>{warning}</li>
               ))}
             </ul>
+            <div className={forms.field}>
+              <label className={forms.label} htmlFor="board-move-note">
+                Note <span className={forms.optional}>(saved in the project history)</span>
+              </label>
+              <textarea
+                id="board-move-note"
+                className={`${forms.control} ${forms.textarea}`}
+                maxLength={2000}
+                value={confirmNote}
+                onChange={(event) => setConfirmNote(event.target.value)}
+                placeholder="Why you are going ahead"
+              />
+            </div>
             <div className={styles.dialogActions}>
               <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setConfirm(null)}>
                 Cancel
@@ -293,7 +310,8 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
                 onClick={() => {
                   const { card, to } = confirm;
                   setConfirm(null);
-                  move(card, to, true);
+                  move(card, to, true, confirmNote.trim());
+                  setConfirmNote('');
                 }}
               >
                 Move anyway
@@ -371,7 +389,7 @@ function CardBody({ card, lifted }: { card: BoardCard; lifted?: boolean }) {
     <article className={`${styles.card} ${lifted ? styles.cardLifted : ''}`}>
       <div className={styles.cardTop}>
         <span className={`${forms.badge} ${BADGE[STATUS_TONE[card.status]]}`}>
-          {STAFF_LABEL[card.status]}
+          {card.changesAsked ? 'Changes asked' : STAFF_LABEL[card.status]}
         </span>
         <span className={styles.ref}>{card.reference}</span>
       </div>

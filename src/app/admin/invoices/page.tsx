@@ -90,6 +90,7 @@ export default async function InvoicesPage({
         currency: true,
         totalMinor: true,
         paidMinor: true,
+        refundedMinor: true,
         issuedAt: true,
         dueAt: true,
         client: { select: { name: true, slug: true } },
@@ -295,7 +296,11 @@ export default async function InvoicesPage({
                         <span
                           className={`${forms.badge} ${STATUS_BADGE[invoiceStanding(invoice, today)]}`}
                         >
-                          {INVOICE_STATUS_LABEL[invoiceStanding(invoice, today)]}
+                          {invoice.status === 'paid' &&
+                          invoice.paidMinor > 0 &&
+                          invoice.refundedMinor >= invoice.paidMinor
+                            ? 'Refunded'
+                            : INVOICE_STATUS_LABEL[invoiceStanding(invoice, today)]}
                         </span>
                       </td>
                       <td

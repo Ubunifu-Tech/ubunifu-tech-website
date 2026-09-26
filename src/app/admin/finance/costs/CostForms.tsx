@@ -375,7 +375,7 @@ export function CostMenu({
   hasBill: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<'menu' | 'edit' | 'remove'>('menu');
+  const [view, setView] = useState<'menu' | 'edit' | 'remove' | 'bill'>('menu');
   const [saveState, save, saving] = useActionState(
     async (previous: FinanceState, formData: FormData) => {
       const result = await saveCost(previous, formData);
@@ -385,7 +385,14 @@ export function CostMenu({
     INITIAL,
   );
   const [removeState, remove, removing] = useActionState(removeCost, INITIAL);
-  const [billState, dropBill, droppingBill] = useActionState(removeBill, INITIAL);
+  const [billState, dropBill, droppingBill] = useActionState(
+    async (previous: FinanceState, formData: FormData) => {
+      const result = await removeBill(previous, formData);
+      if (result.status === 'done') setView('menu');
+      return result;
+    },
+    INITIAL,
+  );
   const said = useLastSaid(saveState, removeState, billState);
 
   return (
@@ -421,6 +428,21 @@ export function CostMenu({
           <Message state={saveState} />
         </form>
       )}
+      {view === 'bill' && (
+        <form action={dropBill}>
+          <input type="hidden" name="costId" value={cost.id} />
+          <MenuTitle>Take the bill off this cost? The cost itself stays.</MenuTitle>
+          <div className={forms.actions}>
+            <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={droppingBill}>
+              {droppingBill ? 'Taking it off…' : 'Take it off'}
+            </button>
+            <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setView('menu')}>
+              Keep it
+            </button>
+          </div>
+          {billState.status === 'error' && <Message state={billState} />}
+        </form>
+      )}
       {view === 'remove' && (
         <form action={remove}>
           <input type="hidden" name="costId" value={cost.id} />
@@ -439,14 +461,7 @@ export function CostMenu({
         <>
           <MenuList>
             <MenuItem onClick={() => setView('edit')}>Change</MenuItem>
-            {hasBill && (
-              <form action={dropBill}>
-                <input type="hidden" name="costId" value={cost.id} />
-                <MenuItem type="submit" disabled={droppingBill}>
-                  {droppingBill ? 'Taking it off…' : 'Take the bill off'}
-                </MenuItem>
-              </form>
-            )}
+            {hasBill && <MenuItem onClick={() => setView('bill')}>Take the bill off</MenuItem>}
             <MenuDivider />
             <MenuItem danger onClick={() => setView('remove')}>
               Remove

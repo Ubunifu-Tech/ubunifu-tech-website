@@ -7,7 +7,7 @@ import { db } from '@/lib/db';
 import { PaymentMethod, Prisma } from '@/generated/prisma/client';
 import { getOrg } from '@/lib/console/org';
 import { retryOnConflict } from '@/lib/console/conflict';
-import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit, type StaffActor } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -24,6 +24,34 @@ import { markRenewalInvoiced, periodLabel } from '@/lib/console/renewals';
 import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
+
+
+/**
+ * Why an email to the main contact cannot go yet, said to whoever pressed
+ * send: what to do, or who can, when their role does not handle clients.
+ */
+function contactProblem(
+  staff: StaffActor,
+  contact: { name: string; canSignIn: boolean; email: string | null } | undefined,
+): string | null {
+  const handlesClients = can(staff, 'clients');
+  if (!contact) {
+    return handlesClients
+      ? 'This client has no main contact to send it to. Add one on their client page.'
+      : 'This client has no main contact to send it to. Someone who handles clients needs to add one.';
+  }
+  if (!contact.canSignIn) {
+    return handlesClients
+      ? `${contact.name}'s portal access is off. Turn it on from their client page, then send.`
+      : `${contact.name}'s portal access is off. Someone who handles clients needs to turn it on.`;
+  }
+  if (!contact.email) {
+    return handlesClients
+      ? `There is no email address for ${contact.name} yet. Add it on their client page, then send.`
+      : `There is no email address for ${contact.name} yet. Someone who handles clients needs to add it.`;
+  }
+  return null;
+}
 
 export type BillingState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -304,25 +332,9 @@ export async function sendInvoice(
   }
 
   const contact = invoice.client.contacts[0];
-  if (!contact) {
-    return {
-      status: 'error',
-      message: 'This client has no main contact to send it to. Add one first.',
-    };
-  }
   // Every link in these emails opens the portal, which is closed to them.
-  if (!contact.canSignIn) {
-    return {
-      status: 'error',
-      message: `${contact.name}'s portal access is off. Turn it on from their client page, then send.`,
-    };
-  }
-  if (!contact.email) {
-    return {
-      status: 'error',
-      message: `There is no email address for ${contact.name} yet. Share their setup link first.`,
-    };
-  }
+  const cannotSend = contactProblem(staff, contact);
+  if (cannotSend || !contact?.email) return { status: 'error', message: cannotSend ?? '' };
 
   const { token } = await issueMagicToken({
     purpose: 'invoice_access',
@@ -777,19 +789,8 @@ export async function emailReceipt(
   }
 
   const contact = receipt.payment.invoice.client.contacts[0];
-  if (!contact) return { status: 'error', message: 'This client has no main contact.' };
-  if (!contact.canSignIn) {
-    return {
-      status: 'error',
-      message: `${contact.name}'s portal access is off. Turn it on from their client page, then send.`,
-    };
-  }
-  if (!contact.email) {
-    return {
-      status: 'error',
-      message: `There is no email address for ${contact.name} yet. Share their setup link first.`,
-    };
-  }
+  const cannotSend = contactProblem(staff, contact);
+  if (cannotSend || !contact?.email) return { status: 'error', message: cannotSend ?? '' };
 
   const sent = await sendConsoleEmail({
     to: contact.email,
@@ -1007,19 +1008,8 @@ export async function emailRefund(
   }
 
   const contact = refund.payment.invoice.client.contacts[0];
-  if (!contact) return { status: 'error', message: 'This client has no main contact.' };
-  if (!contact.canSignIn) {
-    return {
-      status: 'error',
-      message: `${contact.name}'s portal access is off. Turn it on from their client page, then send.`,
-    };
-  }
-  if (!contact.email) {
-    return {
-      status: 'error',
-      message: `There is no email address for ${contact.name} yet. Share their setup link first.`,
-    };
-  }
+  const cannotSend = contactProblem(staff, contact);
+  if (cannotSend || !contact?.email) return { status: 'error', message: cannotSend ?? '' };
 
   const sent = await sendConsoleEmail({
     to: contact.email,

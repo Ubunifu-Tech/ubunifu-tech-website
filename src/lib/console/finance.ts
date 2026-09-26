@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { CostCategory, ServiceLine } from '@/generated/prisma/client';
 import { countedPayment, liveInvoice, renewingLine } from './live';
 import { formatMoney, minorUnitScale } from './money';
-import { ensureRenewalEvents } from './renewals';
+import { INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 
 /**
  * The money reports: what came in, what went out, and what is still to come.
@@ -405,7 +405,7 @@ export type Owing = {
  */
 export async function comingIn(now: Date) {
   await ensureRenewalEvents();
-  const soon = new Date(now.getTime() + 45 * DAY);
+  const soon = new Date(now.getTime() + INVOICE_AHEAD_DAYS * DAY);
 
   const [invoices, renewals, agreedLines, proposalLines] = await Promise.all([
     db.invoice.findMany({

@@ -1,7 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { HORIZON_DAYS, ensureRenewalEvents } from './renewals';
+import { HORIZON_DAYS, INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 
 /**
  * Invoices, payments and receipts.
@@ -187,7 +187,10 @@ export type Billable = {
   dueAt: Date | null;
 };
 
-export async function billableLines(projectId: string, horizonDays = 45): Promise<Billable[]> {
+export async function billableLines(
+  projectId: string,
+  horizonDays = INVOICE_AHEAD_DAYS,
+): Promise<Billable[]> {
   /**
    * Periods close enough to bill may not exist as rows yet. Materialised at
    * least as far as this call is going to look — otherwise the filter below

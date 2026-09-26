@@ -2,8 +2,8 @@ import type { EnquiryStatus } from '@/generated/prisma/client';
 
 /** An enquiry's state, in the words the Enquiries page uses. */
 export const ENQUIRY_STATUS_LABEL: Record<EnquiryStatus, string> = {
-  new: 'Unread',
-  triaged: 'Read',
+  new: 'New',
+  triaged: 'Looked at',
   in_conversation: 'Talking',
   qualified: 'Worth a proposal',
   converted: 'Became a client',

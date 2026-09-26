@@ -84,6 +84,17 @@ function parse(
   }
 
   const dueRaw = formText(formData, 'nextDueAt');
+  // A monthly or yearly fee is invoiced from its date, so it needs one.
+  if (isRecurring(billingKind) && !dueRaw) {
+    return {
+      ok: false,
+      error: {
+        status: 'error',
+        message: 'Choose when the first payment is due.',
+        field: 'nextDueAt',
+      },
+    };
+  }
   const nextDueAt = isRecurring(billingKind) && dueRaw ? parseDateInput(dueRaw) : null;
   if (isRecurring(billingKind) && dueRaw && !nextDueAt) {
     return {

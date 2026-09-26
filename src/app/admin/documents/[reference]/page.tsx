@@ -688,14 +688,18 @@ export default async function DocumentPage({
                 </span>
                 <span className={page.checkText}>
                   <span>{check.ok ? check.label : check.problem}</span>
-                  {!check.ok && check.fix && (
-                    <Link
-                      href={check.fix.step ? hrefFor(check.fix.step) : (check.fix.href ?? '#')}
-                      className={styles.inlineLink}
-                    >
-                      {check.fix.text}
-                    </Link>
-                  )}
+                  {!check.ok &&
+                    check.fix &&
+                    (check.fix.step === 'fees' && !can(staff, 'fees') ? (
+                      <span className={page.handOff}>Someone who can set fees needs to do this.</span>
+                    ) : (
+                      <Link
+                        href={check.fix.step ? hrefFor(check.fix.step) : (check.fix.href ?? '#')}
+                        className={styles.inlineLink}
+                      >
+                        {check.fix.text}
+                      </Link>
+                    ))}
                 </span>
               </li>
             ))}
@@ -825,6 +829,7 @@ export default async function DocumentPage({
         reference={document.reference}
         suggestions={suggestions}
         latestVersion={latest?.version ?? 0}
+        maySetFees={can(staff, 'fees')}
       />
 
       <div className={page.steps}>

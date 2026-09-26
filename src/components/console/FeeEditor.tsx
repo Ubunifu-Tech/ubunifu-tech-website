@@ -10,7 +10,7 @@ import {
   type FeeState,
 } from '@/app/admin/projects/[slug]/fee-actions';
 import { BILLING, BILLING_OPTIONS, FEE_STATUS_LABEL, isRecurring } from '@/lib/console/fee-labels';
-import { formatMoney, moneyInput } from '@/lib/console/money';
+import { formatMoney, formatShortDate, moneyInput } from '@/lib/console/money';
 import { Steps } from './Steps';
 import { ChoiceCards } from './ChoiceCards';
 import { DatePicker } from './DatePicker';
@@ -88,7 +88,7 @@ export function FeeEditor({
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>No fees yet</p>
           <p className={styles.emptyText}>
-            {readOnly ? 'Someone who can set fees will add them.' : 'Add what the client will pay. It goes straight into the contract.'}
+            {readOnly ? 'Someone who can set fees will add them.' : 'Add what the client will pay. It goes into the proposal and the agreement.'}
           </p>
         </div>
       ) : (
@@ -107,6 +107,11 @@ export function FeeEditor({
                   <span className={styles.name}>{fee.label}</span>
                   <span className={styles.meta}>
                     {BILLING[fee.billingKind].label}
+                    {isRecurring(fee.billingKind)
+                      ? fee.nextDueAt
+                        ? ` · next due ${formatShortDate(new Date(`${fee.nextDueAt}T00:00:00Z`))}`
+                        : ' · No first payment date yet'
+                      : ''}
                     {fee.terms ? ` · ${fee.terms}` : ''}
                     {fee.status !== 'planned' && fee.status !== 'active' ? ` · ${FEE_STATUS_LABEL[fee.status]}` : ''}
                   </span>
@@ -340,7 +345,7 @@ function FeeForm({
           {isRecurring(billingKind) && (
             <div className={forms.field}>
               <span className={forms.label} id="fee-due-label">
-                First payment due <span className={forms.optional}>(optional)</span>
+                First payment due
               </span>
               <DatePicker aria-labelledby="fee-due-label" value={nextDueAt} onChange={setNextDueAt} />
             </div>

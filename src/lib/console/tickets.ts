@@ -30,8 +30,8 @@ export const TICKET_KINDS = [
 ] as const;
 
 export const STAFF_TICKET_STATUS: Record<string, string> = {
-  open: 'Unread',
-  triaged: 'Read',
+  open: 'New',
+  triaged: 'Picked up',
   in_progress: 'Being worked on',
   waiting_on_client: 'Waiting on them',
   resolved: 'Done',

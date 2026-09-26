@@ -27,7 +27,9 @@ export async function describeProjectRemoval(projectId: string): Promise<Removal
     select: { id: true },
   });
   if (!project) return null;
-  return projectRemovalCounts(project.id);
+  const counts = await projectRemovalCounts(project.id);
+  // What is owed is named only to those who handle invoices.
+  return can(staff, 'invoices') ? counts : { ...counts, unpaidOwed: '' };
 }
 
 /**

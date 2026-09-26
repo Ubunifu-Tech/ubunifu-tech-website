@@ -102,7 +102,7 @@ export function NewProjectForm({
 
             <SelectField
               name="ownerId"
-              label="Owner"
+              label="Lead"
               defaultValue={me}
               invalid={invalid('ownerId')}
               disabled={pending}

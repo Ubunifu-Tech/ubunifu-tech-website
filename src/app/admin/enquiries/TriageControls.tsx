@@ -18,8 +18,8 @@ import { SERVICE_LINES } from '@/lib/console/project-status';
 const INITIAL: TriageState = { status: 'idle' };
 
 const MOVES: { value: string; label: string }[] = [
-  { value: 'new', label: 'Unread' },
-  { value: 'triaged', label: 'Read, nothing sent yet' },
+  { value: 'new', label: 'New' },
+  { value: 'triaged', label: 'Looked at, nothing sent yet' },
   { value: 'in_conversation', label: 'Talking to them' },
   { value: 'qualified', label: 'Real, worth a proposal' },
   { value: 'declined', label: 'Not for us' },

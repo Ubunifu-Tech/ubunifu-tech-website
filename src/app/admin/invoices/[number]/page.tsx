@@ -117,6 +117,9 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
     }),
   ]);
   const outstanding = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  // Everything paid went back, most often because the work is not going
+  // ahead: the invoice then wants voiding rather than reading as settled.
+  const refundedInFull = invoice.paidMinor > 0 && invoice.refundedMinor >= invoice.paidMinor;
   // Kept for the record, and read only, while its client or project is removed.
   const removedAt = invoice.client.deletedAt ?? invoice.project?.deletedAt ?? null;
   const pastDue =
@@ -226,7 +229,9 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
             value: formatMoney(outstanding, invoice.currency),
             note:
               outstanding === 0
-                ? 'Settled in full'
+                ? refundedInFull
+                  ? 'Refunded in full'
+                  : 'Settled in full'
                 : pastDue
                   ? `Past due since ${formatShortDate(invoice.dueAt)}`
                   : 'Still to come in',
@@ -512,12 +517,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               <section className={forms.card}>
                 <div className={forms.cardHeader}>
                   <h2 className={forms.cardTitle}>
-                    {outstanding === 0 ? 'Settled' : 'Record a payment'}
+                    {outstanding > 0 ? 'Record a payment' : refundedInFull ? 'Refunded in full' : 'Settled'}
                   </h2>
                   <span className={forms.cardMeta}>
-                    {outstanding === 0
-                      ? `Paid in full${invoice.paidAt ? ` on ${formatShortDate(invoice.paidAt)}` : ''}`
-                      : `${formatMoney(outstanding, invoice.currency)} outstanding`}
+                    {outstanding > 0
+                      ? `${formatMoney(outstanding, invoice.currency)} outstanding`
+                      : refundedInFull
+                        ? 'If the work is not going ahead, void the invoice below'
+                        : `Paid in full${invoice.paidAt ? ` on ${formatShortDate(invoice.paidAt)}` : ''}`}
                   </span>
                 </div>
 

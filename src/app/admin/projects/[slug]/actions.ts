@@ -20,6 +20,7 @@ import {
 import { formText, webAddress } from '@/lib/console/form';
 import { emailedAddresses } from '@/lib/console/updates';
 import { withdrawOpenReviews } from '@/lib/console/reviews';
+import { STAFF_LABEL } from '@/lib/console/project-status';
 
 const ASSET_STATUSES: AssetRequestStatus[] = [
   AssetRequestStatus.requested,
@@ -83,7 +84,7 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   if (expectedFrom !== project.status) {
     return {
       status: 'error',
-      message: `Somebody moved this project to "${project.status.replace(/_/g, ' ')}" while this page was open. Reload to see where it actually is.`,
+      message: `Somebody moved this project to ${STAFF_LABEL[project.status]} while this page was open. Reload to see where it is now.`,
     };
   }
 
@@ -96,7 +97,8 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   }
 
   const facts = await loadGuardFacts(project.id);
-  const guards = guardsFor(target, facts);
+  const seesMoney = can(staff, 'invoices') || can(staff, 'fees');
+  const guards = guardsFor(target, facts, { seesMoney });
 
   const blocks = guards.filter((guard) => guard.severity === 'block');
   if (blocks.length > 0) {
@@ -110,10 +112,15 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
     return { status: 'confirm', guards: warnings, to: target };
   }
 
+  // Written without amounts: the stage history is read by people who do not
+  // handle money.
+  const plainWarnings = guardsFor(target, facts, { seesMoney: false }).filter(
+    (guard) => guard.severity === 'warn',
+  );
   const recordedNote = [
     note,
-    warnings.length > 0
-      ? `Accepted despite: ${warnings.map((guard) => guard.message).join(' | ')}`
+    plainWarnings.length > 0
+      ? `Accepted despite: ${plainWarnings.map((guard) => guard.message).join(' | ')}`
       : null,
   ]
     .filter(Boolean)
@@ -182,7 +189,7 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
 
   revalidatePath(`/admin/projects/${project.slug}`);
   revalidatePath('/admin/projects');
-  return { status: 'done', message: `Moved to ${target.replace(/_/g, ' ')}.` };
+  return { status: 'done', message: `Moved to ${STAFF_LABEL[target]}.` };
 }
 
 export type EditState = { status: 'idle' | 'done' | 'error'; message?: string };

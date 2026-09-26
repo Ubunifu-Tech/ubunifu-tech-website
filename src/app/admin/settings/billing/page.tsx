@@ -25,7 +25,7 @@ export default async function BillingSettingsPage() {
         <div className={styles.headText}>
           <h1 className={styles.heading}>Settings</h1>
           <p className={styles.lead}>
-            Billing details are shown on every invoice, receipt and contract you send.
+            Billing details are shown on every invoice, receipt and agreement you send.
           </p>
         </div>
       </div>
@@ -37,7 +37,7 @@ export default async function BillingSettingsPage() {
           {gaps.length > 0 && (
             <Callout
               kind="warn"
-              title="Your invoices, receipts and contracts are missing:"
+              title="Your invoices, receipts and agreements are missing:"
               items={gaps}
             />
           )}

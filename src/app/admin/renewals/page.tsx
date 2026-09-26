@@ -13,6 +13,7 @@ import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { renewingLine } from '@/lib/console/live';
 import { RenewalActions } from './RenewalActions';
+import { INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
 
 export const metadata = { title: 'Renewals' };
 
@@ -69,7 +70,6 @@ export default async function RenewalsPage() {
           quantity: true,
           currency: true,
           billingKind: true,
-          renewalLeadDays: true,
           project: {
             select: {
               name: true,
@@ -89,11 +89,9 @@ export default async function RenewalsPage() {
   const overdue = unbilled.filter((renewal) => days(renewal.dueAt) < 0);
   const soon = unbilled.filter((renewal) => {
     const distance = days(renewal.dueAt);
-    return distance >= 0 && distance <= renewal.lineItem.renewalLeadDays;
+    return distance >= 0 && distance <= INVOICE_AHEAD_DAYS;
   });
-  const later = unbilled.filter(
-    (renewal) => days(renewal.dueAt) > renewal.lineItem.renewalLeadDays,
-  );
+  const later = unbilled.filter((renewal) => days(renewal.dueAt) > INVOICE_AHEAD_DAYS);
   const handled = renewals.filter(
     (renewal) => renewal.status !== 'pending' && renewal.status !== 'skipped',
   );
@@ -290,6 +288,7 @@ export default async function RenewalsPage() {
                                 label={`${line.label}, ${periodLabel(renewal.periodStart, renewal.periodEnd)}`}
                                 status={renewal.status}
                                 invoiceHref={`/projects/${line.project.slug}?tab=fees`}
+                                billable={days(renewal.dueAt) <= INVOICE_AHEAD_DAYS}
                               />
                             )}
                           </td>

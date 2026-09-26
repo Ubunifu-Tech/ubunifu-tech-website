@@ -34,10 +34,13 @@ export function RaiseInvoice({
   projectId,
   lines,
   defaultDue,
+  termsDays,
 }: {
   projectId: string;
   lines: BillableLine[];
   defaultDue: string;
+  /** The payment terms in Billing details, which the due date starts from. */
+  termsDays: number;
 }) {
   const [state, action, pending] = useActionState(createInvoice, INITIAL);
   const [chosen, setChosen] = useState<string[]>(() => lines.map((line) => line.key));
@@ -45,8 +48,8 @@ export function RaiseInvoice({
   if (lines.length === 0) {
     return (
       <p className={styles.note}>
-        Nothing to invoice. Every fee line is either billed in full, unpriced, or a renewal whose
-        next period is not close enough yet.
+        Nothing to invoice right now. Fees are either billed in full or renew later. If a fee has
+        no price, or a monthly or yearly fee has no first payment date, add it on the Fees tab.
       </p>
     );
   }
@@ -111,7 +114,7 @@ export function RaiseInvoice({
           label="Due by"
           defaultValue={defaultDue}
           disabled={pending}
-          hint="Fourteen days is the default. Change it if you agreed otherwise."
+          hint={`Your usual ${termsDays} days. Change it if you agreed otherwise.`}
         />
 
         <div className={forms.field}>

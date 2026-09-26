@@ -217,10 +217,10 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
  * link, and the status edges above are worded as records of something sent
  * another way.
  */
-export const NEXT_STEP: Partial<Record<ProjectStatus, { label: string; tab: 'documents' }>> = {
-  lead: { label: 'Write the proposal', tab: 'documents' },
-  proposal_draft: { label: 'Send the proposal', tab: 'documents' },
-  proposal_accepted: { label: 'Send the agreement for signing', tab: 'documents' },
+export const NEXT_STEP: Partial<Record<ProjectStatus, { label: string; kind: 'proposal' | 'contract' }>> = {
+  lead: { label: 'Write the proposal', kind: 'proposal' },
+  proposal_draft: { label: 'Send the proposal', kind: 'proposal' },
+  proposal_accepted: { label: 'Send the agreement for signing', kind: 'contract' },
 };
 
 /** Neither of these has any outgoing edge that is not a revival or a resume. */
@@ -601,7 +601,12 @@ const WENT_OUT: DocumentStatus[] = ['sent', 'viewed', 'changes_requested', 'sign
  * warns — and a warning that is dismissed is written into the status event, so
  * the decision is attributable rather than invisible.
  */
-export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
+export function guardsFor(
+  to: ProjectStatus,
+  facts: GuardFacts,
+  /** Whether amounts may be named. Without, each warning says the same, unpriced. */
+  { seesMoney = true }: { seesMoney?: boolean } = {},
+): Guard[] {
   const guards: Guard[] = [];
   const money = (minor: number) => formatMoney(minor, facts.currency);
 
@@ -690,8 +695,12 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
       severity: 'warn',
       message:
         facts.invoicedMinor === 0
-          ? `Nothing has been invoiced yet (${money(facts.committedMinor)} agreed). Consider sending the deposit invoice.`
-          : `${money(facts.invoicedMinor)} is invoiced but no payment is recorded yet.`,
+          ? seesMoney
+            ? `Nothing has been invoiced yet (${money(facts.committedMinor)} agreed). Consider sending the deposit invoice.`
+            : 'Nothing has been invoiced yet. Consider asking for the deposit invoice to go out.'
+          : seesMoney
+            ? `${money(facts.invoicedMinor)} is invoiced but no payment is recorded yet.`
+            : 'An invoice is out but no payment is recorded yet.',
         fix: 'billing',
     });
   }
@@ -699,7 +708,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
   if (to === 'launched' && facts.recurringWithoutDueDate > 0) {
     guards.push({
       severity: 'block',
-      message: `${facts.recurringWithoutDueDate} recurring fee${facts.recurringWithoutDueDate === 1 ? ' needs' : 's need'} a renewal date. Add ${facts.recurringWithoutDueDate === 1 ? 'it' : 'them'} first.`,
+      message: `${facts.recurringWithoutDueDate} recurring fee${facts.recurringWithoutDueDate === 1 ? ' needs' : 's need'} a first payment date. Add ${facts.recurringWithoutDueDate === 1 ? 'it' : 'them'} first.`,
         fix: 'fees',
     });
   }
@@ -716,14 +725,16 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
     if (facts.outstandingMinor > 0) {
       guards.push({
         severity: 'warn',
-        message: `${money(facts.outstandingMinor)} is still unpaid. It is harder to collect after handover.`,
+        message: `${seesMoney ? money(facts.outstandingMinor) : 'Money'} is still unpaid. It is harder to collect after handover.`,
         fix: 'billing',
       });
     }
     if (facts.uninvoicedOneOffMinor > 0) {
       guards.push({
         severity: 'warn',
-        message: `${money(facts.uninvoicedOneOffMinor)} of fees has not been invoiced yet.`,
+        message: seesMoney
+          ? `${money(facts.uninvoicedOneOffMinor)} of fees has not been invoiced yet.`
+          : 'Some fees have not been invoiced yet.',
         fix: 'billing',
       });
     }
@@ -771,7 +782,7 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
   if (to === 'cancelled' && facts.paidMinor > 0) {
     guards.push({
       severity: 'warn',
-      message: `${money(facts.paidMinor)} has been paid. Cancelling does not refund it. Say in the note what happens to it.`,
+      message: `${seesMoney ? `${money(facts.paidMinor)} has` : 'Money has'} been paid. Cancelling does not refund it. Say in the note what happens to it.`,
         fix: 'billing',
     });
   }

@@ -19,6 +19,7 @@ export function RenewalActions({
   label,
   status,
   invoiceHref,
+  billable,
 }: {
   renewalId: string;
   /** Read to screen readers, like "Hosting, Sept 2027 to Sept 2028". */
@@ -26,6 +27,8 @@ export function RenewalActions({
   status: string;
   /** Where the period is invoiced from. */
   invoiceHref: string;
+  /** Close enough to invoice now; a later period can only be skipped. */
+  billable: boolean;
 }) {
   const [skipState, skip, skipping] = useActionState(skipRenewal, INITIAL);
   const [backState, back, bringing] = useActionState(bringBackRenewal, INITIAL);
@@ -36,7 +39,7 @@ export function RenewalActions({
       <MenuList>
         {status === 'pending' && (
           <>
-            <MenuLink href={invoiceHref}>Invoice it</MenuLink>
+            {billable && <MenuLink href={invoiceHref}>Invoice it</MenuLink>}
             <form action={skip}>
               <input type="hidden" name="renewalId" value={renewalId} />
               <MenuItem type="submit" disabled={skipping}>

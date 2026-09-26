@@ -9,11 +9,14 @@ import { isCurrency } from '@/lib/console/currencies';
 import { formText } from '@/lib/console/form';
 import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
 import { monthDate, monthLabel, ratePair } from '@/lib/console/finance';
+import { recordCostBill } from '@/lib/console/cost-bills';
 
 export type FinanceState = {
   status: 'idle' | 'done' | 'error';
   message?: string;
   field?: string;
+  /** The cost just added, so its bill can be attached straight away. */
+  costId?: string;
 };
 
 const CATEGORIES = Object.values(CostCategory) as string[];
@@ -154,7 +157,7 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
     summary: `${read.vendor}, ${formatMoney(read.amountMinor, read.currency)}`,
   });
   refresh();
-  return { status: 'done', message: `${read.vendor} added.` };
+  return { status: 'done', message: `${read.vendor} added.`, costId: cost.id };
 }
 
 /** Takes out a cost typed in by mistake. The record says who and what it was. */
@@ -300,4 +303,58 @@ export async function saveExchangeRate(
   });
   refresh();
   return { status: 'done', message: 'Saved.' };
+}
+
+/** Confirms a bill the browser has just sent to the store. */
+export async function attachBill(
+  costId: string,
+  blobUrl: string,
+  filename: string,
+): Promise<FinanceState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
+
+  try {
+    await recordCostBill({ blobUrl, costId, staffId: staff.id, filename });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : '';
+    if (reason === 'bill-wrong-type') {
+      return { status: 'error', message: 'Attach the bill as a PDF or a photo.' };
+    }
+    if (reason === 'bill-too-large') {
+      return { status: 'error', message: 'That file is larger than 10 MB.' };
+    }
+    if (reason === 'cost-gone') return { status: 'error', message: 'That cost no longer exists.' };
+    console.error('[costs] could not record the bill', error);
+    return { status: 'error', message: 'That did not arrive. Try it again?' };
+  }
+  refresh();
+  return { status: 'done', message: 'Bill attached.' };
+}
+
+/** Takes a bill off a cost. The file is kept, marked, as uploads always are. */
+export async function removeBill(_previous: FinanceState, formData: FormData): Promise<FinanceState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
+
+  const costId = formText(formData, 'costId');
+  const cost = await db.cost.findUnique({ where: { id: costId }, select: { id: true, vendor: true } });
+  if (!cost) return { status: 'error', message: 'That cost no longer exists.' };
+
+  const removed = await db.fileUpload.updateMany({
+    where: { costId: cost.id, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (removed.count === 0) return { status: 'error', message: 'There is no bill on it.' };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'cost.bill_removed',
+    entityType: 'Cost',
+    entityId: cost.id,
+    summary: cost.vendor,
+  });
+  refresh();
+  return { status: 'done', message: 'Bill removed.' };
 }

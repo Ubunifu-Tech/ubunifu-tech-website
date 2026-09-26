@@ -5,7 +5,15 @@ import { COST_CATEGORY_LABEL } from '@/lib/console/cost-labels';
 import { addTo, monthDate, monthKey, monthLabel, sideBySide } from '@/lib/console/finance';
 import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
-import { AddCost, AddMonthOf, CostMenu, RegularMenu, type Choices } from './CostForms';
+import { uploadsConfigured } from '@/lib/console/uploads';
+import {
+  AddCost,
+  AddMonthOf,
+  AttachBill,
+  CostMenu,
+  RegularMenu,
+  type Choices,
+} from './CostForms';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -27,6 +35,7 @@ export default async function CostsPage({
   searchParams: Promise<{ month?: string }>;
 }) {
   await requirePermission('finance');
+  const canAttach = uploadsConfigured();
   const { month: asked } = await searchParams;
   const today = todayInput();
   const thisMonth = today.slice(0, 7);
@@ -51,6 +60,12 @@ export default async function CostsPage({
         projectId: true,
         client: { select: { name: true, deletedAt: true } },
         project: { select: { name: true, slug: true, deletedAt: true } },
+        files: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { id: true, filename: true },
+        },
       },
     }),
     db.regularCost.findMany({
@@ -230,7 +245,7 @@ export default async function CostsPage({
             <h2 className={forms.cardTitle}>Add a cost</h2>
             <span className={forms.cardMeta}>From the bill, in the currency it was charged in</span>
           </div>
-          <AddCost choices={choices} today={entryDate} />
+          <AddCost choices={choices} today={entryDate} canAttach={canAttach} />
         </section>
 
         <div className={table.frame}>
@@ -262,6 +277,9 @@ export default async function CostsPage({
                   <th className={`${table.th} ${table.numericHead}`} scope="col">
                     Amount
                   </th>
+                  <th className={table.th} scope="col">
+                    Bill
+                  </th>
                   <th className={`${table.th} ${table.actionsHead}`} scope="col">
                     <span className={table.muted}>Actions</span>
                   </th>
@@ -270,7 +288,7 @@ export default async function CostsPage({
               <tbody>
                 {costs.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={7}>
+                    <td className={table.emptyCell} colSpan={8}>
                       <p className={table.emptyTitle}>No costs added for {monthLabel(month)}.</p>
                       <p className={table.emptyHint}>Add each bill as it arrives.</p>
                     </td>
@@ -296,8 +314,26 @@ export default async function CostsPage({
                       <td className={`${table.td} ${table.numeric}`}>
                         {formatMoney(cost.amountMinor, cost.currency)}
                       </td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {cost.files[0] ? (
+                          <a
+                            href={`/files/${cost.files[0].id}`}
+                            target="_blank"
+                            rel="noopener"
+                            className={table.link}
+                            title={cost.files[0].filename}
+                          >
+                            View
+                          </a>
+                        ) : canAttach ? (
+                          <AttachBill costId={cost.id} />
+                        ) : (
+                          <span className={table.muted}>None</span>
+                        )}
+                      </td>
                       <td className={`${table.td} ${table.actions}`}>
                         <CostMenu
+                          hasBill={cost.files.length > 0}
                           choices={choices}
                           cost={{
                             id: cost.id,

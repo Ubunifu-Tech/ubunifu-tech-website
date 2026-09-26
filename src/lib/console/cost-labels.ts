@@ -14,3 +14,12 @@ export const COST_CATEGORIES = [
 export const COST_CATEGORY_LABEL: Record<string, string> = Object.fromEntries(
   COST_CATEGORIES.map((category) => [category.value, category.label]),
 );
+
+/** What a bill can be: a PDF, or a photo of the paper one. */
+export const BILL_CONTENT_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+
+/** 10 MB, far more than a bill needs. */
+export const MAX_BILL_BYTES = 10 * 1024 * 1024;
+
+/** The folder a cost's bill is stored under, which binds the file to the cost. */
+export const billFolder = (costId: string) => `costs/${costId}`;

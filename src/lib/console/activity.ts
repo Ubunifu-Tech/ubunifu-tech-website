@@ -133,6 +133,8 @@ const ACTION_LABELS: Record<string, string> = {
   'cost.recorded': 'Cost added',
   'cost.changed': 'Cost changed',
   'cost.removed': 'Cost removed',
+  'cost.bill_attached': 'Bill attached to a cost',
+  'cost.bill_removed': 'Bill taken off a cost',
   'regular_cost.saved': 'Regular cost saved',
   'regular_cost.stopped': 'Regular cost stopped',
   'regular_cost.restarted': 'Regular cost started again',

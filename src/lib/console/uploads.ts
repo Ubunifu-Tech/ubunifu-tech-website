@@ -222,6 +222,25 @@ const INLINE_CONTENT_TYPES = new Set([
 const BLOB_HOST = /(^|\.)blob\.vercel-storage\.com$/;
 
 /**
+ * Whether a URL is an object in our own store, under the folder its upload
+ * token was issued for. A finished upload is confirmed by the URL the browser
+ * sends back, so without this a URL for somebody else's file, learned some
+ * other way, could be recorded against the wrong thing and then read.
+ */
+export function storedUnder(url: string, folder: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      BLOB_HOST.test(parsed.hostname) &&
+      decodeURIComponent(parsed.pathname).startsWith(`/${folder}/`)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Builds the Content-Disposition header.
  *
  * Two filenames: an ASCII-only one that every browser understands, and an

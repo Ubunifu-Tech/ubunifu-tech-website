@@ -1,8 +1,15 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import React, { useActionState, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { upload } from '@vercel/blob/client';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
-import { COST_CATEGORIES } from '@/lib/console/cost-labels';
+import {
+  BILL_CONTENT_TYPES,
+  COST_CATEGORIES,
+  MAX_BILL_BYTES,
+  billFolder,
+} from '@/lib/console/cost-labels';
 import { CheckField, DateField, TextField } from '@/components/console/Fields';
 import { Select } from '@/components/console/Select';
 import {
@@ -14,6 +21,8 @@ import {
   RowMenu,
 } from '@/components/console/RowMenu';
 import {
+  attachBill,
+  removeBill,
   removeCost,
   saveCost,
   saveRegularCost,
@@ -22,6 +31,7 @@ import {
 } from '../actions';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
 
 const INITIAL: FinanceState = { status: 'idle' };
 
@@ -209,7 +219,16 @@ function CostFields({
 }
 
 /** Adding a bill, with the choice to expect it again every month. */
-export function AddCost({ choices, today }: { choices: Choices; today: string }) {
+export function AddCost({
+  choices,
+  today,
+  canAttach,
+}: {
+  choices: Choices;
+  today: string;
+  /** Whether bills can be stored on this deployment. */
+  canAttach: boolean;
+}) {
   const [state, action, pending] = useActionState(saveCost, INITIAL);
   // A fresh form after each cost, so the next one starts clean.
   const [round, setRound] = useState(0);
@@ -239,9 +258,85 @@ export function AddCost({ choices, today }: { choices: Choices; today: string })
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Adding…' : 'Add the cost'}
         </button>
+        {state.status === 'done' && state.costId && canAttach && (
+          <AttachBill costId={state.costId} label="Attach its bill" />
+        )}
       </div>
       <Message state={state} />
     </form>
+  );
+}
+
+/**
+ * Sends a bill, a PDF or a photo of the paper one, straight to the store and
+ * files it with the cost. Checked here first only so a wrong file is caught
+ * before it uploads; the server checks everything again.
+ */
+export function AttachBill({ costId, label = 'Attach' }: { costId: string; label?: string }) {
+  const router = useRouter();
+  const input = useRef<HTMLInputElement>(null);
+  const [stage, setStage] = useState<
+    { kind: 'idle' } | { kind: 'sending'; percent: number } | { kind: 'error'; message: string }
+  >({ kind: 'idle' });
+
+  async function send(file: File) {
+    if (!BILL_CONTENT_TYPES.includes(file.type)) {
+      setStage({ kind: 'error', message: 'Attach the bill as a PDF or a photo.' });
+      return;
+    }
+    if (file.size > MAX_BILL_BYTES) {
+      setStage({ kind: 'error', message: 'That file is larger than 10 MB.' });
+      return;
+    }
+    setStage({ kind: 'sending', percent: 0 });
+    try {
+      const blob = await upload(`${billFolder(costId)}/${file.name.replace(/[\\/]/g, '-')}`, file, {
+        access: 'private',
+        // Rewritten by the console host to /admin/finance/costs/upload.
+        handleUploadUrl: '/finance/costs/upload',
+        clientPayload: costId,
+        onUploadProgress: ({ percentage }) => setStage({ kind: 'sending', percent: Math.round(percentage) }),
+      });
+      const result = await attachBill(costId, blob.url, file.name);
+      if (result.status === 'error') {
+        setStage({ kind: 'error', message: result.message ?? 'That did not arrive. Try it again?' });
+        return;
+      }
+      setStage({ kind: 'idle' });
+      router.refresh();
+    } catch (error) {
+      console.error('[costs] bill upload failed', error);
+      setStage({ kind: 'error', message: 'That did not go through. Try it again?' });
+    }
+  }
+
+  return (
+    <span className={styles.inlineForm}>
+      <input
+        ref={input}
+        type="file"
+        accept={BILL_CONTENT_TYPES.join(',')}
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) void send(file);
+        }}
+      />
+      <button
+        type="button"
+        className={table.action}
+        onClick={() => input.current?.click()}
+        disabled={stage.kind === 'sending'}
+      >
+        {stage.kind === 'sending' ? `Sending ${stage.percent}%` : label}
+      </button>
+      {stage.kind === 'error' && (
+        <span className={forms.error} role="alert">
+          {stage.message}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -249,11 +344,13 @@ export function AddCost({ choices, today }: { choices: Choices; today: string })
 export function CostMenu({
   cost,
   choices,
+  hasBill,
 }: {
   cost: { id: string; vendor: string } & Required<Omit<Values, 'description'>> & {
       description: string | null;
     };
   choices: Choices;
+  hasBill: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'menu' | 'edit' | 'remove'>('menu');
@@ -266,7 +363,8 @@ export function CostMenu({
     INITIAL,
   );
   const [removeState, remove, removing] = useActionState(removeCost, INITIAL);
-  const said = [saveState, removeState].find((state) => state.message);
+  const [billState, dropBill, droppingBill] = useActionState(removeBill, INITIAL);
+  const said = [saveState, removeState, billState].find((state) => state.message);
 
   return (
     <RowMenu
@@ -319,6 +417,14 @@ export function CostMenu({
         <>
           <MenuList>
             <MenuItem onClick={() => setView('edit')}>Change</MenuItem>
+            {hasBill && (
+              <form action={dropBill}>
+                <input type="hidden" name="costId" value={cost.id} />
+                <MenuItem type="submit" disabled={droppingBill}>
+                  {droppingBill ? 'Taking it off…' : 'Take the bill off'}
+                </MenuItem>
+              </form>
+            )}
             <MenuDivider />
             <MenuItem danger onClick={() => setView('remove')}>
               Remove

@@ -1,9 +1,9 @@
-import { getStaffActor } from '@/lib/console/auth';
+import { can, getStaffActor } from '@/lib/console/auth';
 import { db } from '@/lib/db';
 import { streamUpload } from '@/lib/console/uploads';
 import { liveProject, liveTicket } from '@/lib/console/live';
 
-/** The same file, read by us. Reached as /files/<id> on the console host. */
+/** A stored file, read by us. Reached as /files/<id> on the console host. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -12,7 +12,8 @@ export async function GET(
   if (!staff) return new Response(null, { status: 404 });
 
   const { id } = await params;
-  // A file from a removed project or client is gone with it.
+  // A file from a removed project or client is gone with it. A cost's bill is
+  // for those who handle the costs.
   const file = await db.fileUpload.findFirst({
     where: {
       id,
@@ -21,11 +22,12 @@ export async function GET(
         { assetRequest: { is: { project: liveProject } } },
         { update: { is: { project: liveProject } } },
         { ticketMessage: { is: { ticket: { is: liveTicket } } } },
+        { cost: { isNot: null } },
       ],
     },
-    select: { storageKey: true, filename: true },
+    select: { storageKey: true, filename: true, costId: true },
   });
-  if (!file) return new Response(null, { status: 404 });
+  if (!file || (file.costId && !can(staff, 'finance'))) return new Response(null, { status: 404 });
 
   return streamUpload(file.storageKey, file.filename);
 }

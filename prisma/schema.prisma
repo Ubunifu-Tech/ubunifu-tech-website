@@ -1116,12 +1116,16 @@ model FileUpload {
   update          ProjectUpdate? @relation(fields: [updateId], references: [id], onDelete: Cascade)
   ticketMessageId String?
   ticketMessage   TicketMessage? @relation(fields: [ticketMessageId], references: [id], onDelete: Cascade)
+  /// The bill behind a cost, kept with it.
+  costId          String?
+  cost            Cost?          @relation(fields: [costId], references: [id], onDelete: Cascade)
   createdAt       DateTime       @default(now())
   deletedAt       DateTime?
 
   @@index([assetRequestId])
   @@index([updateId])
   @@index([ticketMessageId])
+  @@index([costId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1571,6 +1575,7 @@ model Cost {
   recordedBy   StaffUser?   @relation("CostRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  files        FileUpload[]
 
   @@index([incurredOn])
   @@index([clientId])

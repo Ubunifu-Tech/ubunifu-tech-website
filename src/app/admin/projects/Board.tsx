@@ -51,8 +51,9 @@ const BADGE: Record<string, string> = {
   bad: forms.badgeBad,
 };
 
-type Notice = { tone: 'ok' | 'error'; text: string };
+type Notice = { tone: 'ok' | 'error'; text: string; href?: string };
 type Confirm = { card: BoardCard; to: ProjectStatus; warnings: string[] };
+type Choice = { card: BoardCard; lane: Lane; options: ProjectStatus[] };
 
 /**
  * The project board.
@@ -77,6 +78,7 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
   const [dragging, setDragging] = useState<BoardCard | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
+  const [choice, setChoice] = useState<Choice | null>(null);
   const [pending, startTransition] = useTransition();
 
   const sensors = useSensors(
@@ -115,7 +117,11 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
       if (result.status === 'confirm') {
         setConfirm({ card, to, warnings: (result.guards ?? []).map((guard) => guard.message) });
       } else {
-        setNotice({ tone: 'error', text: result.message ?? 'That move did not go through.' });
+        setNotice({
+          tone: 'error',
+          text: result.message ?? 'That move did not go through.',
+          href: `/projects/${card.slug}`,
+        });
       }
     });
   }
@@ -128,10 +134,16 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
     setDragging(null);
     const card = items.find((item) => item.id === event.active.id);
     const lane = LANES.find((item) => item.key === event.over?.id);
-    if (!card || !lane || lane.statuses.includes(card.status)) return;
+    if (!card || !lane) return;
 
-    const to = targetIn(lane, card.allowed);
-    if (!to) {
+    // Every stage in this lane it can reach in one step. Dropped back in its
+    // own lane, that is a move within the lane, like a proposal being sent.
+    const options = lane.statuses.filter(
+      (status) => status !== card.status && card.allowed.includes(status),
+    );
+    const home = lane.statuses.includes(card.status);
+    if (options.length === 0) {
+      if (home) return;
       const next = card.allowed.map((status) => STAFF_LABEL[status]).join(', ');
       setNotice({
         tone: 'error',
@@ -139,7 +151,11 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
       });
       return;
     }
-    move(card, to, false);
+    if (options.length === 1 && !home) {
+      move(card, options[0]!, false);
+      return;
+    }
+    setChoice({ card, lane, options });
   }
 
   return (
@@ -150,7 +166,17 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
           role="status"
           aria-live="polite"
         >
-          <span>{notice.text}</span>
+          <span>
+            {notice.text}
+            {notice.href && (
+              <>
+                {' '}
+                <Link href={notice.href} className={styles.noticeLink}>
+                  Open the project
+                </Link>
+              </>
+            )}
+          </span>
           <button
             type="button"
             className={styles.noticeClose}
@@ -192,6 +218,48 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
           {dragging ? <CardBody card={dragging} lifted /> : null}
         </DragOverlay>
       </DndContext>
+
+      {choice && (
+        <div className={styles.scrim} role="presentation" onClick={() => setChoice(null)}>
+          <div
+            className={styles.dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="board-choice-title"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setChoice(null);
+            }}
+          >
+            <h2 id="board-choice-title" className={styles.dialogTitle}>
+              Move {choice.card.name} to which stage?
+            </h2>
+            <p className={styles.dialogText}>
+              It is at {STAFF_LABEL[choice.card.status]} now.
+            </p>
+            <div className={styles.dialogActions}>
+              <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setChoice(null)}>
+                Cancel
+              </button>
+              {choice.options.map((status, index) => (
+                <button
+                  key={status}
+                  type="button"
+                  className={`${forms.button} ${index === 0 ? '' : forms.quiet}`}
+                  autoFocus={index === 0}
+                  onClick={() => {
+                    const { card } = choice;
+                    setChoice(null);
+                    move(card, status, false);
+                  }}
+                >
+                  {STAFF_LABEL[status]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirm && (
         <div className={styles.scrim} role="presentation" onClick={() => setConfirm(null)}>

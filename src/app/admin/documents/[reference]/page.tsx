@@ -24,11 +24,12 @@ import { Steps } from '@/components/console/Steps';
 import {
   Copilot,
   DetailsForm,
+  DiscardDraft,
   ResendSignatureLink,
   SendForSignature,
+  type CopilotTurn,
   VersionEditor,
   WithdrawDocument,
-  type CopilotTurn,
 } from '../DocumentEditor';
 import { SuggestedWording, type WordingSuggestion } from './SuggestedWording';
 import { ShareLink } from '@/components/console/ShareLink';
@@ -545,6 +546,11 @@ export default async function DocumentPage({
             </dd>
           </div>
         </dl>
+        {!document.signatureRequests.some((request) => request.sentAt) && (
+          <div className={forms.actions}>
+            <DiscardDraft documentId={document.id} />
+          </div>
+        )}
         {stepNav}
       </section>
     );

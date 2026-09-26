@@ -3,10 +3,12 @@
 import React, { useActionState, useState } from 'react';
 import {
   emailReceipt,
+  cancelRefund,
   emailRefund,
   recordPayment,
   recordRefund,
   reversePayment,
+  saveDraftInvoice,
   sendInvoice,
   voidInvoice,
   type BillingState,
@@ -393,23 +395,146 @@ export function PaymentMenu({
 }
 
 /** A refund's actions, behind the "…" on its row: open or email its note. */
-export function RefundMenu({ refundId, number }: { refundId: string; number: string }) {
+export function RefundMenu({
+  refundId,
+  number,
+  cancelled,
+}: {
+  refundId: string;
+  number: string;
+  cancelled: boolean;
+}) {
   const [state, action, pending] = useActionState(emailRefund, INITIAL);
+  const [cancelState, cancel, cancelling] = useActionState(cancelRefund, INITIAL);
+  const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const said = [state, cancelState].find((answer) => answer.message);
+
   return (
-    <RowMenu label={`Refund ${number}`}>
-      <MenuList>
-        <MenuLink href={`/refunds/${number}`}>View the refund note</MenuLink>
-        <form action={action}>
+    <RowMenu
+      label={`Refund ${number}`}
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setAsking(false);
+      }}
+      wide={asking}
+    >
+      {asking ? (
+        <form action={cancel} className={forms.form}>
           <input type="hidden" name="refundId" value={refundId} />
-          <MenuItem type="submit" disabled={pending}>
-            {pending ? 'Sending…' : 'Email the refund note'}
-          </MenuItem>
+          <MenuTitle>Cancel {number}? Use this when it was recorded by mistake.</MenuTitle>
+          <TextField
+            name="reason"
+            label="Why"
+            required
+            minLength={4}
+            maxLength={200}
+            placeholder="Entered the wrong amount"
+          />
+          <div className={forms.actions}>
+            <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={cancelling}>
+              {cancelling ? 'Cancelling…' : 'Cancel the refund'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setAsking(false)}
+            >
+              Keep it
+            </button>
+          </div>
+          <Result state={cancelState} />
         </form>
-      </MenuList>
-      {state.message && (
-        <MenuNote tone={state.status === 'error' ? 'bad' : 'quiet'}>{state.message}</MenuNote>
+      ) : (
+        <>
+          <MenuList>
+            <MenuLink href={`/refunds/${number}`}>View the refund note</MenuLink>
+            {!cancelled && (
+              <form action={action}>
+                <input type="hidden" name="refundId" value={refundId} />
+                <MenuItem type="submit" disabled={pending}>
+                  {pending ? 'Sending…' : 'Email the refund note'}
+                </MenuItem>
+              </form>
+            )}
+            {!cancelled && (
+              <>
+                <MenuDivider />
+                <MenuItem danger onClick={() => setAsking(true)}>
+                  Cancel this refund
+                </MenuItem>
+              </>
+            )}
+          </MenuList>
+          {said?.message && (
+            <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
+          )}
+        </>
       )}
     </RowMenu>
+  );
+}
+
+/** The due date and notes, while the invoice is still a draft. */
+export function DraftInvoiceDetails({
+  invoiceId,
+  dueAt,
+  notes,
+}: {
+  invoiceId: string;
+  /** As a date input value, or empty for due on receipt. */
+  dueAt: string;
+  notes: string;
+}) {
+  const [state, action, pending] = useActionState(saveDraftInvoice, INITIAL);
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className={`${forms.button} ${forms.quiet}`}
+        onClick={() => setOpen(true)}
+      >
+        Change the due date or notes
+      </button>
+    );
+  }
+
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="invoiceId" value={invoiceId} />
+      <DateField
+        name="dueAt"
+        label="Due"
+        optional
+        defaultValue={dueAt}
+        hint="Leave it empty for due on receipt."
+      />
+      <TextAreaField
+        name="notes"
+        label="Notes"
+        optional
+        rows={3}
+        maxLength={2000}
+        defaultValue={notes}
+        hint="Printed on the invoice."
+      />
+      <div className={forms.actions}>
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Saving…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          className={`${forms.button} ${forms.quiet}`}
+          onClick={() => setOpen(false)}
+        >
+          Done
+        </button>
+      </div>
+      <Result state={state} />
+    </form>
   );
 }
 

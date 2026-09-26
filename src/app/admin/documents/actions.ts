@@ -932,6 +932,53 @@ export async function withdrawDocument(
   return { status: 'done', message: 'Withdrawn. You can change it and send it again.' };
 }
 
+/**
+ * Throws away a draft that never went to the client: started by mistake, or
+ * no longer wanted. One that went out at any point stays, because the client
+ * saw it and the record has to show that.
+ */
+export async function discardDocument(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const document = await db.document.findUnique({
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
+    select: { id: true, reference: true, title: true, project: { select: { id: true, slug: true } } },
+  });
+  if (!document) return { status: 'error', message: 'That document no longer exists.' };
+
+  const { count } = await db.document.deleteMany({
+    where: {
+      id: document.id,
+      status: { in: ['draft', 'internal_review'] },
+      signatureRequests: { none: { sentAt: { not: null } } },
+    },
+  });
+  if (count === 0) {
+    return {
+      status: 'error',
+      message: 'It has been with the client, so it stays on the record.',
+    };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.discarded',
+    // On the project: the document itself is gone.
+    entityType: 'Project',
+    entityId: document.project.id,
+    summary: `${document.reference}: ${document.title}`,
+  });
+
+  revalidatePath(`/admin/projects/${document.project.slug}`);
+  revalidatePath('/admin/documents');
+  redirect(`/projects/${document.project.slug}?tab=documents`);
+}
+
 /** Who sent a suggestion, named the way a change note or an audit line reads. */
 function suggestedBy(suggestion: {
   contact: { name: string } | null;

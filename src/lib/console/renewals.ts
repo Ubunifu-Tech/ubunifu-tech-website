@@ -162,6 +162,72 @@ export async function markRenewalInvoiced(
   }
 }
 
+/**
+ * Marks a period skipped: not billed, on purpose, and moves the line on the
+ * same way invoicing it would. Conditional on it still being unbilled, so a
+ * period invoiced in the same moment stays invoiced.
+ */
+export async function markRenewalSkipped(
+  tx: Prisma.TransactionClient,
+  renewalEventId: string,
+): Promise<boolean> {
+  const skipped = await tx.renewalEvent.updateMany({
+    where: { id: renewalEventId, status: 'pending' },
+    data: { status: 'skipped' },
+  });
+  if (skipped.count !== 1) return false;
+
+  const renewal = await tx.renewalEvent.findUniqueOrThrow({
+    where: { id: renewalEventId },
+    select: { periodStart: true, periodEnd: true, lineItem: { select: { id: true, nextDueAt: true } } },
+  });
+  if (renewal.lineItem.nextDueAt?.getTime() === renewal.periodStart.getTime()) {
+    await tx.lineItem.update({
+      where: { id: renewal.lineItem.id },
+      data: { nextDueAt: renewal.periodEnd },
+    });
+  }
+  return true;
+}
+
+/**
+ * After a recurring fee's date or billing changes, the periods laid out on
+ * the old schedule and never billed are dropped, so the renewals screen does
+ * not offer both the old date and the new one. Only unbilled periods go:
+ * anything on an invoice, draft or sent, or skipped on purpose, is a record
+ * and stays. The new schedule is laid out the next time anyone looks.
+ */
+export async function dropOffSchedulePeriods(lineItemId: string): Promise<number> {
+  const line = await db.lineItem.findUnique({
+    where: { id: lineItemId },
+    select: {
+      nextDueAt: true,
+      intervalMonths: true,
+      billingKind: true,
+      renewals: { where: { status: 'pending' }, select: { id: true, periodStart: true } },
+    },
+  });
+  if (!line || line.renewals.length === 0) return 0;
+
+  const months = line.intervalMonths ?? intervalFor(line.billingKind);
+  const onSchedule = new Set<number>();
+  if (months && months > 0 && line.nextDueAt) {
+    const last = Math.max(...line.renewals.map((renewal) => renewal.periodStart.getTime()));
+    let start = line.nextDueAt;
+    for (let index = 0; index < MAX_PERIODS_PER_LINE && start.getTime() <= last; index += 1) {
+      onSchedule.add(start.getTime());
+      start = addMonths(start, months);
+    }
+  }
+
+  const stale = line.renewals.filter((renewal) => !onSchedule.has(renewal.periodStart.getTime()));
+  if (stale.length === 0) return 0;
+  const dropped = await db.renewalEvent.deleteMany({
+    where: { id: { in: stale.map((renewal) => renewal.id) }, status: 'pending' },
+  });
+  return dropped.count;
+}
+
 /** Human wording for a period, e.g. "Sept 2026 – Sept 2027". */
 export function periodLabel(start: Date, end: Date): string {
   const format = (date: Date) =>

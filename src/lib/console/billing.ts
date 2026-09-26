@@ -95,7 +95,12 @@ export async function recomputeInvoice(
       // A reversed payment stays on record but was never money received.
       payments: {
         where: { reversedAt: null },
-        select: { amountMinor: true, receivedAt: true, refunds: { select: { amountMinor: true } } },
+        select: {
+          amountMinor: true,
+          receivedAt: true,
+          // A cancelled refund never sent anything back.
+          refunds: { where: { cancelledAt: null }, select: { amountMinor: true } },
+        },
       },
     },
   });

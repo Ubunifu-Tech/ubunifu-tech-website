@@ -32,6 +32,8 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
       reference: true,
       refundedAt: true,
       reason: true,
+      cancelledAt: true,
+      cancelReason: true,
       recordedBy: { select: { name: true } },
       payment: {
         select: {
@@ -59,9 +61,9 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
           ← {refund.payment.invoice.number}
         </Link>
         <PrintButton />
-        {!refund.payment.invoice.client.deletedAt && !refund.payment.invoice.project?.deletedAt && (
-          <EmailRefundButton refundId={refund.id} />
-        )}
+        {!refund.cancelledAt &&
+          !refund.payment.invoice.client.deletedAt &&
+          !refund.payment.invoice.project?.deletedAt && <EmailRefundButton refundId={refund.id} />}
       </div>
       <RefundNote refund={refund} org={org} />
     </main>

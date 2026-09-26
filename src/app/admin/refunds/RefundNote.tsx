@@ -13,6 +13,8 @@ export type RefundNoteData = {
   refundedAt: Date;
   reason: string;
   recordedBy?: { name: string } | null;
+  cancelledAt: Date | null;
+  cancelReason: string | null;
   payment: {
     amountMinor: number;
     receivedAt: Date;
@@ -61,6 +63,17 @@ export function RefundNote({
       />
 
       <div className={money.content}>
+        {refund.cancelledAt && (
+          <p className={money.cancelled} role="note">
+            <span className={money.cancelledTitle}>
+              Cancelled on {formatDate(refund.cancelledAt)}
+            </span>
+            This refund was recorded by mistake and taken back. No money was sent back under this
+            note.
+            {refund.cancelReason ? ` Reason: ${refund.cancelReason}` : ''}
+          </p>
+        )}
+
         <table className={money.details}>
           <tbody>
             <tr>
@@ -96,14 +109,21 @@ export function RefundNote({
           </tbody>
         </table>
 
-        <div className={`${money.amount} ${money.amountDue}`}>
-          <p className={money.amountLabel}>Amount sent back</p>
+        <div
+          className={
+            refund.cancelledAt ? `${money.amount} ${money.amountVoid}` : `${money.amount} ${money.amountDue}`
+          }
+        >
+          <p className={money.amountLabel}>
+            {refund.cancelledAt ? 'Recorded, then cancelled' : 'Amount sent back'}
+          </p>
           <p className={money.amountFigure}>{formatMoney(refund.amountMinor, refund.currency)}</p>
         </div>
 
         <p className={money.foot}>
-          This note confirms money sent back from a payment against invoice {invoice.number}. It is
-          issued by {org.legalName} and is valid without a signature.
+          {refund.cancelledAt
+            ? `This note was cancelled and confirms nothing. It is kept so the numbers stay unbroken.`
+            : `This note confirms money sent back from a payment against invoice ${invoice.number}. It is issued by ${org.legalName} and is valid without a signature.`}
           {refund.recordedBy ? ` Recorded by ${refund.recordedBy.name}.` : ''}
         </p>
 

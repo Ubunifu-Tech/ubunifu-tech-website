@@ -71,7 +71,9 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
               receivedAt: true,
               reversedAt: true,
               receipt: { select: { number: true } },
-              refunds: { select: { number: true, amountMinor: true, refundedAt: true } },
+              refunds: {
+                select: { number: true, amountMinor: true, refundedAt: true, cancelledAt: true },
+              },
             },
           },
         },
@@ -327,7 +329,9 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
                           {refund.number}
                         </Link>
                       </td>
-                      <td className={table.td}>Refund</td>
+                      <td className={table.td}>
+                        {refund.cancelledAt ? 'Refund, cancelled' : 'Refund'}
+                      </td>
                       <td className={`${table.td} ${table.nowrap}`}>{refund.invoice}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(refund.refundedAt)}

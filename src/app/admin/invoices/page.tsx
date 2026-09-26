@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
-import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
+import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { countedPayment, liveInvoice } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
@@ -112,7 +112,7 @@ export default async function InvoicesPage({
       select: { amountMinor: true, currency: true, receivedAt: true },
     }),
     db.refund.findMany({
-      where: { refundedAt: { gte: lastMonthStart }, payment: countedPayment },
+      where: { refundedAt: { gte: lastMonthStart }, cancelledAt: null, payment: countedPayment },
       select: { amountMinor: true, currency: true, refundedAt: true },
     }),
   ]);
@@ -292,8 +292,10 @@ export default async function InvoicesPage({
                         )}
                       </td>
                       <td className={table.td}>
-                        <span className={`${forms.badge} ${STATUS_BADGE[invoice.status]}`}>
-                          {INVOICE_STATUS_LABEL[invoice.status]}
+                        <span
+                          className={`${forms.badge} ${STATUS_BADGE[invoiceStanding(invoice, today)]}`}
+                        >
+                          {INVOICE_STATUS_LABEL[invoiceStanding(invoice, today)]}
                         </span>
                       </td>
                       <td

@@ -391,14 +391,23 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
   });
 
   if (!update) return { status: 'error', message: 'That update no longer exists.' };
-  if (update.status === 'published') {
-    return { status: 'error', message: 'This has already been sent.' };
+  if (update.status !== 'draft') {
+    return {
+      status: 'error',
+      message:
+        update.status === 'withdrawn'
+          ? 'This was sent and then taken down. Put it back instead.'
+          : 'This has already been sent.',
+    };
   }
 
-  await db.projectUpdate.update({
-    where: { id: update.id },
+  // Conditional on still being a draft, so a second click cannot email
+  // everyone twice.
+  const claimed = await db.projectUpdate.updateMany({
+    where: { id: update.id, status: 'draft' },
     data: { status: 'published', publishedAt: new Date() },
   });
+  if (claimed.count !== 1) return { status: 'error', message: 'This has already been sent.' };
 
   const recipients = update.project.client.contacts;
   // Somebody still setting up from a shared link has no email yet. They are
@@ -555,6 +564,52 @@ export async function discardUpdate(_previous: EditState, formData: FormData): P
   });
   revalidatePath(`/admin/projects/${update.project.slug}`);
   return { status: 'done', message: 'Discarded.' };
+}
+
+/**
+ * Takes a published update out of the client's portal: posted on the wrong
+ * project, or wrong in a way that matters. It is kept, marked, because it was
+ * emailed, and it can be put back.
+ */
+export async function takeDownUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+  return setUpdateShown(staff.id, formText(formData, 'updateId'), false);
+}
+
+/** Puts a taken-down update back in the portal, without emailing it again. */
+export async function putBackUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
+  return setUpdateShown(staff.id, formText(formData, 'updateId'), true);
+}
+
+async function setUpdateShown(staffId: string, updateId: string, shown: boolean): Promise<EditState> {
+  const update = await db.projectUpdate.findFirst({
+    where: { id: updateId, project: { deletedAt: null } },
+    select: { id: true, title: true, project: { select: { slug: true } } },
+  });
+  if (!update) return { status: 'error', message: 'That update no longer exists.' };
+
+  const changed = await db.projectUpdate.updateMany({
+    where: { id: update.id, status: shown ? 'withdrawn' : 'published' },
+    data: { status: shown ? 'published' : 'withdrawn' },
+  });
+  if (changed.count === 0) {
+    return { status: 'error', message: 'It changed a moment ago. Reload to see where it stands.' };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staffId,
+    action: shown ? 'project_update.put_back' : 'project_update.taken_down',
+    entityType: 'ProjectUpdate',
+    entityId: update.id,
+    summary: update.title,
+  });
+  revalidatePath(`/admin/projects/${update.project.slug}`);
+  revalidatePath('/portal', 'layout');
+  return { status: 'done', message: shown ? 'Back in their portal.' : 'Taken down.' };
 }
 
 /**

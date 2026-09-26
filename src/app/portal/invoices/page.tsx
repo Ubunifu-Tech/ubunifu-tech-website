@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
-import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
+import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -28,6 +28,7 @@ const STATUS_BADGE: Record<string, string> = {
  */
 export default async function PortalInvoices() {
   const actor = await requireClient();
+  const now = new Date();
 
   const invoices = await db.invoice.findMany({
     where: {
@@ -57,7 +58,14 @@ export default async function PortalInvoices() {
           receipt: { select: { number: true } },
           refunds: {
             orderBy: { refundedAt: 'asc' },
-            select: { id: true, number: true, amountMinor: true, currency: true, refundedAt: true },
+            select: {
+              id: true,
+              number: true,
+              amountMinor: true,
+              currency: true,
+              refundedAt: true,
+              cancelledAt: true,
+            },
           },
         },
       },
@@ -167,10 +175,12 @@ export default async function PortalInvoices() {
                         {formatShortDate(invoice.dueAt)}
                       </td>
                       <td className={table.td}>
-                        <span className={`${forms.badge} ${STATUS_BADGE[invoice.status] ?? ''}`}>
+                        <span
+                          className={`${forms.badge} ${STATUS_BADGE[invoiceStanding(invoice, now)] ?? ''}`}
+                        >
                           {invoice.status === 'void'
                             ? 'Cancelled'
-                            : INVOICE_STATUS_LABEL[invoice.status]}
+                            : INVOICE_STATUS_LABEL[invoiceStanding(invoice, now)]}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>
@@ -207,6 +217,7 @@ export default async function PortalInvoices() {
                                   </Link>{' '}
                                   · {formatMoney(refund.amountMinor, refund.currency)} sent back{' '}
                                   {formatShortDate(refund.refundedAt)}
+                                  {refund.cancelledAt ? ' · cancelled' : ''}
                                 </span>
                               ))}
                             </React.Fragment>

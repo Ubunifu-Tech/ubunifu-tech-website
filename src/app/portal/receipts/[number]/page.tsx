@@ -44,7 +44,9 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
           receivedAt: true,
           reversedAt: true,
           reversalReason: true,
+          // A cancelled refund sent nothing back, so the receipt does not show it.
           refunds: {
+            where: { cancelledAt: null },
             orderBy: { refundedAt: 'asc' },
             select: { number: true, amountMinor: true, currency: true, refundedAt: true },
           },

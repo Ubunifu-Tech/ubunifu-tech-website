@@ -5,7 +5,7 @@ import { InvoiceSheet } from '@/components/documents/InvoiceSheet';
 import { INVOICE_SHEET_SELECT, toSheet } from '@/lib/console/invoice-sheet';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
-import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
+import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import styles from '../../Portal.module.css';
@@ -45,6 +45,7 @@ export default async function PortalInvoice({
 
   if (!invoice) notFound();
   const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  const standing = invoiceStanding(invoice, new Date());
 
   return (
     <main className={styles.page}>
@@ -56,8 +57,12 @@ export default async function PortalInvoice({
         {invoice.status === 'void' ? (
           <span className={forms.badge}>Cancelled</span>
         ) : (
-          <span className={`${forms.badge} ${owed === 0 ? forms.badgeGood : forms.badgeWarn}`}>
-            {INVOICE_STATUS_LABEL[invoice.status]}
+          <span
+            className={`${forms.badge} ${
+              owed === 0 ? forms.badgeGood : standing === 'overdue' ? forms.badgeBad : forms.badgeWarn
+            }`}
+          >
+            {INVOICE_STATUS_LABEL[standing]}
           </span>
         )}
       </div>

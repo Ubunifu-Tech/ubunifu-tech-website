@@ -4,13 +4,14 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { Callout } from '@/components/console/Callout';
 import { activityFor } from '@/lib/console/activity';
-import { INVOICE_STATUS_LABEL, PAYMENT_METHODS } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate, moneyInput, todayInput } from '@/lib/console/money';
+import { INVOICE_STATUS_LABEL, invoiceStanding, PAYMENT_METHODS } from '@/lib/console/billing-labels';
+import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
+  DraftInvoiceDetails,
   PaymentMenu,
-  RefundMenu,
   RecordPaymentForm,
+  RefundMenu,
   SendInvoiceButton,
   VoidInvoiceForm,
 } from '../InvoiceControls';
@@ -95,6 +96,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               reference: true,
               refundedAt: true,
               reason: true,
+              cancelledAt: true,
+              cancelReason: true,
               recordedBy: { select: { name: true } },
             },
           },
@@ -181,8 +184,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               Print or save as PDF
             </Link>
           )}
-          <span className={`${forms.badge} ${STATUS_BADGE[invoice.status]}`}>
-            {INVOICE_STATUS_LABEL[invoice.status]}
+          <span className={`${forms.badge} ${STATUS_BADGE[invoiceStanding(invoice, now)]}`}>
+            {INVOICE_STATUS_LABEL[invoiceStanding(invoice, now)]}
           </span>
         </div>
       </div>
@@ -383,10 +386,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                           paymentId={payment.id}
                           receipt={payment.receipt}
                           reversed={payment.reversedAt !== null}
-                          refunded={payment.refunds.length > 0}
+                          refunded={payment.refunds.some((refund) => !refund.cancelledAt)}
                           refundable={
                             payment.amountMinor -
-                            payment.refunds.reduce((total, refund) => total + refund.amountMinor, 0)
+                            payment.refunds
+                              .filter((refund) => !refund.cancelledAt)
+                              .reduce((total, refund) => total + refund.amountMinor, 0)
                           }
                           currency={payment.currency}
                           today={todayInput()}
@@ -456,7 +461,14 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         {refund.receiptNumber ?? <span className={table.muted}>None</span>}
                       </td>
                       <td className={table.td}>
-                        <span className={table.clamp}>{refund.reason}</span>
+                        {refund.cancelledAt && (
+                          <span className={`${forms.badge} ${forms.badgeBad}`}>Cancelled</span>
+                        )}{' '}
+                        <span className={table.clamp}>
+                          {refund.cancelledAt
+                            ? `Cancelled ${formatShortDate(refund.cancelledAt)}: ${refund.cancelReason ?? 'no reason given'}`
+                            : refund.reason}
+                        </span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(refund.refundedAt)}
@@ -479,7 +491,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                             Refund note
                           </Link>
                         ) : (
-                          <RefundMenu refundId={refund.id} number={refund.number} />
+                          <RefundMenu
+                            refundId={refund.id}
+                            number={refund.number}
+                            cancelled={refund.cancelledAt !== null}
+                          />
                         )}
                       </td>
                     </tr>
@@ -534,6 +550,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               </div>
               {invoice.notes && <p className={styles.quote}>{invoice.notes}</p>}
               <div className={forms.actions}>
+                {!removedAt && invoice.status === 'draft' && (
+                  <DraftInvoiceDetails
+                    invoiceId={invoice.id}
+                    dueAt={invoice.dueAt ? toDateInputValue(invoice.dueAt) : ''}
+                    notes={invoice.notes ?? ''}
+                  />
+                )}
                 {!removedAt && invoice.status !== 'draft' && invoice.status !== 'void' && (
                   <SendInvoiceButton
                     invoiceId={invoice.id}

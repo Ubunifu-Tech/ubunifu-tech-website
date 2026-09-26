@@ -464,6 +464,9 @@ model AssetRequest {
 enum UpdateStatus {
   draft
   published
+  /// Taken down from the portal after it went out. Kept, because it was
+  /// emailed, and never deleted.
+  withdrawn
 }
 
 /// The Weekly Update. Publishing one is what the client sees change in the
@@ -782,6 +785,10 @@ model Refund {
   recordedById String?
   recordedBy   StaffUser?    @relation("RefundRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
   createdAt    DateTime      @default(now())
+  /// Recorded by mistake and taken back. The note keeps its number, marked
+  /// cancelled, and no total counts it, the same as a reversed payment.
+  cancelledAt  DateTime?
+  cancelReason String?
 
   @@index([paymentId])
 }

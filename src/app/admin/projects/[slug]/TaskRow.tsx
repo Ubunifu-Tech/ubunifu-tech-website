@@ -49,7 +49,7 @@ export function TaskRow({
     return (
       <div className={styles.row}>
         <div className={styles.wide}>
-          <RenameTask id={id} title={title} onDone={() => setMode('view')} />
+          <RenameTask id={id} title={title} teamOnly={teamOnly} onDone={() => setMode('view')} />
         </div>
       </div>
     );

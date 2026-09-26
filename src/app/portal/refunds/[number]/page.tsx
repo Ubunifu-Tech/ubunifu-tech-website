@@ -34,6 +34,8 @@ export default async function PortalRefund({ params }: { params: Promise<{ numbe
       reference: true,
       refundedAt: true,
       reason: true,
+      cancelledAt: true,
+      cancelReason: true,
       payment: {
         select: {
           amountMinor: true,

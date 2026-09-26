@@ -191,6 +191,14 @@ async function pickBillables(projectId: string, chosen: string[]) {
  * not silently rewrite a demand for money the client is already holding, so the
  * invoice keeps its own snapshot of what was charged and why.
  */
+/** Due after the payment terms set in billing settings, counted from today. */
+async function dueOnTerms(): Promise<Date> {
+  const { paymentTermsDays } = await getOrg();
+  const due = new Date();
+  due.setDate(due.getDate() + paymentTermsDays);
+  return due;
+}
+
 export async function createInvoice(
   _previous: BillingState,
   formData: FormData,
@@ -494,14 +502,13 @@ export async function recordEarlyPayment(
   }
 
   // Paid in full, it was due the day it was paid. Paid in part, the rest is
-  // due when the fees say, or in the usual fourteen days, not overdue at once.
-  const fortnight = new Date();
-  fortnight.setDate(fortnight.getDate() + 14);
+  // due when the fees say, or on the usual payment terms, not overdue at once.
+  const onTerms = await dueOnTerms();
   const feesDue = lines
     .map((line) => line.dueAt)
     .filter((due): due is Date => due !== null && due.getTime() > Date.now())
     .sort((a, b) => b.getTime() - a.getTime())[0];
-  const dueAt = read.amountMinor < totalMinor ? (feesDue ?? fortnight) : read.receivedAt;
+  const dueAt = read.amountMinor < totalMinor ? (feesDue ?? onTerms) : read.receivedAt;
 
   let result: { invoice: { id: string; number: string }; receipt: { id: string; number: string } };
   try {
@@ -628,6 +635,7 @@ export async function recordPayment(
     };
   }
 
+  const onTerms = await dueOnTerms();
   let receipt: { id: string; number: string; wasDraft: boolean };
   try {
     receipt = await retryOnConflict(() =>
@@ -645,12 +653,10 @@ export async function recordPayment(
 
         // Paid before it was sent: the payment is what issues it. A draft
         // otherwise stays a draft whatever is paid against it. What is left
-        // falls due in the usual fourteen days if its date has already gone.
+        // falls due on the usual payment terms if its date has already gone.
         const wasDraft = fresh.status === 'draft';
         if (wasDraft) {
           const leftOver = fresh.totalMinor - fresh.paidMinor - amountMinor > 0;
-          const fortnight = new Date();
-          fortnight.setDate(fortnight.getDate() + 14);
           const current = await tx.invoice.findUniqueOrThrow({
             where: { id: invoice.id },
             select: { dueAt: true },
@@ -661,7 +667,7 @@ export async function recordPayment(
               status: 'sent',
               issuedAt: fresh.issuedAt ?? new Date(),
               ...(leftOver && (!current.dueAt || current.dueAt.getTime() < Date.now())
-                ? { dueAt: fortnight }
+                ? { dueAt: onTerms }
                 : {}),
             },
           });
@@ -850,7 +856,7 @@ export async function recordRefund(
       currency: true,
       receivedAt: true,
       reversedAt: true,
-      refunds: { select: { amountMinor: true } },
+      refunds: { where: { cancelledAt: null }, select: { amountMinor: true } },
       invoice: { select: { id: true, number: true, project: { select: { slug: true } } } },
     },
   });
@@ -898,7 +904,7 @@ export async function recordRefund(
           select: {
             amountMinor: true,
             reversedAt: true,
-            refunds: { select: { amountMinor: true } },
+            refunds: { where: { cancelledAt: null }, select: { amountMinor: true } },
           },
         });
         const left = fresh.amountMinor - fresh.refunds.reduce((t, r) => t + r.amountMinor, 0);
@@ -973,6 +979,7 @@ export async function emailRefund(
       amountMinor: true,
       currency: true,
       refundedAt: true,
+      cancelledAt: true,
       payment: {
         select: {
           receipt: { select: { number: true } },
@@ -995,6 +1002,9 @@ export async function emailRefund(
     },
   });
   if (!refund) return { status: 'error', message: 'That refund no longer exists.' };
+  if (refund.cancelledAt) {
+    return { status: 'error', message: 'This refund was cancelled, so there is nothing to send.' };
+  }
 
   const contact = refund.payment.invoice.client.contacts[0];
   if (!contact) return { status: 'error', message: 'This client has no main contact.' };
@@ -1052,6 +1062,66 @@ export async function emailRefund(
 class AlreadyReversed extends Error {}
 
 /**
+ * Takes back a refund recorded by mistake: the wrong amount, or money that
+ * never actually went back. The note keeps its number, marked cancelled, and
+ * nothing counts it any more, so the payment can be refunded properly or
+ * reversed.
+ */
+export async function cancelRefund(
+  _previous: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const reason = formText(formData, 'reason').slice(0, 200);
+  if (reason.length < 4) {
+    return { status: 'error', message: 'Say why it is being cancelled, so the record makes sense later.' };
+  }
+
+  const refund = await db.refund.findFirst({
+    where: { id: formText(formData, 'refundId'), payment: livePayment },
+    select: {
+      id: true,
+      number: true,
+      amountMinor: true,
+      currency: true,
+      payment: { select: { invoice: { select: { id: true, number: true, project: { select: { slug: true } } } } } },
+    },
+  });
+  if (!refund) return { status: 'error', message: 'That refund no longer exists.' };
+
+  const cancelled = await db.$transaction(async (tx) => {
+    // The same lock recording a payment or a refund takes.
+    await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${refund.payment.invoice.id} FOR UPDATE`;
+    const { count } = await tx.refund.updateMany({
+      where: { id: refund.id, cancelledAt: null },
+      data: { cancelledAt: new Date(), cancelReason: reason },
+    });
+    if (count === 0) return false;
+    await recomputeInvoice(tx, refund.payment.invoice.id);
+    return true;
+  });
+  if (!cancelled) return { status: 'error', message: 'That refund was already cancelled.' };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'refund.cancelled',
+    entityType: 'Refund',
+    entityId: refund.id,
+    summary: `${refund.number}, ${formatMoney(refund.amountMinor, refund.currency)}: ${reason}`,
+  });
+
+  revalidatePath(`/admin/invoices/${refund.payment.invoice.number}`);
+  revalidatePath(`/admin/refunds/${refund.number}`);
+  if (refund.payment.invoice.project) {
+    revalidatePath(`/admin/projects/${refund.payment.invoice.project.slug}`);
+  }
+  return { status: 'done', message: `${refund.number} cancelled.` };
+}
+
+/**
  * Takes back a payment recorded by mistake: the wrong amount, the wrong
  * invoice, or money that never arrived.
  *
@@ -1084,7 +1154,7 @@ export async function reversePayment(
         select: { id: true, number: true, projectId: true, project: { select: { slug: true } } },
       },
       receipt: { select: { number: true } },
-      _count: { select: { refunds: true } },
+      _count: { select: { refunds: { where: { cancelledAt: null } } } },
     },
   });
   if (!payment) return { status: 'error', message: 'That payment no longer exists.' };
@@ -1093,7 +1163,8 @@ export async function reversePayment(
   if (payment._count.refunds > 0) {
     return {
       status: 'error',
-      message: 'Money was refunded against this payment, so it cannot be reversed.',
+      message:
+        'Money was refunded against this payment, so it cannot be reversed. If the refund was recorded by mistake, cancel it first.',
     };
   }
 
@@ -1104,7 +1175,7 @@ export async function reversePayment(
       // recorded at the same moment is counted before or after, never lost.
       await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${payment.invoice.id} FOR UPDATE`;
       const { count } = await tx.payment.updateMany({
-        where: { id: payment.id, reversedAt: null, refunds: { none: {} } },
+        where: { id: payment.id, reversedAt: null, refunds: { none: { cancelledAt: null } } },
         data: { reversedAt: new Date(), reversalReason: reason, reversedById: staff.id },
       });
       if (count === 0) throw new AlreadyReversed();
@@ -1150,6 +1221,48 @@ export async function reversePayment(
         : `${payment.invoice.number} is still paid in full.`
     }`,
   };
+}
+
+/**
+ * The due date and notes of an invoice not yet sent. Once it has gone, what
+ * the client was sent stands; void it and raise another to change it.
+ */
+export async function saveDraftInvoice(
+  _previous: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const invoice = await db.invoice.findFirst({
+    where: { id: formText(formData, 'invoiceId'), ...liveInvoice },
+    select: { id: true, number: true, status: true, dueAt: true, notes: true },
+  });
+  if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
+
+  const rawDue = formText(formData, 'dueAt');
+  const dueAt = rawDue ? parseDateInput(rawDue) : null;
+  if (rawDue && !dueAt) return { status: 'error', message: 'That due date does not look right.' };
+  const notes = formText(formData, 'notes').slice(0, 2000) || null;
+
+  const saved = await db.invoice.updateMany({
+    where: { id: invoice.id, status: 'draft' },
+    data: { dueAt, notes },
+  });
+  if (saved.count !== 1) {
+    return { status: 'error', message: 'It has been sent, so it stays as the client has it.' };
+  }
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'invoice.draft_saved',
+    entityType: 'Invoice',
+    entityId: invoice.id,
+    summary: `${invoice.number}: due ${dueAt ? dueAt.toISOString().slice(0, 10) : 'on receipt'}`,
+  });
+  revalidatePath(`/admin/invoices/${invoice.number}`);
+  return { status: 'done', message: 'Saved.' };
 }
 
 /**

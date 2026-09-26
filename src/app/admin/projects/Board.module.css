@@ -364,3 +364,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.noticeLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

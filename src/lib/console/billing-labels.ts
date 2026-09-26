@@ -16,6 +16,27 @@ export const PAYMENT_METHODS = [
   { value: 'other', label: 'Something else' },
 ] as const;
 
+/**
+ * How an invoice stands today. The stored status changes only when the
+ * invoice is touched, so one past its due date and still owed is overdue
+ * from the date itself, whether or not anything has happened to it since.
+ */
+export function invoiceStanding(
+  invoice: { status: string; dueAt: Date | null; totalMinor: number; paidMinor: number },
+  now: Date,
+): string {
+  const owing = invoice.status === 'sent' || invoice.status === 'part_paid';
+  if (
+    owing &&
+    invoice.dueAt !== null &&
+    invoice.dueAt.getTime() < now.getTime() &&
+    invoice.paidMinor < invoice.totalMinor
+  ) {
+    return 'overdue';
+  }
+  return invoice.status;
+}
+
 export const INVOICE_STATUS_LABEL: Record<string, string> = {
   draft: 'Draft',
   sent: 'Sent',

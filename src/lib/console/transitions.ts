@@ -66,9 +66,9 @@ export type Transition = {
 /**
  * Edges, by originating status.
  *
- * on_hold and cancelled are deliberately absent as sources — their outgoing
- * edges depend on where the project was before, so they are computed in
- * transitionsFor() rather than listed.
+ * on_hold has no edges listed and cancelled only the one back to lead: where
+ * they can go depends on where the project was before, so the rest are
+ * computed in transitionsFor().
  */
 const TABLE: Record<ProjectStatus, Transition[]> = {
   lead: [
@@ -401,10 +401,37 @@ export async function heldFrom(projectId: string): Promise<ProjectStatus | null>
   return event?.from ?? null;
 }
 
+/**
+ * Where a cancelled project stood when it was cancelled, read back from the
+ * event log the same way a hold is. A project cancelled by mistake, or
+ * revived by the client, picks up there rather than starting over as a lead.
+ */
+export async function cancelledFrom(projectId: string): Promise<ProjectStatus | null> {
+  const event = await db.projectStatusEvent.findFirst({
+    where: { projectId, to: 'cancelled' },
+    orderBy: { createdAt: 'desc' },
+    select: { from: true },
+  });
+  return event?.from ?? null;
+}
+
 export async function transitionsFor(project: {
   id: string;
   status: ProjectStatus;
 }): Promise<Transition[]> {
+  if (project.status === 'cancelled') {
+    const from = await cancelledFrom(project.id);
+    if (!from || from === 'lead' || from === 'cancelled') return TABLE.cancelled;
+    return [
+      {
+        to: from,
+        label: `Pick it back up (${STAFF_LABEL[from].toLowerCase()})`,
+        detail: 'Where it was when it was cancelled.',
+        tone: 'primary',
+      },
+      ...TABLE.cancelled,
+    ];
+  }
   if (project.status !== 'on_hold') return TABLE[project.status];
 
   const held = await heldFrom(project.id);
@@ -700,6 +727,18 @@ export function guardsFor(to: ProjectStatus, facts: GuardFacts): Guard[] {
         fix: 'billing',
       });
     }
+  }
+
+  // Delivery is for good (see 3 above), so the first move that records it
+  // asks for a second look instead of happening on one click.
+  if ((to === 'launched' || to === 'handover') && !facts.hasDelivered) {
+    guards.push({
+      severity: 'warn',
+      message:
+        to === 'launched'
+          ? 'This records today as the launch date. Afterwards the project can be closed, but not cancelled.'
+          : 'This records the work as delivered. Afterwards the project can be closed, but not cancelled.',
+    });
   }
 
   /**

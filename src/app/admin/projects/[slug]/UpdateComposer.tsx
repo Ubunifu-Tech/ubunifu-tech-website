@@ -6,7 +6,9 @@ import {
   editUpdate,
   emailUpdateToRest,
   publishUpdate,
+  putBackUpdate,
   saveUpdate,
+  takeDownUpdate,
   type EditState,
 } from './actions';
 import { TextAreaField, TextField } from '@/components/console/Fields';
@@ -30,6 +32,8 @@ export type UpdateRow = {
   body: string;
   previewUrl: string | null;
   published: boolean;
+  /** Taken down from the portal after it went out. */
+  withdrawn: boolean;
   when: string;
   /** Addresses it was emailed to. */
   reached: number;
@@ -52,6 +56,7 @@ function Result({ state }: { state: EditState }) {
 
 /** Where a published update stands, from who it actually reached. */
 function sentState(update: UpdateRow): { label: string; tone: string } {
+  if (update.withdrawn) return { label: 'Taken down', tone: '' };
   if (!update.published) return { label: 'Draft', tone: '' };
   const everyone = update.reached + update.unreached;
   if (update.unreached === 0) {
@@ -180,21 +185,82 @@ function DraftMenu({ update }: { update: UpdateRow }) {
   );
 }
 
-/** For a published update some people have not been emailed. */
-function SendToRest({ update }: { update: UpdateRow }) {
-  const [state, action, pending] = useActionState(emailUpdateToRest, INITIAL);
+/**
+ * A sent update's choices: email the people it has not reached, take it out
+ * of the portal, or put back one that was taken down.
+ */
+function SentMenu({ update }: { update: UpdateRow }) {
+  const [sendState, send, sending] = useActionState(emailUpdateToRest, INITIAL);
+  const [downState, takeDown, takingDown] = useActionState(takeDownUpdate, INITIAL);
+  const [backState, putBack, puttingBack] = useActionState(putBackUpdate, INITIAL);
+  const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const said = [sendState, downState, backState].find((state) => state.message);
+
   return (
-    <form action={action} className={table.actionGroup}>
-      <input type="hidden" name="updateId" value={update.id} />
-      {state.message && (
-        <span className={state.status === 'error' ? forms.error : table.muted}>
-          {state.message}
-        </span>
+    <RowMenu
+      label={`Actions for ${update.title}`}
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setAsking(false);
+      }}
+      wide={asking}
+    >
+      {asking ? (
+        <form action={takeDown} className={forms.form}>
+          <input type="hidden" name="updateId" value={update.id} />
+          <MenuTitle>
+            Take it out of their portal? Emails already sent stay in their inbox.
+          </MenuTitle>
+          <div className={forms.actions}>
+            <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={takingDown}>
+              {takingDown ? 'Taking it down…' : 'Take it down'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setAsking(false)}
+            >
+              Keep it
+            </button>
+          </div>
+          <Result state={downState} />
+        </form>
+      ) : (
+        <>
+          <MenuList>
+            {update.published && update.unreached > 0 && (
+              <form action={send}>
+                <input type="hidden" name="updateId" value={update.id} />
+                <MenuItem type="submit" disabled={sending}>
+                  {sending ? 'Sending…' : update.reached > 0 ? 'Send to the rest' : 'Email it'}
+                </MenuItem>
+              </form>
+            )}
+            {update.withdrawn && (
+              <form action={putBack}>
+                <input type="hidden" name="updateId" value={update.id} />
+                <MenuItem type="submit" disabled={puttingBack}>
+                  {puttingBack ? 'Putting it back…' : 'Put it back in their portal'}
+                </MenuItem>
+              </form>
+            )}
+            {update.published && (
+              <>
+                {update.unreached > 0 && <MenuDivider />}
+                <MenuItem danger onClick={() => setAsking(true)}>
+                  Take it down
+                </MenuItem>
+              </>
+            )}
+          </MenuList>
+          {said?.message && (
+            <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
+          )}
+        </>
       )}
-      <button type="submit" className={table.action} disabled={pending}>
-        {pending ? 'Sending…' : update.reached > 0 ? 'Send to the rest' : 'Email it'}
-      </button>
-    </form>
+    </RowMenu>
   );
 }
 
@@ -248,11 +314,11 @@ export function UpdateComposer({
                     </span>
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
-                    {readOnly ? null : !update.published ? (
+                    {readOnly ? null : update.published || update.withdrawn ? (
+                      <SentMenu update={update} />
+                    ) : (
                       <DraftMenu update={update} />
-                    ) : update.unreached > 0 ? (
-                      <SendToRest update={update} />
-                    ) : null}
+                    )}
                   </td>
                 </tr>
               ))}

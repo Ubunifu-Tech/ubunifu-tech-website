@@ -24,7 +24,7 @@ import { billableLines } from '@/lib/console/billing';
 import { getOrg } from '@/lib/console/org';
 import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
-import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
+import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import {
   formatMoney,
   formatRelative,
@@ -302,9 +302,9 @@ export default async function ProjectPage({
       due: item.dueAt ? formatShortDate(item.dueAt) : null,
     }));
 
-  // Fourteen days, unless somebody changes it on the form.
+  // The payment terms in billing settings, unless somebody changes it on the form.
   const defaultDue = new Date(now);
-  defaultDue.setDate(defaultDue.getDate() + 14);
+  defaultDue.setDate(defaultDue.getDate() + org.paymentTermsDays);
 
   // Who each published update has reached, by address, against who could
   // be emailed today: the difference is what Send to the rest would send.
@@ -322,6 +322,7 @@ export default async function ProjectPage({
       body: update.bodyMarkdown,
       previewUrl: update.previewUrl,
       published: update.status === 'published',
+      withdrawn: update.status === 'withdrawn',
       when: formatShortDate(update.publishedAt ?? update.createdAt),
       reached: reached.size,
       unreached: emailable.filter((address) => !reached.has(address)).length,
@@ -799,7 +800,7 @@ export default async function ProjectPage({
                 startDate: toDateInputValue(project.startDate),
                 targetDate: toDateInputValue(project.targetDate),
                 currencyFixed:
-                  project.invoices.length > 0
+                  project.invoices.some((invoice) => invoice.status !== 'void')
                     ? 'Stays as it is now that the project has invoices.'
                     : project.lineItems.some((line) => line.amountMinor > 0)
                       ? 'Stays as it is while fees have prices. Clear the prices first to change it.'
@@ -1103,7 +1104,9 @@ export default async function ProjectPage({
                                 {invoice.number}
                               </Link>
                             </td>
-                            <td className={table.td}>{INVOICE_STATUS_LABEL[invoice.status]}</td>
+                            <td className={table.td}>
+                              {INVOICE_STATUS_LABEL[invoiceStanding(invoice, now)]}
+                            </td>
                             <td className={`${table.td} ${table.nowrap}`}>
                               {formatShortDate(invoice.dueAt)}
                             </td>

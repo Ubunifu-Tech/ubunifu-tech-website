@@ -450,16 +450,20 @@ export function AddTask({ phaseId }: { phaseId: string }) {
 export function RenameTask({
   id,
   title,
+  teamOnly,
   onDone,
 }: {
   id: string;
   title: string;
+  /** Kept off the client's view of the plan. */
+  teamOnly: boolean;
   onDone: () => void;
 }) {
   const [state, action, pending] = useActionState(closing(renameTask, onDone), IDLE);
   return (
     <form action={action} className={styles.confirmRow}>
       <input type="hidden" name="deliverableId" value={id} />
+      <input type="hidden" name="visibility" value="set" />
       <input
         name="title"
         className={`${forms.control} ${styles.renameInput}`}
@@ -469,6 +473,7 @@ export function RenameTask({
         required
         autoFocus
       />
+      <CheckField name="private" label="Only the team sees it" defaultChecked={teamOnly} />
       <span className={styles.confirmButtons}>
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Saving…' : 'Save'}

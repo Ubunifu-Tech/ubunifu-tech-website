@@ -9,6 +9,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { db } from '@/lib/db';
+import { invoiceStanding } from '@/lib/console/billing-labels';
 import { requireClient } from '@/lib/console/auth';
 import { awaitingSignature, liveInvoice, liveTicket, waitingOnClient } from '@/lib/console/live';
 import { clientStage } from '@/lib/console/project-status';
@@ -118,7 +119,7 @@ export default async function PortalHome() {
       detail: `${formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)}${
         invoice.dueAt ? `, due ${formatDate(invoice.dueAt)}` : ''
       }`,
-      urgent: invoice.status === 'overdue',
+      urgent: invoiceStanding(invoice, now) === 'overdue',
     })),
     ...projects.flatMap((project) =>
       project.reviews[0]?.status === 'open'

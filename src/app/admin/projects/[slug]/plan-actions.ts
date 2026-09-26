@@ -57,7 +57,9 @@ export async function updateProjectDetails(
       id: true,
       slug: true,
       currency: true,
-      _count: { select: { invoices: true } },
+      // A voided invoice asks nobody for money, so it does not hold the
+      // currency in place.
+      _count: { select: { invoices: { where: { status: { not: 'void' } } } } },
       lineItems: {
         where: { status: { not: 'cancelled' }, amountMinor: { gt: 0 } },
         select: { id: true },
@@ -346,22 +348,33 @@ export async function renameTask(_previous: PlanState, formData: FormData): Prom
 
   const task = await db.deliverable.findFirst({
     where: { id: formText(formData, 'deliverableId'), phase: { project: { deletedAt: null } } },
-    select: { id: true, phase: { select: { project: { select: { id: true, slug: true } } } } },
+    select: {
+      id: true,
+      isClientVisible: true,
+      phase: { select: { project: { select: { id: true, slug: true } } } },
+    },
   });
   if (!task) return { status: 'error', message: 'That task no longer exists.' };
 
   const title = formText(formData, 'title');
   if (title.length < 2 || title.length > 300)
     return { status: 'error', message: 'Say what the task is.' };
+  // Only a form that offers the choice changes who sees it.
+  const isClientVisible = formData.has('visibility')
+    ? formData.get('private') !== 'on'
+    : task.isClientVisible;
 
-  await db.deliverable.update({ where: { id: task.id }, data: { title } });
+  await db.deliverable.update({ where: { id: task.id }, data: { title, isClientVisible } });
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
     action: 'deliverable.renamed',
     entityType: 'Project',
     entityId: task.phase.project.id,
-    summary: title,
+    summary:
+      isClientVisible === task.isClientVisible
+        ? title
+        : `${title}, now ${isClientVisible ? 'shown to the client' : 'for the team only'}`,
     metadata: { deliverableId: task.id },
   });
   refresh(task.phase.project.slug);

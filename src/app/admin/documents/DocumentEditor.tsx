@@ -4,6 +4,7 @@ import React, { useActionState, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import {
   askCopilot,
+  discardDocument,
   saveDetails,
   saveVersion,
   resendSignatureLink,
@@ -441,6 +442,39 @@ export function SuggestionActions({
       </div>
       <Result state={startState} />
       <Result state={asideState} />
+    </form>
+  );
+}
+
+/** Throwing away a draft that never went out, after asking once. */
+export function DiscardDraft({ documentId }: { documentId: string }) {
+  const [state, action, pending] = useActionState(discardDocument, INITIAL);
+  const [asking, setAsking] = useState(false);
+
+  if (!asking) {
+    return (
+      <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setAsking(true)}>
+        Discard this draft
+      </button>
+    );
+  }
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="documentId" value={documentId} />
+      <p className={forms.hint}>It has never been sent, so nothing is lost but the draft itself.</p>
+      <div className={forms.actions}>
+        <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>
+          {pending ? 'Discarding…' : 'Discard it'}
+        </button>
+        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setAsking(false)}>
+          Keep it
+        </button>
+      </div>
+      {state.status === 'error' && (
+        <p className={forms.error} role="alert">
+          {state.message}
+        </p>
+      )}
     </form>
   );
 }

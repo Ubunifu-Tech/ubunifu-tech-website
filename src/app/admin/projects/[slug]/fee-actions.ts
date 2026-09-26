@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { BillingKind, LineItemStatus } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { dropOffSchedulePeriods } from '@/lib/console/renewals';
 import { formatMoney, parseDateInput, parseMoney, toDateInputValue } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { BILLING, isRecurring } from '@/lib/console/fee-labels';
@@ -231,6 +232,16 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
         : { nextDueAt: null, intervalMonths: null }),
     },
   });
+
+  // A new date or a new way of billing is a new schedule: the old one's
+  // unbilled periods would otherwise be offered alongside it.
+  const nextDueAt = isRecurring(parsed.billingKind) ? parsed.nextDueAt : null;
+  if (
+    line.billingKind !== parsed.billingKind ||
+    line.nextDueAt?.getTime() !== nextDueAt?.getTime()
+  ) {
+    await dropOffSchedulePeriods(line.id);
+  }
 
   // Before and after for everything that changed: a price change is the thing
   // on a project a client is most likely to question later.

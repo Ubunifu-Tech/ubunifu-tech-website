@@ -12,6 +12,7 @@ import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { renewingLine } from '@/lib/console/live';
+import { RenewalActions } from './RenewalActions';
 
 export const metadata = { title: 'Renewals' };
 
@@ -49,7 +50,7 @@ export default async function RenewalsPage() {
 
   const renewals = await db.renewalEvent.findMany({
     where: {
-      status: { in: ['pending', 'drafted', 'invoiced'] },
+      status: { in: ['pending', 'drafted', 'invoiced', 'skipped'] },
       lineItem: renewingLine,
     },
     orderBy: { dueAt: 'asc' },
@@ -93,7 +94,10 @@ export default async function RenewalsPage() {
   const later = unbilled.filter(
     (renewal) => days(renewal.dueAt) > renewal.lineItem.renewalLeadDays,
   );
-  const handled = renewals.filter((renewal) => renewal.status !== 'pending');
+  const handled = renewals.filter(
+    (renewal) => renewal.status !== 'pending' && renewal.status !== 'skipped',
+  );
+  const skipped = renewals.filter((renewal) => renewal.status === 'skipped');
 
   /** What a set of renewals comes to, per currency, never added across them. */
   const toInvoice = (rows: typeof renewals) => {
@@ -130,6 +134,16 @@ export default async function RenewalsPage() {
       hint: 'Periods that have been billed. Kept so a year can be looked up later.',
       rows: handled,
     },
+    ...(skipped.length > 0
+      ? [
+          {
+            key: 'skipped',
+            title: 'Skipped',
+            hint: 'Periods chosen not to bill. Bring one back if it was a mistake.',
+            rows: skipped,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -261,23 +275,23 @@ export default async function RenewalsPage() {
                             </span>
                           </td>
                           <td className={`${table.td} ${table.actions}`}>
-                            <span className={table.actionGroup}>
-                              {renewal.invoice ? (
+                            {renewal.invoice ? (
+                              <span className={table.actionGroup}>
                                 <Link
                                   href={`/invoices/${renewal.invoice.number}`}
                                   className={table.action}
                                 >
                                   {renewal.invoice.number}
                                 </Link>
-                              ) : (
-                                <Link
-                                  href={`/projects/${line.project.slug}`}
-                                  className={table.action}
-                                >
-                                  Invoice it
-                                </Link>
-                              )}
-                            </span>
+                              </span>
+                            ) : (
+                              <RenewalActions
+                                renewalId={renewal.id}
+                                label={`${line.label}, ${periodLabel(renewal.periodStart, renewal.periodEnd)}`}
+                                status={renewal.status}
+                                invoiceHref={`/projects/${line.project.slug}?tab=fees`}
+                              />
+                            )}
                           </td>
                         </tr>
                       );

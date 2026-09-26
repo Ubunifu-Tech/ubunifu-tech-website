@@ -1,0 +1,24 @@
+/* The period and currency choices above the reports, side by side. */
+.switches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.section {
+  margin: var(--space-4) 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-medium);
+}
+
+.rates {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.needsRate {
+  color: var(--tone-amber-fg);
+}

@@ -48,7 +48,16 @@ function auditWhere(key: string): Prisma.AuditEventWhereInput | null {
     case 'failures':
       return null;
     case 'money':
-      return actionStartsWith(['invoice.', 'payment.', 'receipt.', 'refund.', 'line_item.']);
+      return actionStartsWith([
+        'invoice.',
+        'payment.',
+        'receipt.',
+        'refund.',
+        'line_item.',
+        'cost.',
+        'regular_cost.',
+        'exchange_rate.',
+      ]);
     case 'access':
       return { action: { contains: 'sign_in' } };
     default:
@@ -67,7 +76,7 @@ export default async function ActivityPage({
   // Amounts are in these lines, so they are left out for anyone who cannot
   // see money, the same as the pages they would link to.
   const hidden = moneyActionsHiddenFrom(staff);
-  const seesMoney = can(staff, 'invoices') || can(staff, 'fees');
+  const seesMoney = can(staff, 'invoices') || can(staff, 'fees') || can(staff, 'finance');
   const filters = FILTERS.filter((filter) => filter.key !== 'money' || seesMoney);
   const active = filters.some((f) => f.key === show) ? show! : 'all';
 

@@ -130,6 +130,13 @@ const ACTION_LABELS: Record<string, string> = {
   'payment.reversed': 'Payment reversed',
   'refund.recorded': 'Refund recorded',
   'refund.cancelled': 'Refund cancelled',
+  'cost.recorded': 'Cost added',
+  'cost.changed': 'Cost changed',
+  'cost.removed': 'Cost removed',
+  'regular_cost.saved': 'Regular cost saved',
+  'regular_cost.stopped': 'Regular cost stopped',
+  'regular_cost.restarted': 'Regular cost started again',
+  'exchange_rate.saved': 'Exchange rate saved',
   'renewal.skipped': 'Renewal period skipped',
   'renewal.brought_back': 'Skipped renewal brought back',
   'refund.sent': 'Refund note sent',
@@ -244,9 +251,10 @@ export async function activityForClient(
   return activityFor(ids, limit);
 }
 
-/** Lines about invoices and payments, and lines about prices. */
+/** Lines about invoices and payments, about prices, and about costs. */
 const BILLING_ACTIONS = ['invoice.', 'payment.', 'receipt.', 'refund.'];
 const FEE_ACTIONS = ['line_item.'];
+const FINANCE_ACTIONS = ['cost.', 'regular_cost.', 'exchange_rate.'];
 
 /**
  * The kinds of line that carry amounts this person is not allowed to see,
@@ -255,7 +263,11 @@ const FEE_ACTIONS = ['line_item.'];
 export function moneyActionsHiddenFrom(staff: StaffActor): string[] {
   const billing = can(staff, 'invoices');
   const fees = billing || can(staff, 'fees');
-  return [...(billing ? [] : BILLING_ACTIONS), ...(fees ? [] : FEE_ACTIONS)];
+  return [
+    ...(billing ? [] : BILLING_ACTIONS),
+    ...(fees ? [] : FEE_ACTIONS),
+    ...(can(staff, 'finance') ? [] : FINANCE_ACTIONS),
+  ];
 }
 
 export const actionStartsWith = (prefixes: string[]): Prisma.AuditEventWhereInput => ({

@@ -20,6 +20,7 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
     Refund: can(staff, 'invoices'),
     Document: can(staff, 'documents'),
     Enquiry: can(staff, 'enquiries'),
+    Cost: can(staff, 'finance'),
   };
   const ids = (type: string) =>
     allowed[type] === false
@@ -45,6 +46,7 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
     contacts,
     clients,
     items,
+    costs,
   ] = await Promise.all([
     db.invoice.findMany({
       where: { id: { in: ids('Invoice') } },
@@ -86,6 +88,10 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
       where: { id: { in: ids('AssetRequest') }, project: { deletedAt: null } },
       select: { id: true, project: { select: { slug: true } } },
     }),
+    db.cost.findMany({
+      where: { id: { in: ids('Cost') } },
+      select: { id: true, incurredOn: true },
+    }),
   ]);
 
   for (const row of invoices) put('Invoice', row.id, `/invoices/${row.number}`);
@@ -111,6 +117,9 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
   }
   for (const id of ids('Enquiry')) put('Enquiry', id, `/enquiries/${id}`);
   for (const id of ids('StaffUser')) put('StaffUser', id, '/settings/team');
+  for (const row of costs) {
+    put('Cost', row.id, `/finance/costs?month=${row.incurredOn.toISOString().slice(0, 7)}`);
+  }
 
   return links;
 }

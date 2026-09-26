@@ -36,6 +36,11 @@ export const PERMISSIONS = [
     description: 'See money, raise invoices, record payments, and handle renewals.',
   },
   {
+    key: 'finance',
+    label: 'Costs and reports',
+    description: 'Record what the business spends, and see the financial reports and profit.',
+  },
+  {
     key: 'documents',
     label: 'Documents',
     description: 'See, write and send proposals and agreements, prices included.',

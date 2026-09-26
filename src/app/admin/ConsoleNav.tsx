@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
+  BarChart3,
   Briefcase,
   Building2,
   Inbox,
@@ -15,6 +16,7 @@ import {
   Receipt,
   RefreshCw,
   Settings,
+  Wallet,
 } from 'lucide-react';
 import type { Permission } from '@/lib/console/permissions';
 import styles from './Admin.module.css';
@@ -43,6 +45,8 @@ const ICONS = {
   projects: Briefcase,
   invoices: Receipt,
   renewals: RefreshCw,
+  reports: BarChart3,
+  costs: Wallet,
   documents: FileText,
   requests: LifeBuoy,
   posts: Newspaper,
@@ -79,6 +83,8 @@ const GROUPS: { label?: string; items: Item[] }[] = [
     items: [
       { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices', need: 'invoices' },
       { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals', need: 'invoices' },
+      { href: '/finance', label: 'Reports', icon: 'reports', need: 'finance' },
+      { href: '/finance/costs', label: 'Costs', icon: 'costs', need: 'finance' },
     ],
   },
   {
@@ -119,6 +125,15 @@ export function ConsoleNav({
     ...group,
     items: group.items.filter((item) => !item.need || permissions.includes(item.need)),
   })).filter((group) => group.items.length > 0);
+  // The closest match is the current page: /finance/costs is Costs, not also
+  // Reports at /finance.
+  const matching = GROUPS.flatMap((group) => group.items)
+    .filter((item) =>
+      item.href === '/'
+        ? pathname === '/'
+        : pathname === item.href || pathname.startsWith(`${item.href}/`),
+    )
+    .sort((a, b) => b.href.length - a.href.length)[0];
 
   return (
     <nav className={styles.nav} aria-label="Console">
@@ -127,8 +142,7 @@ export function ConsoleNav({
           {group.label && <p className={styles.navGroupLabel}>{group.label}</p>}
           {group.items.map((item) => {
             const Icon = ICONS[item.icon];
-            const current =
-              item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+            const current = matching?.href === item.href;
             const count = item.count ? counts[item.count] : 0;
 
             return (

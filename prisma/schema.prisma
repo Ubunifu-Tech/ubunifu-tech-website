@@ -47,27 +47,28 @@ enum StaffRole {
 }
 
 model StaffUser {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String
-  role      StaffRole @default(member)
+  id         String    @id @default(cuid())
+  email      String    @unique
+  name       String
+  role       StaffRole @default(member)
   /// What they do here, shown beside their name: "Designer", "Developer".
-  title     String?
-  isActive  Boolean   @default(true)
+  title      String?
+  isActive   Boolean   @default(true)
   lastSeenAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  ownedProjects   Project[]        @relation("ProjectOwner")
+  ownedProjects    Project[]         @relation("ProjectOwner")
   documentVersions DocumentVersion[]
-  payments        Payment[]        @relation("PaymentRecordedBy")
-  reversedPayments Payment[]       @relation("PaymentReversedBy")
-  refundsRecorded Refund[]         @relation("RefundRecordedBy")
-  timeEntries     TimeEntry[]
-  posts           Post[]
-  mediaAssets     MediaAsset[]
-  assignedTasks   Deliverable[]    @relation("DeliverableAssignee")
-  reviewsAsked    ProjectReview[]
+  payments         Payment[]         @relation("PaymentRecordedBy")
+  reversedPayments Payment[]         @relation("PaymentReversedBy")
+  refundsRecorded  Refund[]          @relation("RefundRecordedBy")
+  timeEntries      TimeEntry[]
+  posts            Post[]
+  mediaAssets      MediaAsset[]
+  assignedTasks    Deliverable[]     @relation("DeliverableAssignee")
+  reviewsAsked     ProjectReview[]
+  costsRecorded    Cost[]            @relation("CostRecordedBy")
 
   @@index([isActive])
 }
@@ -75,18 +76,18 @@ model StaffUser {
 /// The client organisation. A person is a ClientContact; billing and projects
 /// hang off the organisation so a change of contact does not orphan history.
 model Client {
-  id           String    @id @default(cuid())
-  name         String
-  slug         String    @unique
-  legalName    String?
-  country      String    @default("TZ")
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  legalName String?
+  country   String    @default("TZ")
   /// Default currency for this client's invoices. Overridable per invoice.
-  currency     String    @default("USD")
-  website      String?
-  notes        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  currency  String    @default("USD")
+  website   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   contacts        ClientContact[]
   projects        Project[]
@@ -95,24 +96,26 @@ model Client {
   managedServices ManagedService[]
   enquiries       Enquiry[]
   conversations   Conversation[]
+  costs           Cost[]
+  regularCosts    RegularCost[]
 
   @@index([deletedAt])
 }
 
 model ClientContact {
-  id        String    @id @default(cuid())
-  clientId  String
-  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   /// Empty until the person fills it in themselves, from a link sent to them
   /// another way (WhatsApp, say) when their address is not known yet.
-  email     String?
-  name      String
-  role      String?
-  phone     String?
+  email         String?
+  name          String
+  role          String?
+  phone         String?
   /// The contact who signs and receives billing by default.
-  isPrimary Boolean   @default(false)
+  isPrimary     Boolean   @default(false)
   /// Portal access can be revoked without deleting the person's history.
-  canSignIn Boolean   @default(true)
+  canSignIn     Boolean   @default(true)
   /// Set when the contact completes account creation from their first magic
   /// link. Until then they can follow secure links but have no password.
   activatedAt   DateTime?
@@ -123,17 +126,17 @@ model ClientContact {
   /// the magic-link route stays open as the recovery path.
   failedSignIns Int       @default(0)
   lockedUntil   DateTime?
-  lastSeenAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  lastSeenAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-  signatures   Signature[]
-  ticketsOpened Ticket[]
-  documentResponses SignatureRequest[]
+  signatures          Signature[]
+  ticketsOpened       Ticket[]
+  documentResponses   SignatureRequest[]
   documentSuggestions DocumentSuggestion[]
-  assignedRequests  AssetRequest[] @relation("AssetRequestAssignee")
-  reviewAnswers     ProjectReview[]
+  assignedRequests    AssetRequest[]       @relation("AssetRequestAssignee")
+  reviewAnswers       ProjectReview[]
 
   @@unique([clientId, email])
   @@index([email])
@@ -148,19 +151,19 @@ enum ActorType {
 /// Issued to both staff and client contacts. Only the hash is stored, so a
 /// leaked database row cannot be replayed as a session.
 model Session {
-  id           String    @id @default(cuid())
-  tokenHash    String    @unique
-  actorType    ActorType
-  actorId      String
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  actorType  ActorType
+  actorId    String
   /// Which host the session was issued for. An admin-console session must not
   /// be replayable against the client portal, or the other way round.
-  audience     String
-  ip           String?
-  userAgent    String?
-  expiresAt    DateTime
-  revokedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  lastUsedAt   DateTime?
+  audience   String
+  ip         String?
+  userAgent  String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
 
   @@index([actorType, actorId])
   @@index([expiresAt])
@@ -240,28 +243,28 @@ enum EnquiryStatus {
 /// Written by POST /api/contact. Every message the public form accepts lands
 /// here first, whether or not it ever becomes a project.
 model Enquiry {
-  id          String        @id @default(cuid())
+  id           String        @id @default(cuid())
   /// Matches the allowlist in the contact route, e.g. "Project enquiry".
-  subject     String
-  name        String
-  email       String
-  message     String
-  status      EnquiryStatus @default(new)
+  subject      String
+  name         String
+  email        String
+  message      String
+  status       EnquiryStatus @default(new)
   /// Best guess at the service line, set on triage.
-  serviceLine ServiceLine?
-  source      String        @default("website_contact_form")
+  serviceLine  ServiceLine?
+  source       String        @default("website_contact_form")
   /// Set once the enquiry becomes a real client.
-  clientId    String?
-  client      Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  projectId   String?
-  project     Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  clientId     String?
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  projectId    String?
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
   internalNote String?
-  submissionId String?      @unique
-  ip          String?
-  createdAt   DateTime      @default(now())
+  submissionId String?       @unique
+  ip           String?
+  createdAt    DateTime      @default(now())
   /// Removed from the console. Kept, so the record of who wrote in stays.
-  deletedAt   DateTime?
-  updatedAt   DateTime      @updatedAt
+  deletedAt    DateTime?
+  updatedAt    DateTime      @updatedAt
 
   conversations Conversation[]
 
@@ -347,6 +350,8 @@ model Project {
   statusEvents    ProjectStatusEvent[]
   timeEntries     TimeEntry[]
   enquiries       Enquiry[]
+  costs           Cost[]
+  regularCosts    RegularCost[]
 
   @@index([clientId])
   @@index([status])
@@ -356,15 +361,15 @@ model Project {
 /// Every status change, with who and why. The project's current status is the
 /// latest of these; the column on Project is the denormalised read.
 model ProjectStatusEvent {
-  id        String        @id @default(cuid())
+  id        String         @id @default(cuid())
   projectId String
-  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   from      ProjectStatus?
   to        ProjectStatus
   actorType ActorType
   actorId   String?
   note      String?
-  createdAt DateTime      @default(now())
+  createdAt DateTime       @default(now())
 
   @@index([projectId, createdAt])
 }
@@ -398,22 +403,22 @@ model ProjectPhase {
 }
 
 model Deliverable {
-  id          String    @id @default(cuid())
-  phaseId     String
-  phase       ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
-  title       String
-  detail      String?
-  position    Int
-  isComplete  Boolean   @default(false)
-  completedAt DateTime?
+  id              String       @id @default(cuid())
+  phaseId         String
+  phase           ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  title           String
+  detail          String?
+  position        Int
+  isComplete      Boolean      @default(false)
+  completedAt     DateTime?
   /// Shown to the client in the portal. Internal engineering tasks are not.
-  isClientVisible Boolean @default(true)
+  isClientVisible Boolean      @default(true)
   /// Who on our side is doing it.
-  assigneeId  String?
-  assignee    StaffUser? @relation("DeliverableAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  dueAt       DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  assigneeId      String?
+  assignee        StaffUser?   @relation("DeliverableAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  dueAt           DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([phaseId])
   @@index([assigneeId])
@@ -472,20 +477,20 @@ enum UpdateStatus {
 /// The Weekly Update. Publishing one is what the client sees change in the
 /// portal, and what triggers their notification email.
 model ProjectUpdate {
-  id          String       @id @default(cuid())
-  projectId   String
-  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  phaseId     String?
-  phase       ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
-  title       String
+  id           String        @id @default(cuid())
+  projectId    String
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phaseId      String?
+  phase        ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  title        String
   bodyMarkdown String
-  status      UpdateStatus @default(draft)
+  status       UpdateStatus  @default(draft)
   /// A staging link, preview URL or anything the client should open.
-  previewUrl  String?
-  publishedAt DateTime?
-  notifiedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  previewUrl   String?
+  publishedAt  DateTime?
+  notifiedAt   DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   uploads FileUpload[]
 
@@ -517,25 +522,25 @@ enum ReviewStatus {
 /// sides, and never edited once answered: the answer is a record of what
 /// they agreed to.
 model ProjectReview {
-  id            String         @id @default(cuid())
-  projectId     String
-  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  round         Int
-  title         String
-  previewUrl    String?
+  id           String         @id @default(cuid())
+  projectId    String
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  round        Int
+  title        String
+  previewUrl   String?
   /// What to look at, and what kind of feedback helps.
-  note          String?
-  status        ReviewStatus   @default(open)
-  askedById     String?
-  askedBy       StaffUser?     @relation(fields: [askedById], references: [id], onDelete: SetNull)
-  answeredById  String?
-  answeredBy    ClientContact? @relation(fields: [answeredById], references: [id], onDelete: SetNull)
-  answeredAt    DateTime?
+  note         String?
+  status       ReviewStatus   @default(open)
+  askedById    String?
+  askedBy      StaffUser?     @relation(fields: [askedById], references: [id], onDelete: SetNull)
+  answeredById String?
+  answeredBy   ClientContact? @relation(fields: [answeredById], references: [id], onDelete: SetNull)
+  answeredAt   DateTime?
   /// The client's words: what to change, or anything said with an approval.
-  answer        String?
-  withdrawnAt   DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  answer       String?
+  withdrawnAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@unique([projectId, round])
   @@index([projectId, status])
@@ -547,15 +552,15 @@ model ProjectReview {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model BrandKit {
-  id         String   @id @default(cuid())
-  projectId  String   @unique
-  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  typography String?
-  principles String?
+  id               String   @id @default(cuid())
+  projectId        String   @unique
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  typography       String?
+  principles       String?
   imageryDirection String?
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   colors BrandColor[]
 }
@@ -599,19 +604,19 @@ enum LineItemStatus {
 }
 
 model LineItem {
-  id          String         @id @default(cuid())
-  projectId   String
-  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  label       String
-  description String?
-  billingKind BillingKind    @default(one_off)
-  status      LineItemStatus @default(planned)
-  amountMinor Int
-  currency    String         @default("USD")
-  quantity    Int            @default(1)
+  id              String         @id @default(cuid())
+  projectId       String
+  project         Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label           String
+  description     String?
+  billingKind     BillingKind    @default(one_off)
+  status          LineItemStatus @default(planned)
+  amountMinor     Int
+  currency        String         @default("USD")
+  quantity        Int            @default(1)
   /// Plain-language terms, e.g. "50% deposit due at kick-off".
-  terms       String?
-  position    Int
+  terms           String?
+  position        Int
   /// ── Recurrence, for recurring_monthly and recurring_annual lines ───────
   /// Billing lives here; the thing being billed lives on ManagedService, since
   /// a domain's expiry date and its invoice date are not always the same day.
@@ -619,12 +624,12 @@ model LineItem {
   nextDueAt       DateTime?
   /// How far ahead of nextDueAt a draft invoice is raised.
   renewalLeadDays Int            @default(30)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  invoiceLines InvoiceLine[]
+  invoiceLines   InvoiceLine[]
   managedService ManagedService?
-  renewals     RenewalEvent[]
+  renewals       RenewalEvent[]
 
   @@index([projectId, status])
   @@index([nextDueAt])
@@ -674,29 +679,29 @@ enum InvoiceStatus {
 }
 
 model Invoice {
-  id           String        @id @default(cuid())
-  number       String        @unique
-  clientId     String
-  client       Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  projectId    String?
-  project      Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  status       InvoiceStatus @default(draft)
-  currency     String        @default("USD")
+  id            String        @id @default(cuid())
+  number        String        @unique
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId     String?
+  project       Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  status        InvoiceStatus @default(draft)
+  currency      String        @default("USD")
   /// Denormalised from the lines so listing screens do not need a join.
-  subtotalMinor Int          @default(0)
-  taxMinor     Int           @default(0)
-  totalMinor   Int           @default(0)
-  paidMinor    Int           @default(0)
+  subtotalMinor Int           @default(0)
+  taxMinor      Int           @default(0)
+  totalMinor    Int           @default(0)
+  paidMinor     Int           @default(0)
   /// Sent back to the client against its payments. What was paid stays paid;
   /// this is how much of it the client has back.
-  refundedMinor Int          @default(0)
-  notes        String?
-  issuedAt     DateTime?
-  dueAt        DateTime?
-  paidAt       DateTime?
-  voidedAt     DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  refundedMinor Int           @default(0)
+  notes         String?
+  issuedAt      DateTime?
+  dueAt         DateTime?
+  paidAt        DateTime?
+  voidedAt      DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   lines    InvoiceLine[]
   payments Payment[]
@@ -755,7 +760,7 @@ model Payment {
   reversedAt     DateTime?
   reversalReason String?
   reversedById   String?
-  reversedBy     StaffUser?    @relation("PaymentReversedBy", fields: [reversedById], references: [id], onDelete: SetNull)
+  reversedBy     StaffUser? @relation("PaymentReversedBy", fields: [reversedById], references: [id], onDelete: SetNull)
 
   receipt Receipt?
   refunds Refund[]
@@ -889,9 +894,9 @@ model Document {
 /// one; the client requests changes and another follows. Nothing is overwritten,
 /// so "back and forth until final agreement" is reconstructable afterwards.
 model DocumentVersion {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   documentId      String
-  document        Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document        Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
   version         Int
   /// Exactly what the client reads and signs. Rendered, hashed, never edited
   /// once a signature request points at it.
@@ -904,12 +909,12 @@ model DocumentVersion {
   changeNote      String?
   /// True when a model drafted this revision. A human still has to accept it,
   /// so this records provenance rather than authorship.
-  aiAssisted      Boolean   @default(false)
+  aiAssisted      Boolean    @default(false)
   aiModel         String?
   aiPromptSummary String?
   createdById     String?
   createdBy       StaffUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime   @default(now())
 
   signatureRequests SignatureRequest[]
 
@@ -928,32 +933,32 @@ enum SignatureRequestStatus {
 }
 
 model SignatureRequest {
-  id         String                 @id @default(cuid())
-  documentId String
-  document   Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  id             String                 @id @default(cuid())
+  documentId     String
+  document       Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
   /// Pinned to the exact revision sent. A later edit cannot change what was signed.
-  versionId  String
-  version    DocumentVersion        @relation(fields: [versionId], references: [id], onDelete: Restrict)
-  status     SignatureRequestStatus @default(draft)
+  versionId      String
+  version        DocumentVersion        @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  status         SignatureRequestStatus @default(draft)
   /// SHA-256 of the rendered document at send time, sealed into the audit trail.
-  documentHash String
+  documentHash   String
   /// The terms in force when this was sent. Pinned, so republishing the
   /// standard terms cannot change what this request asked someone to accept.
   termsVersionId String?
-  termsVersion   TermsVersion? @relation(fields: [termsVersionId], references: [id], onDelete: Restrict)
-  tokenHash  String?                @unique
-  sentAt     DateTime?
-  viewedAt   DateTime?
-  expiresAt  DateTime?
+  termsVersion   TermsVersion?          @relation(fields: [termsVersionId], references: [id], onDelete: Restrict)
+  tokenHash      String?                @unique
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  expiresAt      DateTime?
   /// What the client said when they did not sign. Recorded on the request
   /// rather than on the document, because it is an answer to THIS revision —
   /// a later version gets its own request and its own answer.
-  respondedAt   DateTime?
-  responseNote  String?
-  respondedById String?
-  respondedBy   ClientContact? @relation(fields: [respondedById], references: [id], onDelete: SetNull)
-  createdAt  DateTime               @default(now())
-  updatedAt  DateTime               @updatedAt
+  respondedAt    DateTime?
+  responseNote   String?
+  respondedById  String?
+  respondedBy    ClientContact?         @relation(fields: [respondedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
 
   signatures Signature[]
 
@@ -994,30 +999,30 @@ enum SignatureMethod {
 }
 
 model Signature {
-  id          String           @id @default(cuid())
-  requestId   String
-  request     SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  contactId   String?
-  contact     ClientContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  signerName  String
+  id              String           @id @default(cuid())
+  requestId       String
+  request         SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  contactId       String?
+  contact         ClientContact?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  signerName      String
   /// Null when they signed through a link shared by hand and have no email.
-  signerEmail String?
-  method      SignatureMethod  @default(initials)
+  signerEmail     String?
+  method          SignatureMethod  @default(initials)
   /// What the signer actually typed, e.g. "RP". Kept verbatim.
-  initials    String?
+  initials        String?
   /// Data URL of the drawn mark, when method is drawn.
-  signatureData String?
+  signatureData   String?
   /// Acceptance is separate from the signature itself, so it is answerable
   /// later which version of the terms this person agreed to and when.
   termsVersionId  String?
-  termsVersion    TermsVersion? @relation(fields: [termsVersionId], references: [id], onDelete: Restrict)
+  termsVersion    TermsVersion?    @relation(fields: [termsVersionId], references: [id], onDelete: Restrict)
   termsAcceptedAt DateTime?
   /// Re-hashed at signing time and compared with the request's hash, so a
   /// mismatch proves the document changed underneath the signer.
-  documentHash String
-  ip          String?
-  userAgent   String?
-  signedAt    DateTime         @default(now())
+  documentHash    String
+  ip              String?
+  userAgent       String?
+  signedAt        DateTime         @default(now())
 
   @@index([requestId])
 }
@@ -1051,21 +1056,21 @@ enum TicketPriority {
 }
 
 model Ticket {
-  id          String         @id @default(cuid())
-  reference   String         @unique
-  clientId    String
-  client      Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  projectId   String?
-  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  openedById  String?
-  openedBy    ClientContact? @relation(fields: [openedById], references: [id], onDelete: SetNull)
-  kind        TicketKind     @default(support)
-  status      TicketStatus   @default(open)
-  priority    TicketPriority @default(normal)
-  subject     String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  resolvedAt  DateTime?
+  id         String         @id @default(cuid())
+  reference  String         @unique
+  clientId   String
+  client     Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  openedById String?
+  openedBy   ClientContact? @relation(fields: [openedById], references: [id], onDelete: SetNull)
+  kind       TicketKind     @default(support)
+  status     TicketStatus   @default(open)
+  priority   TicketPriority @default(normal)
+  subject    String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  resolvedAt DateTime?
 
   messages      TicketMessage[]
   conversations Conversation[]
@@ -1097,22 +1102,22 @@ model TicketMessage {
 /// One upload table with optional parents, rather than an attachments table per
 /// feature. Storage key points at whatever bucket is configured.
 model FileUpload {
-  id             String         @id @default(cuid())
-  storageKey     String         @unique
-  filename       String
-  contentType    String
-  sizeBytes      Int
-  checksum       String?
-  uploadedByType ActorType
-  uploadedById   String?
-  assetRequestId String?
-  assetRequest   AssetRequest?  @relation(fields: [assetRequestId], references: [id], onDelete: Cascade)
-  updateId       String?
-  update         ProjectUpdate? @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  storageKey      String         @unique
+  filename        String
+  contentType     String
+  sizeBytes       Int
+  checksum        String?
+  uploadedByType  ActorType
+  uploadedById    String?
+  assetRequestId  String?
+  assetRequest    AssetRequest?  @relation(fields: [assetRequestId], references: [id], onDelete: Cascade)
+  updateId        String?
+  update          ProjectUpdate? @relation(fields: [updateId], references: [id], onDelete: Cascade)
   ticketMessageId String?
-  ticketMessage  TicketMessage? @relation(fields: [ticketMessageId], references: [id], onDelete: Cascade)
-  createdAt      DateTime       @default(now())
-  deletedAt      DateTime?
+  ticketMessage   TicketMessage? @relation(fields: [ticketMessageId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  deletedAt       DateTime?
 
   @@index([assetRequestId])
   @@index([updateId])
@@ -1155,15 +1160,15 @@ model EmailLog {
 /// Not billed by the hour today, but knowing what a fixed-price job actually
 /// cost is the only way to price the next one honestly.
 model TimeEntry {
-  id         String    @id @default(cuid())
-  projectId  String
-  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  staffId    String
-  staff      StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  minutes    Int
-  note       String?
-  workedOn   DateTime
-  createdAt  DateTime  @default(now())
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  minutes   Int
+  note      String?
+  workedOn  DateTime
+  createdAt DateTime  @default(now())
 
   @@index([projectId, workedOn])
 }
@@ -1212,33 +1217,33 @@ enum PostStatus {
 /// until every post is migrated, so the public site never depends on a database
 /// that might be down.
 model Post {
-  id           String     @id @default(cuid())
-  slug         String     @unique
-  title        String
-  excerpt      String
-  bodyMarkdown String
-  status       PostStatus @default(draft)
-  tags         String[]   @default([])
-  coverImage   String?
-  coverAlt     String?
-  authorId     String?
-  author       StaffUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  id               String     @id @default(cuid())
+  slug             String     @unique
+  title            String
+  excerpt          String
+  bodyMarkdown     String
+  status           PostStatus @default(draft)
+  tags             String[]   @default([])
+  coverImage       String?
+  coverAlt         String?
+  authorId         String?
+  author           StaffUser? @relation(fields: [authorId], references: [id], onDelete: SetNull)
   /// The byline as it appears on the post. Usually the company rather than a
   /// person, and kept separately from authorId so the credit on a published
   /// piece does not change when a staff member leaves.
-  authorName   String?
+  authorName       String?
   /// The writer's profile, when the byline is somebody in the writers list.
   /// The byline text above is still what is printed; the profile adds their
   /// role, a short bio and a link under the article.
-  writerId     String?
-  writer       Writer?    @relation(fields: [writerId], references: [id], onDelete: SetNull)
-  publishedAt  DateTime?
+  writerId         String?
+  writer           Writer?    @relation(fields: [writerId], references: [id], onDelete: SetNull)
+  publishedAt      DateTime?
   /// The first time it went live. Set once and never cleared, because from
   /// then on people may have the link, so the address is fixed.
   firstPublishedAt DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  deletedAt    DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
 
   @@index([status, publishedAt])
   @@index([writerId])
@@ -1290,12 +1295,12 @@ model ProjectTemplate {
 }
 
 model PhaseTemplate {
-  id         String          @id @default(cuid())
-  templateId String
-  template   ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  name       String
-  goal       String?
-  position   Int
+  id             String          @id @default(cuid())
+  templateId     String
+  template       ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name           String
+  goal           String?
+  position       Int
   /// Offsets from project start, so a template can lay out a timeline.
   startDayOffset Int?
   endDayOffset   Int?
@@ -1357,33 +1362,33 @@ model OrgSettings {
   /// separate table of one.
   id String @id @default("default")
 
-  legalName String @default("Ubunifu Technologies")
-  tradingName String?
+  legalName    String  @default("Ubunifu Technologies")
+  tradingName  String?
   /// Taxpayer Identification Number. Printed on every invoice.
-  tin       String?
+  tin          String?
   /// VAT Registration Number, where registered.
-  vrn       String?
+  vrn          String?
   addressLines String?
-  country   String  @default("TZ")
-  email     String  @default("info@ubunifutech.com")
-  phone     String?
-  website   String?
+  country      String  @default("TZ")
+  email        String  @default("info@ubunifutech.com")
+  phone        String?
+  website      String?
 
   /// Basis points, so 18% is 1800 and nothing is stored as a float.
   vatRateBps Int     @default(0)
   chargesVat Boolean @default(false)
 
-  bankName        String?
-  bankAccountName String?
+  bankName          String?
+  bankAccountName   String?
   bankAccountNumber String?
-  bankSwift       String?
-  mobileMoneyName String?
+  bankSwift         String?
+  mobileMoneyName   String?
   mobileMoneyNumber String?
 
   /// Printed at the foot of every invoice.
-  invoiceFooter String?
+  invoiceFooter    String?
   /// Days from issue to due, unless overridden on the invoice.
-  paymentTermsDays Int @default(14)
+  paymentTermsDays Int     @default(14)
 
   /// What admins and members may do, as { admin: [...], member: [...] }.
   /// Owners can always do everything, so the team can never be locked out.
@@ -1431,8 +1436,8 @@ model Conversation {
   status ConversationStatus @default(open)
 
   /// Who is on the human side, polymorphic like AuditEvent.
-  actorType ActorType?
-  actorId   String?
+  actorType  ActorType?
+  actorId    String?
   /// An anonymous visitor, keyed by a cookie so a refresh keeps the thread.
   /// Never an identifier we can trace back to a person on its own.
   visitorKey String?
@@ -1443,10 +1448,10 @@ model Conversation {
   clientId   String?
   client     Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
   /// Set when the conversation produced one of these.
-  enquiryId String?
-  enquiry   Enquiry? @relation(fields: [enquiryId], references: [id], onDelete: SetNull)
-  ticketId  String?
-  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  enquiryId  String?
+  enquiry    Enquiry?  @relation(fields: [enquiryId], references: [id], onDelete: SetNull)
+  ticketId   String?
+  ticket     Ticket?   @relation(fields: [ticketId], references: [id], onDelete: SetNull)
 
   title String?
 
@@ -1513,19 +1518,99 @@ model RateLimitHit {
 /// they would have it, with a note. Staff compare it with what was sent and
 /// can start the next version from it. Never changes a signed version.
 model DocumentSuggestion {
-  id           String         @id @default(cuid())
-  documentId   String
-  document     Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  contactId    String?
-  contact      ClientContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  id             String         @id @default(cuid())
+  documentId     String
+  document       Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  contactId      String?
+  contact        ClientContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
   /// The version they were looking at when they suggested this.
   basedOnVersion Int
-  bodyMarkdown String
-  note         String?
+  bodyMarkdown   String
+  note           String?
   /// open, used (became a version), or set aside.
-  status       String         @default("open")
-  createdAt    DateTime       @default(now())
-  resolvedAt   DateTime?
+  status         String         @default("open")
+  createdAt      DateTime       @default(now())
+  resolvedAt     DateTime?
 
   @@index([documentId, status])
+}
+
+// ── Costs and reports ─────────────────────────────────────────────────────
+
+/// What a cost was for, for the reports.
+enum CostCategory {
+  hosting // Servers, databases and deploys: Vercel, Railway
+  email // Sending and mailboxes: Resend, Google Workspace
+  domains
+  ai // Model usage: Anthropic
+  software // Tools and subscriptions
+  services // Freelancers and contractors
+  other
+}
+
+/// Money going out: a bill, typed in from the vendor's invoice. Reports put
+/// it against the money that came in; nothing here is ever sent to a client.
+model Cost {
+  id           String       @id @default(cuid())
+  /// The day on the bill.
+  incurredOn   DateTime
+  vendor       String
+  category     CostCategory
+  description  String?
+  amountMinor  Int
+  currency     String
+  /// What it was for, when it serves one client or one project.
+  clientId     String?
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  projectId    String?
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  /// The regular cost this entry is a month of, when it is one.
+  regularId    String?
+  regular      RegularCost? @relation(fields: [regularId], references: [id], onDelete: SetNull)
+  recordedById String?
+  recordedBy   StaffUser?   @relation("CostRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([incurredOn])
+  @@index([clientId])
+  @@index([regularId, incurredOn])
+}
+
+/// A cost that comes back every month, like a hosting plan. Each month is
+/// still typed in, because usage changes the amount; this is where it starts.
+model RegularCost {
+  id          String       @id @default(cuid())
+  vendor      String
+  category    CostCategory
+  description String?
+  /// What it usually comes to.
+  usualMinor  Int
+  currency    String
+  clientId    String?
+  client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  costs Cost[]
+}
+
+/// What one unit of a currency bought in another, for one month. Typed in,
+/// for reports only, so dollars and shillings can share a total. Nothing
+/// billed is ever converted.
+model ExchangeRate {
+  id          String   @id @default(cuid())
+  /// The first day of the month, UTC.
+  month       DateTime
+  base        String
+  quote       String
+  /// How many of `quote` one `base` bought.
+  rate        Decimal  @db.Decimal(20, 8)
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([month, base, quote])
 }

@@ -4,6 +4,7 @@ import { EnquiryStatus, type Prisma } from '@/generated/prisma/client';
 import { can, requirePermission } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
+import { StartForClient } from './StartForClient';
 import { TriageControls } from './TriageControls';
 import { MenuLink, MenuList, RowMenu } from '@/components/console/RowMenu';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
@@ -46,7 +47,13 @@ const FILTERS = [
   { key: 'converted', label: 'Became clients' },
   { key: 'closed', label: 'Declined & spam' },
   { key: 'all', label: 'Everything' },
+  { key: 'removed', label: 'Removed' },
 ] as const;
+
+/** Removed enquiries have a view of their own; every other view leaves them out. */
+function scopeOf(key: string): Prisma.EnquiryWhereInput {
+  return key === 'removed' ? { deletedAt: { not: null } } : liveEnquiry;
+}
 
 function filterToWhere(key: string): Prisma.EnquiryWhereInput {
   switch (key) {
@@ -59,6 +66,7 @@ function filterToWhere(key: string): Prisma.EnquiryWhereInput {
     case 'closed':
       return { status: { in: ['declined', 'spam'] } };
     case 'all':
+    case 'removed':
       return {};
     default:
       return { status: { in: ['new', 'triaged', 'in_conversation', 'qualified'] } };
@@ -75,6 +83,7 @@ const ENQUIRY_ROW = {
   serviceLine: true,
   internalNote: true,
   source: true,
+  deletedAt: true,
   createdAt: true,
   // Kept even when since removed: the enquiry still became them, but a
   // link to a page that is gone would lead nowhere.
@@ -123,7 +132,9 @@ export default async function EnquiriesPage({
   const [viewCounts, thisWeek, weekBefore] = await Promise.all([
     Promise.all(
       FILTERS.map((filter) =>
-        db.enquiry.count({ where: { AND: [liveEnquiry, filterToWhere(filter.key), matching] } }),
+        db.enquiry.count({
+          where: { AND: [scopeOf(filter.key), filterToWhere(filter.key), matching] },
+        }),
       ),
     ),
     db.enquiry.count({
@@ -141,7 +152,7 @@ export default async function EnquiriesPage({
   const keepQuery = query ? `&q=${encodeURIComponent(query)}` : '';
 
   const listed = await db.enquiry.findMany({
-    where: { AND: [liveEnquiry, filterToWhere(active), matching] },
+    where: { AND: [scopeOf(active), filterToWhere(active), matching] },
     orderBy: { createdAt: 'desc' },
     take: 100,
     select: ENQUIRY_ROW,
@@ -152,7 +163,7 @@ export default async function EnquiriesPage({
   const beyond =
     open && !listed.some((enquiry) => enquiry.id === open)
       ? await db.enquiry.findFirst({
-          where: { AND: [liveEnquiry, filterToWhere(active), matching, { id: open }] },
+          where: { AND: [scopeOf(active), filterToWhere(active), matching, { id: open }] },
           select: ENQUIRY_ROW,
         })
       : null;
@@ -161,14 +172,24 @@ export default async function EnquiriesPage({
   /** One row is expanded at a time, chosen by ?open=. */
   const expanded = enquiries.find((enquiry) => enquiry.id === open);
 
+  const workable = expanded && expanded.status !== 'converted' && !expanded.deletedAt;
   // Somebody who is already a client, writing in about something new.
-  const returning =
-    expanded && expanded.status !== 'converted'
-      ? await db.clientContact.findFirst({
-          where: { email: expanded.email, deletedAt: null, client: { deletedAt: null } },
-          select: { client: { select: { name: true, slug: true } } },
+  const returning = workable
+    ? await db.clientContact.findFirst({
+        where: { email: expanded.email, deletedAt: null, client: { deletedAt: null } },
+        select: { client: { select: { name: true, slug: true } } },
+      })
+    : null;
+  // Or a client writing from an address we do not have: chosen by hand.
+  const clients =
+    workable && !returning && mayStart
+      ? await db.client.findMany({
+          where: { deletedAt: null },
+          orderBy: { name: 'asc' },
+          take: 500,
+          select: { name: true, slug: true },
         })
-      : null;
+      : [];
 
   return (
     <main className={styles.page}>
@@ -289,29 +310,29 @@ export default async function EnquiriesPage({
                         {formatShortDate(enquiry.createdAt)}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        {enquiry.status === 'converted' ? (
-                          <span className={table.muted}>Onboarded</span>
-                        ) : (
-                          <RowMenu label={`Actions for ${enquiry.name}`}>
-                            <MenuList>
-                              <MenuLink
-                                href={
-                                  expanded?.id === enquiry.id
-                                    ? `/enquiries?show=${active}${keepQuery}`
-                                    : `/enquiries?show=${active}&open=${enquiry.id}${keepQuery}`
-                                }
-                                scroll={false}
-                              >
-                                {expanded?.id === enquiry.id ? 'Close triage' : 'Triage'}
+                        <RowMenu label={`Actions for ${enquiry.name}`}>
+                          <MenuList>
+                            <MenuLink
+                              href={
+                                expanded?.id === enquiry.id
+                                  ? `/enquiries?show=${active}${keepQuery}`
+                                  : `/enquiries?show=${active}&open=${enquiry.id}${keepQuery}`
+                              }
+                              scroll={false}
+                            >
+                              {expanded?.id === enquiry.id
+                                ? 'Close'
+                                : enquiry.status === 'converted' || enquiry.deletedAt
+                                  ? 'View'
+                                  : 'Triage'}
+                            </MenuLink>
+                            {mayOnboard && enquiry.status !== 'converted' && !enquiry.deletedAt && (
+                              <MenuLink href={`/clients/new?enquiry=${enquiry.id}`}>
+                                Onboard as a client
                               </MenuLink>
-                              {mayOnboard && (
-                                <MenuLink href={`/clients/new?enquiry=${enquiry.id}`}>
-                                  Onboard as a client
-                                </MenuLink>
-                              )}
-                            </MenuList>
-                          </RowMenu>
-                        )}
+                            )}
+                          </MenuList>
+                        </RowMenu>
                       </td>
                     </tr>
                   ))
@@ -374,9 +395,12 @@ export default async function EnquiriesPage({
                 id={expanded.id}
                 status={expanded.status}
                 note={expanded.internalNote}
+                serviceLine={expanded.serviceLine}
+                clientRemoved={Boolean(expanded.client?.deletedAt) || !expanded.client}
+                removed={Boolean(expanded.deletedAt)}
               />
             </div>
-            {expanded.status === 'converted' ? (
+            {expanded.deletedAt ? null : expanded.status === 'converted' ? (
               <p className={styles.note}>
                 Became{' '}
                 {expanded.client && !expanded.client.deletedAt ? (
@@ -423,19 +447,28 @@ export default async function EnquiriesPage({
                     : ' Someone who runs projects can start their next one.'}
                 </p>
               </div>
-            ) : mayOnboard ? (
-              <div className={forms.actions}>
-                <Link href={`/clients/new?enquiry=${expanded.id}`} className={forms.button}>
-                  Make them a client
-                </Link>
-                <p className={forms.payoff}>
-                  {mayStart
-                    ? 'Their name, email and message are filled in. You can start the project in the same step.'
-                    : 'Their name, email and message are filled in.'}
-                </p>
-              </div>
             ) : (
-              <p className={forms.payoff}>Someone who can add clients needs to make them a client.</p>
+              <>
+                {mayOnboard ? (
+                  <div className={forms.actions}>
+                    <Link href={`/clients/new?enquiry=${expanded.id}`} className={forms.button}>
+                      Make them a client
+                    </Link>
+                    <p className={forms.payoff}>
+                      {mayStart
+                        ? 'Their name, email and message are filled in. You can start the project in the same step.'
+                        : 'Their name, email and message are filled in.'}
+                    </p>
+                  </div>
+                ) : (
+                  <p className={forms.payoff}>
+                    Someone who can add clients needs to make them a client.
+                  </p>
+                )}
+                {clients.length > 0 && (
+                  <StartForClient enquiryId={expanded.id} clients={clients} />
+                )}
+              </>
             )}
           </section>
         )}

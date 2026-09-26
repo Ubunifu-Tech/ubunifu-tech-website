@@ -581,7 +581,7 @@ export function NewClientForm({
                   </Select>
                   <p className={forms.hint}>
                     {usable.length === 0
-                      ? 'No plan written for this service line yet. The project starts empty.'
+                      ? 'There is no ready-made plan for this kind of work. It starts empty, and you add the phases on the Plan tab.'
                       : 'Adds a starting plan, what to ask them for, and fees to price. All editable.'}
                   </p>
                 </div>

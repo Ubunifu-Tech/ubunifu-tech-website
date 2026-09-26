@@ -154,7 +154,7 @@ export function NewProjectForm({
               disabled={pending}
               hint={
                 usable.length === 0
-                  ? 'No plan written for this service line yet.'
+                  ? 'There is no ready-made plan for this kind of work. It starts empty, and you add the phases on the Plan tab.'
                   : 'Phases, deliverables, what you need from them, and the fee lines to be priced.'
               }
             >

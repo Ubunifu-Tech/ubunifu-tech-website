@@ -3,7 +3,7 @@
 import { NO_PERMISSION } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { EnquiryStatus } from '@/generated/prisma/client';
+import { EnquiryStatus, ServiceLine } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
 import { liveEnquiry } from '@/lib/console/live';
@@ -150,4 +150,104 @@ export async function removeEnquiry(
   // The list, and the unread counts on the overview and in the sidebar.
   revalidatePath('/admin', 'layout');
   return { status: 'done', message: 'Removed.' };
+}
+
+/**
+ * Opens a converted enquiry again when the client it became has been
+ * removed, so it can be onboarded properly this time. The history keeps who
+ * it was before.
+ */
+export async function reopenEnquiry(
+  _previous: TriageState,
+  formData: FormData,
+): Promise<TriageState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
+
+  const enquiry = await db.enquiry.findFirst({
+    where: { id: formText(formData, 'id'), ...liveEnquiry },
+    select: { id: true, status: true, client: { select: { name: true, deletedAt: true } } },
+  });
+  if (!enquiry) return { status: 'error', message: 'That enquiry no longer exists.' };
+  if (enquiry.status !== 'converted' || (enquiry.client && !enquiry.client.deletedAt)) {
+    return { status: 'error', message: 'It is still with a client, so it stays as it is.' };
+  }
+
+  const reopened = await db.enquiry.updateMany({
+    where: { id: enquiry.id, status: 'converted' },
+    data: { status: 'qualified', clientId: null, projectId: null },
+  });
+  if (reopened.count === 0) return { status: 'error', message: 'It changed a moment ago. Reload.' };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'enquiry.reopened',
+    entityType: 'Enquiry',
+    entityId: enquiry.id,
+    summary: enquiry.client ? `Was ${enquiry.client.name}, since removed` : undefined,
+  });
+  revalidatePath('/admin/enquiries');
+  return { status: 'done', message: 'Open again.' };
+}
+
+/** Brings back an enquiry that was removed, with its note and history. */
+export async function restoreEnquiry(
+  _previous: TriageState,
+  formData: FormData,
+): Promise<TriageState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
+
+  const enquiry = await db.enquiry.findFirst({
+    where: { id: formText(formData, 'id'), deletedAt: { not: null } },
+    select: { id: true, name: true, subject: true },
+  });
+  if (!enquiry) return { status: 'error', message: 'It is not removed any more.' };
+
+  await db.enquiry.updateMany({ where: { id: enquiry.id }, data: { deletedAt: null } });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'enquiry.restored',
+    entityType: 'Enquiry',
+    entityId: enquiry.id,
+    summary: `${enquiry.name}, about ${enquiry.subject}`,
+  });
+  revalidatePath('/admin', 'layout');
+  return { status: 'done', message: 'Brought back.' };
+}
+
+/** What the enquiry is about, which the new client or project form starts from. */
+export async function setEnquiryServiceLine(
+  _previous: TriageState,
+  formData: FormData,
+): Promise<TriageState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
+
+  const serviceLine = formText(formData, 'serviceLine');
+  if (!(Object.values(ServiceLine) as string[]).includes(serviceLine)) {
+    return { status: 'error', message: 'Choose what the work is.' };
+  }
+  const enquiry = await db.enquiry.findFirst({
+    where: { id: formText(formData, 'id'), ...liveEnquiry },
+    select: { id: true },
+  });
+  if (!enquiry) return { status: 'error', message: 'That enquiry no longer exists.' };
+
+  await db.enquiry.update({
+    where: { id: enquiry.id },
+    data: { serviceLine: serviceLine as ServiceLine },
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'enquiry.service_line_set',
+    entityType: 'Enquiry',
+    entityId: enquiry.id,
+    summary: serviceLine,
+  });
+  revalidatePath('/admin/enquiries');
+  return { status: 'done', message: 'Saved.' };
 }

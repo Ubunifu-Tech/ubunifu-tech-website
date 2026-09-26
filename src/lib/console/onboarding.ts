@@ -1,7 +1,8 @@
 import 'server-only';
 import { db } from '@/lib/db';
-import type { BillingKind, Prisma, ProjectStatus } from '@/generated/prisma/client';
+import type { Prisma, ProjectStatus } from '@/generated/prisma/client';
 import { slugify } from '@/lib/slug';
+import { intervalFor } from './renewals';
 
 /**
  * Creating a client by hand.
@@ -73,12 +74,6 @@ function addDays(from: Date, days: number): Date {
   const date = new Date(from);
   date.setDate(date.getDate() + days);
   return date;
-}
-
-function intervalFor(kind: BillingKind): number | null {
-  if (kind === 'recurring_monthly') return 1;
-  if (kind === 'recurring_annual') return 12;
-  return null;
 }
 
 export type NewClientInput = {

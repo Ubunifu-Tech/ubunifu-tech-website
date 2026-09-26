@@ -6,18 +6,11 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { testimonials } from '@/content/testimonials';
 import styles from './Testimonial.module.css';
+import { displayHost } from '@/lib/url';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 /** "https://www.usambaradestination.com/" → "usambaradestination.com" */
-function displayHost(url: string): string {
-  try {
-    return new URL(url).host.replace(/^www\./, '');
-  } catch {
-    return url;
-  }
-}
-
 type Props = {
   /**
    * Pick a specific testimonial by associated project slug. If omitted,

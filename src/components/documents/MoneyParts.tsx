@@ -4,7 +4,7 @@ import type { Org } from '@/lib/console/org';
 import money from './Money.module.css';
 
 /** A value for a CSS string: quotes, backslashes and line breaks made safe. */
-function cssString(value: string): string {
+export function cssString(value: string): string {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ')}"`;
 }
 

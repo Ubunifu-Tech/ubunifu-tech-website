@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import type { ServiceLine } from '@/generated/prisma/client';
 import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
 import { ACKNOWLEDGEMENTS_PER_DAY, allow, requestIp } from '@/lib/console/rate-limit';
+import { TEAM_INBOX } from '@/lib/console/alerts';
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -270,7 +271,7 @@ export async function POST(req: NextRequest) {
       const notification = await resend.emails.send(
         {
           from: 'Ubunifu Website <notifications@ubunifutech.com>',
-          to: 'info@ubunifutech.com',
+          to: TEAM_INBOX,
           replyTo: email,
           subject: `[Website] ${subject} from ${name}`,
           html: notificationEmail({ name, email, subject, message }),
@@ -304,7 +305,7 @@ export async function POST(req: NextRequest) {
           {
             from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
             to: email,
-            replyTo: 'info@ubunifutech.com',
+            replyTo: TEAM_INBOX,
             subject: 'Thanks for reaching out | Ubunifu Technologies',
             // The subject is one of the form's own choices, checked above.
             html: acknowledgementEmail({ topic: subject }),

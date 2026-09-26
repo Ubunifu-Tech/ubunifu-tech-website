@@ -33,7 +33,6 @@ const TTL_MINUTES: Record<MagicTokenPurpose, number> = {
 export type IssuedLink = {
   /** Include this in the email. It is not recoverable afterwards. */
   token: string;
-  expiresAt: Date;
 };
 
 export async function issueMagicToken(options: {
@@ -63,7 +62,7 @@ export async function issueMagicToken(options: {
     },
   });
 
-  return { token, expiresAt };
+  return { token };
 }
 
 export type ConsumedToken = {

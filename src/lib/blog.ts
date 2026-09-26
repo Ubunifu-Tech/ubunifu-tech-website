@@ -1,7 +1,9 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import {
+  comparePosts,
   defaultBlogCover,
+  estimateReadingTime,
   readPostFile,
   readPostFiles,
   resolveBlogCover,
@@ -48,11 +50,6 @@ function usingFiles(): boolean {
 }
 
 /** Same estimate the file reader used, so reading times do not shift. */
-function estimateReadingTime(content: string): number {
-  const words = content.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
-}
-
 type PostRow = {
   slug: string;
   title: string;
@@ -127,13 +124,6 @@ const SELECT = {
 } as const;
 
 /** Newest first, then by slug, which is how the files were ordered. */
-function comparePosts(a: BlogPost, b: BlogPost): number {
-  const byDate = b.date.localeCompare(a.date);
-  if (byDate !== 0) return byDate;
-  if (a.slug === b.slug) return 0;
-  return a.slug < b.slug ? -1 : 1;
-}
-
 /**
  * `unavailable` is the whole point of these shapes.
  *

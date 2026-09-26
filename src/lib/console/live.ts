@@ -35,14 +35,6 @@ export const liveTicket = {
   ],
 } satisfies Prisma.TicketWhereInput;
 
-/** The same rule for a domain, a hosting plan or a mailbox we look after. */
-export const liveManagedService = {
-  AND: [
-    { client: { deletedAt: null } },
-    { OR: [{ projectId: null }, { project: { deletedAt: null } }] },
-  ],
-} satisfies Prisma.ManagedServiceWhereInput;
-
 /** A document always belongs to a project. */
 export const liveDocument = { project: liveProject } satisfies Prisma.DocumentWhereInput;
 

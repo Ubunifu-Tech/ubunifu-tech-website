@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import * as Popover from '@radix-ui/react-popover';
 import { LogOut, Settings, UserRound, Users } from 'lucide-react';

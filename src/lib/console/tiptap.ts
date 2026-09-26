@@ -1,4 +1,4 @@
-import type { Editor, JSONContent } from '@tiptap/core';
+import type { JSONContent } from '@tiptap/core';
 
 /**
  * Turning what the editor holds back into markdown.
@@ -140,7 +140,3 @@ export function documentToMarkdown(doc: JSONContent | undefined): string {
     .trim();
 }
 
-export function editorToMarkdown(editor: Editor | null): string {
-  if (!editor) return '';
-  return documentToMarkdown(editor.getJSON());
-}

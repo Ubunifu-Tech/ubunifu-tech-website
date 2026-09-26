@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { namesMatch, type RemovalState } from '@/lib/console/confirm-name';
 import { Callout } from './Callout';
 import { TextField } from './Fields';

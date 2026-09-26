@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { restoreClient } from '../../clients/actions';
 import type { RemovalState } from '@/lib/console/confirm-name';
 import forms from '@/styles/forms.module.css';

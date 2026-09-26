@@ -37,10 +37,6 @@ const COMPANY = 'Ubunifu Technologies';
 /** Matches the rule the file-based blog enforced on frontmatter. */
 const COVER_PATTERN = /^\/(?:[a-z0-9_-]+\/)*[a-z0-9_-]+\.(?:avif|jpe?g|png|webp)$/i;
 
-function text(formData: FormData, key: string): string {
-  return formText(formData, key);
-}
-
 /**
  * Revalidates everywhere a post is visible.
  *
@@ -131,11 +127,11 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   const staff = await requireStaff();
   if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
-  const intentValue = text(formData, 'intent');
+  const intentValue = formText(formData, 'intent');
   const intent: SaveIntent =
     intentValue === 'autosave' || intentValue === 'publish' ? intentValue : 'save';
 
-  const id = text(formData, 'postId');
+  const id = formText(formData, 'postId');
   const post = await db.post.findFirst({
     where: { id, deletedAt: null },
     select: {
@@ -149,17 +145,17 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   });
   if (!post) return { status: 'error', message: 'That post no longer exists.' };
 
-  const version = text(formData, 'version');
+  const version = formText(formData, 'version');
   if (version && version !== post.updatedAt.toISOString()) return conflict();
 
-  const title = text(formData, 'title');
-  const excerpt = text(formData, 'excerpt');
-  const body = text(formData, 'body');
-  const coverImage = text(formData, 'coverImage');
-  const coverAlt = text(formData, 'coverAlt');
-  const authorName = text(formData, 'authorName') || COMPANY;
-  const wantedWriter = text(formData, 'writerId');
-  const tags = text(formData, 'tags')
+  const title = formText(formData, 'title');
+  const excerpt = formText(formData, 'excerpt');
+  const body = formText(formData, 'body');
+  const coverImage = formText(formData, 'coverImage');
+  const coverAlt = formText(formData, 'coverAlt');
+  const authorName = formText(formData, 'authorName') || COMPANY;
+  const wantedWriter = formText(formData, 'writerId');
+  const tags = formText(formData, 'tags')
     .split(',')
     .map((tag) => tag.trim())
     .filter(Boolean);
@@ -245,7 +241,7 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   // The address follows the post until the first time it is published. After
   // that people may have the link, so it stays put.
   let slug = post.slug;
-  const wantedSlug = text(formData, 'slug');
+  const wantedSlug = formText(formData, 'slug');
   if (!post.firstPublishedAt && wantedSlug && wantedSlug !== post.slug) {
     if (!SLUG_PATTERN.test(wantedSlug) || wantedSlug.length > 120) {
       return {
@@ -266,7 +262,7 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   }
 
   const now = new Date();
-  const chosenDate = parseDateInput(text(formData, 'publishedAt'));
+  const chosenDate = parseDateInput(formText(formData, 'publishedAt'));
   const publishedAt =
     chosenDate ?? (intent === 'publish' && !post.publishedAt ? now : post.publishedAt);
 
@@ -402,7 +398,7 @@ export async function setPostStatus(_previous: PostState, formData: FormData): P
   const staff = await requireStaff();
   if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
-  const id = text(formData, 'postId');
+  const id = formText(formData, 'postId');
   const publish = formData.get('publish') === 'on';
 
   const post = await db.post.findFirst({
@@ -489,7 +485,7 @@ export async function archivePost(_previous: PostState, formData: FormData): Pro
   const staff = await requireStaff();
   if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
-  const id = text(formData, 'postId');
+  const id = formText(formData, 'postId');
   const post = await db.post.findFirst({
     where: { id, deletedAt: null },
     select: { id: true, slug: true, title: true, status: true },

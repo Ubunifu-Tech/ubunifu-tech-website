@@ -6,6 +6,7 @@ import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
 import { retryOnConflict } from './conflict';
+import { TEAM_INBOX } from './alerts';
 
 /**
  * A client asking us for something, from the requests form or from the
@@ -68,7 +69,7 @@ export async function createTicket(input: {
 
   // Our own alert. The request is already safe; this failing is our problem.
   await sendConsoleEmail({
-    to: 'info@ubunifutech.com',
+    to: TEAM_INBOX,
     subject: `[${ticket.reference}] ${subject}`,
     html: ticketRaisedEmail({
       reference: ticket.reference,

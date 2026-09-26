@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from './BrandKit.module.css';
 
 export type BrandKitData = {

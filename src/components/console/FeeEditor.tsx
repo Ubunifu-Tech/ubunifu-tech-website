@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import type { BillingKind, LineItemStatus } from '@/generated/prisma/client';
 import {
@@ -28,7 +28,6 @@ export type FeeRow = {
   terms: string | null;
   nextDueAt: string;
   status: LineItemStatus;
-  invoiced: boolean;
 };
 
 const IDLE: FeeState = { status: 'idle' };

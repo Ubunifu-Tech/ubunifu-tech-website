@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ProjectDiagramKind } from '@/content/project-visuals';
 import { IsoBox, IsoPlane, IsoTray } from './iso';
 import styles from './SystemDiagram.module.css';

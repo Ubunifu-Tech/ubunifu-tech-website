@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -55,7 +55,7 @@ const BADGE: Record<string, string> = {
 
 type Notice = { tone: 'ok' | 'error'; text: string; href?: string };
 type Confirm = { card: BoardCard; to: ProjectStatus; warnings: string[] };
-type Choice = { card: BoardCard; lane: Lane; options: ProjectStatus[] };
+type Choice = { card: BoardCard; options: ProjectStatus[] };
 
 /**
  * The project board.
@@ -159,7 +159,7 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
       move(card, options[0]!, false);
       return;
     }
-    setChoice({ card, lane, options });
+    setChoice({ card, options });
   }
 
   return (

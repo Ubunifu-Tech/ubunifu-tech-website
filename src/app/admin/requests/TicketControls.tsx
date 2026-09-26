@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import { replyToTicket, triageTicket, type TicketState } from './actions';
 import { STAFF_TICKET_STATUS, TICKET_PRIORITY_LABEL } from '@/lib/console/tickets';
 import styles from '../Admin.module.css';

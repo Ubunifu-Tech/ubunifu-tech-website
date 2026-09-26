@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { saveClientDetails, type ClientDetailsState } from '../actions';
 import { TextAreaField, TextField } from '@/components/console/Fields';
 import { Select } from '@/components/console/Select';

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { saveBrandKit, type BrandState } from './brand-actions';
 import { BrandKitView, type BrandKitData } from '@/components/console/BrandKitView';

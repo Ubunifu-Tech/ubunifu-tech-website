@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Check } from 'lucide-react';
 import { Avatar } from '@/components/console/Avatar';

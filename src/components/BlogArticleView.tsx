@@ -7,6 +7,7 @@ import { getProjectDiagram } from '@/content/project-visuals';
 import type { BlogCover } from '@/content/blog-covers';
 import { formatDateLong } from '@/lib/date';
 import styles from '@/app/(site)/blog/[slug]/BlogSlug.module.css';
+import { displayHost } from '@/lib/url';
 
 export type ArticleContent = {
   title: string;
@@ -125,7 +126,7 @@ export function BlogArticleView({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {hostOf(post.writer.link)}
+                  {displayHost(post.writer.link)}
                 </a>
               )}
             </div>
@@ -151,10 +152,3 @@ function initialsOf(name: string): string {
 }
 
 /** "https://www.example.com/about" reads as "example.com". */
-function hostOf(link: string): string {
-  try {
-    return new URL(link).hostname.replace(/^www\./, '');
-  } catch {
-    return link;
-  }
-}

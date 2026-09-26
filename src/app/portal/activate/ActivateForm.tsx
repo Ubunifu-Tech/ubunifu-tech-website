@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { activateAccount, type ActivateState } from './actions';
 import forms from '@/styles/forms.module.css';
 

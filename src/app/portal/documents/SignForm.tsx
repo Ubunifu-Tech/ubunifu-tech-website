@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   askForFreshSigningCopy,

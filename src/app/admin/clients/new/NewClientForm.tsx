@@ -15,7 +15,6 @@ export type TemplateOption = {
   id: string;
   name: string;
   serviceLine: string;
-  description: string | null;
   isDefault: boolean;
 };
 

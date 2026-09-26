@@ -1,22 +1,11 @@
 // The six service pillars. Source of truth for the Services page and the
-// homepage services section. Icons are lucide-react. Keep descriptions
-// specific and grounded (see POSITIONING.md).
-
-import {
-  Code2,
-  Server,
-  Palette,
-  BarChart3,
-  Sparkles,
-  Compass,
-  type LucideIcon,
-} from 'lucide-react';
+// homepage services section. Keep descriptions specific and grounded (see
+// POSITIONING.md).
 
 export type ServiceKey = 'web' | 'hosting' | 'branding' | 'data' | 'ai' | 'strategy';
 
 export type Service = {
   key: ServiceKey;
-  icon: LucideIcon;
   title: string;
   summary: string;
   description: string;
@@ -26,7 +15,6 @@ export type Service = {
 export const services: ReadonlyArray<Service> = [
   {
     key: 'web',
-    icon: Code2,
     title: 'Websites & Custom Platforms',
     summary: 'Websites, online shops, and business applications.',
     description:
@@ -41,7 +29,6 @@ export const services: ReadonlyArray<Service> = [
   },
   {
     key: 'hosting',
-    icon: Server,
     title: 'Hosting, Domains & Email',
     summary: 'Hosting, renewals, backups, and support.',
     description:
@@ -56,7 +43,6 @@ export const services: ReadonlyArray<Service> = [
   },
   {
     key: 'branding',
-    icon: Palette,
     title: 'Brand Identity & Design',
     summary: 'Logos, brand guidelines, and marketing materials.',
     description:
@@ -72,7 +58,6 @@ export const services: ReadonlyArray<Service> = [
   },
   {
     key: 'data',
-    icon: BarChart3,
     title: 'Data & Business Intelligence',
     summary: 'Connected data, dashboards, and reports.',
     description:
@@ -87,7 +72,6 @@ export const services: ReadonlyArray<Service> = [
   },
   {
     key: 'ai',
-    icon: Sparkles,
     title: 'AI & Automation',
     summary: 'Document assistants and task automation.',
     description:
@@ -102,7 +86,6 @@ export const services: ReadonlyArray<Service> = [
   },
   {
     key: 'strategy',
-    icon: Compass,
     title: 'Technology Strategy & Advisory',
     summary: 'System assessments, upgrade plans, and training.',
     description:

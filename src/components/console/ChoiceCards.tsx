@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useId } from 'react';
+import { useId } from 'react';
 import styles from './ChoiceCards.module.css';
 
 export type Choice = { value: string; label: string; description?: string };

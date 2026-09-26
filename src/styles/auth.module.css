@@ -56,10 +56,6 @@
   line-height: 1.25;
 }
 
-.headingAccent {
-  color: inherit;
-}
-
 .lead {
   margin: calc(var(--space-4) * -1) 0 var(--space-5);
   color: var(--text-secondary);

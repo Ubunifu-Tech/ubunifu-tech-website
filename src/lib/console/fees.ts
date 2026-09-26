@@ -228,6 +228,31 @@ export function feeProblems(
   return problems;
 }
 
+/** A fee line as the fee editor shows it. */
+export function feeRow(line: {
+  id: string;
+  label: string;
+  description: string | null;
+  billingKind: FeeRow['billingKind'];
+  amountMinor: number;
+  quantity: number;
+  terms: string | null;
+  nextDueAt: Date | null;
+  status: FeeRow['status'];
+}): FeeRow {
+  return {
+    id: line.id,
+    label: line.label,
+    description: line.description,
+    billingKind: line.billingKind,
+    amountMinor: line.amountMinor,
+    quantity: line.quantity,
+    terms: line.terms,
+    nextDueAt: toDateInputValue(line.nextDueAt),
+    status: line.status,
+  };
+}
+
 /** The project's fees as the fee editor shows them, removed ones left out. */
 export async function editableFees(projectId: string): Promise<FeeRow[]> {
   const lines = await db.lineItem.findMany({
@@ -243,19 +268,7 @@ export async function editableFees(projectId: string): Promise<FeeRow[]> {
       terms: true,
       nextDueAt: true,
       status: true,
-      _count: { select: { invoiceLines: true } },
     },
   });
-  return lines.map((line) => ({
-    id: line.id,
-    label: line.label,
-    description: line.description,
-    billingKind: line.billingKind,
-    amountMinor: line.amountMinor,
-    quantity: line.quantity,
-    terms: line.terms,
-    nextDueAt: toDateInputValue(line.nextDueAt),
-    status: line.status,
-    invoiced: line._count.invoiceLines > 0,
-  }));
+  return lines.map(feeRow);
 }

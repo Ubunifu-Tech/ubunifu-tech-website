@@ -35,7 +35,7 @@ export default async function NewClientPage({
   const [templates, team, enquiry] = await Promise.all([
     db.projectTemplate.findMany({
       orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
-      select: { id: true, name: true, serviceLine: true, description: true, isDefault: true },
+      select: { id: true, name: true, serviceLine: true, isDefault: true },
     }),
     db.staffUser.findMany({
       where: { isActive: true },

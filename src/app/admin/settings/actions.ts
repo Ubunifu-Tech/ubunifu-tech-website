@@ -9,10 +9,6 @@ import { formText } from '@/lib/console/form';
 
 export type SettingsState = { status: 'idle' | 'done' | 'error'; message?: string };
 
-function text(formData: FormData, key: string): string {
-  return formText(formData, key);
-}
-
 /**
  * Saves the details that appear on every invoice and receipt.
  *
@@ -27,19 +23,19 @@ export async function saveOrgSettings(
   const staff = await requireStaff();
   if (!can(staff, 'billing_settings')) return { status: 'error', message: NO_PERMISSION };
 
-  const legalName = text(formData, 'legalName');
+  const legalName = formText(formData, 'legalName');
   if (legalName.length < 2) {
     return { status: 'error', message: 'The registered name cannot be blank.' };
   }
 
   const chargesVat = formData.get('chargesVat') === 'on';
-  const vatRaw = text(formData, 'vatRate');
+  const vatRaw = formText(formData, 'vatRate');
   const vatRateBps = vatRaw === '' ? 0 : parseBps(vatRaw);
   if (vatRateBps === null) {
     return { status: 'error', message: 'The VAT rate should be a percentage, such as 18.' };
   }
 
-  const termsRaw = text(formData, 'paymentTermsDays');
+  const termsRaw = formText(formData, 'paymentTermsDays');
   const paymentTermsDays = Number.parseInt(termsRaw, 10);
   if (!Number.isInteger(paymentTermsDays) || paymentTermsDays < 0 || paymentTermsDays > 365) {
     return { status: 'error', message: 'Payment terms should be a number of days, up to 365.' };
@@ -47,23 +43,23 @@ export async function saveOrgSettings(
 
   const data = {
     legalName,
-    tradingName: text(formData, 'tradingName') || null,
-    tin: text(formData, 'tin') || null,
-    vrn: text(formData, 'vrn') || null,
-    addressLines: text(formData, 'addressLines') || null,
-    country: (text(formData, 'country') || 'TZ').toUpperCase().slice(0, 2),
-    email: text(formData, 'email') || 'info@ubunifutech.com',
-    phone: text(formData, 'phone') || null,
-    website: text(formData, 'website') || null,
+    tradingName: formText(formData, 'tradingName') || null,
+    tin: formText(formData, 'tin') || null,
+    vrn: formText(formData, 'vrn') || null,
+    addressLines: formText(formData, 'addressLines') || null,
+    country: (formText(formData, 'country') || 'TZ').toUpperCase().slice(0, 2),
+    email: formText(formData, 'email') || 'info@ubunifutech.com',
+    phone: formText(formData, 'phone') || null,
+    website: formText(formData, 'website') || null,
     chargesVat,
     vatRateBps,
-    bankName: text(formData, 'bankName') || null,
-    bankAccountName: text(formData, 'bankAccountName') || null,
-    bankAccountNumber: text(formData, 'bankAccountNumber') || null,
-    bankSwift: text(formData, 'bankSwift') || null,
-    mobileMoneyName: text(formData, 'mobileMoneyName') || null,
-    mobileMoneyNumber: text(formData, 'mobileMoneyNumber') || null,
-    invoiceFooter: text(formData, 'invoiceFooter') || null,
+    bankName: formText(formData, 'bankName') || null,
+    bankAccountName: formText(formData, 'bankAccountName') || null,
+    bankAccountNumber: formText(formData, 'bankAccountNumber') || null,
+    bankSwift: formText(formData, 'bankSwift') || null,
+    mobileMoneyName: formText(formData, 'mobileMoneyName') || null,
+    mobileMoneyNumber: formText(formData, 'mobileMoneyNumber') || null,
+    invoiceFooter: formText(formData, 'invoiceFooter') || null,
     paymentTermsDays,
   };
 

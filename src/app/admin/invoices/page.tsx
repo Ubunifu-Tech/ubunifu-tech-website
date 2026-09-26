@@ -10,6 +10,7 @@ import { ListFooter, ListToolbar, searchText } from '@/components/console/ListTo
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { addTo } from '@/lib/console/finance';
 
 export const metadata = { title: 'Invoices' };
 
@@ -48,10 +49,6 @@ function amounts(byCurrency: Map<string, number>): string {
   return parts.length === 0
     ? formatMoney(0, 'USD')
     : parts.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ');
-}
-
-function addTo(map: Map<string, number>, currency: string, amount: number) {
-  map.set(currency, (map.get(currency) ?? 0) + amount);
 }
 
 export default async function InvoicesPage({

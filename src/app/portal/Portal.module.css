@@ -93,10 +93,6 @@
   flex: 1;
 }
 
-.narrow {
-  max-width: 28rem;
-}
-
 .medium {
   max-width: 56rem;
 }
@@ -415,7 +411,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-
 
 /* A notice, not a failure: sign-in links are single use, so arriving with a
    spent one is a normal thing to do — usually by reopening the email twice. */

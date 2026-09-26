@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { answerReview, type AnswerState } from './review-actions';
 import { TextAreaField } from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';

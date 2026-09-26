@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { createDocument, type DocumentState } from '../../documents/actions';
 import { DOCUMENT_KINDS } from '../../documents/kinds';
 import forms from '@/styles/forms.module.css';

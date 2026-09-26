@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import {
   MenuItem,
   MenuLink,

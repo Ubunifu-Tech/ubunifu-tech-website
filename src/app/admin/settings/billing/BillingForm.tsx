@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { saveOrgSettings, type SettingsState } from '../actions';
 import type { Org } from '@/lib/console/org';
 import { NumberField } from '@/components/console/Fields';

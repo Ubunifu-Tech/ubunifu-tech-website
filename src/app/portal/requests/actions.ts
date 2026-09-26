@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { TicketKind } from '@/generated/prisma/client';
 import { createTicket } from '@/lib/console/ticket-create';
 import { allow } from '@/lib/console/rate-limit';
+import { TEAM_INBOX } from '@/lib/console/alerts';
 import { requireClient, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -133,7 +134,7 @@ export async function replyToRequest(
   });
 
   await sendConsoleEmail({
-    to: 'info@ubunifutech.com',
+    to: TEAM_INBOX,
     subject: `[${ticket.reference}] ${actor.clientName} replied`,
     html: ticketRaisedEmail({
       reference: ticket.reference,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useRef, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { upload } from '@vercel/blob/client';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';

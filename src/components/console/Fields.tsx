@@ -22,6 +22,7 @@ type Common = {
   invalid?: boolean;
   disabled?: boolean;
   wide?: boolean;
+  /** For a typed field; a picker's value is checked when the form is saved. */
   required?: boolean;
 };
 
@@ -123,7 +124,7 @@ export function SelectField({
   onChange,
   placeholder,
   children,
-}: Common & {
+}: Omit<Common, 'required'> & {
   defaultValue?: string;
   value?: string;
   onChange?: (value: string) => void;
@@ -201,7 +202,7 @@ export function DateField({
   min,
   max,
   onChange,
-}: Common & {
+}: Omit<Common, 'required'> & {
   defaultValue?: string;
   min?: string;
   max?: string;

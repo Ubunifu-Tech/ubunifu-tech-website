@@ -19,7 +19,6 @@ export const INVOICE_SHEET_SELECT = {
     select: {
       name: true,
       legalName: true,
-      country: true,
       contacts: {
         where: { deletedAt: null, isPrimary: true },
         take: 1,
@@ -55,7 +54,6 @@ export function toSheet(invoice: Row): InvoiceSheetData {
     client: {
       name: invoice.client.name,
       legalName: invoice.client.legalName,
-      country: invoice.client.country,
     },
     attention: invoice.client.contacts[0]?.name ?? null,
   };

@@ -8,7 +8,7 @@ import { EngagementType, ProjectStatus, ServiceLine } from '@/generated/prisma/c
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
-import { formText } from '@/lib/console/form';
+import { formText, isOneOf } from '@/lib/console/form';
 import { isCurrency } from '@/lib/console/currencies';
 
 export type NewProjectState = {
@@ -24,14 +24,6 @@ const OPENING_STATUSES: ProjectStatus[] = [
   ProjectStatus.proposal_sent,
   ProjectStatus.proposal_accepted,
 ];
-
-function isMember<T extends string>(values: readonly T[], value: string): value is T {
-  return (values as readonly string[]).includes(value);
-}
-
-function text(formData: FormData, key: string): string {
-  return formText(formData, key);
-}
 
 /**
  * Starts another project for a client already on the books.
@@ -55,34 +47,34 @@ export async function createProject(
     field,
   });
 
-  const clientId = text(formData, 'clientId');
+  const clientId = formText(formData, 'clientId');
   const client = await db.client.findFirst({
     where: { id: clientId, deletedAt: null },
     select: { id: true, slug: true, name: true, currency: true },
   });
   if (!client) return fail('That client no longer exists.');
 
-  const name = text(formData, 'name');
+  const name = formText(formData, 'name');
   if (name.length < 2 || name.length > 160) {
     return fail('Give the project a name.', 'name');
   }
 
-  const serviceLine = text(formData, 'serviceLine');
-  if (!isMember(Object.values(ServiceLine), serviceLine)) {
+  const serviceLine = formText(formData, 'serviceLine');
+  if (!isOneOf(Object.values(ServiceLine), serviceLine)) {
     return fail('Choose a service line.', 'serviceLine');
   }
 
-  const engagementType = text(formData, 'engagementType');
-  if (!isMember(Object.values(EngagementType), engagementType)) {
+  const engagementType = formText(formData, 'engagementType');
+  if (!isOneOf(Object.values(EngagementType), engagementType)) {
     return fail('Choose how this work is billed.', 'engagementType');
   }
 
-  const status = text(formData, 'status');
-  if (!isMember(OPENING_STATUSES, status)) {
+  const status = formText(formData, 'status');
+  if (!isOneOf(OPENING_STATUSES, status)) {
     return fail('Choose where this project stands today.', 'status');
   }
 
-  const templateId = text(formData, 'templateId');
+  const templateId = formText(formData, 'templateId');
   if (templateId) {
     const template = await db.projectTemplate.findUnique({
       where: { id: templateId },
@@ -96,19 +88,19 @@ export async function createProject(
 
   // Absent only from a form posted without the field; the client's own
   // currency is what the field would have defaulted to.
-  const currency = (text(formData, 'currency') || client.currency).toUpperCase();
+  const currency = (formText(formData, 'currency') || client.currency).toUpperCase();
   if (!isCurrency(currency)) {
     return fail('Choose a currency.', 'currency');
   }
 
-  const startDate = parseDateInput(text(formData, 'startDate'));
-  const targetDate = parseDateInput(text(formData, 'targetDate'));
+  const startDate = parseDateInput(formText(formData, 'startDate'));
+  const targetDate = parseDateInput(formText(formData, 'targetDate'));
   if (startDate && targetDate && targetDate < startDate) {
     return fail('The target date is before the start date.', 'targetDate');
   }
 
   // Someone on the team who can still sign in, or nobody yet.
-  const ownerChoice = text(formData, 'ownerId');
+  const ownerChoice = formText(formData, 'ownerId');
   const owner = ownerChoice
     ? await db.staffUser.findFirst({
         where: { id: ownerChoice, isActive: true },
@@ -126,7 +118,7 @@ export async function createProject(
       engagementType,
       status,
       templateId: templateId || null,
-      summary: text(formData, 'summary') || null,
+      summary: formText(formData, 'summary') || null,
       startDate,
       targetDate,
       currency,
@@ -156,7 +148,7 @@ export async function createProject(
 
   // Closes the enquiry it came from. Conditional, so an enquiry already
   // turned into something else by someone else is left as they left it.
-  const enquiryId = text(formData, 'enquiryId');
+  const enquiryId = formText(formData, 'enquiryId');
   if (enquiryId) {
     await db.enquiry.updateMany({
       where: { id: enquiryId, deletedAt: null, status: { not: 'converted' } },

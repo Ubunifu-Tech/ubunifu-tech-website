@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { MenuItem, MenuList, MenuNote, RowMenu, useLastSaid } from '@/components/console/RowMenu';
 import { TextField } from '@/components/console/Fields';
 import { saveProduct, setProductActive, type ProductState } from './actions';

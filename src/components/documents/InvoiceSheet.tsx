@@ -22,7 +22,7 @@ export type InvoiceSheetData = {
   totalMinor: number;
   paidMinor: number;
   notes: string | null;
-  client: { name: string; legalName: string | null; country: string };
+  client: { name: string; legalName: string | null };
   attention: string | null;
   project: { name: string } | null;
   lines: { id: string; label: string; description: string | null; amountMinor: number; quantity: number }[];

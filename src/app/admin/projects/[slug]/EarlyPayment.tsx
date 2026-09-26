@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import {
   emailReceipt,
@@ -155,7 +155,6 @@ export function EarlyPayment({
           label="Date it arrived"
           defaultValue={today}
           max={today}
-          required
           disabled={pending}
         />
         <SelectField

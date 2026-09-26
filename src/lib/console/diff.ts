@@ -1,4 +1,4 @@
-import { renderMarkdown } from './markdown';
+import { escapeHtml, renderMarkdown } from './markdown';
 
 /**
  * Paragraph-level comparison of two markdown texts.
@@ -207,15 +207,6 @@ export function diffBlocks(
 /** Compares two markdown texts block by block. */
 export function diffParagraphs(before: string, after: string): DiffPart[] {
   return diffBlocks(splitParagraphs(before), splitParagraphs(after));
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 /**

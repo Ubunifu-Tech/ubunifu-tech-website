@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import {
   emailReceipt,
   cancelRefund,
@@ -117,7 +117,6 @@ export function RecordPaymentForm({
           label="Date it arrived"
           defaultValue={today}
           max={today}
-          required
           disabled={pending}
         />
 
@@ -309,7 +308,6 @@ export function PaymentMenu({
             label="Date it went back"
             defaultValue={today}
             max={today}
-            required
           />
           <SelectField name="method" label="How it went back" defaultValue="mobile_money">
             {PAYMENT_METHODS.map((method) => (

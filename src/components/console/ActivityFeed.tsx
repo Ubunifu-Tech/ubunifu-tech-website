@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ActivityItem } from '@/lib/console/activity';
 import { formatRelative } from '@/lib/console/money';
 import styles from '@/app/admin/Admin.module.css';

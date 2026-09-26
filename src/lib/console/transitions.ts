@@ -223,9 +223,6 @@ export const NEXT_STEP: Partial<Record<ProjectStatus, { label: string; kind: 'pr
   proposal_accepted: { label: 'Send the agreement for signing', kind: 'contract' },
 };
 
-/** Neither of these has any outgoing edge that is not a revival or a resume. */
-export const TERMINAL: ProjectStatus[] = ['closed', 'cancelled'];
-
 /**
  * The deal, in order: from first contact to a signed agreement.
  *
@@ -460,8 +457,6 @@ export async function transitionsFor(project: {
 /** Facts the guards need, loaded once per evaluation. */
 export type GuardFacts = {
   currency: string;
-  engagementType: string;
-  linesPriced: number;
   linesUnpriced: number;
   committedMinor: number;
   currencies: string[];
@@ -495,7 +490,6 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
     where: { id: projectId },
     select: {
       currency: true,
-      engagementType: true,
       lineItems: {
         where: { status: { in: ['planned', 'active'] } },
         select: {
@@ -541,8 +535,6 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
 
   return {
     currency: project.currency,
-    engagementType: project.engagementType,
-    linesPriced: project.lineItems.filter((l) => l.amountMinor > 0).length,
     linesUnpriced: project.lineItems.filter((l) => l.amountMinor === 0).length,
     committedMinor: project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
     currencies: [...new Set(project.lineItems.filter((l) => l.amountMinor > 0).map((l) => l.currency))],

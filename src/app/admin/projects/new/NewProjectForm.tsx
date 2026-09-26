@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { createProject, type NewProjectState } from './actions';
 import type { TemplateOption } from '../../clients/new/NewClientForm';
 import {
@@ -14,7 +14,6 @@ import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewProjectState = { status: 'idle' };
-
 
 const STATUSES = [
   { value: 'lead', label: 'Lead' },

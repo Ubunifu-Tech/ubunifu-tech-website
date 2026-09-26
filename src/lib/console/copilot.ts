@@ -6,7 +6,7 @@ import { formatDate, formatMoney } from './money';
 import { DOCUMENT_KIND_LABEL, currentTerms } from './documents';
 import { getOrg } from './org';
 import { liveDocument } from './live';
-import type { AgentTool } from './agent';
+import { AGENT_MODEL, type AgentTool } from './agent';
 
 /**
  * The drafting copilot's context and its one tool.
@@ -315,7 +315,7 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
           ? changeNote.trim().slice(0, 200)
           : 'Drafted by the assistant',
         aiAssisted: true,
-        aiModel: process.env.ANTHROPIC_AGENT_MODEL || 'claude-sonnet-5',
+        aiModel: AGENT_MODEL,
         createdById: context.staffId,
       },
     });

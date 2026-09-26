@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import { saveExchangeRate, type FinanceState } from './actions';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';

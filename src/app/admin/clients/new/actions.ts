@@ -16,7 +16,7 @@ import { sendConsoleEmail } from '@/lib/console/mailer';
 import { clientInviteEmail } from '@/lib/emails';
 import { createClientRecord } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
-import { formText } from '@/lib/console/form';
+import { formText, isOneOf } from '@/lib/console/form';
 import { CURRENCIES } from '@/lib/console/currencies';
 
 /**
@@ -77,14 +77,6 @@ const OPENING_STATUSES: ProjectStatus[] = [
   ProjectStatus.proposal_accepted,
 ];
 
-function isMember<T extends string>(values: readonly T[], value: string): value is T {
-  return (values as readonly string[]).includes(value);
-}
-
-function text(formData: FormData, key: string): string {
-  return formText(formData, key);
-}
-
 /**
  * Creates a client by hand, with an optional first project and invitation.
  *
@@ -100,27 +92,27 @@ export async function createClient(
   if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
 
   const values: NewClientValues = {
-    name: text(formData, 'name'),
-    legalName: text(formData, 'legalName'),
-    website: text(formData, 'website'),
-    country: text(formData, 'country'),
-    currency: text(formData, 'currency'),
-    notes: text(formData, 'notes'),
-    contactName: text(formData, 'contactName'),
-    contactEmail: text(formData, 'contactEmail'),
-    contactRole: text(formData, 'contactRole'),
-    contactPhone: text(formData, 'contactPhone'),
+    name: formText(formData, 'name'),
+    legalName: formText(formData, 'legalName'),
+    website: formText(formData, 'website'),
+    country: formText(formData, 'country'),
+    currency: formText(formData, 'currency'),
+    notes: formText(formData, 'notes'),
+    contactName: formText(formData, 'contactName'),
+    contactEmail: formText(formData, 'contactEmail'),
+    contactRole: formText(formData, 'contactRole'),
+    contactPhone: formText(formData, 'contactPhone'),
     sendInvite: formData.get('sendInvite') === 'on',
     startProject: formData.get('startProject') === 'on',
-    projectName: text(formData, 'projectName'),
-    serviceLine: text(formData, 'serviceLine'),
-    engagementType: text(formData, 'engagementType'),
-    status: text(formData, 'status'),
-    templateId: text(formData, 'templateId'),
-    startDate: text(formData, 'startDate'),
-    targetDate: text(formData, 'targetDate'),
-    summary: text(formData, 'summary'),
-    ownerId: text(formData, 'ownerId'),
+    projectName: formText(formData, 'projectName'),
+    serviceLine: formText(formData, 'serviceLine'),
+    engagementType: formText(formData, 'engagementType'),
+    status: formText(formData, 'status'),
+    templateId: formText(formData, 'templateId'),
+    startDate: formText(formData, 'startDate'),
+    targetDate: formText(formData, 'targetDate'),
+    summary: formText(formData, 'summary'),
+    ownerId: formText(formData, 'ownerId'),
   };
 
   const fail = (message: string, field?: string): NewClientState => ({
@@ -144,7 +136,7 @@ export async function createClient(
   }
 
   const currency = values.currency.toUpperCase();
-  if (!isMember(CURRENCIES, currency)) {
+  if (!isOneOf(CURRENCIES, currency)) {
     return fail('Choose a currency.', 'currency');
   }
 
@@ -197,17 +189,17 @@ export async function createClient(
     }
 
     const { serviceLine } = values;
-    if (!isMember(Object.values(ServiceLine), serviceLine)) {
+    if (!isOneOf(Object.values(ServiceLine), serviceLine)) {
       return fail('Choose a service line.', 'serviceLine');
     }
 
     const { engagementType } = values;
-    if (!isMember(Object.values(EngagementType), engagementType)) {
+    if (!isOneOf(Object.values(EngagementType), engagementType)) {
       return fail('Choose how this work is billed.', 'engagementType');
     }
 
     const { status } = values;
-    if (!isMember(OPENING_STATUSES, status)) {
+    if (!isOneOf(OPENING_STATUSES, status)) {
       return fail('Choose where this project stands today.', 'status');
     }
 
@@ -244,7 +236,7 @@ export async function createClient(
   }
 
   // Who leads the first project: someone on the team who can sign in, or nobody yet.
-  const ownerChoice = text(formData, 'ownerId');
+  const ownerChoice = formText(formData, 'ownerId');
   const owner = ownerChoice
     ? await db.staffUser.findFirst({ where: { id: ownerChoice, isActive: true }, select: { id: true } })
     : null;
@@ -271,7 +263,7 @@ export async function createClient(
         phone: values.contactPhone || null,
       },
       project: project ? { ...project, ownerId: owner?.id ?? null } : undefined,
-      enquiryId: text(formData, 'enquiryId') || null,
+      enquiryId: formText(formData, 'enquiryId') || null,
       staffId: staff.id,
     });
   } catch (error) {

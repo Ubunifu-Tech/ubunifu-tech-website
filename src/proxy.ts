@@ -25,8 +25,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const ADMIN_HOST = process.env.CONSOLE_ADMIN_HOST || 'admin.ubunifutech.com';
 
-/** admin.localhost resolves to 127.0.0.1 without touching /etc/hosts. */
-const DEV_ADMIN_HOSTS = ['admin.localhost', 'admin.127.0.0.1'];
+/**
+ * admin.localhost resolves to 127.0.0.1 without touching /etc/hosts. The same
+ * list as isAdminHost in lib/console/env.ts, which the proxy cannot import.
+ */
+const DEV_ADMIN_HOSTS = ['admin.localhost'];
 
 function isAdminHost(hostHeader: string | null): boolean {
   if (!hostHeader) return false;

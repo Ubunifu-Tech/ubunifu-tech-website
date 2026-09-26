@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { services, type ServiceKey } from '@/content/services';
 import { ScrollReveal } from './ScrollReveal';

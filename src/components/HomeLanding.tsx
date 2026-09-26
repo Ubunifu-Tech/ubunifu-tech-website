@@ -21,6 +21,7 @@ import { testimonials } from '@/content/testimonials';
 import { formatDateShort } from '@/lib/date';
 import { useState } from 'react';
 import styles from './HomeLanding.module.css';
+import { displayHost } from '@/lib/url';
 
 export type HomeInsight = {
   slug: string;
@@ -66,14 +67,6 @@ const ENGAGEMENT_PATHS = [
     linkLabel: 'See our products',
   },
 ] as const;
-
-function displayHost(url: string): string {
-  try {
-    return new URL(url).host.replace(/^www\./, '');
-  } catch {
-    return url;
-  }
-}
 
 export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
   const [activeKey, setActiveKey] = useState<ServiceKey | null>(null);

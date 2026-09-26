@@ -6,9 +6,9 @@ import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
 import { ACKNOWLEDGEMENTS_PER_DAY, allow } from './rate-limit';
 import { acknowledgementEmail, notificationEmail } from '@/lib/emails';
+import { TEAM_INBOX } from './alerts';
 
 /** Where new enquiries and requests are announced. */
-export const TEAM_INBOX = 'info@ubunifutech.com';
 
 /**
  * The assistant on the public website.

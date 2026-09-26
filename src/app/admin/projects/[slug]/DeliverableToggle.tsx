@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useRef } from 'react';
+import { useActionState, useRef } from 'react';
 import { toggleDeliverable, type EditState } from './actions';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';

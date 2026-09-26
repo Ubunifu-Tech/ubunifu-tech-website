@@ -66,6 +66,7 @@ import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { DOCUMENT_KINDS } from '../../documents/kinds';
+import { feeRow } from '@/lib/console/fees';
 
 const TONE_CLASS: Record<string, string> = {
   neutral: '',
@@ -227,7 +228,6 @@ export default async function ProjectPage({
           status: true,
           billingKind: true,
           nextDueAt: true,
-          _count: { select: { invoiceLines: true } },
         },
       },
       documents: {
@@ -402,18 +402,7 @@ export default async function ProjectPage({
     (line) => line.status === 'deferred' || line.status === 'paused',
   ).length;
 
-  const fees: FeeRow[] = project.lineItems.map((line) => ({
-    id: line.id,
-    label: line.label,
-    description: line.description,
-    billingKind: line.billingKind,
-    amountMinor: line.amountMinor,
-    quantity: line.quantity,
-    terms: line.terms,
-    nextDueAt: toDateInputValue(line.nextDueAt),
-    status: line.status,
-    invoiced: line._count.invoiceLines > 0,
-  }));
+  const fees: FeeRow[] = project.lineItems.map(feeRow);
   // A draft has not been sent, so nobody has been asked for it yet.
   const invoiced = project.invoices
     .filter(

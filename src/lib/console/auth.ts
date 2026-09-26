@@ -228,24 +228,6 @@ export async function requireClient(): Promise<ClientActor> {
   return client;
 }
 
-/**
- * Every project read by a client goes through here. Ownership is checked
- * against the contact's own client, so a guessed project id returns nothing
- * rather than someone else's work.
- */
-export async function assertClientOwnsProject(
-  actor: ClientActor,
-  projectId: string,
-): Promise<void> {
-  const project = await db.project.findFirst({
-    where: { id: projectId, clientId: actor.clientId, deletedAt: null },
-    select: { id: true },
-  });
-  if (!project) {
-    notFound();
-  }
-}
-
 export async function recordAudit(options: {
   actorType: ActorType;
   actorId?: string | null;

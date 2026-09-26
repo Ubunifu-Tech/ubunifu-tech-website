@@ -51,20 +51,6 @@ export function hashToken(token: string): string {
     .digest('base64url');
 }
 
-export function tokensMatch(rawToken: string, storedHash: string): boolean {
-  const computed = Buffer.from(hashToken(rawToken));
-  const stored = Buffer.from(storedHash);
-  if (computed.length !== stored.length) return false;
-  return timingSafeEqual(computed, stored);
-}
-
-/** SHA-256 of a document, for sealing what was signed. */
-export function hashDocument(content: string): string {
-  return createHmac('sha256', consoleEnv.sessionSecret)
-    .update(content)
-    .digest('hex');
-}
-
 // ── Passwords ────────────────────────────────────────────────────────────────
 
 const SCRYPT_KEY_LENGTH = 64;

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Printer } from 'lucide-react';
 import forms from '@/styles/forms.module.css';
 

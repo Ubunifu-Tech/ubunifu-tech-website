@@ -163,7 +163,7 @@ export function resolveBlogCover(
 }
 
 // Rough reading time at ~200 words/minute, floored at 1 minute.
-function estimateReadingTime(content: string): number {
+export function estimateReadingTime(content: string): number {
   const words = content.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
@@ -199,7 +199,7 @@ function parsePost(fileName: string): BlogPost {
   };
 }
 
-function comparePosts(a: BlogPost, b: BlogPost): number {
+export function comparePosts(a: BlogPost, b: BlogPost): number {
   const byDate = b.date.localeCompare(a.date);
   if (byDate !== 0) {
     return byDate;

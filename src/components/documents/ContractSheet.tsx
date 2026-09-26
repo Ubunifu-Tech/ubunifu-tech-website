@@ -2,6 +2,7 @@ import { BrandLockup } from '@/components/BrandMark';
 import type { Org } from '@/lib/console/org';
 import { renderMarkdown } from '@/lib/console/markdown';
 import { formatDate } from '@/lib/console/money';
+import { cssString } from './MoneyParts';
 import doc from './Document.module.css';
 
 /**
@@ -13,11 +14,6 @@ function titleLines(title: string, clientName: string): [string, string] {
   const at = title.indexOf(' for ');
   if (at > 0) return [title.slice(0, at + 4), title.slice(at + 5)];
   return [title, `for ${clientName}`];
-}
-
-/** A value for a CSS string: quotes, backslashes and line breaks made safe. */
-function cssString(value: string): string {
-  return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ')}"`;
 }
 
 /**

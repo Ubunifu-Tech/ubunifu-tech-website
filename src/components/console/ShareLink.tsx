@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import forms from '@/styles/forms.module.css';
 import styles from '@/app/admin/Admin.module.css';
 

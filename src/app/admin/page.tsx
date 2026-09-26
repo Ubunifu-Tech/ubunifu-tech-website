@@ -13,6 +13,7 @@ import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { unresolvedEmailFailures } from '@/lib/console/email-failures';
 import { INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
+import { greeting } from '@/lib/console/greeting';
 
 // Absolute: a layout template does not apply to its own sibling page, so a
 // plain string here would inherit the marketing site's title template.
@@ -35,18 +36,6 @@ const TONE_CLASS: Record<string, string> = {
  */
 
 /** Morning, afternoon or evening in Tanzania, not wherever the server is. */
-function greeting(now: Date): string {
-  const hour = Number(
-    new Intl.DateTimeFormat('en-GB', {
-      hour: 'numeric',
-      hour12: false,
-      timeZone: 'Africa/Dar_es_Salaam',
-    }).format(now),
-  );
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 export default async function AdminHome() {
   const staff = await requireStaff();
   const now = new Date();

@@ -16,6 +16,7 @@ import { clientStage } from '@/lib/console/project-status';
 import { formatDate, formatMoney } from '@/lib/console/money';
 import styles from './Portal.module.css';
 import forms from '@/styles/forms.module.css';
+import { greeting } from '@/lib/console/greeting';
 
 /**
  * `absolute`, not a plain string. A layout's title template applies to route
@@ -32,18 +33,6 @@ const TONE_CLASS: Record<string, string> = {
   bad: forms.badgeBad,
 };
 
-function greeting(now: Date): string {
-  const hour = Number(
-    new Intl.DateTimeFormat('en-GB', {
-      hour: 'numeric',
-      hour12: false,
-      timeZone: 'Africa/Dar_es_Salaam',
-    }).format(now),
-  );
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 type Need = {
   key: string;

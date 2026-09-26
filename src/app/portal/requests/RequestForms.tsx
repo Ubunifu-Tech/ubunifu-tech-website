@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { raiseRequest, replyToRequest, type RequestState } from './actions';
 import { TICKET_KINDS } from '@/lib/console/tickets';
 import forms from '@/styles/forms.module.css';

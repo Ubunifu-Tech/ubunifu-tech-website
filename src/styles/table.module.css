@@ -408,16 +408,6 @@
   cursor: not-allowed;
 }
 
-.actionDanger:hover:not(:disabled) {
-  border-color: var(--danger-border);
-  background: var(--danger-dim);
-  color: var(--danger);
-}
-
-.icon {
-  flex-shrink: 0;
-}
-
 /* ── Empty and footer ──────────────────────────── */
 
 .emptyCell {
@@ -481,12 +471,6 @@
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
-}
-
-.whoText {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
 }
 
 /* How far along something is: a short bar and the plain count beside it.

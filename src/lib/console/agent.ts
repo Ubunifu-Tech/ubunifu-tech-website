@@ -69,7 +69,6 @@ type StoredMessage = {
   toolName: string | null;
   toolUseId: string | null;
   toolInput: Prisma.JsonValue;
-  toolResult: Prisma.JsonValue;
 };
 
 /**
@@ -207,7 +206,6 @@ export async function runTurn<Context>(options: {
       toolName: true,
       toolUseId: true,
       toolInput: true,
-      toolResult: true,
     },
   });
 

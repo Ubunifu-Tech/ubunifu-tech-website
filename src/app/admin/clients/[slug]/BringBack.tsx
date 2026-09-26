@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import { bringBackContact, type InviteState } from '../actions';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';

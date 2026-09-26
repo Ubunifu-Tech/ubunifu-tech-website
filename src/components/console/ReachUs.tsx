@@ -1,4 +1,3 @@
-import React from 'react';
 import { getOrg } from '@/lib/console/org';
 import { whatsappLink } from '@/lib/console/whatsapp';
 

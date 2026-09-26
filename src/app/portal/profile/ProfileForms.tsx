@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import { changePassword, emailPasswordLink, saveMyDetails, type TeamState } from '../team/actions';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';

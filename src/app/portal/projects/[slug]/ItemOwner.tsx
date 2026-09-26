@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import { useActionState } from 'react';
 import { Select, type SelectOption } from '@/components/console/Select';
 import { assignMyItem, type AssignItemState } from './actions';
 import styles from '../../Portal.module.css';

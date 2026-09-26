@@ -30,7 +30,7 @@ export default async function BillingSettingsPage() {
         </div>
       </div>
 
-      <SettingsTabs current="billing" role={staff.role} />
+      <SettingsTabs current="billing" staff={staff} />
 
       <div className={styles.split}>
         <div className={styles.splitMain}>

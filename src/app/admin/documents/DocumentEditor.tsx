@@ -76,6 +76,22 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
         </ul>
       )}
 
+      {turns.length === 0 && (
+        <form action={action} className={forms.actions}>
+          <input type="hidden" name="documentId" value={documentId} />
+          <input
+            type="hidden"
+            name="message"
+            value="Write the first draft of this document from what you know about the project, in the usual shape for its kind. Mark anything you do not know as TO CONFIRM."
+          />
+          <button type="submit" className={forms.button} disabled={pending}>
+            <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
+            {pending ? 'Writing…' : 'Write the first draft'}
+          </button>
+          <p className={forms.payoff}>Or say what you want below.</p>
+        </form>
+      )}
+
       <form action={action} className={forms.form}>
         <input type="hidden" name="documentId" value={documentId} />
         <div className={forms.field}>
@@ -96,7 +112,10 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
             }
             disabled={pending}
           />
-          <p className={forms.hint}>It knows the project&rsquo;s plan, fees and dates.</p>
+          <p className={forms.hint}>
+            It knows the project&rsquo;s plan, fees, dates, what we need from them, their enquiry
+            and the other documents on the project.
+          </p>
         </div>
 
         <div className={forms.actions}>

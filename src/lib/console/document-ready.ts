@@ -35,6 +35,23 @@ export type Prepared = {
   signer: { id: string; name: string; email: string | null } | null;
 };
 
+/** Where the standard sections go, when the author has chosen a place. */
+const STANDARD_TOKEN = /^[ \t]*\{\{\s*standard\s*\}\}[ \t]*$/m;
+
+/**
+ * The standard sections for this kind of document, from Settings, written
+ * into the text that goes out: where the author put {{standard}}, or at the
+ * end. Part of what is signed, like the fee table, so they are fixed in each
+ * version the moment it is sent.
+ */
+export function withStandard(text: string, standard: string): string {
+  const sections = standard.trim();
+  if (STANDARD_TOKEN.test(text)) {
+    return text.replace(STANDARD_TOKEN, sections).replace(/\n{3,}/g, '\n\n');
+  }
+  return sections ? `${text.trimEnd()}\n\n${sections}` : text;
+}
+
 /** The text the author is working on: the source when a version kept one. */
 export function authorText(version: { bodyMarkdown: string; sourceMarkdown: string | null }) {
   return version.sourceMarkdown ?? version.bodyMarkdown;
@@ -48,7 +65,7 @@ export async function prepareDocument(document: {
   const { kind, source, project } = document;
   const withFeeTable = carriesFees(kind) || hasFeesToken(source);
 
-  const [lines, later, signer, org] = await Promise.all([
+  const [lines, later, signer, org, standard] = await Promise.all([
     withFeeTable ? projectFees(project.id) : Promise.resolve([]),
     withFeeTable ? projectFeesLater(project.id) : Promise.resolve([]),
     db.clientContact.findFirst({
@@ -56,12 +73,14 @@ export async function prepareDocument(document: {
       select: { id: true, name: true, email: true },
     }),
     getOrg(),
+    db.documentDefault.findUnique({ where: { kind }, select: { bodyMarkdown: true } }),
   ]);
   const vatBps = org.chargesVat ? org.vatRateBps : 0;
 
-  const final = withFeeTable
+  const priced = withFeeTable
     ? withFees(source, feeSchedule(lines, project.currency, vatBps, later), kind)
     : source;
+  const final = withStandard(priced, standard?.bodyMarkdown ?? '');
 
   const checks: ReadyCheck[] = [];
 

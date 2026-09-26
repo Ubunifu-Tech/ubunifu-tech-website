@@ -58,7 +58,7 @@ export default async function TeamPage() {
         {isOwner && <InviteStaff domains={staffDomains()} />}
       </div>
 
-      <SettingsTabs current="team" role={staff.role} />
+      <SettingsTabs current="team" staff={staff} />
 
       <div className={table.frame}>
         <div className={table.toolbar}>

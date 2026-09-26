@@ -489,6 +489,17 @@ model ProjectUpdate {
   @@index([projectId, status])
 }
 
+/// Sections added to every document of one kind when it goes out: what
+/// Ubunifu wants on every proposal, say, such as how changes after handover
+/// are priced. Written into the version the client signs, as the fee table
+/// is, so changing them later never touches anything already sent.
+model DocumentDefault {
+  kind         DocumentKind @id
+  bodyMarkdown String
+  updatedAt    DateTime     @updatedAt
+  updatedById  String?
+}
+
 enum ReviewStatus {
   open
   approved

@@ -8,7 +8,7 @@ import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { formatDate, parseDateInput } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
-import { taskAssignedEmail } from '@/lib/emails';
+import { projectOwnerEmail, taskAssignedEmail } from '@/lib/emails';
 
 export type AssignState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -37,7 +37,7 @@ export async function setProjectLead(
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
   const project = await db.project.findFirst({
     where: { id: formText(formData, 'projectId'), deletedAt: null },
-    select: { id: true, slug: true, name: true, ownerId: true },
+    select: { id: true, slug: true, name: true, ownerId: true, client: { select: { name: true } } },
   });
   if (!project) return { status: 'error', message: 'That project no longer exists.' };
 
@@ -58,8 +58,29 @@ export async function setProjectLead(
     summary: `${project.name}: ${lead.person ? `led by ${lead.person.name}` : 'no lead'}`,
   });
 
+  // Told when somebody else hands it to them, as with a task.
+  if (lead.person && lead.person.id !== staff.id) {
+    await sendConsoleEmail({
+      to: lead.person.email,
+      subject: `${staff.name} made you the owner of ${project.name}`,
+      html: projectOwnerEmail({
+        name: lead.person.name,
+        by: staff.name,
+        project: project.name,
+        client: project.client.name,
+        url: `${consoleEnv.adminOrigin}/projects/${project.slug}`,
+      }),
+      template: 'project_owner',
+      entityType: 'Project',
+      entityId: project.id,
+    });
+  }
+
   refresh(project.slug);
-  return { status: 'done' };
+  return {
+    status: 'done',
+    message: lead.person ? `${lead.person.name} now owns it.` : 'Nobody owns it now.',
+  };
 }
 
 /**

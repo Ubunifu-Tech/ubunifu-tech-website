@@ -309,6 +309,26 @@ export function taskAssignedEmail(input: {
   return shell(`${input.by} gave you a task on ${input.project}.`, body);
 }
 
+/** Somebody on the team made owner of a project. */
+export function projectOwnerEmail(input: {
+  name: string;
+  by: string;
+  project: string;
+  client: string;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">A project for you to lead</h1>
+    <p style="margin:0 0 20px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. ${escapeHtml(input.by)} made you the owner of <strong style="color:#1D1B22;">${escapeHtml(input.project)}</strong> for ${escapeHtml(input.client)}.
+    </p>
+    <div style="margin-top:24px;">${button(input.url, 'Open the project')}</div>`;
+
+  return shell(`${input.by} made you the owner of ${input.project}.`, body);
+}
+
 /** A client adding a colleague to their portal. */
 export function colleagueInviteEmail(input: {
   name: string;

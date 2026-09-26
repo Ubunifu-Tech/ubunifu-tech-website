@@ -36,19 +36,6 @@
   font-size: var(--font-size-caption);
 }
 
-.lead {
-  display: inline-flex;
-  width: 14rem;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.leadLabel {
-  flex: none;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-}
-
 @media (max-width: 40rem) {
   .row {
     padding: 0.75rem 0;

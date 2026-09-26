@@ -36,7 +36,8 @@ import { MoveControls, type StageAction } from './MoveControls';
 import { FeeEditor, type FeeRow } from '@/components/console/FeeEditor';
 import { Tabs } from '@/components/console/Tabs';
 import { Callout } from '@/components/console/Callout';
-import { LeadSelect, TaskRow } from './TaskRow';
+import { TaskRow } from './TaskRow';
+import { OwnerCard } from './OwnerCard';
 import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
 import { EarlyPayment } from './EarlyPayment';
@@ -415,8 +416,9 @@ export default async function ProjectPage({
   const team = await db.staffUser.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },
-    select: { id: true, name: true, title: true },
+    select: { id: true, name: true, title: true, email: true },
   });
+  const owner = team.find((person) => person.id === project.ownerId) ?? null;
   const people = [
     { value: '', label: 'Nobody yet' },
     ...team.map((person) => ({
@@ -500,15 +502,6 @@ export default async function ProjectPage({
               <span>{project.reference}</span>
               <span>{SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}</span>
             </p>
-          </div>
-          <div className={styles.headActions}>
-            {mayRun ? (
-              <LeadSelect projectId={project.id} ownerId={project.ownerId ?? ''} people={people} />
-            ) : (
-              <span className={styles.leadRead}>
-                Owner: {team.find((person) => person.id === project.ownerId)?.name ?? 'nobody yet'}
-              </span>
-            )}
           </div>
         </div>
         <StageTrack
@@ -851,20 +844,21 @@ export default async function ProjectPage({
                 </div>
               </dl>
             </ProjectDetailsCard>
+
+            <OwnerCard projectId={project.id} owner={owner} team={team} editable={mayRun} />
           </div>
 
           <div className={styles.stack}>
             <section className={forms.card}>
               <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>People</h2>
+                <h2 className={forms.cardTitle}>Their team</h2>
               </div>
               <ul className={styles.people}>
-                <li>
-                  <span className={styles.personName}>
-                    {team.find((person) => person.id === project.ownerId)?.name ?? 'Nobody yet'}
-                  </span>
-                  <span className={styles.personMeta}>Owner at Ubunifu</span>
-                </li>
+                {project.client.contacts.length === 0 && (
+                  <li className={styles.personMeta}>
+                    Nobody at {project.client.name} yet. Add their people on the client page.
+                  </li>
+                )}
                 {project.client.contacts.map((contact) => (
                   <li key={contact.id}>
                     <span className={styles.personName}>

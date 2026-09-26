@@ -4,7 +4,7 @@ import React, { useActionState, useRef, useState } from 'react';
 import { Select, type SelectOption } from '@/components/console/Select';
 import { DatePicker } from '@/components/console/DatePicker';
 import { DeliverableToggle } from './DeliverableToggle';
-import { assignTask, setProjectLead, setTaskDue, type AssignState } from './assign-actions';
+import { assignTask, setTaskDue, type AssignState } from './assign-actions';
 import { removeTask } from './plan-actions';
 import { RemoveConfirm, RenameTask, RowTools } from './PlanEditor';
 import styles from './TaskRow.module.css';
@@ -114,32 +114,5 @@ export function TaskRow({
         />
       )}
     </div>
-  );
-}
-
-/** Who leads a project, changed where it is shown. */
-export function LeadSelect({
-  projectId,
-  ownerId,
-  people,
-}: {
-  projectId: string;
-  ownerId: string;
-  people: readonly SelectOption[];
-}) {
-  const [, action] = useActionState(setProjectLead, INITIAL);
-  return (
-    <form action={action} className={styles.lead}>
-      <span className={styles.leadLabel}>Owner</span>
-      <input type="hidden" name="projectId" value={projectId} />
-      <Select
-        name="ownerId"
-        defaultValue={ownerId}
-        options={people}
-        size="sm"
-        autoSubmit
-        aria-label="Project owner"
-      />
-    </form>
   );
 }

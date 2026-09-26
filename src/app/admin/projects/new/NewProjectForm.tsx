@@ -28,12 +28,18 @@ export function NewProjectForm({
   clientName,
   currency,
   templates,
+  team,
+  me,
   from,
 }: {
   clientId: string;
   clientName: string;
   currency: string;
   templates: TemplateOption[];
+  /** Who can lead it: the people on the team who can sign in. */
+  team: { id: string; name: string }[];
+  /** Whoever is creating it, who leads it unless they choose someone else. */
+  me: string;
   /** The enquiry this project answers, when it started as one. */
   from?: { enquiryId: string; name: string; summary: string; serviceLine: string | null };
 }) {
@@ -90,6 +96,21 @@ export function NewProjectForm({
               {ENGAGEMENTS.map((engagement) => (
                 <option key={engagement.value} value={engagement.value}>
                   {engagement.label}
+                </option>
+              ))}
+            </SelectField>
+
+            <SelectField
+              name="ownerId"
+              label="Owner"
+              defaultValue={me}
+              invalid={invalid('ownerId')}
+              disabled={pending}
+            >
+              <option value="">Nobody yet</option>
+              {team.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
                 </option>
               ))}
             </SelectField>

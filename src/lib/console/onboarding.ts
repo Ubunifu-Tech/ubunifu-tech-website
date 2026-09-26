@@ -241,6 +241,8 @@ export type NewProjectInput = {
    */
   currency?: string;
   staffId: string;
+  /** Who leads it. Whoever creates it, unless they choose someone else. */
+  ownerId?: string | null;
 };
 
 /**
@@ -279,7 +281,7 @@ export async function createProjectForClient(
         currency,
         startDate: input.startDate ?? null,
         targetDate: input.targetDate ?? null,
-        ownerId: input.staffId,
+        ownerId: input.ownerId === undefined ? input.staffId : input.ownerId,
         statusEvents: {
           create: {
             to: input.status,

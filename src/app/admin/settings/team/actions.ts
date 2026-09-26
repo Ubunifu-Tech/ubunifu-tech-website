@@ -211,6 +211,40 @@ export async function setActive(_previous: TeamState, formData: FormData): Promi
   return { status: 'done', message: active ? `${person.name} is back.` : `${person.name} removed.` };
 }
 
+/**
+ * Someone else's name and title, for the owner: a title can be set when
+ * someone is invited, but people join before anyone has decided what to
+ * call their job.
+ */
+export async function saveTeamMember(_previous: TeamState, formData: FormData): Promise<TeamState> {
+  const staff = await requireStaffRole('owner');
+  const name = formText(formData, 'name').slice(0, 120);
+  const title = formText(formData, 'title').slice(0, 80) || null;
+  if (name.length < 2) return { status: 'error', message: 'Add their name.' };
+
+  const person = await db.staffUser.findUnique({
+    where: { id: formText(formData, 'staffId') },
+    select: { id: true, name: true, title: true },
+  });
+  if (!person) return { status: 'error', message: 'They are not on the team.' };
+  if (name === person.name && title === person.title) {
+    return { status: 'done', message: 'Nothing changed.' };
+  }
+
+  await db.staffUser.update({ where: { id: person.id }, data: { name, title } });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'staff.details_saved',
+    entityType: 'StaffUser',
+    entityId: person.id,
+    summary: title ? `${name}, ${title}` : name,
+  });
+
+  refresh();
+  return { status: 'done', message: 'Saved.' };
+}
+
 /** Anyone's own name and title. */
 export async function saveProfile(_previous: TeamState, formData: FormData): Promise<TeamState> {
   const staff = await requireStaff();

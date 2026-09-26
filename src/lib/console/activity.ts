@@ -85,6 +85,7 @@ const ACTION_LABELS: Record<string, string> = {
   'client.password_changed': 'Client changed their password',
   'ticket.client_replied': 'Client replied to a request',
   'client.contact_added': 'Contact added',
+  'staff.details_saved': 'Team member details changed',
   'client.contact_access_on': 'Portal access turned on',
   'client.contact_access_off': 'Portal access turned off',
   'client.restored': 'Client brought back',

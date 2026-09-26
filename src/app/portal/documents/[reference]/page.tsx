@@ -54,7 +54,12 @@ export default async function PortalDocument({
       kind: true,
       status: true,
       project: {
-        select: { name: true, slug: true, client: { select: { name: true, legalName: true } } },
+        select: {
+          name: true,
+          slug: true,
+          summary: true,
+          client: { select: { name: true, legalName: true } },
+        },
       },
       signatureRequests: {
         // 'declined' is in here deliberately: a client who said no still has
@@ -197,6 +202,7 @@ export default async function PortalDocument({
         reference={document.reference}
         client={document.project.client}
         projectName={document.project.name}
+        summary={document.project.summary}
         sentAt={request.sentAt}
         bodyMarkdown={request.version.bodyMarkdown}
         terms={request.termsVersion}

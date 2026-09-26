@@ -107,6 +107,16 @@ export async function createProject(
     return fail('The target date is before the start date.', 'targetDate');
   }
 
+  // Someone on the team who can still sign in, or nobody yet.
+  const ownerChoice = text(formData, 'ownerId');
+  const owner = ownerChoice
+    ? await db.staffUser.findFirst({
+        where: { id: ownerChoice, isActive: true },
+        select: { id: true },
+      })
+    : null;
+  if (ownerChoice && !owner) return fail('Choose someone on the team to lead it.', 'ownerId');
+
   let created;
   try {
     created = await createProjectForClient({
@@ -121,6 +131,7 @@ export async function createProject(
       targetDate,
       currency,
       staffId: staff.id,
+      ownerId: owner?.id ?? null,
     });
   } catch (error) {
     // Two people creating a project in the same moment can collide on a

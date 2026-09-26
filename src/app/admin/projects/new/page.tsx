@@ -20,11 +20,11 @@ export default async function NewProjectPage({
 }: {
   searchParams: Promise<{ client?: string; enquiry?: string }>;
 }) {
-  await requirePermission('projects');
+  const staff = await requirePermission('projects');
   const { client: slug, enquiry: enquiryId } = await searchParams;
   if (!slug) return <ChooseClient />;
 
-  const [client, templates] = await Promise.all([
+  const [client, templates, team] = await Promise.all([
     db.client.findFirst({
       where: { slug, deletedAt: null },
       select: {
@@ -43,6 +43,11 @@ export default async function NewProjectPage({
     db.projectTemplate.findMany({
       orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
       select: { id: true, name: true, serviceLine: true, description: true, isDefault: true },
+    }),
+    db.staffUser.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
     }),
   ]);
 
@@ -83,6 +88,8 @@ export default async function NewProjectPage({
             clientName={client.name}
             currency={client.currency}
             templates={templates}
+            team={team}
+            me={staff.id}
             from={
               enquiry
                 ? {

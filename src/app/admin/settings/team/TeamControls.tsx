@@ -18,9 +18,11 @@ import {
   resendInvite,
   saveProfile,
   savePermissions,
+  saveTeamMember,
   setActive,
   type TeamState,
 } from './actions';
+import { TextField } from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';
 import styles from './Team.module.css';
 
@@ -141,19 +143,31 @@ export function RoleControl({ staffId, role }: { staffId: string; role: string }
 export function RowActions({
   staffId,
   name,
+  title,
   active,
   invited,
 }: {
   staffId: string;
   name: string;
+  title: string | null;
   active: boolean;
   invited: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [resendState, resend, resending] = useActionState(resendInvite, INITIAL);
   const [activeState, toggle, toggling] = useActionState(setActive, INITIAL);
-  const said = [activeState, resendState].find((state) => state.message);
+  // Back to the list once saved, from inside the action.
+  const [detailsState, saveDetails, saving] = useActionState(
+    async (previous: TeamState, formData: FormData) => {
+      const result = await saveTeamMember(previous, formData);
+      if (result.status === 'done') setEditing(false);
+      return result;
+    },
+    INITIAL,
+  );
+  const said = [activeState, resendState, detailsState].find((state) => state.message);
 
   return (
     <RowMenu
@@ -161,11 +175,40 @@ export function RowActions({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) setConfirming(false);
+        if (!next) {
+          setConfirming(false);
+          setEditing(false);
+        }
       }}
-      wide={confirming}
+      wide={confirming || editing}
     >
-      {confirming ? (
+      {editing ? (
+        <form action={saveDetails} className={forms.form}>
+          <input type="hidden" name="staffId" value={staffId} />
+          <TextField name="name" label="Name" defaultValue={name} required maxLength={120} />
+          <TextField
+            name="title"
+            label="Title"
+            optional
+            defaultValue={title ?? ''}
+            maxLength={80}
+            placeholder="Designer, Developer"
+          />
+          <div className={forms.actions}>
+            <button type="submit" className={forms.button} disabled={saving}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setEditing(false)}
+            >
+              Cancel
+            </button>
+          </div>
+          {detailsState.status === 'error' && <Message state={detailsState} />}
+        </form>
+      ) : confirming ? (
         <form action={toggle}>
           <input type="hidden" name="staffId" value={staffId} />
           <input type="hidden" name="active" value="false" />
@@ -187,6 +230,7 @@ export function RowActions({
       ) : (
         <>
           <MenuList>
+            <MenuItem onClick={() => setEditing(true)}>Change name or title</MenuItem>
             {active && invited && (
               <form action={resend}>
                 <input type="hidden" name="staffId" value={staffId} />

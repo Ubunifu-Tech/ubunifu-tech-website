@@ -146,6 +146,7 @@ export default async function TeamPage() {
                         <RowActions
                           staffId={person.id}
                           name={person.name}
+                          title={person.title}
                           active={person.isActive}
                           invited={invited}
                         />

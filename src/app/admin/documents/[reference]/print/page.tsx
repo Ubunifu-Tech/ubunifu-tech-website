@@ -36,6 +36,7 @@ export default async function PrintDocument({ params }: { params: Promise<{ refe
           select: {
             id: true,
             name: true,
+            summary: true,
             currency: true,
             client: { select: { id: true, slug: true, name: true, legalName: true } },
           },
@@ -96,6 +97,7 @@ export default async function PrintDocument({ params }: { params: Promise<{ refe
         reference={document.reference}
         client={document.project.client}
         projectName={document.project.name}
+        summary={document.project.summary}
         sentAt={sent?.sentAt ?? null}
         bodyMarkdown={body}
         terms={sent?.termsVersion ?? null}

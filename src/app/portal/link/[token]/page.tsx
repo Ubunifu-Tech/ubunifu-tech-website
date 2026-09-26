@@ -36,7 +36,7 @@ export default async function SharedLinkPage({ params }: { params: Promise<{ tok
 
   return (
     <main className={styles.page}>
-      <div className={styles.linkHead}>
+      <div className={`${styles.linkHead} ${sheet.noPrint}`}>
         <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
         <span className={styles.brandText}>Ubunifu Technologies</span>
       </div>
@@ -50,7 +50,7 @@ export default async function SharedLinkPage({ params }: { params: Promise<{ tok
       ) : (
         <ReviewThroughLink link={link} token={token} />
       )}
-      <p className={`${styles.note} ${styles.after}`}>
+      <p className={`${styles.note} ${styles.after} ${sheet.noPrint}`}>
         Questions? Email {org.email}
         {org.phone ? ` or call ${org.phone}` : ''}.
       </p>
@@ -60,7 +60,7 @@ export default async function SharedLinkPage({ params }: { params: Promise<{ tok
 
 function Notice({ children }: { children: ReactNode }) {
   return (
-    <p className={styles.notice} role="status">
+    <p className={`${styles.notice} ${sheet.noPrint}`} role="status">
       {children}
     </p>
   );
@@ -95,7 +95,9 @@ async function SignThroughLink({
           title: true,
           kind: true,
           reference: true,
-          project: { select: { name: true, client: { select: { name: true, legalName: true } } } },
+          project: {
+            select: { name: true, summary: true, client: { select: { name: true, legalName: true } } },
+          },
         },
       },
     },
@@ -144,6 +146,7 @@ async function SignThroughLink({
         reference={request.document.reference}
         client={request.document.project.client}
         projectName={request.document.project.name}
+        summary={request.document.project.summary}
         sentAt={request.sentAt}
         bodyMarkdown={request.version.bodyMarkdown}
         terms={request.termsVersion}

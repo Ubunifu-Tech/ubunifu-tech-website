@@ -14,6 +14,7 @@ export const INVOICE_SHEET_SELECT = {
   notes: true,
   issuedAt: true,
   dueAt: true,
+  voidedAt: true,
   client: {
     select: {
       name: true,

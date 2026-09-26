@@ -144,6 +144,7 @@ const ACTION_LABELS: Record<string, string> = {
   'document.signed_copy.send_failed': 'Signed copy failed to send',
   'document.declined': 'Client declined a document',
   'document.changes_requested': 'Client asked for changes',
+  'document.fresh_copy_asked': 'Client asked for a fresh copy to sign',
   'document.wording_suggested': 'Client suggested their own wording',
   'document.suggestion_used': 'Next version started from their wording',
   'document.suggestion_set_aside': 'Their suggested wording set aside',

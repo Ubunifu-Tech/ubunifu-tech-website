@@ -8,7 +8,7 @@ import {
   PORTAL_DOCUMENT_STATUS_LABEL,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
-import { RespondForm, SignForm } from '../SignForm';
+import { AskAgain, RespondForm, SignForm } from '../SignForm';
 import { ContractSheet } from '@/components/documents/ContractSheet';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import { getOrg } from '@/lib/console/org';
@@ -44,8 +44,9 @@ export default async function PortalDocument({
       // Scoped here: another client's document, or one on a project that
       // has been removed, does not match at all.
       project: { clientId: actor.clientId, deletedAt: null },
-      // A draft is ours until we send it.
-      status: { notIn: ['draft', 'internal_review'] },
+      // A draft is ours until we send it. One we sent and then took back to
+      // change still opens, saying so, because their email links to it.
+      signatureRequests: { some: { sentAt: { not: null } } },
     },
     select: {
       id: true,
@@ -91,7 +92,46 @@ export default async function PortalDocument({
   if (!document) notFound();
 
   const request = document.signatureRequests[0];
-  if (!request) notFound();
+  if (!request) {
+    // Taken back to be changed. What they asked for, if they did, so they
+    // can see it is being dealt with.
+    const last = await db.signatureRequest.findFirst({
+      where: { documentId: document.id, status: 'cancelled', respondedAt: { not: null } },
+      orderBy: { createdAt: 'desc' },
+      select: { respondedAt: true, responseNote: true, respondedBy: { select: { name: true } } },
+    });
+    return (
+      <main className={styles.page}>
+        <div className={sheet.toolbar}>
+          <Link href="/portal/documents" className={styles.backLink}>
+            ← Documents
+          </Link>
+          <span className={`${forms.badge} ${forms.badgeWarn}`}>Being revised</span>
+        </div>
+        <section className={forms.card}>
+          <div className={forms.cardHeader}>
+            <h1 className={forms.cardTitle}>{document.title}</h1>
+            <span className={forms.cardMeta}>
+              {DOCUMENT_KIND_LABEL[document.kind]} · {document.reference}
+            </span>
+          </div>
+          <p className={styles.note}>
+            We took this back to make changes. The new version will be here for you to read and
+            sign when it is ready.
+          </p>
+          {last?.respondedAt && last.responseNote && (
+            <p className={styles.note}>
+              <strong>
+                {last.respondedBy?.name ? `${last.respondedBy.name} wrote` : 'You wrote'} on{' '}
+                {formatDate(last.respondedAt)}:
+              </strong>{' '}
+              {last.responseNote}
+            </p>
+          )}
+        </section>
+      </main>
+    );
+  }
 
   // Recorded once, so we know whether they have actually opened it.
   if (request.status === 'sent') await markSignatureRequestViewed(request.id);
@@ -188,10 +228,11 @@ export default async function PortalDocument({
           </div>
         )}
 
-        {expired && !signature && (
-          <p className={styles.notice} role="status">
-            This signing request has run out. Nothing is lost. Ask in Help and we will send it again.
-          </p>
+        {expired && !signature && !declined && (
+          <div className={styles.notice} role="status">
+            <p>The time to sign this ran out.</p>
+            <AskAgain requestId={request.id} />
+          </div>
         )}
       </div>
 
@@ -220,6 +261,13 @@ export default async function PortalDocument({
             termsTitle={request.termsVersion?.title ?? null}
             termsVersion={request.termsVersion?.version ?? null}
             signerName={actor.name}
+            wrongHint={
+              suggestion
+                ? 'If anything is still wrong, do not sign it. We are working on a new version.'
+                : request.respondedAt
+                  ? 'If anything else is wrong, do not sign it. You can suggest your own wording below.'
+                  : undefined
+            }
           />
         </section>
       )}

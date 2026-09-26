@@ -285,6 +285,46 @@ export async function sendPasswordLink(contact: { id: string; name: string; emai
 }
 
 /**
+ * Someone who never finished setting up asked to reset a password they do
+ * not have. What they need is their setup link, so that is what goes.
+ */
+export async function sendSetupLinkAgain(contact: {
+  id: string;
+  name: string;
+  email: string;
+  clientName: string;
+}) {
+  const { token } = await issueMagicToken({
+    purpose: 'invite',
+    actorType: 'client_contact',
+    actorId: contact.id,
+  });
+  const sent = await sendConsoleEmail({
+    to: contact.email,
+    subject: 'Your Ubunifu project portal is ready',
+    html: clientInviteEmail({
+      name: contact.name,
+      clientName: contact.clientName,
+      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+    }),
+    template: 'client_invite',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+  });
+  await recordAudit({
+    actorType: 'client_contact',
+    actorId: contact.id,
+    action: sent.ok ? 'client.invite.sent' : 'client.invite.send_failed',
+    entityType: 'ClientContact',
+    entityId: contact.id,
+    summary: sent.ok
+      ? 'Asked to reset a password before setting up, so the setup link went again'
+      : sent.error,
+  });
+  return sent;
+}
+
+/**
  * Tells someone their password changed, at the address they sign in with. If
  * it was not them, this is how they find out.
  */

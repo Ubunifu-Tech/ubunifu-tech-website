@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { liveInvoice } from '@/lib/console/live';
+import { liveInvoice, sentToClient } from '@/lib/console/live';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import styles from '../Portal.module.css';
@@ -21,9 +21,9 @@ const STATUS_BADGE: Record<string, string> = {
 /**
  * The client's own money.
  *
- * Drafts and voided invoices are absent — a draft is a document we have not
- * asked them for yet, and showing one would have them paying against something
- * that may still change. Receipts sit in the same table as the invoice they
+ * Drafts are absent: a draft is a document we have not asked them for yet,
+ * and showing one would have them paying against something that may still
+ * change. A cancelled invoice we had sent stays, marked, with nothing owed. Receipts sit in the same table as the invoice they
  * answer, because "did I pay that" and "prove I paid that" are one question.
  */
 export default async function PortalInvoices() {
@@ -33,7 +33,7 @@ export default async function PortalInvoices() {
     where: {
       clientId: actor.clientId,
       ...liveInvoice,
-      status: { notIn: ['draft', 'void'] },
+      ...sentToClient,
     },
     orderBy: [{ issuedAt: 'desc' }, { createdAt: 'desc' }],
     select: {
@@ -65,8 +65,11 @@ export default async function PortalInvoices() {
   });
 
   const owedByCurrency = new Map<string, number>();
+  // Nothing is owed on a cancelled invoice, whatever its figures say.
+  const owedOn = (invoice: (typeof invoices)[number]) =>
+    invoice.status === 'void' ? 0 : Math.max(0, invoice.totalMinor - invoice.paidMinor);
   for (const invoice of invoices) {
-    const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+    const owed = owedOn(invoice);
     if (owed > 0) {
       owedByCurrency.set(invoice.currency, (owedByCurrency.get(invoice.currency) ?? 0) + owed);
     }
@@ -137,7 +140,7 @@ export default async function PortalInvoices() {
                 </tr>
               ) : (
                 invoices.map((invoice) => {
-                  const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+                  const owed = owedOn(invoice);
                   return (
                     <tr key={invoice.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
@@ -165,7 +168,9 @@ export default async function PortalInvoices() {
                       </td>
                       <td className={table.td}>
                         <span className={`${forms.badge} ${STATUS_BADGE[invoice.status] ?? ''}`}>
-                          {INVOICE_STATUS_LABEL[invoice.status]}
+                          {invoice.status === 'void'
+                            ? 'Cancelled'
+                            : INVOICE_STATUS_LABEL[invoice.status]}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.numeric}`}>

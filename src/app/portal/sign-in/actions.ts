@@ -18,7 +18,7 @@ import {
 } from '@/lib/console/rate-limit';
 import { recordAudit } from '@/lib/console/auth';
 import { clientSignInEmail } from '@/lib/emails';
-import { sendPasswordLink } from '@/lib/console/contacts';
+import { sendPasswordLink, sendSetupLinkAgain } from '@/lib/console/contacts';
 import { safePortalPath } from '@/lib/console/return-path';
 
 export type PortalSignInState = {
@@ -271,12 +271,13 @@ async function sendPasswordReset(
   }
 
   const contact = await db.clientContact.findFirst({
-    where: { email, deletedAt: null, canSignIn: true, activatedAt: { not: null } },
+    where: { email, deletedAt: null, canSignIn: true },
     select: {
       id: true,
       name: true,
       email: true,
-      client: { select: { deletedAt: true } },
+      activatedAt: true,
+      client: { select: { deletedAt: true, name: true } },
     },
   });
 
@@ -286,7 +287,7 @@ async function sendPasswordReset(
     await tooManyLinkRequests({
       actorType: 'client_contact',
       actorId: contact.id,
-      purpose: 'password_reset',
+      purpose: contact.activatedAt ? 'password_reset' : 'invite',
     })
   ) {
     await recordAudit({
@@ -295,6 +296,17 @@ async function sendPasswordReset(
       action: 'client.password_reset.throttled',
       entityType: 'ClientContact',
       entityId: contact.id,
+    });
+    return sameForEveryone;
+  }
+
+  if (!contact.activatedAt) {
+    // Never set up, so there is no password to reset: the setup link again.
+    await sendSetupLinkAgain({
+      id: contact.id,
+      name: contact.name,
+      email: contact.email,
+      clientName: contact.client.name,
     });
     return sameForEveryone;
   }

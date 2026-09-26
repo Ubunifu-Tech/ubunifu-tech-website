@@ -2,7 +2,13 @@
 
 import React, { useActionState, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { respondToDocument, signDocument, suggestWording, type SignState } from './actions';
+import {
+  askForFreshSigningCopy,
+  respondToDocument,
+  signDocument,
+  suggestWording,
+  type SignState,
+} from './actions';
 import { TextAreaField } from '@/components/console/Fields';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -35,6 +41,7 @@ export function SignForm({
   sign = signDocument,
   hidden = {},
   viaLink = false,
+  wrongHint = 'If anything is wrong, do not sign it. Ask for changes below. We would much rather fix it.',
 }: {
   requestId: string;
   termsTitle: string | null;
@@ -45,6 +52,8 @@ export function SignForm({
   hidden?: Record<string, string>;
   /** Opened from a link shared by hand, with no portal behind it. */
   viaLink?: boolean;
+  /** What to do if something is wrong, which depends on what else is on the page. */
+  wrongHint?: string;
 }) {
   const [state, action, pending] = useActionState(sign, INITIAL);
   const [initials, setInitials] = useState('');
@@ -103,10 +112,7 @@ export function SignForm({
         />
         <span className={forms.checkText}>
           <span>I have read this document and agree to it</span>
-          <span className={forms.hint}>
-            If anything is wrong, do not sign it. Ask for changes below. We would much rather fix
-            it.
-          </span>
+          <span className={forms.hint}>{wrongHint}</span>
         </span>
       </label>
 
@@ -191,13 +197,21 @@ export function RespondForm({
   requestId,
   body,
   answered = false,
+  respond = respondToDocument,
+  hidden = {},
+  wording = true,
 }: {
   requestId: string;
   /** The version they are reading, which the wording option starts from. */
   body: string;
   answered?: boolean;
+  /** Where it posts: the portal's action, or the shared link's. */
+  respond?: (previous: SignState, formData: FormData) => Promise<SignState>;
+  hidden?: Record<string, string>;
+  /** Whether to offer their own wording, which needs the portal. */
+  wording?: boolean;
 }) {
-  const [state, action, pending] = useActionState(respondToDocument, INITIAL);
+  const [state, action, pending] = useActionState(respond, INITIAL);
   const [intent, setIntent] = useState<Intent | 'wording' | null>(null);
   // Controlled, so a rejected submission does not hand back an empty box.
   // React resets an uncontrolled form once the action returns, and asking
@@ -228,13 +242,15 @@ export function RespondForm({
             {WORDING.changes.open}
           </button>
         )}
-        <button
-          type="button"
-          className={`${forms.button} ${forms.quiet}`}
-          onClick={() => setIntent('wording')}
-        >
-          Suggest your own wording
-        </button>
+        {wording && (
+          <button
+            type="button"
+            className={`${forms.button} ${forms.quiet}`}
+            onClick={() => setIntent('wording')}
+          >
+            Suggest your own wording
+          </button>
+        )}
         {!answered && (
           <button
             type="button"
@@ -248,16 +264,19 @@ export function RespondForm({
     );
   }
 
-  const wording = WORDING[intent];
+  const words = WORDING[intent];
 
   return (
     <form action={action} className={forms.form}>
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="intent" value={intent} />
+      {Object.entries(hidden).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
 
       <div className={forms.field}>
         <label className={forms.label} htmlFor="respond-note">
-          {wording.title}
+          {words.title}
         </label>
         <textarea
           id="respond-note"
@@ -271,7 +290,7 @@ export function RespondForm({
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />
-        <p className={forms.hint}>{wording.hint}</p>
+        <p className={forms.hint}>{words.hint}</p>
       </div>
 
       <div className={forms.actions}>
@@ -280,7 +299,7 @@ export function RespondForm({
           className={`${forms.button} ${intent === 'decline' ? forms.danger : ''}`}
           disabled={pending}
         >
-          {pending ? wording.working : wording.submit}
+          {pending ? words.working : words.submit}
         </button>
         <button
           type="button"
@@ -374,6 +393,45 @@ function SuggestWording({
         </p>
       </div>
 
+      {state.status === 'error' && (
+        <p className={forms.error} role="alert">
+          {state.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/**
+ * The time to sign ran out. One press tells us, and we send a fresh copy.
+ */
+export function AskAgain({
+  requestId,
+  ask = askForFreshSigningCopy,
+  hidden = {},
+}: {
+  requestId: string;
+  /** Where it posts: the portal's action, or the shared link's. */
+  ask?: (previous: SignState, formData: FormData) => Promise<SignState>;
+  hidden?: Record<string, string>;
+}) {
+  const [state, action, pending] = useActionState(ask, INITIAL);
+
+  // Shown inside the notice that explains why, so no box of its own.
+  if (state.status === 'done') return <p role="status">{state.message}</p>;
+
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="requestId" value={requestId} />
+      {Object.entries(hidden).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
+      <div className={forms.actions}>
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Sending…' : 'Ask us to send it again'}
+        </button>
+        <p className={forms.payoff}>Nothing is lost. We will send you a fresh copy to sign.</p>
+      </div>
       {state.status === 'error' && (
         <p className={forms.error} role="alert">
           {state.message}

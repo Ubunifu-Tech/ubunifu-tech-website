@@ -339,6 +339,9 @@ export async function sendInvoice(
           : null,
       dueAt: invoice.dueAt,
       url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      showsHowToPay: await getOrg().then((org) =>
+        Boolean(org.bankAccountNumber || org.mobileMoneyNumber),
+      ),
     }),
     template: 'invoice_sent',
     entityType: 'Invoice',

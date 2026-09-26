@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { MagicTokenPurpose } from '@/generated/prisma/client';
 import { safePortalPath } from './return-path';
-import { liveInvoice } from './live';
+import { liveInvoice, sentToClient } from './live';
 
 /**
  * Every link that signs a client in comes through /portal/sign-in/verify.
@@ -41,7 +41,7 @@ export async function landingFor(
 
   if (claim.entityType === 'Invoice') {
     const invoice = await db.invoice.findFirst({
-      where: { id: claim.entityId, clientId, ...liveInvoice },
+      where: { id: claim.entityId, clientId, ...liveInvoice, ...sentToClient },
       select: { number: true },
     });
     if (invoice) return `/portal/invoices/${encodeURIComponent(invoice.number)}`;

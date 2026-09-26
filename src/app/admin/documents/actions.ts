@@ -606,6 +606,23 @@ export type ShareState = {
   name?: string;
 };
 
+/** How long a link lasts, and so the least time to sign left once one is sent. */
+const LINK_DAYS = 14;
+
+/**
+ * A fresh link promises fourteen days, so the request it opens is given at
+ * least that long. Only ever later: time already given is never taken away.
+ */
+async function keepOpenForLink(requestId: string, expiresAt: Date | null): Promise<void> {
+  if (!expiresAt) return;
+  const until = new Date(Date.now() + LINK_DAYS * 24 * 60 * 60 * 1000);
+  if (expiresAt.getTime() >= until.getTime()) return;
+  await db.signatureRequest.updateMany({
+    where: { id: requestId, status: { in: ['sent', 'viewed'] } },
+    data: { expiresAt: until },
+  });
+}
+
 /**
  * A link for the signer to open and sign without email or the portal, for
  * sending by hand. When the version with them is still the one that would go
@@ -641,6 +658,7 @@ export async function shareSigningLink(
     open &&
     (!open.expiresAt || open.expiresAt.getTime() > Date.now()) &&
     open.version.bodyMarkdown === ready.final;
+  if (reusable) await keepOpenForLink(open.id, open.expiresAt);
   const requestId = reusable
     ? open.id
     : (await openSignatureRequest(ready, staff.id))?.id;
@@ -678,6 +696,78 @@ export async function shareSigningLink(
     url,
     name: signer.name,
     whatsapp: whatsappLink(signerRow.phone, document.project.client.country, message),
+  };
+}
+
+/**
+ * A link to the signed copy, for someone who signed through a shared link
+ * and has no portal to find it in afterwards. It opens the signed document,
+ * read only, with a way to save it as a PDF.
+ */
+export async function shareSignedCopy(
+  _previous: ShareState,
+  formData: FormData,
+): Promise<ShareState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const document = await db.document.findUnique({
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
+    select: {
+      id: true,
+      reference: true,
+      title: true,
+      project: { select: { slug: true, client: { select: { country: true } } } },
+      signatureRequests: {
+        where: { status: 'signed' },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { id: true, signatures: { select: { contactId: true } } },
+      },
+    },
+  });
+  const request = document?.signatureRequests[0];
+  if (!document || !request) return { status: 'error', message: 'There is no signed copy yet.' };
+
+  const signer = await db.clientContact.findFirst({
+    where: {
+      id: request.signatures[0]?.contactId ?? '',
+      deletedAt: null,
+      canSignIn: true,
+      client: { deletedAt: null },
+    },
+    select: { id: true, name: true, phone: true },
+  });
+  if (!signer) {
+    return {
+      status: 'error',
+      message: 'Whoever signed it has no portal access now, so a link would not open.',
+    };
+  }
+
+  const url = await issueSharedLink({
+    contactId: signer.id,
+    thing: 'SignatureRequest',
+    thingId: request.id,
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.link_shared',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: `${document.reference}: a link for ${signer.name} to the signed copy, to share by hand`,
+  });
+
+  const first = signer.name.split(' ')[0] ?? signer.name;
+  const message =
+    `Hello ${first}, this is Ubunifu Technologies. Here is your signed copy of ${document.title}: ` +
+    `${url}\n\nYou can save it as a PDF from that page. The link is just for you and lasts 14 days.`;
+  return {
+    status: 'done',
+    url,
+    name: signer.name,
+    whatsapp: whatsappLink(signer.phone, document.project.client.country, message),
   };
 }
 
@@ -739,6 +829,7 @@ export async function resendSignatureLink(
   if (!(await allow('signature-resend', document.id, { limit: 5, windowMinutes: 60 }))) {
     return { status: 'error', message: 'It has gone out several times in the last hour. Try later.' };
   }
+  await keepOpenForLink(request.id, request.expiresAt);
 
   const { token } = await issueMagicToken({
     purpose: 'document_access',
@@ -806,8 +897,10 @@ export async function withdrawDocument(
       data: { status: 'cancelled' },
     });
     if (requests.count === 0) return false;
+    // Asking for changes leaves the request open, so a document the client
+    // has asked to change is withdrawn the same way and becomes a draft again.
     await tx.document.updateMany({
-      where: { id: document.id, status: { in: ['sent', 'viewed'] } },
+      where: { id: document.id, status: { in: ['sent', 'viewed', 'changes_requested'] } },
       data: { status: 'draft' },
     });
     return true;

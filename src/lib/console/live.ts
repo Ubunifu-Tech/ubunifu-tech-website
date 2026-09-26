@@ -79,3 +79,28 @@ export const liveEnquiry = { deletedAt: null } satisfies Prisma.EnquiryWhereInpu
  * screens alike. An item marked not available is on hold, not waiting.
  */
 export const waitingOnClient = { status: 'requested' } satisfies Prisma.AssetRequestWhereInput;
+
+/**
+ * A document waiting for the client's signature: sent, not answered, and
+ * still inside its time to sign. One that ran out, or that they asked us to
+ * change, is waiting on us instead, and is not counted as theirs to do.
+ */
+export const awaitingSignature = (now: Date) =>
+  ({
+    signatureRequests: {
+      some: {
+        status: { in: ['sent', 'viewed'] },
+        respondedAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+    },
+  }) satisfies Prisma.DocumentWhereInput;
+
+/**
+ * An invoice the client can see: anything we sent them. One we cancelled
+ * stays, marked, because their emails, receipts and refund notes point at
+ * it. One cancelled before it was ever sent was never theirs.
+ */
+export const sentToClient = {
+  OR: [{ status: { notIn: ['draft', 'void'] } }, { status: 'void', issuedAt: { not: null } }],
+} satisfies Prisma.InvoiceWhereInput;

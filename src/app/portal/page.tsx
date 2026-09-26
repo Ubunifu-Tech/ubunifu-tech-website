@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { liveInvoice, liveTicket, waitingOnClient } from '@/lib/console/live';
+import { awaitingSignature, liveInvoice, liveTicket, waitingOnClient } from '@/lib/console/live';
 import { clientStage } from '@/lib/console/project-status';
 import { formatDate, formatMoney } from '@/lib/console/money';
 import styles from './Portal.module.css';
@@ -87,7 +87,7 @@ export default async function PortalHome() {
     db.document.findMany({
       where: {
         project: { clientId: actor.clientId, deletedAt: null },
-        status: { in: ['sent', 'viewed'] },
+        ...awaitingSignature(now),
       },
       select: { reference: true, title: true },
     }),

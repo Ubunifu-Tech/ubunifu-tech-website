@@ -3,7 +3,13 @@ import { requireClient } from '@/lib/console/auth';
 import { formatDate } from '@/lib/console/money';
 import { Avatar } from '@/components/console/Avatar';
 import { AddPerson, PersonMenu } from '@/components/console/People';
-import { handOverMain, inviteColleague, removeColleague, resendColleagueInvite } from './actions';
+import {
+  editColleague,
+  handOverMain,
+  inviteColleague,
+  removeColleague,
+  resendColleagueInvite,
+} from './actions';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -21,6 +27,7 @@ export default async function PortalTeam() {
       name: true,
       email: true,
       role: true,
+      phone: true,
       isPrimary: true,
       canSignIn: true,
       activatedAt: true,
@@ -90,7 +97,14 @@ export default async function PortalTeam() {
                     ) : person.email ? (
                       <span className={`${forms.badge} ${forms.badgeWarn}`}>Invited</span>
                     ) : (
-                      <span className={forms.badge}>No email yet</span>
+                      <>
+                        <span className={forms.badge}>No email yet</span>
+                        <span className={table.sub}>
+                          {iAmMain
+                            ? 'Add their email to invite them.'
+                            : 'Your main contact can add their email.'}
+                        </span>
+                      </>
                     )}
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
@@ -101,7 +115,7 @@ export default async function PortalTeam() {
                           name: person.name,
                           email: person.email,
                           role: person.role,
-                          phone: null,
+                          phone: person.phone,
                           isPrimary: person.isPrimary,
                           activated: person.activatedAt !== null,
                           // Resending only makes sense before they have set up.
@@ -111,6 +125,7 @@ export default async function PortalTeam() {
                         invite={resendColleagueInvite}
                         makeMain={iAmMain ? handOverMain : undefined}
                         remove={iAmMain ? removeColleague : undefined}
+                        edit={iAmMain && !person.activatedAt ? editColleague : undefined}
                       />
                     )}
                   </td>

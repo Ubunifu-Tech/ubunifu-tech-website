@@ -6,6 +6,7 @@ import { markSignatureRequestViewed } from '@/lib/console/documents';
 import { recordReviewAnswer } from '@/lib/console/review-answers';
 import { readSharedLink } from '@/lib/console/shared-links';
 import { recordSignature } from '@/lib/console/signing';
+import { askForFreshCopy, recordDocumentAnswer } from '@/lib/console/document-answers';
 import type { SignState } from '../../documents/actions';
 import type { AnswerState } from '../../projects/[slug]/review-actions';
 
@@ -31,6 +32,28 @@ export async function signWithLink(_previous: SignState, formData: FormData): Pr
   });
   revalidatePath('/portal/link', 'layout');
   return result;
+}
+
+/** Asking for changes, or declining, through the link. */
+export async function respondWithLink(_previous: SignState, formData: FormData): Promise<SignState> {
+  const link = await readSharedLink(formText(formData, 'token'));
+  if (!link || link.thing !== 'SignatureRequest') return { status: 'error', message: GONE };
+
+  return recordDocumentAnswer({
+    requestId: link.thingId,
+    person: link.contact,
+    intent: formText(formData, 'intent'),
+    note: formText(formData, 'note'),
+    via: 'shared_link',
+  });
+}
+
+/** The time to sign ran out: asking us to send it again, through the link. */
+export async function askAgainWithLink(_previous: SignState, formData: FormData): Promise<SignState> {
+  const link = await readSharedLink(formText(formData, 'token'));
+  if (!link || link.thing !== 'SignatureRequest') return { status: 'error', message: GONE };
+
+  return askForFreshCopy({ requestId: link.thingId, person: link.contact, via: 'shared_link' });
 }
 
 export async function answerWithLink(

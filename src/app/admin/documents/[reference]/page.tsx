@@ -32,7 +32,7 @@ import {
 } from '../DocumentEditor';
 import { SuggestedWording, type WordingSuggestion } from './SuggestedWording';
 import { ShareLink } from '@/components/console/ShareLink';
-import { shareSigningLink } from '../actions';
+import { shareSignedCopy, shareSigningLink } from '../actions';
 import styles from '../../Admin.module.css';
 import page from './Document.module.css';
 import forms from '@/styles/forms.module.css';
@@ -131,6 +131,7 @@ export default async function DocumentPage({
           signatures: {
             select: {
               id: true,
+              contactId: true,
               signerName: true,
               signerEmail: true,
               initials: true,
@@ -362,7 +363,22 @@ export default async function DocumentPage({
             </section>
             {versions}
           </div>
-          {activityCard}
+          <div className={styles.stack}>
+            {mayWrite && !removedAt && signature?.contactId && (
+              <section className={forms.card}>
+                <div className={forms.cardHeader}>
+                  <h2 className={forms.cardTitle}>Their copy</h2>
+                </div>
+                <ShareLink
+                  action={shareSignedCopy}
+                  hidden={{ documentId: document.id }}
+                  label="Share a link to the signed copy"
+                  intro={`For ${signature.signerName} to open and save the signed copy, with no email or account.`}
+                />
+              </section>
+            )}
+            {activityCard}
+          </div>
         </div>
       </main>
     );

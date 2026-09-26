@@ -9,6 +9,7 @@ import { formText } from '@/lib/console/form';
 import { parseDateInput } from '@/lib/console/money';
 import { isCurrency } from '@/lib/console/currencies';
 import { consoleEnv } from '@/lib/console/env';
+import { uploadsConfigured } from '@/lib/console/uploads';
 import { waitingOnClient } from '@/lib/console/live';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { itemsNeededEmail } from '@/lib/emails';
@@ -504,6 +505,7 @@ export async function emailItemList(_previous: PlanState, formData: FormData): P
         projectName: project.name,
         items,
         url: `${consoleEnv.publicOrigin}/portal/projects/${project.slug}`,
+        takesFiles: uploadsConfigured(),
       }),
       template: 'items_needed',
       entityType: 'Project',

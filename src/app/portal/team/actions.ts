@@ -11,6 +11,7 @@ import {
   readContact,
   removeContact,
   sendPasswordLink,
+  updateContact,
 } from '@/lib/console/contacts';
 import { hashPassword, passwordProblem, verifyPassword } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
@@ -64,7 +65,7 @@ export async function resendColleagueInvite(_previous: TeamState, formData: Form
   });
   if (!contact) return { status: 'error', message: 'They are not on your account.' };
   if (!contact.email) {
-    return { status: 'error', message: `${contact.name} has no email yet. Ask us for their setup link.` };
+    return { status: 'error', message: `${contact.name} has no email yet. Your main contact can add it.` };
   }
   if (!(await allow('client-invite', contact.id, { limit: 3, windowMinutes: 60 }))) {
     return { status: 'error', message: 'A link went out recently. Give it a few minutes.' };
@@ -74,6 +75,38 @@ export async function resendColleagueInvite(_previous: TeamState, formData: Form
   return sent.ok
     ? { status: 'sent', message: `Sent to ${contact.email}.` }
     : { status: 'error', message: 'It did not send. Try again later.' };
+}
+
+/**
+ * The main contact correcting a colleague who has not set up yet, most often
+ * to add the email their invitation goes to. Once someone has set up, their
+ * details are theirs to change.
+ */
+export async function editColleague(_previous: TeamState, formData: FormData): Promise<TeamState> {
+  const actor = await requireClient();
+  if (!(await isMain(actor))) {
+    return { status: 'error', message: 'Only your main contact can change someone else’s details.' };
+  }
+  const contact = await db.clientContact.findFirst({
+    where: { id: formText(formData, 'contactId'), clientId: actor.clientId, deletedAt: null },
+    select: { id: true, activatedAt: true },
+  });
+  if (!contact) return { status: 'error', message: 'They are not on your account.' };
+  if (contact.activatedAt) {
+    return { status: 'error', message: 'They have set up their account, so they change their own details.' };
+  }
+
+  const result = await updateContact({
+    contactId: contact.id,
+    clientId: actor.clientId,
+    name: formText(formData, 'name'),
+    email: formText(formData, 'email'),
+    role: formText(formData, 'role').slice(0, 80) || null,
+    phone: formText(formData, 'phone').slice(0, 40) || null,
+    by: by(actor),
+  });
+  revalidatePath('/portal/team');
+  return { status: result.ok ? 'done' : 'error', message: result.message };
 }
 
 export async function removeColleague(_previous: TeamState, formData: FormData): Promise<TeamState> {

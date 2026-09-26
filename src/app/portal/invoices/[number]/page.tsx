@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { InvoiceSheet } from '@/components/documents/InvoiceSheet';
 import { INVOICE_SHEET_SELECT, toSheet } from '@/lib/console/invoice-sheet';
 import { requireClient } from '@/lib/console/auth';
-import { liveInvoice } from '@/lib/console/live';
+import { liveInvoice, sentToClient } from '@/lib/console/live';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { getOrg } from '@/lib/console/org';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
 /**
  * The client's copy of an invoice.
  *
- * Scoped by clientId in the query itself, and drafts and voided invoices are
- * excluded there too — so a guessed number belonging to someone else, or to a
+ * Scoped by clientId in the query itself, and anything never sent is
+ * excluded there too, so a guessed number belonging to someone else, or to a
  * document we have not actually sent, simply does not match.
  */
 export default async function PortalInvoice({
@@ -38,7 +38,7 @@ export default async function PortalInvoice({
       number: decodeURIComponent(number),
       clientId: actor.clientId,
       ...liveInvoice,
-      status: { notIn: ['draft', 'void'] },
+      ...sentToClient,
     },
     select: INVOICE_SHEET_SELECT,
   });
@@ -53,9 +53,13 @@ export default async function PortalInvoice({
           ← Invoices
         </Link>
         <PrintButton />
-        <span className={`${forms.badge} ${owed === 0 ? forms.badgeGood : forms.badgeWarn}`}>
-          {INVOICE_STATUS_LABEL[invoice.status]}
-        </span>
+        {invoice.status === 'void' ? (
+          <span className={forms.badge}>Cancelled</span>
+        ) : (
+          <span className={`${forms.badge} ${owed === 0 ? forms.badgeGood : forms.badgeWarn}`}>
+            {INVOICE_STATUS_LABEL[invoice.status]}
+          </span>
+        )}
       </div>
       <InvoiceSheet
         invoice={toSheet(invoice)}

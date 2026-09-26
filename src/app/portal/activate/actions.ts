@@ -56,7 +56,7 @@ export async function activateAccount(
     if (taken) {
       return {
         status: 'error',
-        message: 'That email already has a portal account. Use another, or ask us to link them.',
+        message: 'That email already has a portal account. Use a different one, or get in touch and we will sort it out.',
       };
     }
   }
@@ -90,7 +90,7 @@ export async function activateAccount(
     if (!isUniqueConflict(error)) throw error;
     return {
       status: 'error',
-      message: 'That email belongs to someone else on your account. Use another, or ask us to sort it out.',
+      message: 'That email belongs to someone else on your account. Use a different one, or get in touch and we will sort it out.',
     };
   }
   if (activated !== 1) {

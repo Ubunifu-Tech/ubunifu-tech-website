@@ -14,6 +14,8 @@ export type InvoiceSheetData = {
   number: string;
   issuedAt: Date | null;
   dueAt: Date | null;
+  /** Cancelled: kept, marked, and nothing to pay. */
+  voidedAt: Date | null;
   currency: string;
   subtotalMinor: number;
   taxMinor: number;
@@ -37,7 +39,8 @@ export function InvoiceSheet({
   /** Where a receipt number links to, for whoever is looking. */
   receiptHref?: (number: string) => string;
 }) {
-  const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  const cancelled = invoice.voidedAt !== null;
+  const owed = cancelled ? 0 : Math.max(0, invoice.totalMinor - invoice.paidMinor);
   const clientName = invoice.client.legalName ?? invoice.client.name;
 
   return (
@@ -68,6 +71,15 @@ export function InvoiceSheet({
       />
 
       <div className={money.content}>
+        {invoice.voidedAt && (
+          <p className={money.cancelled} role="note">
+            <span className={money.cancelledTitle}>
+              Cancelled on {formatDate(invoice.voidedAt)}
+            </span>
+            Nothing is owed on this invoice.
+          </p>
+        )}
+
         <table className={money.lines}>
           <thead>
             <tr>
@@ -137,10 +149,19 @@ export function InvoiceSheet({
           ))}
         </div>
 
-        <div className={owed === 0 ? money.amount : `${money.amount} ${money.amountDue}`}>
-          <p className={money.amountLabel}>{owed === 0 ? 'Paid in full. Thank you.' : 'Amount due'}</p>
-          <p className={money.amountFigure}>{formatMoney(owed, invoice.currency)}</p>
-        </div>
+        {cancelled ? (
+          <div className={`${money.amount} ${money.amountVoid}`}>
+            <p className={money.amountLabel}>Cancelled, nothing to pay</p>
+            <p className={money.amountFigure}>{formatMoney(invoice.totalMinor, invoice.currency)}</p>
+          </div>
+        ) : (
+          <div className={owed === 0 ? money.amount : `${money.amount} ${money.amountDue}`}>
+            <p className={money.amountLabel}>
+              {owed === 0 ? 'Paid in full. Thank you.' : 'Amount due'}
+            </p>
+            <p className={money.amountFigure}>{formatMoney(owed, invoice.currency)}</p>
+          </div>
+        )}
 
         {owed > 0 && (org.bankAccountNumber || org.mobileMoneyNumber) && (
           <section className={money.pay}>

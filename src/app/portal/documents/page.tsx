@@ -11,11 +11,14 @@ export const metadata = { title: 'Documents' };
 
 export default async function PortalDocuments() {
   const actor = await requireClient();
+  const now = new Date();
 
   const documents = await db.document.findMany({
     where: {
       project: { clientId: actor.clientId, deletedAt: null },
-      status: { notIn: ['draft', 'internal_review'] },
+      // Everything that has gone to them, including one we took back to
+      // change: it stays in the list, marked, rather than vanishing.
+      signatureRequests: { some: { sentAt: { not: null } } },
     },
     orderBy: { updatedAt: 'desc' },
     select: {
@@ -32,6 +35,7 @@ export default async function PortalDocuments() {
         select: {
           sentAt: true,
           status: true,
+          expiresAt: true,
           respondedAt: true,
           signatures: { select: { signedAt: true, initials: true } },
         },
@@ -42,13 +46,16 @@ export default async function PortalDocuments() {
   // Waiting on THEM. A document they have already answered — declined, or
   // asked for changes on — is waiting on us, and telling somebody they owe us
   // a signature they have explicitly refused is the fastest way to be ignored.
+  const ranOut = (request: { expiresAt: Date | null } | undefined) =>
+    Boolean(request?.expiresAt && request.expiresAt.getTime() < now.getTime());
   const waiting = documents.filter((document) => {
     const request = document.signatureRequests[0];
     return (
       request !== undefined &&
       request.signatures.length === 0 &&
       request.respondedAt === null &&
-      request.status !== 'declined'
+      request.status !== 'declined' &&
+      !ranOut(request)
     );
   }).length;
 
@@ -104,6 +111,8 @@ export default async function PortalDocuments() {
                   const signature = request?.signatures[0];
                   const answered = request?.respondedAt !== null && request?.respondedAt !== undefined;
                   const declined = request?.status === 'declined';
+                  const revising = !request;
+                  const expired = !signature && !declined && ranOut(request);
                   return (
                     <tr key={document.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
@@ -120,7 +129,11 @@ export default async function PortalDocuments() {
                       </td>
                       <td className={`${table.td} ${table.name}`}>{document.project.name}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
-                        {formatShortDate(request?.sentAt)}
+                        {request ? (
+                          formatShortDate(request.sentAt)
+                        ) : (
+                          <span className={table.muted}>Taken back</span>
+                        )}
                       </td>
                       <td className={table.td}>
                         <span
@@ -134,7 +147,11 @@ export default async function PortalDocuments() {
                         >
                           {signature
                             ? `Signed ${formatShortDate(signature.signedAt)}`
-                            : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
+                            : revising
+                              ? 'Being revised'
+                              : expired
+                                ? 'Time to sign ran out'
+                                : PORTAL_DOCUMENT_STATUS_LABEL[document.status]}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
@@ -143,7 +160,9 @@ export default async function PortalDocuments() {
                             href={`/portal/documents/${document.reference}`}
                             className={table.action}
                           >
-                            {signature || answered ? 'View' : 'Read and sign'}
+                            {signature || answered || revising || expired || declined
+                              ? 'View'
+                              : 'Read and sign'}
                           </Link>
                         </span>
                       </td>

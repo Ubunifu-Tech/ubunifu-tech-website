@@ -459,6 +459,8 @@ export function invoiceEmail(input: {
   outstanding?: string | null;
   dueAt: Date | null;
   url: string;
+  /** Whether the invoice shows how to pay, which it does once our payment details are set. */
+  showsHowToPay: boolean;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
   const org = escapeHtml(input.clientName);
@@ -484,7 +486,9 @@ export function invoiceEmail(input: {
         : '';
   const next = settled
     ? 'Open it in your portal to see what it covered and the receipts for it.'
-    : 'Open it in your portal to see what it covers and how to pay. We will send a receipt as soon as the payment reaches us.';
+    : input.showsHowToPay
+      ? 'Open it in your portal to see what it covers and how to pay. We will send a receipt as soon as the payment reaches us.'
+      : 'Open it in your portal to see what it covers, and reply to this email for our payment details. We will send a receipt as soon as the payment reaches us.';
 
   const body = `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Invoice ${escapeHtml(input.number)}</h1>
@@ -669,6 +673,8 @@ export function itemsNeededEmail(input: {
   projectName: string;
   items: { title: string; detail: string | null; isNew: boolean }[];
   url: string;
+  /** Whether the portal takes files, which needs file storage set up. */
+  takesFiles: boolean;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
   const rows = input.items
@@ -689,8 +695,11 @@ export function itemsNeededEmail(input: {
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)}</p>
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">What we need from you</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. To keep the work moving, we need the following. You can
-      write an answer or attach files against each one in your portal.
+      Hello ${name}. To keep the work moving, we need the following. ${
+        input.takesFiles
+          ? 'You can write an answer or attach files against each one in your portal.'
+          : 'You can write an answer against each one in your portal, and reply to this email with any files.'
+      }
     </p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #ECE9E4;margin-bottom:24px;">${rows}</table>
     ${button(input.url, 'Send them from your portal')}`;
@@ -917,6 +926,28 @@ export function documentResponseEmail(input: {
       (${escapeHtml(input.fromEmail)}). Nothing has been signed and nothing has been charged.
     </p>
     ${paragraphs}
+    ${button(input.url, 'Open it in the console')}`;
+
+  return shell(`${input.reference}: ${headline}`, body);
+}
+
+/** Our own alert: the time to sign ran out, and the client would still like to. */
+export function documentFreshCopyEmail(input: {
+  reference: string;
+  title: string;
+  clientName: string;
+  from: string;
+  url: string;
+}): string {
+  const headline = `${input.from} asked for a fresh copy to sign`;
+  const body = `
+    <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.reference)}</p>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(headline)}</h1>
+    <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
+      The time to sign <strong style="color:#1D1B22;">${escapeHtml(input.title)}</strong> ran out
+      before <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong> signed it.
+      Send it again from the console and they can sign the new copy.
+    </p>
     ${button(input.url, 'Open it in the console')}`;
 
   return shell(`${input.reference}: ${headline}`, body);

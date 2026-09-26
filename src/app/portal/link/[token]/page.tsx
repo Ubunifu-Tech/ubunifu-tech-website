@@ -8,9 +8,9 @@ import { formatDate } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
 import { readSharedLink, type SharedLink } from '@/lib/console/shared-links';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
-import { SignForm } from '../../documents/SignForm';
+import { AskAgain, RespondForm, SignForm } from '../../documents/SignForm';
 import { ReviewAnswer } from '../../projects/[slug]/ReviewAnswer';
-import { answerWithLink, signWithLink } from './actions';
+import { answerWithLink, askAgainWithLink, respondWithLink, signWithLink } from './actions';
 import { Opened } from './Opened';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
 import styles from '../../Portal.module.css';
@@ -87,6 +87,9 @@ async function SignThroughLink({
       status: true,
       sentAt: true,
       expiresAt: true,
+      respondedAt: true,
+      responseNote: true,
+      respondedBy: { select: { name: true } },
       version: { select: { bodyMarkdown: true } },
       termsVersion: { select: { version: true, title: true, bodyMarkdown: true } },
       signatures: { select: { signerName: true, initials: true, signedAt: true } },
@@ -132,11 +135,23 @@ async function SignThroughLink({
         <PrintButton />
       </div>
 
-      {expired && !signature && (
-        <Notice>The time to sign this has passed. Ask us and we will send it again.</Notice>
+      {expired && !signature && !declined && (
+        <div className={`${styles.notice} ${sheet.noPrint}`} role="status">
+          <p>The time to sign this ran out.</p>
+          <AskAgain requestId={request.id} ask={askAgainWithLink} hidden={{ token }} />
+        </div>
       )}
       {declined && !signature && (
         <Notice>This version was declined, so it is closed. Nothing was signed.</Notice>
+      )}
+      {request.respondedAt && !declined && !signature && (
+        <div className={`${styles.notice} ${sheet.noPrint}`} role="status">
+          <p>
+            {request.respondedBy?.name ?? 'You'} asked for changes on{' '}
+            {formatDate(request.respondedAt)}. We are working on a new version.
+          </p>
+          {request.responseNote && <p>{request.responseNote}</p>}
+        </div>
       )}
 
       <ContractSheet
@@ -167,11 +182,28 @@ async function SignThroughLink({
               sign={signWithLink}
               hidden={{ token }}
               viaLink
+              wrongHint={
+                request.respondedAt
+                  ? 'If anything is still wrong, do not sign it. We are working on a new version.'
+                  : undefined
+              }
             />
-            <p className={styles.note}>
-              Not ready to sign, or something needs changing? Tell us before you sign.
-            </p>
           </section>
+          {!request.respondedAt && (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Not ready to sign?</h2>
+                <span className={forms.cardMeta}>Neither of these signs anything</span>
+              </div>
+              <RespondForm
+                requestId={request.id}
+                body={request.version.bodyMarkdown}
+                respond={respondWithLink}
+                hidden={{ token }}
+                wording={false}
+              />
+            </section>
+          )}
         </div>
       )}
     </>

@@ -262,9 +262,10 @@ export default async function ProjectPage({
           answeredBy: { select: { name: true } },
         },
       },
+      // Every one, as the portal shows them: updates are small, and a capped
+      // list hid older ones the team may still need to take down or re-send.
       updates: {
         orderBy: { createdAt: 'desc' },
-        take: 20,
         select: {
           id: true,
           title: true,
@@ -336,6 +337,15 @@ export default async function ProjectPage({
   const emailable = project.client.contacts.flatMap((person) =>
     person.canSignIn && person.email ? [person.email.toLowerCase()] : [],
   );
+  // What the client has actually been told. A draft or a taken-down update
+  // is not news to them.
+  const lastSent = project.updates
+    .filter((update) => update.status === 'published' && update.publishedAt)
+    .reduce<Date | null>(
+      (latest, update) => (!latest || update.publishedAt! > latest ? update.publishedAt : latest),
+      null,
+    );
+  const drafts = project.updates.filter((update) => update.status === 'draft').length;
   const updates: UpdateRow[] = project.updates.map((update) => {
     const reached = reachedBy.get(update.id) ?? new Set<string>();
     return {
@@ -844,9 +854,13 @@ export default async function ProjectPage({
                 )}
                 <li>
                   <Link href={href('updates')}>
-                    {project.updates.length === 0
-                      ? 'No updates sent to the client yet'
-                      : `Last update ${formatRelative(project.updates[0]!.createdAt, now)}`}
+                    {lastSent
+                      ? `Last update sent ${formatRelative(lastSent, now)}`
+                      : drafts === 1
+                        ? 'A draft update has not been sent yet'
+                        : drafts > 1
+                          ? `${drafts} draft updates have not been sent yet`
+                          : 'No updates sent to the client yet'}
                   </Link>
                 </li>
               </ul>

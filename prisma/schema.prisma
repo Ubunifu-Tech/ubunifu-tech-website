@@ -628,6 +628,8 @@ model LineItem {
   /// a domain's expiry date and its invoice date are not always the same day.
   intervalMonths  Int?
   nextDueAt       DateTime?
+  /// The day of the month a recurring fee falls due, kept so short months do not move it for good.
+  dueDay          Int?
   /// How far ahead of nextDueAt a draft invoice is raised.
   renewalLeadDays Int            @default(30)
   createdAt       DateTime       @default(now())

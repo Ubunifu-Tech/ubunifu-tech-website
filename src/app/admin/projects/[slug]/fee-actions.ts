@@ -212,6 +212,7 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
       ...(isRecurring(parsed.billingKind)
         ? {
             nextDueAt: parsed.nextDueAt,
+            dueDay: parsed.nextDueAt?.getUTCDate() ?? null,
             intervalMonths: parsed.billingKind === 'recurring_monthly' ? 1 : 12,
           }
         : {}),
@@ -250,6 +251,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
       status: true,
       currency: true,
       nextDueAt: true,
+      dueDay: true,
       _count: { select: { invoiceLines: true } },
       project: { select: { slug: true, deletedAt: true } },
       // The latest period already invoiced or skipped, if any.
@@ -314,9 +316,14 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
       ...(isRecurring(parsed.billingKind)
         ? {
             nextDueAt: parsed.nextDueAt,
+            // A date carried over unchanged may be a short month's stand-in
+            // for a later day, so only a newly chosen date sets the day.
+            ...(parsed.nextDueAt?.getTime() !== line.nextDueAt?.getTime() || line.dueDay === null
+              ? { dueDay: parsed.nextDueAt?.getUTCDate() ?? null }
+              : {}),
             intervalMonths: parsed.billingKind === 'recurring_monthly' ? 1 : 12,
           }
-        : { nextDueAt: null, intervalMonths: null }),
+        : { nextDueAt: null, dueDay: null, intervalMonths: null }),
     },
   }));
 

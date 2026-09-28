@@ -297,6 +297,7 @@ async function seedNifuate(ownerId: string) {
         terms: line.terms,
         intervalMonths: line.intervalMonths,
         nextDueAt: line.nextDueAt,
+        dueDay: line.nextDueAt?.getUTCDate(),
         position: i,
       },
     });

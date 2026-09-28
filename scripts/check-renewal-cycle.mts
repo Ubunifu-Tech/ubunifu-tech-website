@@ -29,9 +29,32 @@ const { PrismaPg } = await import('@prisma/adapter-pg');
 const { databaseTarget } = await import('../src/lib/db-connection');
 const { PrismaClient } = await import('../src/generated/prisma/client');
 const { billableLines } = await import('../src/lib/console/billing');
-const { markRenewalInvoiced, dropOffSchedulePeriods, ensureRenewalEvents, addMonths } = await import(
-  '../src/lib/console/renewals'
-);
+const { markRenewalInvoiced, dropOffSchedulePeriods, ensureRenewalEvents, nextPeriodStart } =
+  await import('../src/lib/console/renewals');
+
+const failures: string[] = [];
+
+// A monthly fee due on the 31st falls on the last day of a short month and
+// returns to the 31st after it, instead of staying on the 28th for good.
+{
+  const days: string[] = [];
+  let start = new Date('2027-01-31T12:00:00Z');
+  for (let step = 0; step < 5; step += 1) {
+    days.push(start.toISOString().slice(0, 10));
+    start = nextPeriodStart(start, 1, 31);
+  }
+  const want = ['2027-01-31', '2027-02-28', '2027-03-31', '2027-04-30', '2027-05-31'];
+  if (days.join() !== want.join()) {
+    failures.push(`A fee due on the 31st ran ${days.join(', ')}, expected ${want.join(', ')}.`);
+  }
+  const leap = nextPeriodStart(new Date('2028-01-31T12:00:00Z'), 1, 31).toISOString();
+  if (leap !== '2028-02-29T12:00:00.000Z') failures.push(`In a leap year it fell on ${leap}.`);
+  const yearly = nextPeriodStart(new Date('2029-02-28T12:00:00Z'), 12, 29).toISOString();
+  if (yearly !== '2030-02-28T12:00:00.000Z') failures.push(`A 29 February fee fell on ${yearly}.`);
+  const leapAgain = nextPeriodStart(new Date('2031-02-28T12:00:00Z'), 12, 29).toISOString();
+  if (leapAgain !== '2032-02-29T12:00:00.000Z') failures.push(`It missed 29 February 2032: ${leapAgain}.`);
+  if (failures.length === 0) console.log('A fee due on the 31st keeps its day through short months.');
+}
 
 const db = new PrismaClient({ adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)) });
 
@@ -51,6 +74,7 @@ const line = await db.lineItem.findFirst({
     id: true,
     label: true,
     nextDueAt: true,
+    dueDay: true,
     intervalMonths: true,
     project: { select: { id: true, reference: true, clientId: true } },
   },
@@ -58,14 +82,14 @@ const line = await db.lineItem.findFirst({
 
 if (!line) {
   console.log('No recurring line with a due date to test against.');
-  process.exit(0);
+  if (failures.length > 0) console.error(`\n${failures.join('\n')}\n`);
+  process.exit(failures.length > 0 ? 1 : 0);
 }
 
 const project = line.project;
 const originalNextDueAt = line.nextDueAt!;
 console.log(`Testing ${line.label} on ${project.reference}, from ${originalNextDueAt.toISOString().slice(0, 10)}\n`);
 
-const failures: string[] = [];
 const billedPeriods: string[] = [];
 
 for (let year = 1; year <= 3; year += 1) {
@@ -130,7 +154,8 @@ try {
     select: { periodStart: true, periodEnd: true },
   });
   const wrong = pending.filter(
-    (period) => period.periodEnd.getTime() !== addMonths(period.periodStart, 1).getTime(),
+    (period) =>
+      period.periodEnd.getTime() !== nextPeriodStart(period.periodStart, 1, line.dueDay).getTime(),
   );
   if (wrong.length > 0) {
     failures.push(

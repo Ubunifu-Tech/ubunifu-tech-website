@@ -56,6 +56,21 @@ export function addMonths(from: Date, months: number): Date {
   return date;
 }
 
+/**
+ * The start of the period `months` after `from`, on the fee's own day of the
+ * month where that month has it. A fee due on the 31st falls on 28 or 29
+ * February and is back on 31 March, rather than staying on the 28th for good.
+ * Without a day, the day of `from` is used, as addMonths does.
+ */
+export function nextPeriodStart(from: Date, months: number, day: number | null): Date {
+  const date = new Date(from);
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+  date.setUTCDate(Math.min(day ?? from.getUTCDate(), lastDay));
+  return date;
+}
+
 export function intervalFor(billingKind: string): number | null {
   if (billingKind === 'recurring_monthly') return 1;
   if (billingKind === 'recurring_annual') return 12;
@@ -87,6 +102,7 @@ export async function ensureRenewalEvents(
     select: {
       id: true,
       nextDueAt: true,
+      dueDay: true,
       intervalMonths: true,
       billingKind: true,
       renewals: { select: { periodStart: true } },
@@ -112,7 +128,7 @@ export async function ensureRenewalEvents(
       steps += 1
     ) {
       if (!known.has(periodStart.getTime())) {
-        const periodEnd = addMonths(periodStart, months);
+        const periodEnd = nextPeriodStart(periodStart, months, line.dueDay);
         try {
           await db.renewalEvent.create({
             data: {
@@ -132,7 +148,7 @@ export async function ensureRenewalEvents(
         }
       }
 
-      periodStart = addMonths(periodStart, months);
+      periodStart = nextPeriodStart(periodStart, months, line.dueDay);
     }
   }
 
@@ -223,6 +239,7 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
     where: { id: lineItemId },
     select: {
       nextDueAt: true,
+      dueDay: true,
       intervalMonths: true,
       billingKind: true,
       renewals: {
@@ -240,7 +257,7 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
     let start = line.nextDueAt;
     for (let index = 0; index < MAX_STEPS && start.getTime() <= last; index += 1) {
       onSchedule.add(start.getTime());
-      start = addMonths(start, months);
+      start = nextPeriodStart(start, months, line.dueDay);
     }
   }
 
@@ -250,7 +267,8 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
   const stale = line.renewals.filter(
     (renewal) =>
       !onSchedule.has(renewal.periodStart.getTime()) ||
-      renewal.periodEnd.getTime() !== addMonths(renewal.periodStart, months!).getTime(),
+      renewal.periodEnd.getTime() !==
+        nextPeriodStart(renewal.periodStart, months!, line.dueDay).getTime(),
   );
   if (stale.length === 0) return 0;
   const dropped = await db.renewalEvent.deleteMany({

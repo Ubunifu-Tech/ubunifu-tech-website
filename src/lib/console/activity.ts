@@ -196,6 +196,7 @@ const ACTION_LABELS = {
   'post.scheduled': 'Post scheduled',
   'post.unpublished': 'Post taken down',
   'post.archived': 'Post archived',
+  'post.restored': 'Post brought back',
   'media.uploaded': 'Image uploaded',
   'settings.billing_saved': 'Billing details changed',
   'assistant.failed': 'Assistant could not answer',

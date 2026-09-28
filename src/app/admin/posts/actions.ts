@@ -256,11 +256,17 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
         field: 'slug',
       };
     }
-    const taken = await db.post.findUnique({ where: { slug: wantedSlug }, select: { id: true } });
+    // An archived post keeps its address, so it can come back to it.
+    const taken = await db.post.findUnique({
+      where: { slug: wantedSlug },
+      select: { id: true, deletedAt: true },
+    });
     if (taken && taken.id !== post.id) {
       return {
         status: 'error',
-        message: 'Another post already lives at that address. Choose another.',
+        message: taken.deletedAt
+          ? 'An archived post lives at that address. Bring it back from Archived, or choose another.'
+          : 'Another post already lives at that address. Choose another.',
         field: 'slug',
       };
     }
@@ -523,4 +529,35 @@ export async function archivePost(_previous: PostState, formData: FormData): Pro
 
   revalidateBlog(post.slug);
   redirect('/posts');
+}
+
+/**
+ * Brings an archived post back into the journal, as a draft, at the address
+ * it had. Only a draft can be archived, so nothing comes back live.
+ */
+export async function restorePost(_previous: PostState, formData: FormData): Promise<PostState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
+
+  const id = formText(formData, 'postId');
+  const post = await db.post.findFirst({
+    where: { id, deletedAt: { not: null } },
+    select: { id: true, title: true },
+  });
+  if (!post) return { status: 'error', message: 'That post is not in Archived any more.' };
+
+  await db.post.update({ where: { id: post.id }, data: { deletedAt: null } });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'post.restored',
+    entityType: 'Post',
+    entityId: post.id,
+    summary: post.title || 'Untitled draft',
+  });
+
+  revalidatePath('/admin/posts');
+  // Straight into the editor: the row it was pressed on has left the list.
+  redirect(`/posts/${post.id}`);
 }

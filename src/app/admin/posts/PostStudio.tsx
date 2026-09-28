@@ -1126,7 +1126,7 @@ function Archive({ postId }: { postId: string }) {
 
   return (
     <div className={styles.confirm}>
-      <p className={forms.hint}>It leaves the journal. The post and its history are kept.</p>
+      <p className={forms.hint}>It moves to Archived in the journal. You can bring it back from there.</p>
       <div className={styles.confirmActions}>
         <button
           type="button"

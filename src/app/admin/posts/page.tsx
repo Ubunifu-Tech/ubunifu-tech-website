@@ -10,6 +10,7 @@ import { pageNumber, pageWindow } from '@/lib/console/paging';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { coverForSlug } from '@/content/blog-covers';
 import { startPost } from './actions';
+import { RestorePost } from './RestorePost';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -22,7 +23,13 @@ const VIEWS = [
   { key: 'live', label: 'Live' },
   { key: 'scheduled', label: 'Scheduled' },
   { key: 'drafts', label: 'Drafts' },
+  { key: 'archived', label: 'Archived' },
 ] as const;
+
+/** Archived posts are the only ones the Archived view shows, and no other view does. */
+function archiveWhere(key: string): Prisma.PostWhereInput {
+  return key === 'archived' ? { deletedAt: { not: null } } : { deletedAt: null };
+}
 
 function viewToWhere(key: string, now: Date): Prisma.PostWhereInput {
   switch (key) {
@@ -63,7 +70,7 @@ export default async function PostsPage({
     Promise.all(
       VIEWS.map((view) =>
         db.post.count({
-          where: { AND: [{ deletedAt: null }, viewToWhere(view.key, now), matching] },
+          where: { AND: [archiveWhere(view.key), viewToWhere(view.key, now), matching] },
         }),
       ),
     ),
@@ -83,7 +90,7 @@ export default async function PostsPage({
   const total = viewCounts[VIEWS.findIndex((view) => view.key === active)] ?? 0;
   const shown = pageWindow(pageNumber(page), total);
   const posts = await db.post.findMany({
-    where: { AND: [{ deletedAt: null }, viewToWhere(active, now), matching] },
+    where: { AND: [archiveWhere(active), viewToWhere(active, now), matching] },
     // Most recently edited first.
     orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
     skip: shown.skip,
@@ -103,6 +110,7 @@ export default async function PostsPage({
       authorName: true,
     },
   });
+  const archived = active === 'archived';
   const daysSince = lastLive?.publishedAt
     ? Math.floor((now.getTime() - lastLive.publishedAt.getTime()) / 86_400_000)
     : null;
@@ -178,7 +186,7 @@ export default async function PostsPage({
                 <th className={`${table.th} ${table.numericHead}`} scope="col">Words</th>
                 <th className={table.th} scope="col">Edited</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
-                  <span className={table.muted}>On the site</span>
+                  <span className={table.muted}>{archived ? 'Actions' : 'On the site'}</span>
                 </th>
               </tr>
             </thead>
@@ -191,7 +199,9 @@ export default async function PostsPage({
                         ? `No posts match “${query}” here.`
                         : active === 'all'
                           ? 'Nothing written yet.'
-                          : 'Nothing in this view.'}
+                          : archived
+                            ? 'Nothing archived.'
+                            : 'Nothing in this view.'}
                     </p>
                     <p className={table.emptyHint}>
                       {query ? 'Try another view, or search for something else.' : 'New post starts one.'}
@@ -217,9 +227,15 @@ export default async function PostsPage({
                           <span className={journal.thumb}>
                             <EditorialVisual src={cover.image} alt="" fill sizes="5rem" className={journal.thumbImage} />
                           </span>
-                          <Link href={`/posts/${post.id}`} className={table.link}>
-                            {post.title || 'Untitled draft'}
-                          </Link>
+                          {/* The editor opens only posts in the journal; an
+                              archived one is brought back first. */}
+                          {archived ? (
+                            post.title || 'Untitled draft'
+                          ) : (
+                            <Link href={`/posts/${post.id}`} className={table.link}>
+                              {post.title || 'Untitled draft'}
+                            </Link>
+                          )}
                         </span>
                       </td>
                       <td className={table.td}>
@@ -235,7 +251,7 @@ export default async function PostsPage({
                             scheduled ? forms.badgeWarn : live ? forms.badgeGood : ''
                           }`}
                         >
-                          {scheduled ? 'Scheduled' : live ? 'Live' : 'Draft'}
+                          {archived ? 'Archived' : scheduled ? 'Scheduled' : live ? 'Live' : 'Draft'}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
@@ -255,7 +271,9 @@ export default async function PostsPage({
                         {formatRelative(post.updatedAt, now)}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        {live ? (
+                        {archived ? (
+                          <RestorePost postId={post.id} />
+                        ) : live ? (
                           <a
                             href={`${consoleEnv.publicOrigin}/blog/${post.slug}`}
                             className={table.action}

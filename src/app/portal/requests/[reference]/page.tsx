@@ -21,7 +21,12 @@ const STATUS_BADGE: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: reference };
+  const actor = await requireClient();
+  const ticket = await db.ticket.findFirst({
+    where: { reference, clientId: actor.clientId, ...liveTicket },
+    select: { subject: true },
+  });
+  return { title: ticket?.subject ?? reference };
 }
 
 export default async function PortalRequest({

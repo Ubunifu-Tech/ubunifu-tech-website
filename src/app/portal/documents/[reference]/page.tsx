@@ -27,9 +27,19 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
+  const actor = await requireClient();
+  // The same scope as the page, so another client's reference names nothing.
+  const document = await db.document.findFirst({
+    where: {
+      reference,
+      project: { clientId: actor.clientId, deletedAt: null },
+      signatureRequests: { some: { sentAt: { not: null } } },
+    },
+    select: { title: true },
+  });
   // Absolute, so a printed or saved copy is named for the document and
   // never carries the console or portal name.
-  return { title: { absolute: `${reference} · Ubunifu Technologies` } };
+  return { title: { absolute: `${document?.title ?? reference} · Ubunifu Technologies` } };
 }
 
 /**

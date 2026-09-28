@@ -8,6 +8,7 @@ import { activityFor } from '@/lib/console/activity';
 import {
   DOCUMENT_KIND_LABEL,
   DOCUMENT_STATUS_LABEL,
+  hashDocument,
   renderMarkdown,
   shortHash,
 } from '@/lib/console/documents';
@@ -301,6 +302,13 @@ export default async function DocumentPage({
   // ── Signed: a record, not a workspace ─────────────────────────────
   if (signed && live) {
     const signature = live.signatures[0];
+    // Hashed again from the stored text, not the two stored hashes compared:
+    // those were equal at signing by construction, so only a fresh hash can
+    // show the pinned version was changed afterwards.
+    const intact =
+      !!signature &&
+      hashDocument(live.version.bodyMarkdown) === live.documentHash &&
+      signature.documentHash === live.documentHash;
     return (
       <main className={styles.page}>
         {head}
@@ -337,7 +345,7 @@ export default async function DocumentPage({
             <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>Unchanged since signing</span>
               <span className={styles.summaryValue}>
-                {signature.documentHash === live.documentHash ? 'Yes' : 'No'}
+                {intact ? 'Yes' : 'No'}
               </span>
               <span className={`${styles.summaryLabel} ${forms.fingerprint}`}>
                 {shortHash(signature.documentHash)}

@@ -1,10 +1,10 @@
 'use server';
 
-import { NO_PERMISSION } from '@/lib/console/permissions';
+import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit, staffForAction } from '@/lib/console/auth';
 import { formatDate } from '@/lib/console/money';
 import { publishedAtFor } from '@/lib/blog';
 import { SLUG_PATTERN } from '@/lib/slug';
@@ -29,6 +29,8 @@ export type PostState = {
   byline?: string;
   /** Somebody else saved the post since this editor loaded it. */
   conflict?: boolean;
+  /** The session ended; the editor keeps the post on screen and says so. */
+  signedOut?: boolean;
 };
 
 export type SaveIntent = 'autosave' | 'save' | 'publish';
@@ -125,7 +127,10 @@ async function freeSlug(base: string, exceptId?: string): Promise<string> {
  * cannot silently overwrite each other; the second is told instead.
  */
 export async function savePost(_previous: PostState, formData: FormData): Promise<PostState> {
-  const staff = await requireStaff();
+  // Not requireStaff: its redirect would leave the editor and take the post
+  // with it. Autosave calls this too, so the editor has to hear it instead.
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
 
   const intentValue = formText(formData, 'intent');

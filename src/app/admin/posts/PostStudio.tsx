@@ -13,6 +13,7 @@ import { BlogArticleView } from '@/components/BlogArticleView';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { coverForSlug } from '@/content/blog-covers';
 import { formatDate, parseDateInput, todayInput } from '@/lib/console/money';
+import { STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { slugify } from '@/lib/slug';
 import forms from '@/styles/forms.module.css';
 import blogStyles from '@/app/(site)/blog/[slug]/BlogSlug.module.css';
@@ -43,7 +44,8 @@ type SaveStatus =
   | { kind: 'saving'; intent: SaveIntent }
   | { kind: 'saved'; at: Date; message?: string }
   | { kind: 'error'; message: string; field?: string }
-  | { kind: 'conflict'; message: string };
+  | { kind: 'conflict'; message: string }
+  | { kind: 'signed-out'; message: string };
 
 const SITE = 'ubunifutech.com';
 const TITLE_FITS = 60;
@@ -100,6 +102,9 @@ export function PostStudio({
   const revisionRef = useRef(0);
   const versionRef = useRef(post.version);
   const savingRef = useRef(false);
+  // The revision a refused save was made at. Autosave waits for the next edit
+  // rather than sending the same refused post every few seconds.
+  const failedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
   const live = status === 'published';
@@ -176,7 +181,7 @@ export function PostStudio({
       } catch {
         result = {
           status: 'error',
-          message: 'Could not reach the console. Your changes are still here; try again.',
+          message: 'That did not save. Check your connection, then save again.',
         };
       }
 
@@ -194,18 +199,24 @@ export function PostStudio({
         if (result.byline && result.byline !== authorName) setAuthorName(result.byline);
         if (revisionRef.current === startedAt) setDirty(false);
         setSave({ kind: 'saved', at: new Date(), message: intent === 'autosave' ? undefined : result.message });
+      } else if (result.signedOut) {
+        setSave({ kind: 'signed-out', message: result.message ?? STAFF_SIGNED_OUT });
       } else if (result.conflict) {
         setSave({ kind: 'conflict', message: result.message ?? 'Someone else saved this post.' });
       } else {
+        failedRef.current = startedAt;
         setSave({ kind: 'error', message: result.message ?? 'That did not save.', field: result.field });
       }
     },
     [post.id, title, excerpt, body, tags, coverImage, coverAlt, authorName, writerId, publishedAt, slug, savedSlug],
   );
 
-  // Drafts save themselves once typing stops. A live post never does.
+  // Drafts save themselves once typing stops. A live post never does, and
+  // nothing does after a conflict or a sign-out. After a refused save it waits
+  // for the next edit; a manual save still works.
   useEffect(() => {
-    if (!dirty || live || save.kind === 'conflict') return;
+    if (!dirty || live || save.kind === 'conflict' || save.kind === 'signed-out') return;
+    if (save.kind === 'error' && failedRef.current === revision) return;
     const timer = setTimeout(() => void runSave('autosave'), 2500);
     return () => clearTimeout(timer);
   }, [revision, dirty, live, save.kind, runSave]);
@@ -264,6 +275,7 @@ export function PostStudio({
 
   return (
     <div className={styles.studio}>
+      <h1 className="srOnly">{title.trim() || 'Untitled draft'}</h1>
       <div className={styles.bar}>
         <div className={styles.barStart}>
           <Link
@@ -319,7 +331,7 @@ export function PostStudio({
         </div>
       </div>
 
-      {(save.kind === 'error' || save.kind === 'conflict') && (
+      {(save.kind === 'error' || save.kind === 'conflict' || save.kind === 'signed-out') && (
         <p className={`${forms.error} ${styles.problem}`} role="alert">
           {save.message}
           {save.kind === 'conflict' && (
@@ -328,6 +340,14 @@ export function PostStudio({
               <button type="button" className={forms.link} onClick={() => window.location.reload()}>
                 Reload
               </button>
+            </>
+          )}
+          {save.kind === 'signed-out' && (
+            <>
+              {' '}
+              <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
+                Sign in
+              </a>
             </>
           )}
         </p>
@@ -586,7 +606,7 @@ function SaveLine({ save, dirty, live }: { save: SaveStatus; dirty: boolean; liv
   let text: string;
   if (save.kind === 'saving') {
     text = save.intent === 'publish' ? 'Publishing…' : 'Saving…';
-  } else if (save.kind === 'conflict' || save.kind === 'error') {
+  } else if (save.kind === 'conflict' || save.kind === 'error' || save.kind === 'signed-out') {
     text = 'Not saved';
   } else if (dirty) {
     text = live ? 'Changes not live yet' : 'Unsaved changes';

@@ -107,6 +107,17 @@ export async function getStaffActor(): Promise<StaffActor | null> {
   };
 }
 
+/**
+ * The signed-in staff member, or null, for an action whose form holds long
+ * typing. requireStaff redirects to the sign-in page, and the typing goes
+ * with it; with this the action answers STAFF_SIGNED_OUT and the page keeps
+ * what is on screen.
+ */
+export async function staffForAction(): Promise<StaffActor | null> {
+  await assertAdminHost();
+  return getStaffActor();
+}
+
 export async function requireStaff(): Promise<StaffActor> {
   await assertAdminHost();
   const staff = await getStaffActor();

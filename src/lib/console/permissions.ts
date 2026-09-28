@@ -95,3 +95,11 @@ export function permissionsForRole(role: StaffRole, stored: RolePermissions): Pe
 
 /** Said when an action is refused, in the words a person would use. */
 export const NO_PERMISSION = 'Your role does not allow this. Ask an owner if you need it.';
+
+/**
+ * Said when a save arrives after the session ended, from an action that uses
+ * staffForAction. The form shows it with a Sign in link that opens in a new
+ * tab (href "/sign-in", target _blank), so what is on screen stays there.
+ */
+export const STAFF_SIGNED_OUT =
+  'You were signed out. Sign in again in a new tab, then come back here and save.';

@@ -5,7 +5,8 @@ import styles from './Privacy.module.css';
 
 export const metadata = pageMetadata({
   title: 'Privacy',
-  description: 'How Ubunifu Technologies handles contact-form information and general careers enquiries submitted through this website.',
+  description:
+    'How Ubunifu Technologies handles contact form messages, website chat conversations and careers enquiries sent through this website.',
   path: '/privacy',
 });
 
@@ -18,20 +19,38 @@ export default function PrivacyPage() {
           scene="privacy"
           eyebrow="Privacy"
           title="Your message is for the conversation you asked us to have."
-          lead="This notice explains the limited information this website collects, including contact messages and general careers enquiries, and how we use it."
+          lead="This notice explains what this website collects when you write to us or use the chat, and how we use it."
         />
 
         <article className={`container ${styles.article}`}>
-          <p className={styles.updated}>Last updated 23 August 2026</p>
+          <p className={styles.updated}>Last updated 28 September 2026</p>
 
           <h2>Information you choose to send</h2>
           <p>
             The contact form collects your name, email address, enquiry type, and
             message. We use that information to read, route, and respond to your
-            enquiry. If you email us from the careers page, we also receive the
-            message, links, and attachments you choose to include. Please do not
-            send passwords, identity documents, payment or banking details, health
-            information, or other sensitive personal information.
+            enquiry. If you use the chat, we receive what you type there, and the
+            name and email address you give if you ask us to get in touch. If you
+            email us from the careers page, we also receive the message, links, and
+            attachments you choose to include. Please do not send passwords,
+            identity documents, payment or banking details, health information, or
+            other sensitive personal information.
+          </p>
+
+          <h2>Website chat</h2>
+          <p>
+            The chat is an AI assistant, not a person. To answer you, what you
+            type and the page you are on are sent to Anthropic, the company that
+            provides the AI model. The conversation is saved in our database so it
+            is still there if you reload the page, and so our team can read it if
+            you ask to be put in touch. Anything you send to the team from the chat
+            becomes an enquiry and is handled like a contact form message.
+          </p>
+          <p>
+            The chat sets one cookie, ubu_visitor. It holds a random identifier
+            that lets the chat find your conversation again, and nothing else. It
+            expires 30 days after your last message. We also save the network
+            address and browser details the chat was used from, to limit abuse.
           </p>
 
           <h2>General careers enquiries</h2>
@@ -46,23 +65,27 @@ export default function PrivacyPage() {
 
           <h2>Technical information</h2>
           <p>
-            The contact endpoint uses a generated submission identifier and a
-            short-lived process-local count associated with a
-            hosting-platform network address to reduce spam, duplicate delivery,
-            and abuse. The submitted email address is the fallback key outside the
-            production hosting environment. The website does not use that
-            information to build advertising profiles.
+            When you send the contact form or use the chat, we record the network
+            address it came from alongside your message. To limit spam and abuse
+            we count recent attempts from each network address and email address.
+            The counts we store are one-way hashes rather than the addresses
+            themselves, and are deleted after about two days; the server may also
+            hold a short count in memory, which is never saved. This website does
+            not use advertising or analytics cookies and does not build
+            advertising profiles.
           </p>
 
-          <h2>Email delivery and retention</h2>
+          <h2>Storage, email and retention</h2>
           <p>
-            Messages submitted through the contact form are delivered through
-            Resend, our email delivery provider, and then handled in our business
-            inbox. Direct careers emails are handled in that inbox. We keep
-            messages only as long as reasonably needed to respond, manage a
-            relevant business relationship, maintain necessary records, prevent
-            abuse, or meet legal obligations. We do not sell contact or careers
-            enquiry information.
+            Contact form messages and chat conversations are stored in our
+            database. The website runs on Vercel and the database on Railway. New
+            enquiries, from the form or the chat, are sent to our business inbox,
+            and we usually send you a short confirmation, both through Resend, our
+            email delivery provider. Direct careers emails are handled in that
+            inbox. We keep enquiries and chat conversations only as long as
+            reasonably needed to respond, manage a relevant business relationship,
+            maintain necessary records, prevent abuse, or meet legal obligations.
+            We do not sell contact, chat or careers enquiry information.
           </p>
 
           <h2>External services</h2>
@@ -73,9 +96,9 @@ export default function PrivacyPage() {
 
           <h2>Questions or requests</h2>
           <p>
-            To ask what information we have from a website enquiry, request a
-            correction or deletion where appropriate, or raise a privacy concern,
-            email <a href="mailto:info@ubunifutech.com">info@ubunifutech.com</a>.
+            To ask what information we have from a website enquiry or chat
+            conversation, request a correction or deletion where appropriate, or
+            raise a privacy concern, email <a href="mailto:info@ubunifutech.com">info@ubunifutech.com</a>.
           </p>
         </article>
       </main>

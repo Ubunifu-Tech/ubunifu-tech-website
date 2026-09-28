@@ -327,6 +327,12 @@ function PhaseForm({
     closing(phase ? updatePhase : addPhase, onDone),
     IDLE,
   );
+  // Held in state so a refused save keeps them: React resets a form after its
+  // action runs, error or not. A save closes the form, so nothing to clear.
+  // The date pickers keep their own value across a reset.
+  const [name, setName] = useState(phase?.name ?? '');
+  const [goal, setGoal] = useState(phase?.goal ?? '');
+  const [start, setStart] = useState(phase?.startDate ?? '');
   return (
     <form action={action} className={`${forms.form} ${styles.planForm}`}>
       {phase ? (
@@ -339,7 +345,9 @@ function PhaseForm({
           name="name"
           label="Phase"
           wide
-          defaultValue={phase?.name}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          minLength={2}
           maxLength={160}
           required
           autoFocus
@@ -351,16 +359,24 @@ function PhaseForm({
           label="What it achieves"
           optional
           wide
-          defaultValue={phase?.goal}
+          value={goal}
+          onChange={(event) => setGoal(event.target.value)}
           maxLength={1000}
           invalid={state.field === 'goal'}
         />
-        <DateField name="startDate" label="From" optional defaultValue={phase?.startDate} />
+        <DateField
+          name="startDate"
+          label="From"
+          optional
+          defaultValue={phase?.startDate}
+          onChange={setStart}
+        />
         <DateField
           name="endDate"
           label="To"
           optional
           defaultValue={phase?.endDate}
+          min={start || undefined}
           invalid={state.field === 'endDate'}
         />
       </div>

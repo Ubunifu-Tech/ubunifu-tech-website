@@ -120,8 +120,15 @@ export async function recomputeInvoice(
     0,
   );
 
-  // A void invoice stays void. It is a decision, not a balance.
-  if (invoice.status === 'void') return;
+  // A void invoice stays void. It is a decision, not a balance, but its
+  // figures still follow its rows, so it never shows money it does not hold.
+  if (invoice.status === 'void') {
+    await tx.invoice.update({
+      where: { id: invoiceId },
+      data: { subtotalMinor, totalMinor, paidMinor, refundedMinor },
+    });
+    return;
+  }
 
   let status = invoice.status;
   if (invoice.status === 'draft') {

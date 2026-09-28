@@ -71,6 +71,17 @@ class Overpaid extends Error {}
 /** Thrown inside the transaction when the invoice was voided while the form was open. */
 class Voided extends Error {}
 
+const VOID_MONEY = 'This invoice is void. Its payments and refunds stay as recorded.';
+
+/** Under the invoice lock: a void invoice's money is part of the record and stays as it is. */
+async function refuseIfVoid(tx: Prisma.TransactionClient, invoiceId: string): Promise<void> {
+  const { status } = await tx.invoice.findUniqueOrThrow({
+    where: { id: invoiceId },
+    select: { status: true },
+  });
+  if (status === 'void') throw new Voided();
+}
+
 /** Thrown inside the transaction when the project or its client was removed meanwhile. */
 class Gone extends Error {}
 
@@ -888,10 +899,13 @@ export async function recordRefund(
       receivedAt: true,
       reversedAt: true,
       refunds: { where: { cancelledAt: null }, select: { amountMinor: true } },
-      invoice: { select: { id: true, number: true, project: { select: { slug: true } } } },
+      invoice: {
+        select: { id: true, number: true, status: true, project: { select: { slug: true } } },
+      },
     },
   });
   if (!payment) return { status: 'error', message: 'That payment no longer exists.' };
+  if (payment.invoice.status === 'void') return { status: 'error', message: VOID_MONEY };
   if (payment.reversedAt) {
     return {
       status: 'error',
@@ -930,6 +944,7 @@ export async function recordRefund(
         // refund is read again under the lock, so two refunds made at once
         // cannot together give back more than was paid.
         await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${payment.invoice.id} FOR UPDATE`;
+        await refuseIfVoid(tx, payment.invoice.id);
         const fresh = await tx.payment.findUniqueOrThrow({
           where: { id: payment.id },
           select: {
@@ -968,6 +983,7 @@ export async function recordRefund(
           'Something changed on this payment a moment ago. Reload to see what is left to refund.',
       };
     }
+    if (error instanceof Voided) return { status: 'error', message: VOID_MONEY };
     throw error;
   }
 
@@ -1114,15 +1130,23 @@ export async function cancelRefund(
   const cancelled = await db.$transaction(async (tx) => {
     // The same lock recording a payment or a refund takes.
     await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${refund.payment.invoice.id} FOR UPDATE`;
+    const { status } = await tx.invoice.findUniqueOrThrow({
+      where: { id: refund.payment.invoice.id },
+      select: { status: true },
+    });
+    if (status === 'void') return 'void';
     const { count } = await tx.refund.updateMany({
       where: { id: refund.id, cancelledAt: null },
       data: { cancelledAt: new Date(), cancelReason: reason },
     });
-    if (count === 0) return false;
+    if (count === 0) return 'already';
     await recomputeInvoice(tx, refund.payment.invoice.id);
-    return true;
+    return 'cancelled';
   });
-  if (!cancelled) return { status: 'error', message: 'That refund was already cancelled.' };
+  if (cancelled === 'void') return { status: 'error', message: VOID_MONEY };
+  if (cancelled === 'already') {
+    return { status: 'error', message: 'That refund was already cancelled.' };
+  }
 
   await recordAudit({
     actorType: 'staff',
@@ -1194,6 +1218,7 @@ export async function reversePayment(
       // The invoice is locked, as recordPayment locks it, so a payment being
       // recorded at the same moment is counted before or after, never lost.
       await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${payment.invoice.id} FOR UPDATE`;
+      await refuseIfVoid(tx, payment.invoice.id);
       const { count } = await tx.payment.updateMany({
         where: { id: payment.id, reversedAt: null, refunds: { none: { cancelledAt: null } } },
         data: { reversedAt: new Date(), reversalReason: reason, reversedById: staff.id },
@@ -1209,6 +1234,7 @@ export async function reversePayment(
     if (error instanceof AlreadyReversed) {
       return { status: 'error', message: 'That payment was already reversed.' };
     }
+    if (error instanceof Voided) return { status: 'error', message: VOID_MONEY };
     throw error;
   }
 

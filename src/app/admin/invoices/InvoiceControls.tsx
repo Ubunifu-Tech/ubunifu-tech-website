@@ -235,6 +235,7 @@ export function PaymentMenu({
   refunded,
   currency,
   today,
+  locked = false,
 }: {
   paymentId: string;
   receipt: { id: string; number: string } | null;
@@ -245,9 +246,12 @@ export function PaymentMenu({
   refunded: boolean;
   currency: string;
   today: string;
+  /** The invoice is void: its money stays as recorded, so only view and email are offered. */
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'menu' | 'reverse' | 'refund'>('menu');
+  const mayChange = !reversed && !locked;
   const [emailState, email, emailing] = useActionState(emailReceipt, INITIAL);
   const [reverseState, reverse, reversing] = useActionState(
     async (previous: BillingState, formData: FormData) => {
@@ -396,11 +400,11 @@ export function PaymentMenu({
                 </form>
               </>
             )}
-            {!reversed && (refundable > 0 || !refunded) && <MenuDivider />}
-            {!reversed && refundable > 0 && (
+            {mayChange && (refundable > 0 || !refunded) && <MenuDivider />}
+            {mayChange && refundable > 0 && (
               <MenuItem onClick={() => setView('refund')}>Record a refund</MenuItem>
             )}
-            {!reversed && !refunded && (
+            {mayChange && !refunded && (
               <MenuItem danger onClick={() => setView('reverse')}>
                 Reverse this payment
               </MenuItem>
@@ -420,10 +424,13 @@ export function RefundMenu({
   refundId,
   number,
   cancelled,
+  locked = false,
 }: {
   refundId: string;
   number: string;
   cancelled: boolean;
+  /** The invoice is void: the refund stays as recorded. */
+  locked?: boolean;
 }) {
   const [state, action, pending] = useActionState(emailRefund, INITIAL);
   const [cancelState, cancel, cancelling] = useActionState(cancelRefund, INITIAL);
@@ -479,7 +486,7 @@ export function RefundMenu({
                 </MenuItem>
               </form>
             )}
-            {!cancelled && (
+            {!cancelled && !locked && (
               <>
                 <MenuDivider />
                 <MenuItem danger onClick={() => setAsking(true)}>

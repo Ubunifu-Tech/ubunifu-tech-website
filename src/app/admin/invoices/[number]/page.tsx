@@ -398,6 +398,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                           paymentId={payment.id}
                           receipt={payment.receipt}
                           reversed={payment.reversedAt !== null}
+                          locked={invoice.status === 'void'}
                           refunded={payment.refunds.some((refund) => !refund.cancelledAt)}
                           refundable={
                             payment.amountMinor -
@@ -507,6 +508,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                             refundId={refund.id}
                             number={refund.number}
                             cancelled={refund.cancelledAt !== null}
+                            locked={invoice.status === 'void'}
                           />
                         )}
                       </td>

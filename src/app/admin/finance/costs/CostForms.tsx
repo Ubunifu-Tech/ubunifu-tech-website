@@ -256,37 +256,61 @@ export function AddCost({
   // A fresh form after each cost, so the next one starts clean.
   const [round, setRound] = useState(0);
   const [seen, setSeen] = useState(state);
+  // The cost just added, named, with its bill button. It sits outside the
+  // fresh form and goes as soon as the next cost is typed, so a bill can
+  // only ever be filed against the cost the line names.
+  const [added, setAdded] = useState<{ costId: string; message: string } | null>(null);
   if (state !== seen) {
     setSeen(state);
-    if (state.status === 'done') setRound(round + 1);
+    if (state.status === 'done') {
+      setRound(round + 1);
+      if (state.costId) setAdded({ costId: state.costId, message: state.message ?? '' });
+    }
   }
 
   return (
-    <form key={round} action={action} onSubmit={keepTyping(action)} className={forms.form}>
-      <CostFields
-        choices={choices}
-        values={{ incurredOn: today }}
-        amountName="amount"
-        amountLabel="Amount on the bill"
-        withDate
-        prefix={`add-${round}`}
-        invalid={state.field}
-      />
-      <CheckField
-        name="everyMonth"
-        label="It comes every month"
-        hint="It will wait here each month for you to add that month's amount."
-      />
-      <div className={forms.actions}>
-        <button type="submit" className={forms.button} disabled={pending}>
-          {pending ? 'Adding…' : 'Add the cost'}
-        </button>
-        {state.status === 'done' && state.costId && canAttach && (
-          <AttachBill costId={state.costId} label="Attach its bill" />
-        )}
-      </div>
-      <Message state={state} />
-    </form>
+    <>
+      {added && (
+        <p className={forms.hint} role="status">
+          {added.message}{' '}
+          {canAttach && (
+            <AttachBill
+              costId={added.costId}
+              label="Attach its bill"
+              onAttached={() => setAdded(null)}
+            />
+          )}
+        </p>
+      )}
+      <form
+        key={round}
+        action={action}
+        onSubmit={keepTyping(action)}
+        onChange={() => setAdded(null)}
+        className={forms.form}
+      >
+        <CostFields
+          choices={choices}
+          values={{ incurredOn: today }}
+          amountName="amount"
+          amountLabel="Amount on the bill"
+          withDate
+          prefix={`add-${round}`}
+          invalid={state.field}
+        />
+        <CheckField
+          name="everyMonth"
+          label="It comes every month"
+          hint="It will wait here each month for you to add that month's amount."
+        />
+        <div className={forms.actions}>
+          <button type="submit" className={forms.button} disabled={pending}>
+            {pending ? 'Adding…' : 'Add the cost'}
+          </button>
+        </div>
+        {state.status === 'error' && <Message state={state} />}
+      </form>
+    </>
   );
 }
 
@@ -295,7 +319,16 @@ export function AddCost({
  * files it with the cost. Checked here first only so a wrong file is caught
  * before it uploads; the server checks everything again.
  */
-export function AttachBill({ costId, label = 'Attach' }: { costId: string; label?: string }) {
+export function AttachBill({
+  costId,
+  label = 'Attach',
+  onAttached,
+}: {
+  costId: string;
+  label?: string;
+  /** Called once the bill is filed, before the page refreshes. */
+  onAttached?: () => void;
+}) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<
@@ -326,6 +359,7 @@ export function AttachBill({ costId, label = 'Attach' }: { costId: string; label
         return;
       }
       setStage({ kind: 'idle' });
+      onAttached?.();
       router.refresh();
     } catch (error) {
       console.error('[costs] bill upload failed', error);

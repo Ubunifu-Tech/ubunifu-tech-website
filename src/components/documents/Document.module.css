@@ -161,7 +161,9 @@
 .body h1::before,
 .body h2::before,
 .body:not(:has(h1, h2)) h3::before {
-  color: var(--brand);
+  /* The deep orange: the number is text, and the brand orange fails AA on
+     white. */
+  color: var(--brand-deep);
   content: counter(section, decimal-leading-zero);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
@@ -426,6 +428,8 @@
   margin: var(--space-4) 0 0;
   color: var(--text-tertiary);
   font-size: var(--font-size-small);
+  /* Stays on the page with the signature boxes it describes. */
+  break-before: avoid;
 }
 
 /* Version, fingerprint and terms version: what matches the paper to the

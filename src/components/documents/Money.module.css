@@ -208,6 +208,8 @@
   width: min(100%, 22rem);
   margin: var(--space-5) 0 0 auto;
   font-size: var(--font-size-small);
+  /* On paper the totals move to the next page as one block. */
+  break-inside: avoid;
 }
 
 .totalRow {

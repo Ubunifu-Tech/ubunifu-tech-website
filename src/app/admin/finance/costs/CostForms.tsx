@@ -46,6 +46,12 @@ export type Choices = {
   vendors: string[];
 };
 
+/** A removed client or project the record still points at. */
+export type Removed = {
+  client?: { id: string; name: string };
+  project?: { id: string; name: string; clientId: string };
+};
+
 type Values = {
   vendor?: string;
   category?: string;
@@ -80,6 +86,7 @@ function CostFields({
   withDate,
   prefix,
   invalid,
+  removed = {},
 }: {
   choices: Choices;
   values?: Values;
@@ -89,10 +96,13 @@ function CostFields({
   /** Keeps ids apart when several of these are on the page. */
   prefix: string;
   invalid?: string;
+  /** Shown as a choice, marked removed, so the picker says what is stored. */
+  removed?: Removed;
 }) {
   const [clientId, setClientId] = useState(values.clientId ?? '');
   const [projectId, setProjectId] = useState(values.projectId ?? '');
-  const projects = choices.projects.filter((project) => !clientId || project.clientId === clientId);
+  const allProjects = removed.project ? [removed.project, ...choices.projects] : choices.projects;
+  const projects = allProjects.filter((project) => !clientId || project.clientId === clientId);
 
   return (
     <div className={forms.grid}>
@@ -178,14 +188,18 @@ function CostFields({
           value={clientId}
           onValueChange={(next) => {
             setClientId(next);
-            if (next && !choices.projects.some((p) => p.id === projectId && p.clientId === next)) {
+            if (next && !allProjects.some((p) => p.id === projectId && p.clientId === next)) {
               setProjectId('');
             }
           }}
           options={[
             { value: '', label: 'The business as a whole' },
+            ...(removed.client
+              ? [{ value: removed.client.id, label: `${removed.client.name} (removed)` }]
+              : []),
             ...choices.clients.map((client) => ({ value: client.id, label: client.name })),
           ]}
+          invalid={invalid === 'clientId'}
         />
       </div>
 
@@ -199,12 +213,15 @@ function CostFields({
           value={projectId}
           onValueChange={(next) => {
             setProjectId(next);
-            const project = choices.projects.find((p) => p.id === next);
+            const project = allProjects.find((p) => p.id === next);
             if (project) setClientId(project.clientId);
           }}
           options={[
             { value: '', label: 'No one project' },
-            ...projects.map((project) => ({ value: project.id, label: project.name })),
+            ...projects.map((project) => ({
+              value: project.id,
+              label: project.id === removed.project?.id ? `${project.name} (removed)` : project.name,
+            })),
           ]}
           invalid={invalid === 'projectId'}
         />
@@ -402,12 +419,15 @@ export function CostMenu({
   cost,
   choices,
   hasBill,
+  removed,
 }: {
   cost: { id: string; vendor: string } & Required<Omit<Values, 'description'>> & {
       description: string | null;
     };
   choices: Choices;
   hasBill: boolean;
+  /** The removed client or project it is still for, if any. */
+  removed?: Removed;
 }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'menu' | 'edit' | 'remove' | 'bill'>('menu');
@@ -451,6 +471,7 @@ export function CostMenu({
             withDate
             prefix={`edit-${cost.id}`}
             invalid={saveState.field}
+            removed={removed}
           />
           <div className={forms.actions}>
             <button type="submit" className={forms.button} disabled={saving}>
@@ -565,6 +586,7 @@ export function AddMonthOf({
 export function RegularMenu({
   regular,
   choices,
+  removed,
 }: {
   regular: {
     id: string;
@@ -579,6 +601,8 @@ export function RegularMenu({
     isActive: boolean;
   };
   choices: Choices;
+  /** The removed client or project it is still for, if any. */
+  removed?: Removed;
 }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -614,6 +638,7 @@ export function RegularMenu({
             withDate={false}
             prefix={`regular-${regular.id}`}
             invalid={saveState.field}
+            removed={removed}
           />
           <div className={forms.actions}>
             <button type="submit" className={forms.button} disabled={saving}>

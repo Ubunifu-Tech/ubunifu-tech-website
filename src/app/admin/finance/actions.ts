@@ -42,27 +42,57 @@ async function readProduct(formData: FormData) {
     : { ok: false as const, message: 'That product no longer exists.' };
 }
 
-/** A client and project a cost is for, checked to exist and to belong together. */
-async function readFor(formData: FormData) {
+/**
+ * A client and project a cost is for, checked to exist and to belong together.
+ * A removed one is refused, except the one the cost already points at: a cost
+ * for a client since removed can still have its note or amount corrected, and
+ * stays counted under that client.
+ */
+async function readFor(
+  formData: FormData,
+  keep?: { clientId: string | null; projectId: string | null },
+) {
   const clientId = formText(formData, 'clientId') || null;
   const projectId = formText(formData, 'projectId') || null;
   if (projectId) {
-    const project = await db.project.findFirst({
-      where: { id: projectId, deletedAt: null },
-      select: { id: true, clientId: true },
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, clientId: true, deletedAt: true },
     });
-    if (!project) return { ok: false as const, message: 'That project no longer exists.' };
+    if (!project) {
+      return { ok: false as const, message: 'That project no longer exists.', field: 'projectId' };
+    }
+    if (project.deletedAt && project.id !== keep?.projectId) {
+      return {
+        ok: false as const,
+        message: 'That project was removed. Choose another project, or No one project.',
+        field: 'projectId',
+      };
+    }
     if (clientId && clientId !== project.clientId) {
-      return { ok: false as const, message: 'That project belongs to another client.' };
+      return {
+        ok: false as const,
+        message: 'That project belongs to another client.',
+        field: 'projectId',
+      };
     }
     return { ok: true as const, clientId: project.clientId, projectId: project.id };
   }
   if (clientId) {
-    const client = await db.client.findFirst({
-      where: { id: clientId, deletedAt: null },
-      select: { id: true },
+    const client = await db.client.findUnique({
+      where: { id: clientId },
+      select: { id: true, deletedAt: true },
     });
-    if (!client) return { ok: false as const, message: 'That client no longer exists.' };
+    if (!client) {
+      return { ok: false as const, message: 'That client no longer exists.', field: 'clientId' };
+    }
+    if (client.deletedAt && client.id !== keep?.clientId) {
+      return {
+        ok: false as const,
+        message: 'That client was removed. Choose another client, or The business as a whole.',
+        field: 'clientId',
+      };
+    }
   }
   return { ok: true as const, clientId, projectId: null };
 }
@@ -117,12 +147,22 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
   if (incurredOn.getTime() > Date.now() + 31 * 86_400_000) {
     return { status: 'error', message: 'That date is more than a month away.', field: 'incurredOn' };
   }
-  const forWhat = await readFor(formData);
-  if (!forWhat.ok) return { status: 'error', message: forWhat.message, field: 'projectId' };
+  const costId = formText(formData, 'costId');
+  // An edit may keep the client or project the cost is already for.
+  let keep: { clientId: string | null; projectId: string | null } | undefined;
+  if (costId) {
+    const stored = await db.cost.findUnique({
+      where: { id: costId },
+      select: { clientId: true, projectId: true },
+    });
+    if (!stored) return { status: 'error', message: 'That cost no longer exists.' };
+    keep = stored;
+  }
+  const forWhat = await readFor(formData, keep);
+  if (!forWhat.ok) return { status: 'error', message: forWhat.message, field: forWhat.field };
   const product = await readProduct(formData);
   if (!product.ok) return { status: 'error', message: product.message, field: 'productId' };
 
-  const costId = formText(formData, 'costId');
   let regularId = formText(formData, 'regularId') || null;
   if (regularId) {
     const regular = await db.regularCost.findUnique({ where: { id: regularId }, select: { id: true } });
@@ -258,7 +298,7 @@ export async function saveRegularCost(
   const read = readCost(formData, 'usual');
   if (!read.ok) return { status: 'error', message: read.message, field: read.field };
   const forWhat = await readFor(formData);
-  if (!forWhat.ok) return { status: 'error', message: forWhat.message, field: 'projectId' };
+  if (!forWhat.ok) return { status: 'error', message: forWhat.message, field: forWhat.field };
   const product = await readProduct(formData);
   if (!product.ok) return { status: 'error', message: product.message, field: 'productId' };
 

@@ -56,7 +56,7 @@ export default async function CostsPage({
         productId: true,
         product: { select: { name: true } },
         client: { select: { name: true, deletedAt: true } },
-        project: { select: { name: true, slug: true, deletedAt: true } },
+        project: { select: { name: true, slug: true, clientId: true, deletedAt: true } },
         files: {
           where: { deletedAt: null },
           orderBy: { createdAt: 'desc' },
@@ -79,8 +79,8 @@ export default async function CostsPage({
         projectId: true,
         productId: true,
         createdAt: true,
-        client: { select: { name: true } },
-        project: { select: { name: true } },
+        client: { select: { name: true, deletedAt: true } },
+        project: { select: { name: true, clientId: true, deletedAt: true } },
         product: { select: { name: true } },
       },
     }),
@@ -121,18 +121,42 @@ export default async function CostsPage({
   // This month's entries are dated today; an earlier month's, on its last day.
   const entryDate = month === thisMonth ? today : toDateInputValue(new Date(to.getTime() - 43_200_000));
 
-  const forWhat = (row: {
-    client: { name: string; deletedAt?: Date | null } | null;
-    project: { name: string } | null;
+  type Linked = {
+    clientId: string | null;
+    projectId: string | null;
+    client: { name: string; deletedAt: Date | null } | null;
+    project: { name: string; clientId: string; deletedAt: Date | null } | null;
     product: { name: string } | null;
-  }) =>
+  };
+
+  const forWhat = (row: Linked) =>
     [
-      row.project?.name ??
-        (row.client ? `${row.client.name}${row.client.deletedAt ? ' (removed)' : ''}` : null),
+      row.project
+        ? `${row.project.name}${row.project.deletedAt ? ' (removed)' : ''}`
+        : row.client
+          ? `${row.client.name}${row.client.deletedAt ? ' (removed)' : ''}`
+          : null,
       row.product?.name ?? null,
     ]
       .filter(Boolean)
       .join(', ') || null;
+
+  /**
+   * The removed client or project a row still points at. The pickers only
+   * list live ones, so these are added back for its Change form to show.
+   */
+  const removedOf = (row: Linked) => ({
+    client:
+      row.clientId && row.client?.deletedAt ? { id: row.clientId, name: row.client.name } : undefined,
+    project:
+      row.projectId && row.project?.deletedAt
+        ? { id: row.projectId, name: row.project.name, clientId: row.project.clientId }
+        : undefined,
+  });
+
+  /** The removed client or project that stops a regular cost being added. */
+  const removedName = (row: Linked) =>
+    row.project?.deletedAt ? row.project.name : row.client?.deletedAt ? row.client.name : null;
 
   const regularValues = (regular: (typeof regulars)[number]) => ({
     id: regular.id,
@@ -229,6 +253,7 @@ export default async function CostsPage({
                 <tbody>
                   {expected.map((regular) => {
                     const entry = costs.find((cost) => cost.regularId === regular.id);
+                    const gone = removedName(regular);
                     return (
                       <tr key={regular.id} className={table.tr}>
                         <td className={`${table.td} ${table.primary}`}>{regular.vendor}</td>
@@ -239,6 +264,10 @@ export default async function CostsPage({
                         <td className={table.td}>
                           {entry ? (
                             formatMoney(entry.amountMinor, entry.currency)
+                          ) : gone ? (
+                            <span className={forms.hint}>
+                              {gone} was removed. Change or stop this regular cost.
+                            </span>
                           ) : (
                             <AddMonthOf regular={regularValues(regular)} date={entryDate} />
                           )}
@@ -347,6 +376,7 @@ export default async function CostsPage({
                         <CostMenu
                           hasBill={cost.files.length > 0}
                           choices={choices}
+                          removed={removedOf(cost)}
                           cost={{
                             id: cost.id,
                             vendor: cost.vendor,
@@ -420,7 +450,11 @@ export default async function CostsPage({
                         )}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        <RegularMenu regular={regularValues(regular)} choices={choices} />
+                        <RegularMenu
+                          regular={regularValues(regular)}
+                          choices={choices}
+                          removed={removedOf(regular)}
+                        />
                       </td>
                     </tr>
                   ))}

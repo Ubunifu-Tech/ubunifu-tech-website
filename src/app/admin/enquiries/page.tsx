@@ -9,6 +9,7 @@ import { StartForClient } from './StartForClient';
 import { TriageControls } from './TriageControls';
 import { MenuLink, MenuList, RowMenu } from '@/components/console/RowMenu';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -97,12 +98,12 @@ const ENQUIRY_ROW = {
 export default async function EnquiriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; open?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; open?: string; q?: string; page?: string }>;
 }) {
   const staff = await requirePermission('enquiries');
   const mayOnboard = can(staff, 'clients');
   const mayStart = can(staff, 'projects');
-  const { show, open, q } = await searchParams;
+  const { show, open, q, page } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const query = searchText(q);
   const now = new Date();
@@ -140,17 +141,22 @@ export default async function EnquiriesPage({
     }),
   ]);
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
-  const keepQuery = query ? `&q=${encodeURIComponent(query)}` : '';
+  const shown = pageWindow(pageNumber(page), total);
+  // Opening and closing a row keeps the search and the page it is on.
+  const keepPlace =
+    (query ? `&q=${encodeURIComponent(query)}` : '') +
+    (shown.page > 1 ? `&page=${shown.page}` : '');
 
   const listed = await db.enquiry.findMany({
     where: { AND: [scopeOf(active), filterToWhere(active), matching] },
-    orderBy: { createdAt: 'desc' },
-    take: 100,
+    orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
     select: ENQUIRY_ROW,
   });
 
-  // An enquiry opened by link can be older than the first hundred; it is
-  // added to the list so the link still opens it.
+  // An enquiry opened by link can be on another page; it is added to this
+  // one so the link still opens it.
   const beyond =
     open && !listed.some((enquiry) => enquiry.id === open)
       ? await db.enquiry.findFirst({
@@ -306,8 +312,8 @@ export default async function EnquiriesPage({
                             <MenuLink
                               href={
                                 expanded?.id === enquiry.id
-                                  ? `/enquiries?show=${active}${keepQuery}`
-                                  : `/enquiries?show=${active}&open=${enquiry.id}${keepQuery}`
+                                  ? `/enquiries?show=${active}${keepPlace}`
+                                  : `/enquiries?show=${active}&open=${enquiry.id}${keepPlace}`
                               }
                               scroll={false}
                             >
@@ -332,10 +338,11 @@ export default async function EnquiriesPage({
             </table>
           </div>
           <ListFooter
-            shown={enquiries.length}
+            shown={listed.length}
             total={total}
             noun={['enquiry', 'enquiries']}
             query={query}
+            paging={{ page: shown.page, path: '/enquiries', params: { show, q: query } }}
           />
         </div>
 

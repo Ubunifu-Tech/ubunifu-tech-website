@@ -12,6 +12,7 @@ import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveTicket } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -57,10 +58,10 @@ function filterToWhere(key: string): Prisma.TicketWhereInput {
 export default async function RequestsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; q?: string; page?: string }>;
 }) {
   await requireStaff();
-  const { show, q } = await searchParams;
+  const { show, q, page } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'ours';
   const query = searchText(q);
   const now = new Date();
@@ -77,28 +78,7 @@ export default async function RequestsPage({
       }
     : {};
 
-  const [tickets, viewCounts, unread, urgent, oldest, resolvedThisWeek] = await Promise.all([
-    db.ticket.findMany({
-      where: { AND: [liveTicket, filterToWhere(active), matching] },
-      // Oldest first by when it was raised: the one that has waited longest is
-      // the one that costs us. Not by last activity, which every reply moves,
-      // or a request the client has just chased would drop to the bottom.
-      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
-      take: 200,
-      select: {
-        id: true,
-        reference: true,
-        subject: true,
-        kind: true,
-        status: true,
-        priority: true,
-        createdAt: true,
-        updatedAt: true,
-        client: { select: { name: true, slug: true } },
-        project: { select: { name: true, slug: true } },
-        openedBy: { select: { name: true } },
-      },
-    }),
+  const [viewCounts, unread, urgent, oldest, resolvedThisWeek] = await Promise.all([
     Promise.all(
       FILTERS.map((filter) =>
         db.ticket.count({ where: { AND: [liveTicket, filterToWhere(filter.key), matching] } }),
@@ -115,6 +95,29 @@ export default async function RequestsPage({
     db.ticket.count({ where: { ...liveTicket, resolvedAt: { gte: weekAgo } } }),
   ]);
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const shown = pageWindow(pageNumber(page), total);
+  const tickets = await db.ticket.findMany({
+    where: { AND: [liveTicket, filterToWhere(active), matching] },
+    // Oldest first by when it was raised: the one that has waited longest is
+    // the one that costs us. Not by last activity, which every reply moves,
+    // or a request the client has just chased would drop to the bottom.
+    orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
+    select: {
+      id: true,
+      reference: true,
+      subject: true,
+      kind: true,
+      status: true,
+      priority: true,
+      createdAt: true,
+      updatedAt: true,
+      client: { select: { name: true, slug: true } },
+      project: { select: { name: true, slug: true } },
+      openedBy: { select: { name: true } },
+    },
+  });
   const oldestDays = oldest
     ? Math.floor((now.getTime() - oldest.createdAt.getTime()) / 86_400_000)
     : 0;
@@ -247,7 +250,13 @@ export default async function RequestsPage({
             </tbody>
           </table>
         </div>
-        <ListFooter shown={tickets.length} total={total} noun={['request', 'requests']} query={query} />
+        <ListFooter
+          shown={tickets.length}
+          total={total}
+          noun={['request', 'requests']}
+          query={query}
+          paging={{ page: shown.page, path: '/requests', params: { show, q: query } }}
+        />
       </div>
     </main>
   );

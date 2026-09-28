@@ -6,6 +6,7 @@ import { consoleEnv } from '@/lib/console/env';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { coverForSlug } from '@/content/blog-covers';
 import { startPost } from './actions';
@@ -39,10 +40,10 @@ function viewToWhere(key: string, now: Date): Prisma.PostWhereInput {
 export default async function PostsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; q?: string; page?: string }>;
 }) {
   await requirePermission('journal');
-  const { show, q } = await searchParams;
+  const { show, q, page } = await searchParams;
   const active = VIEWS.some((view) => view.key === show) ? show! : 'all';
   const query = searchText(q);
   const now = new Date();
@@ -58,27 +59,7 @@ export default async function PostsPage({
       }
     : {};
 
-  const [posts, viewCounts, lastLive] = await Promise.all([
-    db.post.findMany({
-      where: { AND: [{ deletedAt: null }, viewToWhere(active, now), matching] },
-      // Drafts being worked on first, then by date.
-      orderBy: [{ updatedAt: 'desc' }],
-      take: 300,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        status: true,
-        tags: true,
-        coverImage: true,
-        coverAlt: true,
-        publishedAt: true,
-        updatedAt: true,
-        bodyMarkdown: true,
-        authorName: true,
-      },
-    }),
+  const [viewCounts, lastLive] = await Promise.all([
     Promise.all(
       VIEWS.map((view) =>
         db.post.count({
@@ -100,6 +81,28 @@ export default async function PostsPage({
     db.post.count({ where: { deletedAt: null, ...viewToWhere('drafts', now) } }),
   ]);
   const total = viewCounts[VIEWS.findIndex((view) => view.key === active)] ?? 0;
+  const shown = pageWindow(pageNumber(page), total);
+  const posts = await db.post.findMany({
+    where: { AND: [{ deletedAt: null }, viewToWhere(active, now), matching] },
+    // Most recently edited first.
+    orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      excerpt: true,
+      status: true,
+      tags: true,
+      coverImage: true,
+      coverAlt: true,
+      publishedAt: true,
+      updatedAt: true,
+      bodyMarkdown: true,
+      authorName: true,
+    },
+  });
   const daysSince = lastLive?.publishedAt
     ? Math.floor((now.getTime() - lastLive.publishedAt.getTime()) / 86_400_000)
     : null;
@@ -272,7 +275,13 @@ export default async function PostsPage({
             </tbody>
           </table>
         </div>
-        <ListFooter shown={posts.length} total={total} noun={['post', 'posts']} query={query} />
+        <ListFooter
+          shown={posts.length}
+          total={total}
+          noun={['post', 'posts']}
+          query={query}
+          paging={{ page: shown.page, path: '/posts', params: { show, q: query } }}
+        />
       </div>
     </main>
   );

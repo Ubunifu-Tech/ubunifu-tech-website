@@ -4,6 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -39,12 +40,12 @@ function viewToWhere(key: string): Prisma.ClientWhereInput {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; q?: string; page?: string }>;
 }) {
   const staff = await requireStaff();
   // What a client is worth is the fees on their projects: shown to those who see fees.
   const seesValue = can(staff, 'fees') || can(staff, 'invoices');
-  const { show, q } = await searchParams;
+  const { show, q, page } = await searchParams;
   const active = VIEWS.some((view) => view.key === show) ? show! : 'all';
   const query = searchText(q);
 
@@ -74,14 +75,16 @@ export default async function ClientsPage({
     ),
   );
   const total = viewCounts[VIEWS.findIndex((view) => view.key === active)] ?? 0;
+  const shown = pageWindow(pageNumber(page), total);
   const removedCount = can(staff, 'clients')
     ? await db.client.count({ where: { deletedAt: { not: null } } })
     : 0;
 
   const clients = await db.client.findMany({
     where: { AND: [{ deletedAt: null }, viewToWhere(active), matching] },
-    take: 300,
-    orderBy: { name: 'asc' },
+    orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
     select: {
       id: true,
       name: true,
@@ -246,7 +249,13 @@ export default async function ClientsPage({
             </tbody>
           </table>
         </div>
-        <ListFooter shown={clients.length} total={total} noun={['client', 'clients']} query={query} />
+        <ListFooter
+          shown={clients.length}
+          total={total}
+          noun={['client', 'clients']}
+          query={query}
+          paging={{ page: shown.page, path: '/clients', params: { show, q: query } }}
+        />
       </div>
       {removedCount > 0 && (
         <p className={styles.note}>

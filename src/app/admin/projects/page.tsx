@@ -9,6 +9,7 @@ import { waitingOnClient } from '@/lib/console/live';
 import { Board, type BoardCard } from './Board';
 import { KanbanSquare, List } from 'lucide-react';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -76,13 +77,13 @@ const SELECT = {
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; view?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; view?: string; q?: string; page?: string }>;
 }) {
   const staff = await requireStaff();
   const canRun = can(staff, 'projects');
   // What a project is worth is the fees on it: shown to those who see fees.
   const seesValue = can(staff, 'fees') || can(staff, 'invoices');
-  const { show, view, q } = await searchParams;
+  const { show, view, q, page } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
   const asList = view === 'list';
   const query = searchText(q);
@@ -108,11 +109,13 @@ export default async function ProjectsPage({
     ),
   );
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const shown = pageWindow(pageNumber(page), total);
 
   const projects = await db.project.findMany({
     where: { AND: [{ deletedAt: null }, filterToWhere(active), matching] },
-    orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
-    take: 200,
+    orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
     select: SELECT,
   });
 
@@ -239,7 +242,13 @@ export default async function ProjectsPage({
             </tbody>
           </table>
         </div>
-        <ListFooter shown={projects.length} total={total} noun={['project', 'projects']} query={query} />
+        <ListFooter
+          shown={projects.length}
+          total={total}
+          noun={['project', 'projects']}
+          query={query}
+          paging={{ page: shown.page, path: '/projects', params: { view: 'list', show, q: query } }}
+        />
       </div>
     </main>
   );

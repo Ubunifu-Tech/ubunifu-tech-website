@@ -7,6 +7,7 @@ import { formatShortDate } from '@/lib/console/money';
 import { awaitingSignature, liveDocument, signingRanOut } from '@/lib/console/live';
 import { DocumentBadge } from '@/components/console/DocumentBadge';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
 import table from '@/styles/table.module.css';
 
@@ -49,10 +50,10 @@ function filterToWhere(key: string, now: Date): Prisma.DocumentWhereInput {
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; q?: string; page?: string }>;
 }) {
   await requirePermission('documents');
-  const { show, q } = await searchParams;
+  const { show, q, page } = await searchParams;
   const query = searchText(q);
   const now = new Date();
 
@@ -81,11 +82,13 @@ export default async function DocumentsPage({
   const firstView = countOf('back') > 0 ? 'back' : countOf('ranout') > 0 ? 'ranout' : 'open';
   const active = FILTERS.some((f) => f.key === show) ? show! : firstView;
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const shown = pageWindow(pageNumber(page), total);
 
   const documents = await db.document.findMany({
     where: { AND: [liveDocument, filterToWhere(active, now), matching] },
-    orderBy: { updatedAt: 'desc' },
-    take: 200,
+    orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
     select: {
       id: true,
       reference: true,
@@ -210,7 +213,15 @@ export default async function DocumentsPage({
             </tbody>
           </table>
         </div>
-        <ListFooter shown={documents.length} total={total} noun={['document', 'documents']} query={query} />
+        <ListFooter
+          shown={documents.length}
+          total={total}
+          noun={['document', 'documents']}
+          query={query}
+          // The view is named even when it is the one the list opened on, which
+          // moves as work comes back, so the next page stays in the same view.
+          paging={{ page: shown.page, path: '/documents', params: { show: active, q: query } }}
+        />
       </div>
     </main>
   );

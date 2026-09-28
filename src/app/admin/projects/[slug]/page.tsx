@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import {
@@ -297,7 +297,22 @@ export default async function ProjectPage({
     },
   });
 
-  if (!project) notFound();
+  if (!project) {
+    // A removed project's old address goes to where it can be brought back:
+    // its client's page, or the removed client's record when that went too.
+    // Anyone who could not open that page gets the plain not-found.
+    const removed = await db.project.findFirst({
+      where: { slug, deletedAt: { not: null } },
+      select: { client: { select: { slug: true, deletedAt: true } } },
+    });
+    if (removed?.client.deletedAt && can(staff, 'clients')) {
+      redirect(`/removed/${removed.client.slug}`);
+    }
+    if (removed && !removed.client.deletedAt && mayRun) {
+      redirect(`/clients/${removed.client.slug}#removed-projects`);
+    }
+    notFound();
+  }
 
   const [transitions, facts, billable, org, lastList] = await Promise.all([
     transitionsFor(project),

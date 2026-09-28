@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
@@ -132,7 +132,18 @@ export default async function ClientPage({
     },
   });
 
-  if (!client) notFound();
+  if (!client) {
+    // A removed client's old address (a bookmark, an email, Back after
+    // removing) goes to where it can be brought back, for those who can.
+    const removed = mayManage
+      ? await db.client.findFirst({
+          where: { slug, deletedAt: { not: null } },
+          select: { slug: true },
+        })
+      : null;
+    if (removed) redirect(`/removed/${removed.slug}`);
+    notFound();
+  }
 
   const mayRunProjects = can(staff, 'projects');
   const [activity, removal, removedProjects, removedPeople] = await Promise.all([
@@ -379,7 +390,7 @@ export default async function ClientPage({
         </div>
 
         {removedProjects.length > 0 && (
-          <div className={table.frame}>
+          <div id="removed-projects" className={table.frame}>
             <div className={table.toolbar}>
               <div className={table.toolbarText}>
                 <h2 className={table.title}>Removed projects</h2>

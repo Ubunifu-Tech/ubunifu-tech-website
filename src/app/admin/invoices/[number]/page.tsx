@@ -31,7 +31,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: decodeURIComponent(number) };
+  return { title: number };
 }
 
 export default async function InvoicePage({ params }: { params: Promise<{ number: string }> }) {
@@ -42,7 +42,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
   const invoice = await db.invoice.findUnique({
     // Removed clients' invoices too: staff with billing can always read the
     // record, and every action on this page refuses a removed one anyway.
-    where: { number: decodeURIComponent(number) },
+    where: { number: number },
     select: {
       id: true,
       number: true,

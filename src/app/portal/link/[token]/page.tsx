@@ -28,8 +28,7 @@ export const metadata = { title: { absolute: 'Ubunifu Technologies' } };
  * the link is the permission, and it opens nothing else.
  */
 export default async function SharedLinkPage({ params }: { params: Promise<{ token: string }> }) {
-  const { token: raw } = await params;
-  const token = decodeURIComponent(raw);
+  const { token } = await params;
   // Read once, so every comparison on this render agrees with every other.
   const now = new Date();
   const [link, org] = await Promise.all([readSharedLink(token), getOrg()]);

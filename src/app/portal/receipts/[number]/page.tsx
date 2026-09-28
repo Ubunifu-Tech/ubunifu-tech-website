@@ -11,7 +11,7 @@ import sheet from '@/app/admin/receipts/Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: `Receipt ${decodeURIComponent(number)}` };
+  return { title: `Receipt ${number}` };
 }
 
 /**
@@ -28,7 +28,7 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
 
   const receipt = await db.receipt.findFirst({
     where: {
-      number: decodeURIComponent(number),
+      number: number,
       // Scoped in the query: another client's receipt simply does not match.
       payment: { invoice: { clientId: actor.clientId, ...liveInvoice } },
     },

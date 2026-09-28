@@ -61,7 +61,7 @@ const STEP_LABEL: Record<DocumentStep, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: decodeURIComponent(reference) };
+  return { title: reference };
 }
 
 export default async function DocumentPage({
@@ -80,7 +80,7 @@ export default async function DocumentPage({
     // A removed project's documents stay readable, a signed one above all:
     // it is the record of what was agreed. Nothing on a removed one can be
     // changed; every action here refuses it.
-    where: { reference: decodeURIComponent(reference) },
+    where: { reference: reference },
     select: {
       id: true,
       reference: true,

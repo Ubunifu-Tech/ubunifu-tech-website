@@ -12,7 +12,7 @@ import sheet from '../../../receipts/Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: decodeURIComponent(reference) };
+  return { title: reference };
 }
 
 /**
@@ -27,7 +27,7 @@ export default async function PrintDocument({ params }: { params: Promise<{ refe
   const [document, org] = await Promise.all([
     db.document.findUnique({
       // A removed project's documents still print: they are the record.
-      where: { reference: decodeURIComponent(reference) },
+      where: { reference: reference },
       select: {
         reference: true,
         title: true,

@@ -23,7 +23,7 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: `Invoice ${decodeURIComponent(number)}` };
+  return { title: `Invoice ${number}` };
 }
 
 /**
@@ -44,7 +44,7 @@ export default async function PortalInvoice({
 
   const invoice = await db.invoice.findFirst({
     where: {
-      number: decodeURIComponent(number),
+      number: number,
       clientId: actor.clientId,
       ...liveInvoice,
       ...sentToClient,

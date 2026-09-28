@@ -26,7 +26,7 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: decodeURIComponent(reference) };
+  return { title: reference };
 }
 
 /**
@@ -48,7 +48,7 @@ export default async function PortalDocument({
 
   const document = await db.document.findFirst({
     where: {
-      reference: decodeURIComponent(reference),
+      reference: reference,
       // Scoped here: another client's document, or one on a project that
       // has been removed, does not match at all.
       project: { clientId: actor.clientId, deletedAt: null },

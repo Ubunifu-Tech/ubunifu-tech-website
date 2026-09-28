@@ -20,7 +20,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: decodeURIComponent(reference) };
+  return { title: reference };
 }
 
 export default async function PortalRequest({
@@ -34,7 +34,7 @@ export default async function PortalRequest({
 
   const ticket = await db.ticket.findFirst({
     // Scoped in the query, so another client's reference does not match.
-    where: { reference: decodeURIComponent(reference), clientId: actor.clientId, ...liveTicket },
+    where: { reference: reference, clientId: actor.clientId, ...liveTicket },
     select: {
       id: true,
       reference: true,

@@ -11,7 +11,7 @@ import sheet from '../../../receipts/Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: `Invoice ${decodeURIComponent(number)}` };
+  return { title: `Invoice ${number}` };
 }
 
 /** The invoice exactly as the client gets it, ready to print or save. */
@@ -22,7 +22,7 @@ export default async function PrintInvoice({ params }: { params: Promise<{ numbe
   const [invoice, org] = await Promise.all([
     db.invoice.findUnique({
       // A removed client's invoice still prints: it is the record.
-      where: { number: decodeURIComponent(number) },
+      where: { number: number },
       select: INVOICE_SHEET_SELECT,
     }),
     getOrg(),

@@ -27,7 +27,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: decodeURIComponent(reference) };
+  return { title: reference };
 }
 
 export default async function TicketPage({
@@ -42,7 +42,7 @@ export default async function TicketPage({
 
   // A removed client's requests stay readable, like the rest of their record.
   const ticket = await db.ticket.findUnique({
-    where: { reference: decodeURIComponent(reference) },
+    where: { reference: reference },
     select: {
       id: true,
       reference: true,

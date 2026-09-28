@@ -11,7 +11,7 @@ import sheet from '../Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: `Receipt ${decodeURIComponent(number)}` };
+  return { title: `Receipt ${number}` };
 }
 
 /**
@@ -28,7 +28,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
 
   const receipt = await db.receipt.findUnique({
     // A removed client's receipts stay readable: they are the record.
-    where: { number: decodeURIComponent(number) },
+    where: { number: number },
     select: {
       id: true,
       number: true,

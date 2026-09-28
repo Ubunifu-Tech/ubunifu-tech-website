@@ -11,7 +11,7 @@ import sheet from '../../receipts/Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: `Refund ${decodeURIComponent(number)}` };
+  return { title: `Refund ${number}` };
 }
 
 /** A refund note, as the client receives it. */
@@ -22,7 +22,7 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
 
   const refund = await db.refund.findFirst({
     // A removed client's refund notes stay readable: they are the record.
-    where: { number: decodeURIComponent(number) },
+    where: { number: number },
     select: {
       id: true,
       number: true,

@@ -172,8 +172,14 @@
   padding: 0.625rem 0.875rem;
   font-size: var(--font-size-small);
   line-height: 1.6;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* What the visitor typed is shown as typed, line breaks and all. Replies are
+   formatted, so they keep only the plain fallback's line breaks. */
+.fromVisitor,
+.plainReply {
+  white-space: pre-wrap;
 }
 
 .fromUs {
@@ -263,6 +269,57 @@
   }
 }
 
+/* Where a new thread began, after an earlier one was showing. */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--border);
+}
+
+/* Ways to start, on an empty thread. */
+.starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.starter {
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid var(--border-hover);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.starter:hover {
+  border-color: var(--brand-deep);
+}
+
+.starter:focus-visible {
+  outline: 2px solid var(--brand-deep);
+  outline-offset: 2px;
+}
+
+.sent:focus,
+.handoffTitle:focus {
+  outline: none;
+}
+
 /* ── Composer ──────────────────────────────────── */
 
 .composer {
@@ -319,7 +376,7 @@
 }
 
 .send:focus-visible {
-  outline: 3px solid var(--brand-dim);
+  outline: 2px solid var(--brand-deep);
   outline-offset: 2px;
 }
 
@@ -399,6 +456,30 @@
   box-shadow: 0 0 0 3px var(--brand-dim);
 }
 
+.privacy {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  line-height: 1.5;
+}
+
+.privacy a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.copy {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .trap {
   position: absolute;
   left: -10000px;
@@ -457,6 +538,21 @@
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
+  }
+
+  /* In the portal the word stays: "Help" is what the pages tell clients to look for. */
+  .launcherPortal {
+    width: auto;
+    padding: 0 var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .launcherPortal .launcherLabel {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
   }
 
   .panel {

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import { ArrowLeft } from 'lucide-react';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { getProjectDiagram } from '@/content/project-visuals';
@@ -8,6 +8,21 @@ import type { BlogCover } from '@/content/blog-covers';
 import { formatDateLong } from '@/lib/date';
 import styles from '@/app/(site)/blog/[slug]/BlogSlug.module.css';
 import { displayHost } from '@/lib/url';
+
+
+/**
+ * Code blocks and tables can be wider than the column and scroll sideways on
+ * their own. data-lenis-prevent lets the wheel reach them past the page's
+ * smooth scrolling, which would otherwise take it.
+ */
+const ARTICLE_COMPONENTS: Components = {
+  pre: ({ children }) => <pre data-lenis-prevent>{children}</pre>,
+  table: ({ children }) => (
+    <div data-lenis-prevent>
+      <table>{children}</table>
+    </div>
+  ),
+};
 
 export type ArticleContent = {
   title: string;
@@ -95,7 +110,7 @@ export function BlogArticleView({
 
       <div className={`container ${styles.articleContainer}`}>
         <div className={styles.content}>
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+          <ReactMarkdown components={ARTICLE_COMPONENTS}>{post.content}</ReactMarkdown>
         </div>
 
         {post.writer && (post.writer.bio || post.writer.photo || post.writer.link) && (

@@ -13,6 +13,7 @@ import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
+import { ChatMarkdown } from '@/components/ChatMarkdown';
 
 export const metadata = { title: 'Enquiries' };
 
@@ -227,6 +228,9 @@ export default async function EnquiriesPage({
                     About
                   </th>
                   <th className={table.th} scope="col">
+                    Via
+                  </th>
+                  <th className={table.th} scope="col">
                     Message
                   </th>
                   <th className={table.th} scope="col">
@@ -246,7 +250,7 @@ export default async function EnquiriesPage({
               <tbody>
                 {enquiries.length === 0 ? (
                   <tr>
-                    <td className={table.emptyCell} colSpan={8}>
+                    <td className={table.emptyCell} colSpan={9}>
                       <p className={table.emptyTitle}>
                         {query
                           ? `No enquiries match “${query}” here.`
@@ -272,15 +276,11 @@ export default async function EnquiriesPage({
                           {enquiry.email}
                         </a>
                       </td>
-                      <td
-                        className={`${table.td} ${table.name}`}
-                        title={
-                          enquiry.source === 'website_assistant'
-                            ? 'Came in through the website assistant'
-                            : undefined
-                        }
-                      >
+                      <td className={`${table.td} ${table.name}`}>
                         <span className={table.clamp}>{enquiry.subject}</span>
+                      </td>
+                      <td className={`${table.td} ${table.muted}`}>
+                        {enquiry.source === 'website_assistant' ? 'Chat' : 'Form'}
                       </td>
                       <td className={table.td}>
                         <span className={table.clamp}>{enquiry.message}</span>
@@ -354,7 +354,9 @@ export default async function EnquiriesPage({
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>{expanded.name}</h2>
               <span className={forms.cardMeta}>
-                {expanded.subject} · {formatRelative(expanded.createdAt, now)}
+                {expanded.subject} ·{' '}
+                {expanded.source === 'website_assistant' ? 'from the chat · ' : ''}
+                {formatRelative(expanded.createdAt, now)}
               </span>
             </div>
             <p className={styles.quote}>{expanded.message}</p>
@@ -378,7 +380,14 @@ export default async function EnquiriesPage({
                         <p className={styles.messageWho}>
                           {message.role === 'assistant' ? 'Assistant' : expanded.name}
                         </p>
-                        <p className={styles.messageBody}>{message.content}</p>
+                        {message.role === 'assistant' ? (
+                          // Formatted as the visitor saw it, with links to the public site.
+                          <div className={styles.messageBody}>
+                            <ChatMarkdown text={message.content} variant="console" />
+                          </div>
+                        ) : (
+                          <p className={styles.messageBody}>{message.content}</p>
+                        )}
                       </li>
                     ))}
                 </ul>

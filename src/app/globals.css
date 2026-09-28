@@ -406,17 +406,6 @@ a {
   position: relative;
 }
 
-/* Display,
-
-heading,
-
-body: hierarchy comes from space and placement {
-  font-size: var(--font-size-heading);
-  font-weight: var(--font-weight-medium);
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-}
-
 /* ── Selection ────────────────────────────────── */
 
 ::selection {
@@ -441,53 +430,6 @@ body: hierarchy comes from space and placement {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(109, 63, 232, 0.35);
-}
-
-/* ── Signature graphics ───────────────────────────
- *
- * A small,
-
-reusable visual language used across the site:
- * for tactile depth,
-
-drifting aurora glows,
-
-a blueprint grid,
-
-and a
- * monospace "spec-sheet" label. Drop these in as aria-hidden overlays
- * inside a position:relative container.
- */
-
-/* Blueprint grid — quiet engineering substrate {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(31, 26, 54, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 26, 54, 0.045) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 8%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 8%, transparent 75%);
-}
-
-/* Drifting aurora glow — soft brand-coloured light {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  will-change: transform;
-  animation: auroraDrift 26s ease-in-out infinite;
-}
-
-/* Secondary label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  color: var(--text-tertiary);
 }
 
 @media (prefers-reduced-motion: reduce) {

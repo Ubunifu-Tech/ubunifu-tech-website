@@ -207,7 +207,11 @@ export default async function PostsPage({
                             : 'Nothing in this view.'}
                     </p>
                     <p className={table.emptyHint}>
-                      {query ? 'Try another view, or search for something else.' : 'New post starts one.'}
+                      {query
+                        ? 'Try another view, or search for something else.'
+                        : archived
+                          ? 'An archived draft shows here, ready to bring back.'
+                          : 'New post starts one.'}
                     </p>
                   </td>
                 </tr>

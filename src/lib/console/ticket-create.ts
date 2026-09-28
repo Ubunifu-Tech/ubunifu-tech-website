@@ -3,10 +3,10 @@ import { db } from '@/lib/db';
 import type { Prisma, TicketKind } from '@/generated/prisma/client';
 import { recordAudit, type ClientActor } from './auth';
 import { consoleEnv } from './env';
-import { sendConsoleEmail } from './mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
 import { retryOnConflict } from './conflict';
-import { TEAM_INBOX } from './alerts';
+import { alertTeam } from './alerts';
+import { TICKET_KIND_LABEL } from './tickets';
 
 /**
  * A client asking us for something, from the requests form or from the
@@ -67,16 +67,27 @@ export async function createTicket(input: {
     summary: `${ticket.reference}: ${subject}${input.via ? ` (from ${input.via})` : ''}`,
   });
 
-  // Our own alert. The request is already safe; this failing is our problem.
-  await sendConsoleEmail({
-    to: TEAM_INBOX,
+  // Our own alert, like the other client alerts: the project's owner is
+  // copied when their role can open requests, and a reply reaches the client.
+  // The request is already safe; this failing is our problem.
+  const owner = project
+    ? ((
+        await db.project.findUnique({
+          where: { id: project.id },
+          select: { owner: { select: { email: true, isActive: true, role: true } } },
+        })
+      )?.owner ?? null)
+    : null;
+  await alertTeam({
+    owner,
+    need: 'requests',
     subject: `[${ticket.reference}] ${subject}`,
     html: ticketRaisedEmail({
       reference: ticket.reference,
       clientName: actor.clientName,
       from: actor.name,
       fromEmail: actor.email,
-      kind,
+      label: TICKET_KIND_LABEL[kind] ?? kind,
       subject,
       body,
       projectName: project?.name ?? null,
@@ -85,6 +96,7 @@ export async function createTicket(input: {
     template: 'ticket_raised',
     entityType: 'Ticket',
     entityId: ticket.id,
+    replyTo: actor.email,
   });
 
   return ticket;

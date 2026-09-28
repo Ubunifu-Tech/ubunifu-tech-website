@@ -905,7 +905,8 @@ export function ticketRaisedEmail(input: {
   clientName: string;
   from: string;
   fromEmail: string;
-  kind: string;
+  /** What kind of request it is in words, or 'Reply'. */
+  label: string;
   subject: string;
   body: string;
   projectName: string | null;
@@ -925,7 +926,7 @@ export function ticketRaisedEmail(input: {
 
   const body = `
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">
-      ${escapeHtml(input.reference)} · ${escapeHtml(input.kind.replace(/_/g, ' '))}${
+      ${escapeHtml(input.reference)} · ${escapeHtml(input.label)}${
         input.projectName ? ` · ${escapeHtml(input.projectName)}` : ''
       }
     </p>

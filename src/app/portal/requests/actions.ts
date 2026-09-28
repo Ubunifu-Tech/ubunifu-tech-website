@@ -6,10 +6,9 @@ import { db } from '@/lib/db';
 import { TicketKind } from '@/generated/prisma/client';
 import { createTicket } from '@/lib/console/ticket-create';
 import { allow } from '@/lib/console/rate-limit';
-import { TEAM_INBOX } from '@/lib/console/alerts';
+import { alertTeam } from '@/lib/console/alerts';
 import { CLIENT_SIGNED_OUT, clientForAction, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
-import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
 import { formText } from '@/lib/console/form';
 import { liveTicket } from '@/lib/console/live';
@@ -105,7 +104,15 @@ export async function replyToRequest(
 
   const ticket = await db.ticket.findFirst({
     where: { id: ticketId, clientId: actor.clientId, ...liveTicket },
-    select: { id: true, reference: true, subject: true, status: true },
+    select: {
+      id: true,
+      reference: true,
+      subject: true,
+      status: true,
+      project: {
+        select: { name: true, owner: { select: { email: true, isActive: true, role: true } } },
+      },
+    },
   });
   if (!ticket) return { status: 'error', message: 'That request is not one of yours.' };
   if (ticket.status === 'closed') {
@@ -144,23 +151,25 @@ export async function replyToRequest(
     summary: `${ticket.reference}: ${ticket.subject}`,
   });
 
-  await sendConsoleEmail({
-    to: TEAM_INBOX,
+  await alertTeam({
+    owner: ticket.project?.owner ?? null,
+    need: 'requests',
     subject: `[${ticket.reference}] ${actor.clientName} replied`,
     html: ticketRaisedEmail({
       reference: ticket.reference,
       clientName: actor.clientName,
       from: actor.name,
       fromEmail: actor.email,
-      kind: 'reply',
+      label: 'Reply',
       subject: ticket.subject,
       body,
-      projectName: null,
+      projectName: ticket.project?.name ?? null,
       url: `${consoleEnv.adminOrigin}/requests/${ticket.reference}`,
     }),
     template: 'ticket_reply',
     entityType: 'Ticket',
     entityId: ticket.id,
+    replyTo: actor.email,
   });
 
   revalidatePath(`/portal/requests/${ticket.reference}`);

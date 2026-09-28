@@ -78,8 +78,6 @@ export async function generateMetadata({
       images: [
         {
           url: coverUrl,
-          width: 1672,
-          height: 941,
           alt: cover.alt,
         },
       ],
@@ -161,8 +159,6 @@ export default async function BlogPostPage({
     image: {
       '@type': 'ImageObject',
       url: coverUrl,
-      width: 1672,
-      height: 941,
       caption: cover.alt,
     },
     author: {

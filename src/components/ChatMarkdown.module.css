@@ -1,0 +1,45 @@
+/* An assistant's reply. It inherits the size, colour and line height of the
+   bubble or panel it sits in; this only spaces the blocks and styles links.
+   Markdown owns the paragraphs, so the pre-wrap a plain-text bubble uses is
+   switched off here. */
+.markdown {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin: 0;
+}
+
+.markdown > * + * {
+  margin-top: var(--space-2);
+}
+
+/* What is left of a paragraph that only held a dropped image. */
+.markdown p:empty {
+  display: none;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.25rem;
+}
+
+.markdown li + li,
+.markdown li > p + p {
+  margin-top: var(--space-1);
+}
+
+.markdown a {
+  color: var(--brand-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* One phrase stands out without shouting; the global 600 reads as heavy in a
+   bubble this size. */
+.markdown strong {
+  font-weight: var(--font-weight-medium);
+}

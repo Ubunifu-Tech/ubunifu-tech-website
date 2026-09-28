@@ -14,7 +14,8 @@ import {
 import { revokeAllSessions, revokeSessionsFor } from '@/lib/console/session';
 import { EMAILED_LINKS } from '@/lib/console/client-links';
 import { namesMatch, type RemovalState } from '@/lib/console/confirm-name';
-import { withdrawOpenSignatures } from '@/lib/console/removal';
+import { owingInvoices, owingRefusal, withdrawOpenSignatures } from '@/lib/console/removal';
+import { liveInvoice } from '@/lib/console/live';
 import {
   addContact,
   invitePerson,
@@ -305,6 +306,12 @@ export async function removeClient(
   const removed = await db.$transaction(async (tx) => {
     const now = new Date();
 
+    await tx.$queryRaw`SELECT id FROM "Client" WHERE id = ${client.id} FOR UPDATE`;
+    // Checked again here, not only on the confirmation, so an invoice sent
+    // after the page was opened still stops it.
+    const owing = await owingInvoices(tx, { clientId: client.id, ...liveInvoice });
+    if (owing.length > 0) return { owing };
+
     // Conditional, so two people removing the same client at once cannot
     // both go on to record it.
     const claimed = await tx.client.updateMany({
@@ -350,6 +357,12 @@ export async function removeClient(
   });
 
   if (!removed) return { status: 'error', message: 'That client no longer exists.' };
+  if (removed.owing) {
+    return {
+      status: 'error',
+      message: owingRefusal(removed.owing, 'client', can(staff, 'invoices')) ?? undefined,
+    };
+  }
 
   const projectCount = removed.projectIds.length;
   const documentCount = removed.withdrawn.length;

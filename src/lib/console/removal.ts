@@ -11,7 +11,9 @@ import { formatMoney } from './money';
  * signatures and the activity record remain true. What removal does change is
  * anything still in motion. A document out for signature is withdrawn, the
  * same way withdrawDocument does it for one, so nobody signs something for
- * work that is no longer here.
+ * work that is no longer here. An issued invoice still owed is the one thing
+ * that stops a removal: it would vanish from the client's portal and from
+ * what we are owed.
  */
 
 /** Waiting on the client: the request and document states a withdrawal undoes. */
@@ -71,32 +73,92 @@ export type RemovalCounts = {
   signed: number;
   /** Invoices, which stay on record. */
   invoices: number;
-  /** Invoices with money still owing, which stop counting in what we are owed. */
-  unpaid: number;
-  /** What those still owe, per currency, in words: "TZS 350,000 + US$75.00". */
-  unpaidOwed: string;
+  /** Issued invoices with money still owing, which stop the removal. */
+  owing: OwingInvoice[];
+};
+
+export type OwingInvoice = {
+  number: string;
+  currency: string;
+  /** What is still owed on it. */
+  leftMinor: number;
+  /** Money was paid and not refunded, so it cannot be voided as it stands. */
+  partPaid: boolean;
 };
 
 const OWING = ['sent', 'part_paid', 'overdue'] as const;
 
-/** Unpaid invoices and what they still owe, per currency. */
-async function unpaidIn(where: Prisma.InvoiceWhereInput) {
-  const invoices = await db.invoice.findMany({
+/**
+ * Issued invoices with money still owing. Removing their project or client
+ * would take them out of the client's portal and out of what we are owed,
+ * and hide Record a payment, so a removal is refused while any are left
+ * (decision 1). The block lives here, not in transitions.ts: it stops a
+ * removal, never a stage move.
+ */
+export async function owingInvoices(
+  client: Prisma.TransactionClient | typeof db,
+  where: Prisma.InvoiceWhereInput,
+): Promise<OwingInvoice[]> {
+  const invoices = await client.invoice.findMany({
     where: { AND: [where, { status: { in: [...OWING] } }] },
-    select: { totalMinor: true, paidMinor: true, currency: true },
+    orderBy: { number: 'asc' },
+    select: { number: true, totalMinor: true, paidMinor: true, refundedMinor: true, currency: true },
   });
-  const owed = new Map<string, number>();
-  let unpaid = 0;
-  for (const invoice of invoices) {
-    const left = invoice.totalMinor - invoice.paidMinor;
-    if (left <= 0) continue;
-    unpaid += 1;
-    owed.set(invoice.currency, (owed.get(invoice.currency) ?? 0) + left);
+  return invoices
+    .filter((invoice) => invoice.totalMinor > invoice.paidMinor)
+    .map((invoice) => ({
+      number: invoice.number,
+      currency: invoice.currency,
+      leftMinor: invoice.totalMinor - invoice.paidMinor,
+      partPaid: invoice.paidMinor - invoice.refundedMinor > 0,
+    }));
+}
+
+/** "INV-1", "INV-1 and INV-2", "INV-1, INV-2 and INV-3". */
+function inList(items: string[]): string {
+  return items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+}
+
+/**
+ * Why a removal cannot go ahead, or null when it can. The same sentence on
+ * the confirmation and from the action. Invoice numbers and amounts are
+ * named only to someone who handles invoices; anyone else is told who can.
+ */
+export function owingRefusal(
+  owing: OwingInvoice[],
+  noun: 'project' | 'client',
+  canSeeInvoices: boolean,
+): string | null {
+  if (owing.length === 0) return null;
+  const one = owing.length === 1;
+  if (!canSeeInvoices) {
+    return one
+      ? `This ${noun} has an unpaid invoice. Someone who handles invoices needs to settle or void it before it can be removed.`
+      : `This ${noun} has unpaid invoices. Someone who handles invoices needs to settle or void them before it can be removed.`;
   }
-  return {
-    unpaid,
-    unpaidOwed: [...owed].map(([currency, amount]) => formatMoney(amount, currency)).join(' + '),
-  };
+
+  const owed = new Map<string, number>();
+  for (const invoice of owing) {
+    owed.set(invoice.currency, (owed.get(invoice.currency) ?? 0) + invoice.leftMinor);
+  }
+  const amount = [...owed].map(([currency, minor]) => formatMoney(minor, currency)).join(' + ');
+  const numbers = inList(owing.map((invoice) => invoice.number));
+  const sentences = [
+    `${numbers} still ${one ? 'has' : 'have'} ${amount} owing.`,
+    one
+      ? `Record the payment, or void the invoice, before removing this ${noun}.`
+      : `Record the payments, or void the invoices, before removing this ${noun}.`,
+  ];
+  // Voiding is refused while money paid on it is still held.
+  const partPaid = owing.filter((invoice) => invoice.partPaid).map((invoice) => invoice.number);
+  if (partPaid.length > 0) {
+    sentences.push(
+      one
+        ? 'Refund what was paid, then void it.'
+        : `For ${inList(partPaid)}, refund what was paid, then void ${partPaid.length === 1 ? 'it' : 'them'}.`,
+    );
+  }
+  return sentences.join(' ');
 }
 
 export type ClientRemovalCounts = RemovalCounts & {
@@ -116,9 +178,9 @@ export async function clientRemovalCounts(clientId: string): Promise<ClientRemov
     }),
     db.document.count({ where: { ...onLiveProjects, status: 'signed' } }),
     db.invoice.count({ where: { clientId, ...liveInvoice } }),
-    unpaidIn({ clientId, ...liveInvoice }),
+    owingInvoices(db, { clientId, ...liveInvoice }),
   ]);
-  return { projects, people, waiting, signed, invoices, ...owing };
+  return { projects, people, waiting, signed, invoices, owing };
 }
 
 /** What removing this project will touch, for the confirmation to say. */
@@ -129,7 +191,7 @@ export async function projectRemovalCounts(projectId: string): Promise<RemovalCo
     }),
     db.document.count({ where: { projectId, status: 'signed' } }),
     db.invoice.count({ where: { projectId } }),
-    unpaidIn({ projectId }),
+    owingInvoices(db, { projectId }),
   ]);
-  return { waiting, signed, invoices, ...owing };
+  return { waiting, signed, invoices, owing };
 }

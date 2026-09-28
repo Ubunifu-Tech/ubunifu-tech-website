@@ -8,17 +8,22 @@ import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
 import { namesMatch, type RemovalState } from '@/lib/console/confirm-name';
 import {
+  owingInvoices,
+  owingRefusal,
   projectRemovalCounts,
   withdrawOpenSignatures,
   type RemovalCounts,
 } from '@/lib/console/removal';
+
+/** What the confirmation says: the numbers, and why it cannot go ahead when it cannot. */
+export type ProjectRemovalLookup = Omit<RemovalCounts, 'owing'> & { blocked: string | null };
 
 /**
  * What removing a project will touch, looked up when somebody first presses
  * Remove. A server action rather than a prop so the control can be placed on
  * the project page with nothing but the project's id and name.
  */
-export async function describeProjectRemoval(projectId: string): Promise<RemovalCounts | null> {
+export async function describeProjectRemoval(projectId: string): Promise<ProjectRemovalLookup | null> {
   const staff = await requireStaff();
   if (!can(staff, 'projects')) return null;
 
@@ -27,9 +32,10 @@ export async function describeProjectRemoval(projectId: string): Promise<Removal
     select: { id: true },
   });
   if (!project) return null;
-  const counts = await projectRemovalCounts(project.id);
-  // What is owed is named only to those who handle invoices.
-  return can(staff, 'invoices') ? counts : { ...counts, unpaidOwed: '' };
+  // The owing invoices stay here: their numbers and amounts reach the page
+  // only inside the sentence, and only for those who handle invoices.
+  const { owing, ...counts } = await projectRemovalCounts(project.id);
+  return { ...counts, blocked: owingRefusal(owing, 'project', can(staff, 'invoices')) };
 }
 
 /**
@@ -54,17 +60,29 @@ export async function removeProject(
     return { status: 'error', message: `Type ${project.name} to confirm.` };
   }
 
-  const withdrawn = await db.$transaction(async (tx) => {
+  const outcome = await db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Project" WHERE id = ${project.id} FOR UPDATE`;
+    // Checked again here, not only on the confirmation, so an invoice sent
+    // after the page was opened still stops it.
+    const owing = await owingInvoices(tx, { projectId: project.id });
+    if (owing.length > 0) return { owing };
     // Conditional, so two people removing it at once cannot both record it.
     const claimed = await tx.project.updateMany({
       where: { id: project.id, deletedAt: null },
       data: { deletedAt: new Date() },
     });
     if (claimed.count === 0) return null;
-    return withdrawOpenSignatures(tx, [project.id]);
+    return { withdrawn: await withdrawOpenSignatures(tx, [project.id]) };
   });
 
-  if (!withdrawn) return { status: 'error', message: 'That project no longer exists.' };
+  if (!outcome) return { status: 'error', message: 'That project no longer exists.' };
+  if (outcome.owing) {
+    return {
+      status: 'error',
+      message: owingRefusal(outcome.owing, 'project', can(staff, 'invoices')) ?? undefined,
+    };
+  }
+  const { withdrawn } = outcome;
 
   await recordAudit({
     actorType: 'staff',

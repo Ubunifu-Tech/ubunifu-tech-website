@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  ConfirmRemoval,
-  onRecordLine,
-  unpaidLine,
-  withdrawnLine,
-} from '@/components/console/ConfirmRemoval';
+import { ConfirmRemoval, onRecordLine, withdrawnLine } from '@/components/console/ConfirmRemoval';
 import type { ClientRemovalCounts } from '@/lib/console/removal';
 import { removeClient } from '../actions';
 
@@ -14,10 +9,13 @@ export function RemoveClient({
   clientId,
   clientName,
   counts,
+  blocked,
 }: {
   clientId: string;
   clientName: string;
-  counts: ClientRemovalCounts;
+  counts: Omit<ClientRemovalCounts, 'owing'>;
+  /** Why it cannot be removed yet, when it cannot. */
+  blocked: string | null;
 }) {
   const consequences = [
     counts.projects > 0
@@ -29,7 +27,6 @@ export function RemoveClient({
       ? `${counts.people === 1 ? '1 person loses' : `${counts.people} people lose`} access to the portal.`
       : null,
     withdrawnLine(counts.waiting),
-    unpaidLine(counts.unpaid, counts.unpaidOwed),
     onRecordLine('Their', counts.invoices, counts.signed),
   ].filter((line): line is string => line !== null);
 
@@ -40,6 +37,7 @@ export function RemoveClient({
       action={removeClient}
       hidden={{ clientId }}
       consequences={consequences}
+      blocked={blocked}
     />
   );
 }

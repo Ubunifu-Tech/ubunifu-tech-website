@@ -7,7 +7,7 @@ import { ENQUIRY_STATUS_LABEL } from '@/lib/console/enquiry-labels';
 import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
-import { clientRemovalCounts } from '@/lib/console/removal';
+import { clientRemovalCounts, owingRefusal } from '@/lib/console/removal';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { AddPerson, PersonMenu } from '@/components/console/People';
 import {
@@ -138,10 +138,12 @@ export default async function ClientPage({
   const [activity, removal, removedProjects, removedPeople] = await Promise.all([
     activityForClient(staff, client.id),
     mayManage
-      ? clientRemovalCounts(client.id).then((counts) =>
-          // What is owed is named only to those who handle invoices.
-          can(staff, 'invoices') ? counts : { ...counts, unpaidOwed: '' },
-        )
+      ? clientRemovalCounts(client.id).then(({ owing, ...counts }) => ({
+          counts,
+          // Invoice numbers and amounts are named only to those who handle
+          // invoices, and only inside this sentence.
+          blocked: owingRefusal(owing, 'client', can(staff, 'invoices')),
+        }))
       : null,
     mayRunProjects
       ? db.project.findMany({
@@ -625,7 +627,12 @@ export default async function ClientPage({
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Remove this client</h2>
             </div>
-            <RemoveClient clientId={client.id} clientName={client.name} counts={removal} />
+            <RemoveClient
+              clientId={client.id}
+              clientName={client.name}
+              counts={removal.counts}
+              blocked={removal.blocked}
+            />
           </section>
         )}
       </div>

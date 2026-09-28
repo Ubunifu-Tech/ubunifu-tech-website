@@ -1,14 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  ConfirmRemoval,
-  onRecordLine,
-  unpaidLine,
-  withdrawnLine,
-} from '@/components/console/ConfirmRemoval';
-import type { RemovalCounts } from '@/lib/console/removal';
-import { describeProjectRemoval, removeProject } from './remove-actions';
+import { ConfirmRemoval, onRecordLine, withdrawnLine } from '@/components/console/ConfirmRemoval';
+import { describeProjectRemoval, removeProject, type ProjectRemovalLookup } from './remove-actions';
 
 /**
  * Removing a project. Needs only its id and name, so it can sit anywhere on
@@ -17,7 +11,7 @@ import { describeProjectRemoval, removeProject } from './remove-actions';
 export function RemoveProject({ projectId, projectName }: { projectId: string; projectName: string }) {
   // Undefined until looked up; null when the lookup gave nothing back, in
   // which case the lines are said without numbers.
-  const [counts, setCounts] = useState<RemovalCounts | null | undefined>(undefined);
+  const [counts, setCounts] = useState<ProjectRemovalLookup | null | undefined>(undefined);
 
   const lookUp = () => {
     setCounts(undefined);
@@ -32,7 +26,6 @@ export function RemoveProject({ projectId, projectName }: { projectId: string; p
           counts
             ? withdrawnLine(counts.waiting)
             : 'Anything waiting for a signature is withdrawn.',
-          counts ? unpaidLine(counts.unpaid, counts.unpaidOwed) : null,
           counts
             ? onRecordLine('Its', counts.invoices, counts.signed)
             : 'Its invoices and signed documents stay on record. You can bring the project back from its client’s page.',
@@ -45,6 +38,7 @@ export function RemoveProject({ projectId, projectName }: { projectId: string; p
       action={removeProject}
       hidden={{ projectId }}
       consequences={consequences}
+      blocked={counts?.blocked}
       onOpen={lookUp}
     />
   );

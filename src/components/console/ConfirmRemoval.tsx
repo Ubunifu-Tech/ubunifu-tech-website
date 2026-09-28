@@ -23,6 +23,7 @@ export function ConfirmRemoval({
   action,
   hidden,
   consequences,
+  blocked,
   onOpen,
 }: {
   /** What has to be typed to confirm. */
@@ -32,6 +33,8 @@ export function ConfirmRemoval({
   hidden: Record<string, string>;
   /** One sentence each. Null while they are still being looked up. */
   consequences: string[] | null;
+  /** Why it cannot be removed yet, when it cannot. Nothing is offered but Keep. */
+  blocked?: string | null;
   /** Called on the first press, for a caller that looks the numbers up then. */
   onOpen?: () => void;
 }) {
@@ -51,6 +54,26 @@ export function ConfirmRemoval({
       >
         Remove {noun}
       </button>
+    );
+  }
+
+  const close = () => {
+    setOpen(false);
+    setTyped('');
+  };
+
+  if (consequences !== null && blocked) {
+    return (
+      <div className={styles.confirm}>
+        <div className={styles.summary}>
+          <Callout kind="warn">{blocked}</Callout>
+        </div>
+        <div className={styles.actions}>
+          <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={close}>
+            Keep
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -96,10 +119,7 @@ export function ConfirmRemoval({
           type="button"
           className={`${forms.button} ${forms.quiet}`}
           disabled={pending}
-          onClick={() => {
-            setOpen(false);
-            setTyped('');
-          }}
+          onClick={close}
         >
           Keep
         </button>
@@ -149,16 +169,4 @@ export function onRecordLine(owner: 'Their' | 'Its', invoices: number, signed: n
   if (parts.length === 0) return `${owner} history stays on record. ${place}`;
   const single = parts.length === 1 && invoices + signed === 1;
   return `${owner} ${parts.join(' and ')} ${single ? 'stays' : 'stay'} on record. ${place}`;
-}
-
-/**
- * Money still owing, which stops counting in what we are owed. The amount is
- * left out (empty) for someone who does not handle invoices.
- */
-export function unpaidLine(unpaid: number, owed: string): string | null {
-  if (unpaid === 0) return null;
-  const owing = owed ? ` with ${owed} owing` : '';
-  return unpaid === 1
-    ? `An unpaid invoice${owing} stops counting in what we are owed.`
-    : `${unpaid} unpaid invoices${owing} stop counting in what we are owed.`;
 }

@@ -2,6 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { HORIZON_DAYS, INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
+import { isPastDay } from './money';
 
 /**
  * Invoices, payments and receipts.
@@ -130,7 +131,7 @@ export async function recomputeInvoice(
     status = 'paid';
   } else if (paidMinor > 0) {
     status = 'part_paid';
-  } else if (invoice.dueAt && invoice.dueAt.getTime() < Date.now()) {
+  } else if (isPastDay(invoice.dueAt, new Date())) {
     status = 'overdue';
   } else {
     status = 'sent';

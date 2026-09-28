@@ -27,9 +27,11 @@ import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import {
+  daysBetween,
   formatMoney,
   formatRelative,
   formatShortDate,
+  isPastDay,
   toDateInputValue,
   todayInput,
 } from '@/lib/console/money';
@@ -468,15 +470,13 @@ export default async function ProjectPage({
         (invoice.status === 'sent' ||
           invoice.status === 'part_paid' ||
           invoice.status === 'overdue') &&
-        invoice.dueAt !== null &&
-        invoice.dueAt < now,
+        isPastDay(invoice.dueAt, now),
     )
     .reduce((total, invoice) => total + Math.max(0, invoice.totalMinor - invoice.paidMinor), 0);
 
   const delivered = ['launched', 'handover', 'closed', 'cancelled'].includes(project.status);
-  const daysToTarget = project.targetDate
-    ? Math.ceil((project.targetDate.getTime() - now.getTime()) / 86_400_000)
-    : null;
+  // Counted in Tanzanian days, so 'Today' holds for the whole target day.
+  const daysToTarget = project.targetDate ? daysBetween(now, project.targetDate) : null;
   const late = !delivered && daysToTarget !== null && daysToTarget < 0;
   const targetNote =
     daysToTarget === null

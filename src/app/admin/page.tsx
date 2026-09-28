@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatRelative, formatShortDate, isPastDay } from '@/lib/console/money';
 import { recentActivity } from '@/lib/console/activity';
 import { liveEnquiry, liveInvoice, renewingLine } from '@/lib/console/live';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
@@ -180,7 +180,7 @@ export default async function AdminHome() {
   for (const invoice of unpaidInvoices) {
     const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
     owedByCurrency.set(invoice.currency, (owedByCurrency.get(invoice.currency) ?? 0) + owed);
-    if (owed > 0 && invoice.dueAt && invoice.dueAt < now) {
+    if (owed > 0 && isPastDay(invoice.dueAt, now)) {
       overdueByCurrency.set(invoice.currency, (overdueByCurrency.get(invoice.currency) ?? 0) + owed);
       overdueCount += 1;
     }
@@ -259,7 +259,7 @@ export default async function AdminHome() {
         };
       }),
     ...(seesMoney ? unpaidInvoices : [])
-      .filter((invoice) => invoice.dueAt !== null && invoice.dueAt.getTime() < now.getTime())
+      .filter((invoice) => isPastDay(invoice.dueAt, now))
       .slice(0, 10)
       .map((invoice) => ({
         id: `i-${invoice.id}`,
@@ -452,7 +452,7 @@ export default async function AdminHome() {
             ) : (
               <ul className={styles.glance}>
                 {myTasks.map((task) => {
-                  const late = task.dueAt !== null && task.dueAt < now;
+                  const late = isPastDay(task.dueAt, now);
                   return (
                     <li key={task.id}>
                       <Link href={`/projects/${task.phase.project.slug}?tab=plan`}>

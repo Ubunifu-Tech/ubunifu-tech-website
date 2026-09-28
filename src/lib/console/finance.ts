@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { CostCategory, ServiceLine } from '@/generated/prisma/client';
 import { countedPayment, liveInvoice, renewingLine } from './live';
-import { businessDay, formatMoney, minorUnitScale } from './money';
+import { businessDay, daysBetween, formatMoney, minorUnitScale } from './money';
 import { INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 
 /**
@@ -499,7 +499,8 @@ export async function comingIn(now: Date) {
         currency: invoice.currency,
         outstandingMinor,
         dueAt: invoice.dueAt,
-        daysLate: invoice.dueAt ? Math.floor((now.getTime() - invoice.dueAt.getTime()) / DAY) : 0,
+        // Whole days on Tanzania's calendar: due today is 0, due yesterday is 1.
+        daysLate: invoice.dueAt ? daysBetween(invoice.dueAt, now) : 0,
       },
     ];
   });
@@ -550,9 +551,7 @@ export async function comingIn(now: Date) {
     lateMore: bucket((invoice) => invoice.daysLate > 60),
     dueSoon: bucket(
       (invoice) =>
-        invoice.dueAt !== null &&
-        invoice.daysLate <= 0 &&
-        invoice.dueAt.getTime() <= now.getTime() + 30 * DAY,
+        invoice.dueAt !== null && invoice.daysLate <= 0 && invoice.daysLate >= -30,
     ),
     renewals: { count: renewals.length, byCurrency: renewalsDue },
     agreed,

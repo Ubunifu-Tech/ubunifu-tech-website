@@ -8,6 +8,8 @@
  * here; anything that touches the database stays there.
  */
 
+import { isPastDay } from './money';
+
 export const PAYMENT_METHODS = [
   { value: 'bank_transfer', label: 'Bank transfer' },
   { value: 'mobile_money', label: 'Mobile money' },
@@ -28,8 +30,7 @@ export function invoiceStanding(
   const owing = invoice.status === 'sent' || invoice.status === 'part_paid';
   if (
     owing &&
-    invoice.dueAt !== null &&
-    invoice.dueAt.getTime() < now.getTime() &&
+    isPastDay(invoice.dueAt, now) &&
     invoice.paidMinor < invoice.totalMinor
   ) {
     return 'overdue';

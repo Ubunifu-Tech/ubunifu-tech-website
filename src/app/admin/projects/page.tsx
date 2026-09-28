@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
 import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, isPastDay } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
 import { waitingOnClient } from '@/lib/console/live';
 import { Board, type BoardCard } from './Board';
@@ -178,8 +178,7 @@ export default async function ProjectsPage({
                   const finished = ['launched', 'handover', 'closed', 'cancelled'].includes(
                     project.status,
                   );
-                  const late =
-                    !finished && project.targetDate !== null && project.targetDate < now;
+                  const late = !finished && isPastDay(project.targetDate, now);
 
                   return (
                     <tr key={project.id} className={table.tr}>
@@ -321,7 +320,7 @@ async function BoardView({ canRun, seesValue }: { canRun: boolean; seesValue: bo
         client: project.client.name,
         owner: project.owner?.name ?? null,
         target: project.targetDate ? formatShortDate(project.targetDate) : null,
-        overdue: !finished && project.targetDate !== null && project.targetDate < now,
+        overdue: !finished && isPastDay(project.targetDate, now),
         done: deliverables.filter((deliverable) => deliverable.isComplete).length,
         total: deliverables.length,
         waitingOn: project.assetRequests.length,

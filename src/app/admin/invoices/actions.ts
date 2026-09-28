@@ -21,7 +21,7 @@ import {
   recomputeInvoice,
 } from '@/lib/console/billing';
 import { markRenewalInvoiced, periodLabel, RenewalAlreadyBilled } from '@/lib/console/renewals';
-import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
+import { formatMoney, isPastDay, parseDateInput, parseMoney } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
 
@@ -518,7 +518,7 @@ export async function recordEarlyPayment(
   const onTerms = await dueOnTerms();
   const feesDue = lines
     .map((line) => line.dueAt)
-    .filter((due): due is Date => due !== null && due.getTime() > Date.now())
+    .filter((due): due is Date => due !== null && !isPastDay(due, new Date()))
     .sort((a, b) => b.getTime() - a.getTime())[0];
   const dueAt = read.amountMinor < totalMinor ? (feesDue ?? onTerms) : read.receivedAt;
 
@@ -678,7 +678,7 @@ export async function recordPayment(
             data: {
               status: 'sent',
               issuedAt: fresh.issuedAt ?? new Date(),
-              ...(leftOver && (!current.dueAt || current.dueAt.getTime() < Date.now())
+              ...(leftOver && (!current.dueAt || isPastDay(current.dueAt, new Date()))
                 ? { dueAt: onTerms }
                 : {}),
             },

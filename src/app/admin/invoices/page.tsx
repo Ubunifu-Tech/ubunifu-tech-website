@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate, todayInput } from '@/lib/console/money';
+import { formatMoney, formatShortDate, isPastDay, todayInput } from '@/lib/console/money';
 import { countedPayment, liveInvoice } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
@@ -128,7 +128,7 @@ export default async function InvoicesPage({
   for (const invoice of open) {
     const left = Math.max(0, invoice.totalMinor - invoice.paidMinor);
     addTo(owed, invoice.currency, left);
-    if (left > 0 && invoice.dueAt && invoice.dueAt < today) {
+    if (left > 0 && isPastDay(invoice.dueAt, today)) {
       addTo(overdue, invoice.currency, left);
       overdueCount += 1;
     }
@@ -258,10 +258,7 @@ export default async function InvoicesPage({
                 invoices.map((invoice) => {
                   const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
                   const late =
-                    invoice.dueAt !== null &&
-                    owed > 0 &&
-                    invoice.status !== 'draft' &&
-                    invoice.dueAt.getTime() < today.getTime();
+                    owed > 0 && invoice.status !== 'draft' && isPastDay(invoice.dueAt, today);
 
                   return (
                     <tr key={invoice.id} className={table.tr}>

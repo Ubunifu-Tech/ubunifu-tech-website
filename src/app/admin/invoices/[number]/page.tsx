@@ -5,7 +5,14 @@ import { requirePermission } from '@/lib/console/auth';
 import { Callout } from '@/components/console/Callout';
 import { activityFor } from '@/lib/console/activity';
 import { INVOICE_STATUS_LABEL, invoiceStanding, PAYMENT_METHODS } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
+import {
+  formatMoney,
+  formatShortDate,
+  isPastDay,
+  moneyInput,
+  toDateInputValue,
+  todayInput,
+} from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
   DraftInvoiceDetails,
@@ -125,8 +132,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
   const pastDue =
     invoice.status !== 'draft' &&
     invoice.status !== 'void' &&
-    invoice.dueAt !== null &&
-    invoice.dueAt < new Date();
+    isPastDay(invoice.dueAt, new Date());
   const methodLabel = (value: string) =>
     PAYMENT_METHODS.find((method) => method.value === value)?.label ?? value;
   const refunds = invoice.payments

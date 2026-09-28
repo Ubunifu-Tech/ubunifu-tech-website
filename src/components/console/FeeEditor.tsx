@@ -115,9 +115,13 @@ export function FeeEditor({
                     {fee.status !== 'planned' && fee.status !== 'active' ? ` · ${FEE_STATUS_LABEL[fee.status]}` : ''}
                   </span>
                 </div>
-                <span className={`${styles.amount} ${fee.amountMinor === 0 ? styles.unpriced : ''}`}>
+                <span
+                  className={`${styles.amount} ${fee.amountMinor === 0 && fee.billingKind !== 'usage' ? styles.unpriced : ''}`}
+                >
                   {fee.amountMinor === 0
-                    ? 'No price yet'
+                    ? fee.billingKind === 'usage'
+                      ? 'Billed as used'
+                      : 'No price yet'
                     : `${fee.quantity > 1 ? `${fee.quantity} × ` : ''}${formatMoney(fee.amountMinor, currency)}${BILLING[fee.billingKind].per}`}
                 </span>
                 {readOnly ? null : removing === fee.id ? (
@@ -328,6 +332,9 @@ function FeeForm({
                 {currency}
               </span>
             </span>
+            {billingKind === 'usage' && (
+              <p className={forms.hint}>Leave it empty to enter the amount each time you invoice.</p>
+            )}
           </div>
           <div className={forms.field}>
             <label className={forms.label} htmlFor="fee-quantity">

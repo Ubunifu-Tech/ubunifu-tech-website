@@ -178,6 +178,10 @@ export async function recomputeInvoice(
  *   interval, for ever. It is offered as a PERIOD, from RenewalEvent, and
  *   billing one marks that period and moves the line on to the next. Treating
  *   it like a one-off is what made a renewal billable exactly once.
+ *
+ *   A USAGE line is billed for what was used, which only the provider's bill
+ *   says. It is always offered, never used up, and whoever raises the invoice
+ *   types this time's amount; its price, if it has one, is only a starting point.
  */
 export type Billable = {
   /** What the form posts. Carries which period, when there is one. */
@@ -193,6 +197,8 @@ export type Billable = {
   periodStart: Date | null;
   periodEnd: Date | null;
   dueAt: Date | null;
+  /** Billed by usage: the amount is typed each time it is invoiced. */
+  usage: boolean;
 };
 
 export async function billableLines(
@@ -255,8 +261,27 @@ export async function billableLines(
           periodStart: renewal.periodStart,
           periodEnd: renewal.periodEnd,
           dueAt: renewal.dueAt,
+          usage: false,
         });
       }
+      continue;
+    }
+
+    if (line.billingKind === 'usage') {
+      billable.push({
+        key: `usage:${line.id}`,
+        lineItemId: line.id,
+        renewalEventId: null,
+        label: line.label,
+        terms: line.terms,
+        amountMinor: line.amountMinor * line.quantity,
+        currency: line.currency,
+        billingKind: line.billingKind,
+        periodStart: null,
+        periodEnd: null,
+        dueAt: null,
+        usage: true,
+      });
       continue;
     }
 
@@ -279,6 +304,7 @@ export async function billableLines(
       periodStart: null,
       periodEnd: null,
       dueAt: null,
+      usage: false,
     });
   }
 

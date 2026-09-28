@@ -49,7 +49,8 @@ function cell(text: string): string {
  * there is more than one, so a signed contract states what is actually owed.
  */
 function priceCell(line: ScheduleLine): string {
-  if (line.amountMinor === 0) return 'To be confirmed';
+  // Usage is invoiced at what was used, so it needs no price to be agreed.
+  if (line.amountMinor === 0) return line.billingKind === 'usage' ? 'Billed as used' : 'To be confirmed';
   const billing = BILLING[line.billingKind];
   const each = formatMoney(line.amountMinor, line.currency);
   return line.quantity > 1 ? `${line.quantity} × ${each}${billing.per}` : `${each}${billing.per}`;
@@ -217,7 +218,9 @@ export function feeProblems(
         : 'No fees have been added yet.',
     );
   }
-  const unpriced = lines.filter((line) => line.amountMinor === 0).length;
+  const unpriced = lines.filter(
+    (line) => line.amountMinor === 0 && line.billingKind !== 'usage',
+  ).length;
   if (unpriced > 0) {
     problems.push(`${unpriced} fee${unpriced === 1 ? ' has' : 's have'} no price yet.`);
   }

@@ -66,7 +66,7 @@ const SELECT = {
   owner: { select: { name: true } },
   lineItems: {
     where: { status: { in: ['planned', 'active'] } },
-    select: { amountMinor: true, quantity: true, currency: true },
+    select: { amountMinor: true, quantity: true, currency: true, billingKind: true },
   },
   assetRequests: { where: waitingOnClient, select: { id: true } },
   phases: { select: { deliverables: { select: { isComplete: true } } } },
@@ -177,7 +177,10 @@ export default async function ProjectsPage({
                   const committed = project.lineItems
                     .filter((line) => line.currency === project.currency)
                     .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
-                  const unpriced = project.lineItems.some((line) => line.amountMinor === 0);
+                  // A usage fee is billed as used, so it needs no price.
+                  const unpriced = project.lineItems.some(
+                    (line) => line.amountMinor === 0 && line.billingKind !== 'usage',
+                  );
                   const finished = ['launched', 'handover', 'closed', 'cancelled'].includes(
                     project.status,
                   );

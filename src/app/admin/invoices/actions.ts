@@ -115,7 +115,8 @@ async function invoiceForBillables(
    * waits, sees the first, and stops. Renewal periods are guarded the same
    * way by markRenewalInvoiced below.
    */
-  const oneOff = lines.filter((line) => !line.renewalEventId);
+  // A usage fee is billed again each time, so there is nothing to use up.
+  const oneOff = lines.filter((line) => !line.renewalEventId && line.billingKind !== 'usage');
   if (oneOff.length > 0) {
     const ids = oneOff.map((line) => line.lineItemId);
     await tx.$queryRaw`SELECT id FROM "LineItem" WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
@@ -188,7 +189,7 @@ async function invoiceForBillables(
  * somebody else since, and a renewal period is exactly the thing two people
  * can bill at once.
  */
-async function pickBillables(projectId: string, chosen: string[]) {
+async function pickBillables(projectId: string, chosen: string[], typed?: FormData) {
   const project = await db.project.findFirst({
     where: { id: projectId, deletedAt: null },
     select: { id: true, slug: true, currency: true, clientId: true, name: true },
@@ -196,14 +197,35 @@ async function pickBillables(projectId: string, chosen: string[]) {
   if (!project) return { error: 'That project no longer exists.' } as const;
 
   const billable = await billableLines(project.id);
-  const lines = billable.filter((item) => chosen.includes(item.key));
+  const found = billable.filter((item) => chosen.includes(item.key));
 
-  if (lines.length !== chosen.length) {
+  if (found.length !== chosen.length) {
     return {
       error:
         'One of those can no longer be billed. It may have been invoiced already. Reload and try again.',
     } as const;
   }
+
+  // A usage fee carries the amount typed for it this time, not its price.
+  const lines: Billable[] = [];
+  for (const line of found) {
+    if (!line.usage || !typed) {
+      lines.push(line);
+      continue;
+    }
+    const raw = String(typed.get(`amount:${line.key}`) ?? '').trim();
+    const amountMinor = parseMoney(raw, line.currency);
+    if (amountMinor === null && overMoneyCap(raw, line.currency)) {
+      return {
+        error: `Amounts above ${moneyCapText(line.currency)} cannot be entered. Raise ${line.label} as two invoices.`,
+      } as const;
+    }
+    if (!amountMinor || amountMinor <= 0) {
+      return { error: `Enter this time's amount for ${line.label}.` } as const;
+    }
+    lines.push({ ...line, amountMinor });
+  }
+
   if (lines.some((line) => line.amountMinor === 0)) {
     return {
       error: 'One of those lines has no price. An invoice cannot carry a blank amount.',
@@ -271,7 +293,7 @@ export async function createInvoice(
     return { status: 'error', message: 'Pick at least one fee line to invoice.' };
   }
 
-  const picked = await pickBillables(projectId, chosen);
+  const picked = await pickBillables(projectId, chosen, formData);
   if ('error' in picked) return { status: 'error', message: picked.error };
   const { project, lines, currency, taxMinor } = picked;
 
@@ -558,6 +580,13 @@ export async function recordEarlyPayment(
   const chosen = formData.getAll('billables').map(String).filter(Boolean);
   if (chosen.length === 0) {
     return { status: 'error', message: 'Pick what the money is for.' };
+  }
+  // What usage comes to is only known once it is invoiced.
+  if (chosen.some((key) => key.startsWith('usage:'))) {
+    return {
+      status: 'error',
+      message: 'Raise an invoice for usage first, then record the payment on it.',
+    };
   }
 
   const picked = await pickBillables(String(formData.get('projectId') ?? ''), chosen);

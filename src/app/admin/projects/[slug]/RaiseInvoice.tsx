@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { createInvoice, type BillingState } from '../../invoices/actions';
-import { formatMoney } from '@/lib/console/money';
+import { formatMoney, moneyInput, parseMoney } from '@/lib/console/money';
 import { DateField } from '@/components/console/Fields';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -20,6 +20,8 @@ export type BillableLine = {
   /** Set when this is one period of a recurring line. */
   period: string | null;
   due: string | null;
+  /** Billed by usage: this time's amount is typed in. */
+  usage: boolean;
 };
 
 /**
@@ -43,7 +45,20 @@ export function RaiseInvoice({
   termsDays: number;
 }) {
   const [state, action, pending] = useActionState(createInvoice, INITIAL);
-  const [chosen, setChosen] = useState<string[]>(() => lines.map((line) => line.key));
+  // A usage line with nothing to start from is left unticked until its
+  // amount is typed, so it never stops the rest being invoiced.
+  const [chosen, setChosen] = useState<string[]>(() =>
+    lines.filter((line) => !line.usage || line.amountMinor > 0).map((line) => line.key),
+  );
+  // This time's amount for each usage line, kept in state so a refused
+  // submission does not wipe it.
+  const [typed, setTyped] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      lines
+        .filter((line) => line.usage)
+        .map((line) => [line.key, line.amountMinor > 0 ? moneyInput(line.amountMinor, line.currency) : '']),
+    ),
+  );
 
   if (lines.length === 0) {
     return (
@@ -61,7 +76,9 @@ export function RaiseInvoice({
 
   const picked = lines.filter((line) => chosen.includes(line.key));
   const currencies = [...new Set(picked.map((line) => line.currency))];
-  const total = picked.reduce((sum, line) => sum + line.amountMinor, 0);
+  const amountOf = (line: BillableLine) =>
+    line.usage ? (parseMoney(typed[line.key] ?? '', line.currency) ?? 0) : line.amountMinor;
+  const total = picked.reduce((sum, line) => sum + amountOf(line), 0);
   const mixed = currencies.length > 1;
 
   return (
@@ -101,7 +118,26 @@ export function RaiseInvoice({
                 <td className={`${table.td} ${table.nowrap}`}>
                   {line.due ?? <span className={table.muted}>On agreement</span>}
                 </td>
-                <td className={`${table.td} ${table.numeric}`}>{line.amount}</td>
+                <td className={`${table.td} ${table.numeric}`}>
+                  {line.usage ? (
+                    <input
+                      name={`amount:${line.key}`}
+                      className={`${forms.control} ${forms.number}`}
+                      inputMode="decimal"
+                      value={typed[line.key] ?? ''}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setTyped((current) => ({ ...current, [line.key]: value }));
+                        if (value.trim() && !chosen.includes(line.key)) toggle(line.key);
+                      }}
+                      placeholder="0.00"
+                      aria-label={`This time's amount for ${line.label}, in ${line.currency}`}
+                      disabled={pending}
+                    />
+                  ) : (
+                    line.amount
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

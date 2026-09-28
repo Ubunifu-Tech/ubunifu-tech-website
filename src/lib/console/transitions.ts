@@ -546,7 +546,10 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
 
   return {
     currency: project.currency,
-    linesUnpriced: project.lineItems.filter((l) => l.amountMinor === 0).length,
+    // A usage fee is billed as used, so it needs no price.
+    linesUnpriced: project.lineItems.filter(
+      (l) => l.amountMinor === 0 && l.billingKind !== 'usage',
+    ).length,
     committedMinor: project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
     currencies: [...new Set(project.lineItems.filter((l) => l.amountMinor > 0).map((l) => l.currency))],
     recurringWithoutDueDate: project.lineItems.filter(

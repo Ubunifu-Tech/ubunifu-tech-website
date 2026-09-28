@@ -326,8 +326,9 @@ export default async function ProjectPage({
     }),
   ]);
 
+  // A usage fee is offered with no price too: its amount is typed each time.
   const toBill: BillableLine[] = billable
-    .filter((item) => item.amountMinor > 0)
+    .filter((item) => item.amountMinor > 0 || item.usage)
     .map((item) => ({
       key: item.key,
       label: item.label,
@@ -339,6 +340,7 @@ export default async function ProjectPage({
       period:
         item.periodStart && item.periodEnd ? periodLabel(item.periodStart, item.periodEnd) : null,
       due: item.dueAt ? formatShortDate(item.dueAt) : null,
+      usage: item.usage,
     }));
 
   // The payment terms in billing settings, unless somebody changes it on the form.
@@ -419,8 +421,9 @@ export default async function ProjectPage({
     agreed
       .filter((line) => kinds.includes(line.billingKind))
       .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
+  // Usage is left out: what it comes to is only known when it is billed.
   const agreedParts = [
-    { amount: agreedSum(['one_off', 'installment', 'usage']), per: '' },
+    { amount: agreedSum(['one_off', 'installment']), per: '' },
     { amount: agreedSum(['recurring_monthly']), per: ' a month' },
     { amount: agreedSum(['recurring_annual']), per: ' a year' },
   ]
@@ -443,8 +446,12 @@ export default async function ProjectPage({
   const paid = project.invoices
     .filter((invoice) => invoice.currency === project.currency)
     .reduce((total, invoice) => total + invoice.paidMinor, 0);
+  // A usage fee needs no price: it is billed as used.
   const unpriced = fees.filter(
-    (fee) => (fee.status === 'planned' || fee.status === 'active') && fee.amountMinor === 0,
+    (fee) =>
+      (fee.status === 'planned' || fee.status === 'active') &&
+      fee.amountMinor === 0 &&
+      fee.billingKind !== 'usage',
   ).length;
   const outstandingAssets = project.assetRequests.filter(
     (request) => request.status === 'requested',
@@ -1162,7 +1169,7 @@ export default async function ProjectPage({
                 </div>
                 <EarlyPayment
                   projectId={project.id}
-                  lines={toBill}
+                  lines={toBill.filter((line) => !line.usage)}
                   today={todayInput()}
                   vatBps={org.chargesVat ? org.vatRateBps : 0}
                   reason={
@@ -1174,7 +1181,9 @@ export default async function ProjectPage({
                         ? mayFees
                           ? 'The fees still need prices. Price the one the money is for, then record it here.'
                           : 'The fees still need prices. Someone who can set fees needs to price them.'
-                        : 'Everything due now is already on an invoice. Record the payment on that invoice.'
+                        : toBill.some((line) => line.usage)
+                          ? 'Only usage is left to bill. Raise an invoice for it, then record the payment on that invoice.'
+                          : 'Everything due now is already on an invoice. Record the payment on that invoice.'
                   }
                 />
               </section>

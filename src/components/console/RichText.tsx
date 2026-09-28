@@ -89,6 +89,9 @@ export function RichText({
   // toolbar would read while rendering.
   const fileInputId = useId();
   const [imageStatus, setImageStatus] = useState<string | null>(null);
+  // The toolbar is one tab stop: the tool used last, and the arrow keys move
+  // between the rest.
+  const [activeTool, setActiveTool] = useState('bold');
 
   const initialHtml = useMemo(
     () => renderMarkdown(initialMarkdown) || '<p></p>',
@@ -167,7 +170,9 @@ export function RichText({
         type="button"
         className={`${styles.tool} ${isActive ? styles.toolActive : ''}`}
         onClick={run}
+        onFocus={() => setActiveTool(key)}
         disabled={disabled}
+        tabIndex={key === activeTool ? 0 : -1}
         aria-pressed={isActive}
         title={title}
       >
@@ -175,8 +180,25 @@ export function RichText({
         <span className={styles.toolLabel}>{title}</span>
       </button>
     ),
-    [disabled],
+    [disabled, activeTool],
   );
+
+  const onToolbarKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tools = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+    );
+    const at = tools.indexOf(document.activeElement as HTMLButtonElement);
+    if (at === -1) return;
+    event.preventDefault();
+    const next =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? tools.length - 1
+          : (at + (event.key === 'ArrowRight' ? 1 : -1) + tools.length) % tools.length;
+    tools[next].focus();
+  }, []);
 
   /** Prompted rather than typed inline, so the URL is validated before it lands. */
   const setLink = useCallback(() => {
@@ -238,7 +260,12 @@ export function RichText({
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.toolbar} role="toolbar" aria-label={`${label} formatting`}>
+      <div
+        className={styles.toolbar}
+        role="toolbar"
+        aria-label={`${label} formatting`}
+        onKeyDown={onToolbarKeyDown}
+      >
         {editor && (
           <>
             {tool('bold', Bold, 'Bold', editor.isActive('bold'), () =>

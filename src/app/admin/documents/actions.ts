@@ -1,12 +1,12 @@
 'use server';
 
-import { NO_PERMISSION } from '@/lib/console/permissions';
+import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { advanceForDocument } from '@/lib/console/transitions';
 import { DocumentKind, type ProjectStatus } from '@/generated/prisma/client';
-import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit, staffForAction } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -34,7 +34,12 @@ import { allow } from '@/lib/console/rate-limit';
 import { issueSharedLink } from '@/lib/console/shared-links';
 import { whatsappLink } from '@/lib/console/whatsapp';
 
-export type DocumentState = { status: 'idle' | 'done' | 'error'; message?: string };
+export type DocumentState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  /** The session ended; the form keeps what was typed and links to sign in. */
+  signedOut?: boolean;
+};
 
 /** Thrown inside the send transaction when the document changed after it was checked. */
 class MovedOn extends Error {}
@@ -193,7 +198,10 @@ export async function saveVersion(
   _previous: DocumentState,
   formData: FormData,
 ): Promise<DocumentState> {
-  const staff = await requireStaff();
+  // Not requireStaff: its redirect would leave the editor and take the
+  // document's unsaved text with it.
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
   const documentId = String(formData.get('documentId') ?? '');

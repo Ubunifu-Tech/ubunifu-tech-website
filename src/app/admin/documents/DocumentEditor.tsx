@@ -21,6 +21,7 @@ import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import { Callout } from '@/components/console/Callout';
 import { DOCUMENT_KINDS } from './kinds';
+import { keepTyping } from '@/components/console/keepTyping';
 
 const INITIAL: DocumentState = { status: 'idle' };
 
@@ -33,6 +34,14 @@ function Result({ state }: { state: DocumentState }) {
       aria-live="polite"
     >
       {state.message}
+      {state.signedOut && (
+        <>
+          {' '}
+          <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
+            Sign in
+          </a>
+        </>
+      )}
     </p>
   );
 }
@@ -319,7 +328,7 @@ export function VersionEditor({
   }, [onUnsavedChange]);
 
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} onSubmit={keepTyping(action)} className={forms.form}>
       <input type="hidden" name="documentId" value={documentId} />
       <RichText
         name="body"

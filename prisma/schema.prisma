@@ -224,6 +224,7 @@ model AuditEvent {
   createdAt  DateTime  @default(now())
 
   @@index([entityType, entityId])
+  @@index([entityId])
   @@index([createdAt])
 }
 
@@ -1160,6 +1161,7 @@ model EmailLog {
 
   @@index([toAddress])
   @@index([entityType, entityId])
+  @@index([entityId])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

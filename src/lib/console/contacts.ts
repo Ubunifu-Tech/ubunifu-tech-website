@@ -344,19 +344,24 @@ export async function sendPasswordLink(contact: { id: string; name: string; emai
 }
 
 /**
- * Someone who never finished setting up asked to reset a password they do
- * not have. What they need is their setup link, so that is what goes.
+ * Someone who never finished setting up asked for a sign-in link, or to
+ * reset a password they do not have. What they need is their setup link, so
+ * that is what goes, and `summary` says which they asked for. A page they
+ * were trying to reach travels in the link, so setup ends there.
  */
 export async function sendSetupLinkAgain(contact: {
   id: string;
   name: string;
   email: string;
   clientName: string;
+  summary: string;
+  next?: string | null;
 }) {
   const { token } = await issueMagicToken({
     purpose: 'invite',
     actorType: 'client_contact',
     actorId: contact.id,
+    ...(contact.next ? { entityType: 'Path', entityId: contact.next } : {}),
   });
   const sent = await sendConsoleEmail({
     to: contact.email,
@@ -376,9 +381,7 @@ export async function sendSetupLinkAgain(contact: {
     action: sent.ok ? 'client.invite.sent' : 'client.invite.send_failed',
     entityType: 'ClientContact',
     entityId: contact.id,
-    summary: sent.ok
-      ? 'Asked to reset a password before setting up, so the setup link went again'
-      : sent.error,
+    summary: sent.ok ? contact.summary : sent.error,
   });
   return sent;
 }

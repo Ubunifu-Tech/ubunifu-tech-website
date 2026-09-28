@@ -190,7 +190,8 @@ async function deliverPortalLink(email: string, next: string | null): Promise<vo
       id: true,
       name: true,
       email: true,
-      client: { select: { deletedAt: true } },
+      activatedAt: true,
+      client: { select: { deletedAt: true, name: true } },
     },
   });
 
@@ -200,7 +201,7 @@ async function deliverPortalLink(email: string, next: string | null): Promise<vo
     await tooManyLinkRequests({
       actorType: 'client_contact',
       actorId: contact.id,
-      purpose: 'sign_in',
+      purpose: contact.activatedAt ? 'sign_in' : 'invite',
     })
   ) {
     await recordAudit({
@@ -209,6 +210,20 @@ async function deliverPortalLink(email: string, next: string | null): Promise<vo
       action: 'client.sign_in.throttled',
       entityType: 'ClientContact',
       entityId: contact.id,
+    });
+    return;
+  }
+
+  // Never set up: a sign-in link would only send them to setup with twenty
+  // minutes to finish, so the setup link goes instead, which lasts.
+  if (!contact.activatedAt) {
+    await sendSetupLinkAgain({
+      id: contact.id,
+      name: contact.name,
+      email,
+      clientName: contact.client.name,
+      next,
+      summary: 'Asked for a sign-in link before setting up, so the setup link went instead',
     });
     return;
   }
@@ -333,6 +348,7 @@ async function deliverPasswordReset(email: string): Promise<void> {
       name: contact.name,
       email: contact.email,
       clientName: contact.client.name,
+      summary: 'Asked to reset a password before setting up, so the setup link went again',
     });
     return;
   }

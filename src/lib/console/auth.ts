@@ -204,8 +204,8 @@ export async function getClientActor(): Promise<ClientActor | null> {
   if (!contact.canSignIn) return null;
   if (contact.deletedAt) return null;
   if (contact.client.deletedAt) return null;
-  // Somebody onboarding from a shared link has no address until they give
-  // one, and that same step is what signs them in.
+  // Somebody onboarding from a shared link has no address until they confirm
+  // one: the link we email to it sets the address as it signs them in.
   if (!contact.email) return null;
 
   return {

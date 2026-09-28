@@ -1,0 +1,47 @@
+/* The native dialog is only a frame: the box inside it is styled by whoever
+   uses it. */
+.modal {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+
+/* Literal colours: older browsers do not pass custom properties through to
+   ::backdrop. */
+.modal::backdrop {
+  background: rgba(31, 26, 54, 0.4);
+  animation: modalFade 0.15s ease-out;
+}
+
+.center {
+  max-width: none;
+}
+
+/* A drawer from the left edge, the full height of the screen. */
+.start {
+  margin: 0;
+  inset: 0 auto 0 0;
+  height: 100%;
+  max-height: none;
+  max-width: none;
+  overflow: visible;
+}
+
+/* The page behind stays where it is while a dialog is open. */
+:global(html):has(.modal[open]) {
+  overflow: hidden;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal::backdrop {
+    animation: none;
+  }
+}

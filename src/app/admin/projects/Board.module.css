@@ -315,19 +315,8 @@
   background: rgba(0, 0, 0, 0.06);
 }
 
-.scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: rgba(31, 26, 54, 0.4);
-  animation: fade 0.15s ease-out;
-}
-
 .dialog {
-  width: min(28rem, 100%);
+  width: min(28rem, calc(100vw - 2rem));
   padding: var(--space-6);
   border-radius: var(--app-radius-card);
   background: var(--surface);
@@ -362,19 +351,9 @@
   gap: var(--space-3);
 }
 
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .cardLifted {
     transform: none;
-  }
-
-  .scrim {
-    animation: none;
   }
 }
 

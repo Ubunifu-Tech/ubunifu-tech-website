@@ -437,6 +437,11 @@
   line-height: 1.6;
 }
 
+/* A notice with more than one paragraph, or a form under its text. */
+.notice > * + * {
+  margin-top: var(--space-2);
+}
+
 .divider {
   display: flex;
   flex-wrap: wrap;

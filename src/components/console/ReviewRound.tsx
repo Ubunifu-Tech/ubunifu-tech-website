@@ -41,21 +41,25 @@ const CLIENT_TONE: Record<ReviewStatus, string> = {
 export function ReviewRound({
   review,
   audience,
+  headingLevel = 'h3',
   children,
 }: {
   review: ReviewView;
   audience: 'staff' | 'client';
+  /** One below the heading it sits under: h3 inside a card's h2, h2 under a page's h1. */
+  headingLevel?: 'h2' | 'h3';
   /** The answer form, for the client, while the round is open. */
   children?: React.ReactNode;
 }) {
   const label = audience === 'staff' ? REVIEW_LABEL : CLIENT_REVIEW_LABEL;
   const tone = audience === 'client' ? CLIENT_TONE : TONE;
   const who = review.answeredBy?.name ?? (audience === 'staff' ? 'The client' : 'Your team');
+  const Heading = headingLevel;
 
   return (
     <div className={styles.round}>
       <div className={styles.head}>
-        <h3 className={styles.title}>{review.title}</h3>
+        <Heading className={styles.title}>{review.title}</Heading>
         <span className={`${forms.badge} ${tone[review.status]}`}>{label[review.status]}</span>
       </div>
       <p className={styles.meta}>

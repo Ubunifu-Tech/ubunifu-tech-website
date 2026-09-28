@@ -42,14 +42,14 @@ export default async function SharedLinkPage({ params }: { params: Promise<{ tok
         <span className={styles.brandText}>Ubunifu Technologies</span>
       </div>
       {!link ? (
-        <Notice>
+        <Notice title="This link has run out">
           This link has run out or was replaced by a newer one. Ask whoever sent it to you for a new
-          link{org.phone ? `, or call us on ${org.phone}` : ''}.
+          link{orCall(org)}.
         </Notice>
       ) : link.thing === 'SignatureRequest' ? (
         <SignThroughLink link={link} token={token} org={org} now={now} />
       ) : (
-        <ReviewThroughLink link={link} token={token} />
+        <ReviewThroughLink link={link} token={token} org={org} />
       )}
       <p className={`${styles.note} ${styles.after} ${sheet.noPrint}`}>
         Questions? Email {org.email}
@@ -59,12 +59,26 @@ export default async function SharedLinkPage({ params }: { params: Promise<{ tok
   );
 }
 
-function Notice({ children }: { children: ReactNode }) {
+/**
+ * The page when there is nothing to open. It carries its own heading, since
+ * there is no document or round here to give the page one.
+ */
+function Notice({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <p className={`${styles.notice} ${sheet.noPrint}`} role="status">
-      {children}
-    </p>
+    <div className={sheet.noPrint}>
+      <div className={styles.pageHead}>
+        <h1 className={styles.heading}>{title}</h1>
+      </div>
+      <p className={styles.notice} role="status">
+        {children}
+      </p>
+    </div>
   );
+}
+
+/** The phone clause for a notice that sends someone back for a new link. */
+function orCall(org: Awaited<ReturnType<typeof getOrg>>) {
+  return org.phone ? `, or call us on ${org.phone}` : '';
 }
 
 async function SignThroughLink({
@@ -110,8 +124,9 @@ async function SignThroughLink({
 
   if (!request || request.status === 'cancelled') {
     return (
-      <Notice>
-        This version was withdrawn, so there is nothing to sign here. We will send you the new one.
+      <Notice title="Nothing to sign here">
+        This version was withdrawn, so there is nothing to sign here. Ask whoever sent it to you for
+        a new link{orCall(org)}.
       </Notice>
     );
   }
@@ -154,7 +169,9 @@ async function SignThroughLink({
         </div>
       )}
       {declined && !signature && (
-        <Notice>This version was declined, so it is closed. Nothing was signed.</Notice>
+        <p className={`${styles.notice} ${sheet.noPrint}`} role="status">
+          This version was declined, so it is closed. Nothing was signed.
+        </p>
       )}
       {request.respondedAt && !declined && !signature && (
         <div className={`${styles.notice} ${sheet.noPrint}`} role="status">
@@ -251,11 +268,20 @@ async function SignThroughLink({
   );
 }
 
-async function ReviewThroughLink({ link, token }: { link: SharedLink; token: string }) {
+async function ReviewThroughLink({
+  link,
+  token,
+  org,
+}: {
+  link: SharedLink;
+  token: string;
+  org: Awaited<ReturnType<typeof getOrg>>;
+}) {
   const review = await db.projectReview.findFirst({
     where: { id: link.thingId, project: { clientId: link.contact.clientId, deletedAt: null } },
     select: {
       id: true,
+      projectId: true,
       round: true,
       title: true,
       previewUrl: true,
@@ -269,10 +295,35 @@ async function ReviewThroughLink({ link, token }: { link: SharedLink; token: str
     },
   });
 
-  if (!review || review.status === 'withdrawn') {
+  if (!review) {
     return (
-      <Notice>
-        This round was replaced by a newer version. We will send you a link to the latest one.
+      <Notice title="This round is no longer open">
+        There is nothing to answer here now. Ask whoever sent it to you for a new link
+        {orCall(org)}.
+      </Notice>
+    );
+  }
+
+  // Withdrawn either because a newer round replaced it, or because the work
+  // was paused or moved on and the round was taken back with nothing after
+  // it. Neither promises that a new link is on its way.
+  if (review.status === 'withdrawn') {
+    const later = await db.projectReview.findFirst({
+      where: {
+        projectId: review.projectId,
+        round: { gt: review.round },
+        status: { not: 'withdrawn' },
+      },
+      select: { id: true },
+    });
+    return later ? (
+      <Notice title="This round was replaced">
+        This round was replaced by a newer version. Ask whoever sent it to you for a new link
+        {orCall(org)}.
+      </Notice>
+    ) : (
+      <Notice title="This round was taken back">
+        We took this round back, so there is nothing to answer here for now.
       </Notice>
     );
   }
@@ -285,7 +336,7 @@ async function ReviewThroughLink({ link, token }: { link: SharedLink; token: str
         </h1>
         <span className={forms.cardMeta}>{review.project.name}</span>
       </div>
-      <ReviewRound review={review} audience="client">
+      <ReviewRound review={review} audience="client" headingLevel="h2">
         {review.status === 'open' && (
           <ReviewAnswer reviewId={review.id} answer={answerWithLink} hidden={{ token }} />
         )}

@@ -77,7 +77,7 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
-        <Link href="/portal/invoices" className={styles.projectMeta}>
+        <Link href="/portal/invoices" className={styles.backLink}>
           ← Invoices
         </Link>
         <PrintButton />

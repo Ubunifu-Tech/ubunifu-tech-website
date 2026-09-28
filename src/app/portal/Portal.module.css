@@ -138,7 +138,6 @@
 
 .backLink {
   display: inline-block;
-  margin-bottom: var(--space-3);
   color: var(--accent-deep);
   font-size: var(--font-size-small);
   text-decoration: none;
@@ -146,6 +145,12 @@
 
 .backLink:hover {
   color: var(--text-primary);
+}
+
+/* Above a heading it needs room. In a sheet's toolbar it sits centred on the
+   Print button beside it, so it takes no margin there. */
+.pageHead > .backLink {
+  margin-bottom: var(--space-3);
 }
 
 .sectionHead {

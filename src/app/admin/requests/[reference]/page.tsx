@@ -12,6 +12,7 @@ import {
 import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Callout } from '@/components/console/Callout';
+import { replyRecipient } from '@/lib/console/ticket-reply';
 import { ReplyBox, TriageBox } from '../TicketControls';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -55,7 +56,7 @@ export default async function TicketPage({
       clientId: true,
       client: { select: { name: true, slug: true, deletedAt: true } },
       project: { select: { name: true, slug: true, reference: true, deletedAt: true } },
-      openedBy: { select: { name: true, email: true } },
+      openedBy: { select: { name: true, email: true, canSignIn: true, deletedAt: true } },
       messages: {
         orderBy: { createdAt: 'asc' },
         select: {
@@ -94,7 +95,10 @@ export default async function TicketPage({
     (message.actorId && names.get(message.actorId)) ??
     (message.actorType === 'staff' ? 'Us' : (ticket.openedBy?.name ?? 'The client'));
 
-  const activity = await activityFor(staff, [ticket.id]);
+  const [activity, recipient] = await Promise.all([
+    activityFor(staff, [ticket.id]),
+    mayChange ? replyRecipient(ticket) : null,
+  ]);
 
   return (
     <main className={styles.page}>
@@ -174,7 +178,13 @@ export default async function TicketPage({
             })}
           </ul>
 
-          {mayChange && <ReplyBox ticketId={ticket.id} />}
+          {mayChange && (
+            <ReplyBox
+              ticketId={ticket.id}
+              recipient={recipient?.email ? recipient.name : null}
+              movesOn={ticket.status === 'open' || ticket.status === 'triaged'}
+            />
+          )}
           {!mayReply && !removedAt && (
             <p className={styles.note}>Someone who handles requests replies to these.</p>
           )}

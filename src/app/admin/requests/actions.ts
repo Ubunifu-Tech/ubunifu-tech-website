@@ -11,6 +11,7 @@ import { ticketReplyEmail } from '@/lib/emails';
 import { CLIENT_TICKET_STATUS } from '@/lib/console/tickets';
 import { formText } from '@/lib/console/form';
 import { liveTicket } from '@/lib/console/live';
+import { replyRecipient } from '@/lib/console/ticket-reply';
 
 export type TicketState = { status: 'idle' | 'done' | 'error'; message?: string };
 
@@ -52,8 +53,9 @@ export async function replyToTicket(
   });
   if (!ticket) return { status: 'error', message: 'That request no longer exists.' };
 
-  // Replying moves it to waiting-on-them; an internal note changes nothing,
-  // because writing to ourselves is not progress the client can see.
+  // A reply moves a New or Picked up request to being worked on, and leaves
+  // any other state as it is; an internal note changes nothing, because
+  // writing to ourselves is not progress the client can see.
   const nextStatus: TicketStatus | undefined = isInternal
     ? undefined
     : ticket.status === 'open' || ticket.status === 'triaged'
@@ -88,21 +90,8 @@ export async function replyToTicket(
 
   if (isInternal) return { status: 'done', message: 'Noted. The client cannot see this.' };
 
-  // The reply goes to whoever at the client wrote last, which is not always
-  // the person who raised it; the person who raised it when that is not known.
-  const lastWord = await db.ticketMessage.findFirst({
-    where: { ticketId: ticket.id, actorType: 'client_contact' },
-    orderBy: { createdAt: 'desc' },
-    select: { actorId: true },
-  });
-  const lastWriter = lastWord?.actorId
-    ? await db.clientContact.findFirst({
-        where: { id: lastWord.actorId, clientId: ticket.clientId, deletedAt: null, canSignIn: true },
-        select: { name: true, email: true, canSignIn: true, deletedAt: true },
-      })
-    : null;
-  const contact = lastWriter?.email ? lastWriter : ticket.openedBy;
-  if (!contact || contact.deletedAt || !contact.canSignIn) {
+  const contact = await replyRecipient(ticket);
+  if (!contact) {
     return {
       status: 'done',
       message: 'Replied. The person who raised this can no longer sign in, so no email was sent.',

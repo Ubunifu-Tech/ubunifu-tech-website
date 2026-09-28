@@ -29,7 +29,17 @@ function Result({ state }: { state: TicketState }) {
  * screens is how a note ends up in a reply. Unticked by default, because the
  * safe mistake is telling a client something they already knew.
  */
-export function ReplyBox({ ticketId }: { ticketId: string }) {
+export function ReplyBox({
+  ticketId,
+  recipient,
+  movesOn,
+}: {
+  ticketId: string;
+  /** Who the email goes to, or null when a reply only shows in their portal. */
+  recipient: string | null;
+  /** Whether a reply moves this to being worked on (only from New or Picked up). */
+  movesOn: boolean;
+}) {
   const [state, action, pending] = useActionState(replyToTicket, INITIAL);
 
   return (
@@ -70,7 +80,10 @@ export function ReplyBox({ ticketId }: { ticketId: string }) {
           {pending ? 'Sending…' : 'Send'}
         </button>
         <p className={forms.payoff}>
-          A reply goes to whoever raised it and moves this to &ldquo;being worked on&rdquo;.
+          {recipient
+            ? `A reply goes to ${recipient} by email and in their portal.`
+            : 'A reply shows in their portal. No email goes out.'}
+          {movesOn ? ' It moves this to being worked on.' : ''}
         </p>
       </div>
       <Result state={state} />

@@ -212,8 +212,8 @@ export default async function PortalHome() {
 
       {projects.length === 0 ? (
         <div className={styles.empty}>
-          Your first project will appear here once it is set up. Questions in the meantime? Use Help
-          at the bottom of the page.
+          Your first project will appear here once it is set up. Questions in the meantime? Ask in
+          Help, in the bottom corner of the screen.
         </div>
       ) : (
         <ul className={styles.projects}>

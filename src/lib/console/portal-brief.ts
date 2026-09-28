@@ -5,7 +5,7 @@ import type { ClientActor } from './auth';
 import { clientStage } from './project-status';
 import { portalInvoiceState } from './billing-labels';
 import { CLIENT_TICKET_STATUS } from './tickets';
-import { formatDate, formatMoney } from './money';
+import { formatDate, formatMoney, parseDateInput, todayInput } from './money';
 import { awaitingSignature, liveInvoice, liveTicket, waitingOnClient } from './live';
 import { HOW_TO_WRITE } from './assistant';
 
@@ -123,7 +123,8 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
   ]);
 
   const lines: string[] = [
-    `TODAY: ${formatDate(now)}`,
+    // The date on Tanzania's calendar; `now` stays a moment for comparisons.
+    `TODAY (Tanzania): ${formatDate(parseDateInput(todayInput())!)}`,
     `YOU ARE TALKING TO: ${actor.name} at ${actor.clientName}.`,
     `THEIR TEAM IN THE PORTAL: ${colleagues
       .map((person) => `${person.name}${person.role ? ` (${person.role})` : ''}${person.isPrimary ? ', main contact' : ''}`)

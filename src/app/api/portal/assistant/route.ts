@@ -3,8 +3,10 @@ import { db } from '@/lib/db';
 import { getClientActor, type ClientActor } from '@/lib/console/auth';
 import { runTurn } from '@/lib/console/agent';
 import { createPortalConversation, resolvePortalConversation } from '@/lib/console/conversations';
-import { interimFailure } from '@/lib/console/assistant-copy';
+import { LIMIT_COPY, PORTAL_FAILURE_COPY } from '@/lib/console/assistant-copy';
+import { hashToken } from '@/lib/console/crypto';
 import { allow } from '@/lib/console/rate-limit';
+import { siteKnowledge } from '@/lib/console/site-knowledge';
 import {
   PORTAL_SYSTEM,
   handOff,
@@ -27,9 +29,13 @@ export const maxDuration = 60;
 const MAX_MESSAGES_PER_HOUR = 40;
 const MAX_MESSAGE_LENGTH = 2000;
 
-function unavailable(error: string, status: number) {
-  return NextResponse.json({ error, fallback: true }, { status });
+/** One sentence, and whether the window opens its "send it to the team" form under it. */
+function refused(copy: { text: string; fallback: boolean }, status: number, extra?: object) {
+  return NextResponse.json({ error: copy.text, fallback: copy.fallback, ...extra }, { status });
 }
+
+/** Signed out mid-chat: the window keeps what was typed and offers a way back in. */
+const SIGNED_OUT = { error: 'You have been signed out.', signIn: true };
 
 function pagePath(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -46,13 +52,13 @@ export async function POST(request: NextRequest) {
     return await handle(request);
   } catch (error) {
     console.error('Portal assistant failed', error);
-    return unavailable('The assistant is not available right now. Send this to the team instead.', 503);
+    return refused(PORTAL_FAILURE_COPY.unavailable, 503);
   }
 }
 
 async function handle(request: NextRequest) {
   const actor = await actorOrNull();
-  if (!actor) return NextResponse.json({ error: 'Sign in again to carry on.' }, { status: 401 });
+  if (!actor) return NextResponse.json(SIGNED_OUT, { status: 401 });
 
   const mediaType = request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase();
   if (mediaType !== 'application/json') {
@@ -116,7 +122,7 @@ async function handle(request: NextRequest) {
   // Counted before the model is asked, so messages sent together cannot all
   // go through on the same count.
   if (!(await allow('portal-assistant', actor.id, { limit: MAX_MESSAGES_PER_HOUR, windowMinutes: 60 }))) {
-    return unavailable('That is a lot of questions for one hour. Send this to the team instead.', 429);
+    return refused(LIMIT_COPY.visitor, 429);
   }
 
   // Carries on the chat, including one that became a request today; a
@@ -131,6 +137,8 @@ async function handle(request: NextRequest) {
     conversationId: conversation.id,
     kind: 'portal_client',
     system: PORTAL_SYSTEM,
+    // What the website knows about Ubunifu, shared and cached; then their account.
+    shared: await siteKnowledge(),
     brief: await portalBrief(actor),
     note: page ? `They are looking at ${page}.` : undefined,
     userMessage: message,
@@ -141,14 +149,22 @@ async function handle(request: NextRequest) {
     maxRounds: 3,
     timeoutMs: 20_000,
     deadlineMs: 50_000,
+    userRef: hashToken(actor.id).slice(0, 32),
   });
 
   if (!result.ok) {
-    return unavailable(`${interimFailure(result.cause)} You can send this to the team instead.`, 502);
+    return refused(PORTAL_FAILURE_COPY[result.cause], 502, fresh ? { fresh: true } : undefined);
   }
+  const raised = result.used.find((tool) => tool.name === 'raise_request')?.meta as
+    | { reference: string }
+    | undefined;
   return NextResponse.json({
     reply: result.reply,
-    sent: result.used.some((tool) => tool.name === 'raise_request'),
+    handoff: raised
+      ? { reference: raised.reference, url: `/portal/requests/${raised.reference}` }
+      : null,
+    // Kept for the window until it reads `handoff`.
+    sent: Boolean(raised),
     ...(fresh ? { fresh: true } : {}),
   });
 }
@@ -157,7 +173,7 @@ async function handle(request: NextRequest) {
 export async function GET() {
   try {
     const actor = await actorOrNull();
-    if (!actor) return NextResponse.json({ messages: [] }, { status: 401 });
+    if (!actor) return NextResponse.json({ ...SIGNED_OUT, messages: [] }, { status: 401 });
 
     const current = await resolvePortalConversation(actor, { forWrite: false });
     const conversation = current

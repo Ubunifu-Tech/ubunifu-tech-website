@@ -46,7 +46,7 @@ export default async function PortalProfile() {
       )}
 
       <p className={`${styles.note} ${styles.after}`}>
-        To change your email address, ask in Help or{' '}
+        To change your email address, ask in Help in the bottom corner, or{' '}
         <Link href="/portal/requests" className={forms.link}>
           raise a request
         </Link>

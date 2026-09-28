@@ -26,5 +26,5 @@ export default async function EnquiryLink({ params }: { params: Promise<{ id: st
         : enquiry.status === 'converted'
           ? 'converted'
           : 'open';
-  redirect(`/enquiries?show=${show}&open=${enquiry.id}`);
+  redirect(`/enquiries?show=${show}&open=${enquiry.id}#triage`);
 }

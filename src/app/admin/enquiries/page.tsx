@@ -309,13 +309,15 @@ export default async function EnquiriesPage({
                       <td className={`${table.td} ${table.actions}`}>
                         <RowMenu label={`Actions for ${enquiry.name}`}>
                           <MenuList>
+                            {/* Opening scrolls to the panel below the table, which can
+                                be a long way down; closing stays where the list is. */}
                             <MenuLink
                               href={
                                 expanded?.id === enquiry.id
                                   ? `/enquiries?show=${active}${keepPlace}`
-                                  : `/enquiries?show=${active}&open=${enquiry.id}${keepPlace}`
+                                  : `/enquiries?show=${active}&open=${enquiry.id}${keepPlace}#triage`
                               }
-                              scroll={false}
+                              scroll={expanded?.id === enquiry.id ? false : undefined}
                             >
                               {expanded?.id === enquiry.id
                                 ? 'Close'
@@ -350,7 +352,7 @@ export default async function EnquiriesPage({
             and a status control crammed into a cell make every other row taller
             for no reason. */}
         {expanded && (
-          <section className={forms.card}>
+          <section id="triage" className={forms.card}>
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>{expanded.name}</h2>
               <span className={forms.cardMeta}>

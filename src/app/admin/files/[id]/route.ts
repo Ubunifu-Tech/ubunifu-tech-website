@@ -1,7 +1,7 @@
 import { can, getStaffActor } from '@/lib/console/auth';
 import { db } from '@/lib/db';
 import { streamUpload } from '@/lib/console/uploads';
-import { liveProject, liveTicket } from '@/lib/console/live';
+import { liveProject } from '@/lib/console/live';
 
 /** A stored file, read by us. Reached as /files/<id> on the console host. */
 export async function GET(
@@ -21,7 +21,6 @@ export async function GET(
       OR: [
         { assetRequest: { is: { project: liveProject } } },
         { update: { is: { project: liveProject } } },
-        { ticketMessage: { is: { ticket: { is: liveTicket } } } },
         { cost: { isNot: null } },
       ],
     },

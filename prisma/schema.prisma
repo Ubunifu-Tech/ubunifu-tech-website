@@ -63,7 +63,7 @@ model StaffUser {
   payments         Payment[]         @relation("PaymentRecordedBy")
   reversedPayments Payment[]         @relation("PaymentReversedBy")
   refundsRecorded  Refund[]          @relation("RefundRecordedBy")
-  timeEntries      TimeEntry[]
+  timeEntries      TimeEntry[]       @ignore
   posts            Post[]
   mediaAssets      MediaAsset[]
   assignedTasks    Deliverable[]     @relation("DeliverableAssignee")
@@ -350,7 +350,7 @@ model Project {
   brandKit        BrandKit?
   managedServices ManagedService[]
   statusEvents    ProjectStatusEvent[]
-  timeEntries     TimeEntry[]
+  timeEntries     TimeEntry[]          @ignore
   enquiries       Enquiry[]
   costs           Cost[]
   regularCosts    RegularCost[]
@@ -631,7 +631,7 @@ model LineItem {
   /// The day of the month a recurring fee falls due, kept so short months do not move it for good.
   dueDay          Int?
   /// How far ahead of nextDueAt a draft invoice is raised.
-  renewalLeadDays Int            @default(30)
+  renewalLeadDays Int            @default(30) @ignore
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
@@ -668,7 +668,7 @@ model RenewalEvent {
   status      RenewalStatus @default(pending)
   invoiceId   String?
   invoice     Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
-  draftedAt   DateTime?
+  draftedAt   DateTime?     @ignore
   note        String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -696,13 +696,13 @@ model Invoice {
   status        InvoiceStatus @default(draft)
   currency      String        @default("USD")
   /// Denormalised from the lines so listing screens do not need a join.
-  subtotalMinor BigInt           @default(0)
-  taxMinor      BigInt           @default(0)
-  totalMinor    BigInt           @default(0)
-  paidMinor     BigInt           @default(0)
+  subtotalMinor BigInt        @default(0)
+  taxMinor      BigInt        @default(0)
+  totalMinor    BigInt        @default(0)
+  paidMinor     BigInt        @default(0)
   /// Sent back to the client against its payments. What was paid stays paid;
   /// this is how much of it the client has back.
-  refundedMinor BigInt           @default(0)
+  refundedMinor BigInt        @default(0)
   notes         String?
   issuedAt      DateTime?
   dueAt         DateTime?
@@ -813,7 +813,7 @@ model Receipt {
   payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   issuedAt  DateTime @default(now())
   /// Storage key for the rendered PDF, once generated.
-  pdfKey    String?
+  pdfKey    String?  @ignore
   createdAt DateTime @default(now())
 }
 
@@ -919,7 +919,7 @@ model DocumentVersion {
   /// so this records provenance rather than authorship.
   aiAssisted      Boolean    @default(false)
   aiModel         String?
-  aiPromptSummary String?
+  aiPromptSummary String?    @ignore
   createdById     String?
   createdBy       StaffUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt       DateTime   @default(now())
@@ -1019,7 +1019,7 @@ model Signature {
   /// What the signer actually typed, e.g. "RP". Kept verbatim.
   initials        String?
   /// Data URL of the drawn mark, when method is drawn.
-  signatureData   String?
+  signatureData   String?          @ignore
   /// Acceptance is separate from the signature itself, so it is answerable
   /// later which version of the terms this person agreed to and when.
   termsVersionId  String?
@@ -1098,7 +1098,7 @@ model TicketMessage {
   isInternal Boolean   @default(false)
   createdAt  DateTime  @default(now())
 
-  uploads FileUpload[]
+  uploads FileUpload[] @ignore
 
   @@index([ticketId, createdAt])
 }
@@ -1115,15 +1115,15 @@ model FileUpload {
   filename        String
   contentType     String
   sizeBytes       Int
-  checksum        String?
+  checksum        String?        @ignore
   uploadedByType  ActorType
   uploadedById    String?
   assetRequestId  String?
   assetRequest    AssetRequest?  @relation(fields: [assetRequestId], references: [id], onDelete: Cascade)
   updateId        String?
   update          ProjectUpdate? @relation(fields: [updateId], references: [id], onDelete: Cascade)
-  ticketMessageId String?
-  ticketMessage   TicketMessage? @relation(fields: [ticketMessageId], references: [id], onDelete: Cascade)
+  ticketMessageId String?        @ignore
+  ticketMessage   TicketMessage? @relation(fields: [ticketMessageId], references: [id], onDelete: Cascade) @ignore
   /// The bill behind a cost, kept with it.
   costId          String?
   cost            Cost?          @relation(fields: [costId], references: [id], onDelete: Cascade)
@@ -1184,6 +1184,7 @@ model TimeEntry {
   createdAt DateTime  @default(now())
 
   @@index([projectId, workedOn])
+  @@ignore
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1355,7 +1356,7 @@ model LineItemTemplate {
   description String?
   billingKind BillingKind     @default(one_off)
   /// Suggested amount; always editable when the project is created.
-  amountMinor BigInt             @default(0)
+  amountMinor BigInt          @default(0)
   currency    String          @default("USD")
   terms       String?
   position    Int
@@ -1494,8 +1495,8 @@ model ConversationMessage {
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  role    MessageRole
-  content String
+  role     MessageRole
+  content  String
   /// The staff member who wrote a user turn in a drafting thread, which
   /// everyone with the documents permission shares. Null for visitors,
   /// clients and rows from before it was recorded.

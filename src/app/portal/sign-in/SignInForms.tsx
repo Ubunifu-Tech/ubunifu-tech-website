@@ -22,12 +22,14 @@ export function SignInForms({
   startWith?: Mode;
 }) {
   const [mode, setMode] = useState<Mode>(startWith);
+  // One address across the three forms, so switching between them, or a
+  // wrong password, keeps what was typed.
+  const [email, setEmail] = useState('');
   const [pwState, pwAction, pwPending] = useActionState(signInWithPassword, INITIAL);
   const [linkState, linkAction, linkPending] = useActionState(requestPortalLink, INITIAL);
   const [resetState, resetAction, resetPending] = useActionState(requestPasswordReset, INITIAL);
 
   if (mode === 'reset') {
-    const waiting = resetPending || resetState.status === 'sent';
     return (
       <form action={resetAction} className={forms.form}>
         <div className={forms.field}>
@@ -40,13 +42,19 @@ export function SignInForms({
             type="email"
             autoComplete="email"
             required
-            disabled={waiting}
+            disabled={resetPending}
             className={forms.control}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
 
-        <button type="submit" className={forms.button} disabled={waiting}>
-          {resetPending ? 'Sending…' : 'Email me a reset link'}
+        <button type="submit" className={forms.button} disabled={resetPending}>
+          {resetPending
+            ? 'Sending…'
+            : resetState.status === 'sent'
+              ? 'Send again'
+              : 'Email me a reset link'}
         </button>
 
         <p
@@ -67,7 +75,6 @@ export function SignInForms({
   }
 
   if (mode === 'link') {
-    const waiting = linkPending || linkState.status === 'sent';
     return (
       <form action={linkAction} className={forms.form}>
         {next && <input type="hidden" name="next" value={next} />}
@@ -81,13 +88,15 @@ export function SignInForms({
             type="email"
             autoComplete="email"
             required
-            disabled={waiting}
+            disabled={linkPending}
             className={forms.control}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
 
-        <button type="submit" className={forms.button} disabled={waiting}>
-          {linkPending ? 'Sending…' : 'Email me a link'}
+        <button type="submit" className={forms.button} disabled={linkPending}>
+          {linkPending ? 'Sending…' : linkState.status === 'sent' ? 'Send again' : 'Email me a link'}
         </button>
 
         <p
@@ -98,13 +107,11 @@ export function SignInForms({
           {linkState.message ?? 'We will email you a link to sign in.'}
         </p>
 
-        {linkState.status !== 'sent' && (
-          <div className={styles.divider}>
-            <button type="button" className={forms.link} onClick={() => setMode('password')}>
-              Use a password instead
-            </button>
-          </div>
-        )}
+        <div className={styles.divider}>
+          <button type="button" className={forms.link} onClick={() => setMode('password')}>
+            Use a password instead
+          </button>
+        </div>
       </form>
     );
   }
@@ -124,6 +131,8 @@ export function SignInForms({
           required
           disabled={pwPending}
           className={forms.control}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
         />
       </div>
 

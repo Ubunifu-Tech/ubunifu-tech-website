@@ -203,14 +203,6 @@
   outline-offset: 2px;
 }
 
-.drawerBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  background: rgba(20, 16, 36, 0.36);
-  animation: fadeIn 160ms ease-out;
-}
-
 .drawer {
   display: flex;
   width: min(19rem, 86vw);
@@ -235,12 +227,6 @@
   display: inline-flex;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-}
-
 @keyframes slideIn {
   from {
     transform: translateX(-100%);
@@ -248,8 +234,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer,
-  .drawerBackdrop {
+  .drawer {
     animation: none;
   }
 }

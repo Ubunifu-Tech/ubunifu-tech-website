@@ -85,9 +85,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <aside className={styles.sidebar} aria-label="Console">
+      <div className={styles.sidebar}>
         <ConsoleNav counts={counts} permissions={staff.permissions} />
-      </aside>
+      </div>
 
       <div className={styles.work}>{children}</div>
     </div>

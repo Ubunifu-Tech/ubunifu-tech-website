@@ -9,13 +9,8 @@ import { formatDate, formatMoney, formatShortDate } from '@/lib/console/money';
 import { DOCUMENT_KIND_LABEL, portalDocumentState } from '@/lib/console/documents';
 import { portalInvoiceState } from '@/lib/console/billing-labels';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
-import {
-  ALLOWED_CONTENT_TYPES,
-  ALLOWED_LABEL,
-  MAX_UPLOAD_BYTES,
-  fileSize,
-  uploadsConfigured,
-} from '@/lib/console/uploads';
+import { ALLOWED_LABEL, MAX_UPLOAD_BYTES, fileSize, uploadsConfigured } from '@/lib/console/uploads';
+import { UPLOAD_ACCEPT } from '@/lib/console/upload-rules';
 import { UploadBox } from './UploadBox';
 import { AnswerBox } from './AnswerBox';
 import { ItemOwner } from './ItemOwner';
@@ -437,7 +432,7 @@ export default async function PortalProject({
                       {showUpload && (
                         <UploadBox
                           assetRequestId={request.id}
-                          accept={ALLOWED_CONTENT_TYPES.join(',')}
+                          accept={UPLOAD_ACCEPT}
                           maxBytes={MAX_UPLOAD_BYTES}
                           hint={`${ALLOWED_LABEL}, up to ${fileSize(MAX_UPLOAD_BYTES)} each. You can choose several at once.`}
                           email={org.email}

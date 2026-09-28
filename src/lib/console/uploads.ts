@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
 import type { ActorType } from '@/generated/prisma/client';
 import { alertClientSent } from './alerts';
+import { MAX_UPLOAD_BYTES } from './upload-rules';
 
 /**
  * Files a client sends us, stored outside the database.
@@ -36,35 +37,9 @@ export function uploadsConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
-/** 40 MB. Big enough for a folder of photographs, small enough to bound. */
-export const MAX_UPLOAD_BYTES = 40 * 1024 * 1024;
-
-/**
- * What a client can attach.
- *
- * An allowlist rather than a blocklist, and deliberately a short one: this is
- * the checklist for a website build, so it is images, documents and archives.
- * Nothing here is executable and nothing here is served back as HTML.
- */
-export const ALLOWED_CONTENT_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/avif',
-  'image/gif',
-  'image/svg+xml',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'text/plain',
-  'text/csv',
-  'application/zip',
-  'application/x-zip-compressed',
-];
-
-export const ALLOWED_LABEL = 'Images, PDFs, Word and Excel files, text, CSV or a zip';
+// The rules the browser also reads live in upload-rules.ts; the route and the
+// page import them from here as before.
+export { ALLOWED_CONTENT_TYPES, ALLOWED_LABEL, MAX_UPLOAD_BYTES } from './upload-rules';
 
 /** "2.4 MB". Sizes are read by people, so they are rounded like people write. */
 export function fileSize(bytes: number): string {

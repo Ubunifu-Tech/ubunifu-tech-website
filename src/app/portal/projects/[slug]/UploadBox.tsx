@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
+import { ALLOWED_CONTENT_TYPES, ALLOWED_LABEL, uploadTypeOf } from '@/lib/console/upload-rules';
 import { confirmUpload, stillSignedIn } from './actions';
 import forms from '@/styles/forms.module.css';
 import styles from '../../Portal.module.css';
@@ -50,11 +51,12 @@ export function UploadBox({
     if (files.length === 0) return;
 
     const problems: string[] = [];
-    const types = accept.split(',');
+    // Only the first letter lowered: PDFs, Word, Excel and CSV keep theirs.
+    const kinds = ALLOWED_LABEL.charAt(0).toLowerCase() + ALLOWED_LABEL.slice(1);
     const wrongKind = (name: string) =>
-      `${name} is a kind of file that cannot go here. Put it in a zip file and attach that, or email it to ${email}.`;
+      `${name} is not a kind of file we can take here. We take ${kinds}. You can also email it to ${email}.`;
     const sendable = files.filter((file) => {
-      if (!types.includes(file.type)) {
+      if (!ALLOWED_CONTENT_TYPES.includes(uploadTypeOf(file))) {
         problems.push(wrongKind(file.name));
         return false;
       }
@@ -71,6 +73,8 @@ export function UploadBox({
         // Stored under the item it answers; the server only records it there.
         const blob = await upload(`requests/${assetRequestId}/${file.name.replace(/[\\/]/g, '-')}`, file, {
           access: 'private',
+          // The type it was checked as, so the store does not guess another.
+          contentType: uploadTypeOf(file),
           handleUploadUrl: '/api/portal/uploads',
           clientPayload: assetRequestId,
           multipart: true,

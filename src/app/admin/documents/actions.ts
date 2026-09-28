@@ -18,8 +18,13 @@ import {
   nextDocumentReference,
 } from '@/lib/console/documents';
 import { runTurn } from '@/lib/console/agent';
-import { interimFailure } from '@/lib/console/assistant-copy';
-import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
+import {
+  COPILOT_SYSTEM,
+  copilotBrief,
+  copilotFailure,
+  documentNote,
+  saveDraftTool,
+} from '@/lib/console/copilot';
 import { formText, formTextExact } from '@/lib/console/form';
 import { liveDocument } from '@/lib/console/live';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
@@ -272,7 +277,8 @@ export async function saveVersion(
  * and carry on, and read afterwards exactly what was asked for and what the
  * model did about it. The system prompt and the project brief are cached, so
  * every turn after the first pays for the new message rather than the whole
- * context again.
+ * context again. The document as it stands goes with every turn, uncached, so
+ * a revision keeps what somebody changed by hand since the last one.
  */
 export async function askCopilot(
   _previous: DocumentState,
@@ -290,7 +296,16 @@ export async function askCopilot(
 
   const document = await db.document.findUnique({
     where: { id: documentId, ...liveDocument },
-    select: { id: true, reference: true, status: true },
+    select: {
+      id: true,
+      reference: true,
+      status: true,
+      versions: {
+        orderBy: { version: 'desc' },
+        take: 1,
+        select: { version: true, bodyMarkdown: true, sourceMarkdown: true },
+      },
+    },
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };
   if (document.status === 'signed') {
@@ -299,6 +314,11 @@ export async function askCopilot(
       message: 'This has been signed, so it cannot be redrafted. Start a change order instead.',
     };
   }
+  // Each turn can write a long document, so drafting is paced per person.
+  if (!(await allow('copilot', staff.id, { limit: 30, windowMinutes: 60 }))) {
+    return { status: 'error', message: 'That is a lot of drafting for one hour. Try again later.' };
+  }
+  const latest = document.versions[0] ?? null;
 
   // One thread per document, created on first use.
   const existing = await db.conversation.findFirst({
@@ -329,6 +349,7 @@ export async function askCopilot(
     kind: 'document_draft',
     system: COPILOT_SYSTEM,
     brief: brief ?? undefined,
+    note: documentNote(latest),
     userMessage: message,
     tools: [saveDraftTool],
     context: { documentId: document.id, staffId: staff.id },
@@ -338,6 +359,21 @@ export async function askCopilot(
     deadlineMs: 270_000,
   });
 
+  // A turn can save a version and then fail on the reply that follows, so
+  // what was saved is read back rather than assumed from the failure.
+  const saved = result.ok
+    ? null
+    : await db.documentVersion.findFirst({
+        where: {
+          documentId: document.id,
+          version: { gt: latest?.version ?? 0 },
+          aiAssisted: true,
+          createdById: staff.id,
+        },
+        orderBy: { version: 'desc' },
+        select: { version: true },
+      });
+
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
@@ -346,14 +382,15 @@ export async function askCopilot(
     entityId: document.id,
     summary: result.ok
       ? `${document.reference}: ${result.used.length > 0 ? 'wrote a version' : 'answered'}`
-      : `${document.reference}: ${interimFailure(result.cause)}`,
+      : `${document.reference}: ${result.cause.replace(/_/g, ' ')}${
+          saved ? `, after saving version ${saved.version}` : ''
+        }`,
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
 
   if (!result.ok) {
-    // Staff can see why: the API's own reason is on the activity record.
-    return { status: 'error', message: `${interimFailure(result.cause)} The reason is in Activity.` };
+    return { status: 'error', message: copilotFailure(result.cause, saved?.version ?? null) };
   }
   return { status: 'done', message: result.reply };
 }

@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
-import { formatDate, parseDateInput } from '@/lib/console/money';
+import { formatDate } from '@/lib/console/money';
+import { publishedAtFor } from '@/lib/blog';
 import { SLUG_PATTERN } from '@/lib/slug';
 import { uploadedImageExists } from '@/lib/console/media';
 import { formText } from '@/lib/console/form';
@@ -262,9 +263,12 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
   }
 
   const now = new Date();
-  const chosenDate = parseDateInput(formText(formData, 'publishedAt'));
-  const publishedAt =
-    chosenDate ?? (intent === 'publish' && !post.publishedAt ? now : post.publishedAt);
+  const publishedAt = publishedAtFor({
+    typed: formText(formData, 'publishedAt'),
+    current: post.publishedAt,
+    publishing: intent === 'publish',
+    now,
+  });
 
   let updated: {
     updatedAt: Date;
@@ -366,7 +370,9 @@ export async function savePost(_previous: PostState, formData: FormData): Promis
           ? `Scheduled. It goes live on ${formatDate(scheduledFor)}.`
           : 'Published. It is live now.'
         : live
-          ? 'Saved. The live post has changed.'
+          ? scheduledFor
+            ? `Saved. It is off the site until ${formatDate(scheduledFor)}.`
+            : 'Saved. The live post has changed.'
           : 'Saved.',
     version: updated.updatedAt.toISOString(),
     slug,

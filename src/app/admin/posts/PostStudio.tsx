@@ -12,7 +12,7 @@ import { uploadWebsiteImage } from '@/components/console/uploadWebsiteImage';
 import { BlogArticleView } from '@/components/BlogArticleView';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { coverForSlug } from '@/content/blog-covers';
-import { formatDate, parseDateInput } from '@/lib/console/money';
+import { formatDate, parseDateInput, todayInput } from '@/lib/console/money';
 import { slugify } from '@/lib/slug';
 import forms from '@/styles/forms.module.css';
 import blogStyles from '@/app/(site)/blog/[slug]/BlogSlug.module.css';
@@ -105,7 +105,8 @@ export function PostStudio({
   const live = status === 'published';
   const locked = everPublished;
   const date = parseDateInput(publishedAt);
-  const scheduled = date !== null && date > new Date();
+  // A later day than today in Tanzania schedules it; today means now.
+  const scheduled = publishedAt !== '' && publishedAt > todayInput();
   const count = words(body);
   const minutes = Math.max(1, Math.round(count / 200));
 
@@ -565,7 +566,7 @@ export function PostStudio({
                     excerpt,
                     author: authorName,
                     writer: previewWriter,
-                    date: (date ?? new Date()).toISOString().slice(0, 10),
+                    date: publishedAt || todayInput(),
                     readingTime: minutes,
                     tags,
                     content: body,

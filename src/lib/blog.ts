@@ -1,5 +1,6 @@
 import 'server-only';
 import { db } from '@/lib/db';
+import { businessDay, parseDateInput, toDateInputValue } from '@/lib/console/money';
 import {
   comparePosts,
   defaultBlogCover,
@@ -94,8 +95,10 @@ function toBlogPost(row: PostRow): BlogPost {
     slug: row.slug,
     title: row.title,
     // The files carried a plain calendar date and every page formats it from
-    // that, so the same shape comes back rather than a timestamp.
-    date: published.toISOString().slice(0, 10),
+    // that, so the same shape comes back rather than a timestamp. It is the
+    // day in Tanzania, so a post that went live at 00:30 there is not dated
+    // the day before.
+    date: toDateInputValue(published),
     author: row.authorName ?? 'Ubunifu Technologies',
     ...(writer ? { writer } : {}),
     excerpt: row.excerpt,
@@ -122,6 +125,39 @@ const SELECT = {
   publishedAt: true,
   createdAt: true,
 } as const;
+
+/**
+ * The moment a saved post counts as published, from its date field.
+ *
+ * The editor seeds the field with the stored moment's day in Tanzania, using
+ * the same helper as here, so a field nobody changed keeps the moment the post
+ * went live: editing a live post never re-dates it. A changed field re-dates
+ * it. Today means now. A later day schedules it from 00:00 in Tanzania that
+ * day; an earlier one back-dates it. Empty dates it when it is first published.
+ */
+export function publishedAtFor({
+  typed,
+  current,
+  publishing,
+  now,
+}: {
+  /** The date field as sent: YYYY-MM-DD, or empty. */
+  typed: string;
+  /** The moment the post holds now. */
+  current: Date | null;
+  /** This save publishes the post. */
+  publishing: boolean;
+  now: Date;
+}): Date | null {
+  const date = parseDateInput(typed);
+  if (!date) return publishing && !current ? now : current;
+  const day = toDateInputValue(date);
+  if (current && toDateInputValue(current) === day) return current;
+  const today = businessDay(now);
+  if (day === today) return now;
+  // Tanzania is UTC+3 all year.
+  return day > today ? new Date(`${day}T00:00:00+03:00`) : date;
+}
 
 /** Newest first, then by slug, which is how the files were ordered. */
 /**

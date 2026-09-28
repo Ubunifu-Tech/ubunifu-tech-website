@@ -115,19 +115,30 @@ export function RowTools({
   );
 }
 
-/** The second press before anything is removed, asked as a question. */
+const REMOVE = { idle: 'Remove', pending: 'Removing…' };
+
+/**
+ * The second press before anything is removed, asked as a question. The
+ * button names what it does, which is not always removing. With onDone, the
+ * question closes once the action has worked, for a row that stays on the page
+ * afterwards.
+ */
 export function RemoveConfirm({
   question,
   action,
   hidden,
   onCancel,
+  verb = REMOVE,
+  onDone,
 }: {
   question: string;
   action: Action;
   hidden: Record<string, string>;
   onCancel: () => void;
+  verb?: { idle: string; pending: string };
+  onDone?: () => void;
 }) {
-  const [state, run, pending] = useActionState(action, IDLE);
+  const [state, run, pending] = useActionState(onDone ? closing(action, onDone) : action, IDLE);
   return (
     <form action={run} className={styles.confirmRow}>
       {Object.entries(hidden).map(([name, value]) => (
@@ -136,7 +147,7 @@ export function RemoveConfirm({
       <span className={styles.confirmText}>{question}</span>
       <span className={styles.confirmButtons}>
         <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>
-          {pending ? 'Removing…' : 'Remove'}
+          {pending ? verb.pending : verb.idle}
         </button>
         <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={onCancel}>
           Keep it

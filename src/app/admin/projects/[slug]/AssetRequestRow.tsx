@@ -81,7 +81,9 @@ export function AssetRequestRow({
             }
             action={removeAssetRequest}
             hidden={{ assetRequestId: id }}
+            verb={answered ? { idle: 'Mark not needed', pending: 'Marking…' } : undefined}
             onCancel={() => setMode('view')}
+            onDone={() => setMode('view')}
           />
         </div>
       </div>

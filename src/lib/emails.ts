@@ -161,7 +161,7 @@ export function notificationEmail(input: {
   message: string;
   /** Where the enquiry came from, when it was not the contact form. */
   via?: string;
-  /** The enquiry in the console, with the whole chat. */
+  /** The enquiry in the console, with the whole chat when it came from one. */
   consoleUrl?: string;
   /** Something added to an enquiry already sent, rather than a new one. */
   followUp?: boolean;
@@ -198,7 +198,11 @@ export function notificationEmail(input: {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px 18px 4px;">${paragraphsOf(input.message, 14)}</td></tr></table>
     <div style="margin-top:26px;">${
       input.consoleUrl
-        ? buttonRow(button(input.consoleUrl, 'Read the chat'), buttonGhost(reply, `Reply to ${name}`))
+        ? buttonRow(
+            // A contact-form enquiry has no chat to read.
+            button(input.consoleUrl, input.via ? 'Read the chat' : 'Open the enquiry'),
+            buttonGhost(reply, `Reply to ${name}`),
+          )
         : button(reply, `Reply to ${name}`)
     }</div>
     <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;

@@ -9,6 +9,10 @@ import { db } from '@/lib/db';
  * "did the client ever get that signing link" is answerable from our own
  * database rather than from the Resend dashboard. The log row is written even
  * when sending fails, which is the case you actually need it for.
+ *
+ * If the log row itself cannot be written, the email still goes. The contact
+ * form relies on that: when the database is down, the team email is the only
+ * record of an enquiry, so a logging failure must not stop it.
  */
 
 const FROM = 'Ubunifu Technologies <notifications@ubunifutech.com>';
@@ -39,26 +43,35 @@ export async function sendConsoleEmail(options: {
   /** Who a reply reaches. Our inbox unless the email is about someone else. */
   replyTo?: string;
 }): Promise<SendResult> {
-  const log = await db.emailLog.create({
-    data: {
-      toAddress: options.to,
-      template: options.template,
-      subject: options.subject,
-      status: 'queued',
-      entityType: options.entityType,
-      entityId: options.entityId,
-    },
-  });
+  let logId: string | null = null;
+  try {
+    const log = await db.emailLog.create({
+      data: {
+        toAddress: options.to,
+        template: options.template,
+        subject: options.subject,
+        status: 'queued',
+        entityType: options.entityType,
+        entityId: options.entityId,
+      },
+      select: { id: true },
+    });
+    logId = log.id;
+  } catch (error) {
+    console.error('[mailer] Could not write the email log; sending anyway', error);
+  }
 
   /**
    * The outcome, on the log row. A failure to write it is logged rather than
    * thrown: the email has already gone (or not), and the caller still needs
    * an answer about that.
    */
-  const settle = (data: { status: 'sent' | 'failed'; error?: string; providerId?: string; sentAt?: Date }) =>
-    db.emailLog
-      .update({ where: { id: log.id }, data })
-      .catch((failure: unknown) => console.error(`[mailer] Could not update email log ${log.id}`, failure));
+  const settle = async (data: { status: 'sent' | 'failed'; error?: string; providerId?: string; sentAt?: Date }) => {
+    if (!logId) return;
+    await db.emailLog
+      .update({ where: { id: logId }, data })
+      .catch((failure: unknown) => console.error(`[mailer] Could not update email log ${logId}`, failure));
+  };
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -115,7 +128,7 @@ export async function sendConsoleEmail(options: {
 
     if (response.error) {
       const reason = `${response.error.name ?? 'error'}: ${response.error.message ?? 'no message'}`;
-      console.error(`[mailer] ${options.template} rejected by Resend (log ${log.id}): ${reason}`);
+      console.error(`[mailer] ${options.template} rejected by Resend (log ${logId ?? 'not written'}): ${reason}`);
       await settle({ status: 'failed', error: reason });
       return { ok: false, error: 'The email provider rejected the message.' };
     }
@@ -124,7 +137,7 @@ export async function sendConsoleEmail(options: {
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[mailer] ${options.template} could not reach Resend (log ${log.id}): ${message}`);
+    console.error(`[mailer] ${options.template} could not reach Resend (log ${logId ?? 'not written'}): ${message}`);
     await settle({ status: 'failed', error: message });
     return { ok: false, error: 'The email could not be sent.' };
   }

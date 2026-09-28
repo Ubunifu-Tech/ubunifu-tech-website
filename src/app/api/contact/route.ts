@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import { db } from '@/lib/db';
 import type { ServiceLine } from '@/generated/prisma/client';
 import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
@@ -12,6 +11,8 @@ import {
   requestIp,
 } from '@/lib/console/rate-limit';
 import { TEAM_INBOX } from '@/lib/console/alerts';
+import { consoleEnv } from '@/lib/console/env';
+import { sendConsoleEmail } from '@/lib/console/mailer';
 import { contactSubjects } from '@/content/site';
 
 const RATE_LIMIT = 5;
@@ -113,6 +114,9 @@ const SERVICE_LINE_GUESS: Record<string, ServiceLine> = {
  * submissionId is unique, so the double-submit the client already guards
  * against cannot produce two rows either. A repeat is treated as the same
  * enquiry rather than a new one.
+ *
+ * Returns the enquiry's id, so the emails can link to it, or null when it
+ * could not be stored.
  */
 async function recordEnquiry(input: {
   name: string;
@@ -121,9 +125,9 @@ async function recordEnquiry(input: {
   message: string;
   submissionId: string;
   ip: string | null;
-}): Promise<boolean> {
+}): Promise<string | null> {
   try {
-    await db.enquiry.upsert({
+    const enquiry = await db.enquiry.upsert({
       where: { submissionId: input.submissionId },
       update: {},
       create: {
@@ -135,13 +139,14 @@ async function recordEnquiry(input: {
         submissionId: input.submissionId,
         ip: input.ip,
       },
+      select: { id: true },
     });
-    return true;
+    return enquiry.id;
   } catch (error) {
     // Logged, never thrown. A database that is briefly unreachable must not
     // stop the email going out — between the two of them the enquiry survives.
     console.error('Contact form: could not record the enquiry:', error);
-    return false;
+    return null;
   }
 }
 
@@ -235,7 +240,7 @@ export async function POST(req: NextRequest) {
 
     // Recorded first. Everything below is notification about a row that now
     // exists, rather than the only trace of the enquiry.
-    const recorded = await recordEnquiry({
+    const enquiryId = await recordEnquiry({
       name,
       email,
       subject,
@@ -247,26 +252,13 @@ export async function POST(req: NextRequest) {
         null,
     });
 
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.error('Contact form: RESEND_API_KEY is not set');
-      // Only a failure if the enquiry was not captured either. If it is in the
-      // console, a missing mail key is our problem to fix, not the visitor's
-      // to work around.
-      if (recorded) return NextResponse.json({ success: true });
-      return NextResponse.json(
-        { error: 'Email is not configured. Please email info@ubunifutech.com directly.' },
-        { status: 503 },
-      );
-    }
+    const recorded = enquiryId !== null;
+    // Both emails are logged against the enquiry, so the console shows
+    // whether the visitor was answered. The mailer reports a missing key or a
+    // rejected send as a failure rather than throwing, so once the enquiry is
+    // recorded neither is the visitor's problem.
+    const about = enquiryId ? { entityType: 'Enquiry', entityId: enquiryId } : {};
 
-    const resend = new Resend(apiKey);
-
-    // Caught here rather than by the handler's outer catch: a thrown network
-    // error and a rejected send are the same event to the visitor, and once
-    // the enquiry is recorded neither of them is their problem. Letting it
-    // reach the outer catch would answer 500 and invite a resubmission of
-    // something already in the console.
     let notificationFailed = false;
     // Past the day's allowance the email is skipped, not failed: the enquiry
     // is in the console, so the team still sees it there. When it could not
@@ -280,25 +272,23 @@ export async function POST(req: NextRequest) {
         24 * 60,
       );
     } else {
-      try {
-        const notification = await resend.emails.send(
-          {
-            from: 'Ubunifu Website <notifications@ubunifutech.com>',
-            to: TEAM_INBOX,
-            replyTo: email,
-            subject: `[Website] ${subject} from ${name}`,
-            html: notificationEmail({ name, email, subject, message }),
-          },
-          { idempotencyKey: `contact-notify-${submissionId}` },
-        );
-        if (notification.error) {
-          console.error('Contact form: team notification rejected:', notification.error);
-          notificationFailed = true;
-        }
-      } catch (error) {
-        console.error('Contact form: team notification failed:', error);
-        notificationFailed = true;
-      }
+      const notification = await sendConsoleEmail({
+        to: TEAM_INBOX,
+        subject: `[Website] ${subject} from ${name}`,
+        html: notificationEmail({
+          name,
+          email,
+          subject,
+          message,
+          consoleUrl: enquiryId ? `${consoleEnv.adminOrigin}/enquiries/${enquiryId}` : undefined,
+        }),
+        template: 'contact_notification',
+        // So "reply to this email" reaches the visitor, as the email says.
+        replyTo: email,
+        ...about,
+        idempotencyKey: `contact-notify-${submissionId}`,
+      });
+      notificationFailed = !notification.ok;
     }
 
     if (notificationFailed && !recorded) {
@@ -314,25 +304,15 @@ export async function POST(req: NextRequest) {
     // so the form cannot be used to mail a long list of strangers. Past it
     // the enquiry still reaches us; only the reply is skipped.
     if (await allow('acknowledgement', 'site', ACKNOWLEDGEMENTS_PER_DAY)) {
-      try {
-        const acknowledgement = await resend.emails.send(
-          {
-            from: 'Ubunifu Technologies <notifications@ubunifutech.com>',
-            to: email,
-            replyTo: TEAM_INBOX,
-            subject: 'Thanks for reaching out | Ubunifu Technologies',
-            // The subject is one of the form's own choices, checked above.
-            html: acknowledgementEmail({ topic: subject }),
-          },
-          { idempotencyKey: `contact-ack-${submissionId}` },
-        );
-
-        if (acknowledgement.error) {
-          console.warn('Contact form: acknowledgement email rejected:', acknowledgement.error);
-        }
-      } catch (error) {
-        console.warn('Contact form: acknowledgement email failed:', error);
-      }
+      await sendConsoleEmail({
+        to: email,
+        subject: 'Thanks for reaching out | Ubunifu Technologies',
+        // The subject is one of the form's own choices, checked above.
+        html: acknowledgementEmail({ topic: subject }),
+        template: 'contact_acknowledgement',
+        ...about,
+        idempotencyKey: `contact-ack-${submissionId}`,
+      });
     } else {
       await noteCapReached(
         'acknowledgement',

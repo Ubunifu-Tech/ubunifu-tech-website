@@ -802,6 +802,8 @@ export function clientSentEmail(input: {
   /** Their written answer, or null for a file. */
   answer: string | null;
   filename: string | null;
+  /** Other things the client sent since the last one of these emails. */
+  alsoSent?: number;
   url: string;
 }): string {
   const headline = input.answer
@@ -815,6 +817,13 @@ export function clientSentEmail(input: {
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(headline)}</h1>
     ${answer ? paragraphsOf(answer, 14) : ''}
     ${input.filename ? `<p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">${escapeHtml(input.filename)}</p>` : ''}
+    ${
+      input.alsoSent
+        ? `<p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">They also sent ${input.alsoSent} other ${
+            input.alsoSent === 1 ? 'thing' : 'things'
+          } since the last email about this project.</p>`
+        : ''
+    }
     ${button(input.url, 'Open the project')}`;
 
   return shell(`${input.projectName}: ${headline}`, body);

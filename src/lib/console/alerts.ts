@@ -5,7 +5,6 @@ import { consoleEnv } from './env';
 import { sendConsoleEmail, type SendResult } from './mailer';
 import type { StaffRole } from '@/generated/prisma/client';
 import { permissionsForRole, readRolePermissions, type Permission } from './permissions';
-import { allow } from './rate-limit';
 
 /** Where the team hears about what clients do. */
 export const TEAM_INBOX = 'info@ubunifutech.com';
@@ -78,9 +77,11 @@ async function mayOpen(
 /**
  * Tells the team a client sent something we asked for: an answer, or a file.
  *
- * At most one alert per project every fifteen minutes. A client sending ten
- * photographs one after another is one email, not ten, and the project page
- * shows everything that arrived.
+ * At most one alert per project every fifteen minutes, counted from the last
+ * alert that actually went out. A client sending ten photographs one after
+ * another is one email, not ten, and the project page shows everything that
+ * arrived. The next alert after a quiet spell says how many things came in
+ * that no email mentioned, so none of them goes unnoticed.
  */
 export async function alertClientSent(input: {
   assetRequestId: string;
@@ -105,9 +106,37 @@ export async function alertClientSent(input: {
     },
   });
   if (!item || item.project.deletedAt) return;
-  if (!(await allow('client-sent-alert', item.project.id, { limit: 1, windowMinutes: 15 }))) {
-    return;
-  }
+
+  // A failed send does not count as an alert: nobody was told.
+  const itemIds = (
+    await db.assetRequest.findMany({ where: { projectId: item.project.id }, select: { id: true } })
+  ).map((request) => request.id);
+  const last = await db.emailLog.findFirst({
+    where: {
+      template: 'client_sent',
+      entityType: 'AssetRequest',
+      entityId: { in: itemIds },
+      status: { not: 'failed' },
+    },
+    orderBy: { createdAt: 'desc' },
+    select: { createdAt: true },
+  });
+  if (last && Date.now() - last.createdAt.getTime() < 15 * 60_000) return;
+
+  // What the client sent since that alert, less this one: both callers write
+  // its audit line before calling here.
+  const since = last
+    ? await db.auditEvent.count({
+        where: {
+          actorType: 'client_contact',
+          entityType: 'AssetRequest',
+          entityId: { in: itemIds },
+          action: { in: ['asset.uploaded', 'asset_request.answered'] },
+          createdAt: { gt: last.createdAt },
+        },
+      })
+    : 0;
+  const alsoSent = Math.max(0, since - 1);
 
   const contact = await db.clientContact.findUnique({
     where: { id: input.contactId },
@@ -116,7 +145,9 @@ export async function alertClientSent(input: {
   const from = contact?.name ?? item.project.client.name;
   await alertTeam({
     owner: item.project.owner,
-    subject: `${item.project.name}: ${from} sent ${input.answer ? 'an answer' : 'a file'}`,
+    subject: `${item.project.name}: ${from} sent ${input.answer ? 'an answer' : 'a file'}${
+      alsoSent > 0 ? ` and ${alsoSent} more` : ''
+    }`,
     html: clientSentEmail({
       clientName: item.project.client.name,
       from,
@@ -124,6 +155,7 @@ export async function alertClientSent(input: {
       itemTitle: item.title,
       answer: input.answer,
       filename: input.filename,
+      alsoSent,
       url: `${consoleEnv.adminOrigin}/projects/${item.project.slug}#from-the-client`,
     }),
     template: 'client_sent',

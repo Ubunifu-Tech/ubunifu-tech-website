@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { db } from '@/lib/db';
+import { consoleEnv } from './env';
 import type { ActorType, MagicTokenPurpose } from '@/generated/prisma/client';
 
 /**
@@ -87,8 +88,10 @@ export async function clearFailedSignIns(contactId: string): Promise<void> {
  * one bucket. Returns true when this attempt is allowed, and records it.
  *
  * Keys are hashed with the session secret, so the table never holds a raw IP
- * or email address. A database failure allows the attempt: a throttle that
- * locks everybody out when Postgres blinks does more harm than the abuse.
+ * or email address. A missing secret throws before anything is written, so the
+ * caller reports its failure instead of counting under an unkeyed hash. A
+ * database failure allows the attempt: a throttle that locks everybody out
+ * when Postgres blinks does more harm than the abuse.
  */
 export async function allow(
   bucket: string,
@@ -97,7 +100,7 @@ export async function allow(
 ): Promise<boolean> {
   if (!key) return true;
   const keyHash = createHash('sha256')
-    .update(`${process.env.CONSOLE_SESSION_SECRET ?? ''}:${bucket}:${key.toLowerCase()}`)
+    .update(`${consoleEnv.sessionSecret}:${bucket}:${key.toLowerCase()}`)
     .digest('hex');
 
   try {

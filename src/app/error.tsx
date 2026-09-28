@@ -34,8 +34,9 @@ export default function SiteError({
 
   return (
     <>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <Navbar />
-      <main className={styles.main}>
+      <main id="main-content" tabIndex={-1} className={styles.main}>
         <div className={styles.backdrop} aria-hidden="true">
           <div className={styles.aurora} />
           <Topography className={styles.topo} />

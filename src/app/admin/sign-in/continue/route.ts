@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   // Only our own Continue page posts here. Without this, another site could
   // post a link of its own and sign the visitor into somebody else's account.
-  if (request.headers.get('origin') !== home.origin) return go('/sign-in?error=expired');
+  if (request.headers.get('origin') !== home.origin) return go('/sign-in?error=origin');
 
   const form = await request.formData().catch(() => null);
   const token = String(form?.get('token') ?? '');

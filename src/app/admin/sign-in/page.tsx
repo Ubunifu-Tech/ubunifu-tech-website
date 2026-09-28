@@ -10,6 +10,7 @@ export const metadata = { title: 'Sign in' };
 const LINK_PROBLEM: Record<string, string> = {
   expired: 'That link has expired or was already used. Ask for a new one below.',
   missing: 'That link was incomplete. Ask for a new one below.',
+  origin: 'Open the link in the browser you use for the console, then press Continue again.',
 };
 
 export default async function AdminSignIn({

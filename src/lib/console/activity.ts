@@ -300,7 +300,7 @@ const FINANCE_ACTIONS = ['cost.', 'regular_cost.', 'exchange_rate.', 'income.', 
  * The kinds of line that carry amounts this person is not allowed to see,
  * as action prefixes. Left out wherever the record is shown to them.
  */
-export function moneyActionsHiddenFrom(staff: StaffActor): string[] {
+function moneyActionsHiddenFrom(staff: StaffActor): string[] {
   const billing = can(staff, 'invoices');
   const fees = billing || can(staff, 'fees');
   return [
@@ -319,6 +319,23 @@ const DOCUMENT_ACTIONS = ['document.', 'document_defaults.'];
 /** Emails that carry amounts, and emails about documents, by template. */
 const MONEY_EMAILS = ['invoice_', 'receipt_', 'refund_'];
 const DOCUMENT_EMAILS = ['document_'];
+
+/**
+ * What this person may not see of the record: lines by action prefix, and
+ * emails by template prefix. Amounts need the money permissions, documents
+ * the documents one. Every screen that shows the record uses this.
+ */
+export function hiddenFrom(staff: StaffActor): { actions: string[]; emails: string[] } {
+  const mayDocs = can(staff, 'documents');
+  return {
+    actions: [...moneyActionsHiddenFrom(staff), ...(mayDocs ? [] : DOCUMENT_ACTIONS)],
+    emails: [...(can(staff, 'invoices') ? [] : MONEY_EMAILS), ...(mayDocs ? [] : DOCUMENT_EMAILS)],
+  };
+}
+
+export const templateStartsWith = (prefixes: string[]): Prisma.EmailLogWhereInput => ({
+  OR: prefixes.map((prefix) => ({ template: { startsWith: prefix } })),
+});
 
 /** Who did each thing, by name: there is more than one of us, and of them. */
 export async function whoDid(
@@ -362,18 +379,13 @@ export async function activityFor(
   limit = 40,
 ): Promise<ActivityItem[]> {
   if (entityIds.length === 0) return [];
-  const mayDocs = can(staff, 'documents');
-  const hidden = [...moneyActionsHiddenFrom(staff), ...(mayDocs ? [] : DOCUMENT_ACTIONS)];
-  const hiddenEmails = [
-    ...(can(staff, 'invoices') ? [] : MONEY_EMAILS),
-    ...(mayDocs ? [] : DOCUMENT_EMAILS),
-  ];
+  const hidden = hiddenFrom(staff);
 
   const [audits, emails] = await Promise.all([
     db.auditEvent.findMany({
       where: {
         entityId: { in: entityIds },
-        ...(hidden.length ? { NOT: actionStartsWith(hidden) } : {}),
+        ...(hidden.actions.length ? { NOT: actionStartsWith(hidden.actions) } : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -389,9 +401,7 @@ export async function activityFor(
     db.emailLog.findMany({
       where: {
         entityId: { in: entityIds },
-        ...(hiddenEmails.length
-          ? { NOT: { OR: hiddenEmails.map((prefix) => ({ template: { startsWith: prefix } })) } }
-          : {}),
+        ...(hidden.emails.length ? { NOT: templateStartsWith(hidden.emails) } : {}),
       },
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -439,7 +449,7 @@ const QUIET = ['staff.sign_in.success', 'staff.sign_in.link_sent', 'staff.sign_o
 
 /** The latest things that happened anywhere, for the overview. */
 export async function recentActivity(staff: StaffActor, limit = 8): Promise<ActivityItem[]> {
-  const hidden = moneyActionsHiddenFrom(staff);
+  const hidden = hiddenFrom(staff).actions;
   const audits = await db.auditEvent.findMany({
     where: {
       action: { notIn: QUIET },

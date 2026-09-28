@@ -6,8 +6,9 @@ import { formatShortDate } from '@/lib/console/money';
 import {
   actionLabel,
   actionStartsWith,
-  moneyActionsHiddenFrom,
+  hiddenFrom,
   readableSummary,
+  templateStartsWith,
   whoDid,
 } from '@/lib/console/activity';
 import { Callout } from '@/components/console/Callout';
@@ -81,30 +82,33 @@ export default async function ActivityPage({
   const staff = await requireStaff();
   const { show } = await searchParams;
 
-  // Amounts are in these lines, so they are left out for anyone who cannot
-  // see money, the same as the pages they would link to.
-  const hidden = moneyActionsHiddenFrom(staff);
+  // Lines and emails about money or documents are left out for anyone who
+  // cannot see those, the same as the pages they would link to.
+  const hidden = hiddenFrom(staff);
   const seesMoney = can(staff, 'invoices') || can(staff, 'fees') || can(staff, 'finance');
   const filters = FILTERS.filter((filter) => filter.key !== 'money' || seesMoney);
   const active = filters.some((f) => f.key === show) ? show! : 'all';
 
   const visible = (where: Prisma.AuditEventWhereInput | null) =>
-    where === null || hidden.length === 0
+    where === null || hidden.actions.length === 0
       ? where
-      : { AND: [where, { NOT: actionStartsWith(hidden) }] };
+      : { AND: [where, { NOT: actionStartsWith(hidden.actions) }] };
   const where = visible(auditWhere(active));
-  const wantsEmails = active === 'all' || active === 'emails' || active === 'failures';
 
   // Failed sends that have not been put right by sending again since.
   const failures = await unresolvedEmailFailures(staff);
   const failureIds = failures.map((row) => row.id);
 
+  // The failures view is already limited to what this person can send again.
   const emailWhere = (key: string): Prisma.EmailLogWhereInput | null =>
     key === 'failures'
       ? { id: { in: failureIds } }
       : key === 'all' || key === 'emails'
-        ? {}
+        ? hidden.emails.length
+          ? { NOT: templateStartsWith(hidden.emails) }
+          : {}
         : null;
+  const emailsShown = emailWhere(active);
 
   // How many entries each view holds, audit lines and emails together.
   const viewCounts = await Promise.all(
@@ -140,9 +144,9 @@ export default async function ActivityPage({
             createdAt: true,
           },
         }),
-    wantsEmails
+    emailsShown !== null
       ? db.emailLog.findMany({
-          where: active === 'failures' ? { id: { in: failureIds } } : {},
+          where: emailsShown,
           orderBy: { createdAt: 'desc' },
           take: 150,
           select: {

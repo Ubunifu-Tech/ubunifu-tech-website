@@ -506,6 +506,10 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
           billingKind: true,
           nextDueAt: true,
           status: true,
+          invoiceLines: {
+            where: { invoice: { status: { not: 'void' } } },
+            select: { amountMinor: true, quantity: true },
+          },
         },
       },
       launchedAt: true,
@@ -563,14 +567,17 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
       (total, invoice) => total + Math.max(0, invoice.totalMinor - invoice.paidMinor),
       0,
     ),
-    /** Build fees only. A renewal that has not been invoiced is not late. */
-    uninvoicedOneOffMinor: Math.max(
-      0,
-      project.lineItems
-        .filter((l) => l.billingKind === 'one_off' || l.billingKind === 'installment')
-        .reduce((t, l) => t + l.amountMinor * l.quantity, 0) -
-        project.invoices.reduce((t, i) => t + i.totalMinor, 0),
-    ),
+    /**
+     * Build fees only. A renewal that has not been invoiced is not late. Each
+     * line against its own invoice lines, the rule billableLines follows, so
+     * VAT and renewal invoices never count towards a build fee.
+     */
+    uninvoicedOneOffMinor: project.lineItems
+      .filter((l) => l.billingKind === 'one_off' || l.billingKind === 'installment')
+      .reduce((total, l) => {
+        const billed = l.invoiceLines.reduce((t, i) => t + i.amountMinor * i.quantity, 0);
+        return total + Math.max(0, l.amountMinor * l.quantity - billed);
+      }, 0),
     hasDelivered: project.launchedAt !== null || project.statusEvents.length > 0,
     signatureCount: requests.reduce((t, r) => t + r.signatures.length, 0),
     openSignatureRequests: requests.filter((r) => r.status === 'sent' || r.status === 'viewed').length,

@@ -46,6 +46,41 @@ export const DOCUMENT_STATUS_LABEL: Record<string, string> = {
   superseded: 'Superseded',
 };
 
+export type DocumentTone = 'good' | 'bad' | 'warn' | 'live' | 'quiet';
+
+const CONSOLE_TONE: Record<string, DocumentTone> = {
+  sent: 'live',
+  viewed: 'live',
+  changes_requested: 'warn',
+  signed: 'good',
+  declined: 'bad',
+  expired: 'warn',
+};
+
+/**
+ * A document's state as the console shows it, from its status and its latest
+ * request. Nothing marks a request expired when its time runs out, so that
+ * is read from expiresAt here, on every badge, rather than written during a
+ * page render.
+ */
+export function consoleDocumentState(
+  status: string,
+  latest: { status: string; expiresAt: Date | null } | undefined,
+  now: Date,
+): { label: string; tone: DocumentTone } {
+  const waiting = (value: string) => value === 'sent' || value === 'viewed';
+  if (
+    waiting(status) &&
+    latest &&
+    waiting(latest.status) &&
+    latest.expiresAt &&
+    latest.expiresAt.getTime() <= now.getTime()
+  ) {
+    return { label: 'Time to sign ran out', tone: 'warn' };
+  }
+  return { label: DOCUMENT_STATUS_LABEL[status] ?? status, tone: CONSOLE_TONE[status] ?? 'quiet' };
+}
+
 /**
  * The same states, said to the person they are about.
  *

@@ -2,45 +2,37 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
-import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
+import { consoleDocumentState, DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
 import { formatShortDate } from '@/lib/console/money';
-import { liveDocument } from '@/lib/console/live';
+import { awaitingSignature, liveDocument, signingRanOut } from '@/lib/console/live';
+import { DocumentBadge } from '@/components/console/DocumentBadge';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
-import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Documents' };
 
-const STATUS_BADGE: Record<string, string> = {
-  draft: '',
-  internal_review: '',
-  sent: forms.badgeLive,
-  viewed: forms.badgeLive,
-  changes_requested: forms.badgeWarn,
-  signed: forms.badgeGood,
-  declined: forms.badgeBad,
-  expired: forms.badgeWarn,
-  superseded: '',
-};
-
 /* 'With the client' used to include changes_requested, which is the one state
    that means the opposite — they have answered and the next move is ours. The
    two now have separate views, because a list of what you are waiting on is
-   only useful if nothing on it is waiting on you. */
+   only useful if nothing on it is waiting on you. A request whose time to
+   sign ran out is waiting on us too, to send it again, so it has its own. */
 const FILTERS = [
   { key: 'open', label: 'With the client' },
   { key: 'back', label: 'Changes asked' },
+  { key: 'ranout', label: 'Time ran out' },
   { key: 'drafts', label: 'Drafts' },
   { key: 'signed', label: 'Signed' },
   { key: 'declined', label: 'Declined' },
   { key: 'all', label: 'Everything' },
 ] as const;
 
-function filterToWhere(key: string): Prisma.DocumentWhereInput {
+function filterToWhere(key: string, now: Date): Prisma.DocumentWhereInput {
   switch (key) {
     case 'back':
       return { status: 'changes_requested' };
+    case 'ranout':
+      return signingRanOut(now);
     case 'declined':
       return { status: 'declined' };
     case 'drafts':
@@ -50,7 +42,7 @@ function filterToWhere(key: string): Prisma.DocumentWhereInput {
     case 'all':
       return {};
     default:
-      return { status: { in: ['sent', 'viewed'] } };
+      return { status: { in: ['sent', 'viewed'] }, ...awaitingSignature(now) };
   }
 }
 
@@ -62,6 +54,7 @@ export default async function DocumentsPage({
   await requirePermission('documents');
   const { show, q } = await searchParams;
   const query = searchText(q);
+  const now = new Date();
 
   const matching: Prisma.DocumentWhereInput = query
     ? {
@@ -76,17 +69,21 @@ export default async function DocumentsPage({
 
   const viewCounts = await Promise.all(
     FILTERS.map((filter) =>
-      db.document.count({ where: { AND: [liveDocument, filterToWhere(filter.key), matching] } }),
+      db.document.count({
+        where: { AND: [liveDocument, filterToWhere(filter.key, now), matching] },
+      }),
     ),
   );
   // Opens on the ones waiting for us, when there are any, as the badge that
   // brought them here counts; otherwise on what is with the client.
-  const firstView = (viewCounts[FILTERS.findIndex((f) => f.key === 'back')] ?? 0) > 0 ? 'back' : 'open';
+  const countOf = (key: (typeof FILTERS)[number]['key']) =>
+    viewCounts[FILTERS.findIndex((f) => f.key === key)] ?? 0;
+  const firstView = countOf('back') > 0 ? 'back' : countOf('ranout') > 0 ? 'ranout' : 'open';
   const active = FILTERS.some((f) => f.key === show) ? show! : firstView;
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
 
   const documents = await db.document.findMany({
-    where: { AND: [liveDocument, filterToWhere(active), matching] },
+    where: { AND: [liveDocument, filterToWhere(active, now), matching] },
     orderBy: { updatedAt: 'desc' },
     take: 200,
     select: {
@@ -102,7 +99,12 @@ export default async function DocumentsPage({
       signatureRequests: {
         orderBy: { createdAt: 'desc' },
         take: 1,
-        select: { sentAt: true, signatures: { select: { signedAt: true } } },
+        select: {
+          sentAt: true,
+          status: true,
+          expiresAt: true,
+          signatures: { select: { signedAt: true } },
+        },
       },
     },
   });
@@ -189,9 +191,7 @@ export default async function DocumentsPage({
                         </Link>
                       </td>
                       <td className={table.td}>
-                        <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
-                          {DOCUMENT_STATUS_LABEL[document.status]}
-                        </span>
+                        <DocumentBadge {...consoleDocumentState(document.status, request, now)} />
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {request?.signatures[0] ? (

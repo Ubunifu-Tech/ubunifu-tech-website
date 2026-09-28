@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, type StaffActor } from '@/lib/console/auth';
-import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
+import { consoleDocumentState, DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
 import { formatRelative } from '@/lib/console/money';
-import forms from '@/styles/forms.module.css';
+import { DocumentBadge } from '@/components/console/DocumentBadge';
 import table from '@/styles/table.module.css';
 
 /**
@@ -50,6 +50,7 @@ export async function ProjectDocuments({
         take: 1,
         select: {
           status: true,
+          expiresAt: true,
           respondedAt: true,
           responseNote: true,
           respondedBy: { select: { name: true } },
@@ -118,19 +119,9 @@ export async function ProjectDocuments({
                       {DOCUMENT_KIND_LABEL[document.kind]}
                     </td>
                     <td className={table.td}>
-                      <span
-                        className={`${forms.badge} ${
-                          document.status === 'signed'
-                            ? forms.badgeGood
-                            : document.status === 'declined'
-                              ? forms.badgeBad
-                              : ['sent', 'viewed', 'changes_requested'].includes(document.status)
-                                ? forms.badgeWarn
-                                : ''
-                        }`}
-                      >
-                        {DOCUMENT_STATUS_LABEL[document.status]}
-                      </span>
+                      <DocumentBadge
+                        {...consoleDocumentState(document.status, document.signatureRequests[0], now)}
+                      />
                     </td>
                     <td className={table.td}>
                       {answer?.respondedAt && answer.responseNote ? (

@@ -1,7 +1,14 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import type { NavCounts } from '@/app/admin/ConsoleNav';
-import { liveDocument, liveEnquiry, liveInvoice, liveTicket, renewingLine } from './live';
+import {
+  liveDocument,
+  liveEnquiry,
+  liveInvoice,
+  liveTicket,
+  renewingLine,
+  signingRanOut,
+} from './live';
 import { INVOICE_AHEAD_DAYS } from './renewals';
 import { LIVE_STATUSES } from './project-status';
 
@@ -38,12 +45,18 @@ export async function navCounts(): Promise<NavCounts> {
       },
     }),
     /*
-     * Documents handed back with changes to make: the next move is ours, and
-     * the Documents page opens on them. One out for signature is waiting on
+     * Documents where the next move is ours: handed back with changes to
+     * make, or out for signature after the time to sign ran out. The
+     * Documents page opens on them. One still inside its time is waiting on
      * the client, and 'declined' stays declined for ever; a badge that never
      * clears is a badge nobody reads. Both have their own views instead.
      */
-    db.document.count({ where: { ...liveDocument, status: 'changes_requested' } }),
+    db.document.count({
+      where: {
+        ...liveDocument,
+        OR: [{ status: 'changes_requested' }, signingRanOut(new Date())],
+      },
+    }),
     // Waiting on us, not on them — a request handed back is not a task.
     db.ticket.count({ where: { ...liveTicket, status: { in: ['open', 'triaged', 'in_progress'] } } }),
   ]);

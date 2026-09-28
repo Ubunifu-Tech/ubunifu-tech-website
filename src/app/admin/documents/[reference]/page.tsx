@@ -6,8 +6,8 @@ import { db } from '@/lib/db';
 import { can, requirePermission } from '@/lib/console/auth';
 import { activityFor } from '@/lib/console/activity';
 import {
+  consoleDocumentState,
   DOCUMENT_KIND_LABEL,
-  DOCUMENT_STATUS_LABEL,
   hashDocument,
   renderMarkdown,
   shortHash,
@@ -20,6 +20,7 @@ import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money
 import { getOrg } from '@/lib/console/org';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Callout } from '@/components/console/Callout';
+import { DocumentBadge } from '@/components/console/DocumentBadge';
 import { FeeEditor } from '@/components/console/FeeEditor';
 import { Steps } from '@/components/console/Steps';
 import {
@@ -39,18 +40,6 @@ import styles from '../../Admin.module.css';
 import page from './Document.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
-
-const STATUS_BADGE: Record<string, string> = {
-  draft: '',
-  internal_review: '',
-  sent: forms.badgeLive,
-  viewed: forms.badgeLive,
-  changes_requested: forms.badgeWarn,
-  signed: forms.badgeGood,
-  declined: forms.badgeBad,
-  expired: forms.badgeWarn,
-  superseded: '',
-};
 
 const STEP_LABEL: Record<DocumentStep, string> = {
   details: 'Details',
@@ -209,9 +198,7 @@ export default async function DocumentPage({
         <Link href={`/documents/${document.reference}/print`} className={`${forms.button} ${forms.quiet}`}>
           Print or save as PDF
         </Link>
-        <span className={`${forms.badge} ${STATUS_BADGE[document.status]}`}>
-          {DOCUMENT_STATUS_LABEL[document.status]}
-        </span>
+        <DocumentBadge {...consoleDocumentState(document.status, live, now)} />
       </div>
     </div>
   );

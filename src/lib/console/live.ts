@@ -89,6 +89,19 @@ export const awaitingSignature = (now: Date) =>
   }) satisfies Prisma.DocumentWhereInput;
 
 /**
+ * Out for signature, and the time to sign has run out: the next move is
+ * ours, to send it again. Only one request is open per document
+ * (openSignatureRequest cancels the others), so 'some' finds that one.
+ */
+export const signingRanOut = (now: Date) =>
+  ({
+    status: { in: ['sent', 'viewed'] },
+    signatureRequests: {
+      some: { status: { in: ['sent', 'viewed'] }, expiresAt: { lte: now } },
+    },
+  }) satisfies Prisma.DocumentWhereInput;
+
+/**
  * An invoice the client can see: anything we sent them. One we cancelled
  * stays, marked, because their emails, receipts and refund notes point at
  * it. One cancelled before it was ever sent was never theirs.

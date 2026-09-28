@@ -12,7 +12,7 @@ import { uploadWebsiteImage } from '@/components/console/uploadWebsiteImage';
 import { BlogArticleView } from '@/components/BlogArticleView';
 import { EditorialVisual } from '@/components/EditorialVisual';
 import { coverForSlug } from '@/content/blog-covers';
-import { formatDate, parseDateInput, todayInput } from '@/lib/console/money';
+import { formatDate, formatTime, parseDateInput, todayInput } from '@/lib/console/money';
 import { STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { slugify } from '@/lib/slug';
 import forms from '@/styles/forms.module.css';
@@ -611,7 +611,7 @@ function SaveLine({ save, dirty, live }: { save: SaveStatus; dirty: boolean; liv
   } else if (dirty) {
     text = live ? 'Changes not live yet' : 'Unsaved changes';
   } else if (save.kind === 'saved') {
-    text = save.message ?? `Saved at ${save.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    text = save.message ?? `Saved at ${formatTime(save.at)}`;
   } else {
     text = live ? 'Live and up to date' : 'All changes saved';
   }

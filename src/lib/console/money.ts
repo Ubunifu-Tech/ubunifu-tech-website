@@ -163,6 +163,11 @@ const SHORT_DATE = new Intl.DateTimeFormat('en-GB', {
   year: 'numeric',
   timeZone: BUSINESS_TIME_ZONE,
 });
+const TIME = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: BUSINESS_TIME_ZONE,
+});
 
 /** The day a moment falls on in Tanzania, as YYYY-MM-DD. */
 export function businessDay(value: Date): string {
@@ -182,6 +187,11 @@ export function formatDate(value: Date | null | undefined): string {
 export function formatShortDate(value: Date | null | undefined): string {
   if (!value) return 'Not set';
   return SHORT_DATE.format(value);
+}
+
+/** The time of day in Tanzania, as 14:05, whatever clock the browser keeps. */
+export function formatTime(value: Date): string {
+  return TIME.format(value);
 }
 
 /**

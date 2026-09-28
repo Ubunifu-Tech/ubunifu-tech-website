@@ -42,6 +42,7 @@ const typed = money.parseDateInput('2026-10-01')!; // noon UTC, 15:00 there
 
 expect('formatDate of a moment', money.formatDate(lateNight), '1 October 2026');
 expect('formatShortDate of a moment', money.formatShortDate(lateNight), '1 Oct 2026');
+expect('formatTime of a moment', money.formatTime(lateNight), '01:30');
 expect('formatDate of a typed date', money.formatDate(typed), '1 October 2026');
 expect('formatDate at midnight UTC', money.formatDate(new Date('2026-10-01T00:00:00Z')), '1 October 2026');
 expect('toDateInputValue of a moment', money.toDateInputValue(new Date('2026-09-30T21:45:00Z')), '2026-10-01');

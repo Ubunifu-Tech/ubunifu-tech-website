@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { formatShortDate } from '@/lib/console/money';
+import { formatShortDate, formatTime } from '@/lib/console/money';
 import {
   actionLabel,
   actionStartsWith,
@@ -21,13 +21,6 @@ import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Activity' };
-
-/** The time of day where the team works. */
-const TIME = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-  timeZone: 'Africa/Dar_es_Salaam',
-});
 
 /**
  * The whole record, as a table rather than a stream.
@@ -399,7 +392,7 @@ export default async function ActivityPage({
                   <tr key={row.id} className={table.tr}>
                     <td className={`${table.td} ${table.nowrap}`}>
                       <time dateTime={row.at.toISOString()} title={row.at.toISOString()}>
-                        {formatShortDate(row.at)}, {TIME.format(row.at)}
+                        {formatShortDate(row.at)}, {formatTime(row.at)}
                       </time>
                     </td>
                     <td

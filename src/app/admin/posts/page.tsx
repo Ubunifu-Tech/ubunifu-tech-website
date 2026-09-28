@@ -128,6 +128,9 @@ export default async function PostsPage({
           <Link href="/posts/writers" className={`${forms.button} ${forms.quiet}`}>
             Writers
           </Link>
+          <Link href="/posts/images" className={`${forms.button} ${forms.quiet}`}>
+            Images
+          </Link>
           <form action={startPost}>
             <button type="submit" className={forms.button}>
               New post

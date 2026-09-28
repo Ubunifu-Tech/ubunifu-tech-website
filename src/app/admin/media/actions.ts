@@ -1,8 +1,10 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { can, requireStaff } from '@/lib/console/auth';
 import { NO_PERMISSION } from '@/lib/console/permissions';
-import { recordMediaAsset } from '@/lib/console/media';
+import { recordMediaAsset, removeMediaAsset } from '@/lib/console/media';
+import { formText } from '@/lib/console/form';
 
 export type RegisteredMedia = { ok: true; path: string } | { ok: false; message: string };
 
@@ -32,4 +34,32 @@ export async function registerMedia(blobUrl: string, filename: string): Promise<
     console.error('[media] could not record', error);
     return { ok: false, message: 'That did not arrive. Try it again?' };
   }
+}
+
+export type RemoveMediaState = { status: 'idle' | 'done' | 'error'; message?: string };
+
+/** Takes one image off the website, unless a post or a writer still uses it. */
+export async function removeMedia(
+  _previous: RemoveMediaState,
+  formData: FormData,
+): Promise<RemoveMediaState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
+
+  const result = await removeMediaAsset(formText(formData, 'mediaId'), staff.id);
+  if (!result.ok && 'usedIn' in result) {
+    return { status: 'error', message: `Used in ${inList(result.usedIn)}. Take it out of those first.` };
+  }
+  if (!result.ok) {
+    revalidatePath('/admin/posts/images');
+    return { status: 'error', message: 'That image has already been removed.' };
+  }
+
+  revalidatePath('/admin/posts/images');
+  return { status: 'done', message: 'Removed.' };
+}
+
+/** "Post: A", "Post: A and Writer: B", "Post: A, Post: B and Writer: C". */
+function inList(items: string[]): string {
+  return items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
 }

@@ -198,6 +198,7 @@ const ACTION_LABELS = {
   'post.archived': 'Post archived',
   'post.restored': 'Post brought back',
   'media.uploaded': 'Image uploaded',
+  'media.removed': 'Image removed',
   'settings.billing_saved': 'Billing details changed',
   'assistant.failed': 'Assistant could not answer',
   'assistant.declined': 'Assistant declined a question',

@@ -2,7 +2,7 @@ import 'server-only';
 import { head } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
-import { safeFilename, storedUnder, streamBlob } from '@/lib/console/uploads';
+import { deleteStoredFiles, safeFilename, storedUnder, streamBlob } from '@/lib/console/uploads';
 import { EXTENSION_FOR, MAX_MEDIA_BYTES } from './media-rules';
 
 /**
@@ -149,4 +149,77 @@ export async function serveMedia(file: string): Promise<Response> {
   }
 
   return streamBlob(asset.storageKey, { filename: asset.filename, cache: 'public' });
+}
+
+/**
+ * Where each image is used on the site: 'Post: <title>' for a post in the
+ * journal whose cover is the image or whose body has it, and
+ * 'Writer: <name>' for a writer on the list whose photo it is. Keyed by the
+ * image's /media/ path; an image nobody uses has no entry.
+ */
+export async function mediaUsage(
+  assets: { id: string; extension: string }[],
+): Promise<Map<string, string[]>> {
+  const usage = new Map<string, string[]>();
+  if (assets.length === 0) return usage;
+
+  const [posts, writers] = await Promise.all([
+    db.post.findMany({
+      where: { deletedAt: null },
+      select: { id: true, title: true, status: true, coverImage: true, bodyMarkdown: true },
+    }),
+    db.writer.findMany({
+      where: { deletedAt: null, photo: { not: null } },
+      select: { id: true, name: true, photo: true },
+    }),
+  ]);
+
+  for (const asset of assets) {
+    const path = mediaPath(asset);
+    const labels = [
+      ...posts
+        .filter((post) => post.coverImage === path || post.bodyMarkdown.includes(path))
+        .map((post) => `Post: ${post.title || 'Untitled draft'}`),
+      ...writers.filter((writer) => writer.photo === path).map((writer) => `Writer: ${writer.name}`),
+    ];
+    if (labels.length > 0) usage.set(path, labels);
+  }
+  return usage;
+}
+
+/**
+ * Takes an image off the website: its public address stops answering and the
+ * stored file is deleted. Refused while a post or a writer still uses it,
+ * with where, because removing it would leave a broken picture on the site.
+ */
+export async function removeMediaAsset(
+  id: string,
+  staffId: string,
+): Promise<{ ok: true } | { ok: false; usedIn: string[] } | { ok: false; gone: true }> {
+  const asset = await db.mediaAsset.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, extension: true, filename: true, storageKey: true },
+  });
+  if (!asset) return { ok: false, gone: true };
+
+  const usedIn = (await mediaUsage([asset])).get(mediaPath(asset));
+  if (usedIn) return { ok: false, usedIn };
+
+  const removed = await db.mediaAsset.updateMany({
+    where: { id: asset.id, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (removed.count === 0) return { ok: false, gone: true };
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staffId,
+    action: 'media.removed',
+    entityType: 'MediaAsset',
+    entityId: asset.id,
+    summary: `${asset.filename} taken off the website's images`,
+  });
+
+  await deleteStoredFiles([asset.storageKey]);
+  return { ok: true };
 }

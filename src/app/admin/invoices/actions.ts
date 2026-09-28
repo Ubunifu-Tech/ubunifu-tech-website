@@ -26,6 +26,9 @@ import {
   formatMoney,
   formatShortDate,
   isPastDay,
+  MONEY_CAP_MINOR,
+  moneyCapText,
+  overMoneyCap,
   parseDateInput,
   parseMoney,
 } from '@/lib/console/money';
@@ -220,6 +223,14 @@ async function pickBillables(projectId: string, chosen: string[]) {
   const subtotal = lines.reduce((total, line) => total + line.amountMinor, 0);
   const taxMinor =
     org.chargesVat && org.vatRateBps > 0 ? Math.round((subtotal * org.vatRateBps) / 10_000) : 0;
+  if (
+    lines.some((line) => line.amountMinor > MONEY_CAP_MINOR) ||
+    subtotal + taxMinor > MONEY_CAP_MINOR
+  ) {
+    return {
+      error: `One invoice cannot be more than ${moneyCapText(currencies[0]!)}. Untick some lines and raise a second invoice.`,
+    } as const;
+  }
 
   return {
     project,
@@ -456,7 +467,15 @@ function readPayment(formData: FormData, currency: string, direction: 'in' | 'ou
           date: 'Enter the date the money went back.',
           how: 'Choose how the money went back.',
         };
-  const amountMinor = parseMoney(String(formData.get('amount') ?? ''), currency);
+  const amountRaw = String(formData.get('amount') ?? '');
+  const amountMinor = parseMoney(amountRaw, currency);
+  if (amountMinor === null && overMoneyCap(amountRaw, currency)) {
+    return {
+      error: `Amounts above ${moneyCapText(currency)} cannot be entered. Record it as two ${
+        direction === 'in' ? 'payments' : 'refunds'
+      }.`,
+    };
+  }
   if (amountMinor === null || amountMinor <= 0) {
     return { error: said.amount };
   }

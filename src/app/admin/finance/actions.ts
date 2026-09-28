@@ -7,7 +7,13 @@ import { can, recordAudit, requireStaff } from '@/lib/console/auth';
 import { NO_PERMISSION } from '@/lib/console/permissions';
 import { isCurrency } from '@/lib/console/currencies';
 import { formText } from '@/lib/console/form';
-import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
+import {
+  formatMoney,
+  moneyCapText,
+  overMoneyCap,
+  parseDateInput,
+  parseMoney,
+} from '@/lib/console/money';
 import { monthDate, monthLabel, ratePair } from '@/lib/console/finance';
 import { recordCostBill } from '@/lib/console/cost-bills';
 
@@ -73,7 +79,15 @@ function readCost(formData: FormData, amountField: string) {
   if (!isCurrency(currency)) {
     return { ok: false as const, message: 'Choose a currency.', field: 'currency' };
   }
-  const amountMinor = parseMoney(formText(formData, amountField), currency);
+  const amountRaw = formText(formData, amountField);
+  const amountMinor = parseMoney(amountRaw, currency);
+  if (amountMinor === null && overMoneyCap(amountRaw, currency)) {
+    return {
+      ok: false as const,
+      message: `Amounts above ${moneyCapText(currency)} cannot be entered. Enter it as two costs.`,
+      field: amountField,
+    };
+  }
   if (amountMinor === null || amountMinor <= 0) {
     return { ok: false as const, message: 'Enter the amount on the bill.', field: amountField };
   }
@@ -391,7 +405,15 @@ export async function saveIncome(_previous: FinanceState, formData: FormData): P
     return { status: 'error', message: 'Say where it came from.', field: 'source' };
   }
   if (!isCurrency(currency)) return { status: 'error', message: 'Choose a currency.', field: 'currency' };
-  const amountMinor = parseMoney(formText(formData, 'amount'), currency);
+  const amountRaw = formText(formData, 'amount');
+  const amountMinor = parseMoney(amountRaw, currency);
+  if (amountMinor === null && overMoneyCap(amountRaw, currency)) {
+    return {
+      status: 'error',
+      message: `Amounts above ${moneyCapText(currency)} cannot be entered. Enter it as two amounts.`,
+      field: 'amount',
+    };
+  }
   if (amountMinor === null || amountMinor <= 0) {
     return { status: 'error', message: 'Enter the amount that came in.', field: 'amount' };
   }

@@ -55,6 +55,17 @@ export function moneyInput(amountMinor: number, currency: string): string {
 }
 
 /**
+ * The largest amount one figure can hold, in minor units: the money columns
+ * are 32-bit integers for now. TZS 20,000,000 or US$20,000,000.
+ */
+export const MONEY_CAP_MINOR = 2_000_000_000;
+
+/** The limit as a person reads it, in that currency. */
+export function moneyCapText(currency: string): string {
+  return formatMoney(MONEY_CAP_MINOR, currency);
+}
+
+/**
  * Parses what a person typed into minor units.
  *
  * Returns null rather than NaN or zero for anything it cannot read, so a typo
@@ -74,8 +85,20 @@ export function parseMoney(input: string, currency: string): number | null {
 
   // Beyond this a later sum could exceed Number.MAX_SAFE_INTEGER, and the
   // column is an Int anyway.
-  if (!Number.isSafeInteger(minor) || Math.abs(minor) > 2_000_000_000) return null;
+  if (!Number.isSafeInteger(minor) || Math.abs(minor) > MONEY_CAP_MINOR) return null;
   return minor;
+}
+
+/**
+ * Whether what was typed reads as a number but is over the limit, so the form
+ * can say so instead of 'enter an amount'.
+ */
+export function overMoneyCap(input: string, currency: string): boolean {
+  const cleaned = input.replace(/[^\d.,-]/g, '').replace(/,/g, '');
+  if (!/^-?\d*\.?\d*$/.test(cleaned) || cleaned === '' || cleaned === '-') return false;
+  const value = Number(cleaned);
+  if (!Number.isFinite(value)) return false;
+  return Math.abs(Math.round(value * 10 ** minorUnitScale(currency))) > MONEY_CAP_MINOR;
 }
 
 /** East Africa Time is UTC+3 all year: no daylight saving to account for. */

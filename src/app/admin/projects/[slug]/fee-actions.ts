@@ -9,6 +9,9 @@ import { addMonths, dropOffSchedulePeriods } from '@/lib/console/renewals';
 import {
   formatMoney,
   formatShortDate,
+  MONEY_CAP_MINOR,
+  moneyCapText,
+  overMoneyCap,
   parseDateInput,
   parseMoney,
   toDateInputValue,
@@ -67,6 +70,16 @@ function parse(
 
   const amountRaw = formText(formData, 'amount');
   const amountMinor = amountRaw === '' ? 0 : parseMoney(amountRaw, currency);
+  if (amountMinor === null && overMoneyCap(amountRaw, currency)) {
+    return {
+      ok: false,
+      error: {
+        status: 'error',
+        message: `Amounts above ${moneyCapText(currency)} cannot be entered. Split it into two fees.`,
+        field: 'amount',
+      },
+    };
+  }
   if (amountMinor === null || amountMinor < 0) {
     return {
       ok: false,
@@ -85,6 +98,16 @@ function parse(
       error: {
         status: 'error',
         message: 'Quantity should be a whole number, 1 or more.',
+        field: 'quantity',
+      },
+    };
+  }
+  if (amountMinor * quantity > MONEY_CAP_MINOR) {
+    return {
+      ok: false,
+      error: {
+        status: 'error',
+        message: `Together these come to more than ${moneyCapText(currency)}. Split it into two fees.`,
         field: 'quantity',
       },
     };

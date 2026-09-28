@@ -16,14 +16,16 @@ const shortDate = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'short',
   year: 'numeric',
-  timeZone: 'UTC',
+  // A date string read at midnight UTC falls on the same day in Tanzania.
+  timeZone: 'Africa/Dar_es_Salaam',
 });
 
 const longDate = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
-  timeZone: 'UTC',
+  // A date string read at midnight UTC falls on the same day in Tanzania.
+  timeZone: 'Africa/Dar_es_Salaam',
 });
 
 function format(date: string, fmt: Intl.DateTimeFormat): string {

@@ -262,9 +262,11 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
 /** Human wording for a period, e.g. "Sept 2026 – Sept 2027". */
 export function periodLabel(start: Date, end: Date): string {
   const format = (date: Date) =>
-    new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
-      date,
-    );
+    new Intl.DateTimeFormat('en-GB', {
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Africa/Dar_es_Salaam',
+    }).format(date);
   return `${format(start)} to ${format(end)}`;
 }
 

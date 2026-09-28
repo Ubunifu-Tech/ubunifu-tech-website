@@ -13,6 +13,7 @@ import {
   overMoneyCap,
   parseDateInput,
   parseMoney,
+  toDateInputValue,
 } from '@/lib/console/money';
 import { monthDate, monthKey, monthLabel, ratePair, shiftMonth } from '@/lib/console/finance';
 import { recordCostBill } from '@/lib/console/cost-bills';
@@ -278,9 +279,7 @@ export async function removeCost(_previous: FinanceState, formData: FormData): P
     action: 'cost.removed',
     entityType: 'Cost',
     entityId: cost.id,
-    summary: `${cost.vendor}, ${formatMoney(cost.amountMinor, cost.currency)} on ${cost.incurredOn
-      .toISOString()
-      .slice(0, 10)}`,
+    summary: `${cost.vendor}, ${formatMoney(cost.amountMinor, cost.currency)} on ${toDateInputValue(cost.incurredOn)}`,
   });
   await deleteStoredFiles(bills.map((bill) => bill.storageKey));
   refresh();
@@ -538,9 +537,7 @@ export async function removeIncome(_previous: FinanceState, formData: FormData):
     action: 'income.removed',
     entityType: 'Income',
     entityId: income.id,
-    summary: `${income.source}, ${formatMoney(income.amountMinor, income.currency)} on ${income.receivedOn
-      .toISOString()
-      .slice(0, 10)}`,
+    summary: `${income.source}, ${formatMoney(income.amountMinor, income.currency)} on ${toDateInputValue(income.receivedOn)}`,
   });
   refresh();
   return { status: 'done', message: 'Removed.' };

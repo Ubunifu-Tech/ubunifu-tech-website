@@ -31,6 +31,7 @@ import {
   overMoneyCap,
   parseDateInput,
   parseMoney,
+  toDateInputValue,
 } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
@@ -1384,7 +1385,7 @@ export async function saveDraftInvoice(
     action: 'invoice.draft_saved',
     entityType: 'Invoice',
     entityId: invoice.id,
-    summary: `${invoice.number}: due ${dueAt ? dueAt.toISOString().slice(0, 10) : 'on receipt'}`,
+    summary: `${invoice.number}: due ${dueAt ? toDateInputValue(dueAt) : 'on receipt'}`,
   });
   revalidatePath(`/admin/invoices/${invoice.number}`);
   return { status: 'done', message: 'Saved.' };

@@ -2,7 +2,13 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { CostCategory, ServiceLine } from '@/generated/prisma/client';
 import { countedPayment, liveInvoice, renewingLine } from './live';
-import { businessDay, daysBetween, formatMoney, minorUnitScale } from './money';
+import {
+  BUSINESS_TIME_ZONE,
+  businessDay,
+  daysBetween,
+  formatMoney,
+  minorUnitScale,
+} from './money';
 import { INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 
 /**
@@ -67,7 +73,7 @@ export function monthLabel(key: string): string {
   return new Intl.DateTimeFormat('en-GB', {
     month: 'short',
     year: 'numeric',
-    timeZone: 'UTC',
+    timeZone: BUSINESS_TIME_ZONE,
   }).format(monthDate(key));
 }
 

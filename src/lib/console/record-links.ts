@@ -1,6 +1,7 @@
 import 'server-only';
 import { db } from '@/lib/db';
 import { can, type StaffActor } from '@/lib/console/auth';
+import { monthKey } from './finance';
 
 type Ref = { entityType: string | null; entityId: string | null; action?: string };
 
@@ -140,10 +141,10 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
   for (const id of ids('Enquiry')) put('Enquiry', id, `/enquiries/${id}`);
   for (const id of ids('StaffUser')) put('StaffUser', id, '/settings/team');
   for (const row of costs) {
-    put('Cost', row.id, `/finance/costs?month=${row.incurredOn.toISOString().slice(0, 7)}`);
+    put('Cost', row.id, `/finance/costs?month=${monthKey(row.incurredOn)}`);
   }
   for (const row of income) {
-    put('Income', row.id, `/finance/income?month=${row.receivedOn.toISOString().slice(0, 7)}`);
+    put('Income', row.id, `/finance/income?month=${monthKey(row.receivedOn)}`);
   }
   for (const id of ids('Product')) put('Product', id, '/settings/products');
   // An archived post or writer opens where it can be brought back from.

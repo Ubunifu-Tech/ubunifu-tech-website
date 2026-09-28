@@ -11,11 +11,13 @@ export function cssString(value: string): string {
 /**
  * Paper only: A4, margins, and the footer on every page. Written in the
  * sheet rather than a stylesheet so it applies only while this document is
- * on the page.
+ * on the page. The other margin boxes are written empty, because Chrome
+ * fills an empty one with its own date, tab title and address.
  */
 export function PageFurniture({ footer }: { footer: string }) {
   return (
     <style>{`@page { size: A4; margin: 14mm 14mm 18mm;
+  @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-center { content: ""; }
   @bottom-left { content: ${cssString(footer)}; font-family: Inter, system-ui, sans-serif; font-size: 8pt; color: #6d6975; }
   @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: Inter, system-ui, sans-serif; font-size: 8pt; color: #6d6975; } }`}</style>
   );

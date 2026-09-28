@@ -11,7 +11,9 @@ import sheet from '../Receipt.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
-  return { title: `Receipt ${number}` };
+  // Absolute, so a printed or saved copy is named for the document and
+  // never carries the console or portal name.
+  return { title: { absolute: `Receipt ${number} · Ubunifu Technologies` } };
 }
 
 /**

@@ -27,7 +27,9 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
-  return { title: reference };
+  // Absolute, so a printed or saved copy is named for the document and
+  // never carries the console or portal name.
+  return { title: { absolute: `${reference} · Ubunifu Technologies` } };
 }
 
 /**

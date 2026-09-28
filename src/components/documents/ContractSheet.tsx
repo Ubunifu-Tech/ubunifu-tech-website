@@ -92,8 +92,11 @@ export function ContractSheet({
     <article className={doc.doc}>
       {/* Paper only: page size, margins, and the footer on every page but the
           cover. Written here rather than in a stylesheet so it applies only
-          while a document is on the page, never to a receipt printed later. */}
+          while a document is on the page, never to a receipt printed later.
+          The other margin boxes are written empty, because Chrome fills an
+          empty one with its own date, tab title and address. */}
       <style>{`@page { size: A4; margin: 18mm 16mm 22mm;
+  @top-left { content: ""; } @top-center { content: ""; } @top-right { content: ""; } @bottom-center { content: ""; }
   @bottom-left { content: ${cssString(`${title} · ${org.legalName}`)}; font-family: Inter, system-ui, sans-serif; font-size: 8pt; color: #6d6975; }
   @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: Inter, system-ui, sans-serif; font-size: 8pt; color: #6d6975; } }
 @page :first { margin: 0; @bottom-left { content: none; } @bottom-right { content: none; } }`}</style>

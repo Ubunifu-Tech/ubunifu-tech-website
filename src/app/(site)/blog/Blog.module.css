@@ -288,6 +288,23 @@ div.journal {
   text-wrap: balance;
 }
 
+.metaSmall {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.excerpt {
+  max-width: 62ch;
+  color: var(--text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.72;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
 .row:hover .cardImage {
   transform: scale(1.03);
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState } from 'react';
 import { createSetupLink, type SetupLinkState } from '../actions';
+import { LinkToSend } from '@/components/console/ShareLink';
 import forms from '@/styles/forms.module.css';
 import styles from '../../Admin.module.css';
 
@@ -14,46 +15,15 @@ const INITIAL: SetupLinkState = { status: 'idle' };
  */
 export function SetupLink({ contactId, name }: { contactId: string; name: string }) {
   const [state, action, pending] = useActionState(createSetupLink, INITIAL);
-  const [copied, setCopied] = useState(false);
 
   if (state.status === 'done' && state.url) {
     return (
-      <div className={styles.setupLink}>
-        <input
-          className={`${forms.control} ${styles.setupUrl}`}
-          value={state.url}
-          readOnly
-          aria-label="Setup link"
-          onFocus={(event) => event.currentTarget.select()}
-        />
-        <div className={forms.actions}>
-          <button
-            type="button"
-            className={forms.button}
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(state.url!);
-                setCopied(true);
-              } catch {
-                setCopied(false);
-              }
-            }}
-          >
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-          {state.whatsapp && (
-            <a
-              href={state.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${forms.button} ${forms.quiet}`}
-            >
-              Send on WhatsApp
-            </a>
-          )}
-        </div>
-        <p className={styles.setupHint}>Works once, for 14 days. Only send it to {name}.</p>
-      </div>
+      <LinkToSend
+        url={state.url}
+        whatsapp={state.whatsapp}
+        fieldLabel="Setup link"
+        hint={<>Works once, for 14 days. Only send it to {name}.</>}
+      />
     );
   }
 

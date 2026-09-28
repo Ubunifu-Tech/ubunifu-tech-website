@@ -361,14 +361,17 @@ export async function sendPasswordLink(contact: { id: string; name: string; emai
 /**
  * Someone who never finished setting up asked for a sign-in link, or to
  * reset a password they do not have. What they need is their setup link, so
- * that is what goes, and `summary` says which they asked for. A page they
- * were trying to reach travels in the link, so setup ends there.
+ * that is what goes. The email answers what they asked for (`reason`), and
+ * `summary` says it on the activity record. A page they were trying to reach
+ * travels in the link, so setup ends there.
  */
 export async function sendSetupLinkAgain(contact: {
   id: string;
   name: string;
   email: string;
   clientName: string;
+  /** What they asked for: a sign-in link, or to choose a password. */
+  reason: 'sign_in' | 'reset';
   summary: string;
   next?: string | null;
 }) {
@@ -380,12 +383,15 @@ export async function sendSetupLinkAgain(contact: {
   });
   const sent = await sendConsoleEmail({
     to: contact.email,
-    subject: 'Your Ubunifu project portal is ready',
+    subject: 'Finish setting up your Ubunifu portal',
     html: clientInviteEmail({
       name: contact.name,
       clientName: contact.clientName,
       url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      reason: contact.reason,
     }),
+    // Still an invitation, so a failed one can be sent again from the
+    // console like any other.
     template: 'client_invite',
     entityType: 'ClientContact',
     entityId: contact.id,

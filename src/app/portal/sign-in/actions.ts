@@ -223,6 +223,7 @@ async function deliverPortalLink(email: string, next: string | null): Promise<vo
       email,
       clientName: contact.client.name,
       next,
+      reason: 'sign_in',
       summary: 'Asked for a sign-in link before setting up, so the setup link went instead',
     });
     return;
@@ -348,6 +349,7 @@ async function deliverPasswordReset(email: string): Promise<void> {
       name: contact.name,
       email: contact.email,
       clientName: contact.client.name,
+      reason: 'reset',
       summary: 'Asked to reset a password before setting up, so the setup link went again',
     });
     return;

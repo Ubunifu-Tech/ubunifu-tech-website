@@ -384,31 +384,57 @@ export function colleagueInviteEmail(input: {
 /**
  * The first link a client ever receives. It is an invitation rather than a
  * sign-in: following it is where they set a password and the account begins.
+ *
+ * It also goes to someone not yet set up who asked for a sign-in link or to
+ * choose a password. `reason` says which, so the email answers what they
+ * asked for instead of reading like the old invitation.
  */
 export function clientInviteEmail(input: {
   name: string;
   clientName: string;
   url: string;
+  reason?: 'reset' | 'sign_in';
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
   const org = escapeHtml(input.clientName);
+  const text = 'margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;';
 
-  const body = `
+  const opening = input.reason
+    ? `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Finish setting up your portal</h1>
+    <p style="${text}">
+      Hello ${name}. ${
+        input.reason === 'reset' ? 'You asked to choose a password' : 'You asked for a sign-in link'
+      }, but your account for <strong style="color:#1D1B22;">${org}</strong> is not set up yet.
+      Use the button to finish setting up${
+        input.reason === 'reset' ? ', and choose your password as part of it' : ''
+      }.
+    </p>`
+    : `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Your project portal is ready</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. We have set up a portal for <strong style="color:#1D1B22;">${org}</strong>.
       It is where you will find progress updates, anything we need from you,
       documents to review and sign, and your invoices and receipts.
     </p>
-    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
+    <p style="${text}">
       Follow the link to choose a password and finish setting up your account.
-    </p>
+    </p>`;
+
+  const body = `${opening}
     ${button(input.url, 'Set up your account')}
     ${linkNote(
       'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email.',
     )}`;
 
-  return shell(`Set up your ${input.clientName} project portal.`, body);
+  return shell(
+    input.reason === 'reset'
+      ? 'Finish setting up your portal to choose a password.'
+      : input.reason === 'sign_in'
+        ? 'Finish setting up your portal to sign in.'
+        : `Set up your ${input.clientName} project portal.`,
+    body,
+  );
 }
 
 /**

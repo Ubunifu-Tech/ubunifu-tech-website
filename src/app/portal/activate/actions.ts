@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getPendingContact, recordAudit } from '@/lib/console/auth';
 import { isUniqueConflict } from '@/lib/console/conflict';
@@ -29,7 +30,7 @@ export async function activateAccount(
       message: 'Your link has expired. Ask us for a new one.',
     };
   }
-  if (actor.isActivated) redirect('/portal');
+  if (actor.isActivated) intoThePortal('/portal');
 
   const name = String(formData.get('name') ?? '').trim();
   const phone = String(formData.get('phone') ?? '').trim().slice(0, 40);
@@ -117,5 +118,15 @@ export async function activateAccount(
     entityId: actor.id,
   });
 
-  redirect(safePortalPath(formData.get('next')) ?? '/portal');
+  intoThePortal(safePortalPath(formData.get('next')) ?? '/portal');
+}
+
+/**
+ * Setup is shown without the portal bar, and a redirect on its own keeps the
+ * layout the form was drawn in. Revalidating the portal layout first is what
+ * brings the bar and the sections in on arrival.
+ */
+function intoThePortal(path: string): never {
+  revalidatePath('/portal', 'layout');
+  redirect(path);
 }

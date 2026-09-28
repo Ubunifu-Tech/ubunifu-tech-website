@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { unstable_rethrow } from 'next/navigation';
 import { BrandMark } from '@/components/BrandMark';
 import { Assistant } from '@/components/Assistant';
@@ -27,6 +28,9 @@ export const metadata: Metadata = {
   title: { default: 'Your portal · Ubunifu', template: '%s · Ubunifu portal' },
   robots: { index: false, follow: false, nocache: true },
 };
+
+/** Entrance screens under /portal, which are always shown without the bar. */
+const ENTRANCE = /^\/portal\/(sign-in|reset|link)(\/|\?|$)/;
 
 /** What is waiting on the client, for the numbers beside each section. */
 async function countsFor(clientId: string): Promise<PortalCounts> {
@@ -57,13 +61,24 @@ export default async function PortalLayout({ children }: { children: React.React
   });
 
   /**
-   * Signed out means sign-in or the invitation link, and both bring their own
-   * full-height layout. A bar above them would be chrome for an account that
-   * does not exist yet, on top of a screen already designed as an entrance.
+   * The entrances bring their own full-height layout and their own mark:
+   * sign-in, Continue, setting up, choosing a new password and a link shared
+   * by hand. Someone signed out or not set up yet only ever sees those, and a
+   * signed-in client opening one gets it bare too. A bar above them would be
+   * a second brand mark and an account menu on a screen already designed as
+   * an entrance. The path comes from the proxy, which sets it on every portal
+   * request, action posts included.
+   *
+   * A layout is not drawn again on a client-side navigation, so an entrance
+   * links into the portal with a plain <a>, never <Link>: the full page load
+   * is what brings the bar back. An action that redirects from an entrance
+   * into the portal either sets the session cookie, which draws everything
+   * again, or revalidates this layout first, as finishing setup does.
    */
-  if (!actor) return <>{children}</>;
+  const path = (await headers()).get('x-portal-path') ?? '';
+  if (!actor || !actor.isActivated || ENTRANCE.test(path)) return <>{children}</>;
 
-  const counts = actor.isActivated ? await countsFor(actor.clientId) : null;
+  const counts = await countsFor(actor.clientId);
 
   return (
     <div className={styles.shell}>
@@ -75,7 +90,7 @@ export default async function PortalLayout({ children }: { children: React.React
               Ubunifu <span className={styles.org}>{actor.clientName}</span>
             </span>
           </Link>
-          {counts && <PortalNav counts={counts} />}
+          <PortalNav counts={counts} />
           <div className={styles.account}>
             <ProfileMenu
               name={actor.name}
@@ -91,7 +106,7 @@ export default async function PortalLayout({ children }: { children: React.React
         </div>
       </header>
       {children}
-      {actor.isActivated && <Assistant variant="portal" />}
+      <Assistant variant="portal" />
     </div>
   );
 }

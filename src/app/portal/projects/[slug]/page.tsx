@@ -258,6 +258,8 @@ export default async function PortalProject({
   // would fail.
   const canUpload = uploadsConfigured();
 
+  // A phase whose every item is team-only would show as an empty 0/0.
+  const shownPhases = project.phases.filter((phase) => phase.deliverables.length > 0);
   const total = project.phases.reduce((n, p) => n + p.deliverables.length, 0);
   const done = project.phases.reduce(
     (n, p) => n + p.deliverables.filter((d) => d.isComplete).length,
@@ -543,17 +545,19 @@ export default async function PortalProject({
         <section className={forms.card}>
           <div className={forms.cardHeader}>
             <h2 className={forms.cardTitle}>Where the work has got to</h2>
-            <span className={forms.cardMeta}>
-              {done} of {total} done
-            </span>
+            {total > 0 && (
+              <span className={forms.cardMeta}>
+                {done} of {total} done
+              </span>
+            )}
           </div>
 
-          {project.phases.length === 0 ? (
+          {shownPhases.length === 0 ? (
             <p className={styles.note}>
               The plan for this project is still being put together. It will appear here.
             </p>
           ) : (
-            project.phases.map((phase) => (
+            shownPhases.map((phase) => (
               <div key={phase.id} className={styles.stage}>
                 <div className={styles.stageHead}>
                   <h3 className={styles.stageName}>{phase.name}</h3>

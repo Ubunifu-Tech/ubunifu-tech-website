@@ -75,7 +75,9 @@ export const STATUS_TONE: Record<ProjectStatus, StatusTone> = {
  * have answered: once they have, the next move is ours, and "waiting on your
  * review" would ask them for something they have already given. The same
  * goes for a proposal or agreement: once nothing is waiting for their
- * signature (they answered, or the time ran out), it is back with us.
+ * signature (they answered, or the time ran out), it is back with us. And a
+ * project moved to review by hand, with no round open, has nothing for them
+ * to answer yet, so it is not put to them as waiting on their review.
  */
 export function clientStage(
   status: ProjectStatus,
@@ -90,6 +92,9 @@ export function clientStage(
   }
   if (status === 'client_review' && latestReview?.status === 'changes_requested') {
     return { label: 'Making your changes', tone: 'live' };
+  }
+  if (status === 'client_review' && latestReview?.status !== 'open') {
+    return { label: 'With you to check', tone: 'neutral' };
   }
   return { label: CLIENT_LABEL[status], tone: STATUS_TONE[status] };
 }

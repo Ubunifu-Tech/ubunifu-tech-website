@@ -471,7 +471,9 @@ export default async function PortalProject({
                       </Link>
                       <span className={styles.projectMeta}>{paper.detail}</span>
                     </span>
-                    <span className={`${forms.badge} ${TONE_CLASS[paper.state.tone]}`}>
+                    <span
+                      className={`${forms.badge} ${styles.paperState} ${TONE_CLASS[paper.state.tone]}`}
+                    >
                       {paper.state.label}
                     </span>
                   </li>

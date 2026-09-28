@@ -85,6 +85,16 @@ export default async function RenewalsPage() {
 
   const days = (date: Date) => Math.round((date.getTime() - now.getTime()) / 86_400_000);
 
+  // A billed period is stored as 'invoiced' however far its invoice has got,
+  // so the state shown follows the invoice: an unsent draft is not yet asked
+  // of the client, and a settled one is paid.
+  const shown = (renewal: (typeof renewals)[number]) =>
+    renewal.status === 'invoiced' && renewal.invoice?.status === 'draft'
+      ? 'drafted'
+      : renewal.status === 'invoiced' && renewal.invoice?.status === 'paid'
+        ? 'paid'
+        : renewal.status;
+
   const unbilled = renewals.filter((renewal) => renewal.status === 'pending');
   const overdue = unbilled.filter((renewal) => days(renewal.dueAt) < 0);
   const soon = unbilled.filter((renewal) => {
@@ -268,8 +278,8 @@ export default async function RenewalsPage() {
                             )}
                           </td>
                           <td className={table.td}>
-                            <span className={`${forms.badge} ${STATUS_BADGE[renewal.status]}`}>
-                              {RENEWAL_STATUS_LABEL[renewal.status]}
+                            <span className={`${forms.badge} ${STATUS_BADGE[shown(renewal)]}`}>
+                              {RENEWAL_STATUS_LABEL[shown(renewal)]}
                             </span>
                           </td>
                           <td className={`${table.td} ${table.actions}`}>

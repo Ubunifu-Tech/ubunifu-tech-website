@@ -2,7 +2,13 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { formatMoney, formatRelative, formatShortDate, isPastDay } from '@/lib/console/money';
+import {
+  formatMoney,
+  formatRelative,
+  formatShortDate,
+  isPastDay,
+  numbers,
+} from '@/lib/console/money';
 import { recentActivity } from '@/lib/console/activity';
 import { liveEnquiry, liveInvoice, renewingLine } from '@/lib/console/live';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
@@ -70,7 +76,7 @@ export default async function AdminHome() {
       orderBy: { createdAt: 'asc' },
       take: 10,
       select: { id: true, name: true, subject: true, createdAt: true },
-    }),
+    }).then(numbers),
     // The same clients the "Portal not set up" list shows, so the figure and
     // the list it opens always agree.
     db.client.count({
@@ -95,7 +101,7 @@ export default async function AdminHome() {
         dueAt: true,
         client: { select: { name: true } },
       },
-    }),
+    }).then(numbers),
     // Counted as the sidebar badge counts them: periods not yet invoiced.
     db.renewalEvent.count({
       where: { status: 'pending', dueAt: { lte: soon }, lineItem: renewingLine },
@@ -141,7 +147,7 @@ export default async function AdminHome() {
           select: { reference: true, updatedAt: true },
         },
       },
-    }),
+    }).then(numbers),
     db.project.count({ where: { deletedAt: null, status: { in: LIVE_STATUSES } } }),
     recentActivity(staff, 8),
     // Counted separately: the lists above are capped for the table, and a
@@ -158,7 +164,7 @@ export default async function AdminHome() {
         dueAt: true,
         phase: { select: { project: { select: { name: true, slug: true } } } },
       },
-    }),
+    }).then(numbers),
     // The list shows the first eight; the count says how many there are.
     db.deliverable.count({ where: myOpenTasks }),
     db.enquiry.count({

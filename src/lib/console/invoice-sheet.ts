@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Prisma } from '@/generated/prisma/client';
 import type { InvoiceSheetData } from '@/components/documents/InvoiceSheet';
+import { numbers, type Numbers } from './money';
 
 /** What the invoice sheet reads, and nothing else. */
 export const INVOICE_SHEET_SELECT = {
@@ -56,7 +57,9 @@ export const INVOICE_SHEET_SELECT = {
 
 type Row = Prisma.InvoiceGetPayload<{ select: typeof INVOICE_SHEET_SELECT }>;
 
-export function toSheet(invoice: Row): InvoiceSheetData {
+/** A row as read, or already with its amounts as numbers. */
+export function toSheet(row: Row | Numbers<Row>): InvoiceSheetData {
+  const invoice = numbers(row);
   return {
     ...invoice,
     client: {

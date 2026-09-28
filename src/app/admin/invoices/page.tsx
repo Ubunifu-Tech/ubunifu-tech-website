@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate, isPastDay, todayInput } from '@/lib/console/money';
+import { formatMoney, formatShortDate, isPastDay, numbers, todayInput } from '@/lib/console/money';
 import { countedPayment, liveInvoice } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
@@ -91,16 +91,16 @@ export default async function InvoicesPage({
     db.invoice.findMany({
       where: { AND: [liveInvoice, filterToWhere('owing')] },
       select: { currency: true, totalMinor: true, paidMinor: true, dueAt: true },
-    }),
+    }).then(numbers),
     db.invoice.count({ where: { ...liveInvoice, status: 'draft' } }),
     db.payment.findMany({
       where: { ...countedPayment, receivedAt: { gte: lastMonthStart } },
       select: { amountMinor: true, currency: true, receivedAt: true },
-    }),
+    }).then(numbers),
     db.refund.findMany({
       where: { refundedAt: { gte: lastMonthStart }, cancelledAt: null, payment: countedPayment },
       select: { amountMinor: true, currency: true, refundedAt: true },
-    }),
+    }).then(numbers),
   ]);
 
   /**
@@ -139,7 +139,7 @@ export default async function InvoicesPage({
 
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
   const shown = pageWindow(pageNumber(page), total);
-  const invoices = await db.invoice.findMany({
+  const invoices = numbers(await db.invoice.findMany({
     where: { AND: [liveInvoice, filterToWhere(active), matching] },
     orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
     skip: shown.skip,
@@ -157,7 +157,7 @@ export default async function InvoicesPage({
       client: { select: { name: true, slug: true } },
       project: { select: { name: true, slug: true } },
     },
-  });
+  }));
 
   return (
     <main className={styles.page}>

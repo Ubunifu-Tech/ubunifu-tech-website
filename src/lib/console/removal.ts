@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { liveInvoice } from './live';
-import { formatMoney } from './money';
+import { formatMoney, numbers } from './money';
 
 /**
  * Removing a client or a project.
@@ -37,10 +37,10 @@ export async function withdrawOpenSignatures(
 ): Promise<WithdrawnDocument[]> {
   if (projectIds.length === 0) return [];
 
-  const open = await tx.signatureRequest.findMany({
+  const open = numbers(await tx.signatureRequest.findMany({
     where: { status: { in: [...WAITING] }, document: { projectId: { in: projectIds } } },
     select: { id: true },
-  });
+  }));
   if (open.length === 0) return [];
   const ids = open.map((request) => request.id);
 
@@ -49,10 +49,10 @@ export async function withdrawOpenSignatures(
     data: { status: 'cancelled' },
   });
 
-  const cancelled = await tx.signatureRequest.findMany({
+  const cancelled = numbers(await tx.signatureRequest.findMany({
     where: { id: { in: ids }, status: 'cancelled' },
     select: { document: { select: { id: true, reference: true } } },
-  });
+  }));
   const documents = new Map(cancelled.map((request) => [request.document.id, request.document]));
   if (documents.size === 0) return [];
 
@@ -99,11 +99,11 @@ export async function owingInvoices(
   client: Prisma.TransactionClient | typeof db,
   where: Prisma.InvoiceWhereInput,
 ): Promise<OwingInvoice[]> {
-  const invoices = await client.invoice.findMany({
+  const invoices = numbers(await client.invoice.findMany({
     where: { AND: [where, { status: { in: [...OWING] } }] },
     orderBy: { number: 'asc' },
     select: { number: true, totalMinor: true, paidMinor: true, refundedMinor: true, currency: true },
-  });
+  }));
   return invoices
     .filter((invoice) => invoice.totalMinor > invoice.paidMinor)
     .map((invoice) => ({

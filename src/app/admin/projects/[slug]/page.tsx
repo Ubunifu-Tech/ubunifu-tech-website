@@ -34,6 +34,7 @@ import {
   formatRelative,
   formatShortDate,
   isPastDay,
+  numbers,
   toDateInputValue,
   todayInput,
 } from '@/lib/console/money';
@@ -90,10 +91,10 @@ function dateRange(start: Date | null, end: Date | null): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const project = await db.project.findFirst({
+  const project = numbers(await db.project.findFirst({
     where: { slug, deletedAt: null },
     select: { name: true, reference: true },
-  });
+  }));
   return { title: project ? `${project.reference} · ${project.name}` : 'Project' };
 }
 
@@ -133,7 +134,7 @@ export default async function ProjectPage({
       : 'overview';
   const now = new Date();
 
-  const project = await db.project.findFirst({
+  const project = numbers(await db.project.findFirst({
     where: { slug, deletedAt: null },
     select: {
       id: true,
@@ -295,16 +296,16 @@ export default async function ProjectPage({
         select: { id: true, from: true, to: true, note: true, createdAt: true, actorType: true },
       },
     },
-  });
+  }));
 
   if (!project) {
     // A removed project's old address goes to where it can be brought back:
     // its client's page, or the removed client's record when that went too.
     // Anyone who could not open that page gets the plain not-found.
-    const removed = await db.project.findFirst({
+    const removed = numbers(await db.project.findFirst({
       where: { slug, deletedAt: { not: null } },
       select: { client: { select: { slug: true, deletedAt: true } } },
-    });
+    }));
     if (removed?.client.deletedAt && can(staff, 'clients')) {
       redirect(`/removed/${removed.client.slug}`);
     }
@@ -473,19 +474,19 @@ export default async function ProjectPage({
     project.ownerId,
     ...project.phases.flatMap((phase) => phase.deliverables.map((task) => task.assigneeId)),
   ].filter((id): id is string => Boolean(id));
-  const staffRows = await db.staffUser.findMany({
+  const staffRows = numbers(await db.staffUser.findMany({
     where: { OR: [{ isActive: true }, { id: { in: heldBy } }] },
     orderBy: { name: 'asc' },
     select: { id: true, name: true, title: true, email: true, isActive: true },
-  });
+  }));
   const team = staffRows.filter((person) => person.isActive);
   const owner = staffRows.find((person) => person.id === project.ownerId) ?? null;
   // Offered products, and the project's own even if it has since stopped.
-  const products = await db.product.findMany({
+  const products = numbers(await db.product.findMany({
     where: { OR: [{ isActive: true }, { id: project.productId ?? '' }] },
     orderBy: { name: 'asc' },
     select: { id: true, name: true },
-  });
+  }));
   const people = [
     { value: '', label: 'Nobody yet' },
     ...team.map((person) => ({

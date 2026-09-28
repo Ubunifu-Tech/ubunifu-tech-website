@@ -13,7 +13,7 @@ import { invoiceStanding } from '@/lib/console/billing-labels';
 import { requireClient } from '@/lib/console/auth';
 import { awaitingSignature, liveInvoice, liveTicket, waitingOnClient } from '@/lib/console/live';
 import { clientStage } from '@/lib/console/project-status';
-import { formatDate, formatMoney } from '@/lib/console/money';
+import { formatDate, formatMoney, numbers } from '@/lib/console/money';
 import styles from './Portal.module.css';
 import forms from '@/styles/forms.module.css';
 import { greeting } from '@/lib/console/greeting';
@@ -73,14 +73,14 @@ export default async function PortalHome() {
           select: { round: true, title: true, status: true },
         },
       },
-    }),
+    }).then(numbers),
     db.document.findMany({
       where: {
         project: { clientId: actor.clientId, deletedAt: null },
         ...awaitingSignature(now),
       },
       select: { reference: true, title: true, projectId: true },
-    }),
+    }).then(numbers),
     db.invoice.findMany({
       where: { clientId: actor.clientId, ...liveInvoice, status: { in: ['sent', 'overdue', 'part_paid'] } },
       orderBy: { dueAt: 'asc' },
@@ -92,11 +92,11 @@ export default async function PortalHome() {
         dueAt: true,
         status: true,
       },
-    }),
+    }).then(numbers),
     db.ticket.findMany({
       where: { clientId: actor.clientId, ...liveTicket, status: 'waiting_on_client' },
       select: { reference: true, subject: true },
-    }),
+    }).then(numbers),
   ]);
 
   const needs: Need[] = [

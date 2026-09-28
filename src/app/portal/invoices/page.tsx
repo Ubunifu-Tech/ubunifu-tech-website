@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
 import { portalInvoiceState } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -29,7 +29,7 @@ export default async function PortalInvoices() {
   const actor = await requireClient();
   const now = new Date();
 
-  const invoices = await db.invoice.findMany({
+  const invoices = numbers(await db.invoice.findMany({
     where: {
       clientId: actor.clientId,
       ...liveInvoice,
@@ -51,7 +51,7 @@ export default async function PortalInvoices() {
         select: { receipt: { select: { number: true } } },
       },
     },
-  });
+  }));
 
   const owedByCurrency = new Map<string, number>();
   // Nothing is owed on a cancelled invoice, whatever its figures say.

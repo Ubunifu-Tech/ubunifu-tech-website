@@ -1,7 +1,7 @@
 import 'server-only';
 import type { BillingKind, DocumentKind, LineItemStatus } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
-import { formatMoney, toDateInputValue } from './money';
+import { formatMoney, numbers, toDateInputValue } from './money';
 import type { FeeRow } from '@/components/console/FeeEditor';
 import { BILLING, COUNTED_STATUSES } from './fee-labels';
 
@@ -179,7 +179,7 @@ export async function projectFeesLater(projectId: string): Promise<LaterLine[]> 
       terms: true,
       status: true,
     },
-  });
+  }).then(numbers);
 }
 
 /** The project's counted fees, in order. */
@@ -197,7 +197,7 @@ export async function projectFees(projectId: string) {
       currency: true,
       terms: true,
     },
-  });
+  }).then(numbers);
 }
 
 /** Problems that stop a fee schedule going out, in plain words. */
@@ -258,7 +258,7 @@ export function feeRow(line: {
 
 /** The project's fees as the fee editor shows them, removed ones left out. */
 export async function editableFees(projectId: string): Promise<FeeRow[]> {
-  const lines = await db.lineItem.findMany({
+  const lines = numbers(await db.lineItem.findMany({
     where: { projectId, status: { not: 'cancelled' } },
     orderBy: { position: 'asc' },
     select: {
@@ -272,6 +272,6 @@ export async function editableFees(projectId: string): Promise<FeeRow[]> {
       nextDueAt: true,
       status: true,
     },
-  });
+  }));
   return lines.map(feeRow);
 }

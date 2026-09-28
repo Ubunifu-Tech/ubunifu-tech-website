@@ -2,7 +2,14 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { addTo, monthDate, monthLabel, shiftMonth, sideBySide } from '@/lib/console/finance';
-import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
+import {
+  formatMoney,
+  formatShortDate,
+  moneyInput,
+  numbers,
+  toDateInputValue,
+  todayInput,
+} from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import { AddIncome, IncomeMenu } from './IncomeForms';
 import styles from '../../Admin.module.css';
@@ -43,13 +50,13 @@ export default async function IncomePage({
         productId: true,
         product: { select: { name: true } },
       },
-    }),
+    }).then(numbers),
     db.product.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
-    }),
-    db.income.findMany({ distinct: ['source'], orderBy: { source: 'asc' }, select: { source: true } }),
+    }).then(numbers),
+    db.income.findMany({ distinct: ['source'], orderBy: { source: 'asc' }, select: { source: true } }).then(numbers),
   ]);
 
   const totals = new Map<string, number>();

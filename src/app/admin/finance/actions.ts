@@ -10,6 +10,7 @@ import { formText } from '@/lib/console/form';
 import {
   formatMoney,
   moneyCapText,
+  numbers,
   overMoneyCap,
   parseDateInput,
   parseMoney,
@@ -37,7 +38,7 @@ function refresh() {
 async function readProduct(formData: FormData) {
   const productId = formText(formData, 'productId') || null;
   if (!productId) return { ok: true as const, productId: null };
-  const product = await db.product.findUnique({ where: { id: productId }, select: { id: true } });
+  const product = numbers(await db.product.findUnique({ where: { id: productId }, select: { id: true } }));
   return product
     ? { ok: true as const, productId: product.id }
     : { ok: false as const, message: 'That product no longer exists.' };
@@ -56,10 +57,10 @@ async function readFor(
   const clientId = formText(formData, 'clientId') || null;
   const projectId = formText(formData, 'projectId') || null;
   if (projectId) {
-    const project = await db.project.findUnique({
+    const project = numbers(await db.project.findUnique({
       where: { id: projectId },
       select: { id: true, clientId: true, deletedAt: true },
-    });
+    }));
     if (!project) {
       return { ok: false as const, message: 'That project no longer exists.', field: 'projectId' };
     }
@@ -80,10 +81,10 @@ async function readFor(
     return { ok: true as const, clientId: project.clientId, projectId: project.id };
   }
   if (clientId) {
-    const client = await db.client.findUnique({
+    const client = numbers(await db.client.findUnique({
       where: { id: clientId },
       select: { id: true, deletedAt: true },
-    });
+    }));
     if (!client) {
       return { ok: false as const, message: 'That client no longer exists.', field: 'clientId' };
     }
@@ -152,10 +153,10 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
   // An edit may keep the client or project the cost is already for.
   let keep: { clientId: string | null; projectId: string | null } | undefined;
   if (costId) {
-    const stored = await db.cost.findUnique({
+    const stored = numbers(await db.cost.findUnique({
       where: { id: costId },
       select: { clientId: true, projectId: true },
-    });
+    }));
     if (!stored) return { status: 'error', message: 'That cost no longer exists.' };
     keep = stored;
   }
@@ -166,7 +167,7 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
 
   let regularId = formText(formData, 'regularId') || null;
   if (regularId) {
-    const regular = await db.regularCost.findUnique({ where: { id: regularId }, select: { id: true } });
+    const regular = numbers(await db.regularCost.findUnique({ where: { id: regularId }, select: { id: true } }));
     if (!regular) regularId = null;
   }
 
@@ -201,7 +202,7 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
   const confirming = regularId;
 
   if (!regularId && formData.get('everyMonth') === 'on') {
-    const regular = await db.regularCost.create({
+    const regular = numbers(await db.regularCost.create({
       data: {
         vendor: read.vendor,
         category: read.category,
@@ -213,7 +214,7 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
         productId: product.productId,
       },
       select: { id: true },
-    });
+    }));
     regularId = regular.id;
   }
 
@@ -223,23 +224,23 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
         // Once a month per regular cost, even when two people press Add at
         // the same moment: the second waits on the lock, then finds the first.
         await tx.$queryRaw`SELECT id FROM "RegularCost" WHERE id = ${confirming} FOR UPDATE`;
-        const already = await tx.cost.findFirst({
+        const already = numbers(await tx.cost.findFirst({
           where: {
             regularId: confirming,
             incurredOn: { gte: monthDate(month), lt: monthDate(shiftMonth(month, 1)) },
           },
           select: { id: true },
-        });
+        }));
         if (already) return null;
         return tx.cost.create({
           data: { ...data, regularId: confirming, recordedById: staff.id },
           select: { id: true },
         });
       })
-    : await db.cost.create({
+    : numbers(await db.cost.create({
         data: { ...data, regularId, recordedById: staff.id },
         select: { id: true },
-      });
+      }));
   if (!cost) {
     return { status: 'error', message: `${read.vendor} is already added for ${monthLabel(month)}.` };
   }
@@ -260,18 +261,18 @@ export async function removeCost(_previous: FinanceState, formData: FormData): P
   const staff = await requireStaff();
   if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
 
-  const cost = await db.cost.findUnique({
+  const cost = numbers(await db.cost.findUnique({
     where: { id: formText(formData, 'costId') },
     select: { id: true, vendor: true, amountMinor: true, currency: true, incurredOn: true },
-  });
+  }));
   if (!cost) return { status: 'error', message: 'That cost no longer exists.' };
 
   // Every bill it held, replaced ones too: the delete cascades their rows,
   // so the stored files would otherwise be left with nothing pointing at them.
-  const bills = await db.fileUpload.findMany({
+  const bills = numbers(await db.fileUpload.findMany({
     where: { costId: cost.id },
     select: { storageKey: true },
-  });
+  }));
   await db.cost.delete({ where: { id: cost.id } });
   await recordAudit({
     actorType: 'staff',
@@ -385,7 +386,7 @@ export async function saveExchangeRate(
   }
   const rate = pair.base === base ? value : 1 / value;
 
-  await db.exchangeRate.upsert({
+  numbers(await db.exchangeRate.upsert({
     where: { month_base_quote: { month: monthDate(month), base: pair.base, quote: pair.quote } },
     create: {
       month: monthDate(month),
@@ -395,7 +396,7 @@ export async function saveExchangeRate(
       updatedById: staff.id,
     },
     update: { rate: rate.toFixed(8), updatedById: staff.id },
-  });
+  }));
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
@@ -441,7 +442,7 @@ export async function removeBill(_previous: FinanceState, formData: FormData): P
   if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
 
   const costId = formText(formData, 'costId');
-  const cost = await db.cost.findUnique({ where: { id: costId }, select: { id: true, vendor: true } });
+  const cost = numbers(await db.cost.findUnique({ where: { id: costId }, select: { id: true, vendor: true } }));
   if (!cost) return { status: 'error', message: 'That cost no longer exists.' };
 
   const removed = await db.fileUpload.updateMany({
@@ -505,7 +506,7 @@ export async function saveIncome(_previous: FinanceState, formData: FormData): P
   }
   const saved = incomeId
     ? { id: incomeId }
-    : await db.income.create({ data: { ...data, recordedById: staff.id }, select: { id: true } });
+    : numbers(await db.income.create({ data: { ...data, recordedById: staff.id }, select: { id: true } }));
 
   await recordAudit({
     actorType: 'staff',
@@ -524,10 +525,10 @@ export async function removeIncome(_previous: FinanceState, formData: FormData):
   const staff = await requireStaff();
   if (!can(staff, 'finance')) return { status: 'error', message: NO_PERMISSION };
 
-  const income = await db.income.findUnique({
+  const income = numbers(await db.income.findUnique({
     where: { id: formText(formData, 'incomeId') },
     select: { id: true, source: true, amountMinor: true, currency: true, receivedOn: true },
-  });
+  }));
   if (!income) return { status: 'error', message: 'That income no longer exists.' };
 
   await db.income.delete({ where: { id: income.id } });

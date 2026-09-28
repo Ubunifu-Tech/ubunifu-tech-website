@@ -8,6 +8,7 @@ import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import { RefundNote } from '@/app/admin/refunds/RefundNote';
 import styles from '../../Portal.module.css';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
+import { numbers } from '@/lib/console/money';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -22,7 +23,7 @@ export default async function PortalRefund({ params }: { params: Promise<{ numbe
   const { number } = await params;
   const org = await getOrg();
 
-  const refund = await db.refund.findFirst({
+  const refund = numbers(await db.refund.findFirst({
     where: {
       number: number,
       // Scoped in the query: another client's refund simply does not match.
@@ -53,7 +54,7 @@ export default async function PortalRefund({ params }: { params: Promise<{ numbe
         },
       },
     },
-  });
+  }));
 
   if (!refund) notFound();
 

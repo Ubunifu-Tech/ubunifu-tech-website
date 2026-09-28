@@ -5,7 +5,7 @@ import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
 import { ENQUIRY_STATUS_LABEL } from '@/lib/console/enquiry-labels';
 import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { formatMoney, formatRelative, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatRelative, formatShortDate, numbers } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
 import { clientRemovalCounts, owingRefusal } from '@/lib/console/removal';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
@@ -40,10 +40,10 @@ const TONE_CLASS: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const client = await db.client.findFirst({
+  const client = numbers(await db.client.findFirst({
     where: { slug, deletedAt: null },
     select: { name: true },
-  });
+  }));
   return { title: client?.name ?? 'Client' };
 }
 
@@ -71,7 +71,7 @@ export default async function ClientPage({
   const { slug } = await params;
   const now = new Date();
 
-  const client = await db.client.findFirst({
+  const client = numbers(await db.client.findFirst({
     where: { slug, deletedAt: null },
     select: {
       id: true,
@@ -131,16 +131,16 @@ export default async function ClientPage({
         select: { id: true, subject: true, createdAt: true, status: true },
       },
     },
-  });
+  }));
 
   if (!client) {
     // A removed client's old address (a bookmark, an email, Back after
     // removing) goes to where it can be brought back, for those who can.
     const removed = mayManage
-      ? await db.client.findFirst({
+      ? numbers(await db.client.findFirst({
           where: { slug, deletedAt: { not: null } },
           select: { slug: true },
-        })
+        }))
       : null;
     if (removed) redirect(`/removed/${removed.slug}`);
     notFound();
@@ -177,7 +177,7 @@ export default async function ClientPage({
   // can only come back under a new one.
   const heldElsewhere = new Set(
     (removedPeople.length > 0
-      ? await db.clientContact.findMany({
+      ? numbers(await db.clientContact.findMany({
           where: {
             deletedAt: null,
             clientId: { not: client.id },
@@ -186,7 +186,7 @@ export default async function ClientPage({
             },
           },
           select: { email: true },
-        })
+        }))
       : []
     ).flatMap((contact) => (contact.email ? [contact.email] : [])),
   );

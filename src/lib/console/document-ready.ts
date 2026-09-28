@@ -3,6 +3,7 @@ import type { DocumentKind } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { getOrg } from './org';
 import { carriesFees, feeProblems, feeSchedule, hasFeesToken, projectFees, projectFeesLater, withFees } from './fees';
+import { numbers } from './money';
 
 /**
  * Whether a document can go to the client, and what it will say when it does.
@@ -71,9 +72,9 @@ export async function prepareDocument(document: {
     db.clientContact.findFirst({
       where: { clientId: project.clientId, deletedAt: null, isPrimary: true },
       select: { id: true, name: true, email: true, canSignIn: true },
-    }),
+    }).then(numbers),
     getOrg(),
-    db.documentDefault.findUnique({ where: { kind }, select: { bodyMarkdown: true } }),
+    db.documentDefault.findUnique({ where: { kind }, select: { bodyMarkdown: true } }).then(numbers),
   ]);
   const vatBps = org.chargesVat ? org.vatRateBps : 0;
   // Their main contact signs, and only while they can open the portal.

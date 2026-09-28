@@ -8,6 +8,7 @@ import { ReceiptSheet } from '@/components/documents/ReceiptSheet';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import styles from '../../Portal.module.css';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
+import { numbers } from '@/lib/console/money';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -28,7 +29,7 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
   const { number } = await params;
   const org = await getOrg();
 
-  const receipt = await db.receipt.findFirst({
+  const receipt = numbers(await db.receipt.findFirst({
     where: {
       number: number,
       // Scoped in the query: another client's receipt simply does not match.
@@ -67,7 +68,7 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
         },
       },
     },
-  });
+  }));
 
   if (!receipt) notFound();
 

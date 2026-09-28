@@ -11,6 +11,7 @@ import {
   formatShortDate,
   MONEY_CAP_MINOR,
   moneyCapText,
+  numbers,
   overMoneyCap,
   parseDateInput,
   parseMoney,
@@ -181,7 +182,7 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
   if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
-  const project = await db.project.findFirst({
+  const project = numbers(await db.project.findFirst({
     where: { id: formText(formData, 'projectId'), deletedAt: null },
     select: {
       id: true,
@@ -189,14 +190,14 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
       currency: true,
       _count: { select: { lineItems: true } },
     },
-  });
+  }));
   if (!project) return { status: 'error', message: 'That project no longer exists.' };
 
   const read = parse(formData, project.currency);
   if (!read.ok) return read.error;
   const parsed = read.fee;
 
-  const created = await db.lineItem.create({
+  const created = numbers(await db.lineItem.create({
     data: {
       projectId: project.id,
       label: parsed.label,
@@ -216,7 +217,7 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
         : {}),
     },
     select: { id: true },
-  });
+  }));
 
   await recordAudit({
     actorType: 'staff',
@@ -236,7 +237,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
   if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
-  const line = await db.lineItem.findUnique({
+  const line = numbers(await db.lineItem.findUnique({
     where: { id: formText(formData, 'lineItemId') },
     select: {
       id: true,
@@ -259,7 +260,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
         select: { periodEnd: true },
       },
     },
-  });
+  }));
   if (!line || line.project.deletedAt)
     return { status: 'error', message: 'That fee no longer exists.' };
 
@@ -300,7 +301,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
     };
   }
 
-  await db.lineItem.update({
+  numbers(await db.lineItem.update({
     where: { id: line.id },
     data: {
       label: parsed.label,
@@ -317,7 +318,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
           }
         : { nextDueAt: null, intervalMonths: null }),
     },
-  });
+  }));
 
   // A new date or a new way of billing is a new schedule: the old one's
   // unbilled periods would otherwise be offered alongside it.
@@ -385,7 +386,7 @@ export async function removeFee(_previous: FeeState, formData: FormData): Promis
   const staff = await requireStaff();
   if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
-  const line = await db.lineItem.findUnique({
+  const line = numbers(await db.lineItem.findUnique({
     where: { id: formText(formData, 'lineItemId') },
     select: {
       id: true,
@@ -401,7 +402,7 @@ export async function removeFee(_previous: FeeState, formData: FormData): Promis
       managedService: { select: { id: true } },
       project: { select: { slug: true, deletedAt: true } },
     },
-  });
+  }));
   if (!line || line.project.deletedAt)
     return { status: 'error', message: 'That fee no longer exists.' };
 

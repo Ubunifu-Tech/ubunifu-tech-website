@@ -9,7 +9,7 @@ import type {
   ReviewStatus,
 } from '@/generated/prisma/client';
 import { STAFF_LABEL } from './project-status';
-import { formatMoney } from './money';
+import { formatMoney, numbers } from './money';
 import { waitingOnClient } from './live';
 
 /**
@@ -308,10 +308,10 @@ export async function advanceForDocument(
     actorId: string | null;
   },
 ): Promise<{ from: ProjectStatus; to: ProjectStatus } | null> {
-  const project = await tx.project.findUnique({
+  const project = numbers(await tx.project.findUnique({
     where: { id: input.projectId },
     select: { status: true },
-  });
+  }));
   if (!project) return null;
   const to = stageAfterDocument(project.status, input.kind, input.milestone);
   if (!to) return null;
@@ -323,7 +323,7 @@ export async function advanceForDocument(
   });
   if (moved.count !== 1) return null;
 
-  await tx.projectStatusEvent.create({
+  numbers(await tx.projectStatusEvent.create({
     data: {
       projectId: input.projectId,
       from: project.status,
@@ -332,7 +332,7 @@ export async function advanceForDocument(
       actorId: input.actorId,
       note: `${input.reference} ${input.milestone === 'signed' ? 'signed' : 'sent for signature'}`,
     },
-  });
+  }));
   return { from: project.status, to };
 }
 
@@ -352,10 +352,10 @@ export async function advanceForReview(
     actorId: string | null;
   },
 ): Promise<{ from: ProjectStatus; to: ProjectStatus } | null> {
-  const project = await tx.project.findUnique({
+  const project = numbers(await tx.project.findUnique({
     where: { id: input.projectId },
     select: { status: true },
-  });
+  }));
   if (!project) return null;
   if (!TABLE[project.status].some((edge) => edge.to === 'client_review')) return null;
 
@@ -365,7 +365,7 @@ export async function advanceForReview(
   });
   if (moved.count !== 1) return null;
 
-  await tx.projectStatusEvent.create({
+  numbers(await tx.projectStatusEvent.create({
     data: {
       projectId: input.projectId,
       from: project.status,
@@ -374,7 +374,7 @@ export async function advanceForReview(
       actorId: input.actorId,
       note: `Round ${input.round} sent for review: ${input.title}`,
     },
-  });
+  }));
   return { from: project.status, to: 'client_review' };
 }
 
@@ -399,12 +399,12 @@ export function stoppedFrom(
 }
 
 async function stoppedFromLog(projectId: string): Promise<ProjectStatus | null> {
-  const events = await db.projectStatusEvent.findMany({
+  const events = numbers(await db.projectStatusEvent.findMany({
     where: { projectId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: 20,
     select: { from: true, to: true },
-  });
+  }));
   return stoppedFrom(events);
 }
 
@@ -493,7 +493,7 @@ export type GuardFacts = {
 };
 
 export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
-  const project = await db.project.findUniqueOrThrow({
+  const project = numbers(await db.project.findUniqueOrThrow({
     where: { id: projectId },
     select: {
       currency: true,
@@ -540,7 +540,7 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
       managedServices: { where: { isActive: true }, select: { id: true } },
       assetRequests: { where: waitingOnClient, select: { id: true } },
     },
-  });
+  }));
 
   const requests = project.documents.flatMap((d) => d.signatureRequests);
 

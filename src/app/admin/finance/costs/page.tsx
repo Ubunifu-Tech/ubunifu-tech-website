@@ -3,7 +3,14 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { COST_CATEGORY_LABEL } from '@/lib/console/cost-labels';
 import { addTo, monthDate, monthKey, monthLabel, shiftMonth, sideBySide } from '@/lib/console/finance';
-import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
+import {
+  formatMoney,
+  formatShortDate,
+  moneyInput,
+  numbers,
+  toDateInputValue,
+  todayInput,
+} from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import { uploadsConfigured } from '@/lib/console/uploads';
 import {
@@ -64,7 +71,7 @@ export default async function CostsPage({
           select: { id: true, filename: true },
         },
       },
-    }),
+    }).then(numbers),
     db.regularCost.findMany({
       orderBy: [{ isActive: 'desc' }, { vendor: 'asc' }],
       select: {
@@ -83,23 +90,23 @@ export default async function CostsPage({
         project: { select: { name: true, clientId: true, deletedAt: true } },
         product: { select: { name: true } },
       },
-    }),
+    }).then(numbers),
     db.client.findMany({
       where: { deletedAt: null },
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
-    }),
+    }).then(numbers),
     db.project.findMany({
       where: { deletedAt: null },
       orderBy: { name: 'asc' },
       select: { id: true, name: true, clientId: true },
-    }),
-    db.cost.findMany({ distinct: ['vendor'], orderBy: { vendor: 'asc' }, select: { vendor: true } }),
+    }).then(numbers),
+    db.cost.findMany({ distinct: ['vendor'], orderBy: { vendor: 'asc' }, select: { vendor: true } }).then(numbers),
     db.product.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
-    }),
+    }).then(numbers),
   ]);
 
   const choices: Choices = {

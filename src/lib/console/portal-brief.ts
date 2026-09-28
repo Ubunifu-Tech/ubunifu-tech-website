@@ -5,7 +5,7 @@ import type { ClientActor } from './auth';
 import { clientStage } from './project-status';
 import { portalInvoiceState } from './billing-labels';
 import { CLIENT_TICKET_STATUS } from './tickets';
-import { formatDate, formatMoney, parseDateInput, todayInput } from './money';
+import { formatDate, formatMoney, numbers, parseDateInput, todayInput } from './money';
 import { awaitingSignature, liveInvoice, liveTicket, waitingOnClient } from './live';
 import { HOW_TO_WRITE } from './assistant';
 
@@ -87,17 +87,17 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
           select: { round: true, title: true, status: true },
         },
       },
-    }),
+    }).then(numbers),
     // Theirs to sign only while a request is open and inside its time: one
     // that ran out, or that they answered, is not waiting on them.
     db.document.findMany({
       where: { project: { clientId: actor.clientId, deletedAt: null }, ...awaitingSignature(now) },
       select: { reference: true, title: true, projectId: true },
-    }),
+    }).then(numbers),
     db.document.findMany({
       where: { project: { clientId: actor.clientId, deletedAt: null }, status: 'changes_requested' },
       select: { reference: true, title: true },
-    }),
+    }).then(numbers),
     db.invoice.findMany({
       where: { clientId: actor.clientId, ...liveInvoice, status: { notIn: ['draft', 'void', 'paid'] } },
       orderBy: { dueAt: 'asc' },
@@ -109,17 +109,17 @@ export async function portalBrief(actor: ClientActor): Promise<string> {
         paidMinor: true,
         dueAt: true,
       },
-    }),
+    }).then(numbers),
     db.ticket.findMany({
       where: { clientId: actor.clientId, ...liveTicket, status: { notIn: ['closed'] } },
       orderBy: { createdAt: 'desc' },
       take: 10,
       select: { reference: true, subject: true, status: true },
-    }),
+    }).then(numbers),
     db.clientContact.findMany({
       where: { clientId: actor.clientId, deletedAt: null },
       select: { name: true, role: true, isPrimary: true },
-    }),
+    }).then(numbers),
   ]);
 
   const lines: string[] = [

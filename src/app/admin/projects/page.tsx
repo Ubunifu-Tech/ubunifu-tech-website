@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
 import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import { formatMoney, formatShortDate, isPastDay } from '@/lib/console/money';
+import { formatMoney, formatShortDate, isPastDay, numbers } from '@/lib/console/money';
 import { transitionsFor } from '@/lib/console/transitions';
 import { waitingOnClient } from '@/lib/console/live';
 import { Board, type BoardCard } from './Board';
@@ -111,13 +111,13 @@ export default async function ProjectsPage({
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
   const shown = pageWindow(pageNumber(page), total);
 
-  const projects = await db.project.findMany({
+  const projects = numbers(await db.project.findMany({
     where: { AND: [{ deletedAt: null }, filterToWhere(active), matching] },
     orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
     skip: shown.skip,
     take: shown.take,
     select: SELECT,
-  });
+  }));
 
   return (
     <main className={styles.page}>
@@ -304,7 +304,7 @@ async function BoardView({ canRun, seesValue }: { canRun: boolean; seesValue: bo
   const recent = new Date(now);
   recent.setDate(recent.getDate() - 90);
 
-  const projects = await db.project.findMany({
+  const projects = numbers(await db.project.findMany({
     where: {
       deletedAt: null,
       status: { not: 'cancelled' },
@@ -313,7 +313,7 @@ async function BoardView({ canRun, seesValue }: { canRun: boolean; seesValue: bo
     orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
     take: 300,
     select: SELECT,
-  });
+  }));
 
   const cards: BoardCard[] = await Promise.all(
     projects.map(async (project) => {

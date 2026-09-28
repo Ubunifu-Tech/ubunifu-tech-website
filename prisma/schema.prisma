@@ -617,7 +617,7 @@ model LineItem {
   description     String?
   billingKind     BillingKind    @default(one_off)
   status          LineItemStatus @default(planned)
-  amountMinor     Int
+  amountMinor     BigInt
   currency        String         @default("USD")
   quantity        Int            @default(1)
   /// Plain-language terms, e.g. "50% deposit due at kick-off".
@@ -694,13 +694,13 @@ model Invoice {
   status        InvoiceStatus @default(draft)
   currency      String        @default("USD")
   /// Denormalised from the lines so listing screens do not need a join.
-  subtotalMinor Int           @default(0)
-  taxMinor      Int           @default(0)
-  totalMinor    Int           @default(0)
-  paidMinor     Int           @default(0)
+  subtotalMinor BigInt           @default(0)
+  taxMinor      BigInt           @default(0)
+  totalMinor    BigInt           @default(0)
+  paidMinor     BigInt           @default(0)
   /// Sent back to the client against its payments. What was paid stays paid;
   /// this is how much of it the client has back.
-  refundedMinor Int           @default(0)
+  refundedMinor BigInt           @default(0)
   notes         String?
   issuedAt      DateTime?
   dueAt         DateTime?
@@ -727,7 +727,7 @@ model InvoiceLine {
   lineItem    LineItem? @relation(fields: [lineItemId], references: [id], onDelete: SetNull)
   label       String
   description String?
-  amountMinor Int
+  amountMinor BigInt
   quantity    Int       @default(1)
   position    Int
 
@@ -749,7 +749,7 @@ model Payment {
   id           String        @id @default(cuid())
   invoiceId    String
   invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
-  amountMinor  Int
+  amountMinor  BigInt
   currency     String        @default("USD")
   method       PaymentMethod @default(bank_transfer)
   /// Bank reference, mobile-money transaction id, or similar.
@@ -785,7 +785,7 @@ model Refund {
   number       String        @unique
   paymentId    String
   payment      Payment       @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  amountMinor  Int
+  amountMinor  BigInt
   currency     String
   method       PaymentMethod @default(mobile_money)
   /// The bank or mobile-money reference for the money going back.
@@ -1353,7 +1353,7 @@ model LineItemTemplate {
   description String?
   billingKind BillingKind     @default(one_off)
   /// Suggested amount; always editable when the project is created.
-  amountMinor Int             @default(0)
+  amountMinor BigInt             @default(0)
   currency    String          @default("USD")
   terms       String?
   position    Int
@@ -1572,7 +1572,7 @@ model Cost {
   vendor       String
   category     CostCategory
   description  String?
-  amountMinor  Int
+  amountMinor  BigInt
   currency     String
   /// What it was for, when it serves one client or one project.
   clientId     String?
@@ -1604,7 +1604,7 @@ model RegularCost {
   category    CostCategory
   description String?
   /// What it usually comes to.
-  usualMinor  Int
+  usualMinor  BigInt
   currency    String
   clientId    String?
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
@@ -1660,7 +1660,7 @@ model Income {
   /// Where it came from, in a few words.
   source       String
   description  String?
-  amountMinor  Int
+  amountMinor  BigInt
   currency     String
   productId    String?
   product      Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)

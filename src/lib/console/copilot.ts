@@ -2,7 +2,7 @@ import 'server-only';
 import { isUniqueConflict } from './conflict';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
-import { formatDate, formatMoney } from './money';
+import { formatDate, formatMoney, numbers } from './money';
 import { DOCUMENT_KIND_LABEL, currentTerms } from './documents';
 import { getOrg } from './org';
 import { liveDocument } from './live';
@@ -82,7 +82,7 @@ function unquoted(text: string): string {
 
 /** Everything the model is allowed to know about this project, as plain text. */
 export async function copilotBrief(documentId: string): Promise<string | null> {
-  const document = await db.document.findUnique({
+  const document = numbers(await db.document.findUnique({
     where: { id: documentId, ...liveDocument },
     select: {
       kind: true,
@@ -142,7 +142,7 @@ export async function copilotBrief(documentId: string): Promise<string | null> {
         },
       },
     },
-  });
+  }));
 
   if (!document) return null;
 
@@ -348,14 +348,14 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
       return { result: 'That is too long to save. Make it shorter.', done: false };
     }
 
-    const document = await db.document.findUnique({
+    const document = numbers(await db.document.findUnique({
       where: { id: context.documentId, ...liveDocument },
       select: {
         id: true,
         status: true,
         versions: { orderBy: { version: 'desc' }, take: 1, select: { version: true } },
       },
-    });
+    }));
 
     if (!document) return { result: 'That document no longer exists.', done: false };
     if (document.status === 'signed') {
@@ -369,7 +369,7 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
     const version = (document.versions[0]?.version ?? 0) + 1;
 
     try {
-    await db.documentVersion.create({
+    numbers(await db.documentVersion.create({
       data: {
         documentId: document.id,
         version,
@@ -381,7 +381,7 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
         aiModel: AGENT_MODEL,
         createdById: context.staffId,
       },
-    });
+    }));
     } catch (error) {
       if (isUniqueConflict(error)) {
         return {

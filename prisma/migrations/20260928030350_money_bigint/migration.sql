@@ -1,0 +1,31 @@
+-- AlterTable
+ALTER TABLE "Cost" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "Income" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "Invoice" ALTER COLUMN "subtotalMinor" SET DATA TYPE BIGINT,
+ALTER COLUMN "taxMinor" SET DATA TYPE BIGINT,
+ALTER COLUMN "totalMinor" SET DATA TYPE BIGINT,
+ALTER COLUMN "paidMinor" SET DATA TYPE BIGINT,
+ALTER COLUMN "refundedMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "InvoiceLine" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "LineItem" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "LineItemTemplate" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "Payment" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "Refund" ALTER COLUMN "amountMinor" SET DATA TYPE BIGINT;
+
+-- AlterTable
+ALTER TABLE "RegularCost" ALTER COLUMN "usualMinor" SET DATA TYPE BIGINT;
+

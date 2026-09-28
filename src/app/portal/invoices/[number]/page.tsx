@@ -6,7 +6,7 @@ import { INVOICE_SHEET_SELECT, toSheet } from '@/lib/console/invoice-sheet';
 import { requireClient } from '@/lib/console/auth';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
 import { portalInvoiceState } from '@/lib/console/billing-labels';
-import { formatDate } from '@/lib/console/money';
+import { formatDate, numbers } from '@/lib/console/money';
 import { ReachUs } from '@/components/console/ReachUs';
 import { getOrg } from '@/lib/console/org';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
@@ -44,7 +44,7 @@ export default async function PortalInvoice({
   const { number } = await params;
   const org = await getOrg();
 
-  const invoice = await db.invoice.findFirst({
+  const invoice = numbers(await db.invoice.findFirst({
     where: {
       number: number,
       clientId: actor.clientId,
@@ -52,15 +52,15 @@ export default async function PortalInvoice({
       ...sentToClient,
     },
     select: { ...INVOICE_SHEET_SELECT, projectId: true },
-  });
+  }));
 
   if (!invoice) notFound();
   const state = portalInvoiceState(invoice, new Date());
   const project = invoice.projectId
-    ? await db.project.findFirst({
+    ? numbers(await db.project.findFirst({
         where: { id: invoice.projectId, clientId: actor.clientId, deletedAt: null },
         select: { id: true },
-      })
+      }))
     : null;
   // Straight to a request with the invoice already named in it.
   const tellUs = `/portal/requests?${new URLSearchParams({

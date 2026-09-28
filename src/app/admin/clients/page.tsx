@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
@@ -80,7 +80,7 @@ export default async function ClientsPage({
     ? await db.client.count({ where: { deletedAt: { not: null } } })
     : 0;
 
-  const clients = await db.client.findMany({
+  const clients = numbers(await db.client.findMany({
     where: { AND: [{ deletedAt: null }, viewToWhere(active), matching] },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     skip: shown.skip,
@@ -109,7 +109,7 @@ export default async function ClientsPage({
         },
       },
     },
-  });
+  }));
 
   return (
     <main className={styles.page}>

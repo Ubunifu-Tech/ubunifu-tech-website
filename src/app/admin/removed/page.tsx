@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import styles from '../Admin.module.css';
 import table from '@/styles/table.module.css';
 
@@ -19,7 +19,7 @@ const OWING = ['sent', 'part_paid', 'overdue'] as const;
 export default async function RemovedClients() {
   await requirePermission('clients');
 
-  const clients = await db.client.findMany({
+  const clients = numbers(await db.client.findMany({
     where: { deletedAt: { not: null } },
     orderBy: { deletedAt: 'desc' },
     take: 300,
@@ -35,18 +35,18 @@ export default async function RemovedClients() {
         select: { totalMinor: true, paidMinor: true, currency: true },
       },
     },
-  });
+  }));
 
   // Who removed each, from the record of it.
-  const removals = await db.auditEvent.findMany({
+  const removals = numbers(await db.auditEvent.findMany({
     where: { action: 'client.removed', entityId: { in: clients.map((client) => client.id) } },
     orderBy: { createdAt: 'desc' },
     select: { entityId: true, actorId: true },
-  });
-  const staff = await db.staffUser.findMany({
+  }));
+  const staff = numbers(await db.staffUser.findMany({
     where: { id: { in: removals.flatMap((event) => (event.actorId ? [event.actorId] : [])) } },
     select: { id: true, name: true },
-  });
+  }));
   const removedBy = new Map<string, string>();
   for (const event of removals) {
     if (removedBy.has(event.entityId)) continue;

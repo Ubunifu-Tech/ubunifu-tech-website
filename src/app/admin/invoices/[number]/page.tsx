@@ -10,6 +10,7 @@ import {
   formatShortDate,
   isPastDay,
   moneyInput,
+  numbers,
   toDateInputValue,
   todayInput,
 } from '@/lib/console/money';
@@ -47,7 +48,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
   const { number } = await params;
   const now = new Date();
 
-  const invoice = await db.invoice.findUnique({
+  const invoice = numbers(await db.invoice.findUnique({
     // Removed clients' invoices too: staff with billing can always read the
     // record, and every action on this page refuses a removed one anyway.
     where: { number: number },
@@ -112,7 +113,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
         },
       },
     },
-  });
+  }));
 
   if (!invoice) notFound();
 

@@ -28,6 +28,7 @@ import {
   isPastDay,
   MONEY_CAP_MINOR,
   moneyCapText,
+  numbers,
   overMoneyCap,
   parseDateInput,
   parseMoney,
@@ -79,10 +80,10 @@ const VOID_MONEY = 'This invoice is void. Its payments and refunds stay as recor
 
 /** Under the invoice lock: a void invoice's money is part of the record and stays as it is. */
 async function refuseIfVoid(tx: Prisma.TransactionClient, invoiceId: string): Promise<void> {
-  const { status } = await tx.invoice.findUniqueOrThrow({
+  const { status } = numbers(await tx.invoice.findUniqueOrThrow({
     where: { id: invoiceId },
     select: { status: true },
-  });
+  }));
   if (status === 'void') throw new Voided();
 }
 
@@ -121,7 +122,7 @@ async function invoiceForBillables(
   if (oneOff.length > 0) {
     const ids = oneOff.map((line) => line.lineItemId);
     await tx.$queryRaw`SELECT id FROM "LineItem" WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
-    const current = await tx.lineItem.findMany({
+    const current = numbers(await tx.lineItem.findMany({
       where: { id: { in: ids } },
       select: {
         id: true,
@@ -132,7 +133,7 @@ async function invoiceForBillables(
           select: { amountMinor: true, quantity: true },
         },
       },
-    });
+    }));
     for (const line of oneOff) {
       const fee = current.find((row) => row.id === line.lineItemId);
       const billed = (fee?.invoiceLines ?? []).reduce((t, l) => t + l.amountMinor * l.quantity, 0);
@@ -142,7 +143,7 @@ async function invoiceForBillables(
   }
 
   const number = await nextInvoiceNumber(tx);
-  const created = await tx.invoice.create({
+  const created = numbers(await tx.invoice.create({
     data: {
       number,
       clientId: project.clientId,
@@ -169,7 +170,7 @@ async function invoiceForBillables(
       },
     },
     select: { id: true, number: true },
-  });
+  }));
 
   // Marks each period invoiced and moves its line on to the next one. Throws
   // if a period was billed between the read above and here, which rolls the
@@ -191,10 +192,10 @@ async function invoiceForBillables(
  * can bill at once.
  */
 async function pickBillables(projectId: string, chosen: string[], typed?: FormData) {
-  const project = await db.project.findFirst({
+  const project = numbers(await db.project.findFirst({
     where: { id: projectId, deletedAt: null },
     select: { id: true, slug: true, currency: true, clientId: true, name: true },
-  });
+  }));
   if (!project) return { error: 'That project no longer exists.' } as const;
 
   const billable = await billableLines(project.id);
@@ -356,7 +357,7 @@ export async function sendInvoice(
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
   const invoiceId = String(formData.get('invoiceId') ?? '');
 
-  const invoice = await db.invoice.findUnique({
+  const invoice = numbers(await db.invoice.findUnique({
     where: { id: invoiceId, ...liveInvoice },
     select: {
       id: true,
@@ -377,7 +378,7 @@ export async function sendInvoice(
         },
       },
     },
-  });
+  }));
 
   if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
   if (invoice.status === 'void') {
@@ -536,7 +537,7 @@ async function writePayment(
     staffId: string;
   },
 ): Promise<{ id: string; number: string }> {
-  const payment = await tx.payment.create({
+  const payment = numbers(await tx.payment.create({
     data: {
       invoiceId: input.invoiceId,
       amountMinor: input.amountMinor,
@@ -548,7 +549,7 @@ async function writePayment(
       note: input.note || null,
     },
     select: { id: true },
-  });
+  }));
   const number = await nextReceiptNumber(tx);
   return tx.receipt.create({
     data: { number, paymentId: payment.id },
@@ -708,7 +709,7 @@ export async function recordPayment(
   const invoiceId = String(formData.get('invoiceId') ?? '');
   const emailIt = formData.get('emailReceipt') === 'on';
 
-  const invoice = await db.invoice.findUnique({
+  const invoice = numbers(await db.invoice.findUnique({
     where: { id: invoiceId, ...liveInvoice },
     select: {
       id: true,
@@ -719,7 +720,7 @@ export async function recordPayment(
       paidMinor: true,
       clientId: true,
     },
-  });
+  }));
 
   if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
   if (invoice.status === 'void') {
@@ -747,10 +748,10 @@ export async function recordPayment(
         // both land. The invoice is locked and what is owed is read again under
         // the lock, so the second one sees the first and stops.
         await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${invoice.id} FOR UPDATE`;
-        const fresh = await tx.invoice.findUniqueOrThrow({
+        const fresh = numbers(await tx.invoice.findUniqueOrThrow({
           where: { id: invoice.id },
           select: { status: true, issuedAt: true, totalMinor: true, paidMinor: true },
-        });
+        }));
         if (fresh.status === 'void') throw new Voided();
         if (amountMinor > fresh.totalMinor - fresh.paidMinor) throw new Overpaid();
 
@@ -760,11 +761,11 @@ export async function recordPayment(
         const wasDraft = fresh.status === 'draft';
         if (wasDraft) {
           const leftOver = fresh.totalMinor - fresh.paidMinor - amountMinor > 0;
-          const current = await tx.invoice.findUniqueOrThrow({
+          const current = numbers(await tx.invoice.findUniqueOrThrow({
             where: { id: invoice.id },
             select: { dueAt: true },
-          });
-          await tx.invoice.update({
+          }));
+          numbers(await tx.invoice.update({
             where: { id: invoice.id },
             data: {
               status: 'sent',
@@ -773,7 +774,7 @@ export async function recordPayment(
                 ? { dueAt: onTerms }
                 : {}),
             },
-          });
+          }));
         }
 
         const created = await writePayment(tx, {
@@ -873,7 +874,7 @@ async function deliverReceipt(
   staff: StaffActor,
   receiptId: string,
 ): Promise<{ sent: true; to: string } | { sent: false; message: string }> {
-  const receipt = await db.receipt.findUnique({
+  const receipt = numbers(await db.receipt.findUnique({
     where: { id: receiptId, payment: livePayment },
     select: {
       id: true,
@@ -902,7 +903,7 @@ async function deliverReceipt(
         },
       },
     },
-  });
+  }));
 
   if (!receipt) return { sent: false, message: 'That receipt no longer exists.' };
   if (receipt.payment.reversedAt) {
@@ -970,7 +971,7 @@ export async function recordRefund(
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
 
-  const payment = await db.payment.findFirst({
+  const payment = numbers(await db.payment.findFirst({
     where: { id: String(formData.get('paymentId') ?? ''), ...livePayment },
     select: {
       id: true,
@@ -983,7 +984,7 @@ export async function recordRefund(
         select: { id: true, number: true, status: true, project: { select: { slug: true } } },
       },
     },
-  });
+  }));
   if (!payment) return { status: 'error', message: 'That payment no longer exists.' };
   if (payment.invoice.status === 'void') return { status: 'error', message: VOID_MONEY };
   if (payment.reversedAt) {
@@ -1025,19 +1026,19 @@ export async function recordRefund(
         // cannot together give back more than was paid.
         await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${payment.invoice.id} FOR UPDATE`;
         await refuseIfVoid(tx, payment.invoice.id);
-        const fresh = await tx.payment.findUniqueOrThrow({
+        const fresh = numbers(await tx.payment.findUniqueOrThrow({
           where: { id: payment.id },
           select: {
             amountMinor: true,
             reversedAt: true,
             refunds: { where: { cancelledAt: null }, select: { amountMinor: true } },
           },
-        });
+        }));
         const left = fresh.amountMinor - fresh.refunds.reduce((t, r) => t + r.amountMinor, 0);
         if (fresh.reversedAt || read.amountMinor > left) throw new OverRefunded();
 
         const number = await nextRefundNumber(tx);
-        const created = await tx.refund.create({
+        const created = numbers(await tx.refund.create({
           data: {
             number,
             paymentId: payment.id,
@@ -1050,7 +1051,7 @@ export async function recordRefund(
             recordedById: staff.id,
           },
           select: { id: true, number: true },
-        });
+        }));
         await recomputeInvoice(tx, payment.invoice.id);
         return created;
       }),
@@ -1098,7 +1099,7 @@ export async function emailRefund(
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
 
-  const refund = await db.refund.findFirst({
+  const refund = numbers(await db.refund.findFirst({
     where: { id: String(formData.get('refundId') ?? ''), payment: livePayment },
     select: {
       id: true,
@@ -1127,7 +1128,7 @@ export async function emailRefund(
         },
       },
     },
-  });
+  }));
   if (!refund) return { status: 'error', message: 'That refund no longer exists.' };
   if (refund.cancelledAt) {
     return { status: 'error', message: 'This refund was cancelled, so there is nothing to send.' };
@@ -1195,7 +1196,7 @@ export async function cancelRefund(
     return { status: 'error', message: 'Say why it is being cancelled, so the record makes sense later.' };
   }
 
-  const refund = await db.refund.findFirst({
+  const refund = numbers(await db.refund.findFirst({
     where: { id: formText(formData, 'refundId'), payment: livePayment },
     select: {
       id: true,
@@ -1204,16 +1205,16 @@ export async function cancelRefund(
       currency: true,
       payment: { select: { invoice: { select: { id: true, number: true, project: { select: { slug: true } } } } } },
     },
-  });
+  }));
   if (!refund) return { status: 'error', message: 'That refund no longer exists.' };
 
   const cancelled = await db.$transaction(async (tx) => {
     // The same lock recording a payment or a refund takes.
     await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${refund.payment.invoice.id} FOR UPDATE`;
-    const { status } = await tx.invoice.findUniqueOrThrow({
+    const { status } = numbers(await tx.invoice.findUniqueOrThrow({
       where: { id: refund.payment.invoice.id },
       select: { status: true },
-    });
+    }));
     if (status === 'void') return 'void';
     const { count } = await tx.refund.updateMany({
       where: { id: refund.id, cancelledAt: null },
@@ -1267,7 +1268,7 @@ export async function reversePayment(
   if (reason.length > 500)
     return { status: 'error', message: 'Keep the reason to a sentence or two.' };
 
-  const payment = await db.payment.findFirst({
+  const payment = numbers(await db.payment.findFirst({
     where: { id: String(formData.get('paymentId') ?? ''), ...livePayment },
     select: {
       id: true,
@@ -1280,7 +1281,7 @@ export async function reversePayment(
       receipt: { select: { number: true } },
       _count: { select: { refunds: { where: { cancelledAt: null } } } },
     },
-  });
+  }));
   if (!payment) return { status: 'error', message: 'That payment no longer exists.' };
   if (payment.reversedAt) return { status: 'error', message: 'That payment was already reversed.' };
   // A payment that was refunded really arrived, so it cannot also be a mistake.
@@ -1308,7 +1309,7 @@ export async function reversePayment(
       return tx.invoice.findUniqueOrThrow({
         where: { id: payment.invoice.id },
         select: { totalMinor: true, paidMinor: true },
-      });
+      }).then(numbers);
     });
   } catch (error) {
     if (error instanceof AlreadyReversed) {
@@ -1360,10 +1361,10 @@ export async function saveDraftInvoice(
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
 
-  const invoice = await db.invoice.findFirst({
+  const invoice = numbers(await db.invoice.findFirst({
     where: { id: formText(formData, 'invoiceId'), ...liveInvoice },
     select: { id: true, number: true, status: true, dueAt: true, notes: true },
-  });
+  }));
   if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
 
   const rawDue = formText(formData, 'dueAt');
@@ -1411,7 +1412,7 @@ export async function voidInvoice(
     return { status: 'error', message: 'Say why this invoice is being voided.' };
   }
 
-  const invoice = await db.invoice.findUnique({
+  const invoice = numbers(await db.invoice.findUnique({
     where: { id: invoiceId, ...liveInvoice },
     select: {
       id: true,
@@ -1421,7 +1422,7 @@ export async function voidInvoice(
       refundedMinor: true,
       notes: true,
     },
-  });
+  }));
 
   if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
   if (invoice.status === 'void') return { status: 'done' };
@@ -1439,28 +1440,28 @@ export async function voidInvoice(
     // Checked again under the lock payments and refunds take, so one recorded
     // while this form was open cannot end up on a void invoice.
     await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${invoice.id} FOR UPDATE`;
-    const fresh = await tx.invoice.findUniqueOrThrow({
+    const fresh = numbers(await tx.invoice.findUniqueOrThrow({
       where: { id: invoice.id },
       select: { status: true, paidMinor: true, refundedMinor: true },
-    });
+    }));
     if (fresh.status === 'void' || fresh.paidMinor - fresh.refundedMinor > 0) return false;
-    await tx.invoice.update({
+    numbers(await tx.invoice.update({
       where: { id: invoice.id },
       data: {
         status: 'void',
         voidedAt: new Date(),
         notes: [invoice.notes, `Voided: ${reason}`].filter(Boolean).join('\n\n'),
       },
-    });
+    }));
 
     // Renewal periods it billed can be billed again, and each line's next due
     // date goes back to the earliest of them, the rule bringing back a
     // skipped period follows. Stepping back one period at a time left a fee
     // pointing at its second period when one invoice held two.
-    const periods = await tx.renewalEvent.findMany({
+    const periods = numbers(await tx.renewalEvent.findMany({
       where: { invoiceId: invoice.id },
       select: { periodStart: true, lineItem: { select: { id: true, nextDueAt: true } } },
-    });
+    }));
     await tx.renewalEvent.updateMany({
       where: { invoiceId: invoice.id },
       data: { status: 'pending', invoiceId: null },
@@ -1477,7 +1478,7 @@ export async function voidInvoice(
     }
     for (const [lineItemId, { start, next }] of earliest) {
       if (!next || start < next) {
-        await tx.lineItem.update({ where: { id: lineItemId }, data: { nextDueAt: start } });
+        numbers(await tx.lineItem.update({ where: { id: lineItemId }, data: { nextDueAt: start } }));
       }
     }
     return true;

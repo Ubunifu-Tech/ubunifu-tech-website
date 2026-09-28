@@ -8,6 +8,7 @@ import { PrintButton } from '../../receipts/PrintButton';
 import { RefundNote } from '../RefundNote';
 import styles from '../../Admin.module.css';
 import sheet from '../../receipts/Receipt.module.css';
+import { numbers } from '@/lib/console/money';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -22,7 +23,7 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
   const { number } = await params;
   const org = await getOrg();
 
-  const refund = await db.refund.findFirst({
+  const refund = numbers(await db.refund.findFirst({
     // A removed client's refund notes stay readable: they are the record.
     where: { number: number },
     select: {
@@ -52,7 +53,7 @@ export default async function RefundPage({ params }: { params: Promise<{ number:
         },
       },
     },
-  });
+  }));
 
   if (!refund) notFound();
 

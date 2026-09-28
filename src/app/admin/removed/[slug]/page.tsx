@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { can, requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL } from '@/lib/console/billing-labels';
 import { DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import { STAFF_LABEL } from '@/lib/console/project-status';
 import { STAFF_TICKET_STATUS } from '@/lib/console/tickets';
 import { RestoreClient } from './RestoreClient';
@@ -14,10 +14,10 @@ import table from '@/styles/table.module.css';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const client = await db.client.findFirst({
+  const client = numbers(await db.client.findFirst({
     where: { slug, deletedAt: { not: null } },
     select: { name: true },
-  });
+  }));
   return { title: client ? `${client.name}, removed` : 'Removed client' };
 }
 
@@ -32,7 +32,7 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
   const seesDocuments = can(staff, 'documents');
   const { slug } = await params;
 
-  const client = await db.client.findFirst({
+  const client = numbers(await db.client.findFirst({
     where: { slug, deletedAt: { not: null } },
     select: {
       id: true,
@@ -94,17 +94,17 @@ export default async function RemovedClient({ params }: { params: Promise<{ slug
         },
       },
     },
-  });
+  }));
   if (!client?.deletedAt) notFound();
   const removedAt = client.deletedAt;
 
-  const removal = await db.auditEvent.findFirst({
+  const removal = numbers(await db.auditEvent.findFirst({
     where: { action: 'client.removed', entityId: client.id },
     orderBy: { createdAt: 'desc' },
     select: { actorId: true },
-  });
+  }));
   const remover = removal?.actorId
-    ? await db.staffUser.findUnique({ where: { id: removal.actorId }, select: { name: true } })
+    ? numbers(await db.staffUser.findUnique({ where: { id: removal.actorId }, select: { name: true } }))
     : null;
 
   const withIt = client.projects.filter(

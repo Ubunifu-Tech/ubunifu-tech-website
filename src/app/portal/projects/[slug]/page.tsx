@@ -5,7 +5,7 @@ import { requireClient } from '@/lib/console/auth';
 import { mainContactOf } from '@/lib/console/contacts';
 import { getOrg } from '@/lib/console/org';
 import { clientStage } from '@/lib/console/project-status';
-import { formatDate, formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatDate, formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import { DOCUMENT_KIND_LABEL, portalDocumentState } from '@/lib/console/documents';
 import { portalInvoiceState } from '@/lib/console/billing-labels';
 import { liveInvoice, sentToClient } from '@/lib/console/live';
@@ -39,10 +39,10 @@ const TONE_CLASS: Record<string, string> = {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const actor = await requireClient();
-  const project = await db.project.findFirst({
+  const project = numbers(await db.project.findFirst({
     where: { slug, clientId: actor.clientId, deletedAt: null },
     select: { name: true },
-  });
+  }));
   return { title: project?.name ?? 'Project' };
 }
 
@@ -62,7 +62,7 @@ export default async function PortalProject({
    * belonging to another client simply does not match, so a guessed URL returns
    * "not found" rather than a permission error that confirms it exists.
    */
-  const project = await db.project.findFirst({
+  const project = numbers(await db.project.findFirst({
     where: { slug, clientId: actor.clientId, deletedAt: null },
     select: {
       id: true,
@@ -164,7 +164,7 @@ export default async function PortalProject({
         },
       },
     },
-  });
+  }));
 
   if (!project) notFound();
   const now = new Date();
@@ -194,12 +194,12 @@ export default async function PortalProject({
           },
         },
       },
-    }),
+    }).then(numbers),
     db.invoice.findMany({
       where: { projectId: project.id, clientId: actor.clientId, ...liveInvoice, ...sentToClient },
       orderBy: [{ issuedAt: 'desc' }, { createdAt: 'desc' }],
       select: { id: true, number: true, status: true, dueAt: true, totalMinor: true, paidMinor: true, currency: true },
-    }),
+    }).then(numbers),
   ]);
   const [main, org] = await Promise.all([mainContactOf(actor.clientId), getOrg()]);
   const viewer = { id: actor.id, signs: actor.isPrimary, signerName: main?.name ?? null };

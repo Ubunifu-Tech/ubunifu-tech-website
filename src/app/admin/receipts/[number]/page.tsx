@@ -8,6 +8,7 @@ import { EmailReceiptButton } from '../../invoices/InvoiceControls';
 import { PrintButton } from '../PrintButton';
 import styles from '../../Admin.module.css';
 import sheet from '../Receipt.module.css';
+import { numbers } from '@/lib/console/money';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -28,7 +29,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
   const { number } = await params;
   const org = await getOrg();
 
-  const receipt = await db.receipt.findUnique({
+  const receipt = numbers(await db.receipt.findUnique({
     // A removed client's receipts stay readable: they are the record.
     where: { number: number },
     select: {
@@ -69,7 +70,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
         },
       },
     },
-  });
+  }));
 
   if (!receipt) notFound();
 

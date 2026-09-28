@@ -6,7 +6,7 @@ import {
   ensureRenewalEvents,
   periodLabel,
 } from '@/lib/console/renewals';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -49,7 +49,7 @@ export default async function RenewalsPage() {
 
   const now = new Date();
 
-  const renewals = await db.renewalEvent.findMany({
+  const renewals = numbers(await db.renewalEvent.findMany({
     where: {
       status: { in: ['pending', 'drafted', 'invoiced', 'skipped'] },
       lineItem: renewingLine,
@@ -81,7 +81,7 @@ export default async function RenewalsPage() {
         },
       },
     },
-  });
+  }));
 
   const days = (date: Date) => Math.round((date.getTime() - now.getTime()) / 86_400_000);
 

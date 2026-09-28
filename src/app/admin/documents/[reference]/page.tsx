@@ -16,7 +16,7 @@ import { authorText, prepareDocument, type DocumentStep } from '@/lib/console/do
 import { renderParagraphDiff } from '@/lib/console/diff';
 import { sourceFromSuggestion } from '@/lib/console/suggestions';
 import { editableFees, feeSchedule, projectFees, projectFeesLater } from '@/lib/console/fees';
-import { formatDate, formatRelative, formatShortDate } from '@/lib/console/money';
+import { formatDate, formatRelative, formatShortDate, numbers } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Callout } from '@/components/console/Callout';
@@ -85,7 +85,7 @@ export default async function DocumentPage({
   const [{ reference }, query] = await Promise.all([params, searchParams]);
   const now = new Date();
 
-  const document = await db.document.findUnique({
+  const document = numbers(await db.document.findUnique({
     // A removed project's documents stay readable, a signed one above all:
     // it is the record of what was agreed. Nothing on a removed one can be
     // changed; every action here refuses it.
@@ -151,7 +151,7 @@ export default async function DocumentPage({
         },
       },
     },
-  });
+  }));
 
   if (!document) notFound();
 
@@ -448,7 +448,7 @@ export default async function DocumentPage({
         createdAt: true,
         contact: { select: { name: true } },
       },
-    }),
+    }).then(numbers),
   ]);
 
   // Each compared with the version that person was reading, which is not
@@ -641,7 +641,7 @@ export default async function DocumentPage({
   if (step === 'write') {
     // The open drafting thread, if one has been started. Tool turns are folded
     // into the assistant turn they belong to, so it reads as a conversation.
-    const conversation = await db.conversation.findFirst({
+    const conversation = numbers(await db.conversation.findFirst({
       where: { documentId: document.id, kind: 'document_draft', status: 'open' },
       orderBy: { createdAt: 'desc' },
       select: {
@@ -658,7 +658,7 @@ export default async function DocumentPage({
           },
         },
       },
-    });
+    }));
 
     // The thread is shared by everyone who drafts, so each request says who
     // made it.
@@ -668,10 +668,10 @@ export default async function DocumentPage({
     ];
     const authors = new Map(
       (
-        await db.staffUser.findMany({
+        numbers(await db.staffUser.findMany({
           where: { id: { in: authorIds } },
           select: { id: true, name: true },
-        })
+        }))
       ).map((author) => [author.id, author.name]),
     );
     const authorOf = (id: string | null) =>

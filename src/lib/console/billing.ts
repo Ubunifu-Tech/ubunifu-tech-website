@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { HORIZON_DAYS, INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
-import { isPastDay } from './money';
+import { isPastDay, numbers } from './money';
 import { businessYear, nextInSequence } from './sequence';
 
 /**
@@ -29,10 +29,10 @@ export async function nextInvoiceNumber(
   now = new Date(),
 ): Promise<string> {
   const prefix = `INV-${businessYear(now)}-`;
-  const taken = await tx.invoice.findMany({
+  const taken = numbers(await tx.invoice.findMany({
     where: { number: { startsWith: prefix } },
     select: { number: true },
-  });
+  }));
   return nextInSequence(prefix, taken.map((row) => row.number));
 }
 
@@ -42,10 +42,10 @@ export async function nextReceiptNumber(
   now = new Date(),
 ): Promise<string> {
   const prefix = `RCP-${businessYear(now)}-`;
-  const taken = await tx.receipt.findMany({
+  const taken = numbers(await tx.receipt.findMany({
     where: { number: { startsWith: prefix } },
     select: { number: true },
-  });
+  }));
   return nextInSequence(prefix, taken.map((row) => row.number));
 }
 
@@ -55,10 +55,10 @@ export async function nextRefundNumber(
   now = new Date(),
 ): Promise<string> {
   const prefix = `RFN-${businessYear(now)}-`;
-  const taken = await tx.refund.findMany({
+  const taken = numbers(await tx.refund.findMany({
     where: { number: { startsWith: prefix } },
     select: { number: true },
-  });
+  }));
   return nextInSequence(prefix, taken.map((row) => row.number));
 }
 
@@ -76,7 +76,7 @@ export async function recomputeInvoice(
   tx: Prisma.TransactionClient,
   invoiceId: string,
 ): Promise<void> {
-  const invoice = await tx.invoice.findUniqueOrThrow({
+  const invoice = numbers(await tx.invoice.findUniqueOrThrow({
     where: { id: invoiceId },
     select: {
       status: true,
@@ -96,7 +96,7 @@ export async function recomputeInvoice(
         },
       },
     },
-  });
+  }));
 
   const subtotalMinor = invoice.lines.reduce(
     (total, line) => total + line.amountMinor * line.quantity,
@@ -115,10 +115,10 @@ export async function recomputeInvoice(
   // A void invoice stays void. It is a decision, not a balance, but its
   // figures still follow its rows, so it never shows money it does not hold.
   if (invoice.status === 'void') {
-    await tx.invoice.update({
+    numbers(await tx.invoice.update({
       where: { id: invoiceId },
       data: { subtotalMinor, totalMinor, paidMinor, refundedMinor },
-    });
+    }));
     return;
   }
 
@@ -150,10 +150,10 @@ export async function recomputeInvoice(
         new Date())
       : null;
 
-  await tx.invoice.update({
+  numbers(await tx.invoice.update({
     where: { id: invoiceId },
     data: { subtotalMinor, totalMinor, paidMinor, refundedMinor, status, paidAt: settledOn },
-  });
+  }));
 }
 
 /**
@@ -208,7 +208,7 @@ export async function billableLines(
   const horizon = new Date();
   horizon.setDate(horizon.getDate() + horizonDays);
 
-  const lines = await db.lineItem.findMany({
+  const lines = numbers(await db.lineItem.findMany({
     where: { projectId, status: { in: ['planned', 'active'] } },
     orderBy: { position: 'asc' },
     select: {
@@ -231,7 +231,7 @@ export async function billableLines(
         select: { id: true, periodStart: true, periodEnd: true, dueAt: true },
       },
     },
-  });
+  }));
 
   const billable: Billable[] = [];
 

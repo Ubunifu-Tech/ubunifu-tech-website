@@ -8,6 +8,7 @@ import {
   daysBetween,
   formatMoney,
   minorUnitScale,
+  numbers,
 } from './money';
 import { INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 
@@ -182,7 +183,7 @@ export async function ledger(period: Period): Promise<Line[]> {
         receipt: { select: { number: true } },
         invoice: { select: { number: true, client: PARTY, project: WORK } },
       },
-    }),
+    }).then(numbers),
     db.refund.findMany({
       where: { refundedAt: between, cancelledAt: null, payment: countedPayment },
       select: {
@@ -192,7 +193,7 @@ export async function ledger(period: Period): Promise<Line[]> {
         refundedAt: true,
         payment: { select: { invoice: { select: { client: PARTY, project: WORK } } } },
       },
-    }),
+    }).then(numbers),
     db.cost.findMany({
       where: { incurredOn: between },
       select: {
@@ -205,7 +206,7 @@ export async function ledger(period: Period): Promise<Line[]> {
         project: WORK,
         product: MADE,
       },
-    }),
+    }).then(numbers),
     db.invoice.findMany({
       where: { ...liveInvoice, status: { notIn: ['draft', 'void'] }, issuedAt: between },
       select: {
@@ -217,7 +218,7 @@ export async function ledger(period: Period): Promise<Line[]> {
         client: PARTY,
         project: WORK,
       },
-    }),
+    }).then(numbers),
     db.income.findMany({
       where: { receivedOn: between },
       select: {
@@ -227,7 +228,7 @@ export async function ledger(period: Period): Promise<Line[]> {
         receivedOn: true,
         product: MADE,
       },
-    }),
+    }).then(numbers),
   ]);
 
   return [
@@ -326,10 +327,10 @@ const rateKey = (month: string, base: string, quote: string) => `${month}|${base
 
 export async function ratesFor(months: string[]): Promise<Rates> {
   if (months.length === 0) return new Map();
-  const rows = await db.exchangeRate.findMany({
+  const rows = numbers(await db.exchangeRate.findMany({
     where: { month: { in: months.map(monthDate) } },
     select: { month: true, base: true, quote: true, rate: true },
-  });
+  }));
   return new Map(
     rows.map((row) => [rateKey(monthKey(row.month), row.base, row.quote), row.rate.toNumber()]),
   );
@@ -447,13 +448,13 @@ export async function comingIn(now: Date) {
         dueAt: true,
         client: { select: { name: true, slug: true } },
       },
-    }),
+    }).then(numbers),
     db.renewalEvent.findMany({
       where: { status: 'pending', dueAt: { lte: soon }, lineItem: renewingLine },
       select: {
         lineItem: { select: { amountMinor: true, quantity: true, currency: true } },
       },
-    }),
+    }).then(numbers),
     // Agreed means past the proposal: the client has said yes to these.
     db.lineItem.findMany({
       where: {
@@ -482,7 +483,7 @@ export async function comingIn(now: Date) {
           },
         },
       },
-    }),
+    }).then(numbers),
     db.lineItem.findMany({
       where: {
         billingKind: { in: ['one_off', 'installment'] },
@@ -491,7 +492,7 @@ export async function comingIn(now: Date) {
         project: { deletedAt: null, status: { in: ['lead', 'proposal_draft', 'proposal_sent'] } },
       },
       select: { amountMinor: true, quantity: true, currency: true },
-    }),
+    }).then(numbers),
   ]);
 
   const owing: Owing[] = invoices.flatMap((invoice) => {

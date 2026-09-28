@@ -361,7 +361,7 @@ async function main() {
   console.log(`  deliverables       ${deliverables}`);
   console.log(`  asset requests     ${assets}`);
   console.log(`  line items         ${lines}`);
-  console.log(`  committed value    USD ${((agreed._sum.amountMinor ?? 0) / 100).toFixed(2)} (active + planned only)`);
+  console.log(`  committed value    USD ${(Number(agreed._sum.amountMinor ?? 0) / 100).toFixed(2)} (active + planned only)`);
   console.log(`  recurring lines    ${recurring} with a renewal date set`);
 }
 

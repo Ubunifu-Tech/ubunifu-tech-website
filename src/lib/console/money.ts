@@ -55,10 +55,56 @@ export function moneyInput(amountMinor: number, currency: string): string {
 }
 
 /**
- * The largest amount one figure can hold, in minor units: the money columns
- * are 32-bit integers for now. TZS 20,000,000 or US$20,000,000.
+ * The largest amount one figure may hold, in minor units: TZS or US$ one
+ * trillion. The money columns are 64-bit, and this keeps every sum of them
+ * far inside the range a JavaScript number holds exactly.
  */
-export const MONEY_CAP_MINOR = 2_000_000_000;
+export const MONEY_CAP_MINOR = 100_000_000_000_000;
+
+/**
+ * A money column read from the database as an ordinary number. The columns
+ * are bigint so any real amount fits; the code adds and compares numbers,
+ * which hold every amount under the cap exactly. Refuses rather than rounds
+ * a value that would not be exact.
+ */
+export function minor(value: bigint | number): number {
+  const amount = Number(value);
+  if (!Number.isSafeInteger(amount)) {
+    throw new RangeError(`An amount of ${value} is too large to handle exactly.`);
+  }
+  return amount;
+}
+
+/** A database row with every bigint in it, however deep, read as a number. */
+export type Numbers<T> = T extends bigint
+  ? number
+  : T extends string | number | boolean | null | undefined
+    ? T
+    : T extends Date | ((...args: never[]) => unknown) | { toFixed: (...args: never[]) => string }
+      ? T
+      : T extends readonly (infer Item)[]
+        ? Numbers<Item>[]
+        : T extends object
+          ? { [Key in keyof T]: Numbers<T[Key]> }
+          : T;
+
+/**
+ * Reads a query result's money columns as numbers, including those of
+ * nested rows such as an invoice's payments, so a result is converted once,
+ * where it leaves the database. Dates and decimals are left as they are.
+ */
+export function numbers<T>(value: T): Numbers<T> {
+  if (typeof value === 'bigint') return minor(value) as Numbers<T>;
+  if (Array.isArray(value)) return value.map((item) => numbers(item)) as Numbers<T>;
+  if (value !== null && typeof value === 'object') {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return value as Numbers<T>;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, numbers(item)]),
+    ) as Numbers<T>;
+  }
+  return value as Numbers<T>;
+}
 
 /** The limit as a person reads it, in that currency. */
 export function moneyCapText(currency: string): string {

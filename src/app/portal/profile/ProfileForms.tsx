@@ -68,6 +68,10 @@ export function PasswordForm() {
           <input id="pw-next" name="next" type="password" className={forms.control} required minLength={12} autoComplete="new-password" />
           <p className={forms.hint}>At least 12 characters.</p>
         </div>
+        <div className={forms.field}>
+          <label className={forms.label} htmlFor="pw-confirm">Confirm new password</label>
+          <input id="pw-confirm" name="confirm" type="password" className={forms.control} required minLength={12} autoComplete="new-password" />
+        </div>
       </div>
       <div className={forms.actions}>
         <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>

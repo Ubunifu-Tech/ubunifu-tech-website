@@ -197,6 +197,7 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
   const actor = await requireClient();
   const current = String(formData.get('current') ?? '');
   const next = String(formData.get('next') ?? '');
+  const confirm = String(formData.get('confirm') ?? '');
 
   // A refused change is logged like a refused sign-in: whoever holds a session
   // and is guessing the password shows up in the account's activity.
@@ -209,6 +210,8 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
       entityId: actor.id,
       summary,
     });
+
+  if (next !== confirm) return { status: 'error', message: 'The two passwords do not match.' };
 
   if (!(await allow('password-change', actor.id, { limit: 5, windowMinutes: 15 }))) {
     await refused('Too many tries');

@@ -12,6 +12,7 @@ import {
   type Permission,
 } from './permissions';
 import { safePortalPath } from './return-path';
+import type { AuditAction } from './activity';
 
 /**
  * Authorisation, enforced on the server where the database is reachable.
@@ -231,7 +232,7 @@ export async function requireClient(): Promise<ClientActor> {
 export async function recordAudit(options: {
   actorType: ActorType;
   actorId?: string | null;
-  action: string;
+  action: AuditAction;
   entityType: string;
   entityId: string;
   summary?: string;

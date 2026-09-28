@@ -34,7 +34,7 @@ export type ActivityItem = {
  * activity feeds and the Activity page, so an action is named once and the
  * same everywhere.
  */
-const ACTION_LABELS: Record<string, string> = {
+const ACTION_LABELS = {
   'client.created': 'Client added',
   'client.removed': 'Client removed',
   'project.removed': 'Project removed',
@@ -201,11 +201,15 @@ const ACTION_LABELS: Record<string, string> = {
   'staff.sign_in.rejected_at_use': 'Sign-in refused: access had been removed',
   'staff.sign_in.throttled': 'Too many sign-in links requested',
   'ticket.triaged': 'Request sorted',
-};
+  'ticket.note_added': 'Internal note added',
+} satisfies Record<string, string>;
 
-/** An action's label, or its code made readable when it has none yet. */
+/** Every action recordAudit accepts: an action without a label fails to compile. */
+export type AuditAction = keyof typeof ACTION_LABELS;
+
+/** An action's label, or its code made readable for lines written before it had one. */
 export function actionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? action.replace(/[._]/g, ' ');
+  return (ACTION_LABELS as Record<string, string>)[action] ?? action.replace(/[._]/g, ' ');
 }
 
 /**

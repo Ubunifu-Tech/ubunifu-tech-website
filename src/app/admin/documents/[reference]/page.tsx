@@ -54,6 +54,20 @@ const STEP_LABEL: Record<DocumentStep, string> = {
 // page that renders it.
 export const maxDuration = 300;
 
+// Display only: the short fingerprint breaks after its ellipsis, never
+// inside either half.
+function Fingerprint({ hash }: { hash: string }) {
+  const short = shortHash(hash);
+  const cut = short.indexOf('…') + 1;
+  return (
+    <>
+      <span className={styles.hashPart}>{short.slice(0, cut)}</span>
+      <wbr />
+      <span className={styles.hashPart}>{short.slice(cut)}</span>
+    </>
+  );
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
   return { title: reference };
@@ -340,7 +354,7 @@ export default async function DocumentPage({
                 {intact ? 'Yes' : 'No'}
               </span>
               <span className={`${styles.summaryLabel} ${forms.fingerprint}`}>
-                {shortHash(signature.documentHash)}
+                <Fingerprint hash={signature.documentHash} />
               </span>
             </div>
           </div>
@@ -791,7 +805,9 @@ export default async function DocumentPage({
                 )}
                 <div>
                   <dt>Fingerprint</dt>
-                  <dd className={forms.fingerprint}>{shortHash(live.documentHash)}</dd>
+                  <dd className={forms.fingerprint}>
+                    <Fingerprint hash={live.documentHash} />
+                  </dd>
                 </div>
               </dl>
             )}

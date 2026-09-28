@@ -832,15 +832,19 @@
 
 .summaryItem {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 0.25rem;
   padding: var(--space-4) var(--space-5);
   background: var(--surface);
 }
 
+/* A long signer email wraps rather than being cut off by the strip's
+   rounded corners. */
 .summaryLabel {
   color: var(--text-tertiary);
   font-size: var(--font-size-caption);
+  overflow-wrap: anywhere;
 }
 
 .summaryValue {
@@ -848,6 +852,13 @@
   font-family: var(--font-heading);
   font-size: var(--font-size-body);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* Each half of a short fingerprint stays whole; it breaks only after the
+   ellipsis. */
+.hashPart {
+  white-space: nowrap;
 }
 
 .glance {
@@ -893,14 +904,11 @@
   flex-direction: column;
 }
 
-@media (max-width: 720px) {
-  .summaryItem {
-    border-left: 0;
-    border-top: 1px solid var(--border);
-  }
-
-  .summaryItem:first-child {
-    border-top: 0;
+/* The 1px gap on the border-coloured strip already draws every hairline.
+   A phone gets one column, as the portal's strip does. */
+@media (max-width: 30rem) {
+  .summary {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

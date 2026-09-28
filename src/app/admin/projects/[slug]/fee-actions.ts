@@ -5,13 +5,14 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { BillingKind, LineItemStatus } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
-import { dropOffSchedulePeriods } from '@/lib/console/renewals';
+import { addMonths, dropOffSchedulePeriods } from '@/lib/console/renewals';
 import {
   formatMoney,
   formatShortDate,
   parseDateInput,
   parseMoney,
   toDateInputValue,
+  todayInput,
 } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { BILLING, isRecurring } from '@/lib/console/fee-labels';
@@ -108,6 +109,17 @@ function parse(
       error: {
         status: 'error',
         message: 'That date could not be read.',
+        field: 'nextDueAt',
+      },
+    };
+  }
+  // A mistyped year would lay out years of periods to catch up on.
+  if (nextDueAt && nextDueAt < addMonths(parseDateInput(todayInput())!, -60)) {
+    return {
+      ok: false,
+      error: {
+        status: 'error',
+        message: 'That date is more than five years ago. Enter the next payment date instead.',
         field: 'nextDueAt',
       },
     };

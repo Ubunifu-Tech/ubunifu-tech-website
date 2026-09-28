@@ -33,8 +33,18 @@ export const HORIZON_DAYS = 400;
  */
 export const INVOICE_AHEAD_DAYS = 45;
 
-/** A guard against a bad interval turning one line into ten thousand rows. */
-const MAX_PERIODS_PER_LINE = 24;
+/**
+ * A guard against a bad interval turning one line into ten thousand rows.
+ * Counts only periods created in one call, so a line whose date is years back
+ * still catches up to today over a visit or two.
+ */
+const MAX_CREATED_PER_CALL = 120;
+
+/** How many periods a schedule is walked for, known or not, before giving up. */
+const MAX_STEPS = 2000;
+
+/** The period was invoiced or skipped by someone else a moment ago. */
+export class RenewalAlreadyBilled extends Error {}
 
 export function addMonths(from: Date, months: number): Date {
   const date = new Date(from);
@@ -91,10 +101,16 @@ export async function ensureRenewalEvents(
 
     const known = new Set(line.renewals.map((renewal) => renewal.periodStart.getTime()));
     let periodStart = line.nextDueAt!;
+    let createdHere = 0;
 
-    for (let index = 0; index < MAX_PERIODS_PER_LINE; index += 1) {
-      if (periodStart.getTime() > horizon.getTime()) break;
-
+    // Periods already laid out don't count against the cap, only new ones do.
+    for (
+      let steps = 0;
+      periodStart.getTime() <= horizon.getTime() &&
+      createdHere < MAX_CREATED_PER_CALL &&
+      steps < MAX_STEPS;
+      steps += 1
+    ) {
       if (!known.has(periodStart.getTime())) {
         const periodEnd = addMonths(periodStart, months);
         try {
@@ -108,6 +124,7 @@ export async function ensureRenewalEvents(
             },
           });
           created += 1;
+          createdHere += 1;
         } catch (error) {
           // A unique violation means somebody else materialised the same
           // period a moment ago, which is exactly what should happen.
@@ -135,25 +152,22 @@ export async function markRenewalInvoiced(
   renewalEventId: string,
   invoiceId: string,
 ): Promise<void> {
-  const renewal = await tx.renewalEvent.findUnique({
+  // Claimed with a conditional update rather than read-then-write: two
+  // invoices raised at once both saw 'pending' and both billed the period.
+  // The second now waits on the row lock, sees it taken and stops.
+  const claimed = await tx.renewalEvent.updateMany({
+    where: { id: renewalEventId, status: { in: ['pending', 'drafted'] } },
+    data: { status: 'invoiced', invoiceId },
+  });
+  if (claimed.count !== 1) throw new RenewalAlreadyBilled();
+
+  const renewal = await tx.renewalEvent.findUniqueOrThrow({
     where: { id: renewalEventId },
     select: {
-      id: true,
-      status: true,
       periodStart: true,
       periodEnd: true,
       lineItem: { select: { id: true, nextDueAt: true, intervalMonths: true, billingKind: true } },
     },
-  });
-
-  if (!renewal) throw new Error('renewal-missing');
-  if (renewal.status !== 'pending' && renewal.status !== 'drafted') {
-    throw new Error('renewal-already-billed');
-  }
-
-  await tx.renewalEvent.update({
-    where: { id: renewal.id },
-    data: { status: 'invoiced', invoiceId },
   });
 
   // The anchor moves to the period after the one just billed, but only if it
@@ -224,7 +238,7 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
   if (months && months > 0 && line.nextDueAt) {
     const last = Math.max(...line.renewals.map((renewal) => renewal.periodStart.getTime()));
     let start = line.nextDueAt;
-    for (let index = 0; index < MAX_PERIODS_PER_LINE && start.getTime() <= last; index += 1) {
+    for (let index = 0; index < MAX_STEPS && start.getTime() <= last; index += 1) {
       onSchedule.add(start.getTime());
       start = addMonths(start, months);
     }

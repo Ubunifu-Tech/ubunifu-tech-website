@@ -20,7 +20,7 @@ import {
   nextRefundNumber,
   recomputeInvoice,
 } from '@/lib/console/billing';
-import { markRenewalInvoiced, periodLabel } from '@/lib/console/renewals';
+import { markRenewalInvoiced, periodLabel, RenewalAlreadyBilled } from '@/lib/console/renewals';
 import { formatMoney, parseDateInput, parseMoney } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
@@ -265,7 +265,7 @@ export async function createInvoice(
       }),
     );
   } catch (error) {
-    if (error instanceof AlreadyBilled) {
+    if (error instanceof AlreadyBilled || error instanceof RenewalAlreadyBilled) {
       return {
         status: 'error',
         message: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.',
@@ -554,7 +554,7 @@ export async function recordEarlyPayment(
       }),
     );
   } catch (error) {
-    if (error instanceof AlreadyBilled) {
+    if (error instanceof AlreadyBilled || error instanceof RenewalAlreadyBilled) {
       return {
         status: 'error',
         message: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.',

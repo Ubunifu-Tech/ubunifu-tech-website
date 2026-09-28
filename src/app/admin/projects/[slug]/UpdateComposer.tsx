@@ -12,6 +12,7 @@ import {
   type EditState,
 } from './actions';
 import { TextAreaField, TextField } from '@/components/console/Fields';
+import { keepTyping } from '@/components/console/keepTyping';
 import {
   MenuBody,
   MenuDivider,
@@ -52,6 +53,14 @@ function Result({ state }: { state: EditState }) {
       aria-live="polite"
     >
       {state.message}
+      {state.signedOut && (
+        <>
+          {' '}
+          <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
+            Sign in
+          </a>
+        </>
+      )}
     </p>
   );
 }
@@ -222,7 +231,7 @@ function UpdateMenu({ update }: { update: UpdateRow }) {
       )}
 
       {view === 'edit' && (
-        <form action={editAction} className={forms.form}>
+        <form action={editAction} onSubmit={keepTyping(editAction)} className={forms.form}>
           <input type="hidden" name="updateId" value={update.id} />
           <TextField
             name="title"

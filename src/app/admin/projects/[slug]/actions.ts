@@ -1,10 +1,10 @@
 'use server';
 
-import { NO_PERMISSION } from '@/lib/console/permissions';
+import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { AssetRequestStatus, ProjectStatus } from '@/generated/prisma/client';
-import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit, staffForAction } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { projectUpdateEmail } from '@/lib/emails';
@@ -193,7 +193,12 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   return { status: 'done', message: `Moved to ${STAFF_LABEL[target]}.` };
 }
 
-export type EditState = { status: 'idle' | 'done' | 'error'; message?: string };
+export type EditState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  /** The session ended before the save arrived; the form keeps its typing. */
+  signedOut?: boolean;
+};
 
 /** Ticking a deliverable off. The client sees this in their portal. */
 export async function toggleDeliverable(
@@ -317,7 +322,10 @@ function readUpdate(
 }
 
 export async function saveUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
-  const staff = await requireStaff();
+  // An update can be long typing, so a lapsed session is answered here rather
+  // than redirected to sign-in, which would take the words with it.
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
   const projectId = String(formData.get('projectId') ?? '');
@@ -511,7 +519,8 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
  * client was told, and it stays as it was sent.
  */
 export async function editUpdate(_previous: EditState, formData: FormData): Promise<EditState> {
-  const staff = await requireStaff();
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
   const read = readUpdate(formData);

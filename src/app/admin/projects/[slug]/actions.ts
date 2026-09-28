@@ -21,6 +21,7 @@ import { formText, webAddress } from '@/lib/console/form';
 import { emailedAddresses } from '@/lib/console/updates';
 import { withdrawOpenReviews } from '@/lib/console/reviews';
 import { STAFF_LABEL } from '@/lib/console/project-status';
+import { nobodyToEmail } from '@/lib/console/recipients';
 
 const ASSET_STATUSES: AssetRequestStatus[] = [
   AssetRequestStatus.requested,
@@ -382,9 +383,10 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
           client: {
             select: {
               name: true,
+              // Everyone on file, so the result can say why nobody was emailed.
               contacts: {
-                where: { deletedAt: null, canSignIn: true },
-                select: { id: true, name: true, email: true },
+                where: { deletedAt: null },
+                select: { id: true, name: true, email: true, canSignIn: true },
               },
             },
           },
@@ -412,7 +414,8 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
   });
   if (claimed.count !== 1) return { status: 'error', message: 'This has already been sent.' };
 
-  const recipients = update.project.client.contacts;
+  const people = update.project.client.contacts;
+  const recipients = people.filter((contact) => contact.canSignIn);
   // Somebody still setting up from a shared link has no email yet. They are
   // not a failed send: nothing was tried, and they see it in the portal once
   // they are in. Counting them as recipients reported an email failure with
@@ -467,7 +470,7 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
     entityId: update.id,
     summary:
       recipients.length === 0
-        ? `${update.title}: nobody on this client can receive email`
+        ? `${update.title}: published, nobody emailed (${people.length === 0 ? 'no people on file' : 'portal access is off'})`
         : emailable.length === 0
           ? `${update.title}: nobody was emailed, ${unreached}`
           : `${update.title}: emailed ${delivered} of ${emailable.length}${unreached ? `; ${unreached}` : ''}`,
@@ -476,11 +479,8 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
   revalidatePath(`/admin/projects/${update.project.slug}`);
 
   if (recipients.length === 0) {
-    return {
-      status: 'done',
-      message:
-        'Published to the portal. Nobody on this client can receive email, so nothing was sent.',
-    };
+    const reason = nobodyToEmail(update.project.client.name, people, can(staff, 'clients'));
+    return { status: 'done', message: `Published to their portal. Nobody was emailed. ${reason}` };
   }
   if (emailable.length === 0) {
     return {

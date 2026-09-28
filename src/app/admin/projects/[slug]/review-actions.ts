@@ -13,6 +13,7 @@ import { advanceForReview } from '@/lib/console/transitions';
 import { reviewRequestEmail } from '@/lib/emails';
 import { issueSharedLink } from '@/lib/console/shared-links';
 import { whatsappLink } from '@/lib/console/whatsapp';
+import { nobodyToEmail } from '@/lib/console/recipients';
 
 export type ReviewState = {
   status: 'idle' | 'done' | 'error';
@@ -64,9 +65,10 @@ export async function askForReview(
       client: {
         select: {
           name: true,
+          // Everyone on file, so the result can say why nobody was emailed.
           contacts: {
-            where: { deletedAt: null, canSignIn: true },
-            select: { id: true, name: true, email: true },
+            where: { deletedAt: null },
+            select: { id: true, name: true, email: true, canSignIn: true },
           },
         },
       },
@@ -132,7 +134,7 @@ export async function askForReview(
   // Somebody still setting up from a shared link has no email yet; they see
   // the review in their portal once they are in.
   const emailable = project.client.contacts.flatMap((contact) =>
-    contact.email ? [{ ...contact, email: contact.email }] : [],
+    contact.canSignIn && contact.email ? [{ ...contact, email: contact.email }] : [],
   );
   let delivered = 0;
   for (const contact of emailable) {
@@ -170,9 +172,10 @@ export async function askForReview(
   revalidatePath('/admin');
 
   if (emailable.length === 0) {
+    const reason = nobodyToEmail(project.client.name, project.client.contacts, can(staff, 'clients'));
     return {
       status: 'done',
-      message: `Round ${review.round} is in their portal. Nobody at ${project.client.name} has an email yet, so nobody was emailed.`,
+      message: `Round ${review.round} is in their portal. Nobody was emailed. ${reason}`,
     };
   }
   if (delivered < emailable.length) {

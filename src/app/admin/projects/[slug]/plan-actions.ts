@@ -13,6 +13,7 @@ import { deleteStoredFiles, removeAssetUpload, uploadsConfigured } from '@/lib/c
 import { waitingOnClient } from '@/lib/console/live';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { itemsNeededEmail } from '@/lib/emails';
+import { nobodyToEmail } from '@/lib/console/recipients';
 
 /**
  * Building a project by hand: its details, its plan (phases and tasks) and
@@ -486,9 +487,10 @@ export async function emailItemList(_previous: PlanState, formData: FormData): P
       client: {
         select: {
           name: true,
+          // Everyone on file, so a refusal can say why nobody was emailed.
           contacts: {
-            where: { deletedAt: null, canSignIn: true },
-            select: { id: true, name: true, email: true },
+            where: { deletedAt: null },
+            select: { id: true, name: true, email: true, canSignIn: true },
           },
         },
       },
@@ -504,10 +506,13 @@ export async function emailItemList(_previous: PlanState, formData: FormData): P
     return { status: 'error', message: 'Nothing is waiting on them.' };
   }
   const emailable = project.client.contacts.flatMap((contact) =>
-    contact.email ? [{ ...contact, email: contact.email }] : [],
+    contact.canSignIn && contact.email ? [{ ...contact, email: contact.email }] : [],
   );
   if (emailable.length === 0) {
-    return { status: 'error', message: `Nobody at ${project.client.name} has an email yet.` };
+    return {
+      status: 'error',
+      message: nobodyToEmail(project.client.name, project.client.contacts, can(staff, 'clients'))!,
+    };
   }
 
   const items = project.assetRequests.map((item) => ({

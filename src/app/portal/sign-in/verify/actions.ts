@@ -1,11 +1,13 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { checkMagicToken, consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession, readSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
 import { CLIENT_LINKS, afterDeadLink, landingFor } from '@/lib/console/client-links';
+import { allow, requestIp } from '@/lib/console/rate-limit';
 
 /**
  * Uses a client's link and starts a portal session.
@@ -20,18 +22,25 @@ import { CLIENT_LINKS, afterDeadLink, landingFor } from '@/lib/console/client-li
  * invitation cannot be re-used as a way to skip activation, and a normal link
  * cannot drop someone back into the setup form.
  *
- * A setup link keeps working until setup is finished, which is what ends it.
- * Somebody who opens one from a chat, stops, and comes back to the same
- * message later still gets in. Every other link is used up here.
+ * Any link for someone still setting up keeps working until setup is
+ * finished, which ends every one of them. Somebody who opens a setup link or
+ * a contract from a chat, stops, and comes back to the same message later,
+ * on the same device or another, still gets in. For everyone else a link is
+ * used up here.
+ *
+ * Presses are limited per address, since a link that stays live would
+ * otherwise open a new session every time it is pressed.
  */
 export async function continueWithLink(formData: FormData): Promise<void> {
+  if (!(await allow('portal-continue', requestIp(await headers()), { limit: 20, windowMinutes: 15 }))) {
+    redirect('/portal/sign-in?error=busy');
+  }
   const token = String(formData.get('token') ?? '');
   if (!token) redirect('/portal/sign-in?error=missing');
 
   const seen = await checkMagicToken(token, CLIENT_LINKS);
   if (!seen || seen.actorType !== 'client_contact') redirect(await afterDeadLink(token));
   const pendingSetup =
-    seen.purpose === 'invite' &&
     (await db.clientContact.count({ where: { id: seen.actorId, activatedAt: null } })) > 0;
   const claim = pendingSetup ? seen : await consumeMagicToken(token, CLIENT_LINKS);
   if (!claim || claim.actorType !== 'client_contact') redirect(await afterDeadLink(token));

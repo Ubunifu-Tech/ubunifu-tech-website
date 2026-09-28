@@ -23,6 +23,7 @@ const LINK_PROBLEM: Record<string, string> = {
     'That setup link has run out. Ask us for a new one and we will send it the same way.',
   'reset-expired':
     'That link to choose a new password has expired or was already used. Ask for a new one below.',
+  busy: 'Too many tries from here. Wait a few minutes and open the link again.',
 };
 
 export default async function PortalSignIn({

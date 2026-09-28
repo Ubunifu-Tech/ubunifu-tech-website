@@ -72,26 +72,34 @@ export async function landingFor(
  * Where a link that no longer works should take someone, instead of a dead
  * end. An old link still says who it was for and where it pointed: the same
  * person, still signed in on this device, goes straight there; anyone else
- * signs in first and lands there after. A setup link for someone who has not
- * finished has a message of its own, since they have nothing to sign in with.
+ * signs in first and lands there after. Someone who has not finished setting
+ * up and has an address can get a new link by email, which takes them to
+ * setup and then where the old one pointed. Only a setup link shared by hand,
+ * for someone with no address, has a message of its own: they have nothing
+ * to sign in or ask for a link with.
  */
 export async function afterDeadLink(rawToken: string): Promise<string> {
   const old = await readLink(rawToken, CLIENT_LINKS);
   if (!old || old.actorType !== 'client_contact') return '/portal/sign-in?error=expired';
   const contact = await db.clientContact.findUnique({
     where: { id: old.actorId },
-    select: { clientId: true, activatedAt: true },
+    select: { clientId: true, email: true, activatedAt: true },
   });
   if (!contact) return '/portal/sign-in?error=expired';
 
   const session = await readSession('portal');
   const same = session?.actorType === 'client_contact' && session.actorId === old.actorId;
-  if (!contact.activatedAt) return same ? '/portal/activate' : '/portal/sign-in?error=setup-expired';
-
   const landing = await landingFor(old, contact.clientId);
+  const withNext = (path: string) =>
+    landing === '/portal'
+      ? path
+      : `${path}${path.includes('?') ? '&' : '?'}next=${encodeURIComponent(landing)}`;
+
+  if (!contact.activatedAt) {
+    if (same) return withNext('/portal/activate');
+    return contact.email ? withNext('/portal/sign-in?error=expired') : '/portal/sign-in?error=setup-expired';
+  }
   if (same) return landing;
   if (old.purpose === 'invite') return '/portal/sign-in?error=set-up';
-  return landing === '/portal'
-    ? '/portal/sign-in?error=expired'
-    : `/portal/sign-in?error=expired&next=${encodeURIComponent(landing)}`;
+  return withNext('/portal/sign-in?error=expired');
 }

@@ -4,14 +4,14 @@ import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { ActorType, StaffRole } from '@/generated/prisma/client';
 import { isAdminHost, isStaffEmailAllowed } from './env';
-import { CLIENT_COOKIE, readSession } from './session';
+import { CLIENT_COOKIE, cookieSession, readSession } from './session';
 import { cache } from 'react';
 import {
   permissionsForRole,
   readRolePermissions,
   type Permission,
 } from './permissions';
-import { safePortalPath } from './return-path';
+import { safeConsolePath, safePortalPath } from './return-path';
 import type { AuditAction } from './activity';
 
 /**
@@ -118,11 +118,36 @@ export async function staffForAction(): Promise<StaffActor | null> {
   return getStaffActor();
 }
 
+/**
+ * Why there is no staff member on this request, for the sign-in page:
+ * 'ended' when the cookie's session, live or not, is someone removed from
+ * the team or no longer allowed in; 'signed-out' when the session ended for
+ * another reason; null when this browser never signed in here.
+ */
+async function whyNoStaff(): Promise<'ended' | 'signed-out' | null> {
+  const held = await cookieSession('admin');
+  if (!held) return null;
+  if (held.actorType === 'staff') {
+    const person = await db.staffUser.findUnique({
+      where: { id: held.actorId },
+      select: { email: true, isActive: true },
+    });
+    if (!person || !person.isActive || !isStaffEmailAllowed(person.email)) return 'ended';
+  }
+  return 'signed-out';
+}
+
 export async function requireStaff(): Promise<StaffActor> {
   await assertAdminHost();
   const staff = await getStaffActor();
   if (!staff) {
-    redirect('/sign-in');
+    const query = new URLSearchParams();
+    const why = await whyNoStaff();
+    if (why) query.set('error', why);
+    // Back to the page they asked for once they are in.
+    const next = safeConsolePath((await headers()).get('x-console-path'));
+    if (next && next !== '/') query.set('next', next);
+    redirect(query.size ? `/sign-in?${query}` : '/sign-in');
   }
   return staff;
 }

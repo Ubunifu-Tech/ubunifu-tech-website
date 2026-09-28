@@ -9,6 +9,7 @@ import { sendConsoleEmail } from '@/lib/console/mailer';
 import { allow, requestIp, tooManyLinkRequests } from '@/lib/console/rate-limit';
 import { recordAudit } from '@/lib/console/auth';
 import { staffSignInEmail } from '@/lib/emails';
+import { safeConsolePath } from '@/lib/console/return-path';
 
 export type SignInState = { status: 'idle' | 'sent' | 'error'; message?: string };
 
@@ -33,7 +34,7 @@ export async function requestStaffLink(
   }
 
   try {
-    return await sendStaffLink(email);
+    return await sendStaffLink(email, safeConsolePath(formData.get('next')));
   } catch (error) {
     // A database or mail outage must not become an error page. The person
     // is told plainly, and the cause is in the server log.
@@ -45,7 +46,7 @@ export async function requestStaffLink(
   }
 }
 
-async function sendStaffLink(email: string): Promise<SignInState> {
+async function sendStaffLink(email: string, next: string | null): Promise<SignInState> {
   const sameForEveryone: SignInState = {
     status: 'sent',
     message: 'If that address can use the console, a link is on its way. Check your spam folder if it does not arrive.',
@@ -60,7 +61,7 @@ async function sendStaffLink(email: string): Promise<SignInState> {
   // every address.
   after(async () => {
     try {
-      await deliverStaffLink(email);
+      await deliverStaffLink(email, next);
     } catch (error) {
       console.error('[console] sign-in link failed', error);
     }
@@ -68,7 +69,7 @@ async function sendStaffLink(email: string): Promise<SignInState> {
   return sameForEveryone;
 }
 
-async function deliverStaffLink(email: string): Promise<void> {
+async function deliverStaffLink(email: string, next: string | null): Promise<void> {
   const allowed = isStaffEmailAllowed(email);
   let staff = await db.staffUser.findUnique({ where: { email } });
 
@@ -118,10 +119,13 @@ async function deliverStaffLink(email: string): Promise<void> {
     return;
   }
 
+  // The page they were on travels inside the token, so the link lands there.
+  // The continue route checks it again before using it.
   const { token } = await issueMagicToken({
     purpose: 'sign_in',
     actorType: 'staff',
     actorId: staff.id,
+    ...(next ? { entityType: 'Path', entityId: next } : {}),
   });
 
   const url = `${consoleEnv.adminOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`;

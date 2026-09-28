@@ -6,12 +6,13 @@ import forms from '@/styles/forms.module.css';
 
 const INITIAL: SignInState = { status: 'idle' };
 
-export function SignInForm() {
+export function SignInForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState(requestStaffLink, INITIAL);
   const waiting = pending || state.status === 'sent';
 
   return (
     <form action={action} className={forms.form}>
+      {next && <input type="hidden" name="next" value={next} />}
       <div className={forms.field}>
         <label htmlFor="email" className={forms.label}>
           Email

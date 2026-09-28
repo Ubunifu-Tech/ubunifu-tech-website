@@ -76,7 +76,14 @@ export function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = `/admin${pathname === '/' ? '' : pathname}`;
     url.search = search;
-    return harden(NextResponse.rewrite(url), true);
+    // The console page being asked for, as the browser sees it, so that
+    // sending somebody to sign in can bring them back to it. The same rule as
+    // x-portal-path: only ever a candidate, checked on the server before use.
+    const headers = new Headers(request.headers);
+    const query = new URLSearchParams(search);
+    query.delete('_rsc');
+    headers.set('x-console-path', pathname + (query.size ? `?${query}` : ''));
+    return harden(NextResponse.rewrite(url, { request: { headers } }), true);
   }
 
   // Public hosts: the console does not exist here.

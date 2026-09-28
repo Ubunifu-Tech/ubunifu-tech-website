@@ -156,6 +156,25 @@ export async function readSession(
   };
 }
 
+/**
+ * Who the session behind this browser's cookie was for, even once it has
+ * been revoked or has run out. It grants nothing: it lets the sign-in page
+ * say why someone was signed out. Null when there is no cookie; a cookie
+ * with no session behind it gives an actor of null.
+ */
+export async function cookieSession(
+  audience: Audience,
+): Promise<{ actorType: ActorType; actorId: string } | { actorType: null; actorId: null } | null> {
+  const token = (await cookies()).get(cookieNameFor(audience))?.value;
+  if (!token) return null;
+  const session = await db.session.findUnique({
+    where: { tokenHash: hashToken(token) },
+    select: { audience: true, actorType: true, actorId: true },
+  });
+  if (!session || session.audience !== audience) return { actorType: null, actorId: null };
+  return { actorType: session.actorType, actorId: session.actorId };
+}
+
 export async function destroySession(audience: Audience): Promise<void> {
   const jar = await cookies();
   const name = cookieNameFor(audience);

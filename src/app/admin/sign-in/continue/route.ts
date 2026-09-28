@@ -4,6 +4,7 @@ import { consoleEnv, isAdminHost, isStaffEmailAllowed } from '@/lib/console/env'
 import { consumeMagicToken } from '@/lib/console/magic-link';
 import { createSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
+import { safeConsolePath } from '@/lib/console/return-path';
 
 /**
  * Burns a staff sign-in link and starts a session.
@@ -68,5 +69,9 @@ export async function POST(request: NextRequest) {
     entityId: staff.id,
   });
 
-  return go('/');
+  // Back to the page they were on when they asked for the link. It comes
+  // only from the token row and is checked again here, so it cannot send
+  // anyone off the console.
+  const next = claim.entityType === 'Path' ? safeConsolePath(claim.entityId) : null;
+  return go(next ?? '/');
 }

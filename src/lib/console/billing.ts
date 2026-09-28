@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { HORIZON_DAYS, INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 import { isPastDay } from './money';
+import { businessYear, nextInSequence } from './sequence';
 
 /**
  * Invoices, payments and receipts.
@@ -18,24 +19,21 @@ import { isPastDay } from './money';
  */
 
 /**
- * INV-2026-007. Sequential within the calendar year, derived from the highest
- * number already issued rather than from a row count — a voided invoice keeps
- * its number, and reusing it would make two different demands for money look
- * like the same one.
+ * INV-2026-007. Sequential within Tanzania's calendar year, derived from the
+ * highest number already issued rather than from a row count — a voided
+ * invoice keeps its number, and reusing it would make two different demands
+ * for money look like the same one.
  */
 export async function nextInvoiceNumber(
   tx: Prisma.TransactionClient,
   now = new Date(),
 ): Promise<string> {
-  const prefix = `INV-${now.getFullYear()}-`;
-  const latest = await tx.invoice.findFirst({
+  const prefix = `INV-${businessYear(now)}-`;
+  const taken = await tx.invoice.findMany({
     where: { number: { startsWith: prefix } },
-    orderBy: { number: 'desc' },
     select: { number: true },
   });
-  const previous = latest ? Number.parseInt(latest.number.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
+  return nextInSequence(prefix, taken.map((row) => row.number));
 }
 
 /** RCP-2026-012, on the same rule and for the same reason. */
@@ -43,15 +41,12 @@ export async function nextReceiptNumber(
   tx: Prisma.TransactionClient,
   now = new Date(),
 ): Promise<string> {
-  const prefix = `RCP-${now.getFullYear()}-`;
-  const latest = await tx.receipt.findFirst({
+  const prefix = `RCP-${businessYear(now)}-`;
+  const taken = await tx.receipt.findMany({
     where: { number: { startsWith: prefix } },
-    orderBy: { number: 'desc' },
     select: { number: true },
   });
-  const previous = latest ? Number.parseInt(latest.number.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
+  return nextInSequence(prefix, taken.map((row) => row.number));
 }
 
 /** RFN-2026-003: refund notes, numbered on the same rule as receipts. */
@@ -59,15 +54,12 @@ export async function nextRefundNumber(
   tx: Prisma.TransactionClient,
   now = new Date(),
 ): Promise<string> {
-  const prefix = `RFN-${now.getFullYear()}-`;
-  const latest = await tx.refund.findFirst({
+  const prefix = `RFN-${businessYear(now)}-`;
+  const taken = await tx.refund.findMany({
     where: { number: { startsWith: prefix } },
-    orderBy: { number: 'desc' },
     select: { number: true },
   });
-  const previous = latest ? Number.parseInt(latest.number.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
+  return nextInSequence(prefix, taken.map((row) => row.number));
 }
 
 /**

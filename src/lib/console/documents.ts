@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import type { DocumentKind, Prisma } from '@/generated/prisma/client';
 import { renderMarkdown } from './markdown';
 import { formatShortDate } from './money';
+import { businessYear, nextInSequence } from './sequence';
 
 /**
  * Documents, versions and the hash that makes a signature mean something.
@@ -153,15 +154,12 @@ export async function nextDocumentReference(
   kind: DocumentKind,
   now = new Date(),
 ): Promise<string> {
-  const prefix = `${PREFIX[kind]}-${now.getFullYear()}-`;
-  const latest = await tx.document.findFirst({
+  const prefix = `${PREFIX[kind]}-${businessYear(now)}-`;
+  const taken = await tx.document.findMany({
     where: { reference: { startsWith: prefix } },
-    orderBy: { reference: 'desc' },
     select: { reference: true },
   });
-  const previous = latest ? Number.parseInt(latest.reference.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
+  return nextInSequence(prefix, taken.map((row) => row.reference));
 }
 
 /**

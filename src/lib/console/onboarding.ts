@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import type { Prisma, ProjectStatus } from '@/generated/prisma/client';
 import { slugify } from '@/lib/slug';
 import { intervalFor } from './renewals';
+import { businessYear, nextInSequence } from './sequence';
 
 /**
  * Creating a client by hand.
@@ -47,8 +48,8 @@ export function projectSlugTaken(slug: string): Promise<boolean> {
 }
 
 /**
- * UBU-2026-007. Sequential within the calendar year, because that is how these
- * get referred to out loud and on invoices.
+ * UBU-2026-007. Sequential within Tanzania's calendar year, because that is
+ * how these get referred to out loud and on invoices.
  *
  * The number is derived from the highest reference already issued this year
  * rather than from a row count, so deleting a project does not hand its number
@@ -56,18 +57,14 @@ export function projectSlugTaken(slug: string): Promise<boolean> {
  * one would make two different projects look like the same job.
  */
 export async function nextProjectReference(now = new Date()): Promise<string> {
-  const year = now.getFullYear();
-  const prefix = `UBU-${year}-`;
+  const prefix = `UBU-${businessYear(now)}-`;
 
-  const latest = await db.project.findFirst({
+  const taken = await db.project.findMany({
     where: { reference: { startsWith: prefix } },
-    orderBy: { reference: 'desc' },
     select: { reference: true },
   });
 
-  const previous = latest ? Number.parseInt(latest.reference.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
+  return nextInSequence(prefix, taken.map((row) => row.reference));
 }
 
 function addDays(from: Date, days: number): Date {

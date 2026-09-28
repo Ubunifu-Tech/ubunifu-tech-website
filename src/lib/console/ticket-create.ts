@@ -7,6 +7,7 @@ import { ticketRaisedEmail } from '@/lib/emails';
 import { retryOnConflict } from './conflict';
 import { alertTeam } from './alerts';
 import { TICKET_KIND_LABEL } from './tickets';
+import { businessYear, nextInSequence } from './sequence';
 
 /**
  * A client asking us for something, from the requests form or from the
@@ -18,15 +19,12 @@ import { TICKET_KIND_LABEL } from './tickets';
 
 /** TCK-2026-014, on the same rule as every other reference here. */
 async function nextTicketReference(tx: Prisma.TransactionClient, now = new Date()) {
-  const prefix = `TCK-${now.getFullYear()}-`;
-  const latest = await tx.ticket.findFirst({
+  const prefix = `TCK-${businessYear(now)}-`;
+  const taken = await tx.ticket.findMany({
     where: { reference: { startsWith: prefix } },
-    orderBy: { reference: 'desc' },
     select: { reference: true },
   });
-  const previous = latest ? Number.parseInt(latest.reference.slice(prefix.length), 10) : 0;
-  const next = Number.isFinite(previous) ? previous + 1 : 1;
-  return `${prefix}${String(next).padStart(3, '0')}`;
+  return nextInSequence(prefix, taken.map((row) => row.reference));
 }
 
 export async function createTicket(input: {

@@ -2,7 +2,7 @@
 
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, MessageCircle, Send, UserRound, X } from 'lucide-react';
+import { ArrowLeft, Maximize2, MessageCircle, Minimize2, Send, UserRound, X } from 'lucide-react';
 import { toPlainText } from '@/lib/chat-links';
 import { replyPromise } from '@/content/site';
 import styles from './Assistant.module.css';
@@ -27,6 +27,26 @@ import styles from './Assistant.module.css';
 const ChatMarkdown = lazy(() => import('./ChatMarkdown'));
 
 type Turn = { id: string; role: string; content: string };
+
+/** Whether the panel was last left at its larger size, kept per browser. */
+const EXPANDED_KEY = 'ubunifu-chat-expanded';
+
+/**
+ * Whether something between the target and the panel can still scroll that
+ * way, so a wheel or a drag there has somewhere to go inside the chat.
+ */
+function scrollsInside(target: EventTarget | null, panel: HTMLElement, deltaY: number): boolean {
+  for (let node = target instanceof Element ? target : null; node; node = node.parentElement) {
+    const { overflowY } = window.getComputedStyle(node);
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight + 1) {
+      const room =
+        deltaY < 0 ? node.scrollTop > 0 : node.scrollTop + node.clientHeight < node.scrollHeight - 1;
+      if (room) return true;
+    }
+    if (node === panel) break;
+  }
+  return false;
+}
 
 type Variant = 'site' | 'portal';
 
@@ -128,7 +148,9 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
   /** What a screen reader hears: each new reply once, and the hand-off card. */
   const [announcement, setAnnouncement] = useState('');
   const [handoff, setHandoff] = useState<HandoffDraft>(emptyDraft);
+  const [expanded, setExpanded] = useState(false);
 
+  const panel = useRef<HTMLElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
@@ -139,6 +161,58 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
     setOpen(false);
     requestAnimationFrame(() => launcher.current?.focus());
   }, []);
+
+  useEffect(() => {
+    try {
+      setExpanded(window.localStorage.getItem(EXPANDED_KEY) === '1');
+    } catch {
+      // Storage can be blocked; the panel then opens at its usual size.
+    }
+  }, []);
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded((current) => {
+      try {
+        window.localStorage.setItem(EXPANDED_KEY, current ? '0' : '1');
+      } catch {
+        // Not remembered, which is fine.
+      }
+      return !current;
+    });
+  }, []);
+
+  // The page behind stays put while someone scrolls the chat. data-lenis-prevent
+  // keeps the smooth scrolling off the panel, but a wheel or a drag over a part
+  // of it that cannot scroll, such as the header or a short thread, would still
+  // reach the page, so it is stopped here unless the chat can take it.
+  useEffect(() => {
+    const element = panel.current;
+    if (!open || !element) return;
+    let lastY = 0;
+    const onWheel = (event: WheelEvent) => {
+      // Pinch zoom arrives as a wheel with ctrl held, and is left alone.
+      if (event.ctrlKey || event.deltaY === 0) return;
+      if (!scrollsInside(event.target, element, event.deltaY)) event.preventDefault();
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      lastY = event.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      const y = event.touches[0]!.clientY;
+      const deltaY = lastY - y;
+      lastY = y;
+      if (deltaY !== 0 && !scrollsInside(event.target, element, deltaY)) event.preventDefault();
+    };
+    element.addEventListener('wheel', onWheel, { passive: false });
+    element.addEventListener('touchstart', onTouchStart, { passive: true });
+    element.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      element.removeEventListener('wheel', onWheel);
+      element.removeEventListener('touchstart', onTouchStart);
+      element.removeEventListener('touchmove', onTouchMove);
+    };
+  }, [open]);
 
   // Opened by other parts of the page, and by ?chat=open in a link.
   useEffect(() => {
@@ -386,8 +460,9 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
         // data-lenis-prevent: the page's smooth scrolling would otherwise take
         // the wheel, and the thread could not be scrolled.
         <section
+          ref={panel}
           id="assistant-panel"
-          className={styles.panel}
+          className={`${styles.panel} ${expanded ? styles.panelExpanded : ''}`}
           role="dialog"
           aria-label={copy.title}
           data-lenis-prevent
@@ -417,9 +492,24 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
                 </div>
               </div>
             )}
-            <button type="button" className={styles.close} onClick={close} aria-label="Close">
-              <X size={16} strokeWidth={2} aria-hidden="true" />
-            </button>
+            <div className={styles.headActions}>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={toggleExpanded}
+                aria-label={expanded ? 'Make the chat smaller' : 'Make the chat bigger'}
+                title={expanded ? 'Smaller' : 'Bigger'}
+              >
+                {expanded ? (
+                  <Minimize2 size={16} strokeWidth={2} aria-hidden="true" />
+                ) : (
+                  <Maximize2 size={16} strokeWidth={2} aria-hidden="true" />
+                )}
+              </button>
+              <button type="button" className={styles.close} onClick={close} aria-label="Close">
+                <X size={16} strokeWidth={2} aria-hidden="true" />
+              </button>
+            </div>
           </header>
 
           <p className={styles.srOnly} aria-live="polite">

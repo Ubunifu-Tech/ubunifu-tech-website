@@ -68,6 +68,19 @@
   overflow: hidden;
 }
 
+/* Bigger, for reading a long answer: from under the site's top bar down to
+   the launcher. */
+.panelExpanded {
+  top: calc(var(--nav-height) + var(--space-4));
+  width: min(48rem, calc(100vw - var(--space-5) * 2));
+  height: auto;
+}
+
+.panelExpanded .fromUs,
+.panelExpanded .fromVisitor {
+  max-width: min(86%, 40rem);
+}
+
 .head {
   display: flex;
   align-items: center;
@@ -129,6 +142,13 @@
 
 .back:hover {
   background: var(--surface-2);
+}
+
+.headActions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.125rem;
 }
 
 .close {
@@ -566,6 +586,12 @@
     border-left: 0;
     border-radius: 18px 18px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .panelExpanded {
+    top: var(--nav-height);
+    height: auto;
+    border-radius: 0;
   }
 
   /* The panel's own close button does the job; the launcher would sit on top

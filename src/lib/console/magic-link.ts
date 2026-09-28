@@ -62,7 +62,36 @@ export async function issueMagicToken(options: {
     },
   });
 
+  // Old rows are swept now and then rather than by a cron job.
+  if (Math.random() < 0.02) {
+    await sweepExpiredLinks().catch((error) =>
+      console.error('[magic-link] old links could not be swept', error),
+    );
+  }
+
   return { token };
+}
+
+/**
+ * The purposes swept once long expired. Invitations and document, invoice and
+ * update links stay: invitedAmong reads invite rows for Invited or Not
+ * invited yet, and afterDeadLink reads an old link to send someone to where
+ * it pointed. Those are one row per email sent; sign-in links are the bulk.
+ */
+const SWEPT_PURPOSES: MagicTokenPurpose[] = ['sign_in', 'password_reset', 'shared_link'];
+
+/**
+ * Deletes sign-in, password and shared links that ran out more than thirty
+ * days ago. The audit trail keeps the record of what was sent and used.
+ */
+export async function sweepExpiredLinks(): Promise<number> {
+  const result = await db.magicToken.deleteMany({
+    where: {
+      purpose: { in: SWEPT_PURPOSES },
+      expiresAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60_000) },
+    },
+  });
+  return result.count;
 }
 
 export type ConsumedToken = {

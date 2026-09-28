@@ -81,6 +81,13 @@ export async function createSession(options: {
     },
   });
 
+  // Old rows are swept now and then rather than by a cron job.
+  if (Math.random() < 0.02) {
+    await sweepExpiredSessions().catch((error) =>
+      console.error('[session] old sessions could not be swept', error),
+    );
+  }
+
   jar.set(name, token, {
     httpOnly: true,
     // Lax rather than Strict: a magic link arrives from an email client as a
@@ -90,6 +97,18 @@ export async function createSession(options: {
     path: '/',
     expires: expiresAt,
   });
+}
+
+/**
+ * Deletes sessions that ran out more than thirty days ago. A revoked session
+ * that has not yet run out stays until it has. The audit trail keeps the
+ * record of who signed in and when.
+ */
+export async function sweepExpiredSessions(): Promise<number> {
+  const result = await db.session.deleteMany({
+    where: { expiresAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60_000) } },
+  });
+  return result.count;
 }
 
 export type SessionActor = {

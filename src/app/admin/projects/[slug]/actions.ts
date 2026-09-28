@@ -441,6 +441,9 @@ export async function publishUpdate(_previous: EditState, formData: FormData): P
       template: 'project_update',
       entityType: 'ProjectUpdate',
       entityId: update.id,
+      // The same update to the same address is one email, however many
+      // presses or retries ask for it within the provider's 24 hours.
+      idempotencyKey: `project_update:${update.id}:${contact.email.toLowerCase()}`,
     });
     if (sent.ok) delivered += 1;
   }
@@ -678,6 +681,9 @@ export async function emailUpdateToRest(
       template: 'project_update',
       entityType: 'ProjectUpdate',
       entityId: update.id,
+      // The same update to the same address is one email, however many
+      // presses or retries ask for it within the provider's 24 hours.
+      idempotencyKey: `project_update:${update.id}:${contact.email.toLowerCase()}`,
     });
     if (sent.ok) delivered += 1;
   }

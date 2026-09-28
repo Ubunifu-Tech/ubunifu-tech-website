@@ -82,6 +82,7 @@ export async function sendConsoleEmail(options: {
         `\n[mailer] RESEND_API_KEY is not set, so nothing was sent.\n` +
           `[mailer] To: ${options.to}\n` +
           `[mailer] Subject: ${options.subject}\n` +
+          (options.idempotencyKey ? `[mailer] Idempotency key: ${options.idempotencyKey}\n` : '') +
           `[mailer] Links in this email:\n` +
           extractLinks(options.html)
             .map((link) => `[mailer]   ${link}`)

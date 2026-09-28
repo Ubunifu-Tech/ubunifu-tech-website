@@ -19,6 +19,7 @@ import {
   PaymentMenu,
   RecordPaymentForm,
   RefundMenu,
+  SendDraft,
   SendInvoiceButton,
   VoidInvoiceForm,
 } from '../InvoiceControls';
@@ -534,12 +535,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                   </span>
                 </div>
 
-                {invoice.status === 'draft' && (
-                  <div className={forms.actions}>
-                    <SendInvoiceButton invoiceId={invoice.id} sent={false} />
-                    <p className={forms.payoff}>Or, if they have paid already, record it here.</p>
-                  </div>
-                )}
+                <SendDraft invoiceId={invoice.id} draft={invoice.status === 'draft'} />
                 {/* One place in the tree for the form, draft or not, so the
                     message it shows after issuing a draft survives the refresh. */}
                 {outstanding > 0 ? (

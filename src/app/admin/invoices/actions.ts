@@ -24,6 +24,7 @@ import { markRenewalInvoiced, periodLabel, RenewalAlreadyBilled } from '@/lib/co
 import {
   daysFromToday,
   formatMoney,
+  formatShortDate,
   isPastDay,
   parseDateInput,
   parseMoney,
@@ -343,6 +344,13 @@ export async function sendInvoice(
   const cannotSend = contactProblem(staff, contact);
   if (cannotSend || !contact?.email) return { status: 'error', message: cannotSend ?? '' };
 
+  // A draft whose due date has passed would be overdue the moment it is sent,
+  // so it is moved to the usual terms from today. No due date stays none: it
+  // means due on receipt.
+  const newDue =
+    invoice.status === 'draft' && isPastDay(invoice.dueAt, new Date()) ? await dueOnTerms() : null;
+  const dueAt = newDue ?? invoice.dueAt;
+
   const { token } = await issueMagicToken({
     purpose: 'invoice_access',
     actorType: 'client_contact',
@@ -364,7 +372,7 @@ export async function sendInvoice(
         invoice.totalMinor - invoice.paidMinor > 0
           ? formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)
           : null,
-      dueAt: invoice.dueAt,
+      dueAt,
       url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
       showsHowToPay: await getOrg().then((org) =>
         Boolean(org.bankAccountNumber || org.mobileMoneyNumber),
@@ -375,37 +383,52 @@ export async function sendInvoice(
     entityId: invoice.id,
   });
 
-  await db.$transaction(async (tx) => {
+  const issuedNow = await db.$transaction(async (tx) => {
     // Only a draft is issued here, judged at the moment of writing: the email
     // took a while, and the invoice may have been voided or paid meanwhile. A
     // void stays void, and issuedAt is write-once, because the date the client
     // was first asked is what payment terms run from.
-    await tx.invoice.updateMany({
+    const issued = await tx.invoice.updateMany({
       where: { id: invoice.id, status: 'draft' },
-      data: { status: 'sent', issuedAt: new Date() },
+      data: { status: 'sent', issuedAt: new Date(), ...(newDue ? { dueAt: newDue } : {}) },
     });
     await recomputeInvoice(tx, invoice.id);
+    return issued.count === 1;
   });
 
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
-    action: 'invoice.sent',
+    action: sent.ok ? 'invoice.sent' : 'invoice.send_failed',
     entityType: 'Invoice',
     entityId: invoice.id,
-    summary: `${invoice.number} to ${contact.email}`,
+    summary: sent.ok
+      ? `${invoice.number} to ${contact.email}`
+      : `${invoice.number} to ${contact.email}: ${sent.error}`,
   });
+  if (issuedNow) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'invoice.issued',
+      entityType: 'Invoice',
+      entityId: invoice.id,
+      summary: `${invoice.number}, due ${dueAt ? formatShortDate(dueAt) : 'on receipt'}`,
+    });
+  }
 
   revalidatePath(`/admin/invoices/${invoice.number}`);
   revalidatePath('/admin/invoices');
 
+  const moved =
+    issuedNow && newDue ? ` Its due date had passed, so it is now due ${formatShortDate(newDue)}.` : '';
   if (!sent.ok) {
     return {
       status: 'error',
-      message: `The invoice is marked sent and the attempt is logged, but the email did not go: ${sent.error}`,
+      message: `The invoice is marked sent and the attempt is logged, but the email did not go: ${sent.error.replace(/\.?$/, '.')}${moved}`,
     };
   }
-  return { status: 'done', message: `Sent to ${contact.email}.` };
+  return { status: 'done', message: `Sent to ${contact.email}.${moved}` };
 }
 
 /** The payment fields a form sent, checked. */

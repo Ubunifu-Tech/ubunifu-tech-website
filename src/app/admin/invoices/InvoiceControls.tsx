@@ -74,6 +74,29 @@ export function SendInvoiceButton({
 }
 
 /**
+ * Sending a draft. Stays mounted once the draft is issued, showing only what
+ * sending it said, because the page refreshes into its sent layout and the
+ * message (the email failed, or the due date moved) would otherwise vanish.
+ */
+export function SendDraft({ invoiceId, draft }: { invoiceId: string; draft: boolean }) {
+  const [state, action, pending] = useActionState(sendInvoice, INITIAL);
+
+  if (!draft) return <Result state={state} />;
+  return (
+    <div className={forms.actions}>
+      <form action={action} className={styles.inlineForm}>
+        <input type="hidden" name="invoiceId" value={invoiceId} />
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Sending…' : 'Send to the client'}
+        </button>
+        <Result state={state} />
+      </form>
+      <p className={forms.payoff}>Or, if they have paid already, record it here.</p>
+    </div>
+  );
+}
+
+/**
  * Recording money that has already arrived.
  *
  * Defaults to the full outstanding amount and to today, because that is what

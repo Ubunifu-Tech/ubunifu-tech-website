@@ -131,6 +131,7 @@ const ACTION_LABELS = {
   'invoice.created': 'Invoice created',
   'invoice.draft_saved': 'Draft invoice changed',
   'invoice.sent': 'Invoice sent',
+  'invoice.send_failed': 'Invoice email failed to send',
   'invoice.voided': 'Invoice voided',
   'payment.recorded': 'Payment recorded',
   'payment.reversed': 'Payment reversed',

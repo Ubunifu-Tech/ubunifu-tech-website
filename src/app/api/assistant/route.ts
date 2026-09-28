@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 import { generateToken } from '@/lib/console/crypto';
-import { MAX_TURNS_PER_CONVERSATION, runTurn } from '@/lib/console/agent';
+import { MAX_MESSAGES, runTurn } from '@/lib/console/agent';
+import { interimFailure } from '@/lib/console/assistant-copy';
 import {
   ASSISTANT_SYSTEM,
   EMAIL_OK,
@@ -25,7 +26,7 @@ import { siteBrief } from '@/lib/console/site-brief';
  * until they choose to give a name and an email.
  */
 
-// One short turn (maxTokens 2000, no thinking), so a minute is ample.
+// One short turn, kept inside 50 seconds by the agent's deadline.
 export const maxDuration = 60;
 
 const VISITOR_COOKIE = 'ubu_visitor';
@@ -142,7 +143,7 @@ async function handle(request: NextRequest) {
     });
   }
 
-  if (conversation.messageCount >= MAX_TURNS_PER_CONVERSATION) {
+  if (conversation.messageCount >= MAX_MESSAGES.site_visitor) {
     return unavailable(
       'This is better continued by a person. Leave us a message and somebody will pick it up.',
       409,
@@ -159,16 +160,21 @@ async function handle(request: NextRequest) {
     userMessage: message,
     tools: [recordEnquiryTool],
     context: { conversationId: conversation.id, ip },
-    // Short answers on purpose: this is a chat window, not a brochure.
-    maxTokens: 2000,
-    think: false,
+    effort: 'low',
+    maxTokens: 4096,
+    maxRounds: 3,
+    timeoutMs: 20_000,
+    deadlineMs: 50_000,
   });
 
   const response = result.ok
-    ? NextResponse.json({ reply: result.reply, sent: result.usedTools.includes('record_enquiry') })
+    ? NextResponse.json({
+        reply: result.reply,
+        sent: result.used.some((tool) => tool.name === 'record_enquiry'),
+      })
     : // What the visitor typed is saved, and the window offers a message form,
       // so the answer is a way to reach a person rather than an apology.
-      unavailable(`${result.error} Leave us a message and a person will reply.`, 502);
+      unavailable(`${interimFailure(result.cause)} Leave us a message and a person will reply.`, 502);
 
   response.cookies.set(VISITOR_COOKIE, visitorKey, {
     httpOnly: true,

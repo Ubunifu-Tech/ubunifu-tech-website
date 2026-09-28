@@ -18,6 +18,7 @@ import {
   nextDocumentReference,
 } from '@/lib/console/documents';
 import { runTurn } from '@/lib/console/agent';
+import { interimFailure } from '@/lib/console/assistant-copy';
 import { COPILOT_SYSTEM, copilotBrief, saveDraftTool } from '@/lib/console/copilot';
 import { formText, formTextExact } from '@/lib/console/form';
 import { liveDocument } from '@/lib/console/live';
@@ -332,6 +333,9 @@ export async function askCopilot(
     tools: [saveDraftTool],
     context: { documentId: document.id, staffId: staff.id },
     maxTokens: 32000,
+    // Inside the page's 300-second limit, with room to record the outcome.
+    timeoutMs: 240_000,
+    deadlineMs: 270_000,
   });
 
   await recordAudit({
@@ -341,15 +345,15 @@ export async function askCopilot(
     entityType: 'Document',
     entityId: document.id,
     summary: result.ok
-      ? `${document.reference}: ${result.usedTools.length > 0 ? 'wrote a version' : 'answered'}`
-      : `${document.reference}: ${result.error}`,
+      ? `${document.reference}: ${result.used.length > 0 ? 'wrote a version' : 'answered'}`
+      : `${document.reference}: ${interimFailure(result.cause)}`,
   });
 
   revalidatePath(`/admin/documents/${document.reference}`);
 
   if (!result.ok) {
     // Staff can see why: the API's own reason is on the activity record.
-    return { status: 'error', message: `${result.error} The reason is in Activity.` };
+    return { status: 'error', message: `${interimFailure(result.cause)} The reason is in Activity.` };
   }
   return { status: 'done', message: result.reply };
 }

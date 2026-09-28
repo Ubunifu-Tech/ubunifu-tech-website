@@ -197,6 +197,7 @@ const ACTION_LABELS = {
   'media.uploaded': 'Image uploaded',
   'settings.billing_saved': 'Billing details changed',
   'assistant.failed': 'Assistant could not answer',
+  'assistant.declined': 'Assistant declined a question',
   'writer.created': 'Writer added',
   'writer.updated': 'Writer details changed',
   'writer.archived': 'Writer taken off the list',

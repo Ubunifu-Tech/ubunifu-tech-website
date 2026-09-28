@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { getClientActor, type ClientActor } from '@/lib/console/auth';
-import { MAX_TURNS_PER_CONVERSATION, runTurn } from '@/lib/console/agent';
+import { MAX_MESSAGES, runTurn } from '@/lib/console/agent';
+import { interimFailure } from '@/lib/console/assistant-copy';
 import { allow } from '@/lib/console/rate-limit';
 import {
   PORTAL_SYSTEM,
@@ -19,7 +20,7 @@ import {
  * into a "send this to the team" form that needs no model at all.
  */
 
-// One short turn (maxTokens 2000, no thinking), so a minute is ample.
+// One short turn, kept inside 50 seconds by the agent's deadline.
 export const maxDuration = 60;
 
 const MAX_MESSAGES_PER_HOUR = 40;
@@ -146,7 +147,7 @@ async function handle(request: NextRequest) {
     });
   }
 
-  if (conversation.messageCount >= MAX_TURNS_PER_CONVERSATION) {
+  if (conversation.messageCount >= MAX_MESSAGES.portal_client) {
     return unavailable('This is better continued by a person. Send it to the team.', 409);
   }
 
@@ -160,16 +161,19 @@ async function handle(request: NextRequest) {
     userMessage: message,
     tools: [raiseRequestTool],
     context: { actor, conversationId: conversation.id },
-    maxTokens: 2000,
-    think: false,
+    effort: 'low',
+    maxTokens: 4096,
+    maxRounds: 3,
+    timeoutMs: 20_000,
+    deadlineMs: 50_000,
   });
 
   if (!result.ok) {
-    return unavailable(`${result.error} You can send this to the team instead.`, 502);
+    return unavailable(`${interimFailure(result.cause)} You can send this to the team instead.`, 502);
   }
   return NextResponse.json({
     reply: result.reply,
-    sent: result.usedTools.includes('raise_request'),
+    sent: result.used.some((tool) => tool.name === 'raise_request'),
   });
 }
 

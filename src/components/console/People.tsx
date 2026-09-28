@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState } from 'react';
+import React, { useActionState, useEffect, useRef, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { TextField } from './Fields';
 import {
@@ -78,6 +78,51 @@ export function AddPerson({
   }
 
   return (
+    <AddPersonForm
+      formAction={formAction}
+      pending={pending}
+      state={state}
+      canSkipInvite={canSkipInvite}
+      hidden={hidden}
+      onCancel={() => setOpen(false)}
+    />
+  );
+}
+
+/**
+ * The open form. What is typed is held here, so a refusal (an address in use
+ * elsewhere, say) leaves it in place to correct. It unmounts when the person
+ * is added or the form is cancelled, which is when it should clear.
+ */
+function AddPersonForm({
+  formAction,
+  pending,
+  state,
+  canSkipInvite,
+  hidden,
+  onCancel,
+}: {
+  formAction: (formData: FormData) => void;
+  pending: boolean;
+  state: PeopleState;
+  canSkipInvite: boolean;
+  hidden: Record<string, string>;
+  onCancel: () => void;
+}) {
+  const [values, setValues] = useState({ name: '', email: '', role: '', phone: '', invite: true });
+  // React resets a form when its action returns. The text fields come
+  // through, because React keeps their defaults in step with their values;
+  // a checkbox keeps the default it started with, so it is kept in step here.
+  const inviteBox = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (inviteBox.current) inviteBox.current.defaultChecked = values.invite;
+  }, [values.invite]);
+  const set =
+    (key: 'name' | 'email' | 'role' | 'phone') =>
+    (event: React.ChangeEvent<HTMLInputElement>) =>
+      setValues((current) => ({ ...current, [key]: event.target.value }));
+
+  return (
     <form action={formAction} className={`${forms.form} ${styles.addForm}`}>
       {Object.entries(hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
@@ -87,7 +132,15 @@ export function AddPerson({
           <label className={forms.label} htmlFor="person-name">
             Name
           </label>
-          <input id="person-name" name="name" className={forms.control} required maxLength={120} />
+          <input
+            id="person-name"
+            name="name"
+            className={forms.control}
+            required
+            maxLength={120}
+            value={values.name}
+            onChange={set('name')}
+          />
         </div>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="person-email">
@@ -100,6 +153,8 @@ export function AddPerson({
             className={forms.control}
             required={!canSkipInvite}
             maxLength={254}
+            value={values.email}
+            onChange={set('email')}
           />
           {canSkipInvite && (
             <p className={forms.hint}>Without one, send them a setup link from their menu.</p>
@@ -115,6 +170,8 @@ export function AddPerson({
             className={forms.control}
             maxLength={80}
             placeholder="Marketing lead"
+            value={values.role}
+            onChange={set('role')}
           />
         </div>
         <div className={forms.field}>
@@ -127,12 +184,23 @@ export function AddPerson({
             type="tel"
             className={forms.control}
             maxLength={40}
+            value={values.phone}
+            onChange={set('phone')}
           />
         </div>
       </div>
       {canSkipInvite ? (
         <label className={forms.checkRow}>
-          <input type="checkbox" name="invite" defaultChecked className={forms.check} />
+          <input
+            ref={inviteBox}
+            type="checkbox"
+            name="invite"
+            className={forms.check}
+            checked={values.invite}
+            onChange={(event) =>
+              setValues((current) => ({ ...current, invite: event.target.checked }))
+            }
+          />
           Email them an invitation to the portal
         </label>
       ) : (
@@ -142,11 +210,7 @@ export function AddPerson({
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Adding…' : canSkipInvite ? 'Add' : 'Send invitation'}
         </button>
-        <button
-          type="button"
-          className={`${forms.button} ${forms.quiet}`}
-          onClick={() => setOpen(false)}
-        >
+        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={onCancel}>
           Cancel
         </button>
         <Message state={state} />
@@ -344,56 +408,104 @@ export function PersonMenu({
       )}
 
       {view === 'edit' && (
-        <form action={editAction} className={forms.form}>
-          {fields}
-          <TextField
-            name="name"
-            label="Name"
-            defaultValue={contact.name}
-            required
-            maxLength={120}
-          />
-          <TextField
-            name="email"
-            label="Email"
-            type="email"
-            optional={!contact.email}
-            required={contact.activated}
-            defaultValue={contact.email ?? ''}
-            maxLength={254}
-            hint={contact.activated ? 'They sign in with this address.' : undefined}
-          />
-
-          <TextField
-            name="role"
-            label="Job title"
-            optional
-            defaultValue={contact.role ?? ''}
-            maxLength={80}
-          />
-          <TextField
-            name="phone"
-            label="Phone"
-            type="tel"
-            optional
-            defaultValue={contact.phone ?? ''}
-            maxLength={40}
-          />
-          <div className={forms.actions}>
-            <button type="submit" className={forms.button} disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-            <button
-              type="button"
-              className={`${forms.button} ${forms.quiet}`}
-              onClick={() => setView('menu')}
-            >
-              Cancel
-            </button>
-          </div>
-          {editState.status === 'error' && <Message state={editState} />}
-        </form>
+        <EditPersonForm
+          contact={contact}
+          fields={fields}
+          action={editAction}
+          saving={saving}
+          state={editState}
+          onCancel={() => setView('menu')}
+        />
       )}
     </RowMenu>
+  );
+}
+
+/**
+ * Changing someone's details. Starts from what is saved each time it opens,
+ * and holds the edits, so a refusal (an address someone else uses, say)
+ * leaves them in place to correct.
+ */
+function EditPersonForm({
+  contact,
+  fields,
+  action,
+  saving,
+  state,
+  onCancel,
+}: {
+  contact: {
+    name: string;
+    email: string | null;
+    role: string | null;
+    phone: string | null;
+    activated: boolean;
+  };
+  fields: React.ReactNode;
+  action: (formData: FormData) => void;
+  saving: boolean;
+  state: PeopleState;
+  onCancel: () => void;
+}) {
+  const [values, setValues] = useState({
+    name: contact.name,
+    email: contact.email ?? '',
+    role: contact.role ?? '',
+    phone: contact.phone ?? '',
+  });
+  const set =
+    (key: keyof typeof values) => (event: React.ChangeEvent<HTMLInputElement>) =>
+      setValues((current) => ({ ...current, [key]: event.target.value }));
+
+  return (
+    <form action={action} className={forms.form}>
+      {fields}
+      <TextField
+        name="name"
+        label="Name"
+        value={values.name}
+        onChange={set('name')}
+        required
+        maxLength={120}
+      />
+      <TextField
+        name="email"
+        label="Email"
+        type="email"
+        optional={!contact.email}
+        required={contact.activated}
+        value={values.email}
+        onChange={set('email')}
+        maxLength={254}
+        hint={contact.activated ? 'They sign in with this address.' : undefined}
+      />
+
+      <TextField
+        name="role"
+        label="Job title"
+        optional
+        value={values.role}
+        onChange={set('role')}
+        maxLength={80}
+      />
+      <TextField
+        name="phone"
+        label="Phone"
+        type="tel"
+        optional
+        value={values.phone}
+        onChange={set('phone')}
+        maxLength={40}
+      />
+      <div className={forms.actions}>
+        <button type="submit" className={forms.button} disabled={saving}>
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+      {state.status === 'error' && <Message state={state} />}
+    </form>
   );
 }

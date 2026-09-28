@@ -12,7 +12,7 @@ import {
   whoDid,
 } from '@/lib/console/activity';
 import { Callout } from '@/components/console/Callout';
-import { unresolvedEmailFailures } from '@/lib/console/email-failures';
+import { isStuck, unresolvedEmailFailures } from '@/lib/console/email-failures';
 import { linkFor, recordLinks } from '@/lib/console/record-links';
 import { ListToolbar } from '@/components/console/ListToolbar';
 import { PAGE_SIZE, pageHref } from '@/lib/console/paging';
@@ -287,24 +287,30 @@ export default async function ActivityPage({
         audit.action.includes('voided'),
       href: linkFor(links, audit),
     })),
-    ...emails.map((email) => ({
-      id: `e-${email.id}`,
-      at: email.createdAt,
-      // Sent means the mail service accepted it. Whether it then reached the
-      // inbox is not something we are told, so it is not claimed.
-      what:
-        email.status === 'sent'
-          ? 'Email sent'
-          : email.status === 'queued'
-            ? 'Email not sent yet'
-            : 'Email did not send',
-      detail: `${email.subject} → ${email.toAddress}`,
-      who: 'System',
-      kind: 'Email' as const,
-      bad: email.status === 'failed',
-      note: email.error,
-      href: linkFor(links, email),
-    })),
+    ...emails.map((email) => {
+      // Stuck: still queued long after the mail service should have answered.
+      const stuck = isStuck(email);
+      return {
+        id: `e-${email.id}`,
+        at: email.createdAt,
+        // Sent means the mail service accepted it. Whether it then reached the
+        // inbox is not something we are told, so it is not claimed.
+        what:
+          email.status === 'sent'
+            ? 'Email sent'
+            : stuck
+              ? 'Email not confirmed'
+              : email.status === 'queued'
+                ? 'Email not sent yet'
+                : 'Email did not send',
+        detail: `${email.subject} → ${email.toAddress}`,
+        who: 'System',
+        kind: 'Email' as const,
+        bad: email.status === 'failed' || stuck,
+        note: email.error ?? (stuck ? 'No answer from the mail service' : null),
+        href: linkFor(links, email),
+      };
+    }),
   ].sort((a, b) => b.at.getTime() - a.at.getTime());
 
   const entries = (count: number) => `${count} ${count === 1 ? 'entry' : 'entries'}`;

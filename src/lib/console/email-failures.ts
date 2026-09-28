@@ -23,6 +23,22 @@ const SENT_AGAIN_BY: Record<string, Permission | 'owner'> = {
   staff_invite: 'owner',
 };
 
+/**
+ * How long a send may sit at queued before it counts as a failure. The row
+ * is written before the mail service is called and updated after, so one
+ * still queued long after any function could have finished (Vercel stops one
+ * at 300 seconds by default) never got its answer, and nobody knows whether
+ * it went.
+ */
+export const STUCK_AFTER_MINUTES = 15;
+
+/** Whether a send is still queued long after it should have been answered. */
+export function isStuck(row: { status: string; createdAt: Date }): boolean {
+  return (
+    row.status === 'queued' && row.createdAt.getTime() < Date.now() - STUCK_AFTER_MINUTES * 60_000
+  );
+}
+
 /** Whether this person has a way to send this kind of email again. */
 export function canSendAgain(staff: StaffActor, template: string): boolean {
   const need = SENT_AGAIN_BY[template];
@@ -31,7 +47,8 @@ export function canSendAgain(staff: StaffActor, template: string): boolean {
 }
 
 /**
- * Emails that did not send and have not been sent since: the same kind of
+ * Emails that did not send, or are stuck at queued, and have not been sent
+ * since: the same kind of
  * email, about the same record, to the same address. A failure put right by
  * sending again is history, not a task, and counting it forever teaches
  * everyone to ignore the count. Only the ones this person can send again:
@@ -39,7 +56,15 @@ export function canSendAgain(staff: StaffActor, template: string): boolean {
  */
 export async function unresolvedEmailFailures(staff: StaffActor, limit = 500) {
   const failed = await db.emailLog.findMany({
-    where: { status: 'failed' },
+    where: {
+      OR: [
+        { status: 'failed' },
+        {
+          status: 'queued',
+          createdAt: { lt: new Date(Date.now() - STUCK_AFTER_MINUTES * 60_000) },
+        },
+      ],
+    },
     orderBy: { createdAt: 'desc' },
     take: limit,
     select: {

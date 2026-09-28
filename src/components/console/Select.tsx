@@ -63,23 +63,30 @@ export function Select({
   'aria-label'?: string;
   'aria-labelledby'?: string;
 }) {
-  const [inner, setInner] = useState(defaultValue ?? '');
-  const current = value ?? inner;
+  // What was chosen here since mount or since the form last reset. null means
+  // nothing, so the select shows whatever defaultValue the page now passes,
+  // as a native select does after a save brings back a new value.
+  const [picked, setPicked] = useState<string | null>(null);
+  const current = value ?? picked ?? defaultValue ?? '';
   const trigger = useRef<HTMLButtonElement>(null);
   const resetting = useRef(false);
 
   /**
    * React resets a form once its action has run, and Radix answers a reset by
-   * putting the select back to the value it mounted with. For a select that
-   * saves itself that is wrong twice over: it shows the old value, and it
-   * submits again. So a self-saving select ignores resets. The listener is in
-   * the capture phase so it runs before Radix's own.
+   * calling onValueChange with the value it mounted with, which may be long
+   * out of date. So every select in a form swallows that call. The listener is
+   * in the capture phase so it runs before Radix's own. An ordinary select
+   * then forgets its pick and shows the page's current defaultValue, the value
+   * just saved. A self-saving select keeps its pick: resetting it would show
+   * the old value and submit again. A controlled select keeps its value, which
+   * its owner clears when it needs to.
    */
   useEffect(() => {
     const form = trigger.current?.form;
-    if (!autoSubmit || !form) return;
+    if (!form) return;
     const onReset = () => {
       resetting.current = true;
+      if (!autoSubmit) setPicked(null);
       setTimeout(() => {
         resetting.current = false;
       }, 0);
@@ -94,7 +101,7 @@ export function Select({
     // Flushed so the hidden input already holds the new value when the form
     // is submitted on the very next line.
     flushSync(() => {
-      if (value === undefined) setInner(plain);
+      if (value === undefined) setPicked(plain);
       onValueChange?.(plain);
     });
     if (autoSubmit) trigger.current?.form?.requestSubmit();
@@ -104,8 +111,10 @@ export function Select({
 
   return (
     <>
+      {/* Always controlled, so Radix never holds a value of its own; '' shows
+          the placeholder. */}
       <RadixSelect.Root
-        value={selected ? toRadix(current) : undefined}
+        value={selected ? toRadix(current) : ''}
         onValueChange={change}
         disabled={disabled}
       >

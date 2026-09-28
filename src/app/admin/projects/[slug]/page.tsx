@@ -434,13 +434,20 @@ export default async function ProjectPage({
     0,
   );
 
-  // Who work can be given to: the active team, plus whoever already holds it.
-  const team = await db.staffUser.findMany({
-    where: { isActive: true },
+  // Who work can be given to: the active team. Anyone who has left but still
+  // leads this project or holds one of its tasks is loaded too, so the page
+  // names them, as the list and board do, instead of reading as nobody.
+  const heldBy = [
+    project.ownerId,
+    ...project.phases.flatMap((phase) => phase.deliverables.map((task) => task.assigneeId)),
+  ].filter((id): id is string => Boolean(id));
+  const staffRows = await db.staffUser.findMany({
+    where: { OR: [{ isActive: true }, { id: { in: heldBy } }] },
     orderBy: { name: 'asc' },
-    select: { id: true, name: true, title: true, email: true },
+    select: { id: true, name: true, title: true, email: true, isActive: true },
   });
-  const owner = team.find((person) => person.id === project.ownerId) ?? null;
+  const team = staffRows.filter((person) => person.isActive);
+  const owner = staffRows.find((person) => person.id === project.ownerId) ?? null;
   // Offered products, and the project's own even if it has since stopped.
   const products = await db.product.findMany({
     where: { OR: [{ isActive: true }, { id: project.productId ?? '' }] },
@@ -454,6 +461,15 @@ export default async function ProjectPage({
       label: person.name,
       hint: person.title ?? undefined,
     })),
+    // Shown on the tasks they still hold, but never offered again.
+    ...staffRows
+      .filter((person) => !person.isActive)
+      .map((person) => ({
+        value: person.id,
+        label: person.name,
+        hint: 'No longer on the team',
+        disabled: true,
+      })),
   ];
   const theirPeople = [
     { value: '', label: 'Anyone at the client' },
@@ -880,7 +896,12 @@ export default async function ProjectPage({
               </dl>
             </ProjectDetailsCard>
 
-            <OwnerCard projectId={project.id} owner={owner} team={team} editable={mayRun} />
+            <OwnerCard
+              projectId={project.id}
+              owner={owner ? { ...owner, left: !owner.isActive } : null}
+              team={team}
+              editable={mayRun}
+            />
           </div>
 
           <div className={styles.stack}>

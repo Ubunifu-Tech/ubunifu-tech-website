@@ -10,7 +10,14 @@ import forms from '@/styles/forms.module.css';
 
 const INITIAL: AssignState = { status: 'idle' };
 
-type Person = { id: string; name: string; title: string | null; email?: string };
+type Person = {
+  id: string;
+  name: string;
+  title: string | null;
+  email?: string;
+  /** No longer on the team, but still named as the lead until someone else is. */
+  left?: boolean;
+};
 
 /**
  * Who leads the project, as a card of its own: their initials, name and
@@ -99,15 +106,22 @@ export function OwnerCard({
       </div>
 
       {owner ? (
-        <div className={styles.owner}>
-          <Avatar name={owner.name} size="lg" />
-          <div className={styles.who}>
-            <p className={styles.name}>{owner.name}</p>
-            <p className={styles.meta}>
-              {[owner.title, owner.email].filter(Boolean).join(' · ') || 'On the team'}
-            </p>
+        <>
+          <div className={styles.owner}>
+            <Avatar name={owner.name} size="lg" />
+            <div className={styles.who}>
+              <p className={styles.name}>{owner.name}</p>
+              <p className={styles.meta}>
+                {owner.left ? (
+                  <span className={`${forms.badge} ${forms.badgeWarn}`}>No longer on the team</span>
+                ) : (
+                  [owner.title, owner.email].filter(Boolean).join(' · ') || 'On the team'
+                )}
+              </p>
+            </div>
           </div>
-        </div>
+          {owner.left && editable && <p className={styles.empty}>Choose who leads it now.</p>}
+        </>
       ) : (
         <p className={styles.empty}>
           {editable ? 'Nobody leads it yet. Choose who does.' : 'Nobody leads it yet.'}

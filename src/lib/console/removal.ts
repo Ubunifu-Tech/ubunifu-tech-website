@@ -22,8 +22,9 @@ export type WithdrawnDocument = { id: string; reference: string };
 /**
  * Withdraws everything out for signature on these projects, inside the
  * caller's transaction. Open requests are cancelled; a document that was out
- * for signature goes back to draft. A signed request or a signed document is
- * never touched: it is the record of what was agreed.
+ * for signature, or sent back with changes asked for, goes back to draft. A
+ * signed request or a signed document is never touched: it is the record of
+ * what was agreed.
  *
  * Returns the documents that were actually withdrawn, read back after the
  * update, so a request signed in the same moment is not reported as withdrawn.
@@ -53,8 +54,10 @@ export async function withdrawOpenSignatures(
   const documents = new Map(cancelled.map((request) => [request.document.id, request.document]));
   if (documents.size === 0) return [];
 
+  // Asking for changes leaves the request open, so a document the client has
+  // asked to change is withdrawn too, as withdrawDocument does for one.
   await tx.document.updateMany({
-    where: { id: { in: [...documents.keys()] }, status: { in: [...WAITING] } },
+    where: { id: { in: [...documents.keys()] }, status: { in: [...WAITING, 'changes_requested'] } },
     data: { status: 'draft' },
   });
 

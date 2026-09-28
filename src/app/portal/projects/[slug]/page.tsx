@@ -141,8 +141,18 @@ export default async function PortalProject({
       assetRequests: {
         // 'received' is in here now: a checklist that hides what you already
         // sent cannot tell you whether it arrived, which is the first thing
-        // anybody wants to know after sending something.
-        where: { status: { in: ['requested', 'blocked', 'received'] } },
+        // anybody wants to know after sending something. For the same reason
+        // an item we set aside stays when they had already answered it or
+        // sent files for it; one set aside before they did anything goes.
+        where: {
+          OR: [
+            { status: { in: ['requested', 'blocked', 'received'] } },
+            {
+              status: 'waived',
+              OR: [{ response: { not: null } }, { uploads: { some: { deletedAt: null } } }],
+            },
+          ],
+        },
         orderBy: { position: 'asc' },
         select: {
           id: true,
@@ -263,6 +273,10 @@ export default async function PortalProject({
     { value: '', label: 'Anyone on the team' },
     ...project.client.contacts.map((contact) => ({ value: contact.id, label: contact.name })),
   ];
+  // What is still wanted first; what we no longer need at the end.
+  const items = [...project.assetRequests].sort(
+    (a, b) => Number(a.status === 'waived') - Number(b.status === 'waived'),
+  );
 
   return (
     <main className={styles.page}>
@@ -348,41 +362,51 @@ export default async function PortalProject({
                 </span>
               </div>
               <ul className={styles.needList}>
-                {project.assetRequests.map((request) => {
+                {items.map((request) => {
                   // Something that arrived as a file needs no empty answer
                   // box. Files can always be added, though: what we ask for is
                   // often a set of photographs, and the first one in is not
-                  // the last.
+                  // the last. A set-aside item only shows what they sent.
+                  const waived = request.status === 'waived';
                   const showAnswer = request.status !== 'received' || request.response !== null;
-                  const showUpload = canUpload;
+                  const showUpload = canUpload && !waived;
                   return (
                     <li key={request.id} className={styles.needItem}>
                       <span className={styles.itemStatus}>
                         <span className={styles.needTitle}>{request.title}</span>
                         <span
                           className={`${forms.badge} ${
-                            request.status === 'received'
-                              ? forms.badgeGood
-                              : request.status === 'blocked'
-                                ? forms.badgeBad
-                                : forms.badgeWarn
+                            waived
+                              ? ''
+                              : request.status === 'received'
+                                ? forms.badgeGood
+                                : request.status === 'blocked'
+                                  ? forms.badgeBad
+                                  : forms.badgeWarn
                           }`}
                         >
-                          {request.status === 'received'
-                            ? 'Received'
-                            : request.status === 'blocked'
-                              ? 'On hold'
-                              : 'Needed'}
+                          {waived
+                            ? 'No longer needed'
+                            : request.status === 'received'
+                              ? 'Received'
+                              : request.status === 'blocked'
+                                ? 'On hold'
+                                : 'Needed'}
                         </span>
                       </span>
                       {request.detail && <p className={styles.projectMeta}>{request.detail}</p>}
 
-                      {showAnswer && (
+                      {!waived && showAnswer && (
                         <AnswerBox
                           assetRequestId={request.id}
                           response={request.response}
                           canAttach={showUpload}
                         />
+                      )}
+                      {waived && request.response && (
+                        <div className={styles.answer}>
+                          <p className={styles.answerText}>{request.response}</p>
+                        </div>
                       )}
 
                       {request.uploads.length > 0 && (
@@ -399,7 +423,7 @@ export default async function PortalProject({
                         </ul>
                       )}
 
-                      {request.status !== 'received' && people.length > 2 && (
+                      {!waived && request.status !== 'received' && people.length > 2 && (
                         <ItemOwner
                           id={request.id}
                           title={request.title}

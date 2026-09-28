@@ -348,9 +348,11 @@ a {
   overflow-wrap: anywhere;
 }
 
+/* The console, portal and sign-in screens set the three tokens on <html> for
+   their 2px orange ring; the public site keeps the violet one. */
 :where(a, button):focus-visible {
-  outline: 3px solid var(--primary);
-  outline-offset: 4px;
+  outline: var(--focus-ring-width, 3px) solid var(--focus-ring-color, var(--primary));
+  outline-offset: var(--focus-ring-offset, 4px);
 }
 
 /* Skip-to-content link — off-screen until keyboard focus. */

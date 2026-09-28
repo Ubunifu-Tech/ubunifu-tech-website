@@ -14,6 +14,14 @@
   background: var(--app-bg);
 }
 
+/* The focus ring for links and buttons, set on <html> so that menus and
+   dialogs rendered into <body> have it too. */
+:global(html):has(.shell) {
+  --focus-ring-color: var(--accent);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;

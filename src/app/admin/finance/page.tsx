@@ -331,7 +331,10 @@ export default async function ReportsPage({
               of('cost').length === 0
                 ? 'No costs added yet'
                 : `${of('cost').length} ${of('cost').length === 1 ? 'cost' : 'costs'}`,
-            href: '/finance/costs',
+            // The costs page shows one month at a time, so only a one-month
+            // period links there; longer ones link from each month's row.
+            href:
+              period.months.length === 1 ? `/finance/costs?month=${period.months[0]}` : undefined,
           },
           {
             label: 'Left',
@@ -386,7 +389,15 @@ export default async function ReportsPage({
                     </td>
                     <td className={`${table.td} ${table.numeric}`}>{cell(row.invoiced)}</td>
                     <td className={`${table.td} ${table.numeric}`}>{cell(row.moneyIn)}</td>
-                    <td className={`${table.td} ${table.numeric}`}>{cell(row.moneyOut)}</td>
+                    <td className={`${table.td} ${table.numeric}`}>
+                      {row.moneyOut.complete && row.moneyOut.total !== 0 ? (
+                        <Link href={`/finance/costs?month=${row.month}`} className={table.link}>
+                          {cell(row.moneyOut)}
+                        </Link>
+                      ) : (
+                        cell(row.moneyOut)
+                      )}
+                    </td>
                     <td
                       className={`${table.td} ${table.numeric} ${
                         row.left.complete && row.left.total < 0 ? table.late : ''

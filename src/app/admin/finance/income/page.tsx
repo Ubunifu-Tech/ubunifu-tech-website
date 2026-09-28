@@ -111,7 +111,7 @@ export default async function IncomePage({
           ...[...byProduct.entries()].slice(0, 3).map(([name, map]) => ({
             label: name,
             value: sideBySide(map),
-            note: 'This month',
+            note: month === thisMonth ? 'This month' : monthLabel(month),
           })),
         ]}
       />

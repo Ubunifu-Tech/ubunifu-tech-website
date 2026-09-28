@@ -19,6 +19,9 @@ import {
  * into a "send this to the team" form that needs no model at all.
  */
 
+// One short turn (maxTokens 2000, no thinking), so a minute is ample.
+export const maxDuration = 60;
+
 const MAX_MESSAGES_PER_HOUR = 40;
 const MAX_MESSAGE_LENGTH = 2000;
 

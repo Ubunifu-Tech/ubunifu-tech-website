@@ -49,6 +49,11 @@ const STEP_LABEL: Record<DocumentStep, string> = {
   send: 'Send',
 };
 
+// The drafting copilot (askCopilot in ../actions.ts: maxTokens 32000,
+// adaptive thinking, up to five rounds) runs as a server action inside this
+// page's function, and this is the only page that renders it.
+export const maxDuration = 300;
+
 export async function generateMetadata({ params }: { params: Promise<{ reference: string }> }) {
   const { reference } = await params;
   return { title: reference };

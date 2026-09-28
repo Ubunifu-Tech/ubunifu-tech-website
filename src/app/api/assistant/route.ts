@@ -25,6 +25,9 @@ import { siteBrief } from '@/lib/console/site-brief';
  * until they choose to give a name and an email.
  */
 
+// One short turn (maxTokens 2000, no thinking), so a minute is ample.
+export const maxDuration = 60;
+
 const VISITOR_COOKIE = 'ubu_visitor';
 const VISITOR_TTL_DAYS = 30;
 

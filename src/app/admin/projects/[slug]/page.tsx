@@ -522,9 +522,15 @@ export default async function ProjectPage({
       (document.kind === 'contract' || document.kind === 'statement_of_work'),
   );
   // Document lines only for those who handle documents, and invoice and
-  // payment lines only for those who handle money.
+  // payment lines only for those who handle money. Updates, tasks and asked-for
+  // items log against their own ids, so they are named here too; activityFor
+  // still hides by action what a role may not see.
   const activityIds = [
     project.id,
+    ...project.updates.map((u) => u.id),
+    ...project.phases.flatMap((p) => p.deliverables.map((d) => d.id)),
+    ...project.assetRequests.map((r) => r.id),
+    ...(mayFees || mayMoney ? project.lineItems.map((l) => l.id) : []),
     ...(mayDocs ? project.documents.map((d) => d.id) : []),
     ...(mayMoney ? project.invoices.map((i) => i.id) : []),
   ];

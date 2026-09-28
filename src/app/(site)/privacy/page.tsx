@@ -1,6 +1,7 @@
 import { PageHeader } from '@/components/PageHeader';
 import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { pageMetadata } from '@/lib/metadata';
+import { privacy } from '@/content/privacy';
 import styles from './Privacy.module.css';
 
 export const metadata = pageMetadata({
@@ -23,7 +24,7 @@ export default function PrivacyPage() {
         />
 
         <article className={`container ${styles.article}`}>
-          <p className={styles.updated}>Last updated 28 September 2026</p>
+          <p className={styles.updated}>Last updated {privacy.updated}</p>
 
           <h2>Information you choose to send</h2>
           <p>

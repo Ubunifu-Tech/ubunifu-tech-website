@@ -18,6 +18,27 @@ export const site = {
   },
 } as const;
 
+// The topics on the contact form, in the order the form lists them. The form's
+// select and the contact route's allow-list both read this, so a topic cannot be
+// offered without being accepted, or accepted without being offered.
+export const contactSubjects = [
+  'Project enquiry',
+  'Product question',
+  'Hosting, domains & email',
+  'Branding & design',
+  'Support',
+  'Partnership',
+  'Careers',
+  'Other',
+] as const;
+
+export type ContactSubject = (typeof contactSubjects)[number];
+
+// What we promise about a reply, in one sentence. The chat's hand-off card, the
+// assistant's instructions and its knowledge all read this, so the promise a
+// visitor is given is the same wherever they meet it.
+export const replyPromise = 'A person replies by email, usually within a working day.';
+
 // Calls to action - one wording per action, site-wide. Import these instead of
 // typing a button label, so the primary conversion path cannot drift again.
 export const cta = {

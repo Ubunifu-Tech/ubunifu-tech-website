@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PageAtmosphere } from '@/components/PageAtmosphere';
 import { PageHeader } from '@/components/PageHeader';
 import styles from './Careers.module.css';
+import { careers } from '@/content/careers';
 import { pageMetadata } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
@@ -11,6 +12,7 @@ export const metadata = pageMetadata({
 });
 
 export default function CareersPage() {
+  const [beforeEmail, afterEmail] = careers.intro.split('{email}');
   return (
     <>
       <PageAtmosphere />
@@ -24,12 +26,11 @@ export default function CareersPage() {
         <div className="container">
           <div className={styles.openSection}>
             <div className={styles.noRoles}>
-              <h2 className={styles.noRolesTitle}>No open roles right now</h2>
+              <h2 className={styles.noRolesTitle}>{careers.noRoles}</h2>
               <p className={styles.noRolesText}>
-                We are not currently advertising jobs, internships, or contract roles. If you
-                would still like to make a general introduction, send a short note to{' '}
-                <a href="mailto:info@ubunifutech.com" className={styles.emailLink}>info@ubunifutech.com</a>{' '}
-                with the kind of work you do or a link to your portfolio. We can’t guarantee a reply.
+                {careers.note} {beforeEmail}
+                <a href={`mailto:${careers.introEmail}`} className={styles.emailLink}>{careers.introEmail}</a>
+                {afterEmail}
               </p>
               <p className={styles.privacyNote}>
                 Please do not email identity documents, financial details, health information, or

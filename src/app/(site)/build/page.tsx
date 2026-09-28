@@ -11,6 +11,7 @@ import { CapabilityMap } from '@/components/CapabilityMap';
 import { EditorialPhoto } from '@/components/EditorialPhoto';
 import styles from './Build.module.css';
 import { cta } from '@/content/site';
+import { processStages } from '@/content/process';
 import { editorialPhotography } from '@/content/editorial-photography';
 import { pageMetadata } from '@/lib/metadata';
 
@@ -19,32 +20,6 @@ export const metadata = pageMetadata({
   description: 'Web development, hosting, domain management, professional email, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
   path: '/build',
 });
-
-// Four stages in an order, each ending in something the client can hold us to.
-// `output` is written as a lower-case fragment because it is rendered inside the
-// sentence "You get <output>." — keep it a noun phrase, not a sentence.
-const process = [
-  {
-    title: 'Understand',
-    description: 'We discuss what you need, how your team works, and the constraints to account for.',
-    output: 'a shared brief and priorities',
-  },
-  {
-    title: 'Shape',
-    description: 'We agree what to build, the budget, the timeline, and what each side will provide.',
-    output: 'an agreed scope and delivery plan',
-  },
-  {
-    title: 'Build',
-    description: 'We build in stages, test the system, and review working versions with your team.',
-    output: 'usable deliverables, reviewed together',
-  },
-  {
-    title: 'Operate',
-    description: 'We document the handover and provide hosting and ongoing support where agreed.',
-    output: 'clear ownership and agreed support',
-  },
-];
 
 export default function BuildPage() {
   return (
@@ -89,7 +64,7 @@ export default function BuildPage() {
             </div>
 
             <BuildCards className={styles.processGrid}>
-              {process.map((item) => (
+              {processStages.map((item) => (
                 <div key={item.title} className={styles.processCard}>
                   <h3 className={styles.processTitle}>{item.title}</h3>
                   <p className={styles.processDescription}>{item.description}</p>

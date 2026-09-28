@@ -400,7 +400,7 @@ export default async function CostsPage({
         </div>
 
         {regulars.length > 0 && (
-          <div className={table.frame}>
+          <div id="regular-costs" className={table.frame}>
             <div className={table.toolbar}>
               <div className={table.toolbarText}>
                 <h2 className={table.title}>Regular costs</h2>

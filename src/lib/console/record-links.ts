@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { can, type StaffActor } from '@/lib/console/auth';
 
-type Ref = { entityType: string | null; entityId: string | null };
+type Ref = { entityType: string | null; entityId: string | null; action?: string };
 
 const keyOf = (type: string, id: string) => `${type}:${id}`;
 
@@ -23,6 +23,11 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
     Cost: can(staff, 'finance'),
     Income: can(staff, 'finance'),
     Product: can(staff, 'finance'),
+    Post: can(staff, 'journal'),
+    Writer: can(staff, 'journal'),
+    DocumentDefault: can(staff, 'documents'),
+    RegularCost: can(staff, 'finance'),
+    OrgSettings: can(staff, 'billing_settings'),
   };
   const ids = (type: string) =>
     allowed[type] === false
@@ -50,6 +55,8 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
     items,
     costs,
     income,
+    posts,
+    writers,
   ] = await Promise.all([
     db.invoice.findMany({
       where: { id: { in: ids('Invoice') } },
@@ -99,6 +106,14 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
       where: { id: { in: ids('Income') } },
       select: { id: true, receivedOn: true },
     }),
+    db.post.findMany({
+      where: { id: { in: ids('Post') } },
+      select: { id: true, deletedAt: true },
+    }),
+    db.writer.findMany({
+      where: { id: { in: ids('Writer') } },
+      select: { id: true, deletedAt: true },
+    }),
   ]);
 
   for (const row of invoices) put('Invoice', row.id, `/invoices/${row.number}`);
@@ -131,11 +146,24 @@ export async function recordLinks(refs: Ref[], staff: StaffActor): Promise<Map<s
     put('Income', row.id, `/finance/income?month=${row.receivedOn.toISOString().slice(0, 7)}`);
   }
   for (const id of ids('Product')) put('Product', id, '/settings/products');
+  // An archived post or writer opens where it can be brought back from.
+  for (const row of posts) {
+    put('Post', row.id, row.deletedAt ? '/posts?show=archived' : `/posts/${row.id}`);
+  }
+  for (const row of writers) {
+    put('Writer', row.id, row.deletedAt ? '/posts/writers#archived' : `/posts/writers/${row.id}`);
+  }
+  for (const id of ids('DocumentDefault')) put('DocumentDefault', id, '/settings/documents');
+  for (const id of ids('RegularCost')) put('RegularCost', id, '/finance/costs#regular-costs');
+  for (const id of ids('OrgSettings')) put('OrgSettings', id, '/settings/billing');
 
   return links;
 }
 
 export function linkFor(links: Map<string, string>, ref: Ref): string | null {
+  // Logged against OrgSettings like the billing details, but it is the Team
+  // page that shows and changes permissions.
+  if (ref.action === 'staff.permissions_changed') return '/settings/team';
   return ref.entityType && ref.entityId
     ? (links.get(keyOf(ref.entityType, ref.entityId)) ?? null)
     : null;

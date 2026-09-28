@@ -3,11 +3,11 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { db } from '@/lib/db';
 import { getClientActor } from '@/lib/console/auth';
 import { allow } from '@/lib/console/rate-limit';
+import { consoleEnv } from '@/lib/console/env';
 import {
   ALLOWED_CONTENT_TYPES,
   MAX_UPLOAD_BYTES,
   recordAssetUpload,
-  safeFilename,
   uploadsConfigured,
 } from '@/lib/console/uploads';
 
@@ -60,11 +60,21 @@ export async function POST(request: Request): Promise<NextResponse> {
           addRandomSuffix: true,
           // Carried through to the completion callback, which arrives from
           // the store rather than from the browser and so has no session.
+          // The filename is the one the browser sent, which has already turned
+          // any slash into a dash. The payload is JSON, so nothing else needs
+          // stripping, and whichever writer records the row keeps the name the
+          // client gave the file.
           tokenPayload: JSON.stringify({
             assetRequestId: assetRequest.id,
             contactId: actor.id,
-            filename: safeFilename(pathname.split('/').pop() ?? 'file'),
+            filename: pathname.split('/').pop() || 'file',
           }),
+          // Named rather than left to the SDK, which would guess the project's
+          // production URL; this route lives on the public host. Only on
+          // Vercel: nothing can call back a laptop.
+          ...(process.env.VERCEL === '1'
+            ? { callbackUrl: new URL('/api/portal/uploads', consoleEnv.publicOrigin).href }
+            : {}),
         };
       },
 

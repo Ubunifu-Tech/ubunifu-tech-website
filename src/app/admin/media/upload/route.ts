@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { can, getStaffActor } from '@/lib/console/auth';
+import { consoleEnv } from '@/lib/console/env';
 import { uploadsConfigured } from '@/lib/console/uploads';
 import { MAX_MEDIA_BYTES, MEDIA_CONTENT_TYPES, recordMediaAsset } from '@/lib/console/media';
 
@@ -35,17 +36,32 @@ export async function POST(request: Request): Promise<NextResponse> {
           allowedContentTypes: MEDIA_CONTENT_TYPES,
           maximumSizeInBytes: MAX_MEDIA_BYTES,
           addRandomSuffix: true,
-          tokenPayload: JSON.stringify({ staffId: staff.id }),
+          // The name as the browser sent it, before the store added its
+          // suffix, so the callback records what the browser does.
+          tokenPayload: JSON.stringify({
+            staffId: staff.id,
+            filename: pathname.split('/').pop() || 'image',
+          }),
+          // Left to itself the SDK calls back the production URL at the path
+          // this request arrived on, /admin/media/upload, which the public
+          // host 404s. Named here on the console host instead. Only on Vercel:
+          // nothing can call back a laptop.
+          ...(process.env.VERCEL === '1'
+            ? { callbackUrl: new URL('/media/upload', consoleEnv.adminOrigin).href }
+            : {}),
         };
       },
 
       // The store's own callback; only fires on a real deployment. Verified by
       // handleUpload (an HMAC against the read-write token) before this runs.
       onUploadCompleted: async ({ blob, tokenPayload }) => {
-        const payload = JSON.parse(tokenPayload ?? '{}') as { staffId?: string };
+        const payload = JSON.parse(tokenPayload ?? '{}') as {
+          staffId?: string;
+          filename?: string;
+        };
         await recordMediaAsset({
           blobUrl: blob.url,
-          filename: blob.pathname.split('/').pop() ?? 'image',
+          filename: payload.filename ?? blob.pathname.split('/').pop() ?? 'image',
           staffId: payload.staffId ?? null,
         });
       },

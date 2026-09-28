@@ -5,7 +5,8 @@ import { can, getStaffActor } from '@/lib/console/auth';
 import { allow } from '@/lib/console/rate-limit';
 import { recordCostBill } from '@/lib/console/cost-bills';
 import { BILL_CONTENT_TYPES, MAX_BILL_BYTES, billFolder } from '@/lib/console/cost-labels';
-import { safeFilename, uploadsConfigured } from '@/lib/console/uploads';
+import { consoleEnv } from '@/lib/console/env';
+import { uploadsConfigured } from '@/lib/console/uploads';
 
 /**
  * Issues the token a staff browser uses to send a cost's bill straight to the
@@ -42,11 +43,21 @@ export async function POST(request: Request): Promise<NextResponse> {
           allowedContentTypes: BILL_CONTENT_TYPES,
           maximumSizeInBytes: MAX_BILL_BYTES,
           addRandomSuffix: true,
+          // The name as the browser sent it, which has already turned any
+          // slash into a dash. The payload is JSON, so nothing else needs
+          // stripping, and the callback records the same name the browser does.
           tokenPayload: JSON.stringify({
             costId: cost.id,
             staffId: staff.id,
-            filename: safeFilename(pathname.split('/').pop() ?? 'bill'),
+            filename: pathname.split('/').pop() || 'bill',
           }),
+          // Left to itself the SDK calls back the production URL at the path
+          // this request arrived on, /admin/finance/costs/upload, which the
+          // public host 404s. Named here on the console host instead. Only on
+          // Vercel: nothing can call back a laptop.
+          ...(process.env.VERCEL === '1'
+            ? { callbackUrl: new URL('/finance/costs/upload', consoleEnv.adminOrigin).href }
+            : {}),
         };
       },
 

@@ -561,20 +561,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                 </div>
 
                 <SendDraft invoiceId={invoice.id} draft={invoice.status === 'draft'} />
-                {/* One place in the tree for the form, draft or not, so the
-                    message it shows after issuing a draft survives the refresh. */}
-                {outstanding > 0 ? (
-                  <RecordPaymentForm
-                    invoiceId={invoice.id}
-                    outstanding={moneyInput(outstanding, invoice.currency)}
-                    currency={invoice.currency}
-                    today={todayInput()}
-                  />
-                ) : (
-                  <p className={styles.note}>
-                    Nothing is owed. The receipts are listed above, ready to email or print.
-                  </p>
-                )}
+                {/* One place in the tree for the form, draft or settled, so the
+                    message it shows after a payment survives the refresh. */}
+                <RecordPaymentForm
+                  invoiceId={invoice.id}
+                  outstanding={moneyInput(outstanding, invoice.currency)}
+                  currency={invoice.currency}
+                  today={todayInput()}
+                  settled={outstanding <= 0}
+                />
               </section>
             )}
 

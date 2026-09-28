@@ -108,11 +108,17 @@ export function RecordPaymentForm({
   outstanding,
   currency,
   today,
+  settled,
 }: {
   invoiceId: string;
   outstanding: string;
   currency: string;
   today: string;
+  /**
+   * Nothing is left to pay. The form gives way to a note, but this component
+   * stays mounted so the message about the payment that settled it is kept.
+   */
+  settled: boolean;
 }) {
   const [state, action, pending] = useActionState(recordPayment, INITIAL);
   // Kept in state so a refused submission does not wipe them: React resets a
@@ -121,13 +127,26 @@ export function RecordPaymentForm({
   const [typed, setTyped] = useState<string | null>(null);
   const [method, setMethod] = useState('bank_transfer');
   const [reference, setReference] = useState('');
+  const [emailIt, setEmailIt] = useState(true);
   const [seen, setSeen] = useState(state);
   if (state !== seen) {
     setSeen(state);
     if (state.status === 'done') {
       setTyped(null);
       setReference('');
+      setEmailIt(true);
     }
+  }
+
+  if (settled) {
+    return (
+      <>
+        <Result state={state} />
+        <p className={styles.note}>
+          Nothing is owed. The receipts are listed above, ready to email or print.
+        </p>
+      </>
+    );
   }
 
   return (
@@ -191,6 +210,21 @@ export function RecordPaymentForm({
           </p>
         </div>
       </div>
+
+      <label className={forms.checkRow} htmlFor="pay-email">
+        <input
+          id="pay-email"
+          name="emailReceipt"
+          type="checkbox"
+          className={forms.check}
+          checked={emailIt}
+          onChange={(event) => setEmailIt(event.target.checked)}
+          disabled={pending}
+        />
+        <span className={forms.checkText}>
+          <span>Email the receipt to their main contact</span>
+        </span>
+      </label>
 
       <div className={forms.actions}>
         <button type="submit" className={forms.button} disabled={pending}>

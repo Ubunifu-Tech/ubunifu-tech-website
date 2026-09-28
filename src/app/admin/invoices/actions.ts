@@ -676,6 +676,7 @@ export async function recordPayment(
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
   const invoiceId = String(formData.get('invoiceId') ?? '');
+  const emailIt = formData.get('emailReceipt') === 'on';
 
   const invoice = await db.invoice.findUnique({
     where: { id: invoiceId, ...liveInvoice },
@@ -793,13 +794,29 @@ export async function recordPayment(
     });
   }
 
+  // The payment stands whatever happens to the email: it is already
+  // committed, and the receipt can be sent again from its row.
+  const delivered = emailIt
+    ? await deliverReceipt(staff, receipt.id).catch((error: unknown) => {
+        console.error('[invoices] receipt email after a payment failed', error);
+        return { sent: false as const, message: 'The email did not go. Email it from its row.' };
+      })
+    : null;
+  const opening = receipt.wasDraft
+    ? `Recorded. The invoice is issued and receipt ${receipt.number}`
+    : `Recorded. Receipt ${receipt.number}`;
+
   revalidatePath(`/admin/invoices/${invoice.number}`);
   revalidatePath('/admin/invoices');
   return {
     status: 'done',
-    message: receipt.wasDraft
-      ? `Recorded. The invoice is issued and receipt ${receipt.number} is ready.`
-      : `Recorded. Receipt ${receipt.number} issued.`,
+    message: !delivered
+      ? receipt.wasDraft
+        ? `${opening} is ready.`
+        : `${opening} issued.`
+      : delivered.sent
+        ? `${opening} sent to ${delivered.to}.`
+        : `${opening} is ready. ${delivered.message}`,
   };
 }
 
@@ -810,8 +827,22 @@ export async function emailReceipt(
 ): Promise<BillingState> {
   const staff = await requireStaff();
   if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
-  const receiptId = String(formData.get('receiptId') ?? '');
 
+  const delivered = await deliverReceipt(staff, String(formData.get('receiptId') ?? ''));
+  return delivered.sent
+    ? { status: 'done', message: `Sent to ${delivered.to}.` }
+    : { status: 'error', message: delivered.message };
+}
+
+/**
+ * Sends a receipt to the client's main contact and records how it went.
+ * Shared by the row's Email it and by recording a payment, which sends it
+ * unless told not to. The caller has already checked who may send it.
+ */
+async function deliverReceipt(
+  staff: StaffActor,
+  receiptId: string,
+): Promise<{ sent: true; to: string } | { sent: false; message: string }> {
   const receipt = await db.receipt.findUnique({
     where: { id: receiptId, payment: livePayment },
     select: {
@@ -843,14 +874,14 @@ export async function emailReceipt(
     },
   });
 
-  if (!receipt) return { status: 'error', message: 'That receipt no longer exists.' };
+  if (!receipt) return { sent: false, message: 'That receipt no longer exists.' };
   if (receipt.payment.reversedAt) {
-    return { status: 'error', message: 'This payment was reversed, so its receipt is cancelled.' };
+    return { sent: false, message: 'This payment was reversed, so its receipt is cancelled.' };
   }
 
   const contact = receipt.payment.invoice.client.contacts[0];
   const cannotSend = contactProblem(staff, contact);
-  if (cannotSend || !contact?.email) return { status: 'error', message: cannotSend ?? '' };
+  if (cannotSend || !contact?.email) return { sent: false, message: cannotSend ?? '' };
 
   const sent = await sendConsoleEmail({
     to: contact.email,
@@ -884,11 +915,11 @@ export async function emailReceipt(
 
   if (!sent.ok) {
     return {
-      status: 'error',
+      sent: false,
       message: `The attempt is logged, but the email did not go: ${sent.error}`,
     };
   }
-  return { status: 'done', message: `Sent to ${contact.email}.` };
+  return { sent: true, to: contact.email };
 }
 
 /** Thrown inside the transaction when a refund would give back more than was paid. */

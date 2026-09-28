@@ -439,6 +439,21 @@
 }
 
 @media (max-width: 560px) {
+  /* Two classes, so this beats the global .section padding whatever order the
+     stylesheets load in. */
+  .contact:global(.section) {
+    padding-top: var(--space-5);
+  }
+
+  .text {
+    margin-bottom: var(--space-4);
+  }
+
+  .method {
+    min-height: 0;
+    padding: var(--space-1) 0;
+  }
+
   .info,
   .form {
     padding: var(--space-6);

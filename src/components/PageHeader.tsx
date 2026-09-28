@@ -8,6 +8,8 @@ interface PageHeaderProps {
   lead?: string;
   children?: React.ReactNode;
   scene: PageScene;
+  /** Drop the scene once it would stack under the copy, where it only pushes the page's task down. */
+  hideVisualOnPhone?: boolean;
 }
 
 /**
@@ -22,9 +24,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   lead,
   children,
   scene,
+  hideVisualOnPhone = false,
 }) => {
   return (
-    <header className={styles.header} data-page-header={scene}>
+    <header
+      className={hideVisualOnPhone ? `${styles.header} ${styles.copyOnlyOnPhone}` : styles.header}
+      data-page-header={scene}
+    >
       <div className={styles.inner}>
         <div className={styles.copy}>
           <p className={styles.eyebrow}>{eyebrow}</p>
@@ -32,7 +38,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           {lead && <p className={styles.lead}>{lead}</p>}
           {children && <div className={styles.actions}>{children}</div>}
         </div>
-        <div className={styles.visual}>
+        <div
+          className={
+            hideVisualOnPhone ? `${styles.visual} ${styles.visualDesktopOnly}` : styles.visual
+          }
+        >
           <PageSceneGraphic scene={scene} />
         </div>
       </div>

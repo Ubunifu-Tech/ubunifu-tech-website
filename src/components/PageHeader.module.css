@@ -126,6 +126,16 @@
     width: min(100%, 46rem);
     margin: 0 auto;
   }
+
+  .visualDesktopOnly {
+    display: none;
+  }
+
+  /* With the scene gone the header is only copy, so the band would end
+     partway through the title. Let it fill the header instead. */
+  .copyOnlyOnPhone::before {
+    height: 100%;
+  }
 }
 
 @media (max-width: 560px) {

@@ -17,6 +17,7 @@ export default function ContactPage() {
       <main data-atmosphere>
         <PageHeader
           scene="contact"
+          hideVisualOnPhone
           eyebrow="Contact"
           title="Tell us about your project."
           lead="Ask about our services, get help with a product, or discuss a project with our team."

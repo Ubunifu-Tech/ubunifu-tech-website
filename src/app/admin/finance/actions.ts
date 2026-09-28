@@ -16,6 +16,7 @@ import {
 } from '@/lib/console/money';
 import { monthDate, monthLabel, ratePair } from '@/lib/console/finance';
 import { recordCostBill } from '@/lib/console/cost-bills';
+import { deleteStoredFiles } from '@/lib/console/uploads';
 
 export type FinanceState = {
   status: 'idle' | 'done' | 'error';
@@ -199,6 +200,12 @@ export async function removeCost(_previous: FinanceState, formData: FormData): P
   });
   if (!cost) return { status: 'error', message: 'That cost no longer exists.' };
 
+  // Every bill it held, replaced ones too: the delete cascades their rows,
+  // so the stored files would otherwise be left with nothing pointing at them.
+  const bills = await db.fileUpload.findMany({
+    where: { costId: cost.id },
+    select: { storageKey: true },
+  });
   await db.cost.delete({ where: { id: cost.id } });
   await recordAudit({
     actorType: 'staff',
@@ -210,6 +217,7 @@ export async function removeCost(_previous: FinanceState, formData: FormData): P
       .toISOString()
       .slice(0, 10)}`,
   });
+  await deleteStoredFiles(bills.map((bill) => bill.storageKey));
   refresh();
   return { status: 'done', message: 'Removed.' };
 }

@@ -1,6 +1,6 @@
 'use server';
 
-import { NO_PERMISSION } from '@/lib/console/permissions';
+import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
@@ -9,7 +9,7 @@ import {
   ProjectStatus,
   ServiceLine,
 } from '@/generated/prisma/client';
-import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, recordAudit, staffForAction } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
@@ -57,6 +57,8 @@ export type NewClientState = {
   /** Which field to point at, so the form can mark it rather than only warn. */
   field?: string;
   values?: NewClientValues;
+  /** The session ended before the post arrived; the values come back to refill the form. */
+  signedOut?: boolean;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -80,17 +82,15 @@ const OPENING_STATUSES: ProjectStatus[] = [
 /**
  * Creates a client by hand, with an optional first project and invitation.
  *
- * requireStaff runs here rather than being inherited from the page: a server
- * action is a public endpoint, and the form having been rendered proves nothing
- * about who is posting to it.
+ * The staff check runs here rather than being inherited from the page: a
+ * server action is a public endpoint, and the form having been rendered proves
+ * nothing about who is posting to it. A lapsed session is answered with the
+ * values rather than a redirect to sign-in, so fifteen typed fields survive it.
  */
 export async function createClient(
   _previous: NewClientState,
   formData: FormData,
 ): Promise<NewClientState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
-
   const values: NewClientValues = {
     name: formText(formData, 'name'),
     legalName: formText(formData, 'legalName'),
@@ -114,6 +114,10 @@ export async function createClient(
     summary: formText(formData, 'summary'),
     ownerId: formText(formData, 'ownerId'),
   };
+
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT, values };
+  if (!can(staff, 'clients')) return { status: 'error', message: NO_PERMISSION };
 
   const fail = (message: string, field?: string): NewClientState => ({
     status: 'error',

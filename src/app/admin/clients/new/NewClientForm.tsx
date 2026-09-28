@@ -154,6 +154,7 @@ export function NewClientForm({
     setAnswered(state);
     if (state.status === 'error') {
       setStep(state.field ? (FIELD_STEP[state.field] ?? CHECK) : CHECK);
+      if (state.values) setStartProject(state.values.startProject);
     }
   }
 
@@ -445,6 +446,10 @@ export function NewClientForm({
             <div className={forms.wide} hidden={!canStartProject}>
               <label className={forms.checkRow} htmlFor={field('startProject')}>
                 <input
+                  // The form's reset after a refusal puts a tick box back to how
+                  // it was first drawn. Drawn afresh for what was posted, it
+                  // resets to that, so it stays in step with the project fields.
+                  key={sent ? `posted-${sent.startProject}` : 'start'}
                   id={field('startProject')}
                   name="startProject"
                   type="checkbox"
@@ -633,6 +638,14 @@ export function NewClientForm({
         {state.message && (
           <p className={forms.error} role="alert">
             {state.message}
+            {state.signedOut && (
+              <>
+                {' '}
+                <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
+                  Sign in
+                </a>
+              </>
+            )}
           </p>
         )}
         <div className={`${forms.actions} ${forms.actionsBare}`}>

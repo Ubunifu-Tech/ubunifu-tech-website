@@ -28,6 +28,7 @@ import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import {
   daysBetween,
+  daysFromToday,
   formatMoney,
   formatRelative,
   formatShortDate,
@@ -324,8 +325,7 @@ export default async function ProjectPage({
     }));
 
   // The payment terms in billing settings, unless somebody changes it on the form.
-  const defaultDue = new Date(now);
-  defaultDue.setDate(defaultDue.getDate() + org.paymentTermsDays);
+  const defaultDue = daysFromToday(org.paymentTermsDays);
 
   // Who each published update has reached, by address, against who could
   // be emailed today: the difference is what Send to the rest would send.

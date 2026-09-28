@@ -21,7 +21,13 @@ import {
   recomputeInvoice,
 } from '@/lib/console/billing';
 import { markRenewalInvoiced, periodLabel, RenewalAlreadyBilled } from '@/lib/console/renewals';
-import { formatMoney, isPastDay, parseDateInput, parseMoney } from '@/lib/console/money';
+import {
+  daysFromToday,
+  formatMoney,
+  isPastDay,
+  parseDateInput,
+  parseMoney,
+} from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
 
@@ -219,12 +225,13 @@ async function pickBillables(projectId: string, chosen: string[]) {
  * not silently rewrite a demand for money the client is already holding, so the
  * invoice keeps its own snapshot of what was charged and why.
  */
-/** Due after the payment terms set in billing settings, counted from today. */
+/**
+ * Due after the payment terms set in billing settings: calendar days from
+ * today in Tanzania, stored at noon UTC like a typed date.
+ */
 async function dueOnTerms(): Promise<Date> {
   const { paymentTermsDays } = await getOrg();
-  const due = new Date();
-  due.setDate(due.getDate() + paymentTermsDays);
-  return due;
+  return daysFromToday(paymentTermsDays);
 }
 
 export async function createInvoice(

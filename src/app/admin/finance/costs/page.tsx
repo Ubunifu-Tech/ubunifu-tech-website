@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { COST_CATEGORY_LABEL } from '@/lib/console/cost-labels';
-import { addTo, monthDate, monthKey, monthLabel, sideBySide } from '@/lib/console/finance';
+import { addTo, monthDate, monthKey, monthLabel, shiftMonth, sideBySide } from '@/lib/console/finance';
 import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import { uploadsConfigured } from '@/lib/console/uploads';
@@ -20,11 +20,6 @@ import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Costs' };
 
-const shift = (key: string, by: number) => {
-  const date = monthDate(key);
-  return monthKey(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + by, 1)));
-};
-
 /**
  * What the business spends, a month at a time: the bills typed in as they
  * arrive, and the regular ones waiting for this month's amount.
@@ -41,7 +36,7 @@ export default async function CostsPage({
   const thisMonth = today.slice(0, 7);
   const month = asked && /^\d{4}-\d{2}$/.test(asked) && asked <= thisMonth ? asked : thisMonth;
   const from = monthDate(month);
-  const to = monthDate(shift(month, 1));
+  const to = monthDate(shiftMonth(month, 1));
 
   const [costs, regulars, clients, projects, vendors, products] = await Promise.all([
     db.cost.findMany({
@@ -163,8 +158,8 @@ export default async function CostsPage({
         </div>
         <div className={styles.headActions}>
           <nav className={table.views} aria-label="Month">
-            <Link href={`/finance/costs?month=${shift(month, -1)}`} className={table.view}>
-              ← {monthLabel(shift(month, -1))}
+            <Link href={`/finance/costs?month=${shiftMonth(month, -1)}`} className={table.view}>
+              ← {monthLabel(shiftMonth(month, -1))}
             </Link>
             <Link
               href="/finance/costs"
@@ -174,8 +169,8 @@ export default async function CostsPage({
               This month
             </Link>
             {month < thisMonth && (
-              <Link href={`/finance/costs?month=${shift(month, 1)}`} className={table.view}>
-                {monthLabel(shift(month, 1))} →
+              <Link href={`/finance/costs?month=${shiftMonth(month, 1)}`} className={table.view}>
+                {monthLabel(shiftMonth(month, 1))} →
               </Link>
             )}
           </nav>

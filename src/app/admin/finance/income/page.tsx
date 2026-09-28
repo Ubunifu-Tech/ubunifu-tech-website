@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { addTo, monthDate, monthKey, monthLabel, sideBySide } from '@/lib/console/finance';
+import { addTo, monthDate, monthLabel, shiftMonth, sideBySide } from '@/lib/console/finance';
 import { formatMoney, formatShortDate, moneyInput, toDateInputValue, todayInput } from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import { AddIncome, IncomeMenu } from './IncomeForms';
@@ -10,11 +10,6 @@ import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Income' };
-
-const shift = (key: string, by: number) => {
-  const date = monthDate(key);
-  return monthKey(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + by, 1)));
-};
 
 /**
  * Money that came in without an invoice here, a month at a time: most often
@@ -32,7 +27,7 @@ export default async function IncomePage({
   const thisMonth = today.slice(0, 7);
   const month = asked && /^\d{4}-\d{2}$/.test(asked) && asked <= thisMonth ? asked : thisMonth;
   const from = monthDate(month);
-  const to = monthDate(shift(month, 1));
+  const to = monthDate(shiftMonth(month, 1));
 
   const [entries, products, sources] = await Promise.all([
     db.income.findMany({
@@ -84,8 +79,8 @@ export default async function IncomePage({
         </div>
         <div className={styles.headActions}>
           <nav className={table.views} aria-label="Month">
-            <Link href={`/finance/income?month=${shift(month, -1)}`} className={table.view}>
-              ← {monthLabel(shift(month, -1))}
+            <Link href={`/finance/income?month=${shiftMonth(month, -1)}`} className={table.view}>
+              ← {monthLabel(shiftMonth(month, -1))}
             </Link>
             <Link
               href="/finance/income"
@@ -95,8 +90,8 @@ export default async function IncomePage({
               This month
             </Link>
             {month < thisMonth && (
-              <Link href={`/finance/income?month=${shift(month, 1)}`} className={table.view}>
-                {monthLabel(shift(month, 1))} →
+              <Link href={`/finance/income?month=${shiftMonth(month, 1)}`} className={table.view}>
+                {monthLabel(shiftMonth(month, 1))} →
               </Link>
             )}
           </nav>

@@ -3,14 +3,14 @@ import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { requirePermission } from '@/lib/console/auth';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
-import { formatMoney, formatShortDate } from '@/lib/console/money';
+import { formatMoney, formatShortDate, todayInput } from '@/lib/console/money';
 import { countedPayment, liveInvoice } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
-import { addTo } from '@/lib/console/finance';
+import { addTo, monthOpens, shiftMonth } from '@/lib/console/finance';
 
 export const metadata = { title: 'Invoices' };
 
@@ -61,8 +61,10 @@ export default async function InvoicesPage({
   const active = FILTERS.some((f) => f.key === show) ? show! : 'owing';
   const query = searchText(q);
   const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  // Months begin at 00:00 in Tanzania, not on the server's clock.
+  const thisMonthKey = todayInput().slice(0, 7);
+  const monthStart = monthOpens(thisMonthKey);
+  const lastMonthStart = monthOpens(shiftMonth(thisMonthKey, -1));
 
   const matching: Prisma.InvoiceWhereInput = query
     ? {

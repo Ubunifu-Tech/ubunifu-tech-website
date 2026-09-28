@@ -2,7 +2,7 @@ import 'server-only';
 import { db } from '@/lib/db';
 import type { CostCategory, ServiceLine } from '@/generated/prisma/client';
 import { countedPayment, liveInvoice, renewingLine } from './live';
-import { formatMoney, minorUnitScale } from './money';
+import { businessDay, formatMoney, minorUnitScale } from './money';
 import { INVOICE_AHEAD_DAYS, ensureRenewalEvents } from './renewals';
 
 /**
@@ -34,9 +34,9 @@ export type PeriodKey = (typeof PERIODS)[number]['key'];
 export type Period = {
   key: PeriodKey;
   label: string;
-  /** Inclusive. */
+  /** Inclusive: 00:00 in Tanzania on the first day. */
   from: Date;
-  /** Exclusive. */
+  /** Exclusive: 00:00 in Tanzania on the day after the last. */
   to: Date;
   /** "2026-09", in order, up to the current month. */
   months: string[];
@@ -44,9 +44,23 @@ export type Period = {
 
 const monthStart = (year: number, month: number) => new Date(Date.UTC(year, month, 1));
 
-export const monthKey = (date: Date) => date.toISOString().slice(0, 7);
+/**
+ * The month a moment falls in, in Tanzania: a payment at 01:00 on 1 October
+ * there is October's, though it is still 30 September in UTC. Typed dates
+ * (noon UTC) and the UTC-midnight month cursors land in their own month.
+ */
+export const monthKey = (date: Date) => businessDay(date).slice(0, 7);
 
 export const monthDate = (key: string) => new Date(`${key}-01T00:00:00.000Z`);
+
+/** 00:00 on the 1st of that month in Tanzania, where a month really begins. */
+export const monthOpens = (key: string) => new Date(`${key}-01T00:00:00+03:00`);
+
+/** "2026-09" moved by some months: shiftMonth('2026-01', -1) is '2025-12'. */
+export const shiftMonth = (key: string, by: number) => {
+  const date = monthDate(key);
+  return monthKey(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + by, 1)));
+};
 
 /** "Sept 2026". */
 export function monthLabel(key: string): string {
@@ -58,8 +72,10 @@ export function monthLabel(key: string): string {
 }
 
 export function periodFor(key: string | undefined, now: Date): Period {
-  const year = now.getUTCFullYear();
-  const month = now.getUTCMonth();
+  // Which month it is in Tanzania, not in UTC, which lags three hours behind.
+  const [yearText, monthText] = businessDay(now).split('-');
+  const year = Number(yearText);
+  const month = Number(monthText) - 1;
   const known = PERIODS.find((period) => period.key === key) ?? PERIODS[3];
   let from: Date;
   let to: Date;
@@ -102,7 +118,13 @@ export function periodFor(key: string | undefined, now: Date): Period {
   ) {
     months.push(monthKey(cursor));
   }
-  return { key: known.key, label: known.label, from, to, months };
+  return {
+    key: known.key,
+    label: known.label,
+    from: monthOpens(monthKey(from)),
+    to: monthOpens(monthKey(to)),
+    months,
+  };
 }
 
 // ── Lines ────────────────────────────────────────────────────────────────

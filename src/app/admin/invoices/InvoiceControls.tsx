@@ -115,6 +115,20 @@ export function RecordPaymentForm({
   today: string;
 }) {
   const [state, action, pending] = useActionState(recordPayment, INITIAL);
+  // Kept in state so a refused submission does not wipe them: React resets a
+  // form after its action runs, error or not. The amount follows what is
+  // outstanding until someone types their own.
+  const [typed, setTyped] = useState<string | null>(null);
+  const [method, setMethod] = useState('bank_transfer');
+  const [reference, setReference] = useState('');
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
+    if (state.status === 'done') {
+      setTyped(null);
+      setReference('');
+    }
+  }
 
   return (
     <form action={action} className={forms.form}>
@@ -127,7 +141,8 @@ export function RecordPaymentForm({
           <input
             id="pay-amount"
             name="amount"
-            defaultValue={outstanding}
+            value={typed ?? outstanding}
+            onChange={(event) => setTyped(event.target.value)}
             className={forms.control}
             inputMode="decimal"
             required
@@ -150,7 +165,8 @@ export function RecordPaymentForm({
           <Select
             id="pay-method"
             name="method"
-            defaultValue="bank_transfer"
+            value={method}
+            onValueChange={setMethod}
             options={PAYMENT_METHODS}
             disabled={pending}
           />
@@ -163,6 +179,8 @@ export function RecordPaymentForm({
           <input
             id="pay-ref"
             name="reference"
+            value={reference}
+            onChange={(event) => setReference(event.target.value)}
             className={forms.control}
             maxLength={120}
             placeholder="Bank reference or M-Pesa transaction id"
@@ -261,10 +279,20 @@ export function PaymentMenu({
     },
     INITIAL,
   );
+  // The refund form's fields live here, so a refused refund keeps what was typed.
+  const [refundTyped, setRefundTyped] = useState<string | null>(null);
+  const [refundMethod, setRefundMethod] = useState('mobile_money');
+  const [refundReference, setRefundReference] = useState('');
+  const [refundReason, setRefundReason] = useState('');
   const [refundState, refund, refunding] = useActionState(
     async (previous: RefundState, formData: FormData) => {
       const result = await recordRefund(previous, formData);
-      if (result.status === 'done') setView('menu');
+      if (result.status === 'done') {
+        setView('menu');
+        setRefundTyped(null);
+        setRefundReference('');
+        setRefundReason('');
+      }
       return result;
     },
     INITIAL as RefundState,
@@ -327,7 +355,8 @@ export function PaymentMenu({
             label={`Amount sent back (${currency})`}
             inputMode="decimal"
             required
-            defaultValue={moneyInput(refundable, currency)}
+            value={refundTyped ?? moneyInput(refundable, currency)}
+            onChange={(event) => setRefundTyped(event.target.value)}
             hint={`Up to ${formatMoney(refundable, currency)} from this payment.`}
           />
           <DateField
@@ -336,7 +365,12 @@ export function PaymentMenu({
             defaultValue={today}
             max={today}
           />
-          <SelectField name="method" label="How it went back" defaultValue="mobile_money">
+          <SelectField
+            name="method"
+            label="How it went back"
+            value={refundMethod}
+            onChange={setRefundMethod}
+          >
             {PAYMENT_METHODS.map((method) => (
               <option key={method.value} value={method.value}>
                 {method.label}
@@ -349,6 +383,8 @@ export function PaymentMenu({
             optional
             maxLength={120}
             placeholder="M-Pesa transaction id or bank reference"
+            value={refundReference}
+            onChange={(event) => setRefundReference(event.target.value)}
           />
           <TextAreaField
             name="reason"
@@ -357,6 +393,8 @@ export function PaymentMenu({
             required
             maxLength={500}
             placeholder="Project cancelled before work started"
+            value={refundReason}
+            onChange={(event) => setRefundReason(event.target.value)}
             hint="Shown on the refund note, which the client can see."
           />
           <div className={forms.actions}>

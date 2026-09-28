@@ -384,6 +384,14 @@ function FeeForm({
       {(problem || state.status === 'error') && (
         <p className={forms.error} role="alert">
           {problem ?? state.message}
+          {!problem && state.signedOut && (
+            <>
+              {' '}
+              <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
+                Sign in
+              </a>
+            </>
+          )}
         </p>
       )}
 

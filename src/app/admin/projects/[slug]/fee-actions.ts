@@ -1,10 +1,10 @@
 'use server';
 
-import { NO_PERMISSION } from '@/lib/console/permissions';
+import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { BillingKind, LineItemStatus } from '@/generated/prisma/client';
-import { can, requireStaff, recordAudit } from '@/lib/console/auth';
+import { can, requireStaff, recordAudit, staffForAction } from '@/lib/console/auth';
 import { addMonths, dropOffSchedulePeriods } from '@/lib/console/renewals';
 import {
   formatMoney,
@@ -25,6 +25,8 @@ export type FeeState = {
   message?: string;
   /** Which field the message is about, so the right step can be shown. */
   field?: 'label' | 'billingKind' | 'amount' | 'quantity' | 'nextDueAt';
+  /** The session ended while the form was open; what was typed stays on screen. */
+  signedOut?: boolean;
 };
 
 type Parsed = {
@@ -175,7 +177,8 @@ function revalidate(slug: string) {
 }
 
 export async function addFee(_previous: FeeState, formData: FormData): Promise<FeeState> {
-  const staff = await requireStaff();
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
   const project = await db.project.findFirst({
@@ -229,7 +232,8 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
 }
 
 export async function updateFee(_previous: FeeState, formData: FormData): Promise<FeeState> {
-  const staff = await requireStaff();
+  const staff = await staffForAction();
+  if (!staff) return { status: 'error', signedOut: true, message: STAFF_SIGNED_OUT };
   if (!can(staff, 'fees')) return { status: 'error', message: NO_PERMISSION };
 
   const line = await db.lineItem.findUnique({

@@ -57,7 +57,8 @@ export async function resolveSiteConversation(
   if (!finished) {
     return {
       conversation: { id: found.id, status: found.status, messageCount: found.messageCount },
-      previous: null,
+      // A thread with no enquiry of its own may follow one that had one.
+      previous: forWrite && !found.enquiry ? await earlierEnquiry(visitorKey) : null,
     };
   }
   if (!forWrite) return { conversation: null, previous: null };
@@ -71,8 +72,20 @@ export async function resolveSiteConversation(
           subject: found.enquiry.subject,
           createdAt: found.enquiry.createdAt,
         }
-      : null,
+      : await earlierEnquiry(visitorKey),
   };
+}
+
+/** The enquiry from this visitor's latest finished thread, if it produced one. */
+async function earlierEnquiry(visitorKey: string): Promise<PreviousEnquiry | null> {
+  const closed = await db.conversation.findFirst({
+    where: { visitorKey, kind: 'site_visitor', status: 'closed', enquiryId: { not: null } },
+    orderBy: { createdAt: 'desc' },
+    select: { enquiry: { select: { id: true, subject: true, createdAt: true } } },
+  });
+  return closed?.enquiry
+    ? { enquiryId: closed.enquiry.id, subject: closed.enquiry.subject, createdAt: closed.enquiry.createdAt }
+    : null;
 }
 
 export async function createSiteConversation(input: {

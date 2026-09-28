@@ -148,6 +148,8 @@ export function notificationEmail(input: {
   via?: string;
   /** The enquiry in the console, with the whole chat. */
   consoleUrl?: string;
+  /** Something added to an enquiry already sent, rather than a new one. */
+  followUp?: boolean;
 }): string {
   const name = escapeHtml(input.name);
   const email = escapeHtml(input.email);
@@ -161,16 +163,22 @@ export function notificationEmail(input: {
     </tr>`;
 
   const body = `
-    <p style="margin:0 0 5px;color:#A63A11;font-size:14px;font-weight:700;">New enquiry${
-      input.via ? ` from ${escapeHtml(input.via)}` : ''
+    <p style="margin:0 0 5px;color:#A63A11;font-size:14px;font-weight:700;">${
+      input.followUp
+        ? 'Update from the website chat'
+        : `New enquiry${input.via ? ` from ${escapeHtml(input.via)}` : ''}`
     }</p>
-    <h1 style="margin:0 0 22px;font-size:24px;font-weight:700;color:#1D1B22;">${name} got in touch</h1>
+    <h1 style="margin:0 0 22px;font-size:24px;font-weight:700;color:#1D1B22;">${name} ${
+      input.followUp ? 'added to their enquiry' : 'got in touch'
+    }</h1>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
       ${row('Name', name)}
       ${row('Email', `<a href="mailto:${email}" style="color:#A63A11;text-decoration:none;">${email}</a>`)}
       ${row('Subject', subject)}
     </table>
-    <p style="margin:26px 0 8px;color:#A63A11;font-size:14px;font-weight:700;">Message</p>
+    <p style="margin:26px 0 8px;color:#A63A11;font-size:14px;font-weight:700;">${
+      input.followUp ? 'What they added' : 'Message'
+    }</p>
     <div style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px;color:#1D1B22;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}</div>
     <div style="margin-top:26px;">${
       input.consoleUrl
@@ -185,7 +193,12 @@ export function notificationEmail(input: {
     }</div>
     <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
 
-  return shell(`New enquiry from ${input.name}: ${input.subject}`, body);
+  return shell(
+    input.followUp
+      ? `Update from ${input.name}: ${input.subject}`
+      : `New enquiry from ${input.name}: ${input.subject}`,
+    body,
+  );
 }
 
 /* ── Acknowledgement to the sender ────────────── */

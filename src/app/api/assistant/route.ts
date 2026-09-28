@@ -8,6 +8,7 @@ import { interimFailure } from '@/lib/console/assistant-copy';
 import {
   ASSISTANT_SYSTEM,
   EMAIL_OK,
+  mayHandOff,
   passToTeam,
   recordEnquiryTool,
 } from '@/lib/console/assistant';
@@ -146,7 +147,7 @@ async function handle(request: NextRequest) {
     note: page ? `The visitor is on the page ${page}.` : undefined,
     userMessage: message,
     tools: [recordEnquiryTool],
-    context: { conversationId: conversation.id, ip },
+    context: { conversationId: conversation.id, ip, previous: resolved.previous },
     effort: 'low',
     maxTokens: 4096,
     maxRounds: 3,
@@ -209,11 +210,7 @@ async function handoff(request: NextRequest, raw: unknown) {
   }
 
   const ip = requestIp(request.headers);
-  const [byAddress, byEmail] = await Promise.all([
-    allow('site-handoff:ip', ip, { limit: 5, windowMinutes: 60 }),
-    allow('site-handoff:email', email, { limit: 3, windowMinutes: 60 }),
-  ]);
-  if (!byAddress || !byEmail) {
+  if (!(await mayHandOff(ip, email))) {
     return NextResponse.json(
       { error: 'We already have your message. Somebody will reply by email.' },
       { status: 429 },
@@ -222,20 +219,25 @@ async function handoff(request: NextRequest, raw: unknown) {
 
   const jar = await cookies();
   const visitorKey = jar.get(VISITOR_COOKIE)?.value;
-  const { conversation } = visitorKey
+  const { conversation, previous } = visitorKey
     ? await resolveSiteConversation(visitorKey, { forWrite: true })
-    : { conversation: null };
+    : { conversation: null, previous: null };
 
-  await passToTeam({
+  const handed = await passToTeam({
     conversationId: conversation?.id ?? null,
     name,
     email,
     subject: headline(details) || 'A message from the website chat',
     details,
     ip,
+    previous,
   });
 
-  return NextResponse.json({ sent: true });
+  return NextResponse.json({
+    sent: true,
+    outcome: handed.outcome,
+    acknowledged: handed.acknowledged,
+  });
 }
 
 /** The thread so far, so a refresh does not lose the conversation. */

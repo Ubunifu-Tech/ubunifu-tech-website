@@ -1,10 +1,21 @@
 import 'server-only';
+import { createHash } from 'node:crypto';
 import { db } from '@/lib/db';
-import type { Prisma, ServiceLine } from '@/generated/prisma/client';
+import type { EnquiryStatus, Prisma, ServiceLine } from '@/generated/prisma/client';
 import type { AgentTool } from './agent';
+import { recordAudit } from './auth';
+import type { PreviousEnquiry } from './conversations';
 import { consoleEnv } from './env';
 import { sendConsoleEmail } from './mailer';
-import { ACKNOWLEDGEMENTS_PER_DAY, allow } from './rate-limit';
+import { formatDate, parseDateInput, todayInput } from './money';
+import {
+  ACKNOWLEDGEMENTS_PER_DAY,
+  HANDOFF_PER_EMAIL_HOUR,
+  HANDOFF_PER_IP_DAY,
+  HANDOFF_PER_IP_HOUR,
+  allow,
+  noteCapReached,
+} from './rate-limit';
 import { acknowledgementEmail, notificationEmail } from '@/lib/emails';
 import { TEAM_INBOX } from './alerts';
 
@@ -60,6 +71,8 @@ When record_enquiry succeeds, tell them plainly that it is with the team, that t
 export type AssistantContext = {
   conversationId: string;
   ip: string | null;
+  /** The enquiry an earlier, finished thread produced, for a new one to name. */
+  previous?: PreviousEnquiry | null;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -76,111 +89,153 @@ const SERVICE_LINES: ServiceLine[] = [
 ];
 
 /**
+ * What the model is told after it tries to pass a chat on. Each says exactly
+ * what happened, so the reply cannot promise a confirmation email that was
+ * never sent.
+ */
+export const HANDOFF_RESULTS = {
+  sentWithConfirmation:
+    'Sent. The team has it, and a confirmation email went to their address. Tell them both, and that a person replies by email, usually within a working day.',
+  sentWithoutConfirmation:
+    'Sent. The team has it. No confirmation email was sent, so do not mention one. Tell them it is with the team and that a person replies by email, usually within a working day.',
+  appended:
+    'Added to the enquiry they already sent, and the team has been told. Tell them it has been added.',
+  noName: 'No name yet. Ask what to call them, then try again.',
+  badEmail: 'That is not a usable email address. Ask for it again.',
+  thin: 'Write a fuller subject and summary before sending this on.',
+  limited:
+    'Not sent: there have been too many from this address in the last hour. Tell them it did not go through and to email info@ubunifutech.com.',
+  failed:
+    'Not sent: something went wrong on our side. Tell them it did not go through and to email info@ubunifutech.com.',
+} as const;
+
+type EnquiryInput = {
+  name: string;
+  email: string;
+  subject: string;
+  summary: string;
+  serviceLine: ServiceLine | null;
+};
+
+/**
+ * The tool's input, checked. Everything in it came from a stranger by way of
+ * a model, and neither is a reason to trust it. Pure, so the checks can be
+ * tested without the model.
+ */
+export function validateEnquiryInput(
+  input: unknown,
+): { ok: true; value: EnquiryInput } | { ok: false; result: string } {
+  const raw = (input ?? {}) as Record<string, unknown>;
+  const text = (value: unknown, max: number) =>
+    typeof value === 'string' ? value.trim().slice(0, max) : '';
+  const name = text(raw.name, 120);
+  const email = text(raw.email, 254).toLowerCase();
+  const subject = text(raw.subject, 160);
+  const summary = text(raw.summary, 5000);
+
+  if (name.length < 2) return { ok: false, result: HANDOFF_RESULTS.noName };
+  if (!EMAIL_PATTERN.test(email)) return { ok: false, result: HANDOFF_RESULTS.badEmail };
+  if (subject.length < 4 || summary.length < 20) return { ok: false, result: HANDOFF_RESULTS.thin };
+
+  const serviceLine =
+    typeof raw.service_line === 'string' && SERVICE_LINES.includes(raw.service_line as ServiceLine)
+      ? (raw.service_line as ServiceLine)
+      : null;
+  return { ok: true, value: { name, email, subject, summary, serviceLine } };
+}
+
+/**
+ * Whether this address and this email may hand another chat to the team. The
+ * same limits for the tool and the "Talk to a person" form: without them the
+ * chat could be steered into sending our confirmation to a list of strangers.
+ */
+export async function mayHandOff(ip: string | null, email: string): Promise<boolean> {
+  const [hour, day, byEmail] = await Promise.all([
+    allow('site-handoff:ip', ip, HANDOFF_PER_IP_HOUR),
+    allow('site-handoff:ip-day', ip, HANDOFF_PER_IP_DAY),
+    allow('site-handoff:email', email, HANDOFF_PER_EMAIL_HOUR),
+  ]);
+  return hour && day && byEmail;
+}
+
+/**
  * The one thing the assistant can do to the world.
  *
  * It writes an ordinary Enquiry (the same row the website contact form writes,
  * landing in the same triage queue) and links it to the conversation, so staff
- * can read exactly what was said before deciding what to do. It is idempotent
- * per conversation: a second call updates the first enquiry rather than opening
- * another, because a visitor who rephrases themselves is not a second lead.
+ * can read exactly what was said before deciding what to do. Called again in
+ * the same thread, it adds to that enquiry rather than opening another.
  */
 export const recordEnquiryTool: AgentTool<AssistantContext> = {
   name: 'record_enquiry',
   description:
-    'Pass this conversation to a person at Ubunifu. Use it when the visitor has a real need, wants somebody to get in touch, or has said enough that a person should read it. Calling it again updates what you already sent rather than sending a second one.',
+    'Pass this conversation to a person at Ubunifu as an enquiry. The team gets an email with your summary and can read the whole chat. Use it when the visitor has a project or wants to discuss one, wants a price or a proposal, wants someone to contact them, needs help you cannot give, or asks for a person. You need their name, their email and a summary. Calling it again after it has gone through adds the new detail to the same enquiry.',
   inputSchema: {
     type: 'object',
     properties: {
-      name: { type: 'string', description: 'The visitor’s name, as they gave it.' },
+      name: { type: 'string', description: 'Their name, as they gave it.' },
       email: { type: 'string', description: 'Their email address, as they gave it.' },
       subject: {
         type: 'string',
-        description: 'A short line naming what they need, e.g. "Booking site for a safari company".',
+        description:
+          'A short line naming what they need, under 80 characters, such as "Booking site for a safari company".',
       },
       summary: {
         type: 'string',
         description:
-          'What they actually need, in your own words, including anything they said about timing, budget or what they have already. Write it for a colleague who has not read the conversation.',
+          'What they need, in your own words, for a colleague who has not read the chat: who they are, what they want, and anything about timing, budget, what they already have or which product it concerns. Plain sentences with no formatting.',
       },
       service_line: {
         type: 'string',
         enum: SERVICE_LINES,
-        description: 'Your best guess at which service line this is. Use "other" if unsure.',
+        description:
+          'Your best guess at the service line. Use product for anything about Insight, Sifa or Rafiki, and other if unsure.',
       },
     },
     required: ['name', 'email', 'subject', 'summary'],
   },
   run: async (input, context) => {
-    const {
-      name,
-      email,
-      subject,
-      summary,
-      service_line: serviceLine,
-    } = (input ?? {}) as Record<string, unknown>;
+    const checked = validateEnquiryInput(input);
+    if (!checked.ok) return { result: checked.result, done: false };
+    const { value } = checked;
 
-    // Re-validated here, because everything above came from a stranger by way
-    // of a model and neither is a reason to trust it.
-    const cleanName = typeof name === 'string' ? name.trim().slice(0, 120) : '';
-    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase().slice(0, 254) : '';
-    const cleanSubject = typeof subject === 'string' ? subject.trim().slice(0, 160) : '';
-    const cleanSummary = typeof summary === 'string' ? summary.trim().slice(0, 5000) : '';
-
-    if (cleanName.length < 2) {
-      return { result: 'No name yet. Ask them what to call them, then try again.', done: false };
-    }
-    if (!EMAIL_PATTERN.test(cleanEmail)) {
-      return { result: 'That is not a usable email address. Ask them for it again.', done: false };
-    }
-    if (cleanSubject.length < 4 || cleanSummary.length < 20) {
-      return {
-        result: 'Write a fuller subject and summary before sending this on.',
-        done: false,
-      };
+    if (!(await mayHandOff(context.ip, value.email))) {
+      return { result: HANDOFF_RESULTS.limited, done: false };
     }
 
-    const guessed =
-      typeof serviceLine === 'string' && SERVICE_LINES.includes(serviceLine as ServiceLine)
-        ? (serviceLine as ServiceLine)
-        : null;
-
-    // The same limits as the "Talk to a person" form. Without them the chat
-    // could be steered into sending our acknowledgement to a list of strangers.
-    const [byAddress, byEmail] = await Promise.all([
-      allow('site-handoff:ip', context.ip, { limit: 5, windowMinutes: 60 }),
-      allow('site-handoff:email', cleanEmail, { limit: 3, windowMinutes: 60 }),
-    ]);
-    if (!byAddress || !byEmail) {
+    try {
+      const outcome = await passToTeam({
+        conversationId: context.conversationId,
+        name: value.name,
+        email: value.email,
+        subject: value.subject,
+        details: value.summary,
+        serviceLine: value.serviceLine,
+        ip: context.ip,
+        previous: context.previous ?? null,
+      });
       return {
         result:
-          'Not sent: too many in the last hour. Tell them it could not go through right now and to email info@ubunifutech.com.',
-        done: false,
+          outcome.outcome === 'appended'
+            ? HANDOFF_RESULTS.appended
+            : outcome.acknowledged
+              ? HANDOFF_RESULTS.sentWithConfirmation
+              : HANDOFF_RESULTS.sentWithoutConfirmation,
+        meta: {
+          enquiryId: outcome.enquiryId,
+          outcome: outcome.outcome,
+          acknowledged: outcome.acknowledged,
+        } satisfies Prisma.InputJsonValue,
       };
+    } catch (error) {
+      console.error('Passing the chat to the team failed', error);
+      return { result: HANDOFF_RESULTS.failed, done: false };
     }
-
-    const outcome = await passToTeam({
-      conversationId: context.conversationId,
-      name: cleanName,
-      email: cleanEmail,
-      subject: cleanSubject,
-      details: cleanSummary,
-      serviceLine: guessed,
-      ip: context.ip,
-    });
-
-    return outcome.updated
-      ? {
-          result:
-            'Updated what was already with the team. Tell them it is with a person and somebody replies within a working day.',
-          meta: { enquiryId: outcome.enquiryId, updated: true } satisfies Prisma.InputJsonValue,
-        }
-      : {
-          result:
-            'Sent. Tell them plainly that it is with the team, that a confirmation email is on its way, and that a person replies within a working day.',
-          meta: { enquiryId: outcome.enquiryId, updated: false } satisfies Prisma.InputJsonValue,
-        };
   },
 };
+
+/** An enquiry the team is still working through, which a follow-up may add to. */
+const LINKABLE: EnquiryStatus[] = ['new', 'triaged', 'in_conversation', 'qualified'];
 
 /**
  * Hands a website conversation to the team: an Enquiry in the triage queue,
@@ -188,9 +243,13 @@ export const recordEnquiryTool: AgentTool<AssistantContext> = {
  * confirmation to the visitor. Used by the assistant's tool and by the
  * "Talk to a person" form, which needs no model at all.
  *
- * Once per conversation. A second hand-off updates the first enquiry, because
- * somebody who rephrases themselves is not a second lead, unless staff have
- * removed that enquiry, in which case it starts a new one.
+ * A second hand-off in the same thread adds to the first enquiry, dated,
+ * while the team is still working through it. Nothing already said is
+ * overwritten, and an enquiry the team has settled or removed is never
+ * touched: the thread has been started afresh by then, so this is a new one.
+ *
+ * Reports what actually happened, so nothing downstream claims an email
+ * that did not go.
  */
 export async function passToTeam(input: {
   conversationId: string | null;
@@ -200,7 +259,13 @@ export async function passToTeam(input: {
   details: string;
   serviceLine?: ServiceLine | null;
   ip: string | null;
-}): Promise<{ enquiryId: string; updated: boolean }> {
+  previous?: PreviousEnquiry | null;
+}): Promise<{
+  enquiryId: string;
+  outcome: 'created' | 'appended';
+  acknowledged: boolean;
+  teamAlerted: boolean;
+}> {
   const conversation = input.conversationId
     ? await db.conversation.findUnique({
         where: { id: input.conversationId },
@@ -208,38 +273,65 @@ export async function passToTeam(input: {
       })
     : null;
 
-  const message = `${input.details}\n\n(From the website chat.)`;
-
-  // Only a live enquiry takes the update. If staff removed the first one, nobody
-  // would ever see the rewrite, so this is a fresh lead: a new enquiry, a new
-  // alert to the team, and a confirmation the visitor can trust.
   const linked = conversation?.enquiryId
     ? await db.enquiry.findFirst({
-        where: { id: conversation.enquiryId, deletedAt: null },
-        select: { id: true },
+        where: { id: conversation.enquiryId, deletedAt: null, status: { in: LINKABLE } },
+        select: { id: true, name: true, email: true, subject: true, message: true, status: true, serviceLine: true },
       })
     : null;
 
   if (linked) {
+    const today = formatDate(parseDateInput(todayInput())!);
+    const details = input.details.slice(0, 5000);
+    const otherEmail =
+      input.email !== linked.email ? `\nAlso gave the email ${input.email}.` : '';
     await db.enquiry.update({
       where: { id: linked.id },
       data: {
-        name: input.name,
-        email: input.email,
-        subject: input.subject,
-        message,
-        ...(input.serviceLine ? { serviceLine: input.serviceLine } : {}),
+        message: `${linked.message}\n\nAdded from the website chat on ${today}:\n${details}${otherEmail}`,
+        ...(linked.serviceLine === null && input.serviceLine ? { serviceLine: input.serviceLine } : {}),
+        // Looked at already, but there is something new to look at.
+        ...(linked.status === 'triaged' ? { status: 'new' as const } : {}),
       },
     });
-    return { enquiryId: linked.id, updated: true };
+
+    const alert = await sendConsoleEmail({
+      to: TEAM_INBOX,
+      subject: `[Website chat] ${linked.name} added to their enquiry`,
+      html: notificationEmail({
+        name: linked.name,
+        email: linked.email,
+        subject: linked.subject,
+        message: details,
+        via: 'the website chat',
+        consoleUrl: `${consoleEnv.adminOrigin}/enquiries/${linked.id}`,
+        followUp: true,
+      }),
+      template: 'assistant_enquiry_update',
+      replyTo: linked.email,
+      entityType: 'Enquiry',
+      entityId: linked.id,
+      idempotencyKey: `assistant-followup-${linked.id}-${createHash('sha256').update(details).digest('hex').slice(0, 16)}`,
+    });
+    await recordAudit({
+      actorType: 'system',
+      action: 'enquiry.followed_up',
+      entityType: 'Enquiry',
+      entityId: linked.id,
+      summary: `${linked.name} added to their enquiry from the chat. Team alert ${alert.ok ? 'sent' : 'not sent'}.`,
+    });
+    return { enquiryId: linked.id, outcome: 'appended', acknowledged: false, teamAlerted: alert.ok };
   }
 
+  const earlier = input.previous
+    ? `\n\nFollows an earlier enquiry from the chat: ${input.previous.subject.replace(/[\s.]+$/, '')}, ${formatDate(input.previous.createdAt)}.`
+    : '';
   const enquiry = await db.enquiry.create({
     data: {
       name: input.name,
       email: input.email,
       subject: input.subject,
-      message,
+      message: `${input.details}\n\n(From the website chat.)${earlier}`,
       serviceLine: input.serviceLine ?? null,
       source: 'website_assistant',
       ip: input.ip,
@@ -258,7 +350,15 @@ export async function passToTeam(input: {
   // outage delays the alert but never loses the lead. The visitor's reply
   // shares the site's daily ceiling with the contact form's.
   const mayReply = await allow('acknowledgement', 'site', ACKNOWLEDGEMENTS_PER_DAY);
-  await Promise.all([
+  if (!mayReply) {
+    await noteCapReached(
+      'acknowledgement',
+      'acknowledgement.cap_reached',
+      'The daily limit on confirmation emails was reached. Later senders today get no confirmation email.',
+      24 * 60,
+    );
+  }
+  const [alert, reply] = await Promise.allSettled([
     sendConsoleEmail({
       to: TEAM_INBOX,
       subject: `[Website chat] ${input.subject} from ${input.name}`,
@@ -277,19 +377,27 @@ export async function passToTeam(input: {
       entityId: enquiry.id,
       idempotencyKey: `assistant-notify-${enquiry.id}`,
     }),
-    mayReply &&
-      sendConsoleEmail({
-        to: input.email,
-        subject: 'Thanks for reaching out | Ubunifu Technologies',
-        html: acknowledgementEmail(),
-        template: 'assistant_acknowledgement',
-        entityType: 'Enquiry',
-        entityId: enquiry.id,
-        idempotencyKey: `assistant-ack-${enquiry.id}`,
-      }),
+    mayReply
+      ? sendConsoleEmail({
+          to: input.email,
+          subject: 'Thanks for reaching out | Ubunifu Technologies',
+          html: acknowledgementEmail(),
+          template: 'assistant_acknowledgement',
+          entityType: 'Enquiry',
+          entityId: enquiry.id,
+          idempotencyKey: `assistant-ack-${enquiry.id}`,
+        })
+      : Promise.resolve(null),
   ]);
+  const accepted = (result: PromiseSettledResult<{ ok: boolean } | null>) =>
+    result.status === 'fulfilled' && result.value?.ok === true;
 
-  return { enquiryId: enquiry.id, updated: false };
+  return {
+    enquiryId: enquiry.id,
+    outcome: 'created',
+    acknowledged: accepted(reply),
+    teamAlerted: accepted(alert),
+  };
 }
 
 export const EMAIL_OK = EMAIL_PATTERN;

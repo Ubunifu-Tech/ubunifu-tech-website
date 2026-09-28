@@ -81,6 +81,7 @@ const ACTION_LABELS = {
   'staff.sign_out': 'Signed out',
   'enquiry.status_changed': 'Enquiry updated',
   'enquiry.note_saved': 'Note added to an enquiry',
+  'enquiry.followed_up': 'Enquiry added to from the chat',
   'project.status_changed': 'Project moved',
   'line_item.created': 'Fee added',
   'line_item.saved': 'Fee updated',

@@ -12,7 +12,6 @@
  *   · the first column identifies the row and is the link into it
  *   · actions sit in the last column, right-aligned, and are always reachable
  *     by keyboard — not revealed on hover only
- *   · the header stays put when the body scrolls
  */
 
 .frame {
@@ -239,9 +238,6 @@
 }
 
 .th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   padding: 0.75rem var(--space-4);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -428,6 +424,20 @@
   color: var(--text-tertiary);
   font-size: var(--font-size-small);
   line-height: 1.6;
+}
+
+/* On a phone the table is wider than the screen, so the message is pinned to
+   the left of the visible area instead of centred off to the right. */
+@media (max-width: 48rem) {
+  .emptyCell {
+    text-align: left;
+  }
+
+  .emptyCell > * {
+    position: sticky;
+    left: var(--space-5);
+    max-width: calc(100vw - 7rem);
+  }
 }
 
 .footer {

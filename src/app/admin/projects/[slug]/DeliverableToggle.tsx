@@ -1,25 +1,29 @@
 'use client';
 
-import { useActionState, useRef } from 'react';
-import { toggleDeliverable, type EditState } from './actions';
+import { useRef } from 'react';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 
-const INITIAL: EditState = { status: 'idle' };
-
+/**
+ * The tick box. Its action state lives with the task row, which says why a
+ * tick was refused under the task alongside its other problems.
+ */
 export function DeliverableToggle({
   id,
   title,
   complete,
+  action,
+  pending,
   disabled = false,
 }: {
   id: string;
   title: string;
   complete: boolean;
+  action: (formData: FormData) => void;
+  pending: boolean;
   /** Shown but not tickable, for someone who neither runs projects nor holds the task. */
   disabled?: boolean;
 }) {
-  const [, action, pending] = useActionState(toggleDeliverable, INITIAL);
   const form = useRef<HTMLFormElement>(null);
 
   return (

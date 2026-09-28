@@ -5,11 +5,13 @@ import { Select, type SelectOption } from '@/components/console/Select';
 import { DatePicker } from '@/components/console/DatePicker';
 import { DeliverableToggle } from './DeliverableToggle';
 import { assignTask, setTaskDue, type AssignState } from './assign-actions';
+import { toggleDeliverable, type EditState } from './actions';
 import { removeTask } from './plan-actions';
 import { RemoveConfirm, RenameTask, RowTools } from './PlanEditor';
 import styles from './TaskRow.module.css';
 
 const INITIAL: AssignState = { status: 'idle' };
+const TICK_INITIAL: EditState = { status: 'idle' };
 
 /** One task: done or not, when it is due, and who is doing it. */
 export function TaskRow({
@@ -39,11 +41,17 @@ export function TaskRow({
   /** The viewer holds this task, so they can tick it done either way. */
   mine?: boolean;
 }) {
+  const [tickState, tick, ticking] = useActionState(toggleDeliverable, TICK_INITIAL);
   const [assignState, assign] = useActionState(assignTask, INITIAL);
   const [dueState, due] = useActionState(setTaskDue, INITIAL);
   const [mode, setMode] = useState<'view' | 'rename' | 'remove'>('view');
   const dueForm = useRef<HTMLFormElement>(null);
-  const problem = assignState.status === 'error' ? assignState.message : dueState.message;
+  const problem =
+    tickState.status === 'error'
+      ? tickState.message
+      : assignState.status === 'error'
+        ? assignState.message
+        : dueState.message;
 
   if (mode === 'rename') {
     return (
@@ -76,10 +84,16 @@ export function TaskRow({
           id={id}
           title={title}
           complete={complete}
+          action={tick}
+          pending={ticking}
           disabled={!editable && !mine}
         />
         {teamOnly && <span className={styles.teamOnly}>Team only</span>}
-        {problem && <p className={styles.problem}>{problem}</p>}
+        {problem && (
+          <p className={styles.problem} role="alert">
+            {problem}
+          </p>
+        )}
       </div>
       <form action={due} ref={dueForm} className={styles.due}>
         <input type="hidden" name="deliverableId" value={id} />

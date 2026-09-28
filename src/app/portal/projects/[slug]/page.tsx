@@ -19,6 +19,7 @@ import {
 import { UploadBox } from './UploadBox';
 import { AnswerBox } from './AnswerBox';
 import { ItemOwner } from './ItemOwner';
+import { RemoveFile } from './RemoveFile';
 import { BrandKitView } from '@/components/console/BrandKitView';
 import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
 import { ReviewAnswer } from './ReviewAnswer';
@@ -392,6 +393,7 @@ export default async function PortalProject({
                               <span className={styles.fileMeta}>
                                 {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
                               </span>
+                              <RemoveFile fileId={file.id} filename={file.filename} />
                             </li>
                           ))}
                         </ul>

@@ -76,6 +76,43 @@
   color: var(--text-tertiary);
 }
 
+/* A file and the cross that takes it off, kept on one line. */
+.fileLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* The row's icon buttons (Admin.module.css .iconAction), a size down to sit
+   beside a caption-sized file name. */
+.fileRemove {
+  display: inline-flex;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.fileRemove:hover {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+.fileRemove:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .status {
   min-width: 0;
 }

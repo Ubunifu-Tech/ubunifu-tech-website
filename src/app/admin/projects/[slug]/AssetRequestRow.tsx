@@ -1,10 +1,10 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, X } from 'lucide-react';
 import { setAssetRequestStatus, type EditState } from './actions';
 import { assignClientItem, type AssignState } from './assign-actions';
-import { removeAssetRequest } from './plan-actions';
+import { removeAssetFile, removeAssetRequest } from './plan-actions';
 import { EditAssetRequest, RemoveConfirm, RowTools } from './PlanEditor';
 import { Select, type SelectOption } from '@/components/console/Select';
 import forms from '@/styles/forms.module.css';
@@ -51,6 +51,7 @@ export function AssetRequestRow({
   const [state, action, pending] = useActionState(setAssetRequestStatus, INITIAL);
   const [assignState, assign] = useActionState(assignClientItem, { status: 'idle' } as AssignState);
   const [mode, setMode] = useState<'view' | 'edit' | 'remove'>('view');
+  const [removingFile, setRemovingFile] = useState<{ id: string; filename: string } | null>(null);
   // What they already sent stays attached, so an answered request is set aside
   // rather than removed.
   const answered = files.length > 0 || Boolean(response);
@@ -90,6 +91,22 @@ export function AssetRequestRow({
     );
   }
 
+  if (removingFile) {
+    return (
+      <div className={styles.row}>
+        <div className={styles.wide}>
+          <RemoveConfirm
+            question={`Take ${removingFile.filename} off "${title}"? It goes from the client's portal too.`}
+            action={removeAssetFile}
+            hidden={{ fileId: removingFile.id }}
+            onCancel={() => setRemovingFile(null)}
+            onDone={() => setRemovingFile(null)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.row}>
       <div className={styles.text}>
@@ -108,19 +125,31 @@ export function AssetRequestRow({
         {files.length > 0 && (
           <span className={styles.files}>
             {files.map((file) => (
-              <a
-                key={file.id}
-                href={`/files/${file.id}`}
-                className={styles.file}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Paperclip size={13} strokeWidth={2} aria-hidden="true" />
-                {file.filename}
-                <span className={styles.fileMeta}>
-                  {file.size} · {file.when}
-                </span>
-              </a>
+              <span key={file.id} className={styles.fileLine}>
+                <a
+                  href={`/files/${file.id}`}
+                  className={styles.file}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Paperclip size={13} strokeWidth={2} aria-hidden="true" />
+                  {file.filename}
+                  <span className={styles.fileMeta}>
+                    {file.size} · {file.when}
+                  </span>
+                </a>
+                {editable && (
+                  <button
+                    type="button"
+                    className={styles.fileRemove}
+                    onClick={() => setRemovingFile({ id: file.id, filename: file.filename })}
+                    aria-label={`Remove ${file.filename}`}
+                    title="Remove"
+                  >
+                    <X size={13} strokeWidth={2} aria-hidden="true" />
+                  </button>
+                )}
+              </span>
             ))}
           </span>
         )}

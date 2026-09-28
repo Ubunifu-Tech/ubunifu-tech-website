@@ -201,6 +201,74 @@ export async function recordAssetUpload(input: {
 }
 
 /**
+ * Takes a file off the item it was sent for: the client sent the wrong one,
+ * or staff were sent something that should not be kept.
+ *
+ * The row is marked removed rather than deleted, so the audit line still has
+ * something to point at, and both file routes already refuse a removed row.
+ * The bytes are deleted from the store. With clientId, only a file on that
+ * client's own projects matches, so a posted id from anywhere else finds
+ * nothing. Null means there was nothing (left) to remove.
+ */
+export async function removeAssetUpload({
+  fileId,
+  actor,
+  clientId,
+}: {
+  fileId: string;
+  actor: UploadActor;
+  clientId?: string;
+}): Promise<{ slug: string } | null> {
+  const file = await db.fileUpload.findFirst({
+    where: {
+      id: fileId,
+      deletedAt: null,
+      assetRequest: {
+        is: { project: { deletedAt: null, ...(clientId ? { clientId } : {}) } },
+      },
+    },
+    select: {
+      storageKey: true,
+      filename: true,
+      assetRequestId: true,
+      assetRequest: { select: { title: true, project: { select: { slug: true } } } },
+    },
+  });
+  if (!file?.assetRequestId || !file.assetRequest) return null;
+
+  // Two presses at once remove it once, with one audit line.
+  const taken = await db.fileUpload.updateMany({
+    where: { id: fileId, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (taken.count === 0) return null;
+
+  // A received item left with no file and no written answer goes back to
+  // waiting. One set aside or on hold stays where it is.
+  await db.assetRequest.updateMany({
+    where: {
+      id: file.assetRequestId,
+      status: 'received',
+      response: null,
+      uploads: { none: { deletedAt: null } },
+    },
+    data: { status: 'requested', receivedAt: null },
+  });
+
+  await recordAudit({
+    actorType: actor.type,
+    actorId: actor.id,
+    action: 'asset.removed',
+    entityType: 'AssetRequest',
+    entityId: file.assetRequestId,
+    summary: `${file.filename} taken off "${file.assetRequest.title}"`,
+  });
+
+  await deleteStoredFiles([file.storageKey]);
+  return { slug: file.assetRequest.project.slug };
+}
+
+/**
  * Types a browser may RENDER rather than download.
  *
  * A receipt or a signed contract should open when you click it — being made to

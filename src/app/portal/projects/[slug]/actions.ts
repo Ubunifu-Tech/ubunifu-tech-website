@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getClientActor, requireClient, recordAudit } from '@/lib/console/auth';
-import { recordAssetUpload } from '@/lib/console/uploads';
+import { recordAssetUpload, removeAssetUpload } from '@/lib/console/uploads';
 import { alertClientSent } from '@/lib/console/alerts';
 
 export type UploadState = { status: 'idle' | 'done' | 'error'; message?: string };
@@ -65,6 +65,25 @@ export async function confirmUpload(
   revalidatePath(`/portal/projects/${assetRequest.project.slug}`);
   revalidatePath(`/admin/projects/${assetRequest.project.slug}`);
   return { status: 'done', message: 'Got it, thank you.' };
+}
+
+/**
+ * Takes back a file sent by mistake. Any signed-in person at the client may,
+ * not only whoever sent it: they share the checklist, and the wrong file is
+ * the client's to withdraw. Scoped to their own client inside the lookup.
+ */
+export async function removeMyFile(_previous: UploadState, formData: FormData): Promise<UploadState> {
+  const actor = await requireClient();
+  const removed = await removeAssetUpload({
+    fileId: String(formData.get('fileId') ?? ''),
+    actor: { type: 'client_contact', id: actor.id },
+    clientId: actor.clientId,
+  });
+  if (!removed) return { status: 'error', message: 'That file is already gone.' };
+
+  revalidatePath(`/portal/projects/${removed.slug}`);
+  revalidatePath(`/admin/projects/${removed.slug}`);
+  return { status: 'done' };
 }
 
 export type AssignItemState = { status: 'idle' | 'done' | 'error'; message?: string };

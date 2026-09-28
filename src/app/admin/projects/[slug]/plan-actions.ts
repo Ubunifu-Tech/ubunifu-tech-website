@@ -9,7 +9,7 @@ import { formText } from '@/lib/console/form';
 import { parseDateInput } from '@/lib/console/money';
 import { isCurrency } from '@/lib/console/currencies';
 import { consoleEnv } from '@/lib/console/env';
-import { uploadsConfigured } from '@/lib/console/uploads';
+import { deleteStoredFiles, removeAssetUpload, uploadsConfigured } from '@/lib/console/uploads';
 import { waitingOnClient } from '@/lib/console/live';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { itemsNeededEmail } from '@/lib/emails';
@@ -612,7 +612,8 @@ export async function removeAssetRequest(
       title: true,
       response: true,
       project: { select: { id: true, slug: true } },
-      _count: { select: { uploads: true } },
+      // A file that was taken off no longer counts as something they sent.
+      _count: { select: { uploads: { where: { deletedAt: null } } } },
     },
   });
   if (!request) return { status: 'error', message: 'That request no longer exists.' };
@@ -621,7 +622,14 @@ export async function removeAssetRequest(
   if (answered) {
     await db.assetRequest.update({ where: { id: request.id }, data: { status: 'waived' } });
   } else {
+    // The delete takes the rows of files already taken off with it, so their
+    // bytes go from the store too, once the rows are gone.
+    const removed = await db.fileUpload.findMany({
+      where: { assetRequestId: request.id },
+      select: { storageKey: true },
+    });
     await db.assetRequest.delete({ where: { id: request.id } });
+    await deleteStoredFiles(removed.map((file) => file.storageKey));
   }
   await recordAudit({
     actorType: 'staff',
@@ -633,5 +641,23 @@ export async function removeAssetRequest(
     metadata: { assetRequestId: request.id },
   });
   refresh(request.project.slug);
+  return { status: 'done' };
+}
+
+/**
+ * Takes a file the client sent off its item, for a file that should not be
+ * kept. The client can do the same from their portal.
+ */
+export async function removeAssetFile(_previous: PlanState, formData: FormData): Promise<PlanState> {
+  const staff = await allowed();
+  if (!staff) return { status: 'error', message: NO_PERMISSION };
+
+  const removed = await removeAssetUpload({
+    fileId: formText(formData, 'fileId'),
+    actor: { type: 'staff', id: staff.id },
+  });
+  if (!removed) return { status: 'error', message: 'That file is already gone.' };
+
+  refresh(removed.slug);
   return { status: 'done' };
 }

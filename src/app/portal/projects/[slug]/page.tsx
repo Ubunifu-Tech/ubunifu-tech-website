@@ -449,7 +449,7 @@ export default async function PortalProject({
               <p className={styles.note}>
                 {canUpload
                   ? 'Write your answer or attach a file on each item. They land against the right one.'
-                  : 'Write your answer on each item, or send files by email. We tick them off as they arrive.'}
+                  : `Write your answer on each item, or email files to ${org.email}. We tick them off as they arrive.`}
               </p>
             </section>
           )}

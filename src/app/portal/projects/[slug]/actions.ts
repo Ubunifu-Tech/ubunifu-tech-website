@@ -56,10 +56,31 @@ export async function confirmUpload(
     if (error instanceof Error && error.message === 'upload-too-large') {
       return { status: 'error', message: 'That file is larger than we can take here.' };
     }
-    // A URL the store does not know about, most often — the upload did not
-    // finish, whatever the browser thinks.
     console.error('[uploads] could not record', error);
-    return { status: 'error', message: 'That did not arrive. Try it again?' };
+    // The row may be there even so: a step after it (the checklist or the
+    // audit line) failed. Then the file is safe, and asking the client to
+    // send it again would only make a second copy.
+    const recorded = await db.fileUpload
+      .findFirst({
+        where: { storageKey: blobUrl, assetRequestId: assetRequest.id, deletedAt: null },
+        select: { id: true },
+      })
+      .catch(() => null);
+    if (recorded) {
+      revalidatePath(`/portal/projects/${assetRequest.project.slug}`);
+      revalidatePath(`/admin/projects/${assetRequest.project.slug}`);
+      return { status: 'done', message: 'Got it, thank you.' };
+    }
+    // Only when the store says it has no such file, or it is not under this
+    // item, did the upload really not arrive.
+    const reason = error instanceof Error ? error.message : '';
+    if (reason === 'upload-missing' || reason === 'upload-not-ours') {
+      return { status: 'error', message: 'That did not arrive. Try it again?' };
+    }
+    return {
+      status: 'error',
+      message: 'We could not check that one. Refresh the page before sending it again.',
+    };
   }
 
   revalidatePath(`/portal/projects/${assetRequest.project.slug}`);

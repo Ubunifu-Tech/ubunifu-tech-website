@@ -1,5 +1,5 @@
 import 'server-only';
-import { del, head, get } from '@vercel/blob';
+import { BlobNotFoundError, del, head, get } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
 import type { ActorType } from '@/generated/prisma/client';
@@ -122,7 +122,16 @@ export async function recordAssetUpload(input: {
 
   // Not the client's numbers: the store's. A browser can claim any size and
   // any type it likes, and the only thing that knows the truth is the store.
-  const meta = await head(input.blobUrl);
+  // A URL the store has never heard of means the upload did not finish; any
+  // other failure is the store being unreachable, which says nothing about
+  // whether the file arrived.
+  let meta: Awaited<ReturnType<typeof head>>;
+  try {
+    meta = await head(input.blobUrl);
+  } catch (error) {
+    if (error instanceof BlobNotFoundError) throw new Error('upload-missing');
+    throw error;
+  }
 
   if (meta.size > MAX_UPLOAD_BYTES) {
     throw new Error('upload-too-large');

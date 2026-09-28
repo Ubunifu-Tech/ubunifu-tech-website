@@ -25,6 +25,9 @@ export function ActivateForm({
   const [name, setName] = useState(defaultName);
   const [typedEmail, setTypedEmail] = useState('');
   const [phone, setPhone] = useState(defaultPhone);
+  // Without an address yet, this step only sends a link to confirm the one
+  // they type. The password comes after, once that link is opened.
+  const confirming = email === null;
 
   return (
     <form action={action} className={forms.form}>
@@ -93,51 +96,66 @@ export function ActivateForm({
           />
         </div>
 
-        <div className={forms.field}>
-          <label htmlFor="password" className={forms.label}>
-            Choose a password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={12}
-            disabled={pending}
-            className={forms.control}
-          />
-        </div>
+        {!confirming && (
+          <>
+            <div className={forms.field}>
+              <label htmlFor="password" className={forms.label}>
+                Choose a password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={12}
+                disabled={pending}
+                className={forms.control}
+              />
+            </div>
 
-        <div className={forms.field}>
-          <label htmlFor="confirm" className={forms.label}>
-            Confirm password
-          </label>
-          <input
-            id="confirm"
-            name="confirm"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={12}
-            disabled={pending}
-            className={forms.control}
-          />
-        </div>
+            <div className={forms.field}>
+              <label htmlFor="confirm" className={forms.label}>
+                Confirm password
+              </label>
+              <input
+                id="confirm"
+                name="confirm"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={12}
+                disabled={pending}
+                className={forms.control}
+              />
+            </div>
 
-        <p className={`${forms.hint} ${forms.wide}`}>
-          At least 12 characters.
-        </p>
+            <p className={`${forms.hint} ${forms.wide}`}>
+              At least 12 characters.
+            </p>
+          </>
+        )}
       </div>
 
       <div className={forms.actions}>
         <button type="submit" className={forms.button} disabled={pending}>
-          {pending ? 'Setting up…' : 'Finish setting up'}
+          {confirming
+            ? pending
+              ? 'Sending…'
+              : 'Email me a link'
+            : pending
+              ? 'Setting up…'
+              : 'Finish setting up'}
         </button>
       </div>
 
       {state.status === 'error' && (
         <p className={forms.error} role="status" aria-live="polite">
+          {state.message}
+        </p>
+      )}
+      {state.status === 'sent' && (
+        <p className={forms.hint} role="status" aria-live="polite">
           {state.message}
         </p>
       )}

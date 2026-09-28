@@ -8,6 +8,7 @@ import { createSession, readSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
 import { CLIENT_LINKS, afterDeadLink, landingFor } from '@/lib/console/client-links';
 import { allow, requestIp } from '@/lib/console/rate-limit';
+import { claimConfirmedEmail } from '@/lib/console/contacts';
 
 /**
  * Uses a client's link and starts a portal session.
@@ -50,6 +51,7 @@ export async function continueWithLink(formData: FormData): Promise<void> {
     select: {
       id: true,
       clientId: true,
+      email: true,
       canSignIn: true,
       deletedAt: true,
       activatedAt: true,
@@ -84,6 +86,14 @@ export async function continueWithLink(formData: FormData): Promise<void> {
     redirect('/portal/sign-in?error=set-up');
   }
 
+  // A link sent to confirm an address typed at setup: opening it from that
+  // inbox is the proof, so the address becomes the account's now. They are
+  // signed in either way, to finish setup or to give a different address.
+  const emailTaken =
+    claim.entityType === 'Email' && claim.entityId && !contact.email
+      ? !(await claimConfirmedEmail(contact.id, claim.entityId))
+      : false;
+
   // Someone else signed in on this browser is signed out by the new session,
   // as the Continue page warned. Their account's activity says so.
   const before = await readSession('portal');
@@ -114,6 +124,8 @@ export async function continueWithLink(formData: FormData): Promise<void> {
     entityType: 'ClientContact',
     entityId: contact.id,
   });
+
+  if (emailTaken) redirect('/portal/activate?email=taken');
 
   // Someone who has not set a password finishes that first, whatever the link
   // was for, and then lands where it pointed.

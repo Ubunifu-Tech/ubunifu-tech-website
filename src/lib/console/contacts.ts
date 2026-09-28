@@ -12,6 +12,7 @@ import {
   colleagueInviteEmail,
   passwordChangedEmail,
   passwordResetEmail,
+  setupEmailConfirmEmail,
   signInEmailChangedEmail,
 } from '@/lib/emails';
 import { isUniqueConflict } from './conflict';
@@ -98,6 +99,10 @@ type Actor =
  * address is one of our clients, which the sign-in page never does.
  */
 const EMAIL_NOT_USABLE = 'That email cannot be used here. Use a different one, or get in touch.';
+
+/** The same answer on setup, whether the address is held elsewhere or on this account. */
+export const SETUP_EMAIL_NOT_USABLE =
+  'That email cannot be used for this account. Use a different one, or get in touch.';
 
 /**
  * Adds a person, or brings back one who was removed, and sends them an
@@ -376,6 +381,109 @@ export async function sendSetupLinkAgain(contact: {
       : sent.error,
   });
   return sent;
+}
+
+/**
+ * Someone setting up from a link shared by hand gives their address here. It
+ * becomes the account's only when they open this link from that inbox, which
+ * is how every other address on an account was proved. Only the newest link
+ * counts: sending again, to fix a typo say, ends the one before.
+ */
+export async function sendSetupEmailConfirmation(input: {
+  contactId: string;
+  name: string;
+  clientName: string;
+  email: string;
+}) {
+  await db.magicToken.updateMany({
+    where: {
+      purpose: 'invite',
+      actorType: 'client_contact',
+      actorId: input.contactId,
+      entityType: 'Email',
+      usedAt: null,
+    },
+    data: { usedAt: new Date() },
+  });
+  // The address travels in the link rather than on the contact, so nothing
+  // is written to the account until the link is opened.
+  const { token } = await issueMagicToken({
+    purpose: 'invite',
+    actorType: 'client_contact',
+    actorId: input.contactId,
+    entityType: 'Email',
+    entityId: input.email,
+  });
+  const sent = await sendConsoleEmail({
+    to: input.email,
+    subject: 'Confirm your email for the Ubunifu portal',
+    html: setupEmailConfirmEmail({
+      name: input.name,
+      clientName: input.clientName,
+      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+    }),
+    template: 'setup_email_confirm',
+    entityType: 'ClientContact',
+    entityId: input.contactId,
+  });
+  await recordAudit({
+    actorType: 'client_contact',
+    actorId: input.contactId,
+    action: sent.ok ? 'client.setup_email.sent' : 'client.setup_email.send_failed',
+    entityType: 'ClientContact',
+    entityId: input.contactId,
+    summary: sent.ok ? `Sent to ${input.email}` : `Could not send to ${input.email}: ${sent.error}`,
+  });
+  return sent;
+}
+
+/**
+ * Makes a confirmed address the account's, once its link has been opened.
+ * Refused when someone else holds the address by now, or the account has an
+ * address already or is set up.
+ */
+export async function claimConfirmedEmail(contactId: string, email: string): Promise<boolean> {
+  const refused = async (summary: string) => {
+    await recordAudit({
+      actorType: 'client_contact',
+      actorId: contactId,
+      action: 'client.setup_email.refused',
+      entityType: 'ClientContact',
+      entityId: contactId,
+      summary,
+    });
+    return false;
+  };
+
+  const taken = await db.clientContact.findFirst({
+    where: { email, deletedAt: null, NOT: { id: contactId } },
+    select: { id: true },
+  });
+  if (taken) return refused(`${email} belongs to someone else`);
+
+  let claimed: number;
+  try {
+    const result = await db.clientContact.updateMany({
+      where: { id: contactId, email: null, activatedAt: null, deletedAt: null },
+      data: { email },
+    });
+    claimed = result.count;
+  } catch (error) {
+    // A removed contact on the same client still holds the address.
+    if (!isUniqueConflict(error)) throw error;
+    return refused(`${email} belongs to someone else`);
+  }
+  if (claimed !== 1) return refused(`${email} not saved: the account has an address already`);
+
+  await recordAudit({
+    actorType: 'client_contact',
+    actorId: contactId,
+    action: 'client.setup_email.confirmed',
+    entityType: 'ClientContact',
+    entityId: contactId,
+    summary: email,
+  });
+  return true;
 }
 
 /**

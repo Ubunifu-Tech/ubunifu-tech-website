@@ -370,6 +370,30 @@ export function clientInviteEmail(input: {
   return shell(`Set up your ${input.clientName} project portal.`, body);
 }
 
+/**
+ * For someone setting up from a link shared by hand, who typed their address:
+ * the address becomes the account's only once this link is opened from it.
+ */
+export function setupEmailConfirmEmail(input: {
+  name: string;
+  clientName: string;
+  url: string;
+}): string {
+  const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  const org = escapeHtml(input.clientName);
+
+  const body = `
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Confirm your email</h1>
+    <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
+      Hello ${name}. Use the button to confirm this is your address and finish setting
+      up the ${org} portal. You choose a password next.
+    </p>
+    ${button(input.url, 'Confirm my email')}
+    ${securityNote('14 days')}`;
+
+  return shell(`Confirm your email for the ${input.clientName} portal.`, body);
+}
+
 export function clientSignInEmail(input: { name: string; url: string }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 

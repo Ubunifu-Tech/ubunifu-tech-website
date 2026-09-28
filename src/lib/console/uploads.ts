@@ -1,5 +1,5 @@
 import 'server-only';
-import { head, get } from '@vercel/blob';
+import { del, head, get } from '@vercel/blob';
 import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
 import type { ActorType } from '@/generated/prisma/client';
@@ -248,6 +248,34 @@ export function storedUnder(url: string, folder: string): boolean {
     );
   } catch {
     return false;
+  }
+}
+
+/**
+ * Deletes stored objects whose rows are gone or taken down, best effort.
+ *
+ * Called after the database change has happened, so the row is the truth and
+ * this only stops paying for bytes nothing points at any more. It never
+ * throws: a store that is down leaves an orphan behind, which costs a little,
+ * where failing the action would tell the person their removal did not happen
+ * when it did. Only keys in our own store are sent, so a stray value in a row
+ * cannot become a delete aimed anywhere else.
+ */
+export async function deleteStoredFiles(storageKeys: string[]): Promise<void> {
+  const urls = storageKeys.filter((key) => {
+    try {
+      const parsed = new URL(key);
+      return parsed.protocol === 'https:' && BLOB_HOST.test(parsed.hostname);
+    } catch {
+      return false;
+    }
+  });
+  if (urls.length === 0 || !uploadsConfigured()) return;
+
+  try {
+    await del(urls);
+  } catch (error) {
+    console.error('[uploads] could not delete from the store', urls.length, error);
   }
 }
 

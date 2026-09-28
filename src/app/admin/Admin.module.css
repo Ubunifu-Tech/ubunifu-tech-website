@@ -150,7 +150,8 @@
 }
 
 /* A count only appears when it is greater than zero, and only on the things
-   that mean somebody is waiting. A badge showing "0" is furniture. */
+   that mean somebody is waiting. A badge showing "0" is furniture. White text
+   sits on the deep orange: 6.5:1, where the plain accent gives only 3.8:1. */
 .navCount {
   display: inline-flex;
   align-items: center;
@@ -159,7 +160,7 @@
   margin-left: auto;
   padding: 0 0.4375rem;
   border-radius: var(--radius-pill);
-  background: var(--accent);
+  background: var(--accent-deep);
   color: var(--text-inverse);
   font-size: var(--font-size-caption);
   font-variant-numeric: tabular-nums;

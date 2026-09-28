@@ -83,9 +83,10 @@ button.target:focus-visible {
   font-size: var(--font-size-small);
 }
 
+/* The deep orange, so the white number clears AA. */
 .current .marker {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--accent-deep);
+  background: var(--accent-deep);
   color: var(--text-inverse);
 }
 

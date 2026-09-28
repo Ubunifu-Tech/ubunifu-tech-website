@@ -13,6 +13,7 @@ import {
   HANDOFF_PER_EMAIL_HOUR,
   HANDOFF_PER_IP_DAY,
   HANDOFF_PER_IP_HOUR,
+  TEAM_NOTICES_PER_DAY,
   allow,
   noteCapReached,
 } from './rate-limit';
@@ -234,6 +235,22 @@ export const recordEnquiryTool: AgentTool<AssistantContext> = {
   },
 };
 
+/**
+ * Whether the team may be emailed about one more website enquiry today. Past
+ * the allowance the enquiry is still stored and shown in the console; only
+ * the email is skipped, and that is noted once on the Activity record.
+ */
+async function mayAlertTeam(): Promise<boolean> {
+  if (await allow('team-notice', 'site', TEAM_NOTICES_PER_DAY)) return true;
+  await noteCapReached(
+    'team-notice',
+    'team_notice.cap_reached',
+    'The daily limit on team alert emails from the website was reached. New enquiries today are in the console but are not emailed.',
+    24 * 60,
+  );
+  return false;
+}
+
 /** An enquiry the team is still working through, which a follow-up may add to. */
 const LINKABLE: EnquiryStatus[] = ['new', 'triaged', 'in_conversation', 'qualified'];
 
@@ -295,32 +312,36 @@ export async function passToTeam(input: {
       },
     });
 
-    const alert = await sendConsoleEmail({
-      to: TEAM_INBOX,
-      subject: `[Website chat] ${linked.name} added to their enquiry`,
-      html: notificationEmail({
-        name: linked.name,
-        email: linked.email,
-        subject: linked.subject,
-        message: details,
-        via: 'the website chat',
-        consoleUrl: `${consoleEnv.adminOrigin}/enquiries/${linked.id}`,
-        followUp: true,
-      }),
-      template: 'assistant_enquiry_update',
-      replyTo: linked.email,
-      entityType: 'Enquiry',
-      entityId: linked.id,
-      idempotencyKey: `assistant-followup-${linked.id}-${createHash('sha256').update(details).digest('hex').slice(0, 16)}`,
-    });
+    const alerted =
+      (await mayAlertTeam()) &&
+      (
+        await sendConsoleEmail({
+          to: TEAM_INBOX,
+          subject: `[Website chat] ${linked.name} added to their enquiry`,
+          html: notificationEmail({
+            name: linked.name,
+            email: linked.email,
+            subject: linked.subject,
+            message: details,
+            via: 'the website chat',
+            consoleUrl: `${consoleEnv.adminOrigin}/enquiries/${linked.id}`,
+            followUp: true,
+          }),
+          template: 'assistant_enquiry_update',
+          replyTo: linked.email,
+          entityType: 'Enquiry',
+          entityId: linked.id,
+          idempotencyKey: `assistant-followup-${linked.id}-${createHash('sha256').update(details).digest('hex').slice(0, 16)}`,
+        })
+      ).ok;
     await recordAudit({
       actorType: 'system',
       action: 'enquiry.followed_up',
       entityType: 'Enquiry',
       entityId: linked.id,
-      summary: `${linked.name} added to their enquiry from the chat. Team alert ${alert.ok ? 'sent' : 'not sent'}.`,
+      summary: `${linked.name} added to their enquiry from the chat. Team alert ${alerted ? 'sent' : 'not sent'}.`,
     });
-    return { enquiryId: linked.id, outcome: 'appended', acknowledged: false, teamAlerted: alert.ok };
+    return { enquiryId: linked.id, outcome: 'appended', acknowledged: false, teamAlerted: alerted };
   }
 
   const earlier = input.previous
@@ -358,25 +379,28 @@ export async function passToTeam(input: {
       24 * 60,
     );
   }
+  const mayAlert = await mayAlertTeam();
   const [alert, reply] = await Promise.allSettled([
-    sendConsoleEmail({
-      to: TEAM_INBOX,
-      subject: `[Website chat] ${input.subject} from ${input.name}`,
-      html: notificationEmail({
-        name: input.name,
-        email: input.email,
-        subject: input.subject,
-        message: input.details,
-        via: 'the website chat',
-        consoleUrl: `${consoleEnv.adminOrigin}/enquiries/${enquiry.id}`,
-      }),
-      template: 'assistant_enquiry',
-      // So "reply to this email" reaches the visitor, as the email says.
-      replyTo: input.email,
-      entityType: 'Enquiry',
-      entityId: enquiry.id,
-      idempotencyKey: `assistant-notify-${enquiry.id}`,
-    }),
+    mayAlert
+      ? sendConsoleEmail({
+          to: TEAM_INBOX,
+          subject: `[Website chat] ${input.subject} from ${input.name}`,
+          html: notificationEmail({
+            name: input.name,
+            email: input.email,
+            subject: input.subject,
+            message: input.details,
+            via: 'the website chat',
+            consoleUrl: `${consoleEnv.adminOrigin}/enquiries/${enquiry.id}`,
+          }),
+          template: 'assistant_enquiry',
+          // So "reply to this email" reaches the visitor, as the email says.
+          replyTo: input.email,
+          entityType: 'Enquiry',
+          entityId: enquiry.id,
+          idempotencyKey: `assistant-notify-${enquiry.id}`,
+        })
+      : Promise.resolve(null),
     mayReply
       ? sendConsoleEmail({
           to: input.email,

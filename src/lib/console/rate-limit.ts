@@ -129,9 +129,18 @@ export async function allow(
 
 /**
  * How many "we have your message" replies the website sends in a day, from
- * the contact form and the chat together.
+ * the contact form and the chat together. Resend's free plan stops at 100
+ * emails a day for everything, invoices and sign-in links included, so the
+ * website's share is kept well under it.
  */
-export const ACKNOWLEDGEMENTS_PER_DAY = { limit: 150, windowMinutes: 24 * 60 };
+export const ACKNOWLEDGEMENTS_PER_DAY = { limit: 30, windowMinutes: 24 * 60 };
+
+/**
+ * Team alerts about website enquiries, from the form and the chat, in a day.
+ * Past it the enquiry is still stored and shown in the console; only the
+ * email is skipped, so a spam wave cannot use up the day's email allowance.
+ */
+export const TEAM_NOTICES_PER_DAY = { limit: 40, windowMinutes: 24 * 60 };
 
 /** A number from the environment, or the default when it is unset or not a positive number. */
 function tunable(name: string, fallback: number): number {
@@ -169,7 +178,7 @@ export const CONTACT_PER_IP_DAY = { limit: 10, windowMinutes: 24 * 60 };
  */
 export async function noteCapReached(
   bucket: string,
-  action: 'acknowledgement.cap_reached' | 'assistant.site_cap_reached',
+  action: 'acknowledgement.cap_reached' | 'team_notice.cap_reached' | 'assistant.site_cap_reached',
   summary: string,
   windowMinutes: number,
 ): Promise<void> {

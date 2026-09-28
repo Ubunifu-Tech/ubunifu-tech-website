@@ -201,6 +201,7 @@ const ACTION_LABELS = {
   'assistant.declined': 'Assistant declined a question',
   'assistant.site_cap_reached': 'Website chat paused for now',
   'acknowledgement.cap_reached': 'Confirmation emails paused for the day',
+  'team_notice.cap_reached': 'Team email alerts paused for the day',
   'writer.created': 'Writer added',
   'writer.updated': 'Writer details changed',
   'writer.archived': 'Writer taken off the list',

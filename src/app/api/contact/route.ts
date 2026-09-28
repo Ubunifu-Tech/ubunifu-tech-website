@@ -6,6 +6,7 @@ import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
 import {
   ACKNOWLEDGEMENTS_PER_DAY,
   CONTACT_PER_IP_DAY,
+  TEAM_NOTICES_PER_DAY,
   allow,
   noteCapReached,
   requestIp,
@@ -274,24 +275,37 @@ export async function POST(req: NextRequest) {
     // reach the outer catch would answer 500 and invite a resubmission of
     // something already in the console.
     let notificationFailed = false;
-    try {
-      const notification = await resend.emails.send(
-        {
-          from: 'Ubunifu Website <notifications@ubunifutech.com>',
-          to: TEAM_INBOX,
-          replyTo: email,
-          subject: `[Website] ${subject} from ${name}`,
-          html: notificationEmail({ name, email, subject, message }),
-        },
-        { idempotencyKey: `contact-notify-${submissionId}` },
+    // Past the day's allowance the email is skipped, not failed: the enquiry
+    // is in the console, so the team still sees it there. When it could not
+    // be stored, the email is the only record, so it always goes.
+    const mayAlert = !recorded || (await allow('team-notice', 'site', TEAM_NOTICES_PER_DAY));
+    if (!mayAlert) {
+      await noteCapReached(
+        'team-notice',
+        'team_notice.cap_reached',
+        'The daily limit on team alert emails from the website was reached. New enquiries today are in the console but are not emailed.',
+        24 * 60,
       );
-      if (notification.error) {
-        console.error('Contact form: team notification rejected:', notification.error);
+    } else {
+      try {
+        const notification = await resend.emails.send(
+          {
+            from: 'Ubunifu Website <notifications@ubunifutech.com>',
+            to: TEAM_INBOX,
+            replyTo: email,
+            subject: `[Website] ${subject} from ${name}`,
+            html: notificationEmail({ name, email, subject, message }),
+          },
+          { idempotencyKey: `contact-notify-${submissionId}` },
+        );
+        if (notification.error) {
+          console.error('Contact form: team notification rejected:', notification.error);
+          notificationFailed = true;
+        }
+      } catch (error) {
+        console.error('Contact form: team notification failed:', error);
         notificationFailed = true;
       }
-    } catch (error) {
-      console.error('Contact form: team notification failed:', error);
-      notificationFailed = true;
     }
 
     if (notificationFailed && !recorded) {

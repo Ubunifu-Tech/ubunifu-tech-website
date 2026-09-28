@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
-import { generateToken } from '@/lib/console/crypto';
+import { generateToken, hashToken } from '@/lib/console/crypto';
 import { runTurn } from '@/lib/console/agent';
 import { createSiteConversation, resolveSiteConversation } from '@/lib/console/conversations';
-import { interimFailure } from '@/lib/console/assistant-copy';
+import { LIMIT_COPY, SITE_FAILURE_COPY } from '@/lib/console/assistant-copy';
 import {
   ASSISTANT_SYSTEM,
   EMAIL_OK,
@@ -12,8 +12,15 @@ import {
   passToTeam,
   recordEnquiryTool,
 } from '@/lib/console/assistant';
-import { allow, requestIp } from '@/lib/console/rate-limit';
-import { siteBrief } from '@/lib/console/site-brief';
+import {
+  ASSISTANT_SITE_PER_DAY,
+  ASSISTANT_SITE_PER_HOUR,
+  allow,
+  noteCapReached,
+  requestIp,
+} from '@/lib/console/rate-limit';
+import { siteKnowledge } from '@/lib/console/site-knowledge';
+import { formatDate, parseDateInput, todayInput } from '@/lib/console/money';
 
 /**
  * The website assistant.
@@ -42,12 +49,29 @@ const MAX_MESSAGES_PER_IP_PER_HOUR = 90;
 const MAX_MESSAGE_LENGTH = 2000;
 
 /**
- * Every refusal carries `fallback: true`, which turns the chat window into a
- * short message form. However the assistant fails, the visitor still has a
- * way to reach a person without leaving the page.
+ * A refusal says one sentence. `fallback` opens the window's message form
+ * under it, so where the assistant cannot help the visitor still has a way
+ * to reach a person without leaving the page.
  */
-function unavailable(error: string, status: number) {
-  return NextResponse.json({ error, fallback: true }, { status });
+function refused(copy: { text: string; fallback: boolean }, status: number, extra?: object) {
+  return NextResponse.json({ error: copy.text, fallback: copy.fallback, ...extra }, { status });
+}
+
+const HANDOFF_REFUSED = {
+  error: 'That did not go through. Email info@ubunifutech.com and we will pick it up.',
+  email: 'info@ubunifutech.com',
+};
+
+/** The visitor's key, on every answer to a message, so a refresh carries on the same thread. */
+function withVisitor(response: NextResponse, visitorKey: string): NextResponse {
+  response.cookies.set(VISITOR_COOKIE, visitorKey, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: VISITOR_TTL_DAYS * 24 * 60 * 60,
+  });
+  return response;
 }
 
 /**
@@ -77,7 +101,7 @@ export async function POST(request: NextRequest) {
     // A public endpoint never returns a stack. Whatever broke, the visitor
     // gets a way to reach a person.
     console.error('Assistant failed', error);
-    return unavailable('The assistant is not available right now. Leave us a message instead.', 503);
+    return refused(SITE_FAILURE_COPY.unavailable, 503);
   }
 }
 
@@ -121,8 +145,22 @@ async function handle(request: NextRequest) {
     allow('assistant:ip', ip, { limit: MAX_MESSAGES_PER_IP_PER_HOUR, windowMinutes: 60 }),
   ]);
 
-  if (!byVisitor || !byAddress) {
-    return unavailable('That is a lot of questions for one hour. Leave us a message instead.', 429);
+  if (!byVisitor || !byAddress) return withVisitor(refused(LIMIT_COPY.visitor, 429), visitorKey);
+
+  // The whole site's ceiling, whoever is asking: past it the chat is paused
+  // and visitors get the message form. Noted once an hour on Activity.
+  const [siteHour, siteDay] = await Promise.all([
+    allow('assistant:site', 'all', ASSISTANT_SITE_PER_HOUR),
+    allow('assistant:site-day', 'all', ASSISTANT_SITE_PER_DAY),
+  ]);
+  if (!siteHour || !siteDay) {
+    await noteCapReached(
+      'assistant:site',
+      'assistant.site_cap_reached',
+      'The website chat hit its limit for now. Visitors are offered the message form instead.',
+      60,
+    );
+    return withVisitor(refused(LIMIT_COPY.site, 429), visitorKey);
   }
 
   // One thread per visitor. A finished one (full, quiet for a month, or its
@@ -138,13 +176,16 @@ async function handle(request: NextRequest) {
   // The window was showing an earlier thread, and this message began a new one.
   const fresh = !resolved.conversation && payload.hadThread === true;
 
+  // The page and today's date go in the uncached note, so the knowledge
+  // before it is the same for every visitor and stays cached.
   const page = pagePath(payload.page);
+  const today = formatDate(parseDateInput(todayInput())!);
   const result = await runTurn({
     conversationId: conversation.id,
     kind: 'site_visitor',
     system: ASSISTANT_SYSTEM,
-    brief: await siteBrief(),
-    note: page ? `The visitor is on the page ${page}.` : undefined,
+    shared: await siteKnowledge(),
+    note: `${page ? `The visitor is on ${page}. ` : ''}Today in Tanzania is ${today}.`,
     userMessage: message,
     tools: [recordEnquiryTool],
     context: { conversationId: conversation.id, ip, previous: resolved.previous },
@@ -153,34 +194,33 @@ async function handle(request: NextRequest) {
     maxRounds: 3,
     timeoutMs: 20_000,
     deadlineMs: 50_000,
+    userRef: hashToken(visitorKey).slice(0, 32),
   });
 
-  const response = result.ok
-    ? NextResponse.json({
-        reply: result.reply,
-        sent: result.used.some((tool) => tool.name === 'record_enquiry'),
-        ...(fresh ? { fresh: true } : {}),
-      })
-    : // What the visitor typed is saved, and the window offers a message form,
-      // so the answer is a way to reach a person rather than an apology.
-      NextResponse.json(
-        {
-          error: `${interimFailure(result.cause)} Leave us a message and a person will reply.`,
-          fallback: true,
-          ...(fresh ? { fresh: true } : {}),
-        },
-        { status: 502 },
-      );
+  // CH14: visitor chats that never became an enquiry are pruned from here.
 
-  response.cookies.set(VISITOR_COOKIE, visitorKey, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: VISITOR_TTL_DAYS * 24 * 60 * 60,
-  });
+  if (!result.ok) {
+    // What the visitor typed is saved, so the answer is one sentence and,
+    // where the assistant cannot help, a way to reach a person.
+    return withVisitor(
+      refused(SITE_FAILURE_COPY[result.cause], 502, fresh ? { fresh: true } : undefined),
+      visitorKey,
+    );
+  }
 
-  return response;
+  const handed = result.used.find((tool) => tool.name === 'record_enquiry')?.meta as
+    | { outcome: 'created' | 'appended'; acknowledged: boolean }
+    | undefined;
+  return withVisitor(
+    NextResponse.json({
+      reply: result.reply,
+      handoff: handed ? { outcome: handed.outcome, acknowledged: handed.acknowledged } : null,
+      // Kept for the window until it reads `handoff`.
+      sent: Boolean(handed),
+      ...(fresh ? { fresh: true } : {}),
+    }),
+    visitorKey,
+  );
 }
 
 /**
@@ -210,12 +250,7 @@ async function handoff(request: NextRequest, raw: unknown) {
   }
 
   const ip = requestIp(request.headers);
-  if (!(await mayHandOff(ip, email))) {
-    return NextResponse.json(
-      { error: 'We already have your message. Somebody will reply by email.' },
-      { status: 429 },
-    );
-  }
+  if (!(await mayHandOff(ip, email))) return NextResponse.json(HANDOFF_REFUSED, { status: 429 });
 
   const jar = await cookies();
   const visitorKey = jar.get(VISITOR_COOKIE)?.value;
@@ -261,7 +296,7 @@ async function history() {
     ? await db.conversation.findUnique({
         where: { id: current.id },
         select: {
-          status: true,
+          enquiryId: true,
           messages: {
             where: { role: { in: ['user', 'assistant'] } },
             orderBy: { createdAt: 'asc' },
@@ -272,7 +307,9 @@ async function history() {
     : null;
 
   return NextResponse.json({
-    sent: conversation?.status === 'converted',
+    // The resolver lets go of a thread whose enquiry was settled or removed,
+    // so an enquiry here is one the team is still working.
+    sent: Boolean(conversation?.enquiryId),
     messages: (conversation?.messages ?? [])
       .filter((entry) => entry.content.trim().length > 0)
       .map((entry) => ({ id: entry.id, role: entry.role, content: entry.content })),

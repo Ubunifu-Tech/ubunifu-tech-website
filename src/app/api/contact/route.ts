@@ -12,6 +12,7 @@ import {
   requestIp,
 } from '@/lib/console/rate-limit';
 import { TEAM_INBOX } from '@/lib/console/alerts';
+import { contactSubjects } from '@/content/site';
 
 const RATE_LIMIT = 5;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
@@ -19,16 +20,8 @@ const MAX_BODY_BYTES = 16_000;
 const MAX_RATE_BUCKETS = 1_000;
 const submissions = new Map<string, number[]>();
 
-const SUBJECTS = new Set([
-  'Project enquiry',
-  'Product question',
-  'Hosting, domains & email',
-  'Branding & design',
-  'Support',
-  'Partnership',
-  'Careers',
-  'Other',
-]);
+// One list for the form and this check, in src/content/site.ts.
+const SUBJECTS = new Set<string>(contactSubjects);
 
 function recordRateAttempt(key: string, now: number): boolean {
   if (!submissions.has(key) && submissions.size >= MAX_RATE_BUCKETS) {

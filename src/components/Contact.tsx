@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { openChat } from './Assistant';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Phone, MapPin, MessageCircle, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { site } from '@/content/site';
+import { contactSubjects, site, type ContactSubject } from '@/content/site';
 import { ContactSubjectSelect } from './ContactSubjectSelect';
 import styles from './Contact.module.css';
 
@@ -27,19 +27,8 @@ function createSubmissionId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
-const SUBJECT_OPTIONS = [
-  'Project enquiry',
-  'Product question',
-  'Hosting, domains & email',
-  'Branding & design',
-  'Support',
-  'Partnership',
-  'Careers',
-  'Other',
-] as const;
-
 function validInitialSubject(subject: string | undefined): string {
-  return SUBJECT_OPTIONS.includes(subject as (typeof SUBJECT_OPTIONS)[number]) ? subject ?? '' : '';
+  return contactSubjects.includes(subject as ContactSubject) ? subject ?? '' : '';
 }
 
 export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }) => {
@@ -299,7 +288,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
               <label id="subject-label" htmlFor="subject" className={styles.label}>What can we help with?</label>
               <ContactSubjectSelect
                 value={form.subject}
-                options={SUBJECT_OPTIONS}
+                options={contactSubjects}
                 onChange={(value) => updateField('subject', value)}
                 buttonRef={subjectRef}
                 invalid={status === 'error' && !form.subject}

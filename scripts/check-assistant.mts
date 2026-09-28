@@ -24,7 +24,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 
 const { db } = await import('../src/lib/db');
 const { ASSISTANT_SYSTEM, recordEnquiryTool } = await import('../src/lib/console/assistant');
-const { siteBrief } = await import('../src/lib/console/site-brief');
+const { siteKnowledge } = await import('../src/lib/console/site-knowledge');
 const { PORTAL_SYSTEM, portalBrief, RAISE_REQUEST_SPEC } = await import(
   '../src/lib/console/portal-brief'
 );
@@ -132,7 +132,7 @@ async function run(label: string, system: string, brief: string, tool: Tool, cas
   }
 }
 
-await run('Website', ASSISTANT_SYSTEM, await siteBrief(), recordEnquiryTool, siteCases);
+await run('Website', ASSISTANT_SYSTEM, await siteKnowledge(), recordEnquiryTool, siteCases);
 
 const contact = await db.clientContact.findFirst({
   where: {

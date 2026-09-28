@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
 import { ContractSheet } from '@/components/documents/ContractSheet';
 import { ReviewRound } from '@/components/console/ReviewRound';
+import { mainContactOf } from '@/lib/console/contacts';
 import { DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
@@ -117,6 +118,11 @@ async function SignThroughLink({
   const expired = request.expiresAt !== null && request.expiresAt.getTime() < now.getTime();
   const declined = request.status === 'declined';
   const canSign = !signature && !expired && !declined;
+  // Made for the main contact, who has since handed the role on: they can
+  // still read it and ask for changes, as a colleague can in the portal, but
+  // the new main contact signs (decision 6).
+  const signs = link.contact.isPrimary;
+  const main = signs ? null : await mainContactOf(link.contact.clientId);
 
   return (
     <>
@@ -126,9 +132,13 @@ async function SignThroughLink({
           <span className={`${forms.badge} ${forms.badgeGood}`}>
             Signed {formatDate(signature.signedAt)}
           </span>
-        ) : (
+        ) : signs ? (
           <span className={`${forms.badge} ${forms.badgeLive}`}>
             For {link.contact.name} to read and sign
+          </span>
+        ) : (
+          <span className={`${forms.badge} ${forms.badgeLive}`}>
+            With {main?.name ?? 'your main contact'} to sign
           </span>
         )}
         <PrintButton />
@@ -169,30 +179,52 @@ async function SignThroughLink({
 
       {canSign && (
         <div className={`${sheet.toolbar} ${sheet.noPrint} ${styles.signArea}`}>
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>Sign it</h2>
-            </div>
-            <SignForm
-              requestId={request.id}
-              termsTitle={request.termsVersion?.title ?? null}
-              termsVersion={request.termsVersion?.version ?? null}
-              signerName={link.contact.name}
-              sign={signWithLink}
-              hidden={{ token }}
-              viaLink
-              wrongHint={
-                request.respondedAt
-                  ? 'If anything is still wrong, do not sign it. We are working on a new version.'
-                  : undefined
-              }
-            />
-          </section>
+          {signs ? (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>Sign it</h2>
+              </div>
+              <SignForm
+                requestId={request.id}
+                termsTitle={request.termsVersion?.title ?? null}
+                termsVersion={request.termsVersion?.version ?? null}
+                signerName={link.contact.name}
+                sign={signWithLink}
+                hidden={{ token }}
+                viaLink
+                wrongHint={
+                  request.respondedAt
+                    ? 'If anything is still wrong, do not sign it. We are working on a new version.'
+                    : undefined
+                }
+              />
+            </section>
+          ) : (
+            <section className={forms.card}>
+              <div className={forms.cardHeader}>
+                <h2 className={forms.cardTitle}>
+                  With {main?.name ?? 'your main contact'} to sign
+                </h2>
+              </div>
+              <p className={styles.note}>
+                {main
+                  ? `${main.name} signs for ${link.contact.clientName} as your main contact.`
+                  : `Your main contact signs for ${link.contact.clientName}.`}
+                {request.respondedAt
+                  ? ''
+                  : ' If something should change first, you can ask for changes below.'}
+              </p>
+            </section>
+          )}
           {!request.respondedAt && (
             <section className={forms.card}>
               <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>Not ready to sign?</h2>
-                <span className={forms.cardMeta}>Neither of these signs anything</span>
+                <h2 className={forms.cardTitle}>
+                  {signs ? 'Not ready to sign?' : 'Something to change?'}
+                </h2>
+                <span className={forms.cardMeta}>
+                  {signs ? 'Neither of these signs anything' : 'This does not sign anything'}
+                </span>
               </div>
               <RespondForm
                 requestId={request.id}
@@ -200,6 +232,7 @@ async function SignThroughLink({
                 respond={respondWithLink}
                 hidden={{ token }}
                 wording={false}
+                decline={signs}
               />
             </section>
           )}

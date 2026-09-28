@@ -10,11 +10,18 @@ import { sendConsoleEmail } from './mailer';
 import { formatDate } from './money';
 import { issueMagicToken } from './magic-link';
 import { STAFF_LABEL } from './project-status';
+import { mainContactOf } from './contacts';
 import { advanceForDocument } from './transitions';
 import { alertTeam } from './alerts';
 import { documentSignedEmail, documentSignedNoticeEmail } from '@/lib/emails';
 
 export type SignOutcome = { status: 'done' | 'error'; message: string };
+
+/** What anyone but the main contact is told when they try to sign or decline. */
+export async function signerOnlyMessage(clientId: string, clientName: string): Promise<string> {
+  const main = await mainContactOf(clientId);
+  return `${main?.name ?? 'Your main contact'} signs for ${clientName}. Ask them to answer this one.`;
+}
 
 /**
  * Signing.
@@ -47,6 +54,13 @@ export async function recordSignature(input: {
   }
   if (!input.acceptedDocument) {
     return { status: 'error', message: 'Tick the box to confirm you have read it.' };
+  }
+  // The main contact signs for the client, checked here where the signature
+  // is written, so a link shared with someone who has since handed the role
+  // on stops signing as well as the portal does (decision 6).
+  const main = await mainContactOf(signer.clientId);
+  if (main?.id !== signer.id) {
+    return { status: 'error', message: await signerOnlyMessage(signer.clientId, signer.clientName) };
   }
 
   const request = await db.signatureRequest.findFirst({

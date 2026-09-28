@@ -3,8 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireClient, recordAudit, type ClientActor } from '@/lib/console/auth';
-import { mainContactOf } from '@/lib/console/contacts';
+import { requireClient, recordAudit } from '@/lib/console/auth';
 import { renderMarkdown } from '@/lib/console/documents';
 import { alertTeam } from '@/lib/console/alerts';
 import { consoleEnv } from '@/lib/console/env';
@@ -16,19 +15,15 @@ import { diffParagraphs } from '@/lib/console/diff';
 
 export type SignState = { status: 'idle' | 'done' | 'error'; message?: string };
 
-/** The main contact signs and declines for the client; nobody else. */
-async function signerOnly(actor: ClientActor): Promise<string> {
-  const main = await mainContactOf(actor.clientId);
-  return `${main?.name ?? 'Your main contact'} signs for ${actor.clientName}. Ask them to answer this one.`;
-}
-
-/** Signing from the portal, as the person signed in. See recordSignature. */
+/**
+ * Signing from the portal, as the person signed in. See recordSignature,
+ * which also refuses anyone but the main contact.
+ */
 export async function signDocument(
   _previous: SignState,
   formData: FormData,
 ): Promise<SignState> {
   const actor = await requireClient();
-  if (!actor.isPrimary) return { status: 'error', message: await signerOnly(actor) };
   return recordSignature({
     requestId: String(formData.get('requestId') ?? ''),
     signer: {
@@ -45,15 +40,15 @@ export async function signDocument(
   });
 }
 
-/** Asking for changes, or declining, from the portal. See recordDocumentAnswer. */
+/**
+ * Asking for changes, or declining, from the portal. See recordDocumentAnswer,
+ * which lets only the main contact decline.
+ */
 export async function respondToDocument(
   _previous: SignState,
   formData: FormData,
 ): Promise<SignState> {
   const actor = await requireClient();
-  if (formText(formData, 'intent') === 'decline' && !actor.isPrimary) {
-    return { status: 'error', message: await signerOnly(actor) };
-  }
   const answered = await recordDocumentAnswer({
     requestId: String(formData.get('requestId') ?? ''),
     person: {

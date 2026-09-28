@@ -5,6 +5,8 @@ import { recordAudit } from './auth';
 import { alertTeam } from './alerts';
 import { consoleEnv } from './env';
 import { allow } from './rate-limit';
+import { mainContactOf } from './contacts';
+import { signerOnlyMessage } from './signing';
 import { documentFreshCopyEmail, documentResponseEmail } from '@/lib/emails';
 
 export type DocumentAnswerOutcome = { status: 'done' | 'error'; message: string };
@@ -38,6 +40,14 @@ export async function recordDocumentAnswer(input: {
 
   if (intent !== 'changes' && intent !== 'decline') {
     return { status: 'error', message: 'Choose what you would like to do.' };
+  }
+  // Declining closes the request, so only the main contact may, whichever
+  // way they came. Anyone at the client may ask for changes.
+  if (intent === 'decline') {
+    const main = await mainContactOf(actor.clientId);
+    if (main?.id !== actor.id) {
+      return { status: 'error', message: await signerOnlyMessage(actor.clientId, actor.clientName) };
+    }
   }
   if (note.length < 10) {
     return {

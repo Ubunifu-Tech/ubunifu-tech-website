@@ -47,7 +47,15 @@ export async function issueSharedLink(input: {
 export type SharedLink = {
   thing: SharedThing;
   thingId: string;
-  contact: { id: string; name: string; email: string | null; clientId: string; clientName: string };
+  contact: {
+    id: string;
+    name: string;
+    email: string | null;
+    clientId: string;
+    clientName: string;
+    /** Whether they are the main contact now, not when the link was made. */
+    isPrimary: boolean;
+  };
 };
 
 /**
@@ -82,6 +90,7 @@ export async function readSharedLink(rawToken: string): Promise<SharedLink | nul
       name: true,
       email: true,
       clientId: true,
+      isPrimary: true,
       client: { select: { name: true } },
     },
   });
@@ -96,6 +105,7 @@ export async function readSharedLink(rawToken: string): Promise<SharedLink | nul
       email: contact.email,
       clientId: contact.clientId,
       clientName: contact.client.name,
+      isPrimary: contact.isPrimary,
     },
   };
 }

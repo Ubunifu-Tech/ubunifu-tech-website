@@ -701,7 +701,16 @@ export default async function ProjectPage({
                   status={project.status}
                   actions={actions}
                   next={mayDocs ? nextStep : null}
-                  holdPrimary={Boolean(mayDocs && changesAsked)}
+                  handOff={
+                    mayDocs || !nextStep
+                      ? null
+                      : changesAsked
+                        ? `The client sent the ${changesAsked.kind === 'proposal' ? 'proposal' : 'agreement'} back with changes. Someone who handles documents needs to read them.`
+                        : `Someone who handles documents needs to ${nextStep.label.charAt(0).toLowerCase()}${nextStep.label.slice(1)}.`
+                  }
+                  // Their changes come first for every role, so nobody is
+                  // offered Client accepted as the main move while they wait.
+                  holdPrimary={Boolean(changesAsked)}
                   canOpen={{
                     fees: mayFees,
                     billing: mayMoney,

@@ -56,6 +56,7 @@ export function MoveControls({
   status,
   actions,
   next,
+  handOff = null,
   holdPrimary = false,
   canOpen = {},
 }: {
@@ -65,6 +66,8 @@ export function MoveControls({
   actions: StageAction[];
   /** The real next step, when it happens somewhere else rather than here. */
   next?: { label: string; href: string } | null;
+  /** Said in place of the next step when this person's role cannot take it. */
+  handOff?: string | null;
   /** Keep every move under Other options, because the next step comes first. */
   holdPrimary?: boolean;
   /** Where a fix may be sent. Anything not allowed gets a hand-off line instead of a link. */
@@ -150,6 +153,7 @@ export function MoveControls({
         </div>
       ) : (
         <>
+          {!next && handOff && <p className={styles.rest}>{handOff}</p>}
           {(next || primary.length > 0) && (
             <div className={styles.primary}>
               {next && (
@@ -176,7 +180,7 @@ export function MoveControls({
           {others.length > 0 && (
             <div className={styles.others}>
               <p className={styles.othersLabel}>
-                {next || primary.length > 0 ? 'Other options' : 'Options'}
+                {next || handOff || primary.length > 0 ? 'Other options' : 'Options'}
               </p>
               <ul className={styles.list}>
                 {others.map((item) => (

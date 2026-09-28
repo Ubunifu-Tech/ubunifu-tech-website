@@ -22,6 +22,7 @@ import { RestoreProject } from './RestoreProject';
 import { ClientDetails } from './ClientDetails';
 import { BringBack } from './BringBack';
 import { Callout } from '@/components/console/Callout';
+import { ForgetParams } from '@/components/console/ForgetParams';
 import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
 import { RemoveClient } from './RemoveClient';
@@ -59,9 +60,9 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ restored?: string; kept?: string }>;
+  searchParams: Promise<{ restored?: string; kept?: string; main?: string }>;
 }) {
-  const { restored, kept } = await searchParams;
+  const { restored, kept, main } = await searchParams;
   const leftOut = Number(kept) > 0 ? Number(kept) : 0;
   const staff = await requireStaff();
   const mayManage = can(staff, 'clients');
@@ -246,11 +247,35 @@ export default async function ClientPage({
       </div>
 
       {restored && (
-        <Callout kind="good">
-          {client.name} is back. Portal access is off for each person until you turn it on from
-          their menu.
-          {leftOut > 0 &&
-            ` ${leftOut === 1 ? 'One person was' : `${leftOut} people were`} not brought back, because their email now belongs to someone at another client. They are under Removed people.`}
+        <>
+          <ForgetParams names={['restored', 'kept', 'main']} />
+          <Callout kind="good">
+            {client.name} is back. Portal access is off for each person until you turn it on from
+            their menu.
+            {leftOut > 0 &&
+              ` ${leftOut === 1 ? 'One person was' : `${leftOut} people were`} not brought back, because their email now belongs to someone at another client. They are under Removed people.`}
+            {leftOut > 0 &&
+              main === '1' &&
+              (leftOut === 1 ? ' They were the main contact.' : ' One of them was the main contact.')}
+          </Callout>
+        </>
+      )}
+
+      {/* Signing links, invoices and receipts go to the main contact, so
+          having none is a problem to put right, not a passing notice. */}
+      {!client.contacts.some((contact) => contact.isPrimary) && (
+        <Callout kind="warn">
+          {client.contacts.length === 0
+            ? `Nobody at ${client.name} is on file yet. ${
+                mayManage
+                  ? 'Add the person who signs for them under People.'
+                  : 'Someone who handles clients needs to add them.'
+              }`
+            : `Nobody is the main contact. ${
+                mayManage
+                  ? 'Choose one from their menu under People.'
+                  : 'Someone who handles clients needs to choose one.'
+              }`}
         </Callout>
       )}
 

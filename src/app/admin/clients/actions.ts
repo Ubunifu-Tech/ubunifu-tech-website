@@ -445,10 +445,11 @@ export async function restoreClient(
 
     const people = await tx.clientContact.findMany({
       where: { clientId: client.id, deletedAt: removedAt },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, isPrimary: true },
     });
     const back: string[] = [];
     const kept: string[] = [];
+    let keptMain = false;
     for (const person of people) {
       const taken = person.email
         ? await tx.clientContact.findFirst({
@@ -458,12 +459,13 @@ export async function restoreClient(
         : null;
       if (taken) {
         kept.push(person.name);
+        if (person.isPrimary) keptMain = true;
         continue;
       }
       await tx.clientContact.update({ where: { id: person.id }, data: { deletedAt: null } });
       back.push(person.name);
     }
-    return { projects: projects.count, back, kept };
+    return { projects: projects.count, back, kept, keptMain };
   });
   if (!restored) return { status: 'error', message: 'That client is not removed.' };
 
@@ -486,8 +488,9 @@ export async function restoreClient(
   });
 
   revalidatePath('/admin', 'layout');
+  // Counts and flags only: names never go in an address.
   redirect(
-    `/clients/${client.slug}?restored=1${restored.kept.length > 0 ? `&kept=${restored.kept.length}` : ''}`,
+    `/clients/${client.slug}?restored=1${restored.kept.length > 0 ? `&kept=${restored.kept.length}` : ''}${restored.keptMain ? '&main=1' : ''}`,
   );
 }
 

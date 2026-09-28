@@ -24,14 +24,13 @@ import { DocumentBadge } from '@/components/console/DocumentBadge';
 import { FeeEditor } from '@/components/console/FeeEditor';
 import { Steps } from '@/components/console/Steps';
 import {
-  Copilot,
   DetailsForm,
   DiscardDraft,
   ResendSignatureLink,
   SendForSignature,
   type CopilotTurn,
-  VersionEditor,
   WithdrawDocument,
+  WriteStep,
 } from '../DocumentEditor';
 import { SuggestedWording, type WordingSuggestion } from './SuggestedWording';
 import { ShareLink } from '@/components/console/ShareLink';
@@ -676,26 +675,14 @@ export default async function DocumentPage({
 
     body = (
       <div className={page.split}>
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>The document</h2>
-            <span className={forms.cardMeta}>Version {latest?.version ?? 1}</span>
-          </div>
-          <VersionEditor
-            // A new version from the assistant replaces what is in the editor.
-            key={latest?.id}
-            documentId={document.id}
-            body={source}
-            withFees={prepared.withFeeTable}
-          />
-        </section>
-
-        <section className={forms.card}>
-          <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Assistant</h2>
-          </div>
-          <Copilot documentId={document.id} turns={turns} />
-        </section>
+        <WriteStep
+          documentId={document.id}
+          versionId={latest?.id}
+          version={latest?.version ?? 1}
+          body={source}
+          withFees={prepared.withFeeTable}
+          turns={turns}
+        />
       </div>
     );
   }

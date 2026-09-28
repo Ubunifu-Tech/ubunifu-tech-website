@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import {
   askCopilot,
@@ -67,10 +67,29 @@ function copilotAction(previous: DocumentState, formData: FormData): Promise<Doc
  *
  * It can write a version and nothing else. It never sends.
  */
-export function Copilot({ documentId, turns }: { documentId: string; turns: CopilotTurn[] }) {
+export function Copilot({
+  documentId,
+  turns,
+  empty,
+  blocked,
+  onDraftingChange,
+}: {
+  documentId: string;
+  turns: CopilotTurn[];
+  /** The document has nothing written in it yet. */
+  empty: boolean;
+  /** The editor holds changes that are not saved yet. */
+  blocked: boolean;
+  onDraftingChange: (drafting: boolean) => void;
+}) {
   const [state, action, pending] = useActionState(copilotAction, INITIAL);
   const [draft, setDraft] = useState('');
   const [intent, setIntent] = useState<'ask' | 'fresh'>('ask');
+  const drafting = pending && intent === 'ask';
+
+  useEffect(() => {
+    onDraftingChange(drafting);
+  }, [drafting, onDraftingChange]);
 
   return (
     <>
@@ -106,7 +125,7 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
         </form>
       )}
 
-      {turns.length === 0 && (
+      {turns.length === 0 && empty && (
         <form action={action} onSubmit={() => setIntent('ask')} className={forms.actions}>
           <input type="hidden" name="documentId" value={documentId} />
           <input
@@ -114,9 +133,9 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
             name="message"
             value="Write the first draft of this document from what you know about the project, in the usual shape for its kind. Mark anything you do not know as TO CONFIRM."
           />
-          <button type="submit" className={forms.button} disabled={pending}>
+          <button type="submit" className={forms.button} disabled={pending || blocked}>
             <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-            {pending && intent === 'ask' ? 'Writing…' : 'Write the first draft'}
+            {drafting ? 'Writing…' : 'Write the first draft'}
           </button>
           <p className={forms.payoff}>Or say what you want below.</p>
         </form>
@@ -152,12 +171,16 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
           <button
             type="submit"
             className={`${forms.button} ${forms.quiet}`}
-            disabled={pending || draft.trim().length < 2}
+            disabled={pending || blocked || draft.trim().length < 2}
           >
             <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-            {pending && intent === 'ask' ? 'Thinking…' : 'Send'}
+            {drafting ? 'Thinking…' : 'Send'}
           </button>
-          <p className={forms.payoff}>It saves a new version for you to check. It never sends.</p>
+          <p className={forms.payoff}>
+            {blocked
+              ? 'Save your edits first, then ask.'
+              : 'It saves a new version for you to check. It never sends.'}
+          </p>
         </div>
         <Result state={state} />
       </form>
@@ -211,18 +234,89 @@ export function DetailsForm({
   );
 }
 
+/**
+ * The Write step: the document beside the assistant.
+ *
+ * A version the assistant saves replaces what is in the editor, so the
+ * assistant waits while there are edits to save, and the editor waits while
+ * the assistant is writing. Either way nothing typed is lost.
+ */
+export function WriteStep({
+  documentId,
+  versionId,
+  version,
+  body,
+  withFees,
+  turns,
+}: {
+  documentId: string;
+  versionId: string | undefined;
+  version: number;
+  body: string;
+  withFees: boolean;
+  turns: CopilotTurn[];
+}) {
+  const [unsaved, setUnsaved] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+
+  return (
+    <>
+      <section className={forms.card}>
+        <div className={forms.cardHeader}>
+          <h2 className={forms.cardTitle}>The document</h2>
+          <span className={forms.cardMeta}>Version {version}</span>
+        </div>
+        <VersionEditor
+          // A new version from the assistant replaces what is in the editor.
+          key={versionId}
+          documentId={documentId}
+          body={body}
+          withFees={withFees}
+          locked={drafting}
+          onUnsavedChange={setUnsaved}
+        />
+      </section>
+
+      <section className={forms.card}>
+        <div className={forms.cardHeader}>
+          <h2 className={forms.cardTitle}>Assistant</h2>
+        </div>
+        <Copilot
+          documentId={documentId}
+          turns={turns}
+          empty={body.trim().length === 0}
+          blocked={unsaved}
+          onDraftingChange={setDrafting}
+        />
+      </section>
+    </>
+  );
+}
+
 export function VersionEditor({
   documentId,
   body,
   withFees,
+  locked = false,
+  onUnsavedChange,
 }: {
   documentId: string;
   body: string;
   withFees: boolean;
+  /** The assistant is writing a version that will replace this one. */
+  locked?: boolean;
+  onUnsavedChange?: (unsaved: boolean) => void;
 }) {
   const [state, action, pending] = useActionState(saveVersion, INITIAL);
   const [draft, setDraft] = useState(body);
   const hasMarkers = draft.includes('[TO CONFIRM');
+  const busy = pending || locked;
+
+  // A new editor holds exactly what is saved. The editor reports only what
+  // somebody types, never the text it loads.
+  useEffect(() => {
+    onUnsavedChange?.(false);
+  }, [onUnsavedChange]);
 
   return (
     <form action={action} className={forms.form}>
@@ -231,13 +325,18 @@ export function VersionEditor({
         name="body"
         label="The document"
         initialMarkdown={body}
-        disabled={pending}
+        disabled={busy}
         minHeight="tall"
-        onMarkdownChange={setDraft}
+        onMarkdownChange={(markdown) => {
+          setDraft(markdown);
+          onUnsavedChange?.(markdown !== body);
+        }}
         hint={
-          withFees
-            ? 'Type {{fees}} on its own line where the fee table should go. Otherwise it goes at the end.'
-            : undefined
+          locked
+            ? 'The assistant is writing a new version. You can edit again when it is done.'
+            : withFees
+              ? 'Type {{fees}} on its own line where the fee table should go. Otherwise it goes at the end.'
+              : undefined
         }
       />
 
@@ -257,7 +356,7 @@ export function VersionEditor({
           className={forms.control}
           maxLength={200}
           placeholder="Split the payment into two stages"
-          disabled={pending}
+          disabled={busy}
         />
       </div>
 
@@ -267,11 +366,11 @@ export function VersionEditor({
           name="then"
           value="review"
           className={forms.button}
-          disabled={pending}
+          disabled={busy}
         >
           {pending ? 'Saving…' : 'Save and review'}
         </button>
-        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
+        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={busy}>
           Save
         </button>
         <Result state={state} />

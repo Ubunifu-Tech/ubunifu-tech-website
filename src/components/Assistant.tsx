@@ -146,7 +146,12 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
       const response = await fetch(copy.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, page: window.location.pathname }),
+        body: JSON.stringify({
+          message,
+          page: window.location.pathname,
+          // The window was showing an earlier thread, so a fresh start can be said.
+          hadThread: turns.length > 0,
+        }),
       });
       const data = (await response.json().catch(() => ({}))) as {
         reply?: string;
@@ -174,7 +179,7 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
     } finally {
       setBusy(false);
     }
-  }, [draft, busy, copy.endpoint]);
+  }, [draft, busy, copy.endpoint, turns.length]);
 
   const shown = turns.length > 0 ? turns : [{ id: 'opener', role: 'assistant', content: copy.opener }];
   const theirWords = turns

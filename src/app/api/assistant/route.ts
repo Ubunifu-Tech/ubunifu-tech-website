@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 import { generateToken } from '@/lib/console/crypto';
-import { MAX_MESSAGES, runTurn } from '@/lib/console/agent';
+import { runTurn } from '@/lib/console/agent';
+import { createSiteConversation, resolveSiteConversation } from '@/lib/console/conversations';
 import { interimFailure } from '@/lib/console/assistant-copy';
 import {
   ASSISTANT_SYSTEM,
@@ -85,7 +86,7 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ error: 'Expected a JSON request.' }, { status: 415 });
   }
 
-  let payload: { message?: unknown; page?: unknown; handoff?: unknown };
+  let payload: { message?: unknown; page?: unknown; handoff?: unknown; hadThread?: unknown };
   try {
     payload = (await request.json()) as typeof payload;
   } catch {
@@ -123,32 +124,18 @@ async function handle(request: NextRequest) {
     return unavailable('That is a lot of questions for one hour. Leave us a message instead.', 429);
   }
 
-  // One open conversation per visitor. A converted one stays open so they can
-  // keep talking after their enquiry has been sent.
-  let conversation = await db.conversation.findFirst({
-    where: { visitorKey, kind: 'site_visitor', status: { in: ['open', 'converted'] } },
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, messageCount: true },
-  });
-
-  if (!conversation) {
-    conversation = await db.conversation.create({
-      data: {
-        kind: 'site_visitor',
-        visitorKey,
-        ip,
-        userAgent: request.headers.get('user-agent'),
-      },
-      select: { id: true, messageCount: true },
-    });
-  }
-
-  if (conversation.messageCount >= MAX_MESSAGES.site_visitor) {
-    return unavailable(
-      'This is better continued by a person. Leave us a message and somebody will pick it up.',
-      409,
-    );
-  }
+  // One thread per visitor. A finished one (full, quiet for a month, or its
+  // enquiry settled) is closed here and a fresh one started, never refused.
+  const resolved = await resolveSiteConversation(visitorKey, { forWrite: true });
+  const conversation =
+    resolved.conversation ??
+    (await createSiteConversation({
+      visitorKey,
+      ip,
+      userAgent: request.headers.get('user-agent'),
+    }));
+  // The window was showing an earlier thread, and this message began a new one.
+  const fresh = !resolved.conversation && payload.hadThread === true;
 
   const page = pagePath(payload.page);
   const result = await runTurn({
@@ -171,10 +158,18 @@ async function handle(request: NextRequest) {
     ? NextResponse.json({
         reply: result.reply,
         sent: result.used.some((tool) => tool.name === 'record_enquiry'),
+        ...(fresh ? { fresh: true } : {}),
       })
     : // What the visitor typed is saved, and the window offers a message form,
       // so the answer is a way to reach a person rather than an apology.
-      unavailable(`${interimFailure(result.cause)} Leave us a message and a person will reply.`, 502);
+      NextResponse.json(
+        {
+          error: `${interimFailure(result.cause)} Leave us a message and a person will reply.`,
+          fallback: true,
+          ...(fresh ? { fresh: true } : {}),
+        },
+        { status: 502 },
+      );
 
   response.cookies.set(VISITOR_COOKIE, visitorKey, {
     httpOnly: true,
@@ -227,13 +222,9 @@ async function handoff(request: NextRequest, raw: unknown) {
 
   const jar = await cookies();
   const visitorKey = jar.get(VISITOR_COOKIE)?.value;
-  const conversation = visitorKey
-    ? await db.conversation.findFirst({
-        where: { visitorKey, kind: 'site_visitor', status: { in: ['open', 'converted'] } },
-        orderBy: { createdAt: 'desc' },
-        select: { id: true },
-      })
-    : null;
+  const { conversation } = visitorKey
+    ? await resolveSiteConversation(visitorKey, { forWrite: true })
+    : { conversation: null };
 
   await passToTeam({
     conversationId: conversation?.id ?? null,
@@ -262,18 +253,21 @@ async function history() {
   const visitorKey = jar.get(VISITOR_COOKIE)?.value;
   if (!visitorKey) return NextResponse.json({ messages: [] });
 
-  const conversation = await db.conversation.findFirst({
-    where: { visitorKey, kind: 'site_visitor', status: { in: ['open', 'converted'] } },
-    orderBy: { createdAt: 'desc' },
-    select: {
-      status: true,
-      messages: {
-        where: { role: { in: ['user', 'assistant'] } },
-        orderBy: { createdAt: 'asc' },
-        select: { id: true, role: true, content: true },
-      },
-    },
-  });
+  // Shows the thread the next message would continue, and nothing once it is finished.
+  const { conversation: current } = await resolveSiteConversation(visitorKey, { forWrite: false });
+  const conversation = current
+    ? await db.conversation.findUnique({
+        where: { id: current.id },
+        select: {
+          status: true,
+          messages: {
+            where: { role: { in: ['user', 'assistant'] } },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, role: true, content: true },
+          },
+        },
+      })
+    : null;
 
   return NextResponse.json({
     sent: conversation?.status === 'converted',

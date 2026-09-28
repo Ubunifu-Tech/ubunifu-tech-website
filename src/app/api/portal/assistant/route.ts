@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { getClientActor, type ClientActor } from '@/lib/console/auth';
-import { MAX_MESSAGES, runTurn } from '@/lib/console/agent';
+import { runTurn } from '@/lib/console/agent';
+import { createPortalConversation, resolvePortalConversation } from '@/lib/console/conversations';
 import { interimFailure } from '@/lib/console/assistant-copy';
 import { allow } from '@/lib/console/rate-limit';
 import {
@@ -40,24 +41,6 @@ async function actorOrNull(): Promise<ClientActor | null> {
   return actor && actor.isActivated ? actor : null;
 }
 
-/**
- * The chat still in progress. Once a chat has been handed to the team it is
- * finished, and the next message starts a fresh one, so a question next week
- * does not get attached to last week's request.
- */
-async function openConversation(actor: ClientActor, includeHandedOff = false) {
-  return db.conversation.findFirst({
-    where: {
-      kind: 'portal_client',
-      actorType: 'client_contact',
-      actorId: actor.id,
-      status: { in: includeHandedOff ? ['open', 'converted'] : ['open'] },
-    },
-    orderBy: { createdAt: 'desc' },
-    select: { id: true, messageCount: true, status: true, ticket: { select: { reference: true } } },
-  });
-}
-
 export async function POST(request: NextRequest) {
   try {
     return await handle(request);
@@ -76,7 +59,7 @@ async function handle(request: NextRequest) {
     return NextResponse.json({ error: 'Expected a JSON request.' }, { status: 415 });
   }
 
-  let payload: { message?: unknown; page?: unknown; handoff?: unknown };
+  let payload: { message?: unknown; page?: unknown; handoff?: unknown; hadThread?: unknown };
   try {
     payload = (await request.json()) as typeof payload;
   } catch {
@@ -95,7 +78,10 @@ async function handle(request: NextRequest) {
       typeof payload.handoff === 'object' && payload.handoff !== null
         ? String((payload.handoff as { details?: unknown }).details ?? '').trim().slice(0, 4000)
         : '';
-    const conversation = await openConversation(actor, !note);
+    // A typed note is a new request; pressing through with nothing typed
+    // means this chat, whether or not it became a request already.
+    const current = await resolvePortalConversation(actor, { forWrite: false });
+    const conversation = note && current?.status === 'converted' ? null : current;
     if (conversation?.ticket) {
       return NextResponse.json({
         reference: conversation.ticket.reference,
@@ -133,23 +119,12 @@ async function handle(request: NextRequest) {
     return unavailable('That is a lot of questions for one hour. Send this to the team instead.', 429);
   }
 
-  let conversation = await openConversation(actor);
-  if (!conversation) {
-    conversation = await db.conversation.create({
-      data: {
-        kind: 'portal_client',
-        actorType: 'client_contact',
-        actorId: actor.id,
-        clientId: actor.clientId,
-        userAgent: request.headers.get('user-agent'),
-      },
-      select: { id: true, messageCount: true, status: true, ticket: { select: { reference: true } } },
-    });
-  }
-
-  if (conversation.messageCount >= MAX_MESSAGES.portal_client) {
-    return unavailable('This is better continued by a person. Send it to the team.', 409);
-  }
+  // Carries on the chat, including one that became a request today; a
+  // finished one is closed here and a fresh one started, never refused.
+  const current = await resolvePortalConversation(actor, { forWrite: true });
+  const conversation =
+    current ?? (await createPortalConversation(actor, request.headers.get('user-agent')));
+  const fresh = !current && payload.hadThread === true;
 
   const page = pagePath(payload.page);
   const result = await runTurn({
@@ -174,6 +149,7 @@ async function handle(request: NextRequest) {
   return NextResponse.json({
     reply: result.reply,
     sent: result.used.some((tool) => tool.name === 'raise_request'),
+    ...(fresh ? { fresh: true } : {}),
   });
 }
 
@@ -183,23 +159,20 @@ export async function GET() {
     const actor = await actorOrNull();
     if (!actor) return NextResponse.json({ messages: [] }, { status: 401 });
 
-    const conversation = await db.conversation.findFirst({
-      where: {
-        kind: 'portal_client',
-        actorType: 'client_contact',
-        actorId: actor.id,
-        status: { in: ['open', 'converted'] },
-      },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        ticket: { select: { reference: true } },
-        messages: {
-          where: { role: { in: ['user', 'assistant'] } },
-          orderBy: { createdAt: 'asc' },
-          select: { id: true, role: true, content: true },
-        },
-      },
-    });
+    const current = await resolvePortalConversation(actor, { forWrite: false });
+    const conversation = current
+      ? await db.conversation.findUnique({
+          where: { id: current.id },
+          select: {
+            ticket: { select: { reference: true } },
+            messages: {
+              where: { role: { in: ['user', 'assistant'] } },
+              orderBy: { createdAt: 'asc' },
+              select: { id: true, role: true, content: true },
+            },
+          },
+        })
+      : null;
 
     return NextResponse.json({
       sent: Boolean(conversation?.ticket),

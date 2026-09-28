@@ -163,8 +163,6 @@ async function handle(request: NextRequest) {
     handoff: raised
       ? { reference: raised.reference, url: `/portal/requests/${raised.reference}` }
       : null,
-    // Kept for the window until it reads `handoff`.
-    sent: Boolean(raised),
     ...(fresh ? { fresh: true } : {}),
   });
 }

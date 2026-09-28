@@ -216,8 +216,6 @@ async function handle(request: NextRequest) {
     NextResponse.json({
       reply: result.reply,
       handoff: handed ? { outcome: handed.outcome, acknowledged: handed.acknowledged } : null,
-      // Kept for the window until it reads `handoff`.
-      sent: Boolean(handed),
       ...(fresh ? { fresh: true } : {}),
     }),
     visitorKey,

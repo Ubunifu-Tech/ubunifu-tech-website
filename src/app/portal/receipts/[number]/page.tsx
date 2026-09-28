@@ -83,7 +83,12 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
         <PrintButton />
       </div>
 
-      <ReceiptSheet receipt={receipt} org={org} invoiceHref={`/portal/invoices/${invoice.number}`} />
+      <ReceiptSheet
+        receipt={receipt}
+        org={org}
+        invoiceHref={`/portal/invoices/${invoice.number}`}
+        refundHref={(number) => `/portal/refunds/${number}`}
+      />
     </main>
   );
 }

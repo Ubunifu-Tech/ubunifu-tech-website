@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
 import { liveTicket } from '@/lib/console/live';
 import { CLIENT_TICKET_STATUS, TICKET_KIND_LABEL } from '@/lib/console/tickets';
-import { formatRelative, formatShortDate } from '@/lib/console/money';
+import { formatShortDate } from '@/lib/console/money';
 import { RaiseRequestForm } from './RequestForms';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -27,7 +27,6 @@ export default async function PortalRequests({
 }) {
   const actor = await requireClient();
   const asked = await searchParams;
-  const now = new Date();
 
   const [tickets, projects] = await Promise.all([
     db.ticket.findMany({
@@ -42,7 +41,6 @@ export default async function PortalRequests({
         createdAt: true,
         updatedAt: true,
         project: { select: { name: true } },
-        messages: { where: { isInternal: false }, select: { id: true } },
       },
     }),
     db.project.findMany({
@@ -99,6 +97,7 @@ export default async function PortalRequests({
             <thead>
               <tr>
                 <th className={table.th} scope="col">Request</th>
+                <th className={table.th} scope="col">Number</th>
                 <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">About</th>
                 <th className={table.th} scope="col">Where it stands</th>
@@ -111,7 +110,7 @@ export default async function PortalRequests({
             <tbody>
               {tickets.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={6}>
+                  <td className={table.emptyCell} colSpan={7}>
                     <p className={table.emptyTitle}>You have not asked us for anything yet.</p>
                     <p className={table.emptyHint}>
                       Use the form above and it will appear here.
@@ -125,15 +124,12 @@ export default async function PortalRequests({
                       <Link href={`/portal/requests/${ticket.reference}`} className={table.link}>
                         {ticket.subject}
                       </Link>
-                      <span className={table.sub}>
-                        {ticket.reference} · {ticket.messages.length}{' '}
-                        {ticket.messages.length === 1 ? 'message' : 'messages'}
-                      </span>
                     </td>
+                    <td className={`${table.td} ${table.nowrap}`}>{ticket.reference}</td>
                     <td className={`${table.td} ${table.nowrap}`}>
                       {TICKET_KIND_LABEL[ticket.kind]}
                     </td>
-                    <td className={table.td}>
+                    <td className={`${table.td} ${table.name}`}>
                       {ticket.project?.name ?? <span className={table.muted}>General</span>}
                     </td>
                     <td className={table.td}>
@@ -143,7 +139,6 @@ export default async function PortalRequests({
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>
                       {formatShortDate(ticket.updatedAt)}
-                      <span className={table.sub}>{formatRelative(ticket.updatedAt, now)}</span>
                     </td>
                     <td className={`${table.td} ${table.actions}`}>
                       <span className={table.actionGroup}>

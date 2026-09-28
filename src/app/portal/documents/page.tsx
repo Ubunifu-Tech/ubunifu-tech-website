@@ -92,6 +92,7 @@ export default async function PortalDocuments() {
             <thead>
               <tr>
                 <th className={table.th} scope="col">Document</th>
+                <th className={table.th} scope="col">Number</th>
                 <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">Sent</th>
@@ -104,7 +105,7 @@ export default async function PortalDocuments() {
             <tbody>
               {documents.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={6}>
+                  <td className={table.emptyCell} colSpan={7}>
                     <p className={table.emptyTitle}>Nothing sent to you yet.</p>
                     <p className={table.emptyHint}>
                       Proposals and agreements will appear here when they are ready.
@@ -124,8 +125,8 @@ export default async function PortalDocuments() {
                         >
                           {document.title}
                         </Link>
-                        <span className={table.sub}>{document.reference}</span>
                       </td>
+                      <td className={`${table.td} ${table.nowrap}`}>{document.reference}</td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {DOCUMENT_KIND_LABEL[document.kind]}
                       </td>

@@ -40,11 +40,14 @@ export function ReceiptSheet({
   receipt,
   org,
   invoiceHref,
+  refundHref,
 }: {
   receipt: ReceiptSheetData;
   org: Org;
   /** Where the invoice number links to, for whoever is looking. */
   invoiceHref?: string;
+  /** Where each refund number links to, the refund note it names. */
+  refundHref?: (number: string) => string;
 }) {
   const { payment } = receipt;
   const { invoice } = payment;
@@ -96,7 +99,10 @@ export function ReceiptSheet({
             )}
             {payment.refunds.map((refund) => (
               <tr key={refund.number}>
-                <th scope="row">Refunded, {refund.number}</th>
+                <th scope="row">
+                  Refunded,{' '}
+                  {refundHref ? <a href={refundHref(refund.number)}>{refund.number}</a> : refund.number}
+                </th>
                 <td>
                   {formatMoney(refund.amountMinor, refund.currency)} on {formatDate(refund.refundedAt)}
                 </td>

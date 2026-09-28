@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
@@ -48,26 +47,8 @@ export default async function PortalInvoices() {
       dueAt: true,
       project: { select: { name: true, slug: true } },
       payments: {
-        orderBy: { receivedAt: 'desc' },
-        select: {
-          id: true,
-          amountMinor: true,
-          currency: true,
-          receivedAt: true,
-          reversedAt: true,
-          receipt: { select: { number: true } },
-          refunds: {
-            orderBy: { refundedAt: 'asc' },
-            select: {
-              id: true,
-              number: true,
-              amountMinor: true,
-              currency: true,
-              refundedAt: true,
-              cancelledAt: true,
-            },
-          },
-        },
+        orderBy: { receivedAt: 'asc' },
+        select: { receipt: { select: { number: true } } },
       },
     },
   });
@@ -150,6 +131,9 @@ export default async function PortalInvoices() {
                 invoices.map((invoice) => {
                   const owed = owedOn(invoice);
                   const state = portalInvoiceState(invoice, now);
+                  const receipts = invoice.payments.flatMap((payment) =>
+                    payment.receipt ? [payment.receipt.number] : [],
+                  );
                   return (
                     <tr key={invoice.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
@@ -157,7 +141,7 @@ export default async function PortalInvoices() {
                           {invoice.number}
                         </Link>
                       </td>
-                      <td className={table.td}>
+                      <td className={`${table.td} ${table.name}`}>
                         {invoice.project ? (
                           <Link
                             href={`/portal/projects/${invoice.project.slug}`}
@@ -173,7 +157,7 @@ export default async function PortalInvoices() {
                         {formatShortDate(invoice.issuedAt)}
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
-                        {formatShortDate(invoice.dueAt)}
+                        {invoice.dueAt ? formatShortDate(invoice.dueAt) : 'On receipt'}
                       </td>
                       <td className={table.td}>
                         <span className={`${forms.badge} ${TONE_CLASS[state.tone]}`}>
@@ -190,35 +174,18 @@ export default async function PortalInvoices() {
                           formatMoney(owed, invoice.currency)
                         )}
                       </td>
-                      <td className={table.td}>
-                        {invoice.payments.length === 0 ? (
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {receipts.length === 0 ? (
                           <span className={table.muted}>None yet</span>
+                        ) : receipts.length === 1 ? (
+                          <Link href={`/portal/receipts/${receipts[0]}`} className={table.link}>
+                            {receipts[0]}
+                          </Link>
                         ) : (
-                          invoice.payments.map((payment) => (
-                            <React.Fragment key={payment.id}>
-                              <span className={table.sub}>
-                                {payment.receipt ? (
-                                  <Link href={`/portal/receipts/${payment.receipt.number}`}>
-                                    {payment.receipt.number}
-                                  </Link>
-                                ) : (
-                                  formatMoney(payment.amountMinor, payment.currency)
-                                )}{' '}
-                                · {formatShortDate(payment.receivedAt)}
-                                {payment.reversedAt ? ' · cancelled' : ''}
-                              </span>
-                              {payment.refunds.map((refund) => (
-                                <span key={refund.id} className={table.sub}>
-                                  <Link href={`/portal/refunds/${refund.number}`}>
-                                    {refund.number}
-                                  </Link>{' '}
-                                  · {formatMoney(refund.amountMinor, refund.currency)} sent back{' '}
-                                  {formatShortDate(refund.refundedAt)}
-                                  {refund.cancelledAt ? ' · cancelled' : ''}
-                                </span>
-                              ))}
-                            </React.Fragment>
-                          ))
+                          // The invoice lists each of its receipts.
+                          <Link href={`/portal/invoices/${invoice.number}`} className={table.link}>
+                            {receipts.length} receipts
+                          </Link>
                         )}
                       </td>
                     </tr>

@@ -88,7 +88,12 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
         )}
       </div>
 
-      <ReceiptSheet receipt={receipt} org={org} invoiceHref={`/invoices/${invoice.number}`} />
+      <ReceiptSheet
+        receipt={receipt}
+        org={org}
+        invoiceHref={`/invoices/${invoice.number}`}
+        refundHref={(number) => `/refunds/${number}`}
+      />
     </main>
   );
 }

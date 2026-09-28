@@ -5,11 +5,11 @@ import { dirname, join } from 'node:path';
 //
 // 1. A comment that swallows rules. Deleting a selector but leaving its body
 //    after an opened comment hides every rule down to the next '*/'. That is
-//    how the reduced-motion reset went missing (J1). A comment body holding a
+//    how the reduced-motion reset once went missing. A comment body holding a
 //    '{' is almost always that.
 // 2. A CSS-module class that does not exist. styles.metaSmall on a class the
 //    module never defines renders as a missing class attribute with no error
-//    anywhere (J2). Every styles.name and styles['name'] a .tsx file reads must
+//    anywhere. Every styles.name and styles['name'] a .tsx file reads must
 //    appear as .name in the module it imports.
 //
 // Dynamic lookups (styles[variable]) cannot be checked and are skipped.

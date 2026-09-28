@@ -14,7 +14,7 @@ import {
   parseDateInput,
   parseMoney,
 } from '@/lib/console/money';
-import { monthDate, monthLabel, ratePair } from '@/lib/console/finance';
+import { monthDate, monthKey, monthLabel, ratePair, shiftMonth } from '@/lib/console/finance';
 import { recordCostBill } from '@/lib/console/cost-bills';
 import { deleteStoredFiles } from '@/lib/console/uploads';
 
@@ -156,6 +156,9 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
     return { status: 'done', message: 'Saved.' };
   }
 
+  // Adding this month's amount of a regular cost that is waiting for it.
+  const confirming = regularId;
+
   if (!regularId && formData.get('everyMonth') === 'on') {
     const regular = await db.regularCost.create({
       data: {
@@ -173,10 +176,32 @@ export async function saveCost(_previous: FinanceState, formData: FormData): Pro
     regularId = regular.id;
   }
 
-  const cost = await db.cost.create({
-    data: { ...data, regularId, recordedById: staff.id },
-    select: { id: true },
-  });
+  const month = monthKey(incurredOn);
+  const cost = confirming
+    ? await db.$transaction(async (tx) => {
+        // Once a month per regular cost, even when two people press Add at
+        // the same moment: the second waits on the lock, then finds the first.
+        await tx.$queryRaw`SELECT id FROM "RegularCost" WHERE id = ${confirming} FOR UPDATE`;
+        const already = await tx.cost.findFirst({
+          where: {
+            regularId: confirming,
+            incurredOn: { gte: monthDate(month), lt: monthDate(shiftMonth(month, 1)) },
+          },
+          select: { id: true },
+        });
+        if (already) return null;
+        return tx.cost.create({
+          data: { ...data, regularId: confirming, recordedById: staff.id },
+          select: { id: true },
+        });
+      })
+    : await db.cost.create({
+        data: { ...data, regularId, recordedById: staff.id },
+        select: { id: true },
+      });
+  if (!cost) {
+    return { status: 'error', message: `${read.vendor} is already added for ${monthLabel(month)}.` };
+  }
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,

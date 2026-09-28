@@ -1374,26 +1374,30 @@ export async function voidInvoice(
     });
 
     // Renewal periods it billed can be billed again, and each line's next due
-    // date goes back to the period that is owed once more.
+    // date goes back to the earliest of them, the rule bringing back a
+    // skipped period follows. Stepping back one period at a time left a fee
+    // pointing at its second period when one invoice held two.
     const periods = await tx.renewalEvent.findMany({
       where: { invoiceId: invoice.id },
-      select: {
-        id: true,
-        periodStart: true,
-        periodEnd: true,
-        lineItem: { select: { id: true, nextDueAt: true } },
-      },
+      select: { periodStart: true, lineItem: { select: { id: true, nextDueAt: true } } },
     });
+    await tx.renewalEvent.updateMany({
+      where: { invoiceId: invoice.id },
+      data: { status: 'pending', invoiceId: null },
+    });
+    const earliest = new Map<string, { start: Date; next: Date | null }>();
     for (const period of periods) {
-      await tx.renewalEvent.update({
-        where: { id: period.id },
-        data: { status: 'pending', invoiceId: null },
-      });
-      if (period.lineItem.nextDueAt?.getTime() === period.periodEnd.getTime()) {
-        await tx.lineItem.update({
-          where: { id: period.lineItem.id },
-          data: { nextDueAt: period.periodStart },
+      const seen = earliest.get(period.lineItem.id);
+      if (!seen || period.periodStart < seen.start) {
+        earliest.set(period.lineItem.id, {
+          start: period.periodStart,
+          next: period.lineItem.nextDueAt,
         });
+      }
+    }
+    for (const [lineItemId, { start, next }] of earliest) {
+      if (!next || start < next) {
+        await tx.lineItem.update({ where: { id: lineItemId }, data: { nextDueAt: start } });
       }
     }
     return true;

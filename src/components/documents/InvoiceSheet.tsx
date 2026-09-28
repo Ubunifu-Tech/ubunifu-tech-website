@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import type { Org } from '@/lib/console/org';
 import { formatDate, formatMoney } from '@/lib/console/money';
 import { MoneyBand, MoneyClosing, PageFurniture } from './MoneyParts';
@@ -21,26 +22,41 @@ export type InvoiceSheetData = {
   taxMinor: number;
   totalMinor: number;
   paidMinor: number;
+  /** Sent back against its payments; what was paid stays paid. */
+  refundedMinor: number;
   notes: string | null;
   client: { name: string; legalName: string | null };
   attention: string | null;
   project: { name: string } | null;
   lines: { id: string; label: string; description: string | null; amountMinor: number; quantity: number }[];
-  payments: { id: string; amountMinor: number; currency: string; receivedAt: Date; receipt: { number: string } | null }[];
+  payments: {
+    id: string;
+    amountMinor: number;
+    currency: string;
+    receivedAt: Date;
+    receipt: { number: string } | null;
+    refunds: { id: string; number: string; amountMinor: number; currency: string; refundedAt: Date }[];
+  }[];
 };
 
 export function InvoiceSheet({
   invoice,
   org,
   receiptHref,
+  refundHref,
 }: {
   invoice: InvoiceSheetData;
   org: Org;
   /** Where a receipt number links to, for whoever is looking. */
   receiptHref?: (number: string) => string;
+  /** Where a refund note's number links to, for whoever is looking. */
+  refundHref?: (number: string) => string;
 }) {
   const cancelled = invoice.voidedAt !== null;
   const owed = cancelled ? 0 : Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  // Paid, and all of it sent back: 'Paid in full' would not match their bank.
+  const refundedInFull =
+    owed === 0 && invoice.paidMinor > 0 && invoice.refundedMinor >= invoice.paidMinor;
   const clientName = invoice.client.legalName ?? invoice.client.name;
 
   return (
@@ -130,22 +146,33 @@ export function InvoiceSheet({
             <span>{formatMoney(invoice.totalMinor, invoice.currency)}</span>
           </p>
           {invoice.payments.map((payment) => (
-            <p key={payment.id} className={money.totalRow}>
-              <span>
-                Paid {formatDate(payment.receivedAt)}
-                {payment.receipt && (
-                  <>
-                    {', '}
-                    {receiptHref ? (
-                      <a href={receiptHref(payment.receipt.number)}>{payment.receipt.number}</a>
-                    ) : (
-                      payment.receipt.number
-                    )}
-                  </>
-                )}
-              </span>
-              <span>−{formatMoney(payment.amountMinor, payment.currency)}</span>
-            </p>
+            <Fragment key={payment.id}>
+              <p className={money.totalRow}>
+                <span>
+                  Paid {formatDate(payment.receivedAt)}
+                  {payment.receipt && (
+                    <>
+                      {', '}
+                      {receiptHref ? (
+                        <a href={receiptHref(payment.receipt.number)}>{payment.receipt.number}</a>
+                      ) : (
+                        payment.receipt.number
+                      )}
+                    </>
+                  )}
+                </span>
+                <span>−{formatMoney(payment.amountMinor, payment.currency)}</span>
+              </p>
+              {payment.refunds.map((refund) => (
+                <p key={refund.id} className={money.totalRow}>
+                  <span>
+                    Refunded {formatDate(refund.refundedAt)},{' '}
+                    {refundHref ? <a href={refundHref(refund.number)}>{refund.number}</a> : refund.number}
+                  </span>
+                  <span>+{formatMoney(refund.amountMinor, refund.currency)}</span>
+                </p>
+              ))}
+            </Fragment>
           ))}
         </div>
 
@@ -157,7 +184,11 @@ export function InvoiceSheet({
         ) : (
           <div className={owed === 0 ? money.amount : `${money.amount} ${money.amountDue}`}>
             <p className={money.amountLabel}>
-              {owed === 0 ? 'Paid in full. Thank you.' : 'Amount due'}
+              {owed > 0
+                ? 'Amount due'
+                : refundedInFull
+                  ? 'Paid, then refunded in full'
+                  : 'Paid in full. Thank you.'}
             </p>
             <p className={money.amountFigure}>{formatMoney(owed, invoice.currency)}</p>
           </div>

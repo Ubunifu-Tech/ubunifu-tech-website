@@ -55,6 +55,8 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
           invoice: {
             select: {
               number: true,
+              status: true,
+              voidedAt: true,
               totalMinor: true,
               paidMinor: true,
               currency: true,

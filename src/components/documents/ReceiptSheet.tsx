@@ -19,6 +19,9 @@ export type ReceiptSheetData = {
     recordedBy?: { name: string } | null;
     invoice: {
       number: string;
+      status: string;
+      /** Cancelled after this payment: nothing remains to pay on it. */
+      voidedAt: Date | null;
       totalMinor: number;
       paidMinor: number;
       currency: string;
@@ -49,6 +52,7 @@ export function ReceiptSheet({
   const methodLabel =
     PAYMENT_METHODS.find((method) => method.value === payment.method)?.label ?? payment.method;
   const stillOwed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  const refunded = payment.refunds.reduce((total, refund) => total + refund.amountMinor, 0);
 
   return (
     <article className={money.doc}>
@@ -106,16 +110,27 @@ export function ReceiptSheet({
               <th scope="row">Invoice total</th>
               <td>{formatMoney(invoice.totalMinor, invoice.currency)}</td>
             </tr>
-            <tr>
-              <th scope="row">{stillOwed === 0 ? 'Balance' : 'Balance remaining'}</th>
-              <td>{stillOwed === 0 ? 'Paid in full' : formatMoney(stillOwed, invoice.currency)}</td>
-            </tr>
+            {invoice.voidedAt ? (
+              <tr>
+                <th scope="row">Invoice</th>
+                <td>Cancelled on {formatDate(invoice.voidedAt)}</td>
+              </tr>
+            ) : (
+              <tr>
+                <th scope="row">{stillOwed === 0 ? 'Balance' : 'Balance remaining'}</th>
+                <td>{stillOwed === 0 ? 'Paid in full' : formatMoney(stillOwed, invoice.currency)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
 
         <div className={payment.reversedAt ? `${money.amount} ${money.amountVoid}` : money.amount}>
           <p className={money.amountLabel}>
-            {payment.reversedAt ? 'Amount recorded, then reversed' : 'Amount received, with thanks'}
+            {payment.reversedAt
+              ? 'Amount recorded, then reversed'
+              : refunded >= payment.amountMinor
+                ? 'Amount received, since refunded in full'
+                : 'Amount received, with thanks'}
           </p>
           <p className={money.amountFigure}>{formatMoney(payment.amountMinor, payment.currency)}</p>
         </div>

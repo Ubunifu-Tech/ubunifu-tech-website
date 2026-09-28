@@ -86,6 +86,7 @@ export default async function PortalInvoice({
         invoice={toSheet(invoice)}
         org={org}
         receiptHref={(receipt) => `/portal/receipts/${receipt}`}
+        refundHref={(refund) => `/portal/refunds/${refund}`}
       />
       {state.owing && (
         <section className={`${forms.card} ${sheet.noPrint}`}>

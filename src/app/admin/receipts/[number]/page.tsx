@@ -55,6 +55,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
           invoice: {
             select: {
               number: true,
+              status: true,
+              voidedAt: true,
               totalMinor: true,
               paidMinor: true,
               currency: true,

@@ -11,6 +11,7 @@ export const INVOICE_SHEET_SELECT = {
   taxMinor: true,
   totalMinor: true,
   paidMinor: true,
+  refundedMinor: true,
   notes: true,
   issuedAt: true,
   dueAt: true,
@@ -42,6 +43,13 @@ export const INVOICE_SHEET_SELECT = {
       currency: true,
       receivedAt: true,
       receipt: { select: { number: true } },
+      // Money sent back against it. A cancelled refund sent nothing, so it
+      // is left off, as it is left out of refundedMinor.
+      refunds: {
+        where: { cancelledAt: null },
+        orderBy: { refundedAt: 'asc' },
+        select: { id: true, number: true, amountMinor: true, currency: true, refundedAt: true },
+      },
     },
   },
 } satisfies Prisma.InvoiceSelect;

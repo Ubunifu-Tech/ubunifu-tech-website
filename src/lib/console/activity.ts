@@ -95,6 +95,7 @@ const ACTION_LABELS = {
   'staff.permissions_changed': 'Permissions changed',
   'client.contact_made_main': 'Main contact changed',
   'client.password_changed': 'Client changed their password',
+  'client.password_change.failed': 'Password change refused: the current password was wrong',
   'ticket.client_replied': 'Client replied to a request',
   'client.contact_added': 'Contact added',
   'staff.details_saved': 'Team member details changed',

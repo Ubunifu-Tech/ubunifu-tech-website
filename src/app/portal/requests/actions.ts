@@ -91,6 +91,10 @@ export async function replyToRequest(
   if (body.length < 2 || body.length > 8000) {
     return { status: 'error', message: 'Write a reply first.' };
   }
+  // Every reply emails the team, so one account cannot bury the inbox.
+  if (!(await allow('ticket-reply', actor.clientId, { limit: 60, windowMinutes: 60 }))) {
+    return { status: 'error', message: 'That is a lot of replies in one go. Give it a little while.' };
+  }
 
   const ticket = await db.ticket.findFirst({
     where: { id: ticketId, clientId: actor.clientId, ...liveTicket },

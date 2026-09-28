@@ -115,6 +115,15 @@ export async function editColleague(_previous: TeamState, formData: FormData): P
   if (!email || email === (contact.email ?? '') || !contact.canSignIn) {
     return { status: 'done', message: result.message };
   }
+  // The same limits as Email the invitation and Invite, so changing the
+  // address over and over cannot be used to send invitations to strangers.
+  // The details are already saved, so this is still a success.
+  if (
+    !(await allow('client-invite', contact.id, { limit: 3, windowMinutes: 60 })) ||
+    !(await allow('colleague-invite', actor.clientId, { limit: 10, windowMinutes: 24 * 60 }))
+  ) {
+    return { status: 'done', message: 'Saved. A link went out recently, so the invitation was not sent again yet.' };
+  }
   const person = await db.clientContact.findUnique({
     where: { id: contact.id },
     select: { id: true, name: true, email: true, activatedAt: true },
@@ -189,7 +198,20 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
   const current = String(formData.get('current') ?? '');
   const next = String(formData.get('next') ?? '');
 
+  // A refused change is logged like a refused sign-in: whoever holds a session
+  // and is guessing the password shows up in the account's activity.
+  const refused = (summary?: string) =>
+    recordAudit({
+      actorType: 'client_contact',
+      actorId: actor.id,
+      action: 'client.password_change.failed',
+      entityType: 'ClientContact',
+      entityId: actor.id,
+      summary,
+    });
+
   if (!(await allow('password-change', actor.id, { limit: 5, windowMinutes: 15 }))) {
+    await refused('Too many tries');
     return { status: 'error', message: 'Too many tries. Wait a few minutes.' };
   }
 
@@ -198,6 +220,7 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
     select: { id: true, name: true, email: true, passwordHash: true },
   });
   if (!me?.passwordHash || !(await verifyPassword(current, me.passwordHash))) {
+    await refused();
     return { status: 'error', message: 'Your current password is not right.' };
   }
   const problem = passwordProblem(next);

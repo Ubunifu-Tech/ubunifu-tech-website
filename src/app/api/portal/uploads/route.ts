@@ -36,8 +36,9 @@ export async function POST(request: Request): Promise<NextResponse> {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const actor = await getClientActor();
         if (!actor || !actor.isActivated) throw new Error('not-signed-in');
-        // Generous for real work, a ceiling for a script filling the store.
-        if (!(await allow('portal-upload', actor.id, { limit: 60, windowMinutes: 60 }))) {
+        // Past anything a real batch of photographs reaches, a ceiling for a
+        // script filling the store.
+        if (!(await allow('portal-upload', actor.id, { limit: 250, windowMinutes: 60 }))) {
           throw new Error('too-many-uploads');
         }
 

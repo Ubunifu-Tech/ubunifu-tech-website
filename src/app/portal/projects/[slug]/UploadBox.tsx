@@ -101,6 +101,17 @@ export function UploadBox({
           // Every file after this one would fail the same way.
           problems.push('You were signed out. Sign in again, then attach your files.');
           break;
+        } else if (error instanceof Error && error.message.includes('retrieve the client token')) {
+          // We refused to let it start: too many at once, or we are having
+          // trouble. The browser cannot tell which, so the line does not guess,
+          // and the rest would be refused the same way.
+          const left = sendable.length - index - 1;
+          problems.push(
+            left > 0
+              ? `${file.name} and the ${left === 1 ? 'one' : left} after it did not go through. Wait a few minutes and try them again, or email them to ${email}.`
+              : `${file.name} did not go through. Wait a few minutes and try it again, or email it to ${email}.`,
+          );
+          break;
         } else {
           problems.push(`${file.name} did not go through. Try it again, or email it to ${email}.`);
         }

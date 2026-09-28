@@ -5,7 +5,8 @@ import { db } from '@/lib/db';
 import { StaffRole } from '@/generated/prisma/client';
 import { requireStaff, requireStaffRole, recordAudit } from '@/lib/console/auth';
 import { consoleEnv, isStaffEmailAllowed, staffDomains } from '@/lib/console/env';
-import { issueMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
+import { issueMagicToken, revokeEveryMagicToken, revokeMagicTokens } from '@/lib/console/magic-link';
+import { revokeSessionsFor } from '@/lib/console/session';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { allow } from '@/lib/console/rate-limit';
 import { formText } from '@/lib/console/form';
@@ -180,8 +181,11 @@ export async function changeRole(_previous: TeamState, formData: FormData): Prom
 /**
  * Removes someone, or brings them back. Removal is not deletion: everything
  * they did stays attributed to them, and their open tasks are left assigned
- * so nobody's work silently loses its owner. Sessions end at once, because
- * every request re-checks isActive.
+ * so nobody's work silently loses its owner. It does end their access for
+ * good: every session they hold is signed out and every link still in their
+ * inbox stops working, in the same commit. So Restore brings back the account
+ * but not the old sign-in; they need a fresh sign-in link, or Resend the
+ * invitation for someone who never signed in.
  */
 export async function setActive(_previous: TeamState, formData: FormData): Promise<TeamState> {
   const staff = await requireStaffRole('owner');
@@ -197,7 +201,13 @@ export async function setActive(_previous: TeamState, formData: FormData): Promi
     return { status: 'error', message: 'The team needs at least one owner.' };
   }
 
-  await db.staffUser.update({ where: { id: person.id }, data: { isActive: active } });
+  await db.$transaction(async (tx) => {
+    await tx.staffUser.update({ where: { id: person.id }, data: { isActive: active } });
+    if (!active) {
+      await revokeSessionsFor(tx, 'staff', [person.id]);
+      await revokeEveryMagicToken(tx, 'staff', [person.id]);
+    }
+  });
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,

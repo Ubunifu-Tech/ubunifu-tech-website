@@ -24,22 +24,18 @@ const TRACK: { label: string; statuses: ProjectStatus[] }[] = [
 export function StageTrack({
   status,
   statusLabel,
-  pausedAt,
-  heldFrom = null,
+  stoppedAt,
 }: {
   status: ProjectStatus;
   statusLabel: string;
-  /** For a project on hold or cancelled: the status it left from. */
-  pausedAt: ProjectStatus | null;
   /**
-   * For a project cancelled while on hold: the status it was held from.
-   * The hold is not a stop on the line, so that is where it stopped.
+   * For a project on hold or cancelled: where the work stood before it
+   * stopped, looking through any holds and cancellations in between.
    */
-  heldFrom?: ProjectStatus | null;
+  stoppedAt: ProjectStatus | null;
 }) {
   const stopped = status === 'on_hold' || status === 'cancelled';
-  const left = pausedAt === 'on_hold' ? heldFrom : pausedAt;
-  const at = stopped ? left : status;
+  const at = stopped ? stoppedAt : status;
   const current = at ? TRACK.findIndex((stop) => stop.statuses.includes(at)) : -1;
 
   // Stopped somewhere we cannot place: no track rather than one with every

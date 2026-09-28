@@ -379,60 +379,67 @@ export async function advanceForReview(
 }
 
 /**
- * Where a held project is allowed to resume to.
+ * Where a stopped project really stood, from its status events, newest first.
  *
- * The held-from state is read back out of the event log rather than kept in a
- * column, so it cannot drift from the history. Resuming is allowed to that
- * state or one step on from it — a project paused during the build is often
- * resumed at review, because the client reviewed it while it was parked, and
- * forcing them back through the exact prior state would put a hop in the log
- * that never happened. One step, never a graph search: otherwise on_hold
- * becomes a hub from which anything is reachable.
+ * Read back out of the event log rather than kept in a column, so it cannot
+ * drift from the history. A hold or a cancellation is a pause, not a place, so
+ * the walk goes back through them: a project held during the build and then
+ * cancelled stood at the build, and one cancelled, revived to on hold and held
+ * again still did. Returns null when the log runs out, or reaches the project's
+ * first status, before finding one.
  */
-export async function heldFrom(projectId: string): Promise<ProjectStatus | null> {
-  const event = await db.projectStatusEvent.findFirst({
-    where: { projectId, to: 'on_hold' },
-    orderBy: { createdAt: 'desc' },
-    select: { from: true },
+export function stoppedFrom(
+  events: { from: ProjectStatus | null; to: ProjectStatus }[],
+): ProjectStatus | null {
+  for (const event of events) {
+    if (event.from === null) return null;
+    if (event.from !== 'on_hold' && event.from !== 'cancelled') return event.from;
+  }
+  return null;
+}
+
+async function stoppedFromLog(projectId: string): Promise<ProjectStatus | null> {
+  const events = await db.projectStatusEvent.findMany({
+    where: { projectId },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: 20,
+    select: { from: true, to: true },
   });
-  return event?.from ?? null;
+  return stoppedFrom(events);
 }
 
 /**
- * Where a cancelled project stood when it was cancelled, read back from the
- * event log the same way a hold is. A project cancelled by mistake, or
- * revived by the client, picks up there rather than starting over as a lead.
+ * The moves on offer. A held project resumes to where it stood or one step on
+ * from it: a project paused during the build is often resumed at review,
+ * because the client reviewed it while it was parked, and forcing them back
+ * through the exact prior state would put a hop in the log that never
+ * happened. One step, never a graph search: otherwise on_hold becomes a hub
+ * from which anything is reachable. A cancelled project, cancelled by mistake
+ * or revived by the client, picks up where it stood rather than as a lead.
  */
-export async function cancelledFrom(projectId: string): Promise<ProjectStatus | null> {
-  const event = await db.projectStatusEvent.findFirst({
-    where: { projectId, to: 'cancelled' },
-    orderBy: { createdAt: 'desc' },
-    select: { from: true },
-  });
-  return event?.from ?? null;
-}
-
 export async function transitionsFor(project: {
   id: string;
   status: ProjectStatus;
 }): Promise<Transition[]> {
+  if (project.status !== 'on_hold' && project.status !== 'cancelled') {
+    return TABLE[project.status];
+  }
+  const from = await stoppedFromLog(project.id);
+
   if (project.status === 'cancelled') {
-    const from = await cancelledFrom(project.id);
-    if (!from || from === 'lead' || from === 'cancelled') return TABLE.cancelled;
+    if (!from || from === 'lead') return TABLE.cancelled;
     return [
       {
         to: from,
         label: `Pick it back up (${STAFF_LABEL[from].toLowerCase()})`,
-        detail: 'Where it was when it was cancelled.',
+        detail: 'Where the work stood before it stopped.',
         tone: 'primary',
       },
       ...TABLE.cancelled,
     ];
   }
-  if (project.status !== 'on_hold') return TABLE[project.status];
 
-  const held = await heldFrom(project.id);
-  if (!held || held === 'on_hold') {
+  if (!from) {
     // No readable hold origin. Rather than guess, offer the two ends that are
     // always honest: pick the work up, or close it out.
     return [
@@ -442,11 +449,11 @@ export async function transitionsFor(project: {
     ];
   }
 
-  const onward = TABLE[held].filter((t) => t.to !== 'on_hold');
+  const onward = TABLE[from].filter((t) => t.to !== 'on_hold');
   const seen = new Set<ProjectStatus>();
   const resume: Transition[] = [];
 
-  for (const candidate of [{ to: held, label: `Resume (${STAFF_LABEL[held].toLowerCase()})`, tone: 'primary' as const }, ...onward]) {
+  for (const candidate of [{ to: from, label: `Resume (${STAFF_LABEL[from].toLowerCase()})`, tone: 'primary' as const }, ...onward]) {
     if (seen.has(candidate.to) || candidate.to === 'on_hold') continue;
     seen.add(candidate.to);
     resume.push(candidate);

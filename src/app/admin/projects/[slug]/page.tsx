@@ -10,10 +10,11 @@ import {
   STATUS_TONE,
 } from '@/lib/console/project-status';
 import {
-  NEXT_STEP,
   documentStage,
   guardsFor,
   loadGuardFacts,
+  NEXT_STEP,
+  stoppedFrom,
   transitionsFor,
 } from '@/lib/console/transitions';
 import { activityFor } from '@/lib/console/activity';
@@ -288,7 +289,7 @@ export default async function ProjectPage({
         },
       },
       statusEvents: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         take: 50,
         select: { id: true, from: true, to: true, note: true, createdAt: true, actorType: true },
       },
@@ -537,14 +538,9 @@ export default async function ProjectPage({
         <StageTrack
           status={project.status}
           statusLabel={STAFF_LABEL[project.status]}
-          pausedAt={
+          stoppedAt={
             project.status === 'on_hold' || project.status === 'cancelled'
-              ? (project.statusEvents.find((event) => event.to === project.status)?.from ?? null)
-              : null
-          }
-          heldFrom={
-            project.status === 'cancelled'
-              ? (project.statusEvents.find((event) => event.to === 'on_hold')?.from ?? null)
+              ? stoppedFrom(project.statusEvents)
               : null
           }
         />

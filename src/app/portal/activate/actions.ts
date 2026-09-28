@@ -7,6 +7,7 @@ import { getPendingContact, recordAudit } from '@/lib/console/auth';
 import { isUniqueConflict } from '@/lib/console/conflict';
 import { hashPassword, passwordProblem } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
+import { EMAILED_LINKS } from '@/lib/console/client-links';
 import { readSession, revokeAllSessions } from '@/lib/console/session';
 import { safePortalPath } from '@/lib/console/return-path';
 import { allow } from '@/lib/console/rate-limit';
@@ -107,11 +108,12 @@ export async function activateAccount(
     };
   }
 
-  // Any other setup, invitation or sign-in links still outstanding are now
-  // spent, and any other session opened from one of them ends here. Either
-  // would otherwise be a second way into an account that now has a password.
-  // The session that finished setup is the one kept.
-  await revokeMagicTokens('client_contact', actor.id, ['invite', 'sign_in']);
+  // Every link emailed before setup is now spent: setup, invitation and
+  // sign-in links, and document, invoice and password links too, as on a
+  // reset or a password change. Any other session opened from one of them
+  // ends here. Either would otherwise be a second way into an account that
+  // now has a password. The session that finished setup is the one kept.
+  await revokeMagicTokens('client_contact', actor.id, EMAILED_LINKS);
   const session = await readSession('portal');
   await revokeAllSessions('client_contact', actor.id, session?.sessionId);
 

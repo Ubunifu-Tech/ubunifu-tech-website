@@ -32,13 +32,19 @@ export const metadata: Metadata = {
 /** Entrance screens under /portal, which are always shown without the bar. */
 const ENTRANCE = /^\/portal\/(sign-in|reset|link)(\/|\?|$)/;
 
-/** What is waiting on the client, for the numbers beside each section. */
-async function countsFor(clientId: string): Promise<PortalCounts> {
+/**
+ * What is waiting on this person, for the numbers beside each section.
+ * Signing is the main contact's to do, so a colleague is not counted a
+ * document they cannot sign, the same rule the documents page follows.
+ */
+async function countsFor(clientId: string, signs: boolean): Promise<PortalCounts> {
   try {
     const [documents, invoices, requests] = await Promise.all([
-      db.document.count({
-        where: { project: { clientId, deletedAt: null }, ...awaitingSignature(new Date()) },
-      }),
+      signs
+        ? db.document.count({
+            where: { project: { clientId, deletedAt: null }, ...awaitingSignature(new Date()) },
+          })
+        : Promise.resolve(0),
       db.invoice.count({
         where: { clientId, ...liveInvoice, status: { in: ['sent', 'overdue', 'part_paid'] } },
       }),
@@ -78,7 +84,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const path = (await headers()).get('x-portal-path') ?? '';
   if (!actor || !actor.isActivated || ENTRANCE.test(path)) return <>{children}</>;
 
-  const counts = await countsFor(actor.clientId);
+  const counts = await countsFor(actor.clientId, actor.isPrimary);
 
   return (
     <div className={styles.shell}>

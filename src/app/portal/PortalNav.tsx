@@ -34,8 +34,9 @@ export function PortalNav({ counts }: { counts: PortalCounts }) {
           >
             {link.label}
             {count > 0 && (
-              <span className={styles.navCount} aria-label={`${count} waiting`}>
+              <span className={styles.navCount}>
                 {count}
+                <span className="srOnly"> waiting</span>
               </span>
             )}
           </Link>

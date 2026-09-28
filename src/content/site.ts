@@ -35,8 +35,9 @@ export const contactSubjects = [
 export type ContactSubject = (typeof contactSubjects)[number];
 
 // What we promise about a reply, in one sentence. The chat's hand-off card, the
-// assistant's instructions and its knowledge all read this, so the promise a
-// visitor is given is the same wherever they meet it.
+// assistant's instructions and its knowledge, the contact form and the
+// acknowledgement email all read this, so the promise a visitor is given is the
+// same wherever they meet it.
 export const replyPromise = 'A person replies by email, usually within a working day.';
 
 // Calls to action - one wording per action, site-wide. Import these instead of

@@ -3,6 +3,7 @@
 // exports return ready-to-send HTML strings.
 
 import { formatDate } from '@/lib/console/money';
+import { replyPromise } from '@/content/site';
 
 const SITE = 'https://ubunifutech.com';
 const EMAIL = 'info@ubunifutech.com';
@@ -234,7 +235,7 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
   const body = `
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1D1B22;">Thanks for reaching out.</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      We have your message${about}. We read everything that comes in, and we will reply to this address directly. If it is easier to talk, say so in a reply and we will suggest a time.
+      We have your message${about}. We read everything that comes in. ${escapeHtml(replyPromise)} If it is easier to talk, say so in a reply and we will suggest a time.
     </p>
     <p style="margin:0 0 26px;color:#6D6975;font-size:13px;line-height:1.6;">
       If you did not write to us, you can ignore this email.
@@ -242,7 +243,7 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
     <p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
     ${buttonRow(button(INSIGHT, 'Try Ubunifu Insight'), buttonGhost(SIFA, 'Try Ubunifu Sifa'))}`;
 
-  return shell('We have your message. We will reply directly.', body);
+  return shell(`We have your message. ${replyPromise}`, body);
 }
 
 /* ── Console: sign-in and invitation ──────────── */

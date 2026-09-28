@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { openChat } from './Assistant';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Phone, MapPin, MessageCircle, Send, CheckCircle, AlertCircle } from 'lucide-react';
-import { contactSubjects, site, type ContactSubject } from '@/content/site';
+import { contactSubjects, replyPromise, site, type ContactSubject } from '@/content/site';
 import { ContactSubjectSelect } from './ContactSubjectSelect';
 import styles from './Contact.module.css';
 
@@ -158,11 +158,12 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 </>
               )}
             </h2>
-            {/* Says the same thing the acknowledgement email says, so the promise
-                a sender reads here is the one they get back in writing. */}
+            {/* The reply promise comes from content/site.ts, which the
+                acknowledgement email and the chat also read, so a sender is
+                promised the same thing here, in writing and in the chat. */}
             <p className={styles.text}>
-              We read everything that comes in and reply to you directly. For a quick
-              question, the chat answers straight away and passes anything bigger to us.
+              We read everything that comes in. {replyPromise} For a quick question,
+              the chat answers straight away and passes anything bigger to us.
             </p>
 
             {/* Values come from content/site.ts, which is the single source of

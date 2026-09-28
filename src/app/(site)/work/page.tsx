@@ -24,7 +24,7 @@ export default function WorkPage() {
           scene="work"
           eyebrow="Our work"
           title="Our work is live. Go and look."
-          lead="Two systems we built, both running today. Every link on this page opens the real thing."
+          lead="Two systems we built, both running today. Each address on this page opens the live system."
         />
 
         {/* Dispatch strip: the two addresses, above the fold, each a whole link.

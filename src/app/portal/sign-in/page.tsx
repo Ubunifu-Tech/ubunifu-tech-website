@@ -43,13 +43,18 @@ export default async function PortalSignIn({
   const pending = await getPendingContact();
   if (pending && !pending.isActivated) redirect('/portal/activate');
 
-  // An old link that pointed somewhere still takes them there once signed in.
+  // An old link that pointed somewhere still takes them there once signed in,
+  // and so does a session that ended while they were on a page.
   const problem =
     error === 'expired' && next
       ? 'That link has been used or has run out. Sign in below and it opens where it pointed.'
-      : error
-        ? LINK_PROBLEM[error]
-        : undefined;
+      : error === 'signed-out'
+        ? next
+          ? 'You were signed out. Sign in again and you will go back to where you were.'
+          : 'You were signed out. Sign in again.'
+        : error
+          ? LINK_PROBLEM[error]
+          : undefined;
 
   return (
     <AuthLayout role="Portal">

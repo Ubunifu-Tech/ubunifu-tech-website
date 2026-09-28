@@ -1,10 +1,10 @@
 import 'server-only';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { ActorType, StaffRole } from '@/generated/prisma/client';
 import { isAdminHost, isStaffEmailAllowed } from './env';
-import { readSession } from './session';
+import { CLIENT_COOKIE, readSession } from './session';
 import { cache } from 'react';
 import {
   permissionsForRole,
@@ -226,11 +226,15 @@ export async function requireClient(): Promise<ClientActor> {
     // back to setup, which their session can still finish.
     const pending = await getPendingContact();
     if (pending && !pending.isActivated) redirect('/portal/activate');
+    const query = new URLSearchParams();
+    // A cookie with no live session behind it: the session ended under them,
+    // so the sign-in page says so. Someone who never signed in here sees no
+    // notice. The reason is not given: revoked sessions have several causes.
+    if ((await cookies()).has(CLIENT_COOKIE)) query.set('error', 'signed-out');
     // Back to the page they asked for once they are in.
     const next = safePortalPath((await headers()).get('x-portal-path'));
-    redirect(
-      next && next !== '/portal' ? `/portal/sign-in?next=${encodeURIComponent(next)}` : '/portal/sign-in',
-    );
+    if (next && next !== '/portal') query.set('next', next);
+    redirect(query.size ? `/portal/sign-in?${query}` : '/portal/sign-in');
   }
   // An invited contact who has not finished setting a password can hold a
   // session but must finish before reaching anything else.

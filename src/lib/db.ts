@@ -43,9 +43,10 @@ function createClient(): PrismaClient {
        * holds its own pool. Railway's Postgres has a finite connection limit,
        * and a handful of instances with the pg default of 10 each will exhaust
        * it. Small pool, short idle timeout: reconnecting is cheaper than being
-       * refused.
+       * refused. An empty value means 5 too: Number('') is 0, which pg
+       * would read as its own default of 10.
        */
-      max: Number(process.env.DATABASE_POOL_MAX ?? 5),
+      max: Number(process.env.DATABASE_POOL_MAX) || 5,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 10_000,
     }),

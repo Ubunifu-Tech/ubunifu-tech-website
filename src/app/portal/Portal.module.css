@@ -736,6 +736,8 @@
 
 .updateBody p {
   margin: 0 0 var(--space-4);
+  /* A single line break shows as one, as it does in the email. */
+  white-space: pre-line;
 }
 
 .updateBody p:last-child {

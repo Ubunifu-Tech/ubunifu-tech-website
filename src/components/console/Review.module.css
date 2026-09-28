@@ -39,6 +39,8 @@
 
 .note p {
   margin: 0 0 var(--space-3);
+  /* A single line break shows as one, as it does in the email. */
+  white-space: pre-line;
 }
 
 .note p:last-child {

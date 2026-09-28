@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Search, X } from 'lucide-react';
 import table from '@/styles/table.module.css';
+import { PAGE_SIZE, pageHref } from '@/lib/console/paging';
 
 export type ListView = { key: string; label: string; count: number };
 
@@ -122,15 +123,53 @@ export function ListFooter({
   total,
   noun,
   query,
+  paging,
 }: {
   shown: number;
   total: number;
   /** Singular and plural: ['invoice', 'invoices']. */
   noun: [string, string];
   query?: string;
+  /** Which page this is, and the address to build the others from. */
+  paging?: { page: number; path: string; params: Record<string, string | undefined> };
 }) {
   if (total === 0) return null;
   const word = total === 1 ? noun[0] : noun[1];
+
+  if (paging && shown < total) {
+    const first = (paging.page - 1) * PAGE_SIZE + 1;
+    const last = first + shown - 1;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    return (
+      <nav className={table.footer} aria-label={`Pages of ${noun[1]}`}>
+        <span>
+          {first === last ? first : `${first} to ${last}`} of {total} {word}
+          {query ? ` matching “${query}”` : ''}
+        </span>
+        <span className={table.pager}>
+          {paging.page > 1 && (
+            <Link
+              href={pageHref(paging.path, paging.params, paging.page - 1)}
+              className={table.action}
+              rel="prev"
+            >
+              Previous
+            </Link>
+          )}
+          {paging.page < pages && (
+            <Link
+              href={pageHref(paging.path, paging.params, paging.page + 1)}
+              className={table.action}
+              rel="next"
+            >
+              Next
+            </Link>
+          )}
+        </span>
+      </nav>
+    );
+  }
+
   const text =
     shown < total
       ? `Showing ${shown} of ${total} ${word}. Search to find the rest.`

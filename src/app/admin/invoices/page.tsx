@@ -11,6 +11,7 @@ import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { addTo, monthOpens, shiftMonth } from '@/lib/console/finance';
+import { pageNumber, pageWindow } from '@/lib/console/paging';
 
 export const metadata = { title: 'Invoices' };
 
@@ -54,10 +55,10 @@ function amounts(byCurrency: Map<string, number>): string {
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; q?: string }>;
+  searchParams: Promise<{ show?: string; q?: string; page?: string }>;
 }) {
   await requirePermission('invoices');
-  const { show, q } = await searchParams;
+  const { show, q, page } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'owing';
   const query = searchText(q);
   const today = new Date();
@@ -77,25 +78,7 @@ export default async function InvoicesPage({
       }
     : {};
 
-  const [invoices, viewCounts, open, drafts, payments, refunds] = await Promise.all([
-    db.invoice.findMany({
-      where: { AND: [liveInvoice, filterToWhere(active), matching] },
-      orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }],
-      take: 200,
-      select: {
-        id: true,
-        number: true,
-        status: true,
-        currency: true,
-        totalMinor: true,
-        paidMinor: true,
-        refundedMinor: true,
-        issuedAt: true,
-        dueAt: true,
-        client: { select: { name: true, slug: true } },
-        project: { select: { name: true, slug: true } },
-      },
-    }),
+  const [viewCounts, open, drafts, payments, refunds] = await Promise.all([
     Promise.all(
       FILTERS.map((filter) =>
         db.invoice.count({ where: { AND: [liveInvoice, filterToWhere(filter.key), matching] } }),
@@ -151,7 +134,27 @@ export default async function InvoicesPage({
     if (current) addTo(refundedThisMonth, refund.currency, refund.amountMinor);
   }
 
-  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? invoices.length;
+  const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
+  const shown = pageWindow(pageNumber(page), total);
+  const invoices = await db.invoice.findMany({
+    where: { AND: [liveInvoice, filterToWhere(active), matching] },
+    orderBy: [{ dueAt: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+    skip: shown.skip,
+    take: shown.take,
+    select: {
+      id: true,
+      number: true,
+      status: true,
+      currency: true,
+      totalMinor: true,
+      paidMinor: true,
+      refundedMinor: true,
+      issuedAt: true,
+      dueAt: true,
+      client: { select: { name: true, slug: true } },
+      project: { select: { name: true, slug: true } },
+    },
+  });
 
   return (
     <main className={styles.page}>
@@ -327,6 +330,7 @@ export default async function InvoicesPage({
           total={total}
           noun={['invoice', 'invoices']}
           query={query}
+          paging={{ page: shown.page, path: '/invoices', params: { show, q: query } }}
         />
       </div>
     </main>

@@ -44,9 +44,12 @@ function filterToWhere(key: string): Prisma.InvoiceWhereInput {
   }
 }
 
-/** Amounts in several currencies, side by side. Never added together. */
+/**
+ * Amounts in several currencies, side by side. Never added together. A net
+ * negative stays, so a month that refunded more than it took reads below zero.
+ */
 function amounts(byCurrency: Map<string, number>): string {
-  const parts = [...byCurrency].filter(([, amount]) => amount > 0);
+  const parts = [...byCurrency].filter(([, amount]) => amount !== 0);
   return parts.length === 0
     ? formatMoney(0, 'USD')
     : parts.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ');

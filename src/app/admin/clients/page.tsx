@@ -237,6 +237,10 @@ export default async function ClientsPage({
                           }
                         >
                           {formatMoney(committed, client.currency)}
+                          {/* Said in the cell too: a phone has no hover. */}
+                          {otherCurrencies.length > 0 && (
+                            <span className={table.muted}> + {otherCurrencies.join(', ')}</span>
+                          )}
                         </td>
                       )}
                       <td className={`${table.td} ${table.nowrap}`}>

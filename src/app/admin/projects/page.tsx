@@ -233,6 +233,8 @@ export default async function ProjectsPage({
                           title={unpriced ? 'Some fee lines have no price yet' : undefined}
                         >
                           {formatMoney(committed, project.currency)}
+                          {/* Said in the cell too: a phone has no hover. */}
+                          {unpriced && <span className={table.muted}>, part priced</span>}
                         </td>
                       )}
                     </tr>

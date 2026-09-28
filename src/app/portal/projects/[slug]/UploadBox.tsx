@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
 import { ALLOWED_CONTENT_TYPES, ALLOWED_LABEL, uploadTypeOf } from '@/lib/console/upload-rules';
 import { confirmUpload, stillSignedIn } from './actions';
@@ -44,6 +44,19 @@ export function UploadBox({
 }) {
   const [stage, setStage] = useState<Stage>({ kind: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
+  const sending = stage.kind === 'sending';
+
+  // Leaving mid-batch stops the files still to go, so the browser asks
+  // first. A link inside the portal is not covered.
+  useEffect(() => {
+    if (!sending) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [sending]);
 
   async function onPick(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -121,10 +134,19 @@ export function UploadBox({
     setStage({ kind: 'done', sent, problems });
   }
 
-  const sending = stage.kind === 'sending';
+  // What a screen reader hears: each file once as it starts, not every
+  // percent, then the outcome.
+  const status = sending
+    ? `Sending ${stage.index} of ${stage.count}: ${stage.name}`
+    : stage.kind === 'done' && stage.sent > 0
+      ? stage.sent === 1
+        ? 'Sent. We have it.'
+        : `${stage.sent} files sent. We have them.`
+      : '';
 
   return (
     <div className={styles.uploadBox}>
+      {/* Opened by the button below, which is the one control people reach. */}
       <input
         ref={inputRef}
         type="file"
@@ -133,12 +155,18 @@ export function UploadBox({
         className={styles.fileInput}
         onChange={onPick}
         disabled={sending}
+        tabIndex={-1}
+        aria-hidden="true"
       />
+      {/* aria-disabled rather than disabled, so focus stays on it while sending. */}
       <button
         type="button"
         className={`${forms.button} ${forms.quiet}`}
-        onClick={() => inputRef.current?.click()}
-        disabled={sending}
+        onClick={() => {
+          if (sending) return;
+          inputRef.current?.click();
+        }}
+        aria-disabled={sending}
       >
         {sending
           ? stage.count > 1
@@ -149,19 +177,20 @@ export function UploadBox({
             : 'Attach files'}
       </button>
 
-      <span className={forms.hint}>{sending ? stage.name : hint}</span>
+      <span className={forms.hint}>{hint}</span>
 
-      {stage.kind === 'done' && stage.sent > 0 && (
-        <p className={forms.hint} role="status">
-          {stage.sent === 1 ? 'Sent. We have it.' : `${stage.sent} files sent. We have them.`}
-        </p>
+      <p className={forms.hint} role="status" aria-live="polite">
+        {status}
+      </p>
+      {stage.kind === 'done' && stage.problems.length > 0 && (
+        <div role="alert" className={`${forms.error} ${styles.uploadProblems}`}>
+          <ul>
+            {stage.problems.map((problem, index) => (
+              <li key={index}>{problem}</li>
+            ))}
+          </ul>
+        </div>
       )}
-      {stage.kind === 'done' &&
-        stage.problems.map((problem) => (
-          <p key={problem} className={forms.error} role="alert">
-            {problem}
-          </p>
-        ))}
     </div>
   );
 }

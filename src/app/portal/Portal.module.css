@@ -796,6 +796,21 @@
   margin-top: var(--space-3);
 }
 
+/* Everything that did not go in a batch, as one list on its own line. */
+.uploadProblems {
+  flex-basis: 100%;
+}
+
+.uploadProblems ul {
+  margin: 0;
+  padding-left: 1.25em;
+}
+
+/* Still focusable while sending, so focus stays put; its label says it is busy. */
+.uploadBox button[aria-disabled='true'] {
+  cursor: progress;
+}
+
 /* The real input, kept out of the way: its own button says "Choose File" and
    nothing about which request it belongs to. The visible one is a button. */
 .fileInput {

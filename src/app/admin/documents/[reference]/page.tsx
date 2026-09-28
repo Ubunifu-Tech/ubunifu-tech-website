@@ -524,7 +524,29 @@ export default async function DocumentPage({
         <div className={forms.cardHeader}>
           <h2 className={forms.cardTitle}>Details</h2>
         </div>
-        <DetailsForm documentId={document.id} title={document.title} kind={document.kind} />
+        {['sent', 'viewed', 'changes_requested'].includes(document.status) ? (
+          <>
+            <dl className={page.facts}>
+              <div>
+                <dt>Kind</dt>
+                <dd>{DOCUMENT_KIND_LABEL[document.kind]}</dd>
+              </div>
+              <div>
+                <dt>Title</dt>
+                <dd>{document.title}</dd>
+              </div>
+            </dl>
+            <p className={styles.note}>
+              To change the title or kind, withdraw it on the{' '}
+              <Link href={hrefFor('send')} className={styles.inlineLink}>
+                Send step
+              </Link>{' '}
+              first.
+            </p>
+          </>
+        ) : (
+          <DetailsForm documentId={document.id} title={document.title} kind={document.kind} />
+        )}
         <dl className={page.facts}>
           <div>
             <dt>Project</dt>

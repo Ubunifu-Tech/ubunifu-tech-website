@@ -94,7 +94,17 @@ export async function createDocument(
   redirect(`/documents/${document.reference}`);
 }
 
-/** Renames a document or changes its kind, up to the moment it is signed. */
+const WITH_CLIENT: string[] = ['sent', 'viewed', 'changes_requested'];
+const SIGNED_DETAILS = 'This has been signed, so it cannot change.';
+const WITH_CLIENT_DETAILS =
+  'It is with the client. Withdraw it on the Send step first, then change the details.';
+
+/**
+ * Renames a document or changes its kind, while it is not with the client.
+ * Once a version is sent the cover, the print and the step it moves the
+ * project to all read the current title and kind, so they are frozen until
+ * it is withdrawn (decision 8).
+ */
 export async function saveDetails(
   _previous: DocumentState,
   formData: FormData,
@@ -120,13 +130,34 @@ export async function saveDetails(
   });
   if (!document) return { status: 'error', message: 'That document no longer exists.' };
   if (document.status === 'signed') {
-    return { status: 'error', message: 'This has been signed, so it cannot change.' };
+    return { status: 'error', message: SIGNED_DETAILS };
+  }
+  // After changes are asked for the request stays signable, so that counts
+  // as with the client too.
+  if (WITH_CLIENT.includes(document.status)) {
+    return { status: 'error', message: WITH_CLIENT_DETAILS };
   }
   if (document.title === title && document.kind === kind) {
     return { status: 'done', message: 'Nothing changed.' };
   }
 
-  await db.document.update({ where: { id: document.id }, data: { title, kind } });
+  // Conditional on the status, so a send or a signature landing between the
+  // read above and this write (both change the status in their own
+  // transaction) leaves the details as they were.
+  const saved = await db.document.updateMany({
+    where: {
+      id: document.id,
+      status: { in: ['draft', 'internal_review', 'declined', 'expired', 'superseded'] },
+    },
+    data: { title, kind },
+  });
+  if (saved.count === 0) {
+    const now = await db.document.findUnique({ where: { id: document.id }, select: { status: true } });
+    return {
+      status: 'error',
+      message: now?.status === 'signed' ? SIGNED_DETAILS : WITH_CLIENT_DETAILS,
+    };
+  }
 
   await recordAudit({
     actorType: 'staff',

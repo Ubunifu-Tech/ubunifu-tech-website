@@ -646,7 +646,11 @@ export function projectUpdateEmail(input: {
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.title)}</h1>
     <p style="margin:0 0 16px;color:#4A4753;font-size:15px;line-height:1.7;">Hello ${name},</p>
     ${paragraphs}
-    ${input.previewUrl ? button(input.previewUrl, 'Take a look') : button(input.url, 'Open your portal')}
+    ${
+      input.previewUrl
+        ? buttonRow(button(input.previewUrl, 'Take a look'), buttonGhost(input.url, 'Open your portal'))
+        : button(input.url, 'Open your portal')
+    }
     <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
       Every update is kept in your portal, so you can always go back to one.
     </p>`;

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/check-env.mjs && prisma generate && node scripts/migrate-deploy.mjs && next build",
+    "build": "node scripts/check-env.mjs && prisma generate && npm run check:typography && npm run check:editor && npm run check:diff && node scripts/migrate-deploy.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

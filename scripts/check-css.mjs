@@ -18,19 +18,6 @@ const failures = [];
 let moduleImports = 0;
 let references = 0;
 
-// Known misses in code other packages own, as file -> class names. An entry
-// that starts to resolve fails the check, so it is removed once fixed and the
-// gate then holds that file too.
-const pending = {
-  // TODO(package G): the due-date and assignee forms name classes the module
-  // never defined. Style them or drop the className.
-  'src/app/admin/projects/[slug]/TaskRow.tsx': ['due', 'assignee'],
-  // TODO(package I): react-day-picker's weekdays and week parts map to classes
-  // Controls.module.css never defined.
-  'src/components/console/DatePicker.tsx': ['dpWeekdays', 'dpWeek'],
-};
-const pendingSeen = new Set();
-
 function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
@@ -82,7 +69,6 @@ for (const file of files.filter((f) => f.endsWith('.tsx') || f.endsWith('.ts')))
       continue;
     }
     const defined = classesIn(cssPath);
-    const allowed = new Set(pending[file] ?? []);
     const used = new Set();
     const ident = escape(name);
     for (const match of body.matchAll(new RegExp(`(?<![\\w.$])${ident}\\.([A-Za-z_$][\\w$]*)`, 'g'))) {
@@ -92,20 +78,8 @@ for (const file of files.filter((f) => f.endsWith('.tsx') || f.endsWith('.ts')))
       used.add(match[2]);
     }
     for (const className of used) {
-      if (defined.has(className)) {
-        references++;
-        continue;
-      }
-      if (allowed.has(className)) pendingSeen.add(`${file} ${className}`);
+      if (defined.has(className)) references++;
       else failures.push(`${file}: ${name}.${className} is not a class in ${cssPath}`);
-    }
-  }
-}
-
-for (const [file, classNames] of Object.entries(pending)) {
-  for (const className of classNames) {
-    if (!pendingSeen.has(`${file} ${className}`)) {
-      failures.push(`${file}: ${className} now resolves or is gone; remove it from pending in scripts/check-css.mjs`);
     }
   }
 }
@@ -115,6 +89,6 @@ if (failures.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    `CSS check passed: no comment hides a rule, and ${references} class references across ${moduleImports} module imports resolve (${pendingSeen.size} pending).`,
+    `CSS check passed: no comment hides a rule, and ${references} class references across ${moduleImports} module imports resolve.`,
   );
 }

@@ -95,7 +95,7 @@ export function TaskRow({
           </p>
         )}
       </div>
-      <form action={due} ref={dueForm} className={styles.due}>
+      <form action={due} ref={dueForm}>
         <input type="hidden" name="deliverableId" value={id} />
         <DatePicker
           name="dueAt"
@@ -108,7 +108,7 @@ export function TaskRow({
           onChange={() => requestAnimationFrame(() => dueForm.current?.requestSubmit())}
         />
       </form>
-      <form action={assign} className={styles.assignee}>
+      <form action={assign}>
         <input type="hidden" name="deliverableId" value={id} />
         <Select
           name="assigneeId"

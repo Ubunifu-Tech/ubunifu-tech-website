@@ -161,7 +161,8 @@ ubunifu-tech-website/
 │   ├── brand/              # Canonical Ubunifu Ligature SVG marks and lockups
 │   ├── editorial/          # Subject-specific illustrations and labelled synthetic scenes
 │   ├── logo-v2.png         # Navy social/avatar tile with the Ligature
-│   └── og.png              # Default social preview
+│   ├── og.jpg              # Default social preview, 1200 × 630
+│   └── og.png              # Campaign master the preview is cropped from
 ├── _posts/                  # Blog fallback for a build with no database
 ├── src/
 │   ├── app/                 # Next.js App Router
@@ -216,7 +217,7 @@ Design tokens are the single source of truth — every color, font, and spacing 
 [`src/app/globals.css`](src/app/globals.css). See [`BRANDING.md`](BRANDING.md) for the full
 system, [`public/brand/`](public/brand/) for canonical SVG assets, and
 [`/brand`](https://ubunifutech.com/brand) for the shareable brand kit and downloads.
-`public/logo-v2.png` is the social avatar. `public/og.png` remains campaign media rather than a canonical logo master.
+`public/logo-v2.png` is the social avatar. `public/og.jpg` is the social preview, a 1200 × 630 crop of `public/og.png`, which remains campaign media rather than a canonical logo master.
 
 ---
 

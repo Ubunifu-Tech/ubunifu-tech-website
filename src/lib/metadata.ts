@@ -25,9 +25,10 @@ export function pageMetadata({ title, description, path }: PageMetadataInput): M
       description,
       images: [
         {
-          url: `${SITE_URL}/og.png`,
-          width: 1672,
-          height: 941,
+          url: `${SITE_URL}/og.jpg`,
+          width: 1200,
+          height: 630,
+          type: 'image/jpeg',
           alt: 'Ubunifu Technologies, consulting and products, built in Tanzania.',
         },
       ],
@@ -36,7 +37,7 @@ export function pageMetadata({ title, description, path }: PageMetadataInput): M
       card: 'summary_large_image',
       title: socialTitle,
       description,
-      images: [`${SITE_URL}/og.png`],
+      images: [`${SITE_URL}/og.jpg`],
     },
   };
 }

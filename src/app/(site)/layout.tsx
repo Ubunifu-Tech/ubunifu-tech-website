@@ -47,9 +47,10 @@ export const metadata: Metadata = {
     description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
     images: [
       {
-        url: '/og.png',
-        width: 1672,
-        height: 941,
+        url: '/og.jpg',
+        width: 1200,
+        height: 630,
+        type: 'image/jpeg',
         alt: 'Ubunifu Technologies, consulting and products, built in Tanzania.',
       },
     ],
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Ubunifu Technologies · Technology consulting and products',
     description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
-    images: ['/og.png'],
+    images: ['/og.jpg'],
   },
   robots: {
     index: true,

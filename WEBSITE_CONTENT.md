@@ -44,7 +44,7 @@ Typography uses three shared sizes only: display, heading, and 1rem body. Poppin
 | `/brand` | Ubunifu Ligature kit, palette, type, rules, and downloads | `src/app/brand/page.tsx` |
 | `/api/contact` | Validated contact-form email endpoint | `src/app/api/contact/route.ts` |
 
-[`src/app/sitemap.ts`](src/app/sitemap.ts) publishes static routes plus every case study and journal article. [`src/app/not-found.tsx`](src/app/not-found.tsx) owns the branded 404. Shared page metadata uses [`src/lib/metadata.ts`](src/lib/metadata.ts) and `/og.png`; case studies have generated route-level cards, while journal articles use their own cover images for social metadata.
+[`src/app/sitemap.ts`](src/app/sitemap.ts) publishes static routes plus every case study and journal article. [`src/app/not-found.tsx`](src/app/not-found.tsx) owns the branded 404. Shared page metadata uses [`src/lib/metadata.ts`](src/lib/metadata.ts) and `/og.jpg`; case studies have generated route-level cards, while journal articles use their own cover images for social metadata.
 
 ## Homepage narrative
 
@@ -154,7 +154,7 @@ Canonical downloads live in [`public/brand/`](public/brand/):
 - `ubunifu-mark-white.svg`
 - `ubunifu-lockup-white.svg`
 
-`public/logo-v2.png` is the 512 × 512 social avatar. `public/og.png` remains the current campaign social preview rather than a canonical logo master; refresh it only as a deliberate social-card pass. Use `public/editorial/` for conceptual imagery. Product and project artwork must remain plainly illustrative, never presented as interfaces or customer proof; live links and factual HTML carry the evidence. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
+`public/logo-v2.png` is the 512 × 512 social avatar. `public/og.jpg` is the social preview, a 1200 × 630 crop of the campaign image `public/og.png`, which is not a canonical logo master; refresh them only as a deliberate social-card pass. Use `public/editorial/` for conceptual imagery. Product and project artwork must remain plainly illustrative, never presented as interfaces or customer proof; live links and factual HTML carry the evidence. Full logo, palette, contrast, and image rules live in [`BRANDING.md`](BRANDING.md).
 
 ## Contact and privacy behavior
 

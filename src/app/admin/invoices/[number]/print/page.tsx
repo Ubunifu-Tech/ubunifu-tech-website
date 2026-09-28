@@ -29,7 +29,8 @@ export default async function PrintInvoice({ params }: { params: Promise<{ numbe
     }),
     getOrg(),
   ]);
-  if (!invoice || invoice.status === 'void') notFound();
+  // A void invoice prints as well: the sheet marks it cancelled.
+  if (!invoice) notFound();
 
   return (
     <main className={styles.page}>

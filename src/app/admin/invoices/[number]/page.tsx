@@ -186,14 +186,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           </p>
         </div>
         <div className={styles.headActions}>
-          {invoice.status !== 'void' && (
-            <Link
-              href={`/invoices/${invoice.number}/print`}
-              className={`${forms.button} ${forms.quiet}`}
-            >
-              Print or save as PDF
-            </Link>
-          )}
+          {/* A void invoice prints too, marked cancelled, as the client sees it. */}
+          <Link
+            href={`/invoices/${invoice.number}/print`}
+            className={`${forms.button} ${forms.quiet}`}
+          >
+            Print or save as PDF
+          </Link>
           <span className={`${forms.badge} ${STATUS_BADGE[invoiceStanding(invoice, now)]}`}>
             {INVOICE_STATUS_LABEL[invoiceStanding(invoice, now)]}
           </span>
@@ -214,7 +213,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           {
             label: 'Total',
             value: formatMoney(invoice.totalMinor, invoice.currency),
-            note: `${invoice.lines.length} ${invoice.lines.length === 1 ? 'line' : 'lines'}`,
+            note: `${invoice.lines.length} ${invoice.lines.length === 1 ? 'line' : 'lines'}${
+              invoice.taxMinor > 0
+                ? `, including ${formatMoney(invoice.taxMinor, invoice.currency)} VAT`
+                : ''
+            }`,
           },
           {
             label: 'Received',
@@ -283,6 +286,26 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                     </td>
                   </tr>
                 ))}
+                {invoice.taxMinor > 0 && (
+                  <>
+                    <tr className={table.totalRow}>
+                      <td className={table.td} colSpan={2}>
+                        Subtotal
+                      </td>
+                      <td className={`${table.td} ${table.numeric}`}>
+                        {formatMoney(invoice.subtotalMinor, invoice.currency)}
+                      </td>
+                    </tr>
+                    <tr className={table.totalRow}>
+                      <td className={table.td} colSpan={2}>
+                        VAT
+                      </td>
+                      <td className={`${table.td} ${table.numeric}`}>
+                        {formatMoney(invoice.taxMinor, invoice.currency)}
+                      </td>
+                    </tr>
+                  </>
+                )}
                 <tr className={table.totalRow}>
                   <td className={table.td} colSpan={2}>
                     Total

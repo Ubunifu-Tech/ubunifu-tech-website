@@ -654,22 +654,25 @@ export function guardsFor(
     });
   }
 
-  // Keyed on where the project is going, like every guard: these are the
-  // stages that say the client is happy with the work.
-  if ((to === 'launch_ready' || to === 'handover') && facts.latestReview) {
-    const { round, status } = facts.latestReview;
-    if (status === 'open') {
-      guards.push({
-        severity: 'warn',
-        message: `Round ${round} is still with the client and has not been answered. Moving on takes it back from them.`,
-      });
-    } else if (status === 'changes_requested') {
-      guards.push({
-        severity: 'warn',
-        message: `The client asked for changes in round ${round} and has not approved a version since.`,
-        fix: 'review',
-      });
-    }
+  // Any move off review takes an unanswered round back from the client, so
+  // every one asks first, not only the moves that say the work is approved.
+  // Keyed on the target like every guard: an open round only exists while the
+  // project is at client_review, so "anywhere else" is exactly the moves off it.
+  if (to !== 'client_review' && facts.latestReview?.status === 'open') {
+    const doing = to === 'on_hold' ? 'Pausing' : to === 'cancelled' ? 'Cancelling' : 'Moving on';
+    guards.push({
+      severity: 'warn',
+      message: `Round ${facts.latestReview.round} is still with the client and has not been answered. ${doing} takes it back from them.`,
+    });
+  }
+
+  // These are the stages that say the client is happy with the work.
+  if ((to === 'launch_ready' || to === 'handover') && facts.latestReview?.status === 'changes_requested') {
+    guards.push({
+      severity: 'warn',
+      message: `The client asked for changes in round ${facts.latestReview.round} and has not approved a version since.`,
+      fix: 'review',
+    });
   }
 
   if (to === 'contract_signed' && facts.signatureCount === 0) {

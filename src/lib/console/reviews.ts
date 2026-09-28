@@ -24,7 +24,9 @@ export const CLIENT_REVIEW_LABEL: Record<ReviewStatus, string> = {
   open: 'Waiting on you',
   approved: 'You approved it',
   changes_requested: 'You asked for changes',
-  withdrawn: 'Replaced by a newer version',
+  // A round is taken back by a new round or by the project moving off review,
+  // and the second has no newer version coming, so the label claims neither.
+  withdrawn: 'Taken back',
 };
 
 /** Takes back the open review, inside the caller's transaction. */

@@ -9,8 +9,16 @@ import { hashPassword, passwordProblem } from '@/lib/console/crypto';
 import { revokeMagicTokens } from '@/lib/console/magic-link';
 import { readSession, revokeAllSessions } from '@/lib/console/session';
 import { safePortalPath } from '@/lib/console/return-path';
+import { allow } from '@/lib/console/rate-limit';
 
 export type ActivateState = { status: 'idle' | 'error'; message?: string };
+
+/**
+ * One answer whether the address is held at another client or on this one,
+ * so the setup form cannot be used to find out who our clients are.
+ */
+const EMAIL_NOT_USABLE =
+  'That email cannot be used for this account. Use a different one, or get in touch.';
 
 /**
  * Finishes account creation: confirm who you are, choose a password.
@@ -47,6 +55,11 @@ export async function activateAccount(
     return { status: 'error', message: 'Enter the email address you would like to sign in with.' };
   }
   if (!actor.email) {
+    // Limited before the lookup, so addresses cannot be tried one after
+    // another to see which are taken.
+    if (!(await allow('portal-activate', actor.id, { limit: 5, windowMinutes: 15 }))) {
+      return { status: 'error', message: 'Too many tries. Wait a few minutes.' };
+    }
     // One portal account per address, so signing in is never ambiguous.
     // Removed contacts do not count: they can no longer sign in. A removed
     // contact on this same client still holds its address in the database,
@@ -55,12 +68,7 @@ export async function activateAccount(
       where: { email, deletedAt: null, NOT: { id: actor.id } },
       select: { id: true },
     });
-    if (taken) {
-      return {
-        status: 'error',
-        message: 'That email already has a portal account. Use a different one, or get in touch and we will sort it out.',
-      };
-    }
+    if (taken) return { status: 'error', message: EMAIL_NOT_USABLE };
   }
 
   const problem = passwordProblem(password);
@@ -90,10 +98,7 @@ export async function activateAccount(
     activated = result.count;
   } catch (error) {
     if (!isUniqueConflict(error)) throw error;
-    return {
-      status: 'error',
-      message: 'That email belongs to someone else on your account. Use a different one, or get in touch and we will sort it out.',
-    };
+    return { status: 'error', message: EMAIL_NOT_USABLE };
   }
   if (activated !== 1) {
     return {

@@ -93,6 +93,13 @@ type Actor =
   | { type: 'client_contact'; id: string; name: string };
 
 /**
+ * What a client is told when an address cannot be used. Staff are told it
+ * belongs to someone else; a client is not, because that would confirm the
+ * address is one of our clients, which the sign-in page never does.
+ */
+const EMAIL_NOT_USABLE = 'That email cannot be used here. Use a different one, or get in touch.';
+
+/**
  * Adds a person, or brings back one who was removed, and sends them an
  * invitation. Returns what happened in words the caller can show.
  */
@@ -127,7 +134,10 @@ export async function addContact(input: {
   if (contact.email && (await emailTakenElsewhere(contact.email, input.clientId))) {
     return {
       ok: false,
-      message: 'Someone at another client already uses that email. One address signs in to one account.',
+      message:
+        by.type === 'staff'
+          ? 'Someone at another client already uses that email. One address signs in to one account.'
+          : EMAIL_NOT_USABLE,
     };
   }
 
@@ -228,13 +238,15 @@ export async function updateContact(input: {
   if (emailChanged && !email && contact.email) {
     return { ok: false, message: 'Keep an email, or correct it.' };
   }
+  const takenMessage =
+    input.by.type === 'staff' ? 'Someone else already uses that email.' : EMAIL_NOT_USABLE;
   if (emailChanged && email) {
     // One portal account per address, the same rule setup applies.
     const taken = await db.clientContact.findFirst({
       where: { email, deletedAt: null, NOT: { id: contact.id } },
       select: { id: true },
     });
-    if (taken) return { ok: false, message: 'Someone else already uses that email.' };
+    if (taken) return { ok: false, message: takenMessage };
   }
 
   try {
@@ -243,8 +255,7 @@ export async function updateContact(input: {
       data: { name, email: email || null, role: input.role, phone: input.phone },
     });
   } catch (error) {
-    if (isUniqueConflict(error))
-      return { ok: false, message: 'Someone else already uses that email.' };
+    if (isUniqueConflict(error)) return { ok: false, message: takenMessage };
     throw error;
   }
 

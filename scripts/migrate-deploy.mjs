@@ -8,11 +8,12 @@
  * the right trade — serving pages against a schema they were not written for is
  * worse than serving the previous deploy.
  *
- * The one case that is NOT worth failing on is a build with no database
- * configured at all. Preview deployments and branch builds frequently have no
- * DATABASE_URL, and failing them would block every preview of a marketing copy
- * change. Those skip the migration and build the site; the console simply has
- * no database to talk to, which it reports at runtime rather than at build.
+ * Only production builds touch the database. A preview or branch build that
+ * could see the production DATABASE_URL would otherwise migrate it from an
+ * unmerged branch, so those builds skip migrations and reference data unless
+ * ALLOW_PREVIEW_MIGRATIONS is set for an environment with its own database.
+ * A build with no database configured at all also skips, as before: the
+ * console reports the missing database at runtime rather than at build.
  *
  * Anything else — a URL that is set but unreachable, a migration that errors —
  * fails loudly, because those mean production is about to be wrong.
@@ -29,6 +30,18 @@ try {
   process.loadEnvFile('.env');
 } catch {
   // No .env file: expected on Vercel and in CI.
+}
+
+if (
+  process.env.VERCEL_ENV &&
+  process.env.VERCEL_ENV !== 'production' &&
+  !process.env.ALLOW_PREVIEW_MIGRATIONS
+) {
+  console.warn(
+    `\n[migrate] ${process.env.VERCEL_ENV} build: migrations and reference data are only applied by production builds.` +
+      '\n[migrate] Set ALLOW_PREVIEW_MIGRATIONS=1 for an environment that has its own database to apply them there.\n',
+  );
+  process.exit(0);
 }
 
 const url = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;

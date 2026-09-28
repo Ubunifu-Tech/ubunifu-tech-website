@@ -1,9 +1,10 @@
-# Allow all crawlers
+# Allow all crawlers, except in the client portal and the API.
+# /portal itself, the sign-in page, stays open so its noindex tag is read.
+# The Disallow lines come first for crawlers that take the first match.
 User-agent: *
+Disallow: /portal/
+Disallow: /api/
 Allow: /
-
-# Disallow admin or private areas (when added in future)
-# Disallow: /admin/
 
 # Sitemap location
 Sitemap: https://ubunifutech.com/sitemap.xml

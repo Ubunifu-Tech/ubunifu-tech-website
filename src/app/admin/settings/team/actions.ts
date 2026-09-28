@@ -90,7 +90,16 @@ export async function inviteStaff(_previous: TeamState, formData: FormData): Pro
     return { status: 'error', message: 'That is a lot of invitations for one day. Try again tomorrow.' };
   }
 
-  const existing = await db.staffUser.findUnique({ where: { email }, select: { id: true } });
+  const existing = await db.staffUser.findUnique({
+    where: { email },
+    select: { id: true, name: true, isActive: true },
+  });
+  if (existing && !existing.isActive) {
+    return {
+      status: 'error',
+      message: `${existing.name} was removed from the team. Use Restore to the team on their row to bring them back.`,
+    };
+  }
   if (existing) return { status: 'error', message: 'Someone with that email is already on the team.' };
 
   let person;

@@ -40,6 +40,9 @@ export default async function TeamPage() {
   });
 
   const active = people.filter((person) => person.isActive).length;
+  const owners = people
+    .filter((person) => person.role === 'owner' && person.isActive)
+    .map((person) => person.name);
   const settings = await db.orgSettings.findUnique({
     where: { id: 'default' },
     select: { rolePermissions: true },
@@ -53,6 +56,7 @@ export default async function TeamPage() {
           <h1 className={styles.heading}>Settings</h1>
           <p className={styles.lead}>
             Everyone who can sign in to the console. Projects and tasks can be given to anyone here.
+            {!isOwner && owners.length > 0 && ` To add or remove someone, ask ${owners.join(' or ')}.`}
           </p>
         </div>
         {isOwner && <InviteStaff domains={staffDomains()} />}
@@ -118,18 +122,21 @@ export default async function TeamPage() {
                         ROLE_LABEL[person.role]
                       )}
                     </td>
+                    {/* A removed person keeps their projects and tasks until
+                        someone hands them on, so the counts show for them too,
+                        in red when there is anything left to reassign. */}
                     <td className={`${table.td} ${table.numeric}`}>
-                      {person.isActive ? (
-                        person._count.ownedProjects
+                      {!person.isActive && person._count.ownedProjects > 0 ? (
+                        <span className={table.late}>{person._count.ownedProjects}</span>
                       ) : (
-                        <span className={table.muted}>None</span>
+                        person._count.ownedProjects
                       )}
                     </td>
                     <td className={`${table.td} ${table.numeric}`}>
-                      {person.isActive ? (
-                        person._count.assignedTasks
+                      {!person.isActive && person._count.assignedTasks > 0 ? (
+                        <span className={table.late}>{person._count.assignedTasks}</span>
                       ) : (
-                        <span className={table.muted}>None</span>
+                        person._count.assignedTasks
                       )}
                     </td>
                     <td className={`${table.td} ${table.nowrap}`}>

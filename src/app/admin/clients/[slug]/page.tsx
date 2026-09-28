@@ -173,6 +173,24 @@ export default async function ClientPage({
       : [],
   ]);
 
+  // Removed people whose address now belongs to someone at another client
+  // can only come back under a new one.
+  const heldElsewhere = new Set(
+    (removedPeople.length > 0
+      ? await db.clientContact.findMany({
+          where: {
+            deletedAt: null,
+            clientId: { not: client.id },
+            email: {
+              in: removedPeople.flatMap((person) => (person.email ? [person.email] : [])),
+            },
+          },
+          select: { email: true },
+        })
+      : []
+    ).flatMap((contact) => (contact.email ? [contact.email] : [])),
+  );
+
   /**
    * Summed only within the client's own currency. There is no FX rate anywhere
    * in this system, so adding a TZS line into a USD total would print a figure
@@ -608,7 +626,12 @@ export default async function ClientPage({
                         {formatShortDate(person.deletedAt)}
                       </td>
                       <td className={`${table.td} ${table.actions}`}>
-                        <BringBack clientId={client.id} contactId={person.id} />
+                        <BringBack
+                          clientId={client.id}
+                          contactId={person.id}
+                          name={person.name}
+                          needsNewEmail={Boolean(person.email && heldElsewhere.has(person.email))}
+                        />
                       </td>
                     </tr>
                   ))}

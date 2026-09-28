@@ -694,27 +694,88 @@ export async function makeMainContact(input: { contactId: string; clientId: stri
  * does when a whole client comes back, until it is turned on for them. Not
  * when their address now belongs to someone at another client.
  */
-export async function restoreContact(input: { contactId: string; clientId: string; by: Actor }) {
+/**
+ * Brings a removed person back, with their old address or a new one.
+ *
+ * A new address is for when the old one now belongs to someone at another
+ * client. Their password and portal account are cleared, and every link and
+ * session they held is ended: nobody has shown they control the new address,
+ * so they set up again from an invitation sent to it.
+ */
+export async function restoreContact(input: {
+  contactId: string;
+  clientId: string;
+  by: Actor;
+  newEmail?: string;
+}) {
   const contact = await db.clientContact.findFirst({
     where: { id: input.contactId, clientId: input.clientId, deletedAt: { not: null } },
     select: { id: true, name: true, email: true },
   });
   if (!contact) return { ok: false as const, message: 'They are not removed.' };
-  if (contact.email && (await emailTakenElsewhere(contact.email, input.clientId))) {
+
+  const newEmail = (input.newEmail ?? '').trim().toLowerCase().slice(0, 254);
+  if (newEmail && !EMAIL.test(newEmail)) {
+    return { ok: false as const, message: 'That email does not look right.' };
+  }
+  const address = newEmail || contact.email;
+  if (address && (await emailTakenElsewhere(address, input.clientId))) {
     return {
       ok: false as const,
-      message: `${contact.email} now belongs to someone at another client, so ${contact.name} cannot come back with it.`,
+      message: newEmail
+        ? 'Someone at another client already uses that email.'
+        : `${contact.email} now belongs to someone at another client, so ${contact.name} cannot come back with it. Bring them back with a new email.`,
     };
   }
+  if (newEmail) {
+    // Removed people count too: an address is held once per client.
+    const clash = await db.clientContact.findFirst({
+      where: { clientId: input.clientId, email: newEmail, NOT: { id: contact.id } },
+      select: { id: true },
+    });
+    if (clash) {
+      return { ok: false as const, message: 'Someone at this client already uses that email.' };
+    }
+  }
 
-  await db.clientContact.update({ where: { id: contact.id }, data: { deletedAt: null } });
+  const changed = Boolean(newEmail) && newEmail !== contact.email;
+  try {
+    await db.$transaction(async (tx) => {
+      await tx.clientContact.update({
+        where: { id: contact.id },
+        data: {
+          deletedAt: null,
+          ...(changed
+            ? {
+                email: newEmail,
+                passwordHash: null,
+                passwordSetAt: null,
+                activatedAt: null,
+                failedSignIns: 0,
+                lockedUntil: null,
+              }
+            : {}),
+        },
+      });
+      if (changed) {
+        await revokeEveryMagicToken(tx, 'client_contact', [contact.id]);
+        await revokeSessionsFor(tx, 'client_contact', [contact.id]);
+      }
+    });
+  } catch (error) {
+    if (isUniqueConflict(error)) {
+      return { ok: false as const, message: 'Someone else already uses that email.' };
+    }
+    throw error;
+  }
+
   await recordAudit({
     actorType: input.by.type,
     actorId: input.by.id,
     action: 'client.contact_restored',
     entityType: 'ClientContact',
     entityId: contact.id,
-    summary: contact.name,
+    summary: changed ? `${contact.name}, with a new email` : contact.name,
   });
   return {
     ok: true as const,

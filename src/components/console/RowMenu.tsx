@@ -17,6 +17,8 @@ export function RowMenu({
   open,
   onOpenChange,
   wide = false,
+  text,
+  triggerClassName,
   children,
 }: {
   /** Read to screen readers: "Actions for Tito Meoki". */
@@ -25,6 +27,13 @@ export function RowMenu({
   onOpenChange?: (open: boolean) => void;
   /** Room for a form rather than a list. */
   wide?: boolean;
+  /**
+   * Words on the button instead of the three dots, for a row whose one action
+   * opens a form. The words are then its name, and label is not used.
+   */
+  text?: string;
+  /** The button's look when it carries words, such as the table's action. */
+  triggerClassName?: string;
   children: React.ReactNode;
 }) {
   const [inner, setInner] = useState(false);
@@ -33,9 +42,13 @@ export function RowMenu({
 
   return (
     <Popover.Root open={isOpen} onOpenChange={change}>
-      <Popover.Trigger className={styles.trigger} aria-label={label} title="Actions">
-        <MoreHorizontal size={16} strokeWidth={2} aria-hidden="true" />
-      </Popover.Trigger>
+      {text ? (
+        <Popover.Trigger className={triggerClassName ?? styles.trigger}>{text}</Popover.Trigger>
+      ) : (
+        <Popover.Trigger className={styles.trigger} aria-label={label} title="Actions">
+          <MoreHorizontal size={16} strokeWidth={2} aria-hidden="true" />
+        </Popover.Trigger>
+      )}
       <Popover.Portal>
         <Popover.Content
           className={`${styles.panel} ${wide ? styles.wide : ''}`}

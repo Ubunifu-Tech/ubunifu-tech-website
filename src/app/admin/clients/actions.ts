@@ -620,6 +620,7 @@ export async function bringBackContact(
     contactId: formText(formData, 'contactId'),
     clientId: client.id,
     by: { type: 'staff', id: staff.id, name: staff.name },
+    newEmail: formText(formData, 'email'),
   });
   revalidatePath(`/admin/clients/${client.slug}`);
   return { status: result.ok ? 'done' : 'error', message: result.message };

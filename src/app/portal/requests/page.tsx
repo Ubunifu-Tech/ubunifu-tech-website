@@ -11,8 +11,9 @@ import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Requests' };
 
+// Amber only when the next move is the client's.
 const STATUS_BADGE: Record<string, string> = {
-  open: forms.badgeWarn,
+  open: '',
   triaged: '',
   in_progress: forms.badgeLive,
   waiting_on_client: forms.badgeWarn,

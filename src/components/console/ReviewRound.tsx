@@ -26,6 +26,15 @@ const TONE: Record<ReviewStatus, string> = {
 };
 
 /**
+ * Amber is for the client's own next move. Once they have asked for changes
+ * the next move is ours, so they see it in blue while staff keep the amber.
+ */
+const CLIENT_TONE: Record<ReviewStatus, string> = {
+  ...TONE,
+  changes_requested: forms.badgeLive,
+};
+
+/**
  * One round as both sides read it: what was sent to look at, and the answer.
  * The words differ by who is reading; the facts do not.
  */
@@ -40,13 +49,14 @@ export function ReviewRound({
   children?: React.ReactNode;
 }) {
   const label = audience === 'staff' ? REVIEW_LABEL : CLIENT_REVIEW_LABEL;
+  const tone = audience === 'client' ? CLIENT_TONE : TONE;
   const who = review.answeredBy?.name ?? (audience === 'staff' ? 'The client' : 'Your team');
 
   return (
     <div className={styles.round}>
       <div className={styles.head}>
         <h3 className={styles.title}>{review.title}</h3>
-        <span className={`${forms.badge} ${TONE[review.status]}`}>{label[review.status]}</span>
+        <span className={`${forms.badge} ${tone[review.status]}`}>{label[review.status]}</span>
       </div>
       <p className={styles.meta}>
         Round {review.round}, sent {formatDate(review.createdAt)}

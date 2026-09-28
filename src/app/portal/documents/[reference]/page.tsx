@@ -118,7 +118,7 @@ export default async function PortalDocument({
           <Link href="/portal/documents" className={styles.backLink}>
             ← Documents
           </Link>
-          <span className={`${forms.badge} ${forms.badgeWarn}`}>Being revised</span>
+          <span className={`${forms.badge} ${forms.badgeLive}`}>Being revised</span>
         </div>
         <section className={forms.card}>
           <div className={forms.cardHeader}>

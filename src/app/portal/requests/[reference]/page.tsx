@@ -9,8 +9,9 @@ import { ReplyForm } from '../RequestForms';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
+// Amber only when the next move is the client's.
 const STATUS_BADGE: Record<string, string> = {
-  open: forms.badgeWarn,
+  open: '',
   triaged: '',
   in_progress: forms.badgeLive,
   waiting_on_client: forms.badgeWarn,

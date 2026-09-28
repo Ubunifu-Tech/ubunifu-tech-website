@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
 import { requireClient } from '@/lib/console/auth';
-import { formatDate } from '@/lib/console/money';
-import { Avatar } from '@/components/console/Avatar';
+import { formatShortDate } from '@/lib/console/money';
 import { AddPerson, PersonMenu } from '@/components/console/People';
 import { invitedAmong } from '@/lib/console/contacts';
 import {
@@ -37,8 +36,19 @@ export default async function PortalTeam() {
   });
   const iAmMain = people.some((person) => person.id === actor.id && person.isPrimary);
   const invited = await invitedAmong(
-    people.filter((person) => !person.activatedAt && person.email).map((person) => person.id),
+    people
+      .filter((person) => !person.activatedAt && person.email && person.canSignIn)
+      .map((person) => person.id),
   );
+
+  // The hints that used to sit under each badge, gathered into one line each
+  // below the table, and only when some row needs them.
+  const names = (list: typeof people) =>
+    new Intl.ListFormat('en-GB').format(list.map((person) => person.name));
+  const accessOff = people.filter((person) => !person.canSignIn && person.id !== actor.id);
+  const notSetUp = people.filter((person) => person.canSignIn && !person.activatedAt);
+  const toInvite = notSetUp.filter((person) => person.email && !invited.has(person.id));
+  const noEmail = notSetUp.filter((person) => !person.email);
 
   return (
     <main className={styles.page}>
@@ -63,10 +73,19 @@ export default async function PortalTeam() {
             <thead>
               <tr>
                 <th className={table.th} scope="col">
-                  Person
+                  Name
+                </th>
+                <th className={table.th} scope="col">
+                  Job title
+                </th>
+                <th className={table.th} scope="col">
+                  Email
                 </th>
                 <th className={table.th} scope="col">
                   Portal
+                </th>
+                <th className={table.th} scope="col">
+                  Last seen
                 </th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className="srOnly">Actions</span>
@@ -77,43 +96,39 @@ export default async function PortalTeam() {
               {people.map((person) => (
                 <tr key={person.id} className={table.tr}>
                   <td className={`${table.td} ${table.primary}`}>
-                    <span className={table.who}>
-                      <Avatar name={person.name} size="md" />
-                      <span>
-                        {person.name}
-                        {person.id === actor.id ? ' (you)' : ''}
-                        <span className={table.sub}>
-                          {[person.isPrimary ? 'Main contact' : null, person.role, person.email]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </span>
-                      </span>
-                    </span>
+                    {person.name}
+                    {person.id === actor.id ? ' (you)' : ''}
+                    {person.isPrimary && (
+                      <>
+                        {' '}
+                        <span className={forms.badge}>Main contact</span>
+                      </>
+                    )}
+                  </td>
+                  <td className={table.td}>
+                    {person.role ?? <span className={table.muted}>None</span>}
+                  </td>
+                  <td className={table.td}>
+                    {person.email ?? <span className={table.muted}>None yet</span>}
                   </td>
                   <td className={`${table.td} ${table.nowrap}`}>
-                    {person.activatedAt ? (
-                      <>
-                        <span className={`${forms.badge} ${forms.badgeGood}`}>Active</span>
-                        {person.lastSeenAt && (
-                          <span className={table.sub}>Last in {formatDate(person.lastSeenAt)}</span>
-                        )}
-                      </>
+                    {!person.canSignIn ? (
+                      <span className={forms.badge}>Access off</span>
+                    ) : person.activatedAt ? (
+                      <span className={`${forms.badge} ${forms.badgeGood}`}>Active</span>
                     ) : person.email && invited.has(person.id) ? (
-                      <span className={`${forms.badge} ${forms.badgeWarn}`}>Invited</span>
+                      <span className={forms.badge}>Invited</span>
                     ) : person.email ? (
-                      <>
-                        <span className={forms.badge}>Not invited yet</span>
-                        <span className={table.sub}>Email the invitation from their menu.</span>
-                      </>
+                      <span className={forms.badge}>Not invited yet</span>
                     ) : (
-                      <>
-                        <span className={forms.badge}>No email yet</span>
-                        <span className={table.sub}>
-                          {iAmMain
-                            ? 'Add their email to invite them.'
-                            : 'Your main contact can add their email.'}
-                        </span>
-                      </>
+                      <span className={forms.badge}>No email yet</span>
+                    )}
+                  </td>
+                  <td className={`${table.td} ${table.nowrap}`}>
+                    {person.lastSeenAt ? (
+                      formatShortDate(person.lastSeenAt)
+                    ) : (
+                      <span className={table.muted}>Never</span>
                     )}
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
@@ -145,12 +160,31 @@ export default async function PortalTeam() {
         </div>
       </div>
 
-      <p className={`${styles.note} ${styles.after}`}>
-        The main contact signs agreements and receives invoices.
-        {iAmMain
-          ? ' That is you.'
-          : ' Ask them to add or remove people, or invite colleagues yourself.'}
-      </p>
+      <div className={`${styles.notes} ${styles.after}`}>
+        {accessOff.length > 0 && (
+          <p className={styles.note}>
+            {names(accessOff)} cannot sign in at the moment. Ask us to turn their access back on.
+          </p>
+        )}
+        {toInvite.length > 0 && (
+          <p className={styles.note}>
+            To invite {names(toInvite)}, choose Email the invitation from their menu.
+          </p>
+        )}
+        {noEmail.length > 0 && (
+          <p className={styles.note}>
+            {iAmMain
+              ? `Add an email for ${names(noEmail)} from their menu to invite them.`
+              : `Your main contact can add an email for ${names(noEmail)}.`}
+          </p>
+        )}
+        <p className={styles.note}>
+          The main contact signs agreements and receives invoices.
+          {iAmMain
+            ? ' That is you.'
+            : ' Ask them to add or remove people, or invite colleagues yourself.'}
+        </p>
+      </div>
     </main>
   );
 }

@@ -7,14 +7,19 @@ import { TicketKind } from '@/generated/prisma/client';
 import { createTicket } from '@/lib/console/ticket-create';
 import { allow } from '@/lib/console/rate-limit';
 import { TEAM_INBOX } from '@/lib/console/alerts';
-import { requireClient, recordAudit } from '@/lib/console/auth';
+import { CLIENT_SIGNED_OUT, clientForAction, recordAudit } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { ticketRaisedEmail } from '@/lib/emails';
 import { formText } from '@/lib/console/form';
 import { liveTicket } from '@/lib/console/live';
 
-export type RequestState = { status: 'idle' | 'done' | 'error'; message?: string };
+export type RequestState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  /** The session ended: the form offers a Sign in link and keeps what was typed. */
+  signedOut?: boolean;
+};
 
 /**
  * A client asking us for something.
@@ -33,7 +38,8 @@ export async function raiseRequest(
   _previous: RequestState,
   formData: FormData,
 ): Promise<RequestState> {
-  const actor = await requireClient();
+  const actor = await clientForAction();
+  if (!actor) return { status: 'error', signedOut: true, message: CLIENT_SIGNED_OUT };
 
   const kindRaw = String(formData.get('kind') ?? '');
   const subject = String(formData.get('subject') ?? '').trim();
@@ -83,7 +89,8 @@ export async function replyToRequest(
   _previous: RequestState,
   formData: FormData,
 ): Promise<RequestState> {
-  const actor = await requireClient();
+  const actor = await clientForAction();
+  if (!actor) return { status: 'error', signedOut: true, message: CLIENT_SIGNED_OUT };
 
   const ticketId = String(formData.get('ticketId') ?? '');
   const body = formText(formData, 'body');

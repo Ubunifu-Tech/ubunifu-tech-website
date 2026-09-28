@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { raiseRequest, replyToRequest, type RequestState } from './actions';
+import { SignInAgain } from '../SignInAgain';
 import { TICKET_KINDS } from '@/lib/console/tickets';
 import forms from '@/styles/forms.module.css';
 import { Select } from '@/components/console/Select';
@@ -130,6 +131,7 @@ export function RaiseRequestForm({
       {state.message && (
         <p className={forms.error} role="alert">
           {state.message}
+          {state.signedOut && <SignInAgain />}
         </p>
       )}
     </form>
@@ -185,6 +187,7 @@ export function ReplyForm({ ticketId, closed }: { ticketId: string; closed: bool
           aria-live="polite"
         >
           {state.message}
+          {state.signedOut && <SignInAgain />}
         </p>
       )}
     </form>

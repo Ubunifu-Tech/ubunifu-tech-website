@@ -10,6 +10,7 @@ import {
   type SignState,
 } from './actions';
 import { TextAreaField } from '@/components/console/Fields';
+import { SignInAgain } from '../SignInAgain';
 import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -317,6 +318,7 @@ export function RespondForm({
       {state.status === 'error' && (
         <p className={forms.error} role="alert">
           {state.message}
+          {state.signedOut && <SignInAgain />}
         </p>
       )}
     </form>
@@ -399,6 +401,7 @@ function SuggestWording({
       {state.status === 'error' && (
         <p className={forms.error} role="alert">
           {state.message}
+          {state.signedOut && <SignInAgain />}
         </p>
       )}
     </form>

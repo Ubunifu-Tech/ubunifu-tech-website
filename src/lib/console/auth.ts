@@ -219,6 +219,26 @@ export async function getClientActor(): Promise<ClientActor | null> {
   };
 }
 
+/**
+ * The signed-in client, or null, for an action whose form holds typing.
+ * requireClient redirects to the sign-in page, and the typing goes with it;
+ * with this the action answers CLIENT_SIGNED_OUT and the form keeps what is
+ * in the box.
+ */
+export async function clientForAction(): Promise<ClientActor | null> {
+  const client = await getClientActor();
+  return client?.isActivated ? client : null;
+}
+
+/**
+ * Said when a client's form is sent after their session ended, from an action
+ * that uses clientForAction. The action also returns signedOut: true, and the
+ * form shows a Sign in link that opens in a new tab (SignInAgain), so what
+ * they typed stays on screen.
+ */
+export const CLIENT_SIGNED_OUT =
+  'You were signed out, so this has not been sent. Sign in again in a new tab, then come back here and send it.';
+
 export async function requireClient(): Promise<ClientActor> {
   const client = await getClientActor();
   if (!client) {

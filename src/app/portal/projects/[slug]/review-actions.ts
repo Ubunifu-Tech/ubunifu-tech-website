@@ -2,18 +2,24 @@
 
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireClient } from '@/lib/console/auth';
+import { CLIENT_SIGNED_OUT, clientForAction } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
 import { recordReviewAnswer } from '@/lib/console/review-answers';
 
-export type AnswerState = { status: 'idle' | 'done' | 'error'; message?: string };
+export type AnswerState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  /** The session ended: the form offers a Sign in link and keeps the answer. */
+  signedOut?: boolean;
+};
 
 /** Answering a review from the portal, as the person signed in. */
 export async function answerReview(
   _previous: AnswerState,
   formData: FormData,
 ): Promise<AnswerState> {
-  const actor = await requireClient();
+  const actor = await clientForAction();
+  if (!actor) return { status: 'error', signedOut: true, message: CLIENT_SIGNED_OUT };
   const reviewId = formText(formData, 'reviewId');
   const answered = await recordReviewAnswer({
     reviewId,

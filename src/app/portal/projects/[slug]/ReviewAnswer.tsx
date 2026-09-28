@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { answerReview, type AnswerState } from './review-actions';
 import { TextAreaField } from '@/components/console/Fields';
+import { SignInAgain } from '../../SignInAgain';
 import forms from '@/styles/forms.module.css';
 import styles from '@/components/console/Review.module.css';
 
@@ -21,6 +22,8 @@ export function ReviewAnswer({
 }) {
   const [choice, setChoice] = useState<'approve' | 'changes' | null>(null);
   const [state, action, pending] = useActionState(answer, INITIAL);
+  // Held here, so a refusal (a lapsed session, say) leaves the answer in the box.
+  const [text, setText] = useState('');
 
   if (state.status === 'done') {
     return (
@@ -62,6 +65,8 @@ export function ReviewAnswer({
         required={!approving}
         rows={approving ? 3 : 6}
         maxLength={4000}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
       />
       <div className={forms.actions}>
         <button type="submit" className={forms.button} disabled={pending}>
@@ -79,6 +84,7 @@ export function ReviewAnswer({
       {state.status === 'error' && (
         <p className={forms.error} role="status" aria-live="polite">
           {state.message}
+          {state.signedOut && <SignInAgain />}
         </p>
       )}
     </form>

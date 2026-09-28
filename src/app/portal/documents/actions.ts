@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireClient, recordAudit } from '@/lib/console/auth';
+import { CLIENT_SIGNED_OUT, clientForAction, requireClient, recordAudit } from '@/lib/console/auth';
 import { renderMarkdown } from '@/lib/console/documents';
 import { alertTeam } from '@/lib/console/alerts';
 import { consoleEnv } from '@/lib/console/env';
@@ -13,7 +13,12 @@ import { askForFreshCopy, recordDocumentAnswer } from '@/lib/console/document-an
 import { formText } from '@/lib/console/form';
 import { diffParagraphs } from '@/lib/console/diff';
 
-export type SignState = { status: 'idle' | 'done' | 'error'; message?: string };
+export type SignState = {
+  status: 'idle' | 'done' | 'error';
+  message?: string;
+  /** The session ended: the form offers a Sign in link and keeps what was typed. */
+  signedOut?: boolean;
+};
 
 /**
  * Signing from the portal, as the person signed in. See recordSignature,
@@ -48,7 +53,8 @@ export async function respondToDocument(
   _previous: SignState,
   formData: FormData,
 ): Promise<SignState> {
-  const actor = await requireClient();
+  const actor = await clientForAction();
+  if (!actor) return { status: 'error', signedOut: true, message: CLIENT_SIGNED_OUT };
   const answered = await recordDocumentAnswer({
     requestId: String(formData.get('requestId') ?? ''),
     person: {
@@ -115,7 +121,8 @@ export async function suggestWording(
   _previous: SignState,
   formData: FormData,
 ): Promise<SignState> {
-  const actor = await requireClient();
+  const actor = await clientForAction();
+  if (!actor) return { status: 'error', signedOut: true, message: CLIENT_SIGNED_OUT };
 
   const requestId = formText(formData, 'requestId');
   const body = formText(formData, 'body');

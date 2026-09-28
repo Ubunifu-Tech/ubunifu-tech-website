@@ -115,13 +115,28 @@ ${preheader(preview)}
 }
 
 /* Email cannot read CSS custom properties, so brand colours are literals here.
-   They mirror globals.css. Change them together. */
+   They mirror globals.css. Change them together.
+
+   Each button is a one-cell table. Outlook for Windows ignores padding and
+   background on a link, so there the cell carries the colour (bgcolor) and
+   the size (mso-padding-alt); every other client reads the link's own
+   padding. The href is escaped here, once, so callers pass it raw. */
 function button(href: string, label: string): string {
-  return `<a href="${escapeHtml(href)}" style="display:inline-block;padding:13px 24px;background:#A63A11;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;">${label}</a>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#A63A11" style="background:#A63A11;border-radius:6px;mso-padding-alt:13px 24px;"><a href="${escapeHtml(href)}" style="display:inline-block;padding:13px 24px;color:#FFFFFF;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;">${label}</a></td></tr></table>`;
 }
 
 function buttonGhost(href: string, label: string): string {
-  return `<a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 23px;background:#FDF3EE;color:#A63A11;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;border:1px solid #E9D3C6;">${label}</a>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#FDF3EE" style="background:#FDF3EE;border:1px solid #E9D3C6;border-radius:6px;mso-padding-alt:12px 23px;"><a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 23px;color:#A63A11;font-family:${FONT};font-weight:700;font-size:14px;line-height:1.4;text-decoration:none;border-radius:6px;">${label}</a></td></tr></table>`;
+}
+
+/** Buttons side by side. On a phone the shell's .button-cell rule stacks them. */
+function buttonRow(...cells: string[]): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${cells
+    .map(
+      (cell, index) =>
+        `<td class="button-cell" style="padding:${index === cells.length - 1 ? '0' : '0 10px 0 0'};">${cell}</td>`,
+    )
+    .join('')}</tr></table>`;
 }
 
 /** Label and value rows, for the facts an email is about. Values are HTML. */
@@ -154,7 +169,8 @@ export function notificationEmail(input: {
   const name = escapeHtml(input.name);
   const email = escapeHtml(input.email);
   const subject = escapeHtml(input.subject);
-  const message = escapeHtml(input.message);
+  // Raw address: button() escapes the whole href once.
+  const reply = `mailto:${input.email}?subject=${encodeURIComponent('Re: ' + input.subject)}`;
 
   const row = (label: string, value: string) => `
     <tr>
@@ -179,17 +195,11 @@ export function notificationEmail(input: {
     <p style="margin:26px 0 8px;color:#A63A11;font-size:14px;font-weight:700;">${
       input.followUp ? 'What they added' : 'Message'
     }</p>
-    <div style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px;color:#1D1B22;font-size:14px;line-height:1.7;white-space:pre-wrap;">${message}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#FAF9F7;border:1px solid #E4E0DA;border-radius:8px;padding:18px 18px 4px;">${paragraphsOf(input.message, 14)}</td></tr></table>
     <div style="margin-top:26px;">${
       input.consoleUrl
-        ? `${button(input.consoleUrl, 'Read the chat')}&nbsp;&nbsp;${buttonGhost(
-            `mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`,
-            `Reply to ${name}`,
-          )}`
-        : button(
-            `mailto:${email}?subject=${encodeURIComponent('Re: ' + input.subject)}`,
-            `Reply to ${name}`,
-          )
+        ? buttonRow(button(input.consoleUrl, 'Read the chat'), buttonGhost(reply, `Reply to ${name}`))
+        : button(reply, `Reply to ${name}`)
     }</div>
     <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
 
@@ -226,10 +236,7 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
       If you did not write to us, you can ignore this email.
     </p>
     <p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr>
-      <td class="button-cell" style="padding-right:10px;">${button(INSIGHT, 'Try Ubunifu Insight')}</td>
-      <td class="button-cell">${buttonGhost(SIFA, 'Try Ubunifu Sifa')}</td>
-    </tr></table>`;
+    ${buttonRow(button(INSIGHT, 'Try Ubunifu Insight'), buttonGhost(SIFA, 'Try Ubunifu Sifa'))}`;
 
   return shell('We have your message. We will reply directly.', body);
 }
@@ -679,12 +686,10 @@ export function reviewRequestEmail(input: {
       from your portal.
     </p>
     ${input.note ? paragraphsOf(input.note) : ''}
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
-      <tr>
-        ${input.previewUrl ? `<td class="button-cell" style="padding:0 10px 0 0;">${buttonGhost(input.previewUrl, 'Open the preview')}</td>` : ''}
-        <td class="button-cell">${button(input.url, 'Approve or ask for changes')}</td>
-      </tr>
-    </table>`;
+    <div style="margin-top:8px;">${buttonRow(
+      ...(input.previewUrl ? [buttonGhost(input.previewUrl, 'Open the preview')] : []),
+      button(input.url, 'Approve or ask for changes'),
+    )}</div>`;
 
   return shell(`${input.projectName}: ${input.title} is ready for your review.`, body);
 }
@@ -1030,7 +1035,7 @@ export function documentWordingEmail(input: {
     ])}
     <div style="height:18px;line-height:18px;">&nbsp;</div>
     ${paragraphs}
-    ${button(escapeHtml(input.url), 'Compare it in the console')}`;
+    ${button(input.url, 'Compare it in the console')}`;
 
   return shell(`${input.reference}: ${headline}`, body);
 }

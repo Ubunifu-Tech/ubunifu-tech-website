@@ -28,6 +28,11 @@ export const SITE_FAILURE_COPY: Record<AgentFailure, FailureCopy> = {
   missing: { text: 'The assistant could not finish that one.', fallback: true },
 };
 
+/** The failures where the window puts the words back in the box to send again. */
+export const HANDED_BACK = (Object.keys(SITE_FAILURE_COPY) as AgentFailure[]).filter(
+  (cause) => !SITE_FAILURE_COPY[cause].fallback,
+);
+
 /** The portal's Help chat says the same, and its fallback is a request to the team. */
 export const PORTAL_FAILURE_COPY: Record<AgentFailure, FailureCopy> = SITE_FAILURE_COPY;
 

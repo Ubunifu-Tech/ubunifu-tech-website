@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { generateToken, hashToken } from '@/lib/console/crypto';
 import { runTurn } from '@/lib/console/agent';
 import { createSiteConversation, resolveSiteConversation } from '@/lib/console/conversations';
-import { LIMIT_COPY, SITE_FAILURE_COPY } from '@/lib/console/assistant-copy';
+import { HANDED_BACK, LIMIT_COPY, SITE_FAILURE_COPY } from '@/lib/console/assistant-copy';
 import {
   ASSISTANT_SYSTEM,
   EMAIL_OK,
@@ -194,6 +194,7 @@ async function handle(request: NextRequest) {
     maxRounds: 3,
     timeoutMs: 20_000,
     deadlineMs: 50_000,
+    withdrawOn: HANDED_BACK,
     userRef: hashToken(visitorKey).slice(0, 32),
   });
 
@@ -201,8 +202,9 @@ async function handle(request: NextRequest) {
   if (Math.random() < 0.02) await (await import('@/lib/console/retention')).pruneVisitorChats();
 
   if (!result.ok) {
-    // What the visitor typed is saved, so the answer is one sentence and,
-    // where the assistant cannot help, a way to reach a person.
+    // What the visitor typed is saved, unless the window hands it back to send
+    // again, so the answer is one sentence and, where the assistant cannot
+    // help, a way to reach a person.
     return withVisitor(
       refused(SITE_FAILURE_COPY[result.cause], 502, fresh ? { fresh: true } : undefined),
       visitorKey,

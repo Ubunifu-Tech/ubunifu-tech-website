@@ -308,9 +308,9 @@ async function appendMessage(
     outputTokens?: number;
     authorId?: string;
   },
-): Promise<void> {
-  await db.$transaction([
-    db.conversationMessage.create({ data: { conversationId, ...data } }),
+): Promise<string> {
+  const [created] = await db.$transaction([
+    db.conversationMessage.create({ data: { conversationId, ...data }, select: { id: true } }),
     db.conversation.update({
       where: { id: conversationId },
       data: {
@@ -320,6 +320,22 @@ async function appendMessage(
         lastMessageAt: new Date(),
         model: data.model ?? undefined,
       },
+    }),
+  ]);
+  return created.id;
+}
+
+/**
+ * Takes a message back out of the thread. The chat windows hand the words back
+ * to be sent again when no answer came, and the second send would otherwise
+ * sit in the thread beside the first.
+ */
+async function withdrawMessage(conversationId: string, messageId: string): Promise<void> {
+  await db.$transaction([
+    db.conversationMessage.deleteMany({ where: { id: messageId, conversationId } }),
+    db.conversation.update({
+      where: { id: conversationId },
+      data: { messageCount: { decrement: 1 } },
     }),
   ]);
 }
@@ -347,6 +363,12 @@ export async function runTurn<Context>(
     deadlineMs?: number;
     /** Calls to the model per turn, counting each one after a tool. */
     maxRounds?: number;
+    /**
+     * Failures after which the window gives the person their words back to
+     * send again. Their message is taken out of the thread for those, unless
+     * a tool already ran on it.
+     */
+    withdrawOn?: AgentFailure[];
   },
 ): Promise<AgentResult> {
   const started = Date.now();
@@ -361,11 +383,28 @@ export async function runTurn<Context>(
     return { ok: false, cause: 'thread_full' };
   }
 
-  await appendMessage(options.conversationId, {
+  const userMessageId = await appendMessage(options.conversationId, {
     role: 'user',
     content: options.userMessage,
     authorId: options.authorId,
   });
+  let toolRan = false;
+  let askedAgain = false;
+
+  // Every failure ends here: recorded for staff unless already recorded, and
+  // the message taken back when the window hands it back.
+  const fail = async (
+    cause: AgentFailure,
+    detail?: string,
+  ): Promise<{ ok: false; cause: AgentFailure }> => {
+    if (detail !== undefined) await recordFailure(options.conversationId, options.kind, cause, detail);
+    if (!toolRan && options.withdrawOn?.includes(cause)) {
+      await withdrawMessage(options.conversationId, userMessageId).catch((error: unknown) =>
+        console.error('Could not take back the unanswered message', error),
+      );
+    }
+    return { ok: false, cause };
+  };
 
   const latest = await db.conversationMessage.findMany({
     where: { conversationId: options.conversationId },
@@ -392,7 +431,7 @@ export async function runTurn<Context>(
 
     for (let round = 0; round < maxRounds; round += 1) {
       const left = options.deadlineMs ? options.deadlineMs - (Date.now() - started) : Infinity;
-      if (left < DEADLINE_MARGIN_MS) return { ok: false, cause: 'unavailable' };
+      if (left < DEADLINE_MARGIN_MS) return await fail('unavailable', 'ran out of time before answering');
       const timeout = Math.min(options.timeoutMs ?? left, left);
       // One retry on the first call, and only when it still fits in the turn.
       const maxRetries = round === 0 && timeout * 2 <= left ? 1 : 0;
@@ -424,7 +463,19 @@ export async function runTurn<Context>(
         if (stop.keepUsage) {
           await appendMessage(options.conversationId, { role: 'assistant', content: '', ...usage });
         }
-        return { ok: false, cause: stop.cause };
+        // An answer with no words is usually a one-off, so it is asked once more.
+        if (stop.cause === 'empty' && !askedAgain && round + 1 < maxRounds) {
+          askedAgain = true;
+          continue;
+        }
+        return await fail(
+          stop.cause,
+          stop.cause === 'declined'
+            ? undefined
+            : stop.cause === 'empty' && !askedAgain
+              ? 'gave an empty answer'
+              : FAILURE_DETAIL[stop.cause],
+        );
       }
 
       if (stop.kind === 'reply') {
@@ -437,6 +488,7 @@ export async function runTurn<Context>(
       }
 
       const { toolUse } = stop;
+      toolRan = true;
       await appendMessage(options.conversationId, {
         role: 'assistant',
         content: stop.text,
@@ -490,18 +542,20 @@ export async function runTurn<Context>(
       });
     }
 
-    return { ok: false, cause: 'stuck' };
+    return await fail('stuck', FAILURE_DETAIL.stuck);
   } catch (error) {
+    let detail: string | undefined;
     if (error instanceof Anthropic.APIError) {
       await recordApiFailure(error, options.conversationId, options.kind);
     } else {
       console.error('Agent turn failed', error);
+      detail = `hit an error: ${error instanceof Error ? error.message : String(error)}`;
     }
     if (
       error instanceof Anthropic.AuthenticationError ||
       error instanceof Anthropic.PermissionDeniedError
     ) {
-      return { ok: false, cause: 'not_configured' };
+      return await fail('not_configured', detail);
     }
     // An overload inside a stream arrives with no status, only its type.
     if (
@@ -509,10 +563,49 @@ export async function runTurn<Context>(
       (error instanceof Anthropic.APIError &&
         (error.status === 529 || error.type === 'overloaded_error'))
     ) {
-      return { ok: false, cause: 'busy' };
+      return await fail('busy', detail);
     }
-    return { ok: false, cause: 'unavailable' };
+    return await fail('unavailable', detail);
   }
+}
+
+/** What went wrong, in the words the activity record uses after the assistant's name. */
+const FAILURE_DETAIL: Record<AgentFailure, string> = {
+  declined: 'declined to answer',
+  unavailable: 'was stopped by the API before answering',
+  not_configured: 'is not set up',
+  busy: 'was too busy to answer',
+  stuck: 'kept using tools without answering',
+  too_long: 'had too long a thread to answer',
+  cut_short: 'reached its length limit before finishing',
+  empty: 'gave an empty answer twice',
+  thread_full: 'had a full thread',
+  closed: 'was asked on a closed thread',
+  missing: 'was asked on a thread that no longer exists',
+};
+
+/**
+ * A turn that ended without an answer for a reason of our own, not the API's:
+ * written to the activity record, so staff can see why somebody got nothing.
+ */
+async function recordFailure(
+  conversationId: string,
+  kind: ConversationKind,
+  cause: AgentFailure,
+  detail: string,
+) {
+  await db.auditEvent
+    .create({
+      data: {
+        actorType: 'system',
+        action: 'assistant.failed',
+        entityType: 'conversation',
+        entityId: conversationId,
+        summary: `${WHICH[kind]} ${detail}.`.slice(0, 500),
+        metadata: { cause },
+      },
+    })
+    .catch((failure: unknown) => console.error('Could not record the assistant failure', failure));
 }
 
 const WHICH: Record<ConversationKind, string> = {

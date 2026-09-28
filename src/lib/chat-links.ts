@@ -129,12 +129,23 @@ const BARE = new RegExp(
 );
 
 /**
+ * A list item that ends by naming its page in brackets, as in
+ * "- Websites and custom platforms (/build#web)". The words become the link,
+ * since a path on its own reads as an address.
+ */
+const LABELLED_ITEM =
+  /^([ \t]*(?:[-*+]|\d+[.)])[ \t]+)([^\n[\]()`]+?)[ \t]+\((\/[A-Za-z0-9-]+(?:\/[A-Za-z0-9-]+)*(?:#[A-Za-z0-9-]+)?)\)([.,;:]?)[ \t]*$/gm;
+
+/**
  * Turns the bare paths, addresses and email in a reply into markdown links
  * before it is parsed, so "see /build" is as tappable as "[our services](/build)".
  * Only what classifyHref accepts is linked; anything else is left as written.
  */
 export function linkifyBarePaths(text: string, variant: ChatVariant): string {
   return text
+    .replace(LABELLED_ITEM, (match, lead: string, label: string, path: string, end: string) =>
+      classifyHref(path, variant) ? `${lead}[${label.trim()}](${path})${end}` : match,
+    )
     .split(PROTECTED)
     .map((piece, index) => {
       // split() with a capturing group puts the protected stretches at odd indexes.

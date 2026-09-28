@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { getClientActor, type ClientActor } from '@/lib/console/auth';
 import { runTurn } from '@/lib/console/agent';
 import { createPortalConversation, resolvePortalConversation } from '@/lib/console/conversations';
-import { LIMIT_COPY, PORTAL_FAILURE_COPY } from '@/lib/console/assistant-copy';
+import { HANDED_BACK, LIMIT_COPY, PORTAL_FAILURE_COPY } from '@/lib/console/assistant-copy';
 import { hashToken } from '@/lib/console/crypto';
 import { allow } from '@/lib/console/rate-limit';
 import { siteKnowledge } from '@/lib/console/site-knowledge';
@@ -149,6 +149,7 @@ async function handle(request: NextRequest) {
     maxRounds: 3,
     timeoutMs: 20_000,
     deadlineMs: 50_000,
+    withdrawOn: HANDED_BACK,
     userRef: hashToken(actor.id).slice(0, 32),
   });
 

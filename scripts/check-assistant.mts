@@ -49,7 +49,7 @@ const agent = await import('../src/lib/console/agent');
 const { buildRequest, readStop, replayable, runTurn, AGENT_MODEL, anthropicClient } = agent;
 const { ASSISTANT_SYSTEM, HANDOFF_RESULTS, HOW_TO_WRITE, recordEnquiryTool, validateEnquiryInput } =
   await import('../src/lib/console/assistant');
-const { SITE_FAILURE_COPY, PORTAL_FAILURE_COPY, LIMIT_COPY } = await import(
+const { SITE_FAILURE_COPY, PORTAL_FAILURE_COPY, LIMIT_COPY, HANDED_BACK } = await import(
   '../src/lib/console/assistant-copy'
 );
 const { PORTAL_SYSTEM, portalBrief, RAISE_REQUEST_SPEC } = await import('../src/lib/console/portal-brief');
@@ -328,6 +328,10 @@ const knowledge = knowledgeText({ posts });
   expectLinkified('`/build`', '`/build`');
   expectLinkified('write to info@ubunifutech.com', 'write to [info@ubunifutech.com](mailto:info@ubunifutech.com)');
   expectLinkified('bare https://evil.example/x here', 'bare https://evil.example/x here');
+  expectLinkified('- Websites & custom platforms (/build#web)', '- [Websites & custom platforms](/build#web)');
+  expectLinkified('1. **Hosting**, domains and email (/build#hosting).', '1. [**Hosting**, domains and email](/build#hosting).');
+  expectLinkified('- Something odd (/etc/passwd)', '- Something odd (/etc/passwd)');
+  expectLinkified('More on our page (/build)', 'More on our page ([/build](/build))');
   const plain = toPlainText('**Sifa** is on [our products page](/products).');
   if (plain !== 'Sifa is on our products page.') problems.push(`toPlainText gave ${JSON.stringify(plain)}`);
   report('A6 renderer', problems);
@@ -501,10 +505,78 @@ if (databaseUp) {
     const stored = await db.conversationMessage.count({ where: { conversationId: conversation.id, role: 'assistant' } });
     if (stored > 0) problems.push('an answer was stored although no call should have been made');
   } finally {
+    await db.auditEvent.deleteMany({ where: { entityId: conversation.id } });
     await db.conversation.delete({ where: { id: conversation.id } });
     if (!hadKey) delete process.env.ANTHROPIC_API_KEY;
   }
   report('A10 whole-turn deadline', problems);
+}
+
+// A11 An answer with no words: asked once more, and if it is empty again the
+// visitor's message is taken back out of the thread (the window hands it back
+// to send again) and the failure is written to the activity record. The model
+// is replaced by a stand-in here, so no call is made.
+if (databaseUp) {
+  const problems: string[] = [];
+  const hadKey = process.env.ANTHROPIC_API_KEY;
+  if (!hadKey) process.env.ANTHROPIC_API_KEY = 'check-assistant-no-call';
+  const messagesApi = Object.getPrototypeOf(anthropicClient().messages) as { stream: unknown };
+  const realStream = messagesApi.stream;
+  const answers: string[] = [];
+  const answer = (text: string) => ({
+    id: 'msg_check',
+    type: 'message',
+    role: 'assistant',
+    model: AGENT_MODEL,
+    content: text ? [{ type: 'text', text, citations: null }] : [],
+    stop_reason: 'end_turn',
+    stop_sequence: null,
+    usage: { input_tokens: 10, output_tokens: text ? 5 : 0 },
+  });
+  messagesApi.stream = () => ({ finalMessage: async () => answer(answers.shift() ?? '') });
+
+  const turn = async (replies: string[]) => {
+    answers.splice(0, answers.length, ...replies);
+    const conversation = await db.conversation.create({
+      data: { kind: 'site_visitor', visitorKey: `check-assistant-${Date.now()}-${replies.length}` },
+      select: { id: true },
+    });
+    const result = await runTurn({
+      conversationId: conversation.id,
+      kind: 'site_visitor',
+      userMessage: 'hello',
+      ...SITE_OPTIONS,
+      tools: [recordEnquiryTool],
+      context: { conversationId: conversation.id, ip: null },
+      maxRounds: 3,
+      withdrawOn: HANDED_BACK,
+    });
+    const [rows, counted, recorded] = await Promise.all([
+      db.conversationMessage.findMany({ where: { conversationId: conversation.id }, select: { role: true, content: true } }),
+      db.conversation.findUniqueOrThrow({ where: { id: conversation.id }, select: { messageCount: true } }),
+      db.auditEvent.findMany({ where: { entityId: conversation.id, action: 'assistant.failed' }, select: { summary: true } }),
+    ]);
+    await db.auditEvent.deleteMany({ where: { entityId: conversation.id } });
+    await db.conversation.delete({ where: { id: conversation.id } });
+    return { result, rows, counted: counted.messageCount, recorded };
+  };
+
+  try {
+    const twice = await turn(['', '']);
+    if (twice.result.ok || twice.result.cause !== 'empty') problems.push(`two empty answers gave ${JSON.stringify(twice.result)}`);
+    if (twice.rows.some((row) => row.role === 'user')) problems.push('the unanswered message stayed in the thread');
+    if (twice.counted !== twice.rows.length) problems.push(`the thread counts ${twice.counted} messages but holds ${twice.rows.length}`);
+    if (twice.recorded.length !== 1) problems.push(`${twice.recorded.length} activity lines for two empty answers, expected 1`);
+
+    const once = await turn(['', 'Hello. How can I help?']);
+    if (!once.result.ok || once.result.reply !== 'Hello. How can I help?') problems.push(`an empty answer then a reply gave ${JSON.stringify(once.result)}`);
+    if (!once.rows.some((row) => row.role === 'user' && row.content === 'hello')) problems.push('the answered message was taken out of the thread');
+    if (once.recorded.length !== 0) problems.push('an answered turn was recorded as a failure');
+  } finally {
+    messagesApi.stream = realStream;
+    if (!hadKey) delete process.env.ANTHROPIC_API_KEY;
+  }
+  report('A11 empty answers', problems);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -581,6 +653,7 @@ function replyProblems(text: string, variant: ChatVariant, long: boolean): strin
   const bolds = (text.match(/\*\*[^*\n]+\*\*/g)?.length ?? 0) - leadIns;
   if (bolds > 1) problems.push('bolds more than one phrase outside list lead-ins');
   if (/https?:\/\//.test(text.replace(/\[[^\]]*\]\([^)]*\)/g, ''))) problems.push('pastes a bare address');
+  if (/\(\/[A-Za-z]/.test(text.replace(/\[[^\]]*\]\([^)]*\)/g, ''))) problems.push('shows a page path in brackets');
   for (const link of links(text)) {
     if (!classifyHref(link.href, variant)) problems.push(`links ${link.href}, which will not render`);
     if (/^https?:\/\//.test(link.href) && /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(link.label.trim())) {
@@ -794,6 +867,10 @@ if (!hasKey) {
   const cases: Case[] = [
     // K: Ubunifu itself.
     { id: 'K1', turns: ['What do you do?'], judge: true, expect: (r) => [
+      ...need(countOf(r.text, ['website', 'hosting', 'brand', 'data', 'AI', 'strategy']) >= 3, 'names fewer than 3 services'),
+      ...need(linksTo(r.text, '/build'), 'does not link /build'),
+    ] },
+    { id: 'K15', turns: ['What are some services?'], expect: (r) => [
       ...need(countOf(r.text, ['website', 'hosting', 'brand', 'data', 'AI', 'strategy']) >= 3, 'names fewer than 3 services'),
       ...need(linksTo(r.text, '/build'), 'does not link /build'),
     ] },

@@ -51,6 +51,23 @@ export async function createSession(options: {
   const token = generateToken();
   const { ip, userAgent } = await requestContext();
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS[audience]);
+  const jar = await cookies();
+  const name = cookieNameFor(audience);
+
+  // Whatever session this browser held before ends here, whoever it was for.
+  // The new cookie replaces it, and a session nobody holds any more should
+  // not stay valid for the rest of its thirty days.
+  const replaced = jar.get(name)?.value;
+  if (replaced) {
+    await db.session
+      .updateMany({
+        where: { tokenHash: hashToken(replaced), revokedAt: null },
+        data: { revokedAt: new Date() },
+      })
+      .catch(() => {
+        // Signing in matters more than recording the old session's end.
+      });
+  }
 
   await db.session.create({
     data: {
@@ -64,8 +81,7 @@ export async function createSession(options: {
     },
   });
 
-  const jar = await cookies();
-  jar.set(cookieNameFor(audience), token, {
+  jar.set(name, token, {
     httpOnly: true,
     // Lax rather than Strict: a magic link arrives from an email client as a
     // top-level navigation, and Strict would drop the cookie on that first hop.

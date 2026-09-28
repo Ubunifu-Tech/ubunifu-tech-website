@@ -3,6 +3,7 @@ import { AuthLayout } from '@/components/console/AuthLayout';
 import { ContinueButton } from '@/components/console/ContinueButton';
 import { CLIENT_LINKS, afterDeadLink } from '@/lib/console/client-links';
 import { checkMagicToken } from '@/lib/console/magic-link';
+import { getPendingContact } from '@/lib/console/auth';
 import { continueWithLink } from './actions';
 import auth from '@/styles/auth.module.css';
 
@@ -30,11 +31,17 @@ export default async function VerifyLink({
 
   const claim = await checkMagicToken(token, CLIENT_LINKS);
   if (!claim || claim.actorType !== 'client_contact') redirect(await afterDeadLink(token));
+  // Someone else already signed in here is told before they are signed out.
+  // A preview fetch carries no cookie, so this never reaches a chat's card.
+  const current = await getPendingContact();
 
   return (
     <AuthLayout role="Portal">
       <div className={auth.panel}>
         <h1 className={auth.heading}>Your project portal</h1>
+        {current && current.id !== claim.actorId && (
+          <p className={auth.lead}>Continuing signs {current.name} out on this device.</p>
+        )}
         <div className={auth.card}>
           <form action={continueWithLink}>
             <input type="hidden" name="token" value={token} />

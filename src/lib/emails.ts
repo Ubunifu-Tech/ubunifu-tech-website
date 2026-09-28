@@ -230,8 +230,9 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
  */
 function securityNote(minutesOrDays: string): string {
   return `<p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
-    This link works once and expires in ${minutesOrDays}. If you did not request it,
-    you can ignore this email. Nothing has changed on your account.
+    This link works once and expires in ${minutesOrDays}. The link is just for you,
+    so please do not forward this email. If you did not request it, you can
+    ignore this email. Nothing has changed on your account.
   </p>`;
 }
 
@@ -1012,6 +1013,13 @@ export function documentSignedEmail(input: {
   inPortal: boolean;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
+  // Without an account the button also sets one up, so it is a credential.
+  const forwardNote = input.inPortal
+    ? ''
+    : `
+    <p style="margin:14px 0 0;color:#8B8793;font-size:13px;line-height:1.6;">
+      The link is just for you, so please do not forward this email.
+    </p>`;
 
   const body = `
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
@@ -1029,7 +1037,7 @@ export function documentSignedEmail(input: {
       ['Signed on', escapeHtml(input.signedOn)],
       ['Fingerprint', escapeHtml(input.fingerprint)],
     ])}
-    ${button(input.url, 'Open your signed copy')}
+    ${button(input.url, 'Open your signed copy')}${forwardNote}
     <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
       Keep this email with your records. If a question about the document ever
       comes up, quote the fingerprint above.

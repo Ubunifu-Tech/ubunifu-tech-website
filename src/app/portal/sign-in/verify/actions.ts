@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { checkMagicToken, consumeMagicToken } from '@/lib/console/magic-link';
-import { createSession } from '@/lib/console/session';
+import { createSession, readSession } from '@/lib/console/session';
 import { recordAudit } from '@/lib/console/auth';
 import { CLIENT_LINKS, afterDeadLink, landingFor } from '@/lib/console/client-links';
 
@@ -73,6 +73,20 @@ export async function continueWithLink(formData: FormData): Promise<void> {
       summary: 'An old setup link was used after the account was set up',
     });
     redirect('/portal/sign-in?error=set-up');
+  }
+
+  // Someone else signed in on this browser is signed out by the new session,
+  // as the Continue page warned. Their account's activity says so.
+  const before = await readSession('portal');
+  if (before?.actorType === 'client_contact' && before.actorId !== contact.id) {
+    await recordAudit({
+      actorType: 'client_contact',
+      actorId: before.actorId,
+      action: 'client.session.replaced',
+      entityType: 'ClientContact',
+      entityId: before.actorId,
+      summary: 'Signed out on this browser when someone else opened their link',
+    });
   }
 
   await createSession({

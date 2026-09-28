@@ -76,10 +76,10 @@ The site is then on http://localhost:3001 and the staff console on
 http://admin.localhost:3001. Keep the variables in `.env`: Prisma, the migration
 script and every check script read only that file.
 
-The site renders without email credentials. Without `RESEND_API_KEY` the
-contact form directs visitors to email instead, and in development the console
-and portal print their sign-in links in the dev server's terminal rather than
-sending them.
+The site renders without email credentials. Without `RESEND_API_KEY` a
+contact form message is still saved under Enquiries in the console but no email
+goes out, and in development the console and portal print their sign-in links
+in the dev server's terminal rather than sending them.
 
 ### Environment variables and Resend
 
@@ -101,9 +101,10 @@ To enable the contact form:
 
 The route sends team notifications from `notifications@ubunifutech.com` to
 `info@ubunifutech.com` and sends acknowledgements from the same verified domain.
-If the key is missing, `POST /api/contact` returns `503` and the form directs the
-visitor to email `info@ubunifutech.com` instead. See `.env.example` for the safe
-placeholder format.
+If the key is missing, the message is still saved in the console. Only when it
+cannot be saved either does `POST /api/contact` return `503` and the form direct
+the visitor to email `info@ubunifutech.com` instead. See `.env.example` for the
+safe placeholder format.
 
 The contact form is throttled per network address and per email address. The
 counts are kept in the database (`RateLimitHit`, see

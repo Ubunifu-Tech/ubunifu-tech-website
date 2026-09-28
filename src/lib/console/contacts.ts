@@ -2,7 +2,12 @@ import 'server-only';
 import { db } from '@/lib/db';
 import { recordAudit } from './auth';
 import { consoleEnv } from './env';
-import { issueMagicToken, revokeEveryMagicToken, revokeMagicTokens } from './magic-link';
+import {
+  issueMagicToken,
+  revokeEveryMagicToken,
+  revokeMagicTokens,
+  spendUnsentLink,
+} from './magic-link';
 import { revokeSessionsFor } from './session';
 import { EMAILED_LINKS } from './client-links';
 import { sendConsoleEmail } from './mailer';
@@ -70,11 +75,20 @@ export async function emailTakenElsewhere(email: string, clientId: string): Prom
   return taken !== null;
 }
 
-/** Of these people, the ones who have been sent an invitation or a setup link. */
+/**
+ * Of these people, the ones holding an invitation link that went out and
+ * still works.
+ */
 export async function invitedAmong(contactIds: string[]): Promise<Set<string>> {
   if (contactIds.length === 0) return new Set();
   const sent = await db.magicToken.findMany({
-    where: { purpose: 'invite', actorType: 'client_contact', actorId: { in: contactIds } },
+    where: {
+      purpose: 'invite',
+      actorType: 'client_contact',
+      actorId: { in: contactIds },
+      usedAt: null,
+      expiresAt: { gt: new Date() },
+    },
     distinct: ['actorId'],
     select: { actorId: true },
   });
@@ -332,6 +346,7 @@ export async function sendPasswordLink(contact: { id: string; name: string; emai
     entityType: 'ClientContact',
     entityId: contact.id,
   });
+  if (!sent.ok && !sent.printed) await spendUnsentLink(token);
   await recordAudit({
     actorType: 'client_contact',
     actorId: contact.id,
@@ -375,6 +390,7 @@ export async function sendSetupLinkAgain(contact: {
     entityType: 'ClientContact',
     entityId: contact.id,
   });
+  if (!sent.ok && !sent.printed) await spendUnsentLink(token);
   await recordAudit({
     actorType: 'client_contact',
     actorId: contact.id,
@@ -559,6 +575,7 @@ export async function invitePerson(input: {
         entityType: 'ClientContact',
         entityId: contact.id,
       });
+  if (!sent.ok && !sent.printed) await spendUnsentLink(token);
 
   await recordAudit({
     actorType: by.type,

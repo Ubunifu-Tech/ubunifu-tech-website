@@ -155,6 +155,18 @@ export async function readLink(
   };
 }
 
+/**
+ * For a link whose email did not go: nobody holds it, so nothing should count
+ * it as sent. Marked used rather than deleted, so the limits that count rows
+ * (tooManyLinkRequests) still see the attempt.
+ */
+export async function spendUnsentLink(rawToken: string): Promise<void> {
+  await db.magicToken.updateMany({
+    where: { tokenHash: hashToken(rawToken), usedAt: null },
+    data: { usedAt: new Date() },
+  });
+}
+
 /** Invalidates outstanding links of one or more purposes, e.g. after a password change. */
 export async function revokeMagicTokens(
   actorType: ActorType,

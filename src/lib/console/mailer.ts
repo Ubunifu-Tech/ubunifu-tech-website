@@ -14,7 +14,13 @@ import { db } from '@/lib/db';
 const FROM = 'Ubunifu Technologies <notifications@ubunifutech.com>';
 const REPLY_TO = 'info@ubunifutech.com';
 
-export type SendResult = { ok: true } | { ok: false; error: string };
+export type SendResult =
+  | { ok: true }
+  /**
+   * `printed`: nothing went, but in development the links were printed to the
+   * server console, so a link in this email can still be used from there.
+   */
+  | { ok: false; error: string; printed?: boolean };
 
 export async function sendConsoleEmail(options: {
   to: string;
@@ -85,6 +91,7 @@ export async function sendConsoleEmail(options: {
       return {
         ok: false,
         error: 'email is not configured here, so the link was printed to the server console',
+        printed: true,
       };
     }
 

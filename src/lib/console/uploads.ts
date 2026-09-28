@@ -370,9 +370,10 @@ function disposition(contentType: string, filename: string): string {
  *
  *   private — a client's file. Never cached anywhere but the reader's own
  *             browser session, disposition decided by type.
- *   public  — a website image. Cached by every CDN for a year, because its
- *             address is its id and an id never gets different bytes: a
- *             replaced image is a new upload with a new address.
+ *   public  — a website image. Cached by browsers and the CDN for an hour.
+ *             Its address is its id and an id never gets different bytes,
+ *             so longer would be safe for the bytes; an hour is so that an
+ *             image taken off the site stops being served soon after.
  */
 export type StreamOptions = {
   filename: string;
@@ -430,7 +431,7 @@ export async function streamBlob(storageKey: string, options: StreamOptions): Pr
       'Content-Disposition': disposition(result.blob.contentType, options.filename),
       'Content-Length': String(result.blob.size),
       'Cache-Control':
-        options.cache === 'public' ? 'public, max-age=31536000, immutable' : 'private, no-store',
+        options.cache === 'public' ? 'public, max-age=3600, s-maxage=3600' : 'private, no-store',
       // nosniff stops a mislabelled file being re-read as HTML; the sandbox
       // CSP means that even if one ever were, it would run no script, load
       // nothing and reach no cookie. Inline rendering is why both are here.

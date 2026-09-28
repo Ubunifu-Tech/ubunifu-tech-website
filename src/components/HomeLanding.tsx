@@ -305,7 +305,12 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
           <div className={styles.workGrid}>
             {projects.map((project) => (
               <article key={project.slug} className={styles.workItem}>
-                <Link href={`/work/${project.slug}`} className={styles.workImageLink}>
+                <Link
+                  href={`/work/${project.slug}`}
+                  className={styles.workImageLink}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                >
                   <EditorialVisual
                     src={project.artwork.src}
                     alt={project.artwork.alt}
@@ -451,7 +456,12 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
             <div className={styles.insightGrid}>
               {posts.map((post) => (
                 <article key={post.slug} className={styles.insightCard}>
-                  <Link href={`/blog/${post.slug}`} className={styles.insightImageLink}>
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className={styles.insightImageLink}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  >
                     <EditorialVisual
                       src={post.image}
                       alt={post.alt}

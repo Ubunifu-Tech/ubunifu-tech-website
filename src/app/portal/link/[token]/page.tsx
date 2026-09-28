@@ -13,6 +13,7 @@ import { AskAgain, RespondForm, SignForm } from '../../documents/SignForm';
 import { ReviewAnswer } from '../../projects/[slug]/ReviewAnswer';
 import { answerWithLink, askAgainWithLink, respondWithLink, signWithLink } from './actions';
 import { Opened } from './Opened';
+import { HideAddressWhilePrinting } from './HideAddressWhilePrinting';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
 import styles from '../../Portal.module.css';
 import forms from '@/styles/forms.module.css';
@@ -127,6 +128,7 @@ async function SignThroughLink({
 
   return (
     <>
+      <HideAddressWhilePrinting />
       {canSign && <Opened token={token} />}
       <div className={sheet.toolbar}>
         {signature ? (

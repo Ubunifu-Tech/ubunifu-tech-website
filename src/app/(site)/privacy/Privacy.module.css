@@ -23,6 +23,11 @@ article.article {
   line-height: 1.8;
 }
 
+/* Sections with more than one paragraph, such as the chat's. */
+.article p + p {
+  margin-top: var(--space-3);
+}
+
 .article a {
   color: var(--primary-deep);
   font-weight: var(--font-weight-regular);

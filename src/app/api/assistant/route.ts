@@ -197,7 +197,8 @@ async function handle(request: NextRequest) {
     userRef: hashToken(visitorKey).slice(0, 32),
   });
 
-  // CH14: visitor chats that never became an enquiry are pruned from here.
+  // Old visitor chats are pruned now and then from here (src/lib/console/retention.ts).
+  if (Math.random() < 0.02) await (await import('@/lib/console/retention')).pruneVisitorChats();
 
   if (!result.ok) {
     // What the visitor typed is saved, so the answer is one sentence and,

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { db } from '@/lib/db';
 import { BrandMark } from '@/components/BrandMark';
-import { ContractSheet } from '@/components/documents/ContractSheet';
+import { ContractSheet, sheetStateOf } from '@/components/documents/ContractSheet';
 import { ReviewRound } from '@/components/console/ReviewRound';
 import { mainContactOf } from '@/lib/console/contacts';
-import { DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
+import { DOCUMENT_KIND_LABEL, shortHash } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
 import { readSharedLink, type SharedLink } from '@/lib/console/shared-links';
@@ -90,7 +90,8 @@ async function SignThroughLink({
       respondedAt: true,
       responseNote: true,
       respondedBy: { select: { name: true } },
-      version: { select: { bodyMarkdown: true } },
+      documentHash: true,
+      version: { select: { bodyMarkdown: true, version: true } },
       termsVersion: { select: { version: true, title: true, bodyMarkdown: true } },
       signatures: { select: { signerName: true, initials: true, signedAt: true } },
       document: {
@@ -175,6 +176,12 @@ async function SignThroughLink({
         bodyMarkdown={request.version.bodyMarkdown}
         terms={request.termsVersion}
         signature={signature}
+        state={sheetStateOf(request)}
+        proof={{
+          version: request.version.version,
+          fingerprint: shortHash(request.documentHash),
+          termsVersion: request.termsVersion?.version ?? null,
+        }}
       />
 
       {canSign && (

@@ -7,10 +7,11 @@ import {
   markSignatureRequestViewed,
   DOCUMENT_KIND_LABEL,
   portalDocumentState,
+  shortHash,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { AskAgain, RespondForm, SignForm } from '../SignForm';
-import { ContractSheet } from '@/components/documents/ContractSheet';
+import { ContractSheet, sheetStateOf } from '@/components/documents/ContractSheet';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import { getOrg } from '@/lib/console/org';
 import sheet from '@/app/admin/receipts/Receipt.module.css';
@@ -84,6 +85,7 @@ export default async function PortalDocument({
           expiresAt: true,
           respondedAt: true,
           responseNote: true,
+          documentHash: true,
           respondedBy: { select: { id: true, name: true } },
           version: { select: { bodyMarkdown: true, version: true } },
           termsVersion: {
@@ -254,6 +256,12 @@ export default async function PortalDocument({
         bodyMarkdown={request.version.bodyMarkdown}
         terms={request.termsVersion}
         signature={signature ?? null}
+        state={sheetStateOf(request)}
+        proof={{
+          version: request.version.version,
+          fingerprint: shortHash(request.documentHash),
+          termsVersion: request.termsVersion?.version ?? null,
+        }}
       />
 
       <div className={`${sheet.toolbar} ${sheet.noPrint} ${styles.signArea}`}>

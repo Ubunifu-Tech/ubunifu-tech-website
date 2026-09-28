@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
-import { DOCUMENT_KIND_LABEL } from '@/lib/console/documents';
+import { DOCUMENT_KIND_LABEL, shortHash } from '@/lib/console/documents';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
 import { getOrg } from '@/lib/console/org';
-import { ContractSheet } from '@/components/documents/ContractSheet';
+import { ContractSheet, sheetStateOf } from '@/components/documents/ContractSheet';
 import { PrintButton } from '../../../receipts/PrintButton';
 import styles from '../../../Admin.module.css';
 import sheet from '../../../receipts/Receipt.module.css';
@@ -52,8 +52,11 @@ export default async function PrintDocument({ params }: { params: Promise<{ refe
           take: 1,
           select: {
             sentAt: true,
-            version: { select: { bodyMarkdown: true } },
-            termsVersion: { select: { title: true, bodyMarkdown: true } },
+            status: true,
+            respondedAt: true,
+            documentHash: true,
+            version: { select: { bodyMarkdown: true, version: true } },
+            termsVersion: { select: { title: true, bodyMarkdown: true, version: true } },
             signatures: { select: { signerName: true, initials: true, signedAt: true } },
           },
         },
@@ -102,6 +105,16 @@ export default async function PrintDocument({ params }: { params: Promise<{ refe
         bodyMarkdown={body}
         terms={sent?.termsVersion ?? null}
         signature={sent?.signatures[0] ?? null}
+        state={sheetStateOf(sent)}
+        proof={
+          sent
+            ? {
+                version: sent.version.version,
+                fingerprint: shortHash(sent.documentHash),
+                termsVersion: sent.termsVersion?.version ?? null,
+              }
+            : null
+        }
       />
     </main>
   );

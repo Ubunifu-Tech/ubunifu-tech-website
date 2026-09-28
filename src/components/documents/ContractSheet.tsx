@@ -16,6 +16,32 @@ function titleLines(title: string, clientName: string): [string, string] {
   return [title, `for ${clientName}`];
 }
 
+/** Which of these the printed sheet is, and when that happened. */
+export type SheetState = { kind: 'draft' | 'sent' | 'signed' | 'declined'; at: Date | null };
+
+/**
+ * The sheet's state from the request it shows: signed once there is a
+ * signature, declined when they said no, sent when it went out, and a draft
+ * when nothing has been sent.
+ */
+export function sheetStateOf(
+  request:
+    | {
+        sentAt: Date | null;
+        status: string;
+        respondedAt: Date | null;
+        signatures: { signedAt: Date }[];
+      }
+    | null
+    | undefined,
+): SheetState {
+  if (!request) return { kind: 'draft', at: null };
+  const signature = request.signatures[0];
+  if (signature) return { kind: 'signed', at: signature.signedAt };
+  if (request.status === 'declined') return { kind: 'declined', at: request.respondedAt };
+  return { kind: 'sent', at: request.sentAt };
+}
+
 /**
  * A proposal or agreement as a document: a cover, the text, the terms it
  * comes with, and where it was signed. The client's copy, the link shared by
@@ -34,6 +60,8 @@ export function ContractSheet({
   bodyMarkdown,
   terms,
   signature,
+  state,
+  proof,
 }: {
   org: Org;
   kind: string;
@@ -47,6 +75,14 @@ export function ContractSheet({
   bodyMarkdown: string;
   terms: { title: string; bodyMarkdown: string } | null;
   signature: { signerName: string; initials: string | null; signedAt: Date } | null;
+  /** Draft, sent, signed or declined, so a printed copy says which it is. */
+  state: SheetState;
+  /**
+   * What ties the paper to the record: the version sent, its fingerprint
+   * (already shortened by the caller, so this sheet never imports the
+   * server-only documents module) and the terms version. Null for a draft.
+   */
+  proof: { version: number; fingerprint: string; termsVersion: number | null } | null;
 }) {
   const clientName = client.legalName ?? client.name;
   const [firstLine, secondLine] = titleLines(title, clientName);
@@ -66,7 +102,10 @@ export function ContractSheet({
         <BrandLockup className={doc.lockup} />
 
         <div className={doc.coverMain}>
-          <p className={doc.eyebrow}>{kind}</p>
+          <p className={doc.eyebrow}>
+            {kind}
+            {state.kind === 'draft' ? ' · Draft' : state.kind === 'declined' ? ' · Declined' : ''}
+          </p>
           <h1 className={doc.coverTitle}>
             {firstLine}
             <span className={doc.coverAccent}>{secondLine}</span>
@@ -127,6 +166,11 @@ export function ContractSheet({
                 {signature.initials ? ` (${signature.initials})` : ''}
                 <span className={doc.signWhen}>{formatDate(signature.signedAt)}</span>
               </p>
+            ) : state.kind === 'declined' ? (
+              <p className={doc.signValue}>
+                Declined
+                {state.at && <span className={doc.signWhen}>{formatDate(state.at)}</span>}
+              </p>
             ) : (
               <p className={doc.signPending}>Not signed yet</p>
             )}
@@ -142,7 +186,21 @@ export function ContractSheet({
 
         {signature && (
           <p className={doc.signedNote}>
-            Signed electronically{terms ? `, together with the ${terms.title} that follow` : ''}.
+            Signed electronically
+            {terms
+              ? `, together with the ${terms.title}${
+                  proof?.termsVersion ? `, version ${proof.termsVersion},` : ''
+                } that follow`
+              : ''}
+            .
+          </p>
+        )}
+        {/* Outside .body, so the text a signature's fingerprint is taken
+            over is untouched. */}
+        {proof && (
+          <p className={doc.proof}>
+            Version {proof.version} · Fingerprint {proof.fingerprint}
+            {terms && proof.termsVersion ? ` · ${terms.title}, version ${proof.termsVersion}` : ''}
           </p>
         )}
 

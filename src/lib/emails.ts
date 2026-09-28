@@ -248,16 +248,27 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
 /* ── Console: sign-in and invitation ──────────── */
 
 /**
- * A link is a credential, so these templates say plainly what the link does,
- * how long it lasts, and what to do if the recipient did not ask for it. No
- * marketing, no products, nothing else to click.
+ * A sign-in link is a credential the recipient asked for, so its note says
+ * how long it lasts and what to do if they did not ask. No marketing, no
+ * products, nothing else to click. Only sign-in and password links use it:
+ * an invoice or a contract was never requested, so "ignore this email" would
+ * be the wrong advice there.
  */
-function securityNote(minutesOrDays: string): string {
+function signInNote(minutesOrDays: string): string {
   return `<p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
     This link works once and expires in ${minutesOrDays}. The link is just for you,
     so please do not forward this email. If you did not request it, you can
     ignore this email. Nothing has changed on your account.
   </p>`;
+}
+
+/**
+ * The note under any other emailed link: what is true of that link, in the
+ * email's own words. The lifetimes follow magic-link.ts, and an invitation
+ * keeps working until setup is finished (continueWithLink).
+ */
+function linkNote(text: string): string {
+  return `<p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">${text}</p>`;
 }
 
 export function staffSignInEmail(input: { name: string; url: string }): string {
@@ -269,7 +280,7 @@ export function staffSignInEmail(input: { name: string; url: string }): string {
       Hello ${name}. Use the button below to open the Ubunifu console.
     </p>
     ${button(input.url, 'Open the console')}
-    ${securityNote('20 minutes')}`;
+    ${signInNote('20 minutes')}`;
 
   return shell('Your link to sign in to the Ubunifu console.', body);
 }
@@ -289,7 +300,9 @@ export function staffInviteEmail(input: { name: string; invitedBy: string; url: 
     <p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
       After today, sign in any time with your email address and we will send you a fresh link.
     </p>
-    ${securityNote('14 days')}`;
+    ${linkNote(
+      'This link works once and lasts 14 days. The link is just for you, so please do not forward this email.',
+    )}`;
 
   return shell(`${input.invitedBy} added you to the Ubunifu console.`, body);
 }
@@ -361,7 +374,9 @@ export function colleagueInviteEmail(input: {
       Follow the link to choose a password and finish setting up your account.
     </p>
     ${button(input.url, 'Set up your account')}
-    ${securityNote('14 days')}`;
+    ${linkNote(
+      'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email.',
+    )}`;
 
   return shell(`${input.invitedBy} invited you to the ${input.clientName} portal.`, body);
 }
@@ -389,7 +404,9 @@ export function clientInviteEmail(input: {
       Follow the link to choose a password and finish setting up your account.
     </p>
     ${button(input.url, 'Set up your account')}
-    ${securityNote('14 days')}`;
+    ${linkNote(
+      'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email.',
+    )}`;
 
   return shell(`Set up your ${input.clientName} project portal.`, body);
 }
@@ -413,7 +430,9 @@ export function setupEmailConfirmEmail(input: {
       up the ${org} portal. You choose a password next.
     </p>
     ${button(input.url, 'Confirm my email')}
-    ${securityNote('14 days')}`;
+    ${linkNote(
+      'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email. If you did not ask for it, you can ignore this email.',
+    )}`;
 
   return shell(`Confirm your email for the ${input.clientName} portal.`, body);
 }
@@ -428,7 +447,7 @@ export function clientSignInEmail(input: { name: string; url: string }): string 
       also sign in with your email and password at any time.
     </p>
     ${button(input.url, 'Open my portal')}
-    ${securityNote('20 minutes')}`;
+    ${signInNote('20 minutes')}`;
 
   return shell('Your link to sign in to the Ubunifu portal.', body);
 }
@@ -443,7 +462,7 @@ export function passwordResetEmail(input: { name: string; url: string }): string
       project portal. Your current password keeps working until you do.
     </p>
     ${button(input.url, 'Choose a new password')}
-    ${securityNote('30 minutes')}`;
+    ${signInNote('30 minutes')}`;
 
   return shell('Your link to choose a new portal password.', body);
 }
@@ -546,7 +565,9 @@ export function invoiceEmail(input: {
       ${next}
     </p>
     ${button(input.url, 'View the invoice')}
-    ${securityNote('30 days')}`;
+    ${linkNote(
+      'This button works once and lasts 30 days. After that, sign in to your portal and the invoice is there. The link is just for you, so please do not forward this email.',
+    )}`;
 
   return shell(`Invoice ${input.number} for ${input.total}.`, body);
 }
@@ -836,11 +857,9 @@ export function documentToSignEmail(input: {
       on the same page rather than signing. We would much rather fix it first.
     </p>
     ${button(input.url, 'Read and sign')}
-    ${securityNote('14 days')}
-    <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
-      If the link has expired, sign in to your portal at any time and it will be
-      waiting for you there.
-    </p>`;
+    ${linkNote(
+      'This button works once and lasts 14 days. After that, sign in to your portal and the document will be waiting for you there. The link is just for you, so please do not forward this email.',
+    )}`;
 
   return shell(`${input.documentTitle} is ready for your signature.`, body);
 }
@@ -1066,10 +1085,7 @@ export function documentSignedEmail(input: {
   // Without an account the button also sets one up, so it is a credential.
   const forwardNote = input.inPortal
     ? ''
-    : `
-    <p style="margin:14px 0 0;color:#8B8793;font-size:13px;line-height:1.6;">
-      The link is just for you, so please do not forward this email.
-    </p>`;
+    : linkNote('The link is just for you, so please do not forward this email.');
 
   const body = `
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
@@ -1079,7 +1095,7 @@ export function documentSignedEmail(input: {
       <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>. ${
         input.inPortal
           ? 'The signed copy stays in your portal, where you can read it or save it as a PDF at any time.'
-          : 'Use the button to open the signed copy and save it as a PDF. It also sets up your account, so the copy stays there for you.'
+          : 'Use the button within 14 days to open the signed copy and set up your account. The copy then stays in your portal, where you can save it as a PDF at any time. If the button has stopped working, reply to this email and we will send you the copy.'
       }
     </p>
     ${facts([

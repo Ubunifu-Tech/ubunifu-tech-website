@@ -6,7 +6,13 @@ import { db } from '@/lib/db';
 import { BillingKind, LineItemStatus } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { dropOffSchedulePeriods } from '@/lib/console/renewals';
-import { formatMoney, parseDateInput, parseMoney, toDateInputValue } from '@/lib/console/money';
+import {
+  formatMoney,
+  formatShortDate,
+  parseDateInput,
+  parseMoney,
+  toDateInputValue,
+} from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { BILLING, isRecurring } from '@/lib/console/fee-labels';
 
@@ -206,6 +212,13 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
       nextDueAt: true,
       _count: { select: { invoiceLines: true } },
       project: { select: { slug: true, deletedAt: true } },
+      // The latest period already invoiced or skipped, if any.
+      renewals: {
+        where: { status: { not: 'pending' } },
+        orderBy: { periodEnd: 'desc' },
+        take: 1,
+        select: { periodEnd: true },
+      },
     },
   });
   if (!line || line.project.deletedAt)
@@ -214,14 +227,37 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
   const read = parse(formData, line.currency);
   if (!read.ok) return read.error;
   const parsed = read.fee;
+  const handled = line.renewals;
 
-  // Once invoiced, a fee's billing type is part of what the client was sent.
-  if (line._count.invoiceLines > 0 && parsed.billingKind !== line.billingKind) {
+  // Once a period is invoiced or skipped, a fee's billing type is part of what
+  // the client was sent, and switching it would leave periods of the wrong length.
+  if (
+    (line._count.invoiceLines > 0 || handled.length > 0) &&
+    parsed.billingKind !== line.billingKind
+  ) {
     return {
       status: 'error',
       message:
-        'This fee has been invoiced, so how it is billed cannot change. Add a new fee instead.',
+        'Periods of this fee have been invoiced or skipped, so how it is billed cannot change. Add a new fee instead.',
       field: 'billingKind',
+    };
+  }
+
+  // Moving the date back over periods already handled would offer them again.
+  // Only a changed date is checked, so saving other details never trips this.
+  const handledUntil = handled[0]?.periodEnd;
+  if (
+    isRecurring(parsed.billingKind) &&
+    handledUntil &&
+    parsed.nextDueAt &&
+    parsed.nextDueAt.getTime() !== line.nextDueAt?.getTime() &&
+    parsed.nextDueAt < handledUntil
+  ) {
+    const end = formatShortDate(handledUntil);
+    return {
+      status: 'error',
+      message: `Periods up to ${end} are already invoiced or skipped. Choose ${end} or later.`,
+      field: 'nextDueAt',
     };
   }
 

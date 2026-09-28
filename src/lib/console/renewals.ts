@@ -211,7 +211,10 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
       nextDueAt: true,
       intervalMonths: true,
       billingKind: true,
-      renewals: { where: { status: 'pending' }, select: { id: true, periodStart: true } },
+      renewals: {
+        where: { status: 'pending' },
+        select: { id: true, periodStart: true, periodEnd: true },
+      },
     },
   });
   if (!line || line.renewals.length === 0) return 0;
@@ -227,7 +230,14 @@ export async function dropOffSchedulePeriods(lineItemId: string): Promise<number
     }
   }
 
-  const stale = line.renewals.filter((renewal) => !onSchedule.has(renewal.periodStart.getTime()));
+  // A period is on the schedule only if it starts on it AND spans one interval:
+  // after a switch from yearly to monthly, the old year-long period starts on
+  // the same day as the first monthly one and would otherwise stay.
+  const stale = line.renewals.filter(
+    (renewal) =>
+      !onSchedule.has(renewal.periodStart.getTime()) ||
+      renewal.periodEnd.getTime() !== addMonths(renewal.periodStart, months!).getTime(),
+  );
   if (stale.length === 0) return 0;
   const dropped = await db.renewalEvent.deleteMany({
     where: { id: { in: stale.map((renewal) => renewal.id) }, status: 'pending' },

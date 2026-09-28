@@ -344,7 +344,7 @@ function FeeForm({
           {isRecurring(billingKind) && (
             <div className={forms.field}>
               <span className={forms.label} id="fee-due-label">
-                First payment due
+                {fee ? 'Next payment due' : 'First payment due'}
               </span>
               <DatePicker aria-labelledby="fee-due-label" value={nextDueAt} onChange={setNextDueAt} />
             </div>

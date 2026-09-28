@@ -29,7 +29,9 @@ const { PrismaPg } = await import('@prisma/adapter-pg');
 const { databaseTarget } = await import('../src/lib/db-connection');
 const { PrismaClient } = await import('../src/generated/prisma/client');
 const { billableLines } = await import('../src/lib/console/billing');
-const { markRenewalInvoiced } = await import('../src/lib/console/renewals');
+const { markRenewalInvoiced, dropOffSchedulePeriods, ensureRenewalEvents, addMonths } = await import(
+  '../src/lib/console/renewals'
+);
 
 const db = new PrismaClient({ adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)) });
 
@@ -49,6 +51,7 @@ const line = await db.lineItem.findFirst({
     id: true,
     label: true,
     nextDueAt: true,
+    intervalMonths: true,
     project: { select: { id: true, reference: true, clientId: true } },
   },
 });
@@ -112,6 +115,42 @@ await db.lineItem.update({ where: { id: line.id }, data: { nextDueAt: originalNe
 await db.renewalEvent.deleteMany({
   where: { lineItemId: line.id, periodStart: { gt: originalNextDueAt } },
 });
+
+// Switching a yearly fee to monthly must not leave the year-long period
+// behind: every period still waiting to be billed spans exactly one month.
+try {
+  await db.lineItem.update({
+    where: { id: line.id },
+    data: { billingKind: 'recurring_monthly', intervalMonths: 1 },
+  });
+  await dropOffSchedulePeriods(line.id);
+  await ensureRenewalEvents({ id: line.id }, 1200);
+  const pending = await db.renewalEvent.findMany({
+    where: { lineItemId: line.id, status: 'pending' },
+    select: { periodStart: true, periodEnd: true },
+  });
+  const wrong = pending.filter(
+    (period) => period.periodEnd.getTime() !== addMonths(period.periodStart, 1).getTime(),
+  );
+  if (wrong.length > 0) {
+    failures.push(
+      `After switching to monthly, ${wrong.length} waiting period(s) were not one month long.`,
+    );
+  } else {
+    console.log(`Switched to monthly: ${pending.length} waiting periods, each one month long.`);
+  }
+} finally {
+  await db.lineItem.update({
+    where: { id: line.id },
+    data: {
+      billingKind: 'recurring_annual',
+      intervalMonths: line.intervalMonths,
+      nextDueAt: originalNextDueAt,
+    },
+  });
+  await db.renewalEvent.deleteMany({ where: { lineItemId: line.id, status: 'pending' } });
+  await ensureRenewalEvents({ id: line.id });
+}
 
 await db.$disconnect();
 

@@ -786,7 +786,9 @@ export function guardsFor(
     });
   }
 
-  if (to === 'cancelled' && facts.openSignatureRequests > 0) {
+  // Closing is refused too: a closed project with a document still open would
+  // let the client sign something nobody is watching any more.
+  if ((to === 'cancelled' || to === 'closed') && facts.openSignatureRequests > 0) {
     guards.push({
       severity: 'block',
       message: `${facts.openSignatureRequests === 1 ? 'A document is' : `${facts.openSignatureRequests} documents are`} still out for signature. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first.`,

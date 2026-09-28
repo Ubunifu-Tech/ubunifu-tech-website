@@ -123,6 +123,21 @@ export async function saveWriter(_previous: WriterState, formData: FormData): Pr
   if (sameName) {
     return { status: 'error', message: `${sameName.name} is already on the list.`, field: 'name' };
   }
+  // Someone taken off the list comes back as the same entry, with their
+  // articles still linked, rather than as a second one.
+  if (!id) {
+    const archived = await db.writer.findFirst({
+      where: { deletedAt: { not: null }, name: { equals: name, mode: 'insensitive' } },
+      select: { name: true },
+    });
+    if (archived) {
+      return {
+        status: 'error',
+        message: `${archived.name} was taken off the list. Bring them back under Taken off the list on the Writers page.`,
+        field: 'name',
+      };
+    }
+  }
 
   let writer: WriterSummary;
   let published: string[] = [];
@@ -207,6 +222,50 @@ export async function archiveWriter(
 
   refresh(writer.posts.map((post) => post.slug));
   redirect('/posts/writers');
+}
+
+/**
+ * Puts a writer back on the list. Their articles that still name them show
+ * the profile again.
+ */
+export async function restoreWriter(
+  _previous: WriterState,
+  formData: FormData,
+): Promise<WriterState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'journal')) return { status: 'error', message: NO_PERMISSION };
+
+  const id = formText(formData, 'writerId');
+  const writer = await db.writer.findFirst({
+    where: { id, deletedAt: { not: null } },
+    select: {
+      id: true,
+      name: true,
+      posts: { where: { status: 'published', deletedAt: null }, select: { slug: true } },
+    },
+  });
+  if (!writer) return { status: 'error', message: 'That writer is not taken off the list any more.' };
+
+  // One entry per person, as saveWriter keeps it.
+  const sameName = await db.writer.findFirst({
+    where: { deletedAt: null, name: { equals: writer.name, mode: 'insensitive' } },
+    select: { name: true },
+  });
+  if (sameName) return { status: 'error', message: `${sameName.name} is already on the list.` };
+
+  await db.writer.update({ where: { id: writer.id }, data: { deletedAt: null } });
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'writer.restored',
+    entityType: 'Writer',
+    entityId: writer.id,
+    summary: writer.name,
+  });
+
+  refresh(writer.posts.map((post) => post.slug));
+  return { status: 'done', message: 'Back on the list.' };
 }
 
 /** The writers pages, and every live article that shows this writer. */

@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useActionState, useState } from 'react';
-import { archiveWriter, saveWriter, type WriterState } from './actions';
+import { archiveWriter, restoreWriter, saveWriter, type WriterState } from './actions';
 import { TextAreaField, TextField } from '@/components/console/Fields';
 import { Avatar } from '@/components/console/Avatar';
 import { uploadWebsiteImage } from '@/components/console/uploadWebsiteImage';
 import forms from '@/styles/forms.module.css';
+import table from '@/styles/table.module.css';
 import styles from './Writers.module.css';
 
 export type WriterFields = {
@@ -250,6 +251,25 @@ export function ArchiveWriter({ writerId, postCount }: { writerId: string; postC
         </button>
       </div>
       {state.status === 'error' && (
+        <p className={forms.error} role="alert">
+          {state.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/** Puts a writer who was taken off the list back on it. */
+export function RestoreWriter({ writerId }: { writerId: string }) {
+  const [state, action, pending] = useActionState(restoreWriter, INITIAL);
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="writerId" value={writerId} />
+      <button type="submit" className={table.action} disabled={pending}>
+        {pending ? 'Bringing back…' : 'Bring back'}
+      </button>
+      {state.status === 'error' && state.message && (
         <p className={forms.error} role="alert">
           {state.message}
         </p>

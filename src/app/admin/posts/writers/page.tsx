@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { ListFooter } from '@/components/console/ListToolbar';
-import { WriterForm } from './WriterForm';
+import { formatShortDate } from '@/lib/console/money';
+import { RestoreWriter, WriterForm } from './WriterForm';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -18,21 +19,33 @@ export const metadata = { title: 'Writers' };
 export default async function WritersPage() {
   await requirePermission('journal');
 
-  const list = await db.writer.findMany({
-    where: { deletedAt: null },
-    orderBy: { name: 'asc' },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-      email: true,
-      phone: true,
-      photo: true,
-      link: true,
-      bio: true,
-      posts: { where: { deletedAt: null }, select: { status: true } },
-    },
-  });
+  const [list, archived] = await Promise.all([
+    db.writer.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        email: true,
+        phone: true,
+        photo: true,
+        link: true,
+        bio: true,
+        posts: { where: { deletedAt: null }, select: { status: true } },
+      },
+    }),
+    db.writer.findMany({
+      where: { deletedAt: { not: null } },
+      orderBy: { deletedAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        deletedAt: true,
+        _count: { select: { posts: { where: { deletedAt: null } } } },
+      },
+    }),
+  ]);
 
   return (
     <main className={styles.page}>
@@ -156,6 +169,51 @@ export default async function WritersPage() {
           </div>
           <WriterForm />
         </section>
+
+        {archived.length > 0 && (
+          <div id="archived" className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Taken off the list</h2>
+                <span className={table.count}>{archived.length}</span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={`${table.table} ${table.compact}`}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Name
+                    </th>
+                    <th className={`${table.th} ${table.numericHead}`} scope="col">
+                      Articles
+                    </th>
+                    <th className={table.th} scope="col">
+                      Taken off
+                    </th>
+                    <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                      <span className={table.muted}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {archived.map((writer) => (
+                    <tr key={writer.id} className={table.tr}>
+                      <td className={`${table.td} ${table.primary}`}>{writer.name}</td>
+                      <td className={`${table.td} ${table.numeric}`}>{writer._count.posts}</td>
+                      <td className={`${table.td} ${table.nowrap}`}>
+                        {writer.deletedAt ? formatShortDate(writer.deletedAt) : null}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        <RestoreWriter writerId={writer.id} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

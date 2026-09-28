@@ -207,6 +207,7 @@ const ACTION_LABELS = {
   'writer.created': 'Writer added',
   'writer.updated': 'Writer details changed',
   'writer.archived': 'Writer taken off the list',
+  'writer.restored': 'Writer back on the list',
   'receipt.sent': 'Receipt sent',
   'receipt.send_failed': 'Receipt email failed to send',
   'invoice.issued': 'Invoice issued',

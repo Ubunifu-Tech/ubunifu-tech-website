@@ -351,7 +351,10 @@ export async function saveUpdate(_previous: EditState, formData: FormData): Prom
   });
 
   revalidatePath(`/admin/projects/${project.slug}`);
-  return { status: 'done', message: 'Saved as a draft. Read it back, then send it.' };
+  return {
+    status: 'done',
+    message: 'Saved as a draft. Open its menu in the list above to read it back and send it.',
+  };
 }
 
 /**

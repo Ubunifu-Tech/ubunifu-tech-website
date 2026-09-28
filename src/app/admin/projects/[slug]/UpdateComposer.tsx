@@ -125,6 +125,7 @@ function DraftMenu({ update }: { update: UpdateRow }) {
             label="What has happened"
             defaultValue={update.title}
             required
+            minLength={3}
             maxLength={160}
           />
           <TextAreaField
@@ -133,6 +134,7 @@ function DraftMenu({ update }: { update: UpdateRow }) {
             defaultValue={update.body}
             required
             rows={6}
+            minLength={10}
             maxLength={8000}
           />
           <TextField
@@ -276,6 +278,20 @@ export function UpdateComposer({
   readOnly?: boolean;
 }) {
   const [state, action, pending] = useActionState(saveUpdate, INITIAL);
+  // Kept in state so a refused save does not wipe them: React resets a form
+  // after its action runs, error or not. Cleared only once it has saved.
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [link, setLink] = useState('');
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
+    if (state.status === 'done') {
+      setTitle('');
+      setBody('');
+      setLink('');
+    }
+  }
 
   return (
     <>
@@ -340,6 +356,10 @@ export function UpdateComposer({
                 id="update-title"
                 name="title"
                 className={forms.control}
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                required
+                minLength={3}
                 maxLength={160}
                 placeholder="Homepage design is ready for you to look at"
                 disabled={pending}
@@ -354,6 +374,10 @@ export function UpdateComposer({
                 id="update-body"
                 name="body"
                 className={`${forms.control} ${forms.textarea}`}
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                required
+                minLength={10}
                 maxLength={8000}
                 placeholder="Write it as you would say it on the phone. Leave a blank line between paragraphs."
                 disabled={pending}
@@ -372,6 +396,8 @@ export function UpdateComposer({
                 name="previewUrl"
                 type="url"
                 className={forms.control}
+                value={link}
+                onChange={(event) => setLink(event.target.value)}
                 placeholder="https://"
                 disabled={pending}
               />

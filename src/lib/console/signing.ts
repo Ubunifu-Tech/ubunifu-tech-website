@@ -15,7 +15,31 @@ import { advanceForDocument } from './transitions';
 import { alertTeam } from './alerts';
 import { documentSignedEmail, documentSignedNoticeEmail } from '@/lib/emails';
 
-export type SignOutcome = { status: 'done' | 'error'; message: string };
+/** Whether the signer's copy went: emailed, failed to send, or none (no email to send it to). */
+export type SignedCopy = 'emailed' | 'failed' | 'none';
+
+export type SignOutcome =
+  | { status: 'error'; message: string }
+  | { status: 'done'; message: string; copy: SignedCopy; reference: string };
+
+/** Reads the copy's outcome back from the address signing redirects to. */
+export function isSignedCopy(value: string | undefined): value is SignedCopy {
+  return value === 'emailed' || value === 'failed' || value === 'none';
+}
+
+/**
+ * The thank-you once a signature is recorded. Kept here so the form, and the
+ * page the signer is sent back to, say it in the same words.
+ */
+export function signedNotice(copy: SignedCopy, via: 'portal' | 'shared_link'): string {
+  if (copy === 'none') return 'Signed. Thank you. Save a copy as a PDF from this page for your records.';
+  if (copy === 'failed') {
+    return 'Signed. Thank you. We could not email your copy just now. Save it as a PDF from this page.';
+  }
+  return via === 'shared_link'
+    ? 'Signed. Thank you. A copy is on its way to your email.'
+    : 'Signed. Thank you. A copy is on its way to your email, and it stays here.';
+}
 
 /** What anyone but the main contact is told when they try to sign or decline. */
 export async function signerOnlyMessage(clientId: string, clientName: string): Promise<string> {
@@ -318,18 +342,11 @@ export async function recordSignature(input: {
   revalidatePath(`/admin/documents/${request.document.reference}`);
   revalidatePath(`/admin/projects/${request.document.project.slug}`);
 
-  if (!copy) {
-    return {
-      status: 'done',
-      message: 'Signed. Thank you. Save a copy as a PDF from this page for your records.',
-    };
-  }
+  const sent: SignedCopy = !copy ? 'none' : copy.ok ? 'emailed' : 'failed';
   return {
     status: 'done',
-    message: copy.ok
-      ? byLink
-        ? 'Signed. Thank you. A copy is on its way to your email.'
-        : 'Signed. Thank you. A copy is on its way to your email, and it stays here.'
-      : 'Signed. Thank you. We could not email your copy just now. Save it as a PDF from this page.',
+    message: signedNotice(sent, input.via),
+    copy: sent,
+    reference: request.document.reference,
   };
 }

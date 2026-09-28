@@ -10,6 +10,7 @@ import {
   shortHash,
 } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
+import { isSignedCopy, signedNotice } from '@/lib/console/signing';
 import { AskAgain, RespondForm, SignForm } from '../SignForm';
 import { ContractSheet, sheetStateOf } from '@/components/documents/ContractSheet';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
@@ -51,11 +52,14 @@ export async function generateMetadata({ params }: { params: Promise<{ reference
  */
 export default async function PortalDocument({
   params,
+  searchParams,
 }: {
   params: Promise<{ reference: string }>;
+  searchParams: Promise<{ signed?: string }>;
 }) {
   const actor = await requireClient();
   const { reference } = await params;
+  const { signed } = await searchParams;
   // Read once, so every comparison on this render agrees with every other.
   const now = new Date();
 
@@ -213,6 +217,13 @@ export default async function PortalDocument({
       </div>
 
       <div className={sheet.toolbar}>
+        {/* Signing sends them back here with how their copy went. */}
+        {signature && isSignedCopy(signed) && (
+          <div className={styles.notice} role="status">
+            <p>{signedNotice(signed, 'portal')}</p>
+          </div>
+        )}
+
         {/* Not once it is signed: "we are working on a new version" is untrue the
             moment they decide this one is fine after all. */}
         {suggestion && !signature && !declined && (

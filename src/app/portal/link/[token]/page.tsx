@@ -8,6 +8,7 @@ import { DOCUMENT_KIND_LABEL, shortHash } from '@/lib/console/documents';
 import { formatDate } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
 import { readSharedLink, type SharedLink } from '@/lib/console/shared-links';
+import { isSignedCopy, signedNotice, type SignedCopy } from '@/lib/console/signing';
 import { PrintButton } from '@/app/admin/receipts/PrintButton';
 import { AskAgain, RespondForm, SignForm } from '../../documents/SignForm';
 import { ReviewAnswer } from '../../projects/[slug]/ReviewAnswer';
@@ -29,8 +30,15 @@ export const metadata = { title: { absolute: 'Ubunifu Technologies' } };
  * answer, for the one person it was made for. No sign-in and no account;
  * the link is the permission, and it opens nothing else.
  */
-export default async function SharedLinkPage({ params }: { params: Promise<{ token: string }> }) {
+export default async function SharedLinkPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ token: string }>;
+  searchParams: Promise<{ signed?: string }>;
+}) {
   const { token } = await params;
+  const { signed } = await searchParams;
   // Read once, so every comparison on this render agrees with every other.
   const now = new Date();
   const [link, org] = await Promise.all([readSharedLink(token), getOrg()]);
@@ -47,7 +55,13 @@ export default async function SharedLinkPage({ params }: { params: Promise<{ tok
           link{orCall(org)}.
         </Notice>
       ) : link.thing === 'SignatureRequest' ? (
-        <SignThroughLink link={link} token={token} org={org} now={now} />
+        <SignThroughLink
+          link={link}
+          token={token}
+          org={org}
+          now={now}
+          signed={isSignedCopy(signed) ? signed : null}
+        />
       ) : (
         <ReviewThroughLink link={link} token={token} org={org} />
       )}
@@ -86,11 +100,14 @@ async function SignThroughLink({
   token,
   org,
   now,
+  signed,
 }: {
   link: SharedLink;
   token: string;
   org: Awaited<ReturnType<typeof getOrg>>;
   now: Date;
+  /** How their copy went, when signing has just sent them back here. */
+  signed: SignedCopy | null;
 }) {
   const request = await db.signatureRequest.findFirst({
     where: {
@@ -180,6 +197,12 @@ async function SignThroughLink({
             {formatDate(request.respondedAt)}. We are working on a new version.
           </p>
           {request.responseNote && <p>{request.responseNote}</p>}
+        </div>
+      )}
+
+      {signature && signed && (
+        <div className={`${styles.notice} ${sheet.noPrint}`} role="status">
+          <p>{signedNotice(signed, 'shared_link')}</p>
         </div>
       )}
 

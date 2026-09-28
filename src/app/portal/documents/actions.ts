@@ -29,7 +29,7 @@ export async function signDocument(
   formData: FormData,
 ): Promise<SignState> {
   const actor = await requireClient();
-  return recordSignature({
+  const result = await recordSignature({
     requestId: String(formData.get('requestId') ?? ''),
     signer: {
       id: actor.id,
@@ -43,6 +43,10 @@ export async function signDocument(
     acceptedTerms: formData.get('acceptTerms') === 'on',
     via: 'portal',
   });
+  if (result.status !== 'done') return result;
+  // Back to the document with the thank-you in the address, so it is still
+  // there after a reload rather than living only in the form's state.
+  redirect(`/portal/documents/${encodeURIComponent(result.reference)}?signed=${result.copy}`);
 }
 
 /**

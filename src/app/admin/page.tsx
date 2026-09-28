@@ -41,6 +41,13 @@ export default async function AdminHome() {
   const now = new Date();
   const soon = new Date(now);
   soon.setDate(soon.getDate() + INVOICE_AHEAD_DAYS);
+  const myOpenTasks = {
+    assigneeId: staff.id,
+    isComplete: false,
+    phase: {
+      project: { deletedAt: null, status: { notIn: ['closed' as const, 'cancelled' as const] } },
+    },
+  };
 
   const [
     newEnquiries,
@@ -54,6 +61,7 @@ export default async function AdminHome() {
     enquiryCount,
     pipelineCount,
     myTasks,
+    myTaskCount,
     enquiriesThisWeek,
     enquiriesWeekBefore,
   ] = await Promise.all([
@@ -141,11 +149,7 @@ export default async function AdminHome() {
     db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
     db.project.count({ where: { deletedAt: null, status: { in: PIPELINE_STATUSES } } }),
     db.deliverable.findMany({
-      where: {
-        assigneeId: staff.id,
-        isComplete: false,
-        phase: { project: { deletedAt: null, status: { notIn: ['closed', 'cancelled'] } } },
-      },
+      where: myOpenTasks,
       orderBy: [{ dueAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
       take: 8,
       select: {
@@ -155,6 +159,8 @@ export default async function AdminHome() {
         phase: { select: { project: { select: { name: true, slug: true } } } },
       },
     }),
+    // The list shows the first eight; the count says how many there are.
+    db.deliverable.count({ where: myOpenTasks }),
     db.enquiry.count({
       where: {
         ...liveEnquiry,
@@ -205,6 +211,25 @@ export default async function AdminHome() {
   const seesEnquiries = can(staff, 'enquiries');
   const seesMoney = can(staff, 'invoices');
 
+  // Only to those who move projects on, and only where the move is ours:
+  // a proposal, agreement or review still with the client is not.
+  const ourMove = (can(staff, 'projects') ? waitingProjects : []).filter((project) => {
+    if (project.status === 'client_review') {
+      const review = project.reviews[0];
+      return review !== undefined && review.status !== 'open';
+    }
+    if (project.status === 'proposal_sent' || project.status === 'contract_sent') {
+      return project.documents.length > 0;
+    }
+    return true;
+  });
+  const overdue = (seesMoney ? unpaidInvoices : []).filter((invoice) =>
+    isPastDay(invoice.dueAt, now),
+  );
+  // The table shows at most ten of each kind; the sentence and the count say
+  // how many are really waiting.
+  const waitingTotal = (seesEnquiries ? enquiryCount : 0) + ourMove.length + overdue.length;
+
   const waiting: Waiting[] = [
     ...(seesEnquiries ? newEnquiries : []).map((enquiry) => ({
       id: `e-${enquiry.id}`,
@@ -215,19 +240,7 @@ export default async function AdminHome() {
       badge: 'New enquiry',
       tone: forms.badgeWarn,
     })),
-    // Only to those who move projects on, and only where the move is ours:
-    // a proposal, agreement or review still with the client is not.
-    ...(can(staff, 'projects') ? waitingProjects : [])
-      .filter((project) => {
-        if (project.status === 'client_review') {
-          const review = project.reviews[0];
-          return review !== undefined && review.status !== 'open';
-        }
-        if (project.status === 'proposal_sent' || project.status === 'contract_sent') {
-          return project.documents.length > 0;
-        }
-        return true;
-      })
+    ...ourMove
       .slice(0, 10)
       .map((project) => {
         // At review, the client's answer is the news: it is what moves next.
@@ -258,8 +271,7 @@ export default async function AdminHome() {
               : TONE_CLASS[STATUS_TONE[project.status]],
         };
       }),
-    ...(seesMoney ? unpaidInvoices : [])
-      .filter((invoice) => isPastDay(invoice.dueAt, now))
+    ...overdue
       .slice(0, 10)
       .map((invoice) => ({
         id: `i-${invoice.id}`,
@@ -353,9 +365,9 @@ export default async function AdminHome() {
             {greeting(now)}, {firstName}
           </h1>
           <p className={styles.lead}>
-            {waiting.length === 0
+            {waitingTotal === 0
               ? 'All clear. Nothing needs you right now.'
-              : `${waiting.length} ${waiting.length === 1 ? 'thing needs' : 'things need'} your attention.`}
+              : `${waitingTotal} ${waitingTotal === 1 ? 'thing needs' : 'things need'} your attention.`}
           </p>
         </div>
         {can(staff, 'clients') && (
@@ -378,7 +390,7 @@ export default async function AdminHome() {
           <div className={table.toolbar}>
             <div className={table.toolbarText}>
               <h2 className={table.title}>Needs your attention</h2>
-              <span className={table.count}>{waiting.length}</span>
+              <span className={table.count}>{waitingTotal}</span>
             </div>
           </div>
           <div className={table.scroll}>
@@ -431,6 +443,11 @@ export default async function AdminHome() {
               </tbody>
             </table>
           </div>
+          {waitingTotal > waiting.length && (
+            <div className={table.footer}>
+              Showing {waiting.length} of {waitingTotal}.
+            </div>
+          )}
         </div>
 
         <div className={styles.stack}>
@@ -438,7 +455,7 @@ export default async function AdminHome() {
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Your tasks</h2>
               <span className={forms.cardMeta}>
-                {myTasks.length === 0 ? 'Nothing assigned' : `${myTasks.length} open`}
+                {myTaskCount === 0 ? 'Nothing assigned' : `${myTaskCount} open`}
               </span>
             </div>
             {myTasks.length === 0 ? (

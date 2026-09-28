@@ -78,24 +78,41 @@ export function parseMoney(input: string, currency: string): number | null {
   return minor;
 }
 
+/** East Africa Time is UTC+3 all year: no daylight saving to account for. */
+export const BUSINESS_TIME_ZONE = 'Africa/Dar_es_Salaam';
+
+const DAY_KEY = new Intl.DateTimeFormat('en-CA', { timeZone: BUSINESS_TIME_ZONE });
+const LONG_DATE = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: BUSINESS_TIME_ZONE,
+});
+const SHORT_DATE = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: BUSINESS_TIME_ZONE,
+});
+
+/** The day a moment falls on in Tanzania, as YYYY-MM-DD. */
+export function businessDay(value: Date): string {
+  return DAY_KEY.format(value);
+}
+
+/**
+ * Dates read on Tanzania's calendar. A typed date is stored at noon UTC
+ * (15:00 there), so it reads as typed; a moment, such as a signature at 01:30,
+ * reads as the day it happened there, not the UTC day before.
+ */
 export function formatDate(value: Date | null | undefined): string {
   if (!value) return 'Not set';
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(value);
+  return LONG_DATE.format(value);
 }
 
 export function formatShortDate(value: Date | null | undefined): string {
   if (!value) return 'Not set';
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(value);
+  return SHORT_DATE.format(value);
 }
 
 /**
@@ -144,12 +161,31 @@ export function parseDateInput(value: string): Date | null {
  * UTC is still yesterday, so a payment that arrived at 1 a.m. would default to
  * the day before and could not be dated today.
  */
-export function todayInput(timeZone = 'Africa/Dar_es_Salaam'): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
+export function todayInput(): string {
+  return businessDay(new Date());
 }
 
 /** For <input type="date">, which only ever speaks YYYY-MM-DD. */
 export function toDateInputValue(value: Date | null | undefined): string {
-  if (!value) return '';
-  return value.toISOString().slice(0, 10);
+  return value ? businessDay(value) : '';
+}
+
+/**
+ * Whether a due date has passed, on Tanzania's calendar: something due on
+ * 1 October is late from 00:00 on 2 October there, not from any hour of the 1st.
+ */
+export function isPastDay(value: Date | null | undefined, now: Date): boolean {
+  return !!value && businessDay(now) > businessDay(value);
+}
+
+/** Whole days from one date to another, counted on Tanzania's calendar. */
+export function daysBetween(from: Date, to: Date): number {
+  return Math.round((Date.parse(businessDay(to)) - Date.parse(businessDay(from))) / 86_400_000);
+}
+
+/** A date some days from today, stored at noon UTC like a typed date. */
+export function daysFromToday(days: number): Date {
+  const date = parseDateInput(todayInput())!;
+  date.setUTCDate(date.getUTCDate() + days);
+  return date;
 }

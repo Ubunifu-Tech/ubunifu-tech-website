@@ -2,6 +2,8 @@
 // styles, absolute links, built to render across email clients. The two
 // exports return ready-to-send HTML strings.
 
+import { formatDate } from '@/lib/console/money';
+
 const SITE = 'https://ubunifutech.com';
 const EMAIL = 'info@ubunifutech.com';
 const PHONE_TEL = '+255748548816';
@@ -468,14 +470,7 @@ export function invoiceEmail(input: {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
   const org = escapeHtml(input.clientName);
   const strong = (value: string) => `<strong style="color:#1D1B22;">${escapeHtml(value)}</strong>`;
-  const due = input.dueAt
-    ? new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'UTC',
-      }).format(input.dueAt)
-    : null;
+  const due = input.dueAt ? formatDate(input.dueAt) : null;
   const settled = input.outstanding === null && Boolean(input.paid);
 
   // Settled, part paid or not paid yet: each says only what is true of it. A
@@ -518,12 +513,7 @@ export function receiptEmail(input: {
   url: string;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
-  const issued = new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(input.issuedAt);
+  const issued = formatDate(input.issuedAt);
 
   const body = `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Thank you, payment received</h1>
@@ -552,12 +542,7 @@ export function refundEmail(input: {
   url: string;
 }): string {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
-  const on = new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(input.refundedAt);
+  const on = formatDate(input.refundedAt);
   const strong = (value: string) => `<strong style="color:#1D1B22;">${escapeHtml(value)}</strong>`;
 
   const body = `

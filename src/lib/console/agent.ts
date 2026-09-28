@@ -503,9 +503,11 @@ export async function runTurn<Context>(
     ) {
       return { ok: false, cause: 'not_configured' };
     }
+    // An overload inside a stream arrives with no status, only its type.
     if (
       error instanceof Anthropic.RateLimitError ||
-      (error instanceof Anthropic.APIError && error.status === 529)
+      (error instanceof Anthropic.APIError &&
+        (error.status === 529 || error.type === 'overloaded_error'))
     ) {
       return { ok: false, cause: 'busy' };
     }

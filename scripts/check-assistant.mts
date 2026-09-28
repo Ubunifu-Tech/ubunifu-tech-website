@@ -551,6 +551,24 @@ const need = (ok: boolean, problem: string) => (ok ? [] : [problem]);
 const never = (bad: boolean, problem: string) => (bad ? [problem] : []);
 const called = (reply: Reply, name = 'record_enquiry') => reply.conversation.tools.some((tool) => tool.name === name);
 
+/**
+ * An overloaded API is not a failing case: it is waited out and asked again,
+ * twice, before the run gives up. An overload inside a stream has no status,
+ * only its type.
+ */
+async function withRetry<T>(call: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await call();
+    } catch (error) {
+      const { status, type } = (error ?? {}) as { status?: number; type?: string };
+      const busy = status === 529 || type === 'overloaded_error';
+      if (!busy || attempt >= 2) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 5_000 * (attempt + 1)));
+    }
+  }
+}
+
 /** Every reply, whatever it says: plain, human, safely linked. */
 function replyProblems(text: string, variant: ChatVariant, long: boolean): string[] {
   const problems = copyProblems('reply', text).map((problem) => problem.replace('reply: ', ''));
@@ -558,7 +576,10 @@ function replyProblems(text: string, variant: ChatVariant, long: boolean): strin
   if (/\|\s*-{3}/.test(text)) problems.push('has a table');
   if (text.includes('```')) problems.push('has a code block');
   if (text.includes('![')) problems.push('has an image');
-  if ((text.match(/\*\*/g)?.length ?? 0) > 2) problems.push('bolds more than one phrase');
+  // A bold name leading each list item is allowed; beyond that, one bold phrase.
+  const leadIns = text.match(/^\s*(?:[-*]|\d+\.)\s+\*\*[^*\n]+\*\*/gm)?.length ?? 0;
+  const bolds = (text.match(/\*\*[^*\n]+\*\*/g)?.length ?? 0) - leadIns;
+  if (bolds > 1) problems.push('bolds more than one phrase outside list lead-ins');
   if (/https?:\/\//.test(text.replace(/\[[^\]]*\]\([^)]*\)/g, ''))) problems.push('pastes a bare address');
   for (const link of links(text)) {
     if (!classifyHref(link.href, variant)) problems.push(`links ${link.href}, which will not render`);
@@ -638,7 +659,9 @@ if (!hasKey) {
   /** One call, exactly as runTurn makes it. */
   async function call(params: Anthropic.MessageStreamParams): Promise<Anthropic.Message> {
     const started = Date.now();
-    const message = await client.messages.stream(params, { timeout: 20_000, maxRetries: 1 }).finalMessage();
+    const message = await withRetry(() =>
+      client.messages.stream(params, { timeout: 20_000, maxRetries: 1 }).finalMessage(),
+    );
     stats.push({
       ms: Date.now() - started,
       stop: message.stop_reason,

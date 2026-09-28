@@ -92,6 +92,7 @@ const ACTION_LABELS = {
   'document.send_failed': 'Document email failed to send',
   'document.copilot_turn': 'Assistant used',
   'document.copilot_failed': 'Assistant failed',
+  'document.copilot_reset': 'Assistant thread started afresh',
   'staff.invited': 'Team member invited',
   'staff.invite.send_failed': 'Team invitation failed to send',
   'staff.role_changed': 'Team member role changed',

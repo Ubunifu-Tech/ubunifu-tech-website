@@ -10,6 +10,7 @@ import {
   resendSignatureLink,
   sendForSignature,
   setSuggestionAside,
+  startFreshCopilotThread,
   startFromSuggestion,
   withdrawDocument,
   type DocumentState,
@@ -39,10 +40,22 @@ function Result({ state }: { state: DocumentState }) {
 export type CopilotTurn = {
   id: string;
   role: string;
+  /** 'You', a colleague's name, 'Staff' for older rows, or 'Assistant'. */
+  author: string;
   content: string;
   toolName: string | null;
   when: string;
 };
+
+/**
+ * Asking and starting afresh share one outcome, so the line under Send is
+ * always about the last thing pressed.
+ */
+function copilotAction(previous: DocumentState, formData: FormData): Promise<DocumentState> {
+  return formData.get('intent') === 'fresh'
+    ? startFreshCopilotThread(previous, formData)
+    : askCopilot(previous, formData);
+}
 
 /**
  * The copilot, as a conversation.
@@ -55,8 +68,9 @@ export type CopilotTurn = {
  * It can write a version and nothing else. It never sends.
  */
 export function Copilot({ documentId, turns }: { documentId: string; turns: CopilotTurn[] }) {
-  const [state, action, pending] = useActionState(askCopilot, INITIAL);
+  const [state, action, pending] = useActionState(copilotAction, INITIAL);
   const [draft, setDraft] = useState('');
+  const [intent, setIntent] = useState<'ask' | 'fresh'>('ask');
 
   return (
     <>
@@ -68,7 +82,7 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
               className={`${styles.message} ${turn.role === 'user' ? '' : styles.fromUs}`}
             >
               <p className={styles.messageWho}>
-                {turn.role === 'user' ? 'You' : 'Assistant'} · {turn.when}
+                {turn.author} · {turn.when}
                 {turn.toolName === 'save_draft' && ' · wrote a version'}
               </p>
               <p className={styles.messageBody}>{turn.content}</p>
@@ -77,8 +91,23 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
         </ul>
       )}
 
+      {turns.length > 0 && (
+        <form
+          action={action}
+          onSubmit={() => setIntent('fresh')}
+          className={`${forms.actions} ${forms.actionsBare}`}
+        >
+          <input type="hidden" name="documentId" value={documentId} />
+          <input type="hidden" name="intent" value="fresh" />
+          <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
+            {pending && intent === 'fresh' ? 'Starting…' : 'Start a fresh thread'}
+          </button>
+          <p className={forms.payoff}>The document stays as it is.</p>
+        </form>
+      )}
+
       {turns.length === 0 && (
-        <form action={action} className={forms.actions}>
+        <form action={action} onSubmit={() => setIntent('ask')} className={forms.actions}>
           <input type="hidden" name="documentId" value={documentId} />
           <input
             type="hidden"
@@ -87,13 +116,13 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
           />
           <button type="submit" className={forms.button} disabled={pending}>
             <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-            {pending ? 'Writing…' : 'Write the first draft'}
+            {pending && intent === 'ask' ? 'Writing…' : 'Write the first draft'}
           </button>
           <p className={forms.payoff}>Or say what you want below.</p>
         </form>
       )}
 
-      <form action={action} className={forms.form}>
+      <form action={action} onSubmit={() => setIntent('ask')} className={forms.form}>
         <input type="hidden" name="documentId" value={documentId} />
         <div className={forms.field}>
           <label className={forms.label} htmlFor="copilot-message">
@@ -126,7 +155,7 @@ export function Copilot({ documentId, turns }: { documentId: string; turns: Copi
             disabled={pending || draft.trim().length < 2}
           >
             <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-            {pending ? 'Thinking…' : 'Send'}
+            {pending && intent === 'ask' ? 'Thinking…' : 'Send'}
           </button>
           <p className={forms.payoff}>It saves a new version for you to check. It never sends.</p>
         </div>

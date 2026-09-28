@@ -1492,6 +1492,10 @@ model ConversationMessage {
 
   role    MessageRole
   content String
+  /// The staff member who wrote a user turn in a drafting thread, which
+  /// everyone with the documents permission shares. Null for visitors,
+  /// clients and rows from before it was recorded.
+  authorId String?
 
   /// Present when the assistant called a tool, so what it did and what it was
   /// told back are both on the record rather than only its prose about it.

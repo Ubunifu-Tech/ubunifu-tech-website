@@ -625,25 +625,50 @@ export default async function DocumentPage({
   }
 
   if (step === 'write') {
-    // The drafting thread, if one has been started. Tool turns are folded into
-    // the assistant turn they belong to, so it reads as a conversation.
+    // The open drafting thread, if one has been started. Tool turns are folded
+    // into the assistant turn they belong to, so it reads as a conversation.
     const conversation = await db.conversation.findFirst({
-      where: { documentId: document.id, kind: 'document_draft' },
+      where: { documentId: document.id, kind: 'document_draft', status: 'open' },
       orderBy: { createdAt: 'desc' },
       select: {
         messages: {
           where: { role: { in: ['user', 'assistant'] } },
           orderBy: { createdAt: 'asc' },
-          select: { id: true, role: true, content: true, toolName: true, createdAt: true },
+          select: {
+            id: true,
+            role: true,
+            content: true,
+            toolName: true,
+            authorId: true,
+            createdAt: true,
+          },
         },
       },
     });
 
-    const turns: CopilotTurn[] = (conversation?.messages ?? [])
+    // The thread is shared by everyone who drafts, so each request says who
+    // made it.
+    const messages = conversation?.messages ?? [];
+    const authorIds = [
+      ...new Set(messages.flatMap((message) => (message.authorId ? [message.authorId] : []))),
+    ];
+    const authors = new Map(
+      (
+        await db.staffUser.findMany({
+          where: { id: { in: authorIds } },
+          select: { id: true, name: true },
+        })
+      ).map((author) => [author.id, author.name]),
+    );
+    const authorOf = (id: string | null) =>
+      id === staff.id ? 'You' : ((id && authors.get(id)) ?? 'Staff');
+
+    const turns: CopilotTurn[] = messages
       .filter((message) => message.content.trim().length > 0 || message.toolName)
       .map((message) => ({
         id: message.id,
         role: message.role,
+        author: message.role === 'user' ? authorOf(message.authorId) : 'Assistant',
         content: message.content.trim() || 'Wrote a new version.',
         toolName: message.toolName,
         when: formatRelative(message.createdAt, now),

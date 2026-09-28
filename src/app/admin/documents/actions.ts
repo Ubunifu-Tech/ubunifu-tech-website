@@ -320,9 +320,10 @@ export async function askCopilot(
   }
   const latest = document.versions[0] ?? null;
 
-  // One thread per document, created on first use.
+  // One open thread per document, created on first use and again after
+  // somebody starts afresh.
   const existing = await db.conversation.findFirst({
-    where: { documentId: document.id, kind: 'document_draft' },
+    where: { documentId: document.id, kind: 'document_draft', status: 'open' },
     orderBy: { createdAt: 'desc' },
     select: { id: true },
   });
@@ -351,6 +352,7 @@ export async function askCopilot(
     brief: brief ?? undefined,
     note: documentNote(latest),
     userMessage: message,
+    authorId: staff.id,
     tools: [saveDraftTool],
     context: { documentId: document.id, staffId: staff.id },
     maxTokens: 32000,
@@ -393,6 +395,44 @@ export async function askCopilot(
     return { status: 'error', message: copilotFailure(result.cause, saved?.version ?? null) };
   }
   return { status: 'done', message: result.reply };
+}
+
+/**
+ * Closes the document's drafting thread, so the next request starts a new
+ * one. For a thread that is full, or has wandered: the versions it wrote stay
+ * as they are, and the closed thread stays on the record.
+ */
+export async function startFreshCopilotThread(
+  _previous: DocumentState,
+  formData: FormData,
+): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const document = await db.document.findUnique({
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
+    select: { id: true, reference: true },
+  });
+  if (!document) return { status: 'error', message: 'That document no longer exists.' };
+
+  const closed = await db.conversation.updateMany({
+    where: { documentId: document.id, kind: 'document_draft', status: 'open' },
+    data: { status: 'closed' },
+  });
+
+  if (closed.count > 0) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'document.copilot_reset',
+      entityType: 'Document',
+      entityId: document.id,
+      summary: document.reference,
+    });
+  }
+
+  revalidatePath(`/admin/documents/${document.reference}`);
+  return { status: 'done', message: 'Started a fresh thread. The document is unchanged.' };
 }
 
 /** A document checked and ready to go to be signed, with its fees filled in. */

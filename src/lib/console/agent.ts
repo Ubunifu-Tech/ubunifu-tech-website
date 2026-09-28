@@ -306,6 +306,7 @@ async function appendMessage(
     model?: string;
     inputTokens?: number;
     outputTokens?: number;
+    authorId?: string;
   },
 ): Promise<void> {
   await db.$transaction([
@@ -332,6 +333,8 @@ export async function runTurn<Context>(
     conversationId: string;
     kind: ConversationKind;
     userMessage: string;
+    /** The staff member writing, on a thread staff share. Stored on their row. */
+    authorId?: string;
     tools: AgentTool<Context>[];
     context: Context;
     /** Longest wait for one call to the model, in milliseconds. */
@@ -358,7 +361,11 @@ export async function runTurn<Context>(
     return { ok: false, cause: 'thread_full' };
   }
 
-  await appendMessage(options.conversationId, { role: 'user', content: options.userMessage });
+  await appendMessage(options.conversationId, {
+    role: 'user',
+    content: options.userMessage,
+    authorId: options.authorId,
+  });
 
   const latest = await db.conversationMessage.findMany({
     where: { conversationId: options.conversationId },

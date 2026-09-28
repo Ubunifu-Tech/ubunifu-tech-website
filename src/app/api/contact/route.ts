@@ -3,7 +3,13 @@ import { Resend } from 'resend';
 import { db } from '@/lib/db';
 import type { ServiceLine } from '@/generated/prisma/client';
 import { notificationEmail, acknowledgementEmail } from '@/lib/emails';
-import { ACKNOWLEDGEMENTS_PER_DAY, allow, requestIp } from '@/lib/console/rate-limit';
+import {
+  ACKNOWLEDGEMENTS_PER_DAY,
+  CONTACT_PER_IP_DAY,
+  allow,
+  noteCapReached,
+  requestIp,
+} from '@/lib/console/rate-limit';
 import { TEAM_INBOX } from '@/lib/console/alerts';
 
 const RATE_LIMIT = 5;
@@ -224,6 +230,7 @@ export async function POST(req: NextRequest) {
     if (
       isRateLimited(rateLimitKey(req, email)) ||
       !(await allow('contact:ip', ip, { limit: 5, windowMinutes: 10 })) ||
+      !(await allow('contact:ip-day', ip, CONTACT_PER_IP_DAY)) ||
       !(await allow('contact:email', email, { limit: 5, windowMinutes: 60 }))
     ) {
       return NextResponse.json(
@@ -319,6 +326,13 @@ export async function POST(req: NextRequest) {
       } catch (error) {
         console.warn('Contact form: acknowledgement email failed:', error);
       }
+    } else {
+      await noteCapReached(
+        'acknowledgement',
+        'acknowledgement.cap_reached',
+        'The daily limit on confirmation emails was reached. Later senders today get no confirmation email.',
+        24 * 60,
+      );
     }
 
     return NextResponse.json({ success: true });

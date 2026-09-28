@@ -133,6 +133,56 @@ export async function allow(
  */
 export const ACKNOWLEDGEMENTS_PER_DAY = { limit: 150, windowMinutes: 24 * 60 };
 
+/** A number from the environment, or the default when it is unset or not a positive number. */
+function tunable(name: string, fallback: number): number {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+/**
+ * Ceilings on the website chat across the whole site, whoever is asking: the
+ * per-visitor limits stop one person, these stop a crowd of scripts from
+ * spending the month's model budget in an afternoon.
+ */
+export const ASSISTANT_SITE_PER_HOUR = {
+  limit: tunable('ASSISTANT_SITE_TURNS_PER_HOUR', 60),
+  windowMinutes: 60,
+};
+export const ASSISTANT_SITE_PER_DAY = {
+  limit: tunable('ASSISTANT_SITE_TURNS_PER_DAY', 300),
+  windowMinutes: 24 * 60,
+};
+
+/** "Talk to a person" from the website chat: per address, and per email given. */
+export const HANDOFF_PER_IP_HOUR = { limit: 10, windowMinutes: 60 };
+export const HANDOFF_PER_IP_DAY = { limit: 20, windowMinutes: 24 * 60 };
+export const HANDOFF_PER_EMAIL_HOUR = { limit: 3, windowMinutes: 60 };
+
+/** The contact form, per address in a day, on top of its ten-minute limit. */
+export const CONTACT_PER_IP_DAY = { limit: 10, windowMinutes: 24 * 60 };
+
+/**
+ * One line on the Activity record when a site-wide limit is reached, and no
+ * more for the rest of that window, so staff learn about it without a line
+ * per refused visitor. Never throws: a note that cannot be written must not
+ * turn a refusal into an error page.
+ */
+export async function noteCapReached(
+  bucket: string,
+  action: 'acknowledgement.cap_reached' | 'assistant.site_cap_reached',
+  summary: string,
+  windowMinutes: number,
+): Promise<void> {
+  try {
+    if (!(await allow(`${bucket}:alert`, 'site', { limit: 1, windowMinutes }))) return;
+    await db.auditEvent.create({
+      data: { actorType: 'system', action, entityType: 'Site', entityId: bucket, summary },
+    });
+  } catch (error) {
+    console.error('[rate-limit] could not note that a limit was reached', error);
+  }
+}
+
 /**
  * The caller's address, as Vercel reports it, for counting. An IPv6 address
  * is cut to its /64, the block one connection is usually handed, so moving

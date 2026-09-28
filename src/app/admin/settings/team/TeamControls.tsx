@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { UserPlus } from 'lucide-react';
 import { Select } from '@/components/console/Select';
+import { keepTyping } from '@/components/console/keepTyping';
 import {
   MenuDivider,
   MenuItem,
@@ -46,6 +47,13 @@ function Message({ state }: { state: TeamState }) {
 export function InviteStaff({ domains }: { domains: string[] }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(inviteStaff, INITIAL);
+  // A fresh form after each invitation, so the next one starts clean.
+  const [round, setRound] = useState(0);
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
+    if (state.status === 'done') setRound(round + 1);
+  }
 
   if (!open) {
     return (
@@ -57,7 +65,12 @@ export function InviteStaff({ domains }: { domains: string[] }) {
   }
 
   return (
-    <form action={action} className={`${forms.form} ${styles.inviteForm}`}>
+    <form
+      key={round}
+      action={action}
+      onSubmit={keepTyping(action)}
+      className={`${forms.form} ${styles.inviteForm}`}
+    >
       <div className={forms.grid}>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="invite-name">
@@ -186,7 +199,7 @@ export function RowActions({
       wide={confirming || editing}
     >
       {editing ? (
-        <form action={saveDetails} className={forms.form}>
+        <form action={saveDetails} onSubmit={keepTyping(saveDetails)} className={forms.form}>
           <input type="hidden" name="staffId" value={staffId} />
           <TextField name="name" label="Name" defaultValue={name} required maxLength={120} />
           <TextField
@@ -280,7 +293,7 @@ export function RowActions({
 export function ProfileForm({ name, title }: { name: string; title: string | null }) {
   const [state, action, pending] = useActionState(saveProfile, INITIAL);
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} onSubmit={keepTyping(action)} className={forms.form}>
       <div className={forms.grid}>
         <div className={forms.field}>
           <label className={forms.label} htmlFor="profile-name">
@@ -335,7 +348,7 @@ export function PermissionsGrid({
   const [state, action, pending] = useActionState(savePermissions, INITIAL);
 
   return (
-    <form action={action} className={styles.permissions}>
+    <form action={action} onSubmit={keepTyping(action)} className={styles.permissions}>
       <div className={styles.permissionsScroll}>
         <table className={styles.grid}>
           <thead>

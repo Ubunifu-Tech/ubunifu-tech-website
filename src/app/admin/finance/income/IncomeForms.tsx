@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
 import { DateField, TextField } from '@/components/console/Fields';
 import { Select } from '@/components/console/Select';
+import { keepTyping } from '@/components/console/keepTyping';
 import {
   MenuDivider,
   MenuItem,
@@ -158,7 +159,7 @@ export function AddIncome({
   }
 
   return (
-    <form key={round} action={action} className={forms.form}>
+    <form key={round} action={action} onSubmit={keepTyping(action)} className={forms.form}>
       <IncomeFields
         products={products}
         sources={sources}
@@ -214,7 +215,7 @@ export function IncomeMenu({
       wide={view === 'edit'}
     >
       {view === 'edit' && (
-        <form action={save} className={forms.form}>
+        <form action={save} onSubmit={keepTyping(save)} className={forms.form}>
           <input type="hidden" name="incomeId" value={entry.id} />
           <IncomeFields
             products={products}

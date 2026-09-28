@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { MenuItem, MenuList, MenuNote, RowMenu, useLastSaid } from '@/components/console/RowMenu';
 import { TextField } from '@/components/console/Fields';
+import { keepTyping } from '@/components/console/keepTyping';
 import { saveProduct, setProductActive, type ProductState } from './actions';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -19,7 +20,7 @@ export function AddProduct() {
     if (state.status === 'done') setRound(round + 1);
   }
   return (
-    <form key={round} action={action} className={styles.inlineForm}>
+    <form key={round} action={action} onSubmit={keepTyping(action)} className={styles.inlineForm}>
       <label className={forms.label} htmlFor={`product-${round}`}>
         Name
       </label>
@@ -74,7 +75,7 @@ export function ProductMenu({
       wide={renaming}
     >
       {renaming ? (
-        <form action={save} className={forms.form}>
+        <form action={save} onSubmit={keepTyping(save)} className={forms.form}>
           <input type="hidden" name="productId" value={product.id} />
           <TextField name="name" label="Name" defaultValue={product.name} maxLength={80} required />
           <div className={forms.actions}>

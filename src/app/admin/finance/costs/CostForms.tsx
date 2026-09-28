@@ -12,6 +12,7 @@ import {
 } from '@/lib/console/cost-labels';
 import { CheckField, DateField, TextField } from '@/components/console/Fields';
 import { Select } from '@/components/console/Select';
+import { keepTyping } from '@/components/console/keepTyping';
 import {
   MenuDivider,
   MenuItem,
@@ -261,7 +262,7 @@ export function AddCost({
   }
 
   return (
-    <form key={round} action={action} className={forms.form}>
+    <form key={round} action={action} onSubmit={keepTyping(action)} className={forms.form}>
       <CostFields
         choices={choices}
         values={{ incurredOn: today }}
@@ -406,7 +407,7 @@ export function CostMenu({
       wide={view === 'edit'}
     >
       {view === 'edit' && (
-        <form action={save} className={forms.form}>
+        <form action={save} onSubmit={keepTyping(save)} className={forms.form}>
           <input type="hidden" name="costId" value={cost.id} />
           <CostFields
             choices={choices}
@@ -499,7 +500,7 @@ export function AddMonthOf({
   if (state.status === 'done') return <span className={forms.hint}>{state.message}</span>;
 
   return (
-    <form action={action} className={styles.inlineForm}>
+    <form action={action} onSubmit={keepTyping(action)} className={styles.inlineForm}>
       <input type="hidden" name="regularId" value={regular.id} />
       <input type="hidden" name="vendor" value={regular.vendor} />
       <input type="hidden" name="category" value={regular.category} />
@@ -569,7 +570,7 @@ export function RegularMenu({
       wide={editing}
     >
       {editing ? (
-        <form action={save} className={forms.form}>
+        <form action={save} onSubmit={keepTyping(save)} className={forms.form}>
           <input type="hidden" name="regularId" value={regular.id} />
           <CostFields
             choices={choices}

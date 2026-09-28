@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import { saveOrgSettings, type SettingsState } from '../actions';
 import type { Org } from '@/lib/console/org';
 import { NumberField } from '@/components/console/Fields';
+import { keepTyping } from '@/components/console/keepTyping';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: SettingsState = { status: 'idle' };
@@ -13,7 +14,7 @@ export function BillingForm({ org, vatRate }: { org: Org; vatRate: string }) {
   const [chargesVat, setChargesVat] = useState(org.chargesVat);
 
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} onSubmit={keepTyping(action)} className={forms.form}>
       <div className={forms.card}>
         <fieldset className={forms.section}>
           <legend className={`${forms.sectionTitle} ${forms.hueBrand}`}>Who we are</legend>

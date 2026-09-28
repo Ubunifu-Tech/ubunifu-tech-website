@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { saveExchangeRate, type FinanceState } from './actions';
+import { keepTyping } from '@/components/console/keepTyping';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 
@@ -26,7 +27,7 @@ export function RateForm({
   const [state, action, pending] = useActionState(saveExchangeRate, INITIAL);
   const id = `rate-${month}-${base}-${quote}`;
   return (
-    <form action={action} className={styles.inlineForm}>
+    <form action={action} onSubmit={keepTyping(action)} className={styles.inlineForm}>
       <input type="hidden" name="month" value={month} />
       <input type="hidden" name="base" value={base} />
       <input type="hidden" name="quote" value={quote} />

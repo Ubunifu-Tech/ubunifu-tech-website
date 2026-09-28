@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { saveDocumentDefault, type DefaultsState } from './actions';
+import { keepTyping } from '@/components/console/keepTyping';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: DefaultsState = { status: 'idle' };
@@ -19,7 +20,7 @@ export function DefaultForm({
   const [state, action, pending] = useActionState(saveDocumentDefault, INITIAL);
   const id = `default-${kind}`;
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} onSubmit={keepTyping(action)} className={forms.form}>
       <input type="hidden" name="kind" value={kind} />
       <div className={forms.field}>
         <label className={forms.label} htmlFor={id}>

@@ -372,9 +372,10 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
 }
 
 /**
- * Removes a fee. One that was never invoiced or renewed is deleted outright;
- * one with history is marked removed instead, because an invoice already sent
- * still points at it.
+ * Removes a fee. One that was never invoiced, skipped or tied to a managed
+ * service is deleted outright, with any periods merely laid out for it; one
+ * with history is marked removed instead, because an invoice already sent
+ * still points at it, and its unbilled periods go so none is left behind.
  */
 export async function removeFee(_previous: FeeState, formData: FormData): Promise<FeeState> {
   const staff = await requireStaff();
@@ -385,7 +386,14 @@ export async function removeFee(_previous: FeeState, formData: FormData): Promis
     select: {
       id: true,
       label: true,
-      _count: { select: { invoiceLines: true, renewals: true } },
+      _count: {
+        select: {
+          invoiceLines: true,
+          // Periods invoiced or skipped. Pending ones were only laid out
+          // ahead, by opening the Fees tab or Renewals, and are not history.
+          renewals: { where: { status: { not: 'pending' } } },
+        },
+      },
       managedService: { select: { id: true } },
       project: { select: { slug: true, deletedAt: true } },
     },
@@ -393,15 +401,21 @@ export async function removeFee(_previous: FeeState, formData: FormData): Promis
   if (!line || line.project.deletedAt)
     return { status: 'error', message: 'That fee no longer exists.' };
 
-  const hasHistory =
-    line._count.invoiceLines > 0 || line._count.renewals > 0 || line.managedService !== null;
+  const invoiced = line._count.invoiceLines > 0;
+  const handled = line._count.renewals > 0;
+  const managed = line.managedService !== null;
+  const hasHistory = invoiced || handled || managed;
 
   if (hasHistory) {
-    await db.lineItem.update({
-      where: { id: line.id },
-      data: { status: 'cancelled' },
-    });
+    await db.$transaction([
+      db.lineItem.update({
+        where: { id: line.id },
+        data: { status: 'cancelled' },
+      }),
+      db.renewalEvent.deleteMany({ where: { lineItemId: line.id, status: 'pending' } }),
+    ]);
   } else {
+    // Its pending periods go with it.
     await db.lineItem.delete({ where: { id: line.id } });
   }
 
@@ -411,7 +425,13 @@ export async function removeFee(_previous: FeeState, formData: FormData): Promis
     action: 'line_item.removed',
     entityType: 'LineItem',
     entityId: line.id,
-    summary: hasHistory ? `${line.label} (kept in the history, it has been invoiced)` : line.label,
+    summary: invoiced
+      ? `${line.label} (kept in the history, it has been invoiced)`
+      : handled
+        ? `${line.label} (kept in the history, some periods were skipped)`
+        : managed
+          ? `${line.label} (kept, it bills a managed service)`
+          : line.label,
   });
 
   revalidate(line.project.slug);

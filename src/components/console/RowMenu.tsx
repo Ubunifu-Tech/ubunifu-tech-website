@@ -130,6 +130,11 @@ export function MenuNote({
   );
 }
 
+/** Longer text to read in a wide panel, scrolled inside it when it runs long. */
+export function MenuBody({ children }: { children: React.ReactNode }) {
+  return <div className={styles.body}>{children}</div>;
+}
+
 /** A heading for a panel that has turned into a form or a question. */
 export function MenuTitle({ children }: { children: React.ReactNode }) {
   return <p className={styles.title}>{children}</p>;

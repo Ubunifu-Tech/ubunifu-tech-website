@@ -38,9 +38,12 @@
   box-shadow: var(--app-shadow-pop);
 }
 
-/* A form or a setup link needs more than a list does. */
+/* A form or a setup link needs more than a list does. It scrolls inside the
+   height the popover has on screen, so a tall form never runs off the page. */
 .wide {
   width: 22rem;
+  max-height: var(--radix-popover-content-available-height, none);
+  overflow-y: auto;
   padding: var(--space-4);
 }
 
@@ -106,4 +109,17 @@
   color: var(--text-primary);
   font-size: var(--font-size-small);
   line-height: 1.45;
+}
+
+/* Read-only text in a wide panel, such as an update read back in full. It
+   also leaves room for the panel's title and buttons in whatever height the
+   popover has on screen, so a long text never pushes them out of view. */
+.body {
+  max-height: min(24rem, 60vh, calc(var(--radix-popover-content-available-height, 100vh) - 9rem));
+  overflow-y: auto;
+  margin-bottom: var(--space-3);
+}
+
+.body > :first-child {
+  margin-top: 0;
 }

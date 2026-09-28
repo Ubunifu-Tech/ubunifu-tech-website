@@ -13,6 +13,7 @@ import {
 } from './actions';
 import { TextAreaField, TextField } from '@/components/console/Fields';
 import {
+  MenuBody,
   MenuDivider,
   MenuItem,
   MenuList,
@@ -70,11 +71,26 @@ function sentState(update: UpdateRow): { label: string; tone: string } {
     : { label: 'Not emailed', tone: forms.badgeWarn };
 }
 
-/** A draft's choices: send it, change it, or throw it away. */
-function DraftMenu({ update }: { update: UpdateRow }) {
+/**
+ * One update's choices, whether it is still a draft or has gone out: read it
+ * back, send it, change it or throw it away; then email the people it has not
+ * reached, take it down or put it back.
+ *
+ * One component for both, so the row keeps it when the update turns from a
+ * draft into a sent one underneath it, and the result of Send it (who was not
+ * emailed, and why) stays on screen instead of going with the draft's menu.
+ */
+function UpdateMenu({ update }: { update: UpdateRow }) {
   const [open, setOpen] = useState(false);
-  const [view, setView] = useState<'menu' | 'edit' | 'discard'>('menu');
-  const [sendState, sendAction, sending] = useActionState(publishUpdate, INITIAL);
+  const [view, setView] = useState<'menu' | 'read' | 'edit' | 'discard' | 'takeDown'>('menu');
+  const [sendState, sendAction, sending] = useActionState(
+    async (previous: EditState, formData: FormData) => {
+      const result = await publishUpdate(previous, formData);
+      setView('menu');
+      return result;
+    },
+    INITIAL,
+  );
   const [editState, editAction, saving] = useActionState(
     async (previous: EditState, formData: FormData) => {
       const result = await editUpdate(previous, formData);
@@ -84,7 +100,33 @@ function DraftMenu({ update }: { update: UpdateRow }) {
     INITIAL,
   );
   const [discardState, discardAction, discarding] = useActionState(discardUpdate, INITIAL);
-  const said = useLastSaid(sendState, editState, discardState);
+  const [restState, sendRest, sendingRest] = useActionState(emailUpdateToRest, INITIAL);
+  const [downState, takeDown, takingDown] = useActionState(
+    async (previous: EditState, formData: FormData) => {
+      const result = await takeDownUpdate(previous, formData);
+      if (result.status === 'done') setView('menu');
+      return result;
+    },
+    INITIAL,
+  );
+  const [backState, putBack, puttingBack] = useActionState(putBackUpdate, INITIAL);
+  const said = useLastSaid(sendState, editState, discardState, restState, downState, backState);
+  const draft = !update.published && !update.withdrawn;
+
+  const sendIt = (
+    <form action={sendAction}>
+      <input type="hidden" name="updateId" value={update.id} />
+      {view === 'read' ? (
+        <button type="submit" className={forms.button} disabled={sending}>
+          {sending ? 'Sending…' : 'Send it'}
+        </button>
+      ) : (
+        <MenuItem type="submit" disabled={sending}>
+          {sending ? 'Sending…' : 'Send it'}
+        </MenuItem>
+      )}
+    </form>
+  );
 
   return (
     <RowMenu
@@ -94,26 +136,88 @@ function DraftMenu({ update }: { update: UpdateRow }) {
         setOpen(next);
         if (!next) setView('menu');
       }}
-      wide={view === 'edit'}
+      wide={view !== 'menu'}
     >
       {view === 'menu' && (
         <>
           <MenuList>
-            <form action={sendAction}>
-              <input type="hidden" name="updateId" value={update.id} />
-              <MenuItem type="submit" disabled={sending}>
-                {sending ? 'Sending…' : 'Send it'}
-              </MenuItem>
-            </form>
-            <MenuItem onClick={() => setView('edit')}>Edit</MenuItem>
-            <MenuDivider />
-            <MenuItem danger onClick={() => setView('discard')}>
-              Discard
-            </MenuItem>
+            {draft ? (
+              <>
+                <MenuItem onClick={() => setView('read')}>Read it back</MenuItem>
+                {sendIt}
+                <MenuItem onClick={() => setView('edit')}>Edit</MenuItem>
+                <MenuDivider />
+                <MenuItem danger onClick={() => setView('discard')}>
+                  Discard
+                </MenuItem>
+              </>
+            ) : (
+              <>
+                {update.published && update.unreached > 0 && (
+                  <form action={sendRest}>
+                    <input type="hidden" name="updateId" value={update.id} />
+                    <MenuItem type="submit" disabled={sendingRest}>
+                      {sendingRest
+                        ? 'Sending…'
+                        : update.reached > 0
+                          ? 'Send to the rest'
+                          : 'Email it'}
+                    </MenuItem>
+                  </form>
+                )}
+                {update.withdrawn && (
+                  <form action={putBack}>
+                    <input type="hidden" name="updateId" value={update.id} />
+                    <MenuItem type="submit" disabled={puttingBack}>
+                      {puttingBack ? 'Putting it back…' : 'Put it back in their portal'}
+                    </MenuItem>
+                  </form>
+                )}
+                {update.published && (
+                  <>
+                    {update.unreached > 0 && <MenuDivider />}
+                    <MenuItem danger onClick={() => setView('takeDown')}>
+                      Take it down
+                    </MenuItem>
+                  </>
+                )}
+              </>
+            )}
           </MenuList>
           {said?.message && (
             <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
           )}
+        </>
+      )}
+
+      {view === 'read' && (
+        <>
+          <MenuTitle>{update.title}</MenuTitle>
+          <MenuBody>
+            <p className={styles.quote}>{update.body}</p>
+            {update.previewUrl && (
+              <p className={forms.hint}>
+                <a
+                  href={update.previewUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className={forms.link}
+                >
+                  {update.previewUrl}
+                </a>
+              </p>
+            )}
+          </MenuBody>
+          <div className={forms.actions}>
+            {sendIt}
+            <button
+              type="button"
+              className={`${forms.button} ${forms.quiet}`}
+              onClick={() => setView('edit')}
+            >
+              Edit
+            </button>
+          </div>
         </>
       )}
 
@@ -184,33 +288,8 @@ function DraftMenu({ update }: { update: UpdateRow }) {
           <Result state={discardState.status === 'error' ? discardState : INITIAL} />
         </form>
       )}
-    </RowMenu>
-  );
-}
 
-/**
- * A sent update's choices: email the people it has not reached, take it out
- * of the portal, or put back one that was taken down.
- */
-function SentMenu({ update }: { update: UpdateRow }) {
-  const [sendState, send, sending] = useActionState(emailUpdateToRest, INITIAL);
-  const [downState, takeDown, takingDown] = useActionState(takeDownUpdate, INITIAL);
-  const [backState, putBack, puttingBack] = useActionState(putBackUpdate, INITIAL);
-  const [open, setOpen] = useState(false);
-  const [asking, setAsking] = useState(false);
-  const said = useLastSaid(sendState, downState, backState);
-
-  return (
-    <RowMenu
-      label={`Actions for ${update.title}`}
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setAsking(false);
-      }}
-      wide={asking}
-    >
-      {asking ? (
+      {view === 'takeDown' && (
         <form action={takeDown} className={forms.form}>
           <input type="hidden" name="updateId" value={update.id} />
           <MenuTitle>
@@ -223,45 +302,13 @@ function SentMenu({ update }: { update: UpdateRow }) {
             <button
               type="button"
               className={`${forms.button} ${forms.quiet}`}
-              onClick={() => setAsking(false)}
+              onClick={() => setView('menu')}
             >
               Keep it
             </button>
           </div>
-          <Result state={downState} />
+          <Result state={downState.status === 'error' ? downState : INITIAL} />
         </form>
-      ) : (
-        <>
-          <MenuList>
-            {update.published && update.unreached > 0 && (
-              <form action={send}>
-                <input type="hidden" name="updateId" value={update.id} />
-                <MenuItem type="submit" disabled={sending}>
-                  {sending ? 'Sending…' : update.reached > 0 ? 'Send to the rest' : 'Email it'}
-                </MenuItem>
-              </form>
-            )}
-            {update.withdrawn && (
-              <form action={putBack}>
-                <input type="hidden" name="updateId" value={update.id} />
-                <MenuItem type="submit" disabled={puttingBack}>
-                  {puttingBack ? 'Putting it back…' : 'Put it back in their portal'}
-                </MenuItem>
-              </form>
-            )}
-            {update.published && (
-              <>
-                {update.unreached > 0 && <MenuDivider />}
-                <MenuItem danger onClick={() => setAsking(true)}>
-                  Take it down
-                </MenuItem>
-              </>
-            )}
-          </MenuList>
-          {said?.message && (
-            <MenuNote tone={said.status === 'error' ? 'bad' : 'quiet'}>{said.message}</MenuNote>
-          )}
-        </>
       )}
     </RowMenu>
   );
@@ -331,11 +378,7 @@ export function UpdateComposer({
                     </span>
                   </td>
                   <td className={`${table.td} ${table.actions}`}>
-                    {readOnly ? null : update.published || update.withdrawn ? (
-                      <SentMenu update={update} />
-                    ) : (
-                      <DraftMenu update={update} />
-                    )}
+                    {readOnly ? null : <UpdateMenu update={update} />}
                   </td>
                 </tr>
               ))}
@@ -417,6 +460,7 @@ export function UpdateComposer({
       {updates.length === 0 && (
         <p className={styles.note}>Nothing has been sent on this project yet.</p>
       )}
+      {readOnly && <p className={styles.note}>Someone who runs projects writes and sends these.</p>}
     </>
   );
 }

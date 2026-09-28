@@ -26,7 +26,7 @@ export function HomeHeroGraphic() {
       <path className={`${styles.heroRoute} ${styles.heroRouteSoft}`} d="M540 438h96v92h130" />
 
       <g transform="translate(74 176)">
-        <g className={`${styles.heroSatellite} ${styles.heroSatelliteOne}`}>
+        <g className={styles.heroSatellite}>
           <rect width="126" height="92" rx="6" />
           <path d="M22 26h54M22 45h80M22 64h62" />
           <circle cx="101" cy="25" r="7" />
@@ -78,7 +78,7 @@ export function HomeHeroGraphic() {
           <path d="M430 268v28M430 380v28" />
         </g>
 
-        <g className={styles.heroCore}>
+        <g>
           <polygon className={styles.heroCoreTop} points="430,321 506,283 430,245 354,283" />
           <polygon className={styles.heroCoreLeft} points="354,283 430,321 430,421 354,383" />
           <polygon className={styles.heroCoreRight} points="506,283 430,321 430,421 506,383" />
@@ -235,7 +235,7 @@ export function EngagementPathGraphic({ kind }: { kind: 'consulting' | 'products
         <circle className={styles.pathNode} cx="38" cy="138" r="8" />
         <circle className={styles.pathNode} cx="38" cy="204" r="8" />
         <path className={styles.pathRouteLive} d="M256 138h76" />
-        <g className={styles.pathAssembly}>
+        <g>
           <polygon className={styles.pathPlaneBack} points="430,231 560,166 430,101 300,166" />
           <polygon className={styles.pathPlaneTop} points="430,195 526,147 430,99 334,147" />
           <polygon className={styles.pathCoreTop} points="430,122 480,97 430,72 380,97" />
@@ -249,7 +249,7 @@ export function EngagementPathGraphic({ kind }: { kind: 'consulting' | 'products
 
   return (
     <svg className={styles.pathGraphic} viewBox="0 0 620 280" aria-hidden="true" focusable="false">
-      <g className={styles.productCoreSmall}>
+      <g>
         <polygon className={styles.pathCoreTop} points="210,120 266,92 210,64 154,92" />
         <polygon className={styles.pathCoreLeft} points="154,92 210,120 210,192 154,164" />
         <polygon className={styles.pathCoreRight} points="266,92 210,120 210,192 266,164" />

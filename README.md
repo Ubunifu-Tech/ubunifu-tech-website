@@ -122,7 +122,7 @@ extra layer.
 | `npm start` | Serve an existing production build. |
 | `npm run lint` | Run ESLint across the repository. |
 | `npm run typecheck` | Run TypeScript without emitting files. |
-| `npm run check` | Runs lint, typecheck, `check:typography`, `check:editor` and `check:diff`. None of them needs a database. |
+| `npm run check` | Runs lint, typecheck, `check:typography`, `check:editor`, `check:diff`, `check:dates` and `check:css`. None of them needs a database. |
 | `npm run check:signatures`, `check:renewals`, `check:blog-parity`, `check:links`, `check:assistant` | The checks that need the database in `.env`. `check:links` also needs the dev server on port 3001, and `check:assistant` needs `ANTHROPIC_API_KEY`. |
 | `npm run db:migrate` | Create and apply migrations on the local database. |
 | `npm run db:seed` | Load an owner, plan templates, standard terms, products and one sample client into the local database. |

@@ -108,13 +108,8 @@
 
 .cardWrap {
   border-radius: 12px;
-  outline: none;
   cursor: grab;
   touch-action: manipulation;
-}
-
-.cardWrap:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .cardWrap:active {
@@ -166,6 +161,33 @@
   font-size: var(--font-size-caption);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* The grip: where the keyboard picks a card up. Always shown, not on hover
+   only, so keyboard and touch users can find it. */
+.handle {
+  display: inline-flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: grab;
+}
+
+.handle:hover {
+  background: var(--tone-neutral-bg);
+  color: var(--text-primary);
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .cardName {

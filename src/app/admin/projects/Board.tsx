@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,7 +16,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { CalendarDays, Clock, UserRound, X } from 'lucide-react';
+import { CalendarDays, Clock, GripVertical, UserRound, X } from 'lucide-react';
 import type { ProjectStatus } from '@/generated/prisma/client';
 import { LANES, laneOf, targetIn, type Lane } from '@/lib/console/board';
 import { STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
@@ -215,11 +215,22 @@ export function Board({ cards, canMove = true }: { cards: BoardCard[]; canMove?:
               lane={lane}
               cards={items.filter((card) => laneOf(card.status)?.key === lane.key)}
               dragging={dragging}
+              canMove={canMove}
             />
           ))}
         </div>
         <DragOverlay dropAnimation={null}>
-          {dragging ? <CardBody card={dragging} lifted /> : null}
+          {dragging ? (
+            <CardBody
+              card={dragging}
+              lifted
+              handle={
+                <span className={styles.handle} aria-hidden="true">
+                  <GripVertical size={15} strokeWidth={2} />
+                </span>
+              }
+            />
+          ) : null}
         </DragOverlay>
       </DndContext>
 
@@ -328,10 +339,12 @@ function LaneColumn({
   lane,
   cards,
   dragging,
+  canMove,
 }: {
   lane: Lane;
   cards: BoardCard[];
   dragging: BoardCard | null;
+  canMove: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: lane.key });
 
@@ -361,29 +374,66 @@ function LaneColumn({
         {cards.length === 0 ? (
           <p className={styles.laneEmpty}>Nothing here</p>
         ) : (
-          cards.map((card) => <DraggableCard key={card.id} card={card} />)
+          // A role that cannot move projects gets plain cards: a link each,
+          // and nothing announced as draggable.
+          cards.map((card) =>
+            canMove ? (
+              <DraggableCard key={card.id} card={card} />
+            ) : (
+              <CardBody key={card.id} card={card} />
+            ),
+          )
         )}
       </div>
     </section>
   );
 }
 
+/**
+ * A mouse or a finger drags the whole card. The keyboard moves it from the
+ * grip, which is the only control announced as draggable, so the name stays a
+ * plain link: dnd-kit's keyboard sensor ignores keys pressed anywhere but the
+ * activator, and after a drop it returns focus to the grip.
+ */
 function DraggableCard({ card }: { card: BoardCard }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
+    id: card.id,
+  });
   return (
     <div
       ref={setNodeRef}
       {...listeners}
-      {...attributes}
       className={`${styles.cardWrap} ${isDragging ? styles.cardGhost : ''}`}
-      aria-roledescription="draggable project"
     >
-      <CardBody card={card} />
+      <CardBody
+        card={card}
+        handle={
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            {...attributes}
+            id={`card-handle-${card.id}`}
+            className={styles.handle}
+            aria-label={`Move ${card.name}`}
+            aria-roledescription="draggable project"
+          >
+            <GripVertical size={15} strokeWidth={2} aria-hidden="true" />
+          </button>
+        }
+      />
     </div>
   );
 }
 
-function CardBody({ card, lifted }: { card: BoardCard; lifted?: boolean }) {
+function CardBody({
+  card,
+  lifted,
+  handle,
+}: {
+  card: BoardCard;
+  lifted?: boolean;
+  handle?: ReactNode;
+}) {
   const percent = card.total > 0 ? Math.round((card.done / card.total) * 100) : 0;
   return (
     <article className={`${styles.card} ${lifted ? styles.cardLifted : ''}`}>
@@ -392,6 +442,7 @@ function CardBody({ card, lifted }: { card: BoardCard; lifted?: boolean }) {
           {card.changesAsked ? 'Changes asked' : STAFF_LABEL[card.status]}
         </span>
         <span className={styles.ref}>{card.reference}</span>
+        {handle}
       </div>
 
       <Link href={`/projects/${card.slug}`} className={styles.cardName} draggable={false}>

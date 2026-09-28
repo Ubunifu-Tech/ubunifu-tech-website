@@ -565,7 +565,7 @@ export async function saveClientDetails(
   const country = formText(formData, 'country').toUpperCase();
   const currency = formText(formData, 'currency').toUpperCase();
   const website = formText(formData, 'website').slice(0, 300) || null;
-  const notes = formTextExact(formData, 'notes').trim().slice(0, 4000) || null;
+  const notes = formTextExact(formData, 'notes').trim().slice(0, 6000) || null;
 
   if (name.length < 2) return { status: 'error', message: 'Add their name.', field: 'name' };
   if (!/^[A-Z]{2}$/.test(country)) {

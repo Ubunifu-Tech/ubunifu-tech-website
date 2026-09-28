@@ -69,7 +69,8 @@ export default async function NewClientPage({
         contactName: usable.name,
         contactEmail: usable.email,
         serviceLine: usable.serviceLine ?? 'web',
-        notes: `From the website enquiry on ${formatDate(usable.createdAt)}, about ${usable.subject}:\n\n${usable.message}`,
+        // The notes hold 6,000 characters, room for a whole 5,000-character enquiry.
+        notes: `From the website enquiry on ${formatDate(usable.createdAt)}, about ${usable.subject}:\n\n${usable.message}`.slice(0, 6000),
         projectName: usable.subject.slice(0, 160),
       }
     : undefined;

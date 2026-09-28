@@ -99,7 +99,7 @@ export function ClientDetails({
             optional
             rows={4}
             defaultValue={client.notes ?? ''}
-            maxLength={4000}
+            maxLength={6000}
             hint="For the team only."
           />
           <div className={forms.actions}>

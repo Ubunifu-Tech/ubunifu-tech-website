@@ -97,7 +97,7 @@ export async function createClient(
     website: formText(formData, 'website'),
     country: formText(formData, 'country'),
     currency: formText(formData, 'currency'),
-    notes: formText(formData, 'notes'),
+    notes: formText(formData, 'notes').slice(0, 6000),
     contactName: formText(formData, 'contactName'),
     contactEmail: formText(formData, 'contactEmail'),
     contactRole: formText(formData, 'contactRole'),

@@ -328,7 +328,7 @@ export function NewClientForm({
                 name="notes"
                 defaultValue={was('notes', prefill?.notes)}
                 className={`${forms.control} ${forms.textarea}`}
-                maxLength={2000}
+                maxLength={6000}
               />
               <p className={forms.hint}>
                 Never shown in the portal. How the conversation started, who introduced you, what

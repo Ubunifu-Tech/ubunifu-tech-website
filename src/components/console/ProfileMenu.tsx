@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import * as Popover from '@radix-ui/react-popover';
 import { LogOut, Settings, UserRound, Users } from 'lucide-react';
@@ -33,6 +33,7 @@ export function ProfileMenu({
   signOutAction: string;
 }) {
   const [open, setOpen] = useState(false);
+  const menu = useRef<HTMLDivElement>(null);
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
@@ -41,7 +42,21 @@ export function ProfileMenu({
       </Popover.Trigger>
 
       <Popover.Portal>
-        <Popover.Content className={styles.menu} align="end" sideOffset={8} collisionPadding={12}>
+        <Popover.Content
+          ref={menu}
+          className={styles.menu}
+          align="end"
+          sideOffset={8}
+          collisionPadding={12}
+          // Radix passes over links when it picks what to focus, which put
+          // focus on Sign out. The menu starts from its first choice instead.
+          onOpenAutoFocus={(event) => {
+            const first = menu.current?.querySelector<HTMLElement>('a[href], button');
+            if (!first) return;
+            event.preventDefault();
+            first.focus();
+          }}
+        >
           <div className={styles.menuHead}>
             <Avatar name={name} size="lg" />
             <div className={styles.menuWho}>

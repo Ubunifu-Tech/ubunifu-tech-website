@@ -183,9 +183,12 @@ export default async function ClientsPage({
                    * Only lines already in the client's own currency are summed.
                    * Nothing here converts between currencies, so adding a TZS
                    * line to a USD total would print a number that is not money.
-                   * Anything else is counted and named instead.
+                   * Anything else is counted and named instead. A cancelled
+                   * project's fees are left out, as on the client's page.
                    */
-                  const lines = client.projects.flatMap((p) => p.lineItems);
+                  const lines = client.projects
+                    .filter((p) => p.status !== 'cancelled')
+                    .flatMap((p) => p.lineItems);
                   const committed = lines
                     .filter((l) => l.currency === client.currency)
                     .reduce((total, l) => total + l.amountMinor * l.quantity, 0);

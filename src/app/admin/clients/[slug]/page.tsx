@@ -169,7 +169,11 @@ export default async function ClientPage({
   const ownCurrency = <T extends { currency: string }>(rows: T[]) =>
     rows.filter((row) => row.currency === client.currency);
 
-  const allLines = client.projects.flatMap((p) => p.lineItems);
+  // A cancelled project's fees were never taken up, the same rule renewals
+  // follow (live.ts renewingLine), so they are not money the client committed.
+  const allLines = client.projects
+    .filter((p) => p.status !== 'cancelled')
+    .flatMap((p) => p.lineItems);
   const committed = ownCurrency(allLines).reduce(
     (total, line) => total + line.amountMinor * line.quantity,
     0,
@@ -252,7 +256,7 @@ export default async function ClientPage({
                 {
                   label: 'Committed',
                   value: formatMoney(committed, client.currency),
-                  note: 'Planned and active fee lines',
+                  note: 'Planned and active fees, cancelled projects left out',
                 },
                 {
                   label: 'Received',

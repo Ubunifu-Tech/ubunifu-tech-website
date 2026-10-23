@@ -30,7 +30,8 @@
     "check:blog-parity": "tsx scripts/check-blog-parity.mts",
     "check:links": "tsx --conditions=react-server scripts/check-links.mts",
     "check:db-tls": "tsx scripts/check-db-tls.mts",
-    "check:assistant": "tsx --conditions=react-server scripts/check-assistant.mts"
+    "check:assistant": "tsx --conditions=react-server scripts/check-assistant.mts",
+    "check:old-urls": "tsx --conditions=react-server scripts/check-old-urls.mts"
   },
   "engines": {
     "node": ">=20.9.0"

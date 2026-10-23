@@ -562,6 +562,13 @@ export type EarlyPaymentState = BillingState & {
   invoiceNumber?: string;
 };
 
+type Recorded = {
+  invoice: { id: string; number: string };
+  receipt: { id: string; number: string };
+  project: { slug: string } | null;
+  clientSlug: string;
+};
+
 /**
  * Money that arrived before an invoice, or before anything was signed: a
  * deposit sent on WhatsApp the day the work was agreed.
@@ -572,35 +579,27 @@ export type EarlyPaymentState = BillingState & {
  * against it in the same transaction. Part of the amount is fine; the rest
  * stays owed on that invoice.
  */
-export async function recordEarlyPayment(
-  _previous: EarlyPaymentState,
+async function payFees(
+  staff: StaffActor,
+  projectId: string,
+  chosen: string[],
   formData: FormData,
-): Promise<EarlyPaymentState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
-
-  const chosen = formData.getAll('billables').map(String).filter(Boolean);
-  if (chosen.length === 0) {
-    return { status: 'error', message: 'Pick what the money is for.' };
-  }
+): Promise<{ error: string } | (Recorded & { left: number; amount: string; currency: string })> {
+  if (chosen.length === 0) return { error: 'Pick what the money is for.' };
   // What usage comes to is only known once it is invoiced.
   if (chosen.some((key) => key.startsWith('usage:'))) {
-    return {
-      status: 'error',
-      message: 'Raise an invoice for usage first, then record the payment on it.',
-    };
+    return { error: 'Raise an invoice for usage first, then record the payment on it.' };
   }
 
-  const picked = await pickBillables(String(formData.get('projectId') ?? ''), chosen);
-  if ('error' in picked) return { status: 'error', message: picked.error };
+  const picked = await pickBillables(projectId, chosen);
+  if ('error' in picked) return { error: picked.error! };
   const { project, lines, currency, taxMinor, totalMinor } = picked;
 
   const read = readPayment(formData, currency);
-  if ('error' in read) return { status: 'error', message: read.error };
+  if ('error' in read) return { error: read.error! };
   if (read.amountMinor > totalMinor) {
     return {
-      status: 'error',
-      message: `That is more than the ${formatMoney(totalMinor, currency)} those fees come to. Pick more of them, or add a fee for the rest.`,
+      error: `That is more than the ${formatMoney(totalMinor, currency)} those fees come to. Pick more of them, or add a fee for the rest.`,
     };
   }
 
@@ -619,12 +618,7 @@ export async function recordEarlyPayment(
       db.$transaction(async (tx) => {
         // Held until this commits, so removing the client or project waits
         // for the payment, or the payment sees the removal and stops.
-        const live = await tx.$queryRaw<{ id: string }[]>`
-          SELECT p.id FROM "Project" p JOIN "Client" c ON c.id = p."clientId"
-          WHERE p.id = ${project.id} AND p."deletedAt" IS NULL AND c."deletedAt" IS NULL
-          FOR SHARE OF p, c`;
-        if (live.length === 0) throw new Gone();
-
+        await holdProject(tx, project.id);
         const invoice = await invoiceForBillables(tx, {
           project,
           lines,
@@ -646,19 +640,13 @@ export async function recordEarlyPayment(
     );
   } catch (error) {
     if (error instanceof AlreadyBilled || error instanceof RenewalAlreadyBilled) {
-      return {
-        status: 'error',
-        message: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.',
-      };
+      return { error: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.' };
     }
-    if (error instanceof Gone) {
-      return { status: 'error', message: 'That project was removed a moment ago.' };
-    }
+    if (error instanceof Gone) return { error: 'That project was removed a moment ago.' };
     throw error;
   }
 
   const amount = formatMoney(read.amountMinor, currency);
-  const left = totalMinor - read.amountMinor;
   await recordAudit({
     actorType: 'staff',
     actorId: staff.id,
@@ -681,13 +669,52 @@ export async function recordEarlyPayment(
   revalidatePath(`/admin/invoices/${result.invoice.number}`);
   revalidatePath(`/admin/projects/${project.slug}`);
   return {
+    ...result,
+    project: { slug: project.slug },
+    clientSlug: await clientSlugOf(project.clientId),
+    left: totalMinor - read.amountMinor,
+    amount,
+    currency,
+  };
+}
+
+/** Under a share lock: the project and its client are still here, and stay while this commits. */
+async function holdProject(tx: Prisma.TransactionClient, projectId: string): Promise<void> {
+  const live = await tx.$queryRaw<{ id: string }[]>`
+    SELECT p.id FROM "Project" p JOIN "Client" c ON c.id = p."clientId"
+    WHERE p.id = ${projectId} AND p."deletedAt" IS NULL AND c."deletedAt" IS NULL
+    FOR SHARE OF p, c`;
+  if (live.length === 0) throw new Gone();
+}
+
+async function clientSlugOf(clientId: string): Promise<string> {
+  const client = await db.client.findUniqueOrThrow({ where: { id: clientId }, select: { slug: true } });
+  return client.slug;
+}
+
+export async function recordEarlyPayment(
+  _previous: EarlyPaymentState,
+  formData: FormData,
+): Promise<EarlyPaymentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const paid = await payFees(
+    staff,
+    String(formData.get('projectId') ?? ''),
+    formData.getAll('billables').map(String).filter(Boolean),
+    formData,
+  );
+  if ('error' in paid) return { status: 'error', message: paid.error };
+
+  return {
     status: 'done',
     message:
-      left > 0
-        ? `${amount} recorded on ${result.invoice.number}, with ${formatMoney(left, currency)} still owed on it. Receipt ${result.receipt.number} is ready.`
-        : `${amount} recorded on ${result.invoice.number}, paid in full. Receipt ${result.receipt.number} is ready.`,
-    receipt: result.receipt,
-    invoiceNumber: result.invoice.number,
+      paid.left > 0
+        ? `${paid.amount} recorded on ${paid.invoice.number}, with ${formatMoney(paid.left, paid.currency)} still owed on it. Receipt ${paid.receipt.number} is ready.`
+        : `${paid.amount} recorded on ${paid.invoice.number}, paid in full. Receipt ${paid.receipt.number} is ready.`,
+    receipt: paid.receipt,
+    invoiceNumber: paid.invoice.number,
   };
 }
 
@@ -700,15 +727,11 @@ export async function recordEarlyPayment(
  * the receipt is issued in the same transaction. A payment without a receipt is
  * a payment the client cannot prove they made.
  */
-export async function recordPayment(
-  _previous: BillingState,
+async function payInvoice(
+  staff: StaffActor,
+  invoiceId: string,
   formData: FormData,
-): Promise<BillingState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
-  const invoiceId = String(formData.get('invoiceId') ?? '');
-  const emailIt = formData.get('emailReceipt') === 'on';
-
+): Promise<{ error: string } | (Recorded & { wasDraft: boolean })> {
   const invoice = numbers(await db.invoice.findUnique({
     where: { id: invoiceId, ...liveInvoice },
     select: {
@@ -719,23 +742,22 @@ export async function recordPayment(
       totalMinor: true,
       paidMinor: true,
       clientId: true,
+      client: { select: { slug: true } },
+      project: { select: { slug: true } },
     },
   }));
 
-  if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
-  if (invoice.status === 'void') {
-    return { status: 'error', message: 'A void invoice cannot take a payment.' };
-  }
+  if (!invoice) return { error: 'That invoice no longer exists.' };
+  if (invoice.status === 'void') return { error: 'A void invoice cannot take a payment.' };
 
   const read = readPayment(formData, invoice.currency);
-  if ('error' in read) return { status: 'error', message: read.error };
+  if ('error' in read) return { error: read.error! };
   const { amountMinor, receivedAt, method, reference, note } = read;
 
   const outstanding = invoice.totalMinor - invoice.paidMinor;
   if (amountMinor > outstanding) {
     return {
-      status: 'error',
-      message: `That is more than the ${formatMoney(outstanding, invoice.currency)} still outstanding. Record the amount actually received, and raise a separate invoice for anything extra.`,
+      error: `That is more than the ${formatMoney(outstanding, invoice.currency)} still outstanding. Record the amount actually received, and raise a separate invoice for anything extra.`,
     };
   }
 
@@ -794,14 +816,10 @@ export async function recordPayment(
   } catch (error) {
     if (error instanceof Overpaid) {
       return {
-        status: 'error',
-        message:
-          'A payment was recorded against this invoice a moment ago. Reload to see what is still owed.',
+        error: 'A payment was recorded against this invoice a moment ago. Reload to see what is still owed.',
       };
     }
-    if (error instanceof Voided) {
-      return { status: 'error', message: 'That invoice was voided a moment ago.' };
-    }
+    if (error instanceof Voided) return { error: 'That invoice was voided a moment ago.' };
     throw error;
   }
 
@@ -825,30 +843,241 @@ export async function recordPayment(
     });
   }
 
+  revalidatePath(`/admin/invoices/${invoice.number}`);
+  revalidatePath('/admin/invoices');
+  return {
+    invoice: { id: invoice.id, number: invoice.number },
+    receipt: { id: receipt.id, number: receipt.number },
+    wasDraft: receipt.wasDraft,
+    project: invoice.project,
+    clientSlug: invoice.client.slug,
+  };
+}
+
+export async function recordPayment(
+  _previous: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+  const emailIt = formData.get('emailReceipt') === 'on';
+
+  const paid = await payInvoice(staff, String(formData.get('invoiceId') ?? ''), formData);
+  if ('error' in paid) return { status: 'error', message: paid.error };
+
   // The payment stands whatever happens to the email: it is already
   // committed, and the receipt can be sent again from its row.
   const delivered = emailIt
-    ? await deliverReceipt(staff, receipt.id).catch((error: unknown) => {
+    ? await deliverReceipt(staff, paid.receipt.id).catch((error: unknown) => {
         console.error('[invoices] receipt email after a payment failed', error);
         return { sent: false as const, message: 'The email did not go. Email it from its row.' };
       })
     : null;
-  const opening = receipt.wasDraft
-    ? `Recorded. The invoice is issued and receipt ${receipt.number}`
-    : `Recorded. Receipt ${receipt.number}`;
+  const opening = paid.wasDraft
+    ? `Recorded. The invoice is issued and receipt ${paid.receipt.number}`
+    : `Recorded. Receipt ${paid.receipt.number}`;
 
-  revalidatePath(`/admin/invoices/${invoice.number}`);
-  revalidatePath('/admin/invoices');
   return {
     status: 'done',
     message: !delivered
-      ? receipt.wasDraft
+      ? paid.wasDraft
         ? `${opening} is ready.`
         : `${opening} issued.`
       : delivered.sent
         ? `${opening} sent to ${delivered.to}.`
         : `${opening} is ready. ${delivered.message}`,
   };
+}
+
+/**
+ * The price that, with VAT added the way pickBillables adds it, comes to
+ * exactly the amount received, so the invoice made for a payment is paid in
+ * full to the shilling. Null when no whole amount does.
+ */
+function priceForTotal(totalMinor: number, vatBps: number): number | null {
+  if (vatBps <= 0) return totalMinor;
+  const guess = Math.round((totalMinor * 10_000) / (10_000 + vatBps));
+  for (const price of [guess, guess - 1, guess + 1, guess - 2, guess + 2]) {
+    if (price > 0 && price + Math.round((price * vatBps) / 10_000) === totalMinor) return price;
+  }
+  return null;
+}
+
+/**
+ * Money that arrived before any fee was priced: a deposit on work agreed by
+ * phone. A fee is made for exactly what came in, and an invoice for that fee,
+ * paid in full, with its receipt, all in one transaction. What the rest of the
+ * work costs is priced and invoiced later.
+ */
+async function payNewFee(
+  staff: StaffActor,
+  projectId: string,
+  label: string,
+  formData: FormData,
+): Promise<{ error: string } | Recorded> {
+  if (!can(staff, 'fees')) {
+    return { error: 'Adding a fee needs someone who can set fees. Ask them to add it, then record the payment on it.' };
+  }
+  if (label.length < 2) return { error: 'Say what the money is for, such as Deposit.' };
+
+  const project = numbers(await db.project.findFirst({
+    where: { id: projectId, deletedAt: null, client: { deletedAt: null } },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      currency: true,
+      clientId: true,
+      client: { select: { slug: true } },
+      _count: { select: { lineItems: true } },
+    },
+  }));
+  if (!project) return { error: 'That project no longer exists.' };
+
+  const read = readPayment(formData, project.currency);
+  if ('error' in read) return { error: read.error! };
+
+  const org = await getOrg();
+  const vatBps = org.chargesVat && org.vatRateBps > 0 ? org.vatRateBps : 0;
+  const price = priceForTotal(read.amountMinor, vatBps);
+  if (price === null) {
+    return { error: 'That amount cannot be split into a price and VAT exactly. Change it by one shilling or cent.' };
+  }
+  const taxMinor = read.amountMinor - price;
+
+  let result: { invoice: { id: string; number: string }; receipt: { id: string; number: string }; lineItemId: string };
+  try {
+    result = await retryOnConflict(() =>
+      db.$transaction(async (tx) => {
+        await holdProject(tx, project.id);
+        const fee = await tx.lineItem.create({
+          data: {
+            projectId: project.id,
+            label: label.slice(0, 120),
+            billingKind: 'one_off',
+            amountMinor: price,
+            quantity: 1,
+            currency: project.currency,
+            position: project._count.lineItems,
+            status: 'active',
+          },
+          select: { id: true },
+        });
+        const invoice = await invoiceForBillables(tx, {
+          project,
+          lines: [
+            {
+              key: `line:${fee.id}`,
+              lineItemId: fee.id,
+              renewalEventId: null,
+              label: label.slice(0, 120),
+              terms: null,
+              amountMinor: price,
+              currency: project.currency,
+              billingKind: 'one_off',
+              periodStart: null,
+              periodEnd: null,
+              dueAt: null,
+              usage: false,
+            },
+          ],
+          currency: project.currency,
+          notes: '',
+          dueAt: read.receivedAt,
+          taxMinor,
+          issuedAt: new Date(),
+        });
+        const receipt = await writePayment(tx, {
+          invoiceId: invoice.id,
+          currency: project.currency,
+          ...read,
+          staffId: staff.id,
+        });
+        await recomputeInvoice(tx, invoice.id);
+        return { invoice, receipt, lineItemId: fee.id };
+      }),
+    );
+  } catch (error) {
+    if (error instanceof Gone) return { error: 'That project was removed a moment ago.' };
+    throw error;
+  }
+
+  const amount = formatMoney(read.amountMinor, project.currency);
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'line_item.created',
+    entityType: 'LineItem',
+    entityId: result.lineItemId,
+    summary: `${label}: ${formatMoney(price, project.currency)} one-off, added with a payment`,
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'invoice.created',
+    entityType: 'Invoice',
+    entityId: result.invoice.id,
+    summary: `${result.invoice.number} for ${project.name}, issued with a payment`,
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'payment.recorded',
+    entityType: 'Invoice',
+    entityId: result.invoice.id,
+    summary: `${amount}, receipt ${result.receipt.number}`,
+    metadata: { method: read.method, reference: read.reference || null },
+  });
+
+  revalidatePath('/admin/invoices');
+  revalidatePath(`/admin/projects/${project.slug}`);
+  return {
+    invoice: result.invoice,
+    receipt: result.receipt,
+    project: { slug: project.slug },
+    clientSlug: project.client.slug,
+  };
+}
+
+export type RecordPaymentState = BillingState;
+
+/**
+ * Record a payment, from anywhere: on an invoice, on fees not invoiced yet, or
+ * on a new fee for money that came before any price was set. Every case ends
+ * on the receipt, emailed to the client if that was ticked.
+ */
+export async function recordPaymentFor(
+  _previous: RecordPaymentState,
+  formData: FormData,
+): Promise<RecordPaymentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const target = String(formData.get('for') ?? '');
+  const [kind, id] = [target.slice(0, target.indexOf(':')), target.slice(target.indexOf(':') + 1)];
+  const paid =
+    kind === 'invoice'
+      ? await payInvoice(staff, id, formData)
+      : kind === 'fees'
+        ? await payFees(staff, id, formData.getAll('billables').map(String).filter(Boolean), formData)
+        : kind === 'new'
+          ? await payNewFee(staff, id, formText(formData, 'feeLabel'), formData)
+          : { error: 'Choose what the money is for.' };
+  if ('error' in paid) return { status: 'error', message: paid.error };
+
+  // The payment stands whatever happens to the email; the receipt page says
+  // whether it went, from the email log.
+  if (formData.get('emailReceipt') === 'on') {
+    await deliverReceipt(staff, paid.receipt.id).catch((error: unknown) => {
+      console.error('[payments] receipt email after a payment failed', error);
+    });
+  }
+
+  revalidatePath('/admin/payments');
+  revalidatePath('/admin');
+  revalidatePath(`/admin/clients/${paid.clientSlug}`);
+  if (paid.project) revalidatePath(`/admin/projects/${paid.project.slug}`);
+  redirect(`/receipts/${paid.receipt.number}`);
 }
 
 /** Emails the client their receipt. */

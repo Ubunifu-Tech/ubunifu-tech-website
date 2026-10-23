@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import type {
   ActorType,
   DocumentKind,
-  DocumentStatus,
   Prisma,
   ProjectStatus,
   ReviewStatus,
@@ -11,6 +10,7 @@ import type {
 import { STAFF_LABEL } from './project-status';
 import { formatMoney, numbers } from './money';
 import { waitingOnClient } from './live';
+import { REVIEWABLE } from './reviews';
 
 /**
  * The delivery state machine.
@@ -70,116 +70,55 @@ export type Transition = {
  * they can go depends on where the project was before, so the rest are
  * computed in transitionsFor().
  */
+const START: Transition = { to: 'in_progress', label: 'Start the work', tone: 'primary' };
+
+/**
+ * Starting the work is the agreement. Proposals and agreements sent from
+ * Documents still move a deal along by themselves (advanceForDocument), but
+ * work agreed on the phone or in a meeting is never made to look like
+ * paperwork first: from any point in the deal, it starts with one press.
+ */
 const TABLE: Record<ProjectStatus, Transition[]> = {
-  lead: [
-    { to: 'proposal_draft', label: 'Mark as writing the proposal', tone: 'quiet' },
-    {
-      to: 'proposal_sent',
-      label: 'Record a proposal already sent',
-      detail: 'For one sent before you used the console.',
-      tone: 'quiet',
-    },
-    { to: 'cancelled', label: 'Mark as lost', tone: 'danger' },
-  ],
-  proposal_draft: [
-    {
-      to: 'proposal_sent',
-      label: 'Record the proposal as sent',
-      detail: 'If it went by email or on paper.',
-      tone: 'quiet',
-    },
-    { to: 'lead', label: 'Not ready for a proposal yet', tone: 'quiet' },
-    { to: 'cancelled', label: 'Drop this before sending', tone: 'danger' },
-  ],
-  proposal_sent: [
-    { to: 'proposal_accepted', label: 'Client accepted', tone: 'primary' },
-    {
-      to: 'proposal_draft',
-      label: 'Pull the proposal back',
-      detail: 'Only if it was sent by mistake.',
-      tone: 'quiet',
-    },
-    { to: 'cancelled', label: 'Mark the proposal lost', tone: 'danger' },
-  ],
+  lead: [START, { to: 'cancelled', label: 'Mark as lost', tone: 'danger' }],
+  proposal_draft: [START, { to: 'cancelled', label: 'Mark as lost', tone: 'danger' }],
+  proposal_sent: [START, { to: 'cancelled', label: 'Mark as lost', tone: 'danger' }],
   proposal_accepted: [
-    {
-      to: 'contract_sent',
-      label: 'Record the agreement as sent',
-      detail: 'If it went by email or on paper.',
-      tone: 'quiet',
-    },
-    {
-      to: 'in_progress',
-      label: 'Start work without an agreement',
-      detail: 'Noted in the history as started without a signature.',
-      tone: 'quiet',
-    },
-    { to: 'proposal_sent', label: 'They have not actually accepted', tone: 'quiet' },
-    {
-      to: 'on_hold',
-      label: 'Park it for now',
-      detail: 'Accepted, but not starting yet.',
-      tone: 'quiet',
-    },
-    { to: 'cancelled', label: 'Cancel, not going ahead', tone: 'danger' },
+    START,
+    { to: 'on_hold', label: 'Pause before starting', tone: 'quiet' },
+    { to: 'cancelled', label: 'Not going ahead', tone: 'danger' },
   ],
-  contract_sent: [
-    { to: 'contract_signed', label: 'Mark as signed', tone: 'primary' },
-    { to: 'proposal_accepted', label: 'Withdraw and renegotiate', tone: 'quiet' },
-    { to: 'cancelled', label: 'Withdraw and cancel', tone: 'danger' },
-  ],
+  contract_sent: [START, { to: 'cancelled', label: 'Not going ahead', tone: 'danger' }],
   contract_signed: [
-    { to: 'in_progress', label: 'Start the work', tone: 'primary' },
-    { to: 'on_hold', label: 'Pause before kick-off', tone: 'quiet' },
+    START,
+    { to: 'on_hold', label: 'Pause before starting', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel the engagement', tone: 'danger' },
   ],
   in_progress: [
-    {
-      to: 'client_review',
-      label: 'Mark as with the client for review',
-      detail: 'When it went to them another way. Otherwise use Ask for a review, below.',
-      tone: 'quiet',
-    },
-    { to: 'launch_ready', label: 'Mark ready to launch', tone: 'primary' },
-    {
-      to: 'handover',
-      label: 'Go straight to handover',
-      detail: 'For work with nothing to launch, like a brand kit or a report.',
-      tone: 'quiet',
-    },
-    { to: 'closed', label: 'Close without handover', tone: 'quiet' },
+    { to: 'launched', label: 'Go live', tone: 'primary' },
+    { to: 'handover', label: 'Hand it over', tone: 'primary' },
+    { to: 'closed', label: 'Close without handing over', tone: 'quiet' },
     { to: 'on_hold', label: 'Pause the work', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel the project', tone: 'danger' },
   ],
   client_review: [
     { to: 'in_progress', label: 'Work on their feedback', tone: 'primary' },
-    { to: 'launch_ready', label: 'Approved, ready to launch', tone: 'primary' },
-    { to: 'handover', label: 'Approved, hand it over', tone: 'quiet' },
+    { to: 'launched', label: 'Go live', tone: 'primary' },
+    { to: 'handover', label: 'Hand it over', tone: 'primary' },
     { to: 'on_hold', label: 'Pause the work', tone: 'quiet' },
-    { to: 'cancelled', label: 'Cancel during review', tone: 'danger' },
+    { to: 'cancelled', label: 'Cancel the project', tone: 'danger' },
   ],
+  // No longer reached; kept so projects already here can move on.
   launch_ready: [
     { to: 'launched', label: 'Go live', tone: 'primary' },
-    {
-      to: 'handover',
-      label: 'Hand over without launching',
-      detail: 'When the client puts it live themselves.',
-      tone: 'quiet',
-    },
-    {
-      to: 'closed',
-      label: 'Finish without launching',
-      detail: 'Delivered, but not going live.',
-      tone: 'quiet',
-    },
-    { to: 'client_review', label: 'Back to the client to check', tone: 'quiet' },
+    { to: 'handover', label: 'Hand it over', tone: 'primary' },
+    { to: 'closed', label: 'Close without launching', tone: 'quiet' },
     { to: 'in_progress', label: 'Back to the work', tone: 'quiet' },
     { to: 'on_hold', label: 'Hold the launch', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel before launch', tone: 'danger' },
   ],
   launched: [
-    { to: 'handover', label: 'Start handover', tone: 'primary' },
-    { to: 'closed', label: 'Close without handover', tone: 'quiet' },
+    { to: 'closed', label: 'Close the project', tone: 'primary' },
+    { to: 'handover', label: 'Hand it over', tone: 'quiet' },
     { to: 'in_progress', label: 'Undo the launch', tone: 'quiet' },
     { to: 'on_hold', label: 'Suspend the live service', tone: 'quiet' },
   ],
@@ -189,23 +128,11 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     { to: 'on_hold', label: 'Pause the handover', tone: 'quiet' },
   ],
   closed: [
-    {
-      to: 'in_progress',
-      label: 'Reopen this project',
-      detail: 'For more of the same work. New work is a new project.',
-      tone: 'quiet',
-    },
+    { to: 'in_progress', label: 'Reopen for more work', tone: 'quiet' },
     { to: 'handover', label: 'Reopen the handover', tone: 'quiet' },
   ],
   on_hold: [],
-  cancelled: [
-    {
-      to: 'lead',
-      label: 'It is back on',
-      detail: 'Starts again as a lead.',
-      tone: 'quiet',
-    },
-  ],
+  cancelled: [{ to: 'lead', label: 'It is back on, as a deal', tone: 'quiet' }],
 };
 
 /**
@@ -338,8 +265,8 @@ export async function advanceForDocument(
 
 /**
  * Puts the project with the client for review when a review is asked for,
- * inside the caller's transaction, and records why. Only along an edge the
- * table already has; a project already at review stays there, because a new
+ * inside the caller's transaction, and records why. Only from where a review
+ * can be asked for; a project already at review stays there, because a new
  * round is not a move. Returns the move, or null when there was none.
  */
 export async function advanceForReview(
@@ -357,7 +284,7 @@ export async function advanceForReview(
     select: { status: true },
   }));
   if (!project) return null;
-  if (!TABLE[project.status].some((edge) => edge.to === 'client_review')) return null;
+  if (project.status === 'client_review' || !REVIEWABLE.includes(project.status)) return null;
 
   const moved = await tx.project.updateMany({
     where: { id: input.projectId, status: project.status },
@@ -464,7 +391,6 @@ export async function transitionsFor(project: {
 /** Facts the guards need, loaded once per evaluation. */
 export type GuardFacts = {
   currency: string;
-  linesUnpriced: number;
   committedMinor: number;
   currencies: string[];
   recurringWithoutDueDate: number;
@@ -479,15 +405,10 @@ export type GuardFacts = {
    * the current status, because status can be walked backwards.
    */
   hasDelivered: boolean;
-  signatureCount: number;
   openSignatureRequests: number;
   liveRecurringLines: number;
   activeManagedServices: number;
   outstandingAssetRequests: number;
-  /** Proposals that went to the client from Documents, whatever became of them. */
-  sentProposals: number;
-  /** Agreements and statements of work that went to the client from Documents. */
-  sentAgreements: number;
   /** The latest review the client was asked for, unless it was taken back. */
   latestReview: { round: number; status: ReviewStatus } | null;
 };
@@ -523,13 +444,7 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
         select: { totalMinor: true, paidMinor: true },
       },
       documents: {
-        select: {
-          kind: true,
-          status: true,
-          signatureRequests: {
-            select: { status: true, signatures: { select: { id: true } } },
-          },
-        },
+        select: { signatureRequests: { select: { status: true } } },
       },
       reviews: {
         where: { status: { not: 'withdrawn' } },
@@ -546,10 +461,6 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
 
   return {
     currency: project.currency,
-    // A usage fee is billed as used, so it needs no price.
-    linesUnpriced: project.lineItems.filter(
-      (l) => l.amountMinor === 0 && l.billingKind !== 'usage',
-    ).length,
     committedMinor: project.lineItems.reduce((t, l) => t + l.amountMinor * l.quantity, 0),
     currencies: [...new Set(project.lineItems.filter((l) => l.amountMinor > 0).map((l) => l.currency))],
     recurringWithoutDueDate: project.lineItems.filter(
@@ -582,25 +493,15 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
         return total + Math.max(0, l.amountMinor * l.quantity - billed);
       }, 0),
     hasDelivered: project.launchedAt !== null || project.statusEvents.length > 0,
-    signatureCount: requests.reduce((t, r) => t + r.signatures.length, 0),
     openSignatureRequests: requests.filter((r) => r.status === 'sent' || r.status === 'viewed').length,
     liveRecurringLines: project.lineItems.filter(
       (l) => l.billingKind === 'recurring_monthly' || l.billingKind === 'recurring_annual',
     ).length,
     activeManagedServices: project.managedServices.length,
     outstandingAssetRequests: project.assetRequests.length,
-    sentProposals: project.documents.filter(
-      (d) => d.kind === 'proposal' && WENT_OUT.includes(d.status),
-    ).length,
-    sentAgreements: project.documents.filter(
-      (d) => (d.kind === 'contract' || d.kind === 'statement_of_work') && WENT_OUT.includes(d.status),
-    ).length,
     latestReview: project.reviews[0] ?? null,
   };
 }
-
-/** Document statuses that mean it reached the client at some point. */
-const WENT_OUT: DocumentStatus[] = ['sent', 'viewed', 'changes_requested', 'signed', 'declined', 'expired'];
 
 /**
  * What must be true, and what merely ought to be.
@@ -619,7 +520,7 @@ export function guardsFor(
   const guards: Guard[] = [];
   const money = (minor: number) => formatMoney(minor, facts.currency);
 
-  if (to === 'contract_sent' || to === 'launched' || to === 'closed') {
+  if (to === 'launched' || to === 'closed') {
     if (facts.currencies.length > 1) {
       guards.push({
         severity: 'block',
@@ -627,32 +528,6 @@ export function guardsFor(
         fix: 'fees',
       });
     }
-  }
-
-  if (to === 'contract_sent' && facts.linesUnpriced > 0) {
-    guards.push({
-      severity: 'block',
-      message: `${facts.linesUnpriced} fee${facts.linesUnpriced === 1 ? ' has' : 's have'} no price yet. Price ${facts.linesUnpriced === 1 ? 'it' : 'them'} first.`,
-        fix: 'fees',
-    });
-  }
-
-  if (to === 'proposal_sent' && facts.sentProposals === 0) {
-    guards.push({
-      severity: 'warn',
-      message:
-        'No proposal has gone to the client from Documents. If it went by email or on paper, say so in the note.',
-      fix: 'documents',
-    });
-  }
-
-  if (to === 'contract_sent' && facts.sentAgreements === 0) {
-    guards.push({
-      severity: 'warn',
-      message:
-        'No agreement has gone to the client from Documents. If it went by email or on paper, say so in the note.',
-      fix: 'documents',
-    });
   }
 
   if (to === 'client_review' && facts.latestReview?.status !== 'open') {
@@ -677,28 +552,14 @@ export function guardsFor(
   }
 
   // These are the stages that say the client is happy with the work.
-  if ((to === 'launch_ready' || to === 'handover') && facts.latestReview?.status === 'changes_requested') {
+  if (
+    (to === 'launch_ready' || to === 'launched' || to === 'handover') &&
+    facts.latestReview?.status === 'changes_requested'
+  ) {
     guards.push({
       severity: 'warn',
       message: `The client asked for changes in round ${facts.latestReview.round} and has not approved a version since.`,
       fix: 'review',
-    });
-  }
-
-  if (to === 'contract_signed' && facts.signatureCount === 0) {
-    guards.push({
-      severity: 'warn',
-      message:
-        'No signature is on file. If it was signed on paper or by email, say so in the note.',
-        fix: 'documents',
-    });
-  }
-
-  if (to === 'proposal_accepted' && facts.openSignatureRequests > 0) {
-    guards.push({
-      severity: 'warn',
-      message: `${facts.openSignatureRequests === 1 ? 'A document is' : `${facts.openSignatureRequests} documents are`} still waiting for the client's signature. Withdraw ${facts.openSignatureRequests === 1 ? 'it' : 'them'} first.`,
-        fix: 'documents',
     });
   }
 

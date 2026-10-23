@@ -20,6 +20,7 @@ import {
 import { formText, webAddress } from '@/lib/console/form';
 import { emailedAddresses } from '@/lib/console/updates';
 import { withdrawOpenReviews } from '@/lib/console/reviews';
+import { STAGE_LABEL, STAGE_OF } from '@/lib/console/stages';
 import { STAFF_LABEL } from '@/lib/console/project-status';
 import { nobodyToEmail } from '@/lib/console/recipients';
 
@@ -61,6 +62,8 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   const expectedFrom = String(formData.get('expectedFrom') ?? '');
   const note = formText(formData, 'note');
   const acknowledged = formData.get('acknowledged') === 'on';
+  // The warnings the page showed beside the button, read before it was pressed.
+  const shown = new Set(formData.getAll('shown').map(String));
 
   if (!Object.values(ProjectStatus).includes(to as ProjectStatus)) {
     return { status: 'error', message: 'That is not a state a project can be in.' };
@@ -107,10 +110,12 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   }
 
   const warnings = guards.filter((guard) => guard.severity === 'warn');
-  if (warnings.length > 0 && !acknowledged) {
-    // Shown once, and only accepted deliberately. The acceptance then goes into
-    // the event note, so it is attributable rather than a click nobody saw.
-    return { status: 'confirm', guards: warnings, to: target };
+  // Pressing the button beside a warning is accepting it. A warning that came
+  // up after the page loaded was not seen, so that one is asked about first.
+  // The acceptance goes into the event note, so it is attributable.
+  const unseen = warnings.filter((guard) => !shown.has(guard.message));
+  if (unseen.length > 0 && !acknowledged) {
+    return { status: 'confirm', guards: unseen, to: target };
   }
 
   // Written without amounts: the stage history is read by people who do not
@@ -190,7 +195,7 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
 
   revalidatePath(`/admin/projects/${project.slug}`);
   revalidatePath('/admin/projects');
-  return { status: 'done', message: `Moved to ${STAFF_LABEL[target]}.` };
+  return { status: 'done', message: `Moved to ${STAGE_LABEL[STAGE_OF[target]]}.` };
 }
 
 export type EditState = {

@@ -31,7 +31,8 @@
     "check:links": "tsx --conditions=react-server scripts/check-links.mts",
     "check:db-tls": "tsx scripts/check-db-tls.mts",
     "check:assistant": "tsx --conditions=react-server scripts/check-assistant.mts",
-    "check:old-urls": "tsx --conditions=react-server scripts/check-old-urls.mts"
+    "check:old-urls": "tsx --conditions=react-server scripts/check-old-urls.mts",
+    "check:transitions": "tsx scripts/check-transitions.mts"
   },
   "engines": {
     "node": ">=20.9.0"

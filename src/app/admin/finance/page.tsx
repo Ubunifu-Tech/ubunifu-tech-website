@@ -24,6 +24,7 @@ import { Figures } from '@/components/console/Figures';
 import { RateForm } from './RateForm';
 import finance from './Finance.module.css';
 import styles from '../Admin.module.css';
+import { MoneyTabs } from '../MoneyTabs';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
@@ -239,11 +240,10 @@ export default async function ReportsPage({
 
   return (
     <main className={styles.page}>
+      <MoneyTabs staff={staff} current="reports" />
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            How the business <span className={styles.headingAccent}>is doing</span>
-          </h1>
+          <h1 className={styles.heading}>Reports</h1>
           <p className={styles.lead}>
             {period.months.length > 0
               ? `${period.label}, ${monthLabel(period.months[0]!)}${
@@ -255,9 +255,6 @@ export default async function ReportsPage({
           </p>
         </div>
         <div className={styles.headActions}>
-          <Link href="/finance/costs" className={`${forms.button} ${forms.quiet}`}>
-            Add costs
-          </Link>
           <a href={`/finance/export?period=${period.key}`} className={`${forms.button} ${forms.quiet}`}>
             Download as CSV
           </a>

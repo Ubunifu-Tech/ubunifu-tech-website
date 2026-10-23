@@ -3,11 +3,11 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import * as Popover from '@radix-ui/react-popover';
-import { LogOut, Settings, UserRound, Users } from 'lucide-react';
+import { LogOut, UserRound, Users } from 'lucide-react';
 import { Avatar } from './Avatar';
 import styles from './ProfileMenu.module.css';
 
-const ICONS = { profile: UserRound, team: Users, settings: Settings } as const;
+const ICONS = { profile: UserRound, team: Users } as const;
 
 export type ProfileLink = { href: string; label: string; icon: keyof typeof ICONS };
 

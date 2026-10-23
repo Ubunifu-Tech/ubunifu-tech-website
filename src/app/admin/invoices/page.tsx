@@ -8,6 +8,7 @@ import { countedPayment, liveInvoice } from '@/lib/console/live';
 import { Figures } from '@/components/console/Figures';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import styles from '../Admin.module.css';
+import { MoneyTabs } from '../MoneyTabs';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { addTo, monthOpens, shiftMonth } from '@/lib/console/finance';
@@ -60,7 +61,7 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<{ show?: string; q?: string; page?: string }>;
 }) {
-  await requirePermission('invoices');
+  const staff = await requirePermission('invoices');
   const { show, q, page } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'owing';
   const query = searchText(q);
@@ -161,14 +162,10 @@ export default async function InvoicesPage({
 
   return (
     <main className={styles.page}>
+      <MoneyTabs staff={staff} current="invoices" />
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            Money <span className={styles.headingAccent}>owed</span>
-          </h1>
-          <p className={styles.lead}>
-            Every invoice and what is still owed. Record payments as they arrive.
-          </p>
+          <h1 className={styles.heading}>Invoices</h1>
         </div>
       </div>
 

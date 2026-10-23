@@ -9,6 +9,7 @@ import {
 import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import { Figures } from '@/components/console/Figures';
 import styles from '../Admin.module.css';
+import { MoneyTabs } from '../MoneyTabs';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { renewingLine } from '@/lib/console/live';
@@ -43,7 +44,7 @@ const STATUS_BADGE: Record<string, string> = {
  * nobody opens does not need rows waiting in a table.
  */
 export default async function RenewalsPage() {
-  await requirePermission('invoices');
+  const staff = await requirePermission('invoices');
 
   await ensureRenewalEvents();
 
@@ -156,15 +157,10 @@ export default async function RenewalsPage() {
 
   return (
     <main className={styles.page}>
+      <MoneyTabs staff={staff} current="renewals" />
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            What <span className={styles.headingAccent}>renews</span>
-          </h1>
-          <p className={styles.lead}>
-            Domains, hosting and anything else billed again on a date. Nothing renews itself, so
-            invoice these on time.
-          </p>
+          <h1 className={styles.heading}>Renewals</h1>
         </div>
       </div>
 

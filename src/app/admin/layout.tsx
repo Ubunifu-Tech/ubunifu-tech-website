@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { unstable_rethrow } from 'next/navigation';
@@ -9,6 +9,7 @@ import { ConsoleNav } from './ConsoleNav';
 import { ProfileMenu, type ProfileLink } from '@/components/console/ProfileMenu';
 import { ROLE_LABEL } from '@/lib/console/people';
 import { MobileNav } from './MobileNav';
+import { SearchBox } from './SearchBox';
 import styles from './Admin.module.css';
 
 /**
@@ -48,17 +49,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const counts = await navCounts().catch(() => ({
     enquiries: 0,
-    projects: 0,
-    invoices: 0,
-    renewals: 0,
+    money: 0,
     documents: 0,
     requests: 0,
   }));
 
   const links: ProfileLink[] = [
     { href: '/profile', label: 'Your profile', icon: 'profile' },
-    // Settings opens on the Team tab, so one link covers both.
-    { href: '/settings', label: 'Settings and team', icon: 'settings' },
   ];
 
   return (
@@ -75,6 +72,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
         </div>
         <div className={styles.bandEnd}>
+          <Suspense fallback={null}>
+            <SearchBox />
+          </Suspense>
           <ProfileMenu
             name={staff.name}
             email={staff.email}

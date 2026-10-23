@@ -10,14 +10,14 @@ import {
   signingRanOut,
 } from './live';
 import { INVOICE_AHEAD_DAYS } from './renewals';
-import { LIVE_STATUSES } from './project-status';
+import { parseDateInput, todayInput } from './money';
 
 /**
  * The numbers in the sidebar.
  *
  * Only things that mean somebody is waiting, because a badge that is always
- * lit is furniture. Projects are the exception and are marked quiet in the nav
- * — a count of live work is orientation, not a summons.
+ * lit is furniture: new enquiries, money past due or due to be invoiced,
+ * documents back with us, and requests waiting on us.
  *
  * One round trip. This runs on every console page, so it is a single
  * Promise.all of counts rather than a query per section.
@@ -26,11 +26,15 @@ export async function navCounts(): Promise<NavCounts> {
   const horizon = new Date();
   horizon.setDate(horizon.getDate() + INVOICE_AHEAD_DAYS);
 
-  const [enquiries, projects, invoices, renewals, documents, requests] = await Promise.all([
+  // Midnight in Tanzania today: a typed date is noon UTC, 15:00 there.
+  const startOfToday = new Date(parseDateInput(todayInput())!.getTime() - 15 * 60 * 60_000);
+
+  const [enquiries, overdue, renewals, documents, requests] = await Promise.all([
     db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
-    db.project.count({ where: { deletedAt: null, status: { in: LIVE_STATUSES } } }),
-    // Money we have asked for and not been paid. Draft and void are neither.
-    db.invoice.count({ where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] } } }),
+    // Money asked for and past its due date. Not yet due is not yet a task.
+    db.invoice.count({
+      where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] }, dueAt: { lt: startOfToday } },
+    }),
     /**
      * Periods that are close enough to act on and have not been invoiced.
      * Counted from RenewalEvent rather than from the line's next date, so a
@@ -61,5 +65,5 @@ export async function navCounts(): Promise<NavCounts> {
     db.ticket.count({ where: { ...liveTicket, status: { in: ['open', 'triaged', 'in_progress'] } } }),
   ]);
 
-  return { enquiries, projects, invoices, renewals, documents, requests };
+  return { enquiries, money: overdue + renewals, documents, requests };
 }

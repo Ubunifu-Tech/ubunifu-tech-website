@@ -8,6 +8,7 @@ import { liveInvoice } from '@/lib/console/live';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
+import { MoneyTabs } from '../MoneyTabs';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
@@ -32,7 +33,7 @@ export default async function PaymentsPage({
 }: {
   searchParams: Promise<{ show?: string; q?: string; page?: string; client?: string; project?: string }>;
 }) {
-  await requirePermission('invoices');
+  const staff = await requirePermission('invoices');
   const { show, q, page, client: clientSlug, project: projectSlug } = await searchParams;
   const active = VIEWS.some((view) => view.key === show) ? show! : 'received';
   const query = searchText(q);
@@ -166,6 +167,7 @@ export default async function PaymentsPage({
 
   return (
     <main className={styles.page}>
+      <MoneyTabs staff={staff} current="payments" />
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <h1 className={styles.heading}>

@@ -13,6 +13,7 @@ import {
 import { Figures } from '@/components/console/Figures';
 import { AddIncome, IncomeMenu } from './IncomeForms';
 import styles from '../../Admin.module.css';
+import { MoneyTabs } from '../../MoneyTabs';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
@@ -28,7 +29,7 @@ export default async function IncomePage({
 }: {
   searchParams: Promise<{ month?: string }>;
 }) {
-  await requirePermission('finance');
+  const staff = await requirePermission('finance');
   const { month: asked } = await searchParams;
   const today = todayInput();
   const thisMonth = today.slice(0, 7);
@@ -74,15 +75,11 @@ export default async function IncomePage({
 
   return (
     <main className={styles.page}>
+      <MoneyTabs staff={staff} current="income" />
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            Other <span className={styles.headingAccent}>income</span>
-          </h1>
-          <p className={styles.lead}>
-            {monthLabel(month)}. Money that came in without an invoice here, such as what our
-            products collect. Payments against invoices go on the invoice.
-          </p>
+          <h1 className={styles.heading}>Income</h1>
+          <p className={styles.lead}>{monthLabel(month)}.</p>
         </div>
         <div className={styles.headActions}>
           <nav className={table.views} aria-label="Month">

@@ -22,6 +22,7 @@ import {
   type Choices,
 } from './CostForms';
 import styles from '../../Admin.module.css';
+import { MoneyTabs } from '../../MoneyTabs';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
@@ -36,7 +37,7 @@ export default async function CostsPage({
 }: {
   searchParams: Promise<{ month?: string }>;
 }) {
-  await requirePermission('finance');
+  const staff = await requirePermission('finance');
   const canAttach = uploadsConfigured();
   const { month: asked } = await searchParams;
   const today = todayInput();
@@ -180,11 +181,10 @@ export default async function CostsPage({
 
   return (
     <main className={styles.page}>
+      <MoneyTabs staff={staff} current="costs" />
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>
-            What the business <span className={styles.headingAccent}>spends</span>
-          </h1>
+          <h1 className={styles.heading}>Costs</h1>
           <p className={styles.lead}>{monthLabel(month)}.</p>
         </div>
         <div className={styles.headActions}>

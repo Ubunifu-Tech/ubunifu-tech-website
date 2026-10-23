@@ -5,18 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
-  Banknote,
-  BarChart3,
   Briefcase,
-  Coins,
   Building2,
   Inbox,
   LayoutDashboard,
   FileText,
   LifeBuoy,
   Newspaper,
-  Receipt,
-  RefreshCw,
   Settings,
   Wallet,
 } from 'lucide-react';
@@ -33,24 +28,18 @@ import styles from './Admin.module.css';
  */
 export type NavCounts = {
   enquiries: number;
-  projects: number;
-  invoices: number;
-  renewals: number;
+  /** Invoices past their due date, and renewal periods due to be invoiced. */
+  money: number;
   documents: number;
   requests: number;
 };
 
 const ICONS = {
-  overview: LayoutDashboard,
+  home: LayoutDashboard,
   enquiries: Inbox,
   clients: Building2,
   projects: Briefcase,
-  invoices: Receipt,
-  payments: Banknote,
-  renewals: RefreshCw,
-  reports: BarChart3,
-  income: Coins,
-  costs: Wallet,
+  money: Wallet,
   documents: FileText,
   requests: LifeBuoy,
   posts: Newspaper,
@@ -64,70 +53,45 @@ type Item = {
   icon: keyof typeof ICONS;
   /** Which count to show, when it is greater than zero. */
   count?: keyof NavCounts;
-  /** Quiet counts are information; loud ones mean somebody is waiting. */
-  quiet?: boolean;
-  /** Shown only to roles that have this. */
-  need?: Permission;
+  /** Shown only to roles that have one of these. */
+  need?: Permission[];
   /** Open to everyone, but the badge only for those whose job it is. */
   countNeed?: Permission;
-  /** Other addresses that belong to this item, such as one receipt under Payments. */
+  /** Other addresses that belong to this item, such as one receipt under Money. */
   also?: string[];
 };
 
-const GROUPS: { label?: string; items: Item[] }[] = [
-  {
-    items: [{ href: '/', label: 'Overview', icon: 'overview' }],
-  },
-  {
-    label: 'Pipeline',
-    items: [
-      { href: '/enquiries', label: 'Enquiries', icon: 'enquiries', count: 'enquiries', need: 'enquiries' },
+const MONEY_PAGES = ['/invoices', '/payments', '/receipts', '/refunds', '/renewals', '/finance'];
+
+function items(permissions: readonly Permission[]): { main: Item[]; record: Item[] } {
+  // Money opens on invoices, or on the reports for a role that sees the books
+  // but not the invoices.
+  const moneyHref = permissions.includes('invoices') ? '/invoices' : '/finance';
+  return {
+    main: [
+      { href: '/', label: 'Home', icon: 'home' },
+      { href: '/enquiries', label: 'Enquiries', icon: 'enquiries', count: 'enquiries', need: ['enquiries'] },
       { href: '/clients', label: 'Clients', icon: 'clients' },
-      { href: '/projects', label: 'Projects', icon: 'projects', count: 'projects', quiet: true },
-    ],
-  },
-  {
-    label: 'Money',
-    items: [
-      { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices', need: 'invoices' },
-      { href: '/payments', label: 'Payments', icon: 'payments', need: 'invoices', also: ['/receipts', '/refunds'] },
-      { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals', need: 'invoices' },
-      { href: '/finance/income', label: 'Income', icon: 'income', need: 'finance' },
-      { href: '/finance/costs', label: 'Costs', icon: 'costs', need: 'finance' },
-      { href: '/finance', label: 'Reports', icon: 'reports', need: 'finance' },
-    ],
-  },
-  {
-    label: 'Client care',
-    items: [
+      { href: '/projects', label: 'Projects', icon: 'projects' },
       {
-        href: '/documents',
-        label: 'Documents',
-        icon: 'documents',
-        count: 'documents',
-        need: 'documents',
+        href: moneyHref,
+        label: 'Money',
+        icon: 'money',
+        count: 'money',
+        countNeed: 'invoices',
+        need: ['invoices', 'finance'],
+        also: MONEY_PAGES,
       },
-      {
-        href: '/requests',
-        label: 'Requests',
-        icon: 'requests',
-        count: 'requests',
-        countNeed: 'requests',
-      },
+      { href: '/documents', label: 'Documents', icon: 'documents', count: 'documents', need: ['documents'] },
+      { href: '/requests', label: 'Requests', icon: 'requests', count: 'requests', countNeed: 'requests' },
+      { href: '/posts', label: 'Journal', icon: 'posts', need: ['journal'] },
     ],
-  },
-  {
-    label: 'Website',
-    items: [{ href: '/posts', label: 'Journal', icon: 'posts', need: 'journal' }],
-  },
-  {
-    label: 'Record',
-    items: [
+    record: [
       { href: '/activity', label: 'Activity', icon: 'activity' },
-      { href: '/settings', label: 'Settings', icon: 'settings' },
+      { href: '/settings/team', label: 'Settings', icon: 'settings', also: ['/settings'] },
     ],
-  },
-];
+  };
+}
 
 export function ConsoleNav({
   counts,
@@ -137,14 +101,11 @@ export function ConsoleNav({
   permissions: readonly Permission[];
 }) {
   const pathname = usePathname();
-  const groups = GROUPS.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => !item.need || permissions.includes(item.need)),
-  })).filter((group) => group.items.length > 0);
-  // The closest match is the current page: /finance/costs is Costs, not also
-  // Reports at /finance.
+  const allowed = (item: Item) => !item.need || item.need.some((need) => permissions.includes(need));
+  const { main, record } = items(permissions);
+  const groups = [main.filter(allowed), record.filter(allowed)];
   const under = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const matching = GROUPS.flatMap((group) => group.items)
+  const matching = [...main, ...record]
     .filter((item) =>
       item.href === '/' ? pathname === '/' : under(item.href) || (item.also ?? []).some(under),
     )
@@ -153,9 +114,8 @@ export function ConsoleNav({
   return (
     <nav className={styles.nav} aria-label="Console">
       {groups.map((group, index) => (
-        <React.Fragment key={group.label ?? index}>
-          {group.label && <p className={styles.navGroupLabel}>{group.label}</p>}
-          {group.items.map((item) => {
+        <div key={index} className={index > 0 ? styles.navRecord : styles.navMain}>
+          {group.map((item) => {
             const Icon = ICONS[item.icon];
             const current = matching?.href === item.href;
             const count =
@@ -172,17 +132,11 @@ export function ConsoleNav({
               >
                 <Icon size={17} strokeWidth={1.8} className={styles.navIcon} aria-hidden="true" />
                 <span className={styles.navText}>{item.label}</span>
-                {count > 0 && (
-                  <span
-                    className={`${styles.navCount} ${item.quiet ? styles.navCountQuiet : ''}`}
-                  >
-                    {count > 99 ? '99+' : count}
-                  </span>
-                )}
+                {count > 0 && <span className={styles.navCount}>{count > 99 ? '99+' : count}</span>}
               </Link>
             );
           })}
-        </React.Fragment>
+        </div>
       ))}
     </nav>
   );

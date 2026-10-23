@@ -72,6 +72,7 @@ import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 import { DOCUMENT_KINDS } from '../../documents/kinds';
 import { feeRow } from '@/lib/console/fees';
+import { PaymentsTable } from '@/components/console/PaymentsTable';
 
 const TONE_CLASS: Record<string, string> = {
   neutral: '',
@@ -315,7 +316,8 @@ export default async function ProjectPage({
     notFound();
   }
 
-  const [transitions, facts, billable, org, lastList] = await Promise.all([
+  const paymentsHere = { reversedAt: null, invoice: { projectId: project.id } };
+  const [transitions, facts, billable, org, lastList, payments] = await Promise.all([
     transitionsFor(project),
     loadGuardFacts(project.id),
     billableLines(project.id),
@@ -325,6 +327,28 @@ export default async function ProjectPage({
       orderBy: { createdAt: 'desc' },
       select: { createdAt: true },
     }),
+    tab === 'fees' && mayMoney
+      ? Promise.all([
+          db.payment
+            .findMany({
+              where: paymentsHere,
+              orderBy: [{ receivedAt: 'desc' }, { createdAt: 'desc' }],
+              take: 10,
+              select: {
+                id: true,
+                receivedAt: true,
+                amountMinor: true,
+                currency: true,
+                method: true,
+                reference: true,
+                receipt: { select: { number: true } },
+                invoice: { select: { number: true, project: { select: { name: true, slug: true } } } },
+              },
+            })
+            .then(numbers),
+          db.payment.count({ where: paymentsHere }),
+        ])
+      : null,
   ]);
 
   // A usage fee is offered with no price too: its amount is typed each time.
@@ -1257,6 +1281,14 @@ export default async function ProjectPage({
                   </table>
                 </div>
               </div>
+
+              {payments && (
+                <PaymentsTable
+                  rows={payments[0]}
+                  total={payments[1]}
+                  allHref={`/payments?project=${project.slug}`}
+                />
+              )}
             </>
           )}
         </div>

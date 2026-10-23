@@ -12,6 +12,29 @@
   flex-wrap: wrap;
 }
 
+.toolbarLink {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  text-decoration: none;
+}
+
+.toolbarLink:hover {
+  color: var(--text-primary);
+}
+
+.toolbarEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.toolbarNote {
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+}
+
 /* Paper. Everything that is screen furniture goes; the sheet becomes the page. */
 @media print {
   .toolbar,

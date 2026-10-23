@@ -8,7 +8,7 @@ import { EmailReceiptButton } from '../../invoices/InvoiceControls';
 import { PrintButton } from '../PrintButton';
 import styles from '../../Admin.module.css';
 import sheet from '../Receipt.module.css';
-import { numbers } from '@/lib/console/money';
+import { formatShortDate, numbers } from '@/lib/console/money';
 
 export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -77,16 +77,42 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
   const { payment } = receipt;
   const { invoice } = payment;
 
+  const lastEmail = await db.emailLog.findFirst({
+    where: { entityType: 'Receipt', entityId: receipt.id, template: 'receipt_sent' },
+    orderBy: { createdAt: 'desc' },
+    select: { status: true, toAddress: true, sentAt: true, createdAt: true },
+  });
+  const emailed = !lastEmail
+    ? 'Not emailed yet'
+    : lastEmail.status === 'sent'
+      ? `Emailed to ${lastEmail.toAddress}, ${formatShortDate(lastEmail.sentAt ?? lastEmail.createdAt)}`
+      : lastEmail.status === 'failed'
+        ? 'The email did not send'
+        : 'Sending';
+
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
         <Link href={`/invoices/${invoice.number}`} className={styles.backLink}>
           ← {invoice.number}
         </Link>
-        <PrintButton />
-        {!payment.reversedAt && !invoice.client.deletedAt && !invoice.project?.deletedAt && (
-          <EmailReceiptButton receiptId={receipt.id} />
+        {!invoice.client.deletedAt && (
+          <Link href={`/clients/${invoice.client.slug}`} className={sheet.toolbarLink}>
+            {invoice.client.name}
+          </Link>
         )}
+        {invoice.project && !invoice.project.deletedAt && (
+          <Link href={`/projects/${invoice.project.slug}`} className={sheet.toolbarLink}>
+            {invoice.project.name}
+          </Link>
+        )}
+        <div className={sheet.toolbarEnd}>
+          {!payment.reversedAt && <span className={sheet.toolbarNote}>{emailed}</span>}
+          {!payment.reversedAt && !invoice.client.deletedAt && !invoice.project?.deletedAt && (
+            <EmailReceiptButton receiptId={receipt.id} />
+          )}
+          <PrintButton />
+        </div>
       </div>
 
       <ReceiptSheet

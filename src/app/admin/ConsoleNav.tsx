@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Activity,
+  Banknote,
   BarChart3,
   Briefcase,
   Coins,
@@ -45,6 +46,7 @@ const ICONS = {
   clients: Building2,
   projects: Briefcase,
   invoices: Receipt,
+  payments: Banknote,
   renewals: RefreshCw,
   reports: BarChart3,
   income: Coins,
@@ -68,6 +70,8 @@ type Item = {
   need?: Permission;
   /** Open to everyone, but the badge only for those whose job it is. */
   countNeed?: Permission;
+  /** Other addresses that belong to this item, such as one receipt under Payments. */
+  also?: string[];
 };
 
 const GROUPS: { label?: string; items: Item[] }[] = [
@@ -86,6 +90,7 @@ const GROUPS: { label?: string; items: Item[] }[] = [
     label: 'Money',
     items: [
       { href: '/invoices', label: 'Invoices', icon: 'invoices', count: 'invoices', need: 'invoices' },
+      { href: '/payments', label: 'Payments', icon: 'payments', need: 'invoices', also: ['/receipts', '/refunds'] },
       { href: '/renewals', label: 'Renewals', icon: 'renewals', count: 'renewals', need: 'invoices' },
       { href: '/finance/income', label: 'Income', icon: 'income', need: 'finance' },
       { href: '/finance/costs', label: 'Costs', icon: 'costs', need: 'finance' },
@@ -138,11 +143,10 @@ export function ConsoleNav({
   })).filter((group) => group.items.length > 0);
   // The closest match is the current page: /finance/costs is Costs, not also
   // Reports at /finance.
+  const under = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const matching = GROUPS.flatMap((group) => group.items)
     .filter((item) =>
-      item.href === '/'
-        ? pathname === '/'
-        : pathname === item.href || pathname.startsWith(`${item.href}/`),
+      item.href === '/' ? pathname === '/' : under(item.href) || (item.also ?? []).some(under),
     )
     .sort((a, b) => b.href.length - a.href.length)[0];
 

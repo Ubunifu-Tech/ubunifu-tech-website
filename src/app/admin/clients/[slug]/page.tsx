@@ -26,6 +26,7 @@ import { ForgetParams } from '@/components/console/ForgetParams';
 import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
 import { RemoveClient } from './RemoveClient';
+import { PaymentsTable } from '@/components/console/PaymentsTable';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
@@ -147,7 +148,11 @@ export default async function ClientPage({
   }
 
   const mayRunProjects = can(staff, 'projects');
-  const [activity, removal, removedProjects, removedPeople] = await Promise.all([
+  const paymentsHere = {
+    reversedAt: null,
+    invoice: { clientId: client.id, OR: [{ projectId: null }, { project: { deletedAt: null } }] },
+  };
+  const [activity, removal, removedProjects, removedPeople, payments] = await Promise.all([
     activityForClient(staff, client.id),
     mayManage
       ? clientRemovalCounts(client.id).then(({ owing, ...counts }) => ({
@@ -171,6 +176,28 @@ export default async function ClientPage({
           select: { id: true, name: true, email: true, deletedAt: true },
         })
       : [],
+    seesMoney
+      ? Promise.all([
+          db.payment
+            .findMany({
+              where: paymentsHere,
+              orderBy: [{ receivedAt: 'desc' }, { createdAt: 'desc' }],
+              take: 10,
+              select: {
+                id: true,
+                receivedAt: true,
+                amountMinor: true,
+                currency: true,
+                method: true,
+                reference: true,
+                receipt: { select: { number: true } },
+                invoice: { select: { number: true, project: { select: { name: true, slug: true } } } },
+              },
+            })
+            .then(numbers),
+          db.payment.count({ where: paymentsHere }),
+        ])
+      : null,
   ]);
 
   // Removed people whose address now belongs to someone at another client
@@ -475,6 +502,15 @@ export default async function ClientPage({
               </table>
             </div>
           </div>
+        )}
+
+        {payments && (
+          <PaymentsTable
+            rows={payments[0]}
+            total={payments[1]}
+            allHref={`/payments?client=${client.slug}`}
+            showProject
+          />
         )}
 
         <div className={table.frame}>

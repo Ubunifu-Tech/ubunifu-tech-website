@@ -195,6 +195,7 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
 
   revalidatePath(`/admin/projects/${project.slug}`);
   revalidatePath('/admin/projects');
+  revalidatePath('/admin');
   return { status: 'done', message: `Moved to ${STAGE_LABEL[STAGE_OF[target]]}.` };
 }
 
@@ -246,6 +247,7 @@ export async function toggleDeliverable(
   });
 
   revalidatePath(`/admin/projects/${deliverable.phase.project.slug}`);
+  revalidatePath('/admin');
   return { status: 'done' };
 }
 

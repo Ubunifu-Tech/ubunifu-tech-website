@@ -266,13 +266,6 @@ async function pickBillables(projectId: string, chosen: string[], typed?: FormDa
 }
 
 /**
- * Raises an invoice from a project's fee lines.
- *
- * The lines are copied, not referenced. Re-pricing the project afterwards must
- * not silently rewrite a demand for money the client is already holding, so the
- * invoice keeps its own snapshot of what was charged and why.
- */
-/**
  * Due after the payment terms set in billing settings: calendar days from
  * today in Tanzania, stored at noon UTC like a typed date.
  */
@@ -281,6 +274,13 @@ async function dueOnTerms(): Promise<Date> {
   return daysFromToday(paymentTermsDays);
 }
 
+/**
+ * Raises an invoice from a project's fee lines.
+ *
+ * The lines are copied, not referenced. Re-pricing the project afterwards must
+ * not silently rewrite a demand for money the client is already holding, so the
+ * invoice keeps its own snapshot of what was charged and why.
+ */
 export async function createInvoice(
   _previous: BillingState,
   formData: FormData,
@@ -339,6 +339,8 @@ export async function createInvoice(
 
   revalidatePath('/admin/invoices');
   revalidatePath(`/admin/projects/${project.slug}`);
+  revalidatePath('/admin/renewals');
+  revalidatePath('/admin');
   redirect(`/invoices/${invoice.number}`);
 }
 

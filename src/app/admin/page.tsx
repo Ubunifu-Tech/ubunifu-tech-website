@@ -1,513 +1,393 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
-import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
-import {
-  formatMoney,
-  formatRelative,
-  formatShortDate,
-  isPastDay,
-  numbers,
-} from '@/lib/console/money';
-import { recentActivity } from '@/lib/console/activity';
-import { liveEnquiry, liveInvoice, renewingLine } from '@/lib/console/live';
-import { ActivityFeed } from '@/components/console/ActivityFeed';
+import { daysFromToday, formatMoney, formatRelative, formatShortDate, isPastDay, numbers, toDateInputValue } from '@/lib/console/money';
+import { liveDocument, liveEnquiry, liveInvoice, liveTicket, renewingLine, signingRanOut } from '@/lib/console/live';
+import { periodLabel, INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
 import { Callout } from '@/components/console/Callout';
-import { Figures, type Figure } from '@/components/console/Figures';
-import styles from './Admin.module.css';
-import forms from '@/styles/forms.module.css';
-import table from '@/styles/table.module.css';
 import { unresolvedEmailFailures } from '@/lib/console/email-failures';
-import { INVOICE_AHEAD_DAYS } from '@/lib/console/renewals';
 import { greeting } from '@/lib/console/greeting';
+import { InvoiceIt, StartWork, TaskDone } from './HomeActions';
+import styles from './Admin.module.css';
+import table from '@/styles/table.module.css';
 
 // Absolute: a layout template does not apply to its own sibling page, so a
 // plain string here would inherit the marketing site's title template.
-export const metadata = { title: { absolute: 'Overview · Ubunifu Console' } };
+export const metadata = { title: { absolute: 'Home · Ubunifu Console' } };
 
-const TONE_CLASS: Record<string, string> = {
-  neutral: '',
-  live: forms.badgeLive,
-  good: forms.badgeGood,
-  warn: forms.badgeWarn,
-  bad: forms.badgeBad,
+/** How many of each kind are listed; the lead line counts all of them. */
+const EACH = 10;
+
+type Row = {
+  key: string;
+  type: string;
+  what: string;
+  href: string;
+  client: string | null;
+  since: Date;
+  amount: string | null;
+  action: React.ReactNode;
 };
 
 /**
- * The desk.
- *
- * A row of figures that each open the list behind them, the things somebody
- * is waiting on — oldest first — and what happened lately. Every number on
- * this screen is something you can act on; none of it is a vanity total.
+ * Home: one list of what needs this person, oldest first, each row with the
+ * press that finishes it where one can. A row leaves the list once it is done.
  */
-
-/** Morning, afternoon or evening in Tanzania, not wherever the server is. */
-export default async function AdminHome() {
+export default async function Home() {
   const staff = await requireStaff();
   const now = new Date();
   const soon = new Date(now);
   soon.setDate(soon.getDate() + INVOICE_AHEAD_DAYS);
-  const myOpenTasks = {
-    assigneeId: staff.id,
-    isComplete: false,
-    phase: {
-      project: { deletedAt: null, status: { notIn: ['closed' as const, 'cancelled' as const] } },
-    },
-  };
-
-  const [
-    newEnquiries,
-    uninvited,
-    unpaidInvoices,
-    dueRenewals,
-    failedEmails,
-    waitingProjects,
-    liveProjects,
-    activity,
-    enquiryCount,
-    pipelineCount,
-    myTasks,
-    myTaskCount,
-    enquiriesThisWeek,
-    enquiriesWeekBefore,
-  ] = await Promise.all([
-    db.enquiry.findMany({
-      where: { ...liveEnquiry, status: 'new' },
-      orderBy: { createdAt: 'asc' },
-      take: 10,
-      select: { id: true, name: true, subject: true, createdAt: true },
-    }).then(numbers),
-    // The same clients the "Portal not set up" list shows, so the figure and
-    // the list it opens always agree.
-    db.client.count({
-      where: {
-        deletedAt: null,
-        contacts: {
-          some: { deletedAt: null, isPrimary: true, canSignIn: true, activatedAt: null },
-        },
-      },
-    }),
-    // Every open invoice, not a capped list: the total owed is added up from
-    // these, and a total of the first ten would quietly be wrong.
-    db.invoice.findMany({
-      where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] } },
-      orderBy: { dueAt: 'asc' },
-      select: {
-        id: true,
-        number: true,
-        currency: true,
-        totalMinor: true,
-        paidMinor: true,
-        dueAt: true,
-        client: { select: { name: true } },
-      },
-    }).then(numbers),
-    // Counted as the sidebar badge counts them: periods not yet invoiced.
-    db.renewalEvent.count({
-      where: { status: 'pending', dueAt: { lte: soon }, lineItem: renewingLine },
-    }),
-    // Only those not put right by sending again since.
-    unresolvedEmailFailures(staff).then((rows) => rows.length),
-    // Projects where the next move is ours; filtered below to drop those
-    // waiting on the client.
-    db.project.findMany({
-      where: {
-        deletedAt: null,
-        status: {
-          in: [
-            'lead',
-            'proposal_draft',
-            'proposal_sent',
-            'proposal_accepted',
-            'contract_sent',
-            'client_review',
-          ],
-        },
-      },
-      orderBy: { updatedAt: 'asc' },
-      take: 40,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        reference: true,
-        status: true,
-        updatedAt: true,
-        client: { select: { name: true } },
-        reviews: {
-          where: { status: { not: 'withdrawn' } },
-          orderBy: { round: 'desc' },
-          take: 1,
-          select: { status: true, answeredAt: true },
-        },
-        documents: {
-          where: { status: 'changes_requested' },
-          orderBy: { updatedAt: 'desc' },
-          take: 1,
-          select: { reference: true, updatedAt: true },
-        },
-      },
-    }).then(numbers),
-    db.project.count({ where: { deletedAt: null, status: { in: LIVE_STATUSES } } }),
-    recentActivity(staff, 8),
-    // Counted separately: the lists above are capped for the table, and a
-    // capped length shown as a total would quietly read "10" when it is 14.
-    db.enquiry.count({ where: { ...liveEnquiry, status: 'new' } }),
-    db.project.count({ where: { deletedAt: null, status: { in: PIPELINE_STATUSES } } }),
-    db.deliverable.findMany({
-      where: myOpenTasks,
-      orderBy: [{ dueAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
-      take: 8,
-      select: {
-        id: true,
-        title: true,
-        dueAt: true,
-        phase: { select: { project: { select: { name: true, slug: true } } } },
-      },
-    }).then(numbers),
-    // The list shows the first eight; the count says how many there are.
-    db.deliverable.count({ where: myOpenTasks }),
-    db.enquiry.count({
-      where: {
-        ...liveEnquiry,
-        createdAt: { gte: new Date(now.getTime() - 7 * 86_400_000) },
-        status: { not: 'spam' },
-      },
-    }),
-    db.enquiry.count({
-      where: {
-        ...liveEnquiry,
-        createdAt: {
-          gte: new Date(now.getTime() - 14 * 86_400_000),
-          lt: new Date(now.getTime() - 7 * 86_400_000),
-        },
-        status: { not: 'spam' },
-      },
-    }),
-  ]);
-
-  const owedByCurrency = new Map<string, number>();
-  const overdueByCurrency = new Map<string, number>();
-  let overdueCount = 0;
-  for (const invoice of unpaidInvoices) {
-    const owed = Math.max(0, invoice.totalMinor - invoice.paidMinor);
-    owedByCurrency.set(invoice.currency, (owedByCurrency.get(invoice.currency) ?? 0) + owed);
-    if (owed > 0 && isPastDay(invoice.dueAt, now)) {
-      overdueByCurrency.set(invoice.currency, (overdueByCurrency.get(invoice.currency) ?? 0) + owed);
-      overdueCount += 1;
-    }
-  }
-  const amounts = (byCurrency: Map<string, number>) => {
-    const parts = [...byCurrency].filter(([, amount]) => amount > 0);
-    return parts.length === 0
-      ? formatMoney(0, 'USD')
-      : parts.map(([currency, amount]) => formatMoney(amount, currency)).join(' + ');
-  };
-
-  type Waiting = {
-    id: string;
-    what: string;
-    who: string;
-    since: Date;
-    href: string;
-    badge: string;
-    tone: string;
-  };
+  const weekOut = daysFromToday(7);
 
   const seesEnquiries = can(staff, 'enquiries');
+  const seesRequests = can(staff, 'requests');
+  const seesDocuments = can(staff, 'documents');
+  const runsProjects = can(staff, 'projects');
   const seesMoney = can(staff, 'invoices');
 
-  // Only to those who move projects on, and only where the move is ours:
-  // a proposal, agreement or review still with the client is not.
-  const ourMove = (can(staff, 'projects') ? waitingProjects : []).filter((project) => {
-    if (project.status === 'client_review') {
-      const review = project.reviews[0];
-      return review !== undefined && review.status !== 'open';
-    }
-    if (project.status === 'proposal_sent' || project.status === 'contract_sent') {
-      return project.documents.length > 0;
-    }
-    return true;
-  });
-  const overdue = (seesMoney ? unpaidInvoices : []).filter((invoice) =>
-    isPastDay(invoice.dueAt, now),
-  );
-  // The table shows at most ten of each kind; the sentence and the count say
-  // how many are really waiting.
-  const waitingTotal = (seesEnquiries ? enquiryCount : 0) + ourMove.length + overdue.length;
+  const enquiriesWhere = { ...liveEnquiry, status: 'new' as const };
+  const requestsWhere = { ...liveTicket, status: { in: ['open' as const, 'triaged' as const, 'in_progress' as const] } };
+  const documentsWhere = { ...liveDocument, OR: [{ status: 'changes_requested' as const }, signingRanOut(now)] };
+  const renewalsWhere = { status: 'pending' as const, dueAt: { lte: soon }, lineItem: renewingLine };
+  const draftsWhere = { ...liveInvoice, status: 'draft' as const };
+  const tasksWhere = {
+    assigneeId: staff.id,
+    isComplete: false,
+    dueAt: { lte: weekOut },
+    phase: { project: { deletedAt: null, status: { notIn: ['closed' as const, 'cancelled' as const] } } },
+  };
 
-  const waiting: Waiting[] = [
-    ...(seesEnquiries ? newEnquiries : []).map((enquiry) => ({
-      id: `e-${enquiry.id}`,
+  const [failedEmails, enquiries, requests, documents, projects, owing, renewals, drafts, tasks, counts] =
+    await Promise.all([
+      unresolvedEmailFailures(staff).then((rows) => rows.length),
+      seesEnquiries
+        ? db.enquiry.findMany({
+            where: enquiriesWhere,
+            orderBy: { createdAt: 'asc' },
+            take: EACH,
+            select: { id: true, name: true, subject: true, createdAt: true },
+          })
+        : [],
+      seesRequests
+        ? db.ticket.findMany({
+            where: requestsWhere,
+            orderBy: { createdAt: 'asc' },
+            take: EACH,
+            select: { reference: true, subject: true, createdAt: true, client: { select: { name: true } } },
+          })
+        : [],
+      seesDocuments
+        ? db.document.findMany({
+            where: documentsWhere,
+            orderBy: { updatedAt: 'asc' },
+            take: EACH,
+            select: {
+              reference: true,
+              title: true,
+              status: true,
+              updatedAt: true,
+              project: { select: { client: { select: { name: true } } } },
+            },
+          })
+        : [],
+      // Deals waiting on our decision, signed deals not started, and reviews
+      // the client has answered. A deal with a document out is waiting on
+      // them, and one sent back with changes is listed under its document.
+      runsProjects
+        ? db.project
+            .findMany({
+              where: {
+                deletedAt: null,
+                status: { in: ['lead', 'proposal_draft', 'proposal_accepted', 'contract_signed', 'client_review'] },
+              },
+              orderBy: { updatedAt: 'asc' },
+              take: 40,
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                status: true,
+                updatedAt: true,
+                client: { select: { name: true } },
+                reviews: {
+                  where: { status: { not: 'withdrawn' } },
+                  orderBy: { round: 'desc' },
+                  take: 1,
+                  select: { status: true, answeredAt: true },
+                },
+              },
+            })
+            .then(numbers)
+        : [],
+      seesMoney
+        ? db.invoice
+            .findMany({
+              where: { ...liveInvoice, status: { in: ['sent', 'part_paid', 'overdue'] } },
+              orderBy: { dueAt: 'asc' },
+              select: {
+                number: true,
+                currency: true,
+                totalMinor: true,
+                paidMinor: true,
+                dueAt: true,
+                client: { select: { name: true } },
+              },
+            })
+            .then(numbers)
+        : [],
+      seesMoney
+        ? db.renewalEvent
+            .findMany({
+              where: renewalsWhere,
+              orderBy: { dueAt: 'asc' },
+              take: EACH,
+              select: {
+                id: true,
+                dueAt: true,
+                periodStart: true,
+                periodEnd: true,
+                lineItem: {
+                  select: {
+                    label: true,
+                    amountMinor: true,
+                    quantity: true,
+                    currency: true,
+                    project: { select: { id: true, client: { select: { name: true } } } },
+                  },
+                },
+              },
+            })
+            .then(numbers)
+        : [],
+      seesMoney
+        ? db.invoice
+            .findMany({
+              where: draftsWhere,
+              orderBy: { createdAt: 'asc' },
+              take: EACH,
+              select: { number: true, createdAt: true, totalMinor: true, currency: true, client: { select: { name: true } } },
+            })
+            .then(numbers)
+        : [],
+      db.deliverable
+        .findMany({
+          where: tasksWhere,
+          orderBy: { dueAt: 'asc' },
+          take: EACH,
+          select: {
+            id: true,
+            title: true,
+            dueAt: true,
+            phase: { select: { project: { select: { slug: true, name: true, client: { select: { name: true } } } } } },
+          },
+        })
+        .then(numbers),
+      Promise.all([
+        seesEnquiries ? db.enquiry.count({ where: enquiriesWhere }) : 0,
+        seesRequests ? db.ticket.count({ where: requestsWhere }) : 0,
+        seesDocuments ? db.document.count({ where: documentsWhere }) : 0,
+        seesMoney ? db.renewalEvent.count({ where: renewalsWhere }) : 0,
+        seesMoney ? db.invoice.count({ where: draftsWhere }) : 0,
+        db.deliverable.count({ where: tasksWhere }),
+      ]),
+    ]);
+
+  const deals = projects.filter((project) => {
+    if (project.status !== 'client_review') return true;
+    const review = project.reviews[0];
+    return review !== undefined && review.status !== 'open' && review.answeredAt !== null;
+  });
+  const overdue = owing.filter((invoice) => invoice.totalMinor > invoice.paidMinor && isPastDay(invoice.dueAt, now));
+
+  const rows: Row[] = [
+    ...enquiries.map((enquiry) => ({
+      key: `e-${enquiry.id}`,
+      type: 'New enquiry',
       what: enquiry.subject,
-      who: enquiry.name,
-      since: enquiry.createdAt,
       href: `/enquiries/${enquiry.id}`,
-      badge: 'New enquiry',
-      tone: forms.badgeWarn,
+      client: enquiry.name,
+      since: enquiry.createdAt,
+      amount: null,
+      action: null,
     })),
-    ...ourMove
-      .slice(0, 10)
-      .map((project) => {
-        // At review, the client's answer is the news: it is what moves next.
-        const review = project.status === 'client_review' ? project.reviews[0] : undefined;
-        const answeredAt = review && review.status !== 'open' ? review.answeredAt : null;
-        const changes = project.documents[0];
-        return {
-          id: `p-${project.id}`,
-          what: project.name,
-          who: project.client.name,
-          since: answeredAt ?? changes?.updatedAt ?? project.updatedAt,
-          href: changes
-            ? `/documents/${changes.reference}`
-            : `/projects/${project.slug}${review ? '#review' : ''}`,
-          badge: answeredAt
-            ? review!.status === 'approved'
-              ? 'Client approved'
-              : 'Changes asked for'
-            : changes
-              ? 'Changes asked for'
-              : STAFF_LABEL[project.status],
-          tone: answeredAt
-            ? review!.status === 'approved'
-              ? forms.badgeGood
-              : forms.badgeWarn
-            : changes
-              ? forms.badgeWarn
-              : TONE_CLASS[STATUS_TONE[project.status]],
-        };
-      }),
-    ...overdue
-      .slice(0, 10)
-      .map((invoice) => ({
-        id: `i-${invoice.id}`,
-        what: `${invoice.number}: ${formatMoney(
-          invoice.totalMinor - invoice.paidMinor,
-          invoice.currency,
-        )} outstanding`,
-        who: invoice.client.name,
-        since: invoice.dueAt!,
-        href: `/invoices/${invoice.number}`,
-        badge: 'Overdue',
-        tone: forms.badgeBad,
-      })),
+    ...requests.map((request) => ({
+      key: `t-${request.reference}`,
+      type: 'Request',
+      what: request.subject,
+      href: `/requests/${request.reference}`,
+      client: request.client.name,
+      since: request.createdAt,
+      amount: null,
+      action: null,
+    })),
+    ...documents.map((document) => ({
+      key: `d-${document.reference}`,
+      type: document.status === 'changes_requested' ? 'Changes asked for' : 'Signing time ran out',
+      what: document.title,
+      href: `/documents/${document.reference}`,
+      client: document.project.client.name,
+      since: document.updatedAt,
+      amount: null,
+      action: null,
+    })),
+    ...deals.slice(0, EACH).map((project) => {
+      const review = project.status === 'client_review' ? project.reviews[0] : undefined;
+      return {
+        key: `p-${project.id}`,
+        type: review
+          ? review.status === 'approved'
+            ? 'Client approved'
+            : 'Changes asked for'
+          : project.status === 'contract_signed'
+            ? 'Agreement signed'
+            : 'Deal',
+        what: project.name,
+        href: `/projects/${project.slug}${review ? '#review' : ''}`,
+        client: project.client.name,
+        since: review?.answeredAt ?? project.updatedAt,
+        amount: null,
+        action: project.status === 'contract_signed' ? <StartWork projectId={project.id} from={project.status} /> : null,
+      };
+    }),
+    ...overdue.slice(0, EACH).map((invoice) => ({
+      key: `i-${invoice.number}`,
+      type: 'Overdue',
+      what: invoice.number,
+      href: `/invoices/${invoice.number}`,
+      client: invoice.client.name,
+      since: invoice.dueAt!,
+      amount: formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency),
+      action: (
+        <Link href={`/payments/new?invoice=${invoice.number}`} className={table.action}>
+          Record a payment
+        </Link>
+      ),
+    })),
+    ...renewals.map((renewal) => ({
+      key: `r-${renewal.id}`,
+      type: 'Renewal due',
+      what: `${renewal.lineItem.label}, ${periodLabel(renewal.periodStart, renewal.periodEnd)}`,
+      href: '/renewals',
+      client: renewal.lineItem.project.client.name,
+      since: renewal.dueAt,
+      amount: formatMoney(renewal.lineItem.amountMinor * renewal.lineItem.quantity, renewal.lineItem.currency),
+      action: (
+        <InvoiceIt
+          projectId={renewal.lineItem.project.id}
+          billable={`renewal:${renewal.id}`}
+          dueAt={toDateInputValue(renewal.dueAt)}
+        />
+      ),
+    })),
+    ...drafts.map((invoice) => ({
+      key: `x-${invoice.number}`,
+      type: 'Draft, not sent',
+      what: invoice.number,
+      href: `/invoices/${invoice.number}`,
+      client: invoice.client.name,
+      since: invoice.createdAt,
+      amount: formatMoney(invoice.totalMinor, invoice.currency),
+      action: null,
+    })),
+    ...tasks.map((task) => ({
+      key: `k-${task.id}`,
+      type: isPastDay(task.dueAt, now) ? 'Your task, late' : 'Your task',
+      what: task.title,
+      href: `/projects/${task.phase.project.slug}?tab=plan`,
+      client: task.phase.project.client.name,
+      since: task.dueAt!,
+      amount: null,
+      action: <TaskDone deliverableId={task.id} title={task.title} />,
+    })),
   ].sort((a, b) => a.since.getTime() - b.since.getTime());
 
-  const firstName = staff.name.split(' ')[0];
-
-  // Problems, not figures: each one is something that has already gone wrong.
-  const problems: React.ReactNode[] = [];
-  if (failedEmails > 0) {
-    problems.push(
-      <>
-        {failedEmails} {failedEmails === 1 ? 'email' : 'emails'} did not send.{' '}
-        <Link href="/activity?show=failures" className={styles.inlineLink}>
-          See which ones
-        </Link>
-      </>,
-    );
-  }
-  if (seesMoney && overdueCount > 0) {
-    problems.push(
-      <>
-        {overdueCount} {overdueCount === 1 ? 'invoice is' : 'invoices are'} past due,{' '}
-        {amounts(overdueByCurrency)} in all.{' '}
-        <Link href="/invoices" className={styles.inlineLink}>
-          Open invoices
-        </Link>
-      </>,
-    );
-  }
-
-  const figures: Figure[] = [
-    {
-      label: 'Active projects',
-      value: liveProjects,
-      note: `${pipelineCount} more in the pipeline`,
-      href: '/projects?view=list',
-    },
-  ];
-  if (seesMoney) {
-    figures.push({
-      label: 'Owed to us',
-      value: amounts(owedByCurrency),
-      note:
-        unpaidInvoices.length === 0
-          ? 'No invoices open'
-          : `${unpaidInvoices.length} ${unpaidInvoices.length === 1 ? 'invoice' : 'invoices'} open`,
-      href: '/invoices',
-    });
-  }
-  if (seesEnquiries) {
-    figures.push({
-      label: 'New enquiries',
-      value: enquiryCount,
-      note: `${enquiriesThisWeek} this week, ${enquiriesWeekBefore} the week before`,
-      href: '/enquiries?show=new',
-    });
-  }
-  if (seesMoney) {
-    figures.push({
-      label: 'Renewals due',
-      value: dueRenewals,
-      note: `In the next ${INVOICE_AHEAD_DAYS} days`,
-      href: '/renewals',
-    });
-  }
-  if (figures.length < 4) {
-    figures.push({
-      label: 'Portal not set up',
-      value: uninvited,
-      note: 'Their main contact has not signed in yet',
-      href: '/clients?show=portal',
-    });
-  }
+  const [enquiryCount, requestCount, documentCount, renewalCount, draftCount, taskCount] = counts;
+  const total =
+    enquiryCount + requestCount + documentCount + deals.length + overdue.length + renewalCount + draftCount + taskCount;
 
   return (
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
           <h1 className={styles.heading}>
-            {greeting(now)}, {firstName}
+            {greeting(now)}, {staff.name.split(' ')[0]}
           </h1>
           <p className={styles.lead}>
-            {waitingTotal === 0
-              ? 'All clear. Nothing needs you right now.'
-              : `${waitingTotal} ${waitingTotal === 1 ? 'thing needs' : 'things need'} your attention.`}
+            {total === 0 ? 'Nothing needs you.' : `${total} ${total === 1 ? 'thing needs' : 'things need'} you.`}
           </p>
         </div>
-        {can(staff, 'clients') && (
-          <Link href="/clients/new" className={forms.button}>
-            Add a client
-          </Link>
-        )}
       </div>
 
-      {problems.length > 0 && (
-        <Callout kind="bad" items={problems.length > 1 ? problems : undefined}>
-          {problems.length === 1 ? problems[0] : undefined}
+      {failedEmails > 0 && (
+        <Callout kind="bad">
+          {failedEmails} {failedEmails === 1 ? 'email' : 'emails'} did not send.{' '}
+          <Link href="/activity?show=failures" className={styles.inlineLink}>
+            See which ones
+          </Link>
         </Callout>
       )}
 
-      <Figures items={figures} />
-
-      <div className={styles.columns}>
-        <div className={table.frame}>
-          <div className={table.toolbar}>
-            <div className={table.toolbarText}>
-              <h2 className={table.title}>Needs your attention</h2>
-              <span className={table.count}>{waitingTotal}</span>
-            </div>
-          </div>
-          <div className={table.scroll}>
-            <table className={`${table.table} ${table.compact}`}>
-              <thead>
+      <div className={table.frame}>
+        <div className={table.scroll}>
+          <table className={table.table}>
+            <thead>
+              <tr>
+                <th className={table.th} scope="col">
+                  Type
+                </th>
+                <th className={table.th} scope="col">
+                  What
+                </th>
+                <th className={table.th} scope="col">
+                  Client
+                </th>
+                <th className={table.th} scope="col">
+                  When
+                </th>
+                <th className={`${table.th} ${table.numericHead}`} scope="col">
+                  Amount
+                </th>
+                <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                  <span className={table.muted}>Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
                 <tr>
-                  <th className={table.th} scope="col">
-                    What
-                  </th>
-                  <th className={table.th} scope="col">
-                    Client
-                  </th>
-                  <th className={table.th} scope="col">
-                    Since
-                  </th>
-                  <th className={table.th} scope="col">
-                    Status
-                  </th>
+                  <td className={table.emptyCell} colSpan={6}>
+                    <p className={table.emptyTitle}>Nothing needs you right now.</p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {waiting.length === 0 ? (
-                  <tr>
-                    <td className={table.emptyCell} colSpan={4}>
-                      <p className={table.emptyTitle}>You are all caught up</p>
-                      <p className={table.emptyHint}>
-                        {liveProjects} {liveProjects === 1 ? 'project is' : 'projects are'} moving
-                        and nothing is waiting on you.
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  waiting.map((item) => (
-                    <tr key={item.id} className={table.tr}>
-                      <td className={`${table.td} ${table.primary}`}>
-                        <Link href={item.href} className={table.link}>
-                          {item.what}
-                        </Link>
-                      </td>
-                      <td className={table.td}>{item.who}</td>
-                      <td className={`${table.td} ${table.nowrap}`} title={formatShortDate(item.since)}>
-                        {formatRelative(item.since, now)}
-                      </td>
-                      <td className={table.td}>
-                        <span className={`${forms.badge} ${item.tone}`}>{item.badge}</span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {waitingTotal > waiting.length && (
-            <div className={table.footer}>
-              Showing {waiting.length} of {waitingTotal}.
-            </div>
-          )}
-        </div>
-
-        <div className={styles.stack}>
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>Your tasks</h2>
-              <span className={forms.cardMeta}>
-                {myTaskCount === 0 ? 'Nothing assigned' : `${myTaskCount} open`}
-              </span>
-            </div>
-            {myTasks.length === 0 ? (
-              <p className={styles.note}>
-                Nothing is assigned to you. Tasks are given out on each project&rsquo;s{' '}
-                <Link href="/projects" className={styles.inlineLink}>
-                  plan
-                </Link>
-                .
-              </p>
-            ) : (
-              <ul className={styles.glance}>
-                {myTasks.map((task) => {
-                  const late = isPastDay(task.dueAt, now);
-                  return (
-                    <li key={task.id}>
-                      <Link href={`/projects/${task.phase.project.slug}?tab=plan`}>
-                        <span className={styles.taskText}>
-                          {task.title}
-                          <span className={styles.taskMeta}>{task.phase.project.name}</span>
-                        </span>
-                        <span className={`${forms.badge} ${late ? forms.badgeBad : ''}`}>
-                          {task.dueAt
-                            ? late
-                              ? `Late, ${formatShortDate(task.dueAt)}`
-                              : formatShortDate(task.dueAt)
-                            : 'No date'}
-                        </span>
+              ) : (
+                rows.map((row) => (
+                  <tr key={row.key} className={table.tr}>
+                    <td className={`${table.td} ${table.nowrap}`}>{row.type}</td>
+                    <td className={`${table.td} ${table.name}`}>
+                      <Link href={row.href} className={table.link}>
+                        {row.what}
                       </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>Recent activity</h2>
-              <Link href="/activity" className={table.action}>
-                See all
-              </Link>
-            </div>
-            <ActivityFeed items={activity} now={now} />
-          </section>
+                    </td>
+                    <td className={`${table.td} ${table.name}`}>
+                      {row.client ?? <span className={table.muted}>None</span>}
+                    </td>
+                    <td className={`${table.td} ${table.nowrap}`} title={formatShortDate(row.since)}>
+                      {formatRelative(row.since, now)}
+                    </td>
+                    <td className={`${table.td} ${table.numeric}`}>{row.amount}</td>
+                    <td className={`${table.td} ${table.actions}`}>{row.action}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+        {total > rows.length && (
+          <div className={table.footer}>
+            Showing {rows.length} of {total}, oldest first.
+          </div>
+        )}
       </div>
     </main>
   );

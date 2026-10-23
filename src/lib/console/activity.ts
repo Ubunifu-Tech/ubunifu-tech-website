@@ -456,36 +456,3 @@ export async function activityFor(
 
   return items.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit);
 }
-
-/** Actions too routine to fill a dashboard with. */
-const QUIET = ['staff.sign_in.success', 'staff.sign_in.link_sent', 'staff.sign_out', 'client.sign_out'];
-
-/** The latest things that happened anywhere, for the overview. */
-export async function recentActivity(staff: StaffActor, limit = 8): Promise<ActivityItem[]> {
-  const hidden = hiddenFrom(staff).actions;
-  const audits = await db.auditEvent.findMany({
-    where: {
-      action: { notIn: QUIET },
-      ...(hidden.length ? { NOT: actionStartsWith(hidden) } : {}),
-    },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-    select: {
-      id: true,
-      action: true,
-      summary: true,
-      actorType: true,
-      actorId: true,
-      createdAt: true,
-    },
-  });
-
-  const who = await whoDid(audits);
-  return audits.map((audit) => ({
-    id: `audit-${audit.id}`,
-    at: audit.createdAt,
-    text: describeAudit(audit.action, audit.summary),
-    meta: who(audit),
-    tone: auditTone(audit.action),
-  }));
-}

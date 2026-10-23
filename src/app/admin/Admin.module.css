@@ -865,6 +865,25 @@
   text-decoration-color: currentColor;
 }
 
+/* A row's button on Home. A warning or error wraps above it instead of
+   widening the table. */
+.rowAction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  max-width: 18rem;
+  white-space: normal;
+  text-align: right;
+}
+
+.rowNote {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+}
+
 .summary {
   display: grid;
   gap: 1px;

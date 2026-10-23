@@ -304,6 +304,19 @@
   background: var(--accent);
 }
 
+/* One of several: round, with a dot. */
+.check[type='radio'] {
+  border-radius: 50%;
+}
+
+.check[type='radio']::after {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 .check:checked::after {
   transform: scale(1);
 }

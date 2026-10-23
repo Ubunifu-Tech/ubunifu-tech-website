@@ -100,6 +100,7 @@ const staffUrls: string[] = [
   '/payments',
   '/payments?show=refunds',
   '/payments?show=reversed',
+  '/payments/new',
   '/receipts',
   '/refunds',
   '/renewals',
@@ -128,10 +129,11 @@ if (enquiry) {
   staffUrls.push(`/clients/new?enquiry=${enquiry.id}`);
 }
 if (client) {
-  staffUrls.push(`/clients/${client.slug}`, `/projects/new?client=${client.slug}`);
+  staffUrls.push(`/clients/${client.slug}`, `/projects/new?client=${client.slug}`, `/payments/new?client=${client.slug}`);
 }
 if (removedClient) staffUrls.push(`/removed/${removedClient.slug}`);
 if (project) {
+  staffUrls.push(`/payments/new?project=${project.slug}`);
   for (const tab of ['', '?tab=plan', '?tab=fees', '?tab=documents', '?tab=updates', '?tab=brand', '?tab=activity', '?tab=nonsense']) {
     staffUrls.push(`/projects/${project.slug}${tab}`);
   }
@@ -143,7 +145,9 @@ if (document) {
   }
 }
 if (ticket) staffUrls.push(`/requests/${ticket.reference}`);
-if (invoice) staffUrls.push(`/invoices/${invoice.number}`, `/invoices/${invoice.number}/print`);
+if (invoice) {
+  staffUrls.push(`/invoices/${invoice.number}`, `/invoices/${invoice.number}/print`, `/payments/new?invoice=${invoice.number}`);
+}
 if (receipt) staffUrls.push(`/receipts/${receipt.number}`);
 if (refund) staffUrls.push(`/refunds/${refund.number}`);
 if (post) staffUrls.push(`/posts/${post.id}`);

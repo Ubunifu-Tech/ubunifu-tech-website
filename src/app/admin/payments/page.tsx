@@ -8,6 +8,7 @@ import { liveInvoice } from '@/lib/console/live';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
+import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Payments' };
@@ -170,6 +171,14 @@ export default async function PaymentsPage({
           <h1 className={styles.heading}>
             {project ? `Payments for ${project.name}` : client ? `Payments from ${client.name}` : 'Payments'}
           </h1>
+        </div>
+        <div className={styles.headActions}>
+          <Link
+            href={`/payments/new${project ? `?project=${project.slug}` : client ? `?client=${client.slug}` : ''}`}
+            className={forms.button}
+          >
+            Record a payment
+          </Link>
         </div>
       </div>
 

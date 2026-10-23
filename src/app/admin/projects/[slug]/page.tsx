@@ -36,7 +36,6 @@ import {
   isPastDay,
   numbers,
   toDateInputValue,
-  todayInput,
 } from '@/lib/console/money';
 import { MoveControls, type StageAction } from './MoveControls';
 import { FeeEditor, type FeeRow } from '@/components/console/FeeEditor';
@@ -46,7 +45,6 @@ import { TaskRow } from './TaskRow';
 import { OwnerCard } from './OwnerCard';
 import { AssetRequestRow } from './AssetRequestRow';
 import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
-import { EarlyPayment } from './EarlyPayment';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import {
@@ -1187,31 +1185,6 @@ export default async function ProjectPage({
                 />
               </section>
 
-              <section className={forms.card}>
-                <div className={forms.cardHeader}>
-                  <h2 className={forms.cardTitle}>Record a payment</h2>
-                  <span className={forms.cardMeta}>Paid before an invoice or a signature</span>
-                </div>
-                <EarlyPayment
-                  projectId={project.id}
-                  lines={toBill.filter((line) => !line.usage)}
-                  today={todayInput()}
-                  vatBps={org.chargesVat ? org.vatRateBps : 0}
-                  reason={
-                    fees.length === 0
-                      ? mayFees
-                        ? 'This project has no fees yet. Add the fee the money is for, then record it here.'
-                        : 'This project has no fees yet. Someone who can set fees needs to add the one the money is for.'
-                      : unpriced > 0 && toBill.length === 0
-                        ? mayFees
-                          ? 'The fees still need prices. Price the one the money is for, then record it here.'
-                          : 'The fees still need prices. Someone who can set fees needs to price them.'
-                        : toBill.some((line) => line.usage)
-                          ? 'Only usage is left to bill. Raise an invoice for it, then record the payment on that invoice.'
-                          : 'Everything due now is already on an invoice. Record the payment on that invoice.'
-                  }
-                />
-              </section>
 
               <div className={table.frame}>
                 <div className={table.toolbar}>
@@ -1287,6 +1260,7 @@ export default async function ProjectPage({
                   rows={payments[0]}
                   total={payments[1]}
                   allHref={`/payments?project=${project.slug}`}
+                  recordHref={`/payments/new?project=${project.slug}`}
                 />
               )}
             </>

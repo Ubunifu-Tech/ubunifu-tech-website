@@ -240,12 +240,15 @@ export default async function InvoicesPage({
                 <th className={`${table.th} ${table.numericHead}`} scope="col">
                   Outstanding
                 </th>
+                <th className={`${table.th} ${table.actionsHead}`} scope="col">
+                  <span className={table.muted}>Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {invoices.length === 0 ? (
                 <tr>
-                  <td className={table.emptyCell} colSpan={8}>
+                  <td className={table.emptyCell} colSpan={9}>
                     <p className={table.emptyTitle}>
                       {query
                         ? `No invoices match “${query}” here.`
@@ -319,6 +322,13 @@ export default async function InvoicesPage({
                           <span className={table.muted}>Paid</span>
                         ) : (
                           formatMoney(owed, invoice.currency)
+                        )}
+                      </td>
+                      <td className={`${table.td} ${table.actions}`}>
+                        {owed > 0 && invoice.status !== 'void' && (
+                          <Link href={`/payments/new?invoice=${invoice.number}`} className={table.action}>
+                            Record a payment
+                          </Link>
                         )}
                       </td>
                     </tr>

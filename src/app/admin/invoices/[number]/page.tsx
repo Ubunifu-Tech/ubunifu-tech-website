@@ -9,7 +9,6 @@ import {
   formatMoney,
   formatShortDate,
   isPastDay,
-  moneyInput,
   numbers,
   toDateInputValue,
   todayInput,
@@ -18,7 +17,6 @@ import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
   DraftInvoiceDetails,
   PaymentMenu,
-  RecordPaymentForm,
   RefundMenu,
   SendDraft,
   SendInvoiceButton,
@@ -562,15 +560,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                 </div>
 
                 <SendDraft invoiceId={invoice.id} draft={invoice.status === 'draft'} />
-                {/* One place in the tree for the form, draft or settled, so the
-                    message it shows after a payment survives the refresh. */}
-                <RecordPaymentForm
-                  invoiceId={invoice.id}
-                  outstanding={moneyInput(outstanding, invoice.currency)}
-                  currency={invoice.currency}
-                  today={todayInput()}
-                  settled={outstanding <= 0}
-                />
+                {outstanding > 0 && (
+                  <div className={forms.actions}>
+                    <Link href={`/payments/new?invoice=${invoice.number}`} className={forms.button}>
+                      Record a payment
+                    </Link>
+                  </div>
+                )}
               </section>
             )}
 

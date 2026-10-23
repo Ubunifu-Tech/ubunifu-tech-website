@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { formatMoney, formatShortDate } from '@/lib/console/money';
+import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
 export type PaymentRow = {
@@ -24,11 +25,14 @@ export function PaymentsTable({
   rows,
   total,
   allHref,
+  recordHref,
   showProject = false,
 }: {
   rows: PaymentRow[];
   total: number;
   allHref: string;
+  /** Where Record a payment opens, with this record already chosen. */
+  recordHref: string;
   showProject?: boolean;
 }) {
   const columns = showProject ? 7 : 6;
@@ -40,11 +44,16 @@ export function PaymentsTable({
           <h2 className={table.title}>Payments</h2>
           <span className={table.count}>{total}</span>
         </div>
-        {total > rows.length && (
-          <Link href={allHref} className={table.link}>
-            All {total}
+        <div className={table.toolbarActions}>
+          {total > rows.length && (
+            <Link href={allHref} className={table.link}>
+              All {total}
+            </Link>
+          )}
+          <Link href={recordHref} className={forms.button}>
+            Record a payment
           </Link>
-        )}
+        </div>
       </div>
       <div className={table.scroll}>
         <table className={`${table.table} ${table.compact}`}>

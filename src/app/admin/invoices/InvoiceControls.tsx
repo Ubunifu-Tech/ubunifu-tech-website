@@ -5,7 +5,6 @@ import {
   emailReceipt,
   cancelRefund,
   emailRefund,
-  recordPayment,
   recordRefund,
   reversePayment,
   saveDraftInvoice,
@@ -20,7 +19,6 @@ import { formatMoney, moneyInput } from '@/lib/console/money';
 import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
-import { Select } from '@/components/console/Select';
 import {
   MenuDivider,
   MenuItem,
@@ -91,149 +89,8 @@ export function SendDraft({ invoiceId, draft }: { invoiceId: string; draft: bool
         </button>
         <Result state={state} />
       </form>
-      <p className={forms.payoff}>Or, if they have paid already, record it here.</p>
+      <p className={forms.payoff}>Or, if they have paid already, record the payment.</p>
     </div>
-  );
-}
-
-/**
- * Recording money that has already arrived.
- *
- * Defaults to the full outstanding amount and to today, because that is what
- * most payments are — but both are editable, because a part payment made last
- * Friday is the case this exists for.
- */
-export function RecordPaymentForm({
-  invoiceId,
-  outstanding,
-  currency,
-  today,
-  settled,
-}: {
-  invoiceId: string;
-  outstanding: string;
-  currency: string;
-  today: string;
-  /**
-   * Nothing is left to pay. The form gives way to a note, but this component
-   * stays mounted so the message about the payment that settled it is kept.
-   */
-  settled: boolean;
-}) {
-  const [state, action, pending] = useActionState(recordPayment, INITIAL);
-  // Kept in state so a refused submission does not wipe them: React resets a
-  // form after its action runs, error or not. The amount follows what is
-  // outstanding until someone types their own.
-  const [typed, setTyped] = useState<string | null>(null);
-  const [method, setMethod] = useState('bank_transfer');
-  const [reference, setReference] = useState('');
-  const [emailIt, setEmailIt] = useState(true);
-  const [seen, setSeen] = useState(state);
-  if (state !== seen) {
-    setSeen(state);
-    if (state.status === 'done') {
-      setTyped(null);
-      setReference('');
-      setEmailIt(true);
-    }
-  }
-
-  if (settled) {
-    return (
-      <>
-        <Result state={state} />
-        <p className={styles.note}>
-          Nothing is owed. The receipts are listed above, ready to email or print.
-        </p>
-      </>
-    );
-  }
-
-  return (
-    <form action={action} className={forms.form}>
-      <input type="hidden" name="invoiceId" value={invoiceId} />
-      <div className={forms.grid}>
-        <div className={forms.field}>
-          <label className={forms.label} htmlFor="pay-amount">
-            Amount received ({currency})
-          </label>
-          <input
-            id="pay-amount"
-            name="amount"
-            value={typed ?? outstanding}
-            onChange={(event) => setTyped(event.target.value)}
-            className={forms.control}
-            inputMode="decimal"
-            required
-            disabled={pending}
-          />
-        </div>
-
-        <DateField
-          name="receivedAt"
-          label="Date it arrived"
-          defaultValue={today}
-          max={today}
-          disabled={pending}
-        />
-
-        <div className={forms.field}>
-          <label className={forms.label} htmlFor="pay-method">
-            How it arrived
-          </label>
-          <Select
-            id="pay-method"
-            name="method"
-            value={method}
-            onValueChange={setMethod}
-            options={PAYMENT_METHODS}
-            disabled={pending}
-          />
-        </div>
-
-        <div className={forms.field}>
-          <label className={forms.label} htmlFor="pay-ref">
-            Reference <span className={forms.optional}>(optional)</span>
-          </label>
-          <input
-            id="pay-ref"
-            name="reference"
-            value={reference}
-            onChange={(event) => setReference(event.target.value)}
-            className={forms.control}
-            maxLength={120}
-            placeholder="Bank reference or M-Pesa transaction id"
-            disabled={pending}
-          />
-          <p className={forms.hint}>
-            What you would quote if the client asked us to find this payment again.
-          </p>
-        </div>
-      </div>
-
-      <label className={forms.checkRow} htmlFor="pay-email">
-        <input
-          id="pay-email"
-          name="emailReceipt"
-          type="checkbox"
-          className={forms.check}
-          checked={emailIt}
-          onChange={(event) => setEmailIt(event.target.checked)}
-          disabled={pending}
-        />
-        <span className={forms.checkText}>
-          <span>Email the receipt to their main contact</span>
-        </span>
-      </label>
-
-      <div className={forms.actions}>
-        <button type="submit" className={forms.button} disabled={pending}>
-          {pending ? 'Recording…' : 'Record the payment'}
-        </button>
-        <p className={forms.payoff}>Issues a numbered receipt straight away.</p>
-      </div>
-      <Result state={state} />
-    </form>
   );
 }
 

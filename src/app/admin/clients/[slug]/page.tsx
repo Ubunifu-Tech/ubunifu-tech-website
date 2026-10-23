@@ -509,6 +509,7 @@ export default async function ClientPage({
             rows={payments[0]}
             total={payments[1]}
             allHref={`/payments?client=${client.slug}`}
+            recordHref={`/payments/new?client=${client.slug}`}
             showProject
           />
         )}

@@ -10,6 +10,7 @@ import { ProfileMenu, type ProfileLink } from '@/components/console/ProfileMenu'
 import { ROLE_LABEL } from '@/lib/console/people';
 import { MobileNav } from './MobileNav';
 import { SearchBox } from './SearchBox';
+import { NewMenu } from './NewMenu';
 import styles from './Admin.module.css';
 
 /**
@@ -75,6 +76,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Suspense fallback={null}>
             <SearchBox />
           </Suspense>
+          <NewMenu
+            payment={staff.permissions.includes('invoices')}
+            project={staff.permissions.includes('projects')}
+            client={staff.permissions.includes('clients')}
+            post={staff.permissions.includes('journal')}
+          />
           <ProfileMenu
             name={staff.name}
             email={staff.email}

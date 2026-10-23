@@ -59,6 +59,32 @@
   padding: 0 clamp(1.25rem, 3vw, 2.5rem);
 }
 
+/* New, beside the account menu: the button's look on a menu trigger. */
+.newTrigger {
+  display: inline-flex;
+  align-items: center;
+  height: 2.375rem;
+  padding: 0 1.125rem;
+  border: 1px solid transparent;
+  border-radius: var(--app-radius-control);
+  background: var(--cta);
+  color: var(--text-inverse);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.newTrigger:hover,
+.newTrigger[data-state='open'] {
+  background: color-mix(in srgb, var(--cta) 86%, black);
+}
+
+.newTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-dim), 0 0 0 1px var(--accent);
+}
+
 /* Search, on the left of the band's work side; the account menu stays right. */
 .search {
   position: relative;

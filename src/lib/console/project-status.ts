@@ -21,7 +21,7 @@ export const STAFF_LABEL: Record<ProjectStatus, string> = {
   launch_ready: 'Ready to launch',
   launched: 'Launched',
   handover: 'Handover',
-  closed: 'Closed',
+  closed: 'Complete',
   on_hold: 'On hold',
   cancelled: 'Cancelled',
 };

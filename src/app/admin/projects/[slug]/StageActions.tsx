@@ -43,7 +43,8 @@ const HAND_OFF: Record<FixTab, string> = {
 /**
  * The project's next move, in its header: one button for the move that takes
  * it on, a link for the next thing done elsewhere (such as sending the
- * agreement), and the rarer moves behind the menu. The expected status travels
+ * agreement), Mark complete whenever it is on offer, and the rarer moves behind
+ * the menu. The expected status travels
  * with the post, so a project someone else moved meanwhile is refused rather
  * than recorded with a history that never happened.
  */
@@ -52,6 +53,7 @@ export function StageActions({
   projectSlug,
   status,
   primary,
+  complete,
   others,
   link,
   canOpen,
@@ -60,6 +62,8 @@ export function StageActions({
   projectSlug: string;
   status: ProjectStatus;
   primary: StageMove | null;
+  /** Shown as its own button. What it warns of is asked about when it is pressed. */
+  complete: StageMove | null;
   others: StageMove[];
   link: { label: string; href: string } | null;
   canOpen: Partial<Record<FixTab, boolean>>;
@@ -83,17 +87,21 @@ export function StageActions({
       <span className={styles.handOff}>{HAND_OFF[tab]}</span>
     );
 
-  const shown = [...new Set([primary, ...others].flatMap((move) => move?.warnings.map((w) => w.message) ?? []))];
+  // Each warning counts as read only for the move it was shown beside.
+  const shown = [primary, ...others].flatMap(
+    (move) => move?.warnings.map((warning) => `${move.to}|${warning.message}`) ?? [],
+  );
   const confirming = state.status === 'confirm' && state.to;
+  const confirmLabel = [primary, complete, ...others].find((move) => move?.to === state.to)?.label;
 
-  if (!primary && !link && others.length === 0) return null;
+  if (!primary && !complete && !link && others.length === 0) return null;
 
   return (
     <form id={formId} action={action} className={styles.actions}>
       <input type="hidden" name="projectId" value={projectId} />
       <input type="hidden" name="expectedFrom" value={status} />
-      {shown.map((message) => (
-        <input key={message} type="hidden" name="shown" value={message} />
+      {shown.map((value) => (
+        <input key={value} type="hidden" name="shown" value={value} />
       ))}
 
       <div className={styles.buttons}>
@@ -101,6 +109,17 @@ export function StageActions({
           <Link href={link.href} className={`${forms.button} ${primary ? forms.quiet : ''}`}>
             {link.label}
           </Link>
+        )}
+        {complete && (
+          <button
+            type="submit"
+            name="to"
+            value={complete.to}
+            className={`${forms.button} ${forms.quiet}`}
+            disabled={pending}
+          >
+            {complete.label}
+          </button>
         )}
         {primary && (
           <button
@@ -150,6 +169,7 @@ export function StageActions({
         </p>
       )}
       {primary &&
+        !confirming &&
         primary.warnings.map((warning) => (
           <p key={warning.message} className={styles.line}>
             {warning.message} {fix(warning.fix)}
@@ -165,12 +185,12 @@ export function StageActions({
           ))}
           <input type="hidden" name="acknowledged" value="on" />
           <button type="submit" name="to" value={state.to} className={forms.button} disabled={pending}>
-            Move anyway
+            {confirmLabel ? `${confirmLabel} anyway` : 'Move anyway'}
           </button>
         </div>
       )}
 
-      {(primary || others.length > 0) &&
+      {(primary || complete || others.length > 0) &&
         (noting ? (
           <textarea
             name="note"

@@ -439,7 +439,13 @@ export default async function ProjectPage({
     (project.status === 'on_hold' || project.status === 'cancelled'
       ? transitions.find((transition) => transition.tone === 'primary')
       : undefined);
-  const otherTransitions = transitions.filter((transition) => transition !== primaryTransition);
+  // Marking it complete is never tucked into the menu: when the work is done,
+  // the button that says so is in plain sight.
+  const completeTransition =
+    primaryTransition?.to === 'closed' ? undefined : transitions.find((transition) => transition.to === 'closed');
+  const otherTransitions = transitions.filter(
+    (transition) => transition !== primaryTransition && transition !== completeTransition,
+  );
   const stageLink =
     STAGE_OF[project.status] === 'deal'
       ? mayDocs
@@ -626,6 +632,7 @@ export default async function ProjectPage({
               projectSlug={project.slug}
               status={project.status}
               primary={primaryTransition ? toMove(primaryTransition) : null}
+              complete={completeTransition ? toMove(completeTransition) : null}
               others={otherTransitions.map(toMove)}
               link={stageLink}
               canOpen={{

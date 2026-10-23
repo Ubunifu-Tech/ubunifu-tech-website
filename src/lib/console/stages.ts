@@ -31,7 +31,7 @@ export const STAGE_LABEL: Record<Stage, string> = {
   deal: 'Deal',
   in_progress: 'In progress',
   delivered: 'Delivered',
-  closed: 'Closed',
+  closed: 'Complete',
   on_hold: 'On hold',
   cancelled: 'Cancelled',
 };

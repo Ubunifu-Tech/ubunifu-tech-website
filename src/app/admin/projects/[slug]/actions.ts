@@ -62,7 +62,8 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   const expectedFrom = String(formData.get('expectedFrom') ?? '');
   const note = formText(formData, 'note');
   const acknowledged = formData.get('acknowledged') === 'on';
-  // The warnings the page showed beside the button, read before it was pressed.
+  // The warnings the page showed beside each move, as "to|message", read
+  // before the button was pressed.
   const shown = new Set(formData.getAll('shown').map(String));
 
   if (!Object.values(ProjectStatus).includes(to as ProjectStatus)) {
@@ -113,7 +114,7 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   // Pressing the button beside a warning is accepting it. A warning that came
   // up after the page loaded was not seen, so that one is asked about first.
   // The acceptance goes into the event note, so it is attributable.
-  const unseen = warnings.filter((guard) => !shown.has(guard.message));
+  const unseen = warnings.filter((guard) => !shown.has(`${target}|${guard.message}`));
   if (unseen.length > 0 && !acknowledged) {
     return { status: 'confirm', guards: unseen, to: target };
   }
@@ -196,7 +197,10 @@ export async function moveProject(_previous: MoveState, formData: FormData): Pro
   revalidatePath(`/admin/projects/${project.slug}`);
   revalidatePath('/admin/projects');
   revalidatePath('/admin');
-  return { status: 'done', message: `Moved to ${STAGE_LABEL[STAGE_OF[target]]}.` };
+  return {
+    status: 'done',
+    message: target === 'closed' ? 'Marked complete.' : `Moved to ${STAGE_LABEL[STAGE_OF[target]]}.`,
+  };
 }
 
 export type EditState = {

@@ -96,7 +96,7 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
   in_progress: [
     { to: 'launched', label: 'Go live', tone: 'primary' },
     { to: 'handover', label: 'Hand it over', tone: 'primary' },
-    { to: 'closed', label: 'Close without handing over', tone: 'quiet' },
+    { to: 'closed', label: 'Mark complete', tone: 'quiet' },
     { to: 'on_hold', label: 'Pause the work', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel the project', tone: 'danger' },
   ],
@@ -104,6 +104,7 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
     { to: 'in_progress', label: 'Work on their feedback', tone: 'primary' },
     { to: 'launched', label: 'Go live', tone: 'primary' },
     { to: 'handover', label: 'Hand it over', tone: 'primary' },
+    { to: 'closed', label: 'Mark complete', tone: 'quiet' },
     { to: 'on_hold', label: 'Pause the work', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel the project', tone: 'danger' },
   ],
@@ -111,19 +112,19 @@ const TABLE: Record<ProjectStatus, Transition[]> = {
   launch_ready: [
     { to: 'launched', label: 'Go live', tone: 'primary' },
     { to: 'handover', label: 'Hand it over', tone: 'primary' },
-    { to: 'closed', label: 'Close without launching', tone: 'quiet' },
+    { to: 'closed', label: 'Mark complete', tone: 'quiet' },
     { to: 'in_progress', label: 'Back to the work', tone: 'quiet' },
     { to: 'on_hold', label: 'Hold the launch', tone: 'quiet' },
     { to: 'cancelled', label: 'Cancel before launch', tone: 'danger' },
   ],
   launched: [
-    { to: 'closed', label: 'Close the project', tone: 'primary' },
+    { to: 'closed', label: 'Mark complete', tone: 'primary' },
     { to: 'handover', label: 'Hand it over', tone: 'quiet' },
     { to: 'in_progress', label: 'Undo the launch', tone: 'quiet' },
     { to: 'on_hold', label: 'Suspend the live service', tone: 'quiet' },
   ],
   handover: [
-    { to: 'closed', label: 'Close the project', tone: 'primary' },
+    { to: 'closed', label: 'Mark complete', tone: 'primary' },
     { to: 'in_progress', label: 'Reopen for more work', tone: 'quiet' },
     { to: 'on_hold', label: 'Pause the handover', tone: 'quiet' },
   ],
@@ -371,7 +372,7 @@ export async function transitionsFor(project: {
     // always honest: pick the work up, or close it out.
     return [
       { to: 'in_progress', label: 'Resume the work', tone: 'primary' },
-      { to: 'closed', label: 'Close without resuming', tone: 'quiet' },
+      { to: 'closed', label: 'Mark complete', tone: 'quiet' },
       { to: 'cancelled', label: 'Cancel this project', tone: 'danger' },
     ];
   }
@@ -503,6 +504,16 @@ export async function loadGuardFacts(projectId: string): Promise<GuardFacts> {
   };
 }
 
+/** "2 recurring fees and 1 service", leaving out whichever there are none of. */
+function renewing(fees: number, services: number): string {
+  return [
+    fees > 0 ? `${fees} recurring fee${fees === 1 ? '' : 's'}` : null,
+    services > 0 ? `${services} service${services === 1 ? '' : 's'}` : null,
+  ]
+    .filter(Boolean)
+    .join(' and ');
+}
+
 /**
  * What must be true, and what merely ought to be.
  *
@@ -598,7 +609,7 @@ export function guardsFor(
     if (facts.outstandingMinor > 0) {
       guards.push({
         severity: 'warn',
-        message: `${seesMoney ? money(facts.outstandingMinor) : 'Money'} is still unpaid. It is harder to collect after handover.`,
+        message: `${seesMoney ? money(facts.outstandingMinor) : 'Money'} is still unpaid.`,
         fix: 'billing',
       });
     }
@@ -620,8 +631,8 @@ export function guardsFor(
       severity: 'warn',
       message:
         to === 'launched'
-          ? 'This records today as the launch date. Afterwards the project can be closed, but not cancelled.'
-          : 'This records the work as delivered. Afterwards the project can be closed, but not cancelled.',
+          ? 'This records today as the launch date. Afterwards it can be marked complete, but not cancelled.'
+          : 'This records the work as delivered. Afterwards it can be marked complete, but not cancelled.',
     });
   }
 
@@ -640,14 +651,14 @@ export function guardsFor(
     guards.push({
       severity: 'block',
       message:
-        'Already delivered. Close it instead.',
+        'Already delivered. Mark it complete instead.',
     });
   }
 
   if (to === 'closed' && (facts.liveRecurringLines > 0 || facts.activeManagedServices > 0)) {
     guards.push({
       severity: 'warn',
-      message: `${facts.liveRecurringLines} recurring fee${facts.liveRecurringLines === 1 ? '' : 's'} and ${facts.activeManagedServices} service${facts.activeManagedServices === 1 ? '' : 's'} will keep renewing after it closes. To stop one, pause or cancel it on the Fees tab.`,
+      message: `${renewing(facts.liveRecurringLines, facts.activeManagedServices)} will keep renewing. To stop one, pause or cancel it on the Fees tab.`,
         fix: 'fees',
     });
   }

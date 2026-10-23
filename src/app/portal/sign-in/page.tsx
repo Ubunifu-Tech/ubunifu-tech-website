@@ -69,11 +69,6 @@ export default async function PortalSignIn({
         <div className={auth.card}>
           <SignInForms next={next} startWith={error === 'reset-expired' ? 'reset' : 'password'} />
         </div>
-        {error !== 'setup-expired' && (
-          <p className={auth.foot}>
-            First time here? Use Email me a sign-in link, then choose a password.
-          </p>
-        )}
         <ReachUs lead="Need help?" className={auth.foot} />
       </div>
     </AuthLayout>

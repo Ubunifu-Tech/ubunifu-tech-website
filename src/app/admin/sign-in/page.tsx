@@ -44,6 +44,7 @@ export default async function AdminSignIn({
     <AuthLayout role="Console">
       <div className={auth.panel}>
         <h1 className={auth.heading}>Sign in</h1>
+        <p className={auth.lead}>We will email you a link to sign in.</p>
         {problem ? (
           <p className={auth.notice} role="status">
             {problem}

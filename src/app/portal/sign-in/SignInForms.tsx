@@ -1,14 +1,14 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, type ReactNode } from 'react';
 import {
   requestPasswordReset,
   requestPortalLink,
   signInWithPassword,
   type PortalSignInState,
 } from './actions';
-import styles from '../Portal.module.css';
 import forms from '@/styles/forms.module.css';
+import auth from '@/styles/auth.module.css';
 
 const INITIAL: PortalSignInState = { status: 'idle' };
 
@@ -25,150 +25,174 @@ export function SignInForms({
   // One address across the three forms, so switching between them, or a
   // wrong password, keeps what was typed.
   const [email, setEmail] = useState('');
-  const [pwState, pwAction, pwPending] = useActionState(signInWithPassword, INITIAL);
-  const [linkState, linkAction, linkPending] = useActionState(requestPortalLink, INITIAL);
-  const [resetState, resetAction, resetPending] = useActionState(requestPasswordReset, INITIAL);
+  // Switching form starts it fresh, so a link sent earlier does not stay
+  // announced on the next one.
+  const [attempt, setAttempt] = useState(0);
+  const go = (to: Mode) => {
+    setMode(to);
+    setAttempt((n) => n + 1);
+  };
+
+  const emailField = (id: string, disabled: boolean) => (
+    <div className={forms.field}>
+      <label htmlFor={id} className={forms.label}>
+        Email
+      </label>
+      <input
+        id={id}
+        name="email"
+        type="email"
+        autoComplete="email"
+        autoFocus={!email}
+        required
+        disabled={disabled}
+        className={forms.control}
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+      />
+    </div>
+  );
 
   if (mode === 'reset') {
     return (
-      <form action={resetAction} className={forms.form}>
-        <div className={forms.field}>
-          <label htmlFor="reset-email" className={forms.label}>
-            Email
-          </label>
-          <input
-            id="reset-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            disabled={resetPending}
-            className={forms.control}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-
-        <button type="submit" className={forms.button} disabled={resetPending}>
-          {resetPending
-            ? 'Sending…'
-            : resetState.status === 'sent'
-              ? 'Send again'
-              : 'Email me a reset link'}
-        </button>
-
-        <p
-          className={resetState.status === 'error' ? forms.error : forms.hint}
-          role="status"
-          aria-live="polite"
-        >
-          {resetState.message ?? 'We will email you a link to choose a new password.'}
-        </p>
-
-        <div className={styles.divider}>
-          <button type="button" className={forms.link} onClick={() => setMode('password')}>
-            Back to sign in
-          </button>
-        </div>
-      </form>
+      <LinkRequest
+        key={`reset-${attempt}`}
+        action={requestPasswordReset}
+        next={null}
+        field={emailField}
+        fieldId="reset-email"
+        button="Email me a reset link"
+        back={{ label: 'Back to sign in', onClick: () => go('password') }}
+      />
     );
   }
 
   if (mode === 'link') {
     return (
-      <form action={linkAction} className={forms.form}>
-        {next && <input type="hidden" name="next" value={next} />}
-        <div className={forms.field}>
-          <label htmlFor="link-email" className={forms.label}>
-            Email
-          </label>
-          <input
-            id="link-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            disabled={linkPending}
-            className={forms.control}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-        </div>
-
-        <button type="submit" className={forms.button} disabled={linkPending}>
-          {linkPending ? 'Sending…' : linkState.status === 'sent' ? 'Send again' : 'Email me a link'}
-        </button>
-
-        <p
-          className={linkState.status === 'error' ? forms.error : forms.hint}
-          role="status"
-          aria-live="polite"
-        >
-          {linkState.message ?? 'We will email you a link to sign in.'}
-        </p>
-
-        <div className={styles.divider}>
-          <button type="button" className={forms.link} onClick={() => setMode('password')}>
-            Use a password instead
-          </button>
-        </div>
-      </form>
+      <LinkRequest
+        key={`link-${attempt}`}
+        action={requestPortalLink}
+        next={next}
+        field={emailField}
+        fieldId="link-email"
+        button="Email me a sign-in link"
+        back={{ label: 'Sign in with a password', onClick: () => go('password') }}
+      />
     );
   }
 
   return (
-    <form action={pwAction} className={forms.form}>
+    <PasswordForm
+      key={`password-${attempt}`}
+      next={next}
+      field={emailField}
+      onForgot={() => go('reset')}
+      onLink={() => go('link')}
+    />
+  );
+}
+
+function PasswordForm({
+  next,
+  field,
+  onForgot,
+  onLink,
+}: {
+  next?: string | null;
+  field: (id: string, disabled: boolean) => ReactNode;
+  onForgot: () => void;
+  onLink: () => void;
+}) {
+  const [state, action, pending] = useActionState(signInWithPassword, INITIAL);
+  const [showing, setShowing] = useState(false);
+
+  return (
+    <form action={action} className={forms.form}>
       {next && <input type="hidden" name="next" value={next} />}
-      <div className={forms.field}>
-        <label htmlFor="email" className={forms.label}>
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          disabled={pwPending}
-          className={forms.control}
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </div>
+      {field('email', pending)}
 
       <div className={forms.field}>
-        <label htmlFor="password" className={forms.label}>
-          Password
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          disabled={pwPending}
-          className={forms.control}
-        />
+        <div className={auth.labelRow}>
+          <label htmlFor="password" className={forms.label}>
+            Password
+          </label>
+          <button type="button" className={forms.link} onClick={onForgot}>
+            Forgot password?
+          </button>
+        </div>
+        <div className={auth.reveal}>
+          <input
+            id="password"
+            name="password"
+            type={showing ? 'text' : 'password'}
+            autoComplete="current-password"
+            required
+            disabled={pending}
+            className={forms.control}
+          />
+          <button
+            type="button"
+            className={auth.revealButton}
+            onClick={() => setShowing((shown) => !shown)}
+            aria-pressed={showing}
+            aria-controls="password"
+          >
+            {showing ? 'Hide' : 'Show'}
+          </button>
+        </div>
       </div>
 
-      <button type="submit" className={forms.button} disabled={pwPending}>
-        {pwPending ? 'Signing in…' : 'Sign in'}
+      <button type="submit" className={forms.button} disabled={pending}>
+        {pending ? 'Signing in…' : 'Sign in'}
       </button>
 
-      {pwState.status === 'error' && (
-        <p className={forms.error} role="status" aria-live="polite">
-          {pwState.message}
-        </p>
-      )}
+      <p className={forms.error} role="status" aria-live="polite">
+        {state.status === 'error' ? state.message : ''}
+      </p>
 
-      <div className={styles.divider}>
-        <button type="button" className={forms.link} onClick={() => setMode('reset')}>
-          Forgot your password?
-        </button>
-        <button type="button" className={forms.link} onClick={() => setMode('link')}>
-          Email me a sign-in link
-        </button>
-      </div>
+      <p className={auth.or}>or</p>
+
+      <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={onLink}>
+        Email me a sign-in link
+      </button>
+    </form>
+  );
+}
+
+function LinkRequest({
+  action: request,
+  next,
+  field,
+  fieldId,
+  button,
+  back,
+}: {
+  action: (previous: PortalSignInState, formData: FormData) => Promise<PortalSignInState>;
+  next: string | null | undefined;
+  field: (id: string, disabled: boolean) => ReactNode;
+  fieldId: string;
+  button: string;
+  back: { label: string; onClick: () => void };
+}) {
+  const [state, action, pending] = useActionState(request, INITIAL);
+  const sent = state.status === 'sent';
+
+  return (
+    <form action={action} className={forms.form}>
+      {next && <input type="hidden" name="next" value={next} />}
+      {field(fieldId, pending)}
+
+      <button type="submit" className={forms.button} disabled={pending}>
+        {pending ? 'Sending…' : sent ? 'Send again' : button}
+      </button>
+
+      <p className={state.status === 'error' ? forms.error : auth.status} role="status" aria-live="polite">
+        {state.message}
+      </p>
+
+      <button type="button" className={`${forms.link} ${auth.textButton}`} onClick={back.onClick}>
+        {back.label}
+      </button>
     </form>
   );
 }

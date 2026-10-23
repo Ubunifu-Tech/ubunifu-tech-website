@@ -2,12 +2,9 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import type { Prisma } from '@/generated/prisma/client';
 import { can, requireStaff } from '@/lib/console/auth';
-import { LIVE_STATUSES, PIPELINE_STATUSES, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
 import { formatMoney, formatShortDate, isPastDay, numbers } from '@/lib/console/money';
-import { transitionsFor } from '@/lib/console/transitions';
 import { waitingOnClient } from '@/lib/console/live';
-import { Board, type BoardCard } from './Board';
-import { KanbanSquare, List } from 'lucide-react';
+import { STAGE_LABEL, STAGE_OF, statusesIn } from '@/lib/console/stages';
 import { ListFooter, ListToolbar, searchText } from '@/components/console/ListToolbar';
 import { pageNumber, pageWindow } from '@/lib/console/paging';
 import styles from '../Admin.module.css';
@@ -16,23 +13,14 @@ import table from '@/styles/table.module.css';
 
 export const metadata = { title: 'Projects' };
 
-const TONE_CLASS: Record<string, string> = {
-  neutral: '',
-  live: forms.badgeLive,
-  good: forms.badgeGood,
-  warn: forms.badgeWarn,
-  bad: forms.badgeBad,
-};
-
-
 /**
- * "Live" is the default view, and it means work that is actually moving — not
- * every project ever created. A list that opens on all of them is a list
- * nobody reads by the third month.
+ * Work in progress is the default view: the projects actually moving, not
+ * every project ever created. The view keys are the ones links have always
+ * used, so an old bookmark still opens the same slice.
  */
 const FILTERS = [
-  { key: 'live', label: 'Live' },
-  { key: 'pipeline', label: 'Pipeline' },
+  { key: 'live', label: 'In progress' },
+  { key: 'pipeline', label: 'Deals' },
   { key: 'waiting', label: 'Waiting on someone' },
   { key: 'done', label: 'Finished' },
   { key: 'all', label: 'Everything' },
@@ -41,15 +29,15 @@ const FILTERS = [
 function filterToWhere(key: string): Prisma.ProjectWhereInput {
   switch (key) {
     case 'pipeline':
-      return { status: { in: PIPELINE_STATUSES } };
+      return { status: { in: statusesIn('deal') } };
     case 'waiting':
       return { status: { in: ['proposal_sent', 'contract_sent', 'client_review', 'on_hold'] } };
     case 'done':
-      return { status: { in: ['launched', 'handover', 'closed', 'cancelled'] } };
+      return { status: { in: [...statusesIn('delivered'), 'closed', 'cancelled'] } };
     case 'all':
       return {};
     default:
-      return { status: { in: LIVE_STATUSES } };
+      return { status: { in: statusesIn('in_progress') } };
   }
 }
 
@@ -83,12 +71,10 @@ export default async function ProjectsPage({
   const canRun = can(staff, 'projects');
   // What a project is worth is the fees on it: shown to those who see fees.
   const seesValue = can(staff, 'fees') || can(staff, 'invoices');
-  const { show, view, q, page } = await searchParams;
+  // ?view=board and ?view=list are what old links carry; there is only the list now.
+  const { show, q, page } = await searchParams;
   const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
-  const asList = view === 'list';
   const query = searchText(q);
-
-  if (!asList) return <BoardView canRun={canRun} seesValue={seesValue} />;
 
   const now = new Date();
   const matching: Prisma.ProjectWhereInput = query
@@ -121,12 +107,22 @@ export default async function ProjectsPage({
 
   return (
     <main className={styles.page}>
-      <ProjectsHeader view="list" canRun={canRun} />
+      <div className={styles.pageHead}>
+        <div className={styles.headText}>
+          <h1 className={styles.heading}>Projects</h1>
+        </div>
+        {canRun && (
+          <div className={styles.headActions}>
+            <Link href="/projects/new" className={forms.button}>
+              Start a project
+            </Link>
+          </div>
+        )}
+      </div>
 
       <div className={table.frame}>
         <ListToolbar
           path="/projects"
-          keep={{ view: 'list' }}
           views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
           current={active}
           defaultView="live"
@@ -203,10 +199,8 @@ export default async function ProjectsPage({
                         {project.owner?.name ?? <span className={table.muted}>Nobody yet</span>}
                       </td>
                       <td className={table.td}>
-                        <span
-                          className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}
-                        >
-                          {project.documents.length > 0 ? 'Changes asked' : STAFF_LABEL[project.status]}
+                        <span className={`${forms.badge} ${project.documents.length > 0 ? forms.badgeWarn : ''}`}>
+                          {project.documents.length > 0 ? 'Changes asked' : STAGE_LABEL[STAGE_OF[project.status]]}
                         </span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
@@ -252,103 +246,9 @@ export default async function ProjectsPage({
           total={total}
           noun={['project', 'projects']}
           query={query}
-          paging={{ page: shown.page, path: '/projects', params: { view: 'list', show, q: query } }}
+          paging={{ page: shown.page, path: '/projects', params: { show, q: query } }}
         />
       </div>
-    </main>
-  );
-}
-
-/** Title, one line of help, and the switch between the board and the list. */
-function ProjectsHeader({ view, canRun }: { view: 'board' | 'list'; canRun: boolean }) {
-  return (
-    <div className={styles.pageHead}>
-      <div className={styles.headText}>
-        <h1 className={styles.heading}>Projects</h1>
-        <p className={styles.lead}>
-          {view === 'board'
-            ? canRun
-              ? 'Drag a project to move it to its next stage.'
-              : 'Where every project stands.'
-            : 'Every project and how far along it is.'}
-        </p>
-      </div>
-      <div className={styles.headActions}>
-        <nav className={styles.viewSwitch} aria-label="View">
-          <Link href="/projects" className={styles.viewOption} aria-current={view === 'board' ? 'page' : undefined}>
-            <KanbanSquare size={16} strokeWidth={2} aria-hidden="true" />
-            Board
-          </Link>
-          <Link href="/projects?view=list" className={styles.viewOption} aria-current={view === 'list' ? 'page' : undefined}>
-            <List size={16} strokeWidth={2} aria-hidden="true" />
-            List
-          </Link>
-        </nav>
-        {canRun && (
-          <Link href="/projects/new" className={forms.button}>
-            New project
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Every project on the board except cancelled ones, and finished ones only
- * from the last three months — a Done lane that keeps every project ever
- * closed stops being something anyone looks at.
- */
-async function BoardView({ canRun, seesValue }: { canRun: boolean; seesValue: boolean }) {
-  const now = new Date();
-  const recent = new Date(now);
-  recent.setDate(recent.getDate() - 90);
-
-  const projects = numbers(await db.project.findMany({
-    where: {
-      deletedAt: null,
-      status: { not: 'cancelled' },
-      OR: [{ status: { not: 'closed' } }, { closedAt: { gte: recent } }],
-    },
-    orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
-    take: 300,
-    select: SELECT,
-  }));
-
-  const cards: BoardCard[] = await Promise.all(
-    projects.map(async (project) => {
-      const deliverables = project.phases.flatMap((phase) => phase.deliverables);
-      const committed = project.lineItems
-        .filter((line) => line.currency === project.currency)
-        .reduce((total, line) => total + line.amountMinor * line.quantity, 0);
-      // Only a held project needs the database for this; every other state's
-      // next steps are a fixed table.
-      const allowed = (await transitionsFor(project)).map((transition) => transition.to);
-      const finished = ['launched', 'handover', 'closed'].includes(project.status);
-      return {
-        id: project.id,
-        slug: project.slug,
-        name: project.name,
-        reference: project.reference ?? '',
-        status: project.status,
-        client: project.client.name,
-        owner: project.owner?.name ?? null,
-        target: project.targetDate ? formatShortDate(project.targetDate) : null,
-        overdue: !finished && isPastDay(project.targetDate, now),
-        done: deliverables.filter((deliverable) => deliverable.isComplete).length,
-        total: deliverables.length,
-        waitingOn: project.assetRequests.length,
-        committed: seesValue && committed > 0 ? formatMoney(committed, project.currency) : null,
-        allowed,
-        changesAsked: project.documents.length > 0,
-      };
-    }),
-  );
-
-  return (
-    <main className={`${styles.page} ${styles.pageWide}`}>
-      <ProjectsHeader view="board" canRun={canRun} />
-      <Board cards={cards} canMove={canRun} />
     </main>
   );
 }

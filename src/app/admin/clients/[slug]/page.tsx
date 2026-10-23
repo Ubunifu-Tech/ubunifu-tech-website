@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { can, requireStaff } from '@/lib/console/auth';
 import { activityForClient } from '@/lib/console/activity';
 import { ENQUIRY_STATUS_LABEL } from '@/lib/console/enquiry-labels';
-import { SERVICE_LABEL, STAFF_LABEL, STATUS_TONE } from '@/lib/console/project-status';
+import { SERVICE_LABEL } from '@/lib/console/project-status';
 import { formatMoney, formatRelative, formatShortDate, numbers } from '@/lib/console/money';
 import { liveEnquiry } from '@/lib/console/live';
 import { clientRemovalCounts, owingRefusal } from '@/lib/console/removal';
@@ -27,17 +27,11 @@ import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
 import { RemoveClient } from './RemoveClient';
 import { PaymentsTable } from '@/components/console/PaymentsTable';
+import { STAGE_LABEL, STAGE_OF } from '@/lib/console/stages';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
-const TONE_CLASS: Record<string, string> = {
-  neutral: '',
-  live: forms.badgeLive,
-  good: forms.badgeGood,
-  warn: forms.badgeWarn,
-  bad: forms.badgeBad,
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -434,11 +428,7 @@ export default async function ClientPage({
                         {SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}
                       </td>
                       <td className={table.td}>
-                        <span
-                          className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}
-                        >
-                          {STAFF_LABEL[project.status]}
-                        </span>
+                        <span className={forms.badge}>{STAGE_LABEL[STAGE_OF[project.status]]}</span>
                       </td>
                       <td className={`${table.td} ${table.nowrap}`}>
                         {formatShortDate(project.targetDate)}

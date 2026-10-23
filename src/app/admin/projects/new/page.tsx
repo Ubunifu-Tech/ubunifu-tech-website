@@ -5,7 +5,7 @@ import { can, requirePermission } from '@/lib/console/auth';
 import { ChevronRight } from 'lucide-react';
 import { Steps } from '@/components/console/Steps';
 import { NewProjectForm } from './NewProjectForm';
-import { STAFF_LABEL } from '@/lib/console/project-status';
+import { STAGE_LABEL, STAGE_OF } from '@/lib/console/stages';
 import forms from '@/styles/forms.module.css';
 import styles from '../../Admin.module.css';
 
@@ -121,7 +121,7 @@ export default async function NewProjectPage({
                       <Link href={`/projects/${project.slug}`}>
                         <span className={styles.taskText}>
                           {project.name}
-                          <span className={styles.taskMeta}>{STAFF_LABEL[project.status]}</span>
+                          <span className={styles.taskMeta}>{STAGE_LABEL[STAGE_OF[project.status]]}</span>
                         </span>
                       </Link>
                     </li>

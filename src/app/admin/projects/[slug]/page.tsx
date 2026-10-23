@@ -7,21 +7,18 @@ import {
   SERVICE_LABEL,
   SERVICE_LINES,
   STAFF_LABEL,
-  STATUS_TONE,
 } from '@/lib/console/project-status';
 import {
-  documentStage,
   guardsFor,
   loadGuardFacts,
   NEXT_STEP,
-  stoppedFrom,
   transitionsFor,
+  type Transition,
 } from '@/lib/console/transitions';
 import { activityFor } from '@/lib/console/activity';
 import { invitedAmong } from '@/lib/console/contacts';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Figures } from '@/components/console/Figures';
-import { StageCatchUp, StageTrack } from './StageTrack';
 import { billableLines } from '@/lib/console/billing';
 import { getOrg } from '@/lib/console/org';
 import { periodLabel } from '@/lib/console/renewals';
@@ -37,7 +34,8 @@ import {
   numbers,
   toDateInputValue,
 } from '@/lib/console/money';
-import { MoveControls, type StageAction } from './MoveControls';
+import { StageActions, type StageMove } from './StageActions';
+import { primaryMove, STAGE_LABEL, STAGE_OF } from '@/lib/console/stages';
 import { FeeEditor, type FeeRow } from '@/components/console/FeeEditor';
 import { Tabs } from '@/components/console/Tabs';
 import { Callout } from '@/components/console/Callout';
@@ -71,14 +69,6 @@ import table from '@/styles/table.module.css';
 import { DOCUMENT_KINDS } from '../../documents/kinds';
 import { feeRow } from '@/lib/console/fees';
 import { PaymentsTable } from '@/components/console/PaymentsTable';
-
-const TONE_CLASS: Record<string, string> = {
-  neutral: '',
-  live: forms.badgeLive,
-  good: forms.badgeGood,
-  warn: forms.badgeWarn,
-  bad: forms.badgeBad,
-};
 
 /** "21 Sept 2026 to 31 Oct 2026", or as much of it as is known. */
 function dateRange(start: Date | null, end: Date | null): string {
@@ -424,16 +414,40 @@ export default async function ProjectPage({
         ? { label: planned.label, href: `/projects/${project.slug}?tab=documents&kind=${planned.kind}` }
         : null;
 
-  // Each next step carries its own blocker, shown greyed on the step itself,
-  // rather than one warning box about steps nobody has tried to take.
-  const actions: StageAction[] = transitions.map((transition) => ({
-    ...transition,
-    blocked:
-      guardsFor(transition.to, facts, { seesMoney }).find((guard) => guard.severity === 'block')
-        ?.message ?? null,
-    blockedFix:
-      guardsFor(transition.to, facts).find((guard) => guard.severity === 'block')?.fix ?? null,
-  }));
+  // Each move carries what stands in its way, and what pressing it accepts,
+  // so both are read before the press rather than after it.
+  const toMove = (transition: Transition): StageMove => {
+    const guards = guardsFor(transition.to, facts, { seesMoney });
+    const block = guards.find((guard) => guard.severity === 'block');
+    return {
+      to: transition.to,
+      label: transition.label,
+      tone: transition.tone,
+      warnings: guards
+        .filter((guard) => guard.severity === 'warn')
+        .map((guard) => ({ message: guard.message, fix: guard.fix ?? null })),
+      blocked: block ? { message: block.message, fix: block.fix ?? null } : null,
+    };
+  };
+  // The client's answer comes first: changes asked for in review are worked on
+  // before anything else moves.
+  const feedbackWaiting =
+    project.status === 'client_review' && project.reviews[0]?.status === 'changes_requested';
+  const wanted = feedbackWaiting ? 'in_progress' : primaryMove(project.status, project.serviceLine);
+  const primaryTransition =
+    transitions.find((transition) => transition.to === wanted) ??
+    (project.status === 'on_hold' || project.status === 'cancelled'
+      ? transitions.find((transition) => transition.tone === 'primary')
+      : undefined);
+  const otherTransitions = transitions.filter((transition) => transition !== primaryTransition);
+  const stageLink =
+    STAGE_OF[project.status] === 'deal'
+      ? mayDocs
+        ? nextStep
+        : null
+      : feedbackWaiting
+        ? { label: 'Read their feedback', href: `/projects/${project.slug}#review` }
+        : null;
 
   // What the client has agreed to pay, split by how often: a one-off build and
   // a yearly renewal added into one number is a figure nobody is charged.
@@ -531,9 +545,6 @@ export default async function ProjectPage({
     ...project.client.contacts.map((contact) => ({ value: contact.id, label: contact.name })),
   ];
 
-  // Documents already further on than the project: a signed agreement on a
-  // project that still reads "Lead", from before documents moved projects on.
-  const behind = documentStage(project.status, project.documents);
 
   const overdue = project.invoices
     .filter(
@@ -601,9 +612,7 @@ export default async function ProjectPage({
           <div className={styles.headText}>
             <h1 className={styles.heading}>{project.name}</h1>
             <p className={styles.projectMeta}>
-              <span className={`${forms.badge} ${TONE_CLASS[STATUS_TONE[project.status]]}`}>
-                {STAFF_LABEL[project.status]}
-              </span>
+              <span className={forms.badge}>{STAGE_LABEL[STAGE_OF[project.status]]}</span>
               <Link href={`/clients/${project.client.slug}`} className={styles.inlineLink}>
                 {project.client.name}
               </Link>
@@ -611,26 +620,27 @@ export default async function ProjectPage({
               <span>{SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}</span>
             </p>
           </div>
+          {mayRun && (
+            <StageActions
+              projectId={project.id}
+              projectSlug={project.slug}
+              status={project.status}
+              primary={primaryTransition ? toMove(primaryTransition) : null}
+              others={otherTransitions.map(toMove)}
+              link={stageLink}
+              canOpen={{
+                fees: mayFees,
+                billing: mayMoney,
+                documents: mayDocs,
+                updates: mayRun,
+                overview: mayRun,
+                review: mayRun && REVIEWABLE.includes(project.status),
+              }}
+            />
+          )}
         </div>
-        <StageTrack
-          status={project.status}
-          statusLabel={STAFF_LABEL[project.status]}
-          stoppedAt={
-            project.status === 'on_hold' || project.status === 'cancelled'
-              ? stoppedFrom(project.statusEvents)
-              : null
-          }
-        />
       </div>
 
-      {mayRun && behind && (
-        <StageCatchUp
-          projectId={project.id}
-          reference={behind.reference}
-          what={behind.milestone === 'signed' ? 'signed' : 'with the client to sign'}
-          to={STAFF_LABEL[behind.to].toLowerCase()}
-        />
-      )}
 
       <Figures
         label="This project at a glance"
@@ -751,42 +761,6 @@ export default async function ProjectPage({
       {tab === 'overview' && (
         <div className={styles.columns}>
           <div className={styles.stack}>
-            <section className={forms.card}>
-              <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>Next step</h2>
-              </div>
-              {mayRun ? (
-                <MoveControls
-                  projectId={project.id}
-                  projectSlug={project.slug}
-                  status={project.status}
-                  actions={actions}
-                  next={mayDocs ? nextStep : null}
-                  handOff={
-                    mayDocs || !nextStep
-                      ? null
-                      : changesAsked
-                        ? `The client sent the ${changesAsked.kind === 'proposal' ? 'proposal' : 'agreement'} back with changes. Someone who handles documents needs to read them.`
-                        : `Someone who handles documents needs to ${nextStep.label.charAt(0).toLowerCase()}${nextStep.label.slice(1)}.`
-                  }
-                  // Their changes come first for every role, so nobody is
-                  // offered Client accepted as the main move while they wait.
-                  holdPrimary={Boolean(changesAsked)}
-                  canOpen={{
-                    fees: mayFees,
-                    billing: mayMoney,
-                    documents: mayDocs,
-                    updates: mayRun,
-                    overview: mayRun,
-                    review: mayRun && REVIEWABLE.includes(project.status),
-                  }}
-                />
-              ) : (
-                <p className={styles.note}>
-                  {STAFF_LABEL[project.status]}. Moving a project on is for roles that run projects.
-                </p>
-              )}
-            </section>
 
             {(project.reviews.length > 0 || REVIEWABLE.includes(project.status)) && (
               <section id="review" className={forms.card}>

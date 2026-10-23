@@ -66,7 +66,9 @@ const [owner, enquiry, client, removedClient, project, document, ticket, invoice
     db.client.findFirst({ where: { deletedAt: { not: null } }, select: { slug: true } }),
     db.project.findFirst({
       where: { deletedAt: null, client: { deletedAt: null } },
-      orderBy: { updatedAt: 'desc' },
+      // By creation, so the same records are used run after run and the
+      // baseline stays comparable.
+      orderBy: { createdAt: 'asc' },
       select: { slug: true },
     }),
     db.document.findFirst({ where: { project: { deletedAt: null } }, orderBy: { createdAt: 'desc' }, select: { reference: true } }),

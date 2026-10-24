@@ -9,9 +9,9 @@ import { pageMetadata } from '@/lib/metadata';
 import styles from './Work.module.css';
 
 export const metadata = pageMetadata({
-  title: 'Our Work',
+  title: 'Our work',
   description:
-    'Production websites and operations platforms Ubunifu has shipped for clients in Tanzania.',
+    'Websites and operations platforms Ubunifu has built for clients in Tanzania.',
   path: '/work',
 });
 
@@ -23,8 +23,8 @@ export default function WorkPage() {
         <PageHeader
           scene="work"
           eyebrow="Our work"
-          title="Our work is live. Go and look."
-          lead="Two systems we built, both running today. Each address on this page opens the live system."
+          title="Client projects"
+          lead="Two live systems we built for clients, each with its address below."
         />
 
         {/* Dispatch strip: the two addresses, above the fold, each a whole link.
@@ -68,8 +68,8 @@ export default function WorkPage() {
           <div className="container">
             <p className={styles.codaText}>
               We have not measured booking volumes or staff hours on either system, so we
-              do not quote them. What we publish is what each system does, and the address
-              where you can go and check it.
+              do not quote any figures. Each case study describes what the system does and
+              links to the live site.
             </p>
           </div>
         </section>

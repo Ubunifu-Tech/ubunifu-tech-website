@@ -12,12 +12,12 @@ export const careers = {
   openRoles: [] as string[],
   /** The heading the page shows while there are none. */
   noRoles: 'No open roles right now',
-  note: 'We are not currently advertising jobs, internships, or contract roles.',
+  note: 'That includes jobs, internships and contract work.',
   /** Where a general introduction goes. */
   introEmail: site.contact.email,
   /** How to send one. `{email}` is where the page puts the address as a link. */
   intro:
-    'If you would still like to make a general introduction, send a short note to {email} with the kind of work you do or a link to your portfolio. We can’t guarantee a reply.',
+    'If you would like to introduce yourself, send a short note to {email} about the work you do, or a link to your portfolio. We cannot promise a reply.',
 };
 
 /** The introduction sentence with the address written in, for plain text. */

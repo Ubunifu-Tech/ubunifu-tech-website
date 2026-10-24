@@ -1,16 +1,15 @@
 # Product artwork - 14 September 2026
 
-The product page and homepage use three original editorial illustrations generated for the current light Ubunifu Technologies design system. They explain each product's purpose without presenting a fictional product screenshot.
+The product page and homepage use two original editorial illustrations generated for the current light Ubunifu Technologies design system. They explain each product's purpose without presenting a fictional product screenshot.
 
-Runtime artwork is mapped by stable product ID in `src/content/product-artwork.ts`. Product names, capabilities, availability, and links remain accessible HTML sourced from `src/content/products.tsx`.
+Runtime artwork is mapped by stable product ID in `src/content/product-artwork.ts`. Product names, capabilities, availability, and links remain accessible HTML sourced from `src/content/products.tsx`. Ubunifu Insight was withdrawn in October 2026 and its artwork removed.
 
 | Product | Runtime asset | Subject | WebP size |
 |---|---|---|---:|
-| Insight | `public/editorial/product-insight-v2.webp` | A professional reviews answers connected back to source documents | 54,314 bytes |
 | Sifa | `public/editorial/product-sifa-v2.webp` | A small-business workflow connects sales, stock, customers, and records | 57,082 bytes |
 | Rafiki | `public/editorial/product-rafiki-v2.webp` | A team assembles contact, booking, and publishing modules into a website | 45,470 bytes |
 
-All three runtime files are 1200 x 900 WebP images on a clean white canvas. They contain no product claims, readable interface copy, logos, watermarks, metrics, or currency amounts. Rafiki includes an outlined, unfilled module to make its in-development status visible rather than implying it is already live.
+Both runtime files are 1200 x 900 WebP images on a clean white canvas. They contain no product claims, readable interface copy, logos, watermarks, metrics, or currency amounts. Rafiki includes an outlined, unfilled module to make its in-development status visible rather than implying it is already live.
 
 ## Shared visual direction
 
@@ -22,14 +21,6 @@ All three runtime files are 1200 x 900 WebP images on a clean white canvas. They
 - No robots, brains, rockets, VR headsets, dark server racks, decorative network fields, or science-fiction imagery.
 
 ## Product subjects
-
-### Insight
-
-Several source documents pass through a compact analysis module into an answer panel. Reference markers connect answer fragments back to their sources while a professional visibly reviews the result. The scene is limited to capabilities listed in `src/content/products.tsx`: questions about documents, structured extraction, and source references.
-
-Final corrected generation output:
-
-`/Users/richardpallangyo/.codex/generated_images/019efd0a-a70c-73c1-9f92-edfad648a5f4/exec-b5967cc7-1cb6-43e4-b881-39afce57d73e.png`
 
 ### Sifa
 

@@ -52,7 +52,7 @@ export async function generateMetadata({
     // asked and the answer was no.
     return unavailable
       ? { title: 'This article is not loading', robots: { index: false } }
-      : { title: 'Post not found' };
+      : { title: 'Article not found' };
   }
 
   const url = `${SITE_URL}/blog/${post.slug}`;
@@ -107,13 +107,13 @@ function ArticleUnavailable() {
           <div className={styles.content}>
             <h1>This article is not loading</h1>
             <p>
-              Something on our side is not answering. It is usually brief. Trying again in a
-              minute or two normally does it, and the link you followed is still good.
+              The problem is on our side, and the link you followed is correct. Please try again
+              in a minute or two.
             </p>
             <p>
-              <Link href="/blog">Everything else we have written</Link> ·{' '}
-              <Link href="/work">the work we have done</Link> ·{' '}
-              <Link href="/contact">ask us for it directly</Link>
+              <Link href="/blog">All articles</Link> ·{' '}
+              <Link href="/work">Our work</Link> ·{' '}
+              <Link href="/contact">Ask us for this article</Link>
             </p>
           </div>
         </div>

@@ -137,7 +137,7 @@ export default async function CaseStudyPage({
               <figcaption className={styles.plateCaption}>
                 <span>{project.artwork.alt}</span>
                 <span className={styles.plateNote}>
-                  Diagram of the system, not a capture of the interface.
+                  Diagram of the system. See the live site for the interface.
                 </span>
               </figcaption>
               <div className={styles.plateViewport}>
@@ -201,7 +201,7 @@ export default async function CaseStudyPage({
 
               {project.furtherReading?.length ? (
                 <div className={styles.further}>
-                  <p className={styles.furtherLabel}>Written up in more detail</p>
+                  <p className={styles.furtherLabel}>Further reading</p>
                   {project.furtherReading.map((item) => (
                     <Link key={item.href} href={item.href} className={styles.furtherLink}>
                       {item.title} <ArrowRight size={17} strokeWidth={2} aria-hidden="true" />

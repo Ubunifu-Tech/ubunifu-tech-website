@@ -59,11 +59,10 @@ export default async function PortalRequests({
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <h1 className={styles.heading}>
-          Ask us for <span className={styles.headingAccent}>something</span>
+          Your <span className={styles.headingAccent}>requests</span>
         </h1>
         <p className={styles.lead}>
-          A change to the site, new content, something broken, or a question. Everything you send
-          is kept here with our replies, so nothing gets lost in an email thread.
+          Ask for a change, new content or a fix, or send us a question, and we will reply here.
         </p>
       </div>
 
@@ -85,7 +84,7 @@ export default async function PortalRequests({
       <div className={table.frame}>
         <div className={table.toolbar}>
           <div className={table.toolbarText}>
-            <h2 className={table.title}>Everything you have asked us</h2>
+            <h2 className={table.title}>All requests</h2>
             <span className={table.count}>
               {openCount === 0
                 ? 'Nothing outstanding'
@@ -101,7 +100,7 @@ export default async function PortalRequests({
                 <th className={table.th} scope="col">Number</th>
                 <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">About</th>
-                <th className={table.th} scope="col">Where it stands</th>
+                <th className={table.th} scope="col">Status</th>
                 <th className={table.th} scope="col">Last activity</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className={table.muted}>Actions</span>
@@ -112,9 +111,9 @@ export default async function PortalRequests({
               {tickets.length === 0 ? (
                 <tr>
                   <td className={table.emptyCell} colSpan={7}>
-                    <p className={table.emptyTitle}>You have not asked us for anything yet.</p>
+                    <p className={table.emptyTitle}>No requests yet.</p>
                     <p className={table.emptyHint}>
-                      Use the form above and it will appear here.
+                      Requests you send appear here.
                     </p>
                   </td>
                 </tr>

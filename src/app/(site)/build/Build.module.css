@@ -134,7 +134,7 @@
 }
 
 /* Matches the "Best when ..." footer on the home page's engagement paths: a
-   hairline, then the one phrase that is the point of the card. */
+   hairline, then one plain sentence. */
 .processOutput {
   margin: 0;
   padding-top: var(--space-5);
@@ -142,11 +142,6 @@
   color: var(--text-secondary);
   font-size: var(--font-size-body);
   line-height: 1.6;
-}
-
-.processOutput strong {
-  color: var(--brand-deep);
-  font-weight: var(--font-weight-emphasis);
 }
 
 /* ── Responsive ──────────────────────────────── */

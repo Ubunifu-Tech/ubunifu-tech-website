@@ -20,7 +20,7 @@ export const revalidate = 300;
 export const metadata = pageMetadata({
   title: 'Insights',
   description:
-    'Notes from Ubunifu Technologies on building software for African businesses: product decisions, pricing, AI in Swahili, and what we are learning in Tanzania.',
+    'Articles from Ubunifu Technologies on building software in Tanzania: product decisions, pricing and what we have learned.',
   path: '/blog',
 });
 
@@ -60,17 +60,17 @@ export default async function BlogPage() {
                so they leave with somewhere to go rather than an apology. */
             <div className={styles.empty}>
               <p>
-                The articles are not loading at the moment. This is our end, not yours, and it is
-                usually brief. Refreshing in a minute or two normally does it.
+                The articles are not loading because of a problem on our side. Please try
+                again in a minute or two.
               </p>
               <p>
-                In the meantime there is <Link href="/work">the work we have done</Link> and{' '}
-                <Link href="/build">what we actually do</Link>. If you were looking for something
-                specific, <Link href="/contact">tell us</Link> and we will send it to you directly.
+                You can still see <Link href="/work">our work</Link> and{' '}
+                <Link href="/build">our services</Link>. If you were looking for a particular
+                article, <Link href="/contact">tell us</Link> and we will send it to you.
               </p>
             </div>
           ) : posts.length === 0 ? (
-            <p className={styles.empty}>Nothing published yet. Check back soon.</p>
+            <p className={styles.empty}>No articles published yet.</p>
           ) : (
             <BlogIndex posts={meta} />
           )}

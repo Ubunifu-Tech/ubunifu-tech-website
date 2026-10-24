@@ -7,7 +7,7 @@
 // and live links remain accessible HTML rather than simulated interfaces.
 
 export type ProductStatus = 'live' | 'soon' | 'available';
-export type ProductId = 'insight' | 'sifa' | 'rafiki';
+export type ProductId = 'sifa' | 'rafiki';
 
 export type Product = {
   id: ProductId;
@@ -23,35 +23,17 @@ export type Product = {
 
 export const products: ReadonlyArray<Product> = [
   {
-    id: 'insight',
-    name: 'Ubunifu Insight',
-    tagline: 'Ask questions about your documents',
-    description:
-      'Upload your contracts, reports, lesson plans, or tax invoices, then ask questions, extract structured data, or generate new documents from your own templates. It includes specialised AI agents, including an Education Tutor that teaches in Swahili.',
-    features: [
-      'Document answers with source references',
-      'Data extraction from PDFs',
-      'Tanzania-localised templates',
-      'Multilingual AI agents',
-      'Pay-as-you-go credits',
-    ],
-    status: 'live',
-    url: 'https://insight.ubunifutech.com',
-    domain: 'insight.ubunifutech.com',
-    cta: 'Open Insight',
-  },
-  {
     id: 'sifa',
     name: 'Ubunifu Sifa',
-    tagline: 'Run your shop, restaurant, or distributor',
+    tagline: 'For shops, restaurants and distributors',
     description:
-      'Manage sales, stock, suppliers, customers, and unpaid balances in Tanzanian shillings.',
+      'Keep sales, stock, suppliers, customers and unpaid balances in one place.',
     features: [
-      'Sales & POS',
+      'Sales and point of sale',
       'Inventory with low-stock alerts',
-      'Customer balances grouped by age',
-      'Supplier & customer management',
-      'Records in Tanzanian shillings',
+      'Customer balances grouped by how long they have been unpaid',
+      'Supplier and customer records',
+      'Amounts in Tanzanian shillings',
     ],
     status: 'live',
     url: 'https://sifa.ubunifutech.com',
@@ -61,9 +43,9 @@ export const products: ReadonlyArray<Product> = [
   {
     id: 'rafiki',
     name: 'Ubunifu Rafiki',
-    tagline: 'Embeddable tools for your website',
+    tagline: 'Tools to add to an existing website',
     description:
-      'We’re developing contact forms, booking widgets, and blog tools for existing websites.',
+      'We are still building these tools.',
     features: ['Contact forms', 'Booking widgets', 'Blog tools'],
     status: 'soon',
     url: null,

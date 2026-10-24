@@ -43,7 +43,7 @@ export async function inviteColleague(_previous: TeamState, formData: FormData):
 
   // Per client, so one account cannot be used to send invitations to strangers.
   if (!(await allow('colleague-invite', actor.clientId, { limit: 10, windowMinutes: 24 * 60 }))) {
-    return { status: 'error', message: 'That is a lot of invitations for one day. Try again tomorrow.' };
+    return { status: 'error', message: 'You have sent a lot of invitations today. Try again tomorrow.' };
   }
 
   const result = await addContact({
@@ -69,13 +69,13 @@ export async function resendColleagueInvite(_previous: TeamState, formData: Form
     return { status: 'error', message: `${contact.name} has no email yet. Your main contact can add it.` };
   }
   if (!(await allow('client-invite', contact.id, { limit: 3, windowMinutes: 60 }))) {
-    return { status: 'error', message: 'A link went out recently. Give it a few minutes.' };
+    return { status: 'error', message: 'An invitation went out recently. Try again in a few minutes.' };
   }
 
   const sent = await invitePerson({ contact, clientName: actor.clientName, by: by(actor) });
   return sent.ok
     ? { status: 'sent', message: `Sent to ${contact.email}.` }
-    : { status: 'error', message: 'It did not send. Try again later.' };
+    : { status: 'error', message: 'The invitation did not send. Try again later.' };
 }
 
 /**
@@ -94,7 +94,7 @@ export async function editColleague(_previous: TeamState, formData: FormData): P
   });
   if (!contact) return { status: 'error', message: 'They are not on your account.' };
   if (contact.activatedAt) {
-    return { status: 'error', message: 'They have set up their account, so they change their own details.' };
+    return { status: 'error', message: 'They have set up their account, so only they can change their details.' };
   }
 
   const result = await updateContact({
@@ -122,7 +122,7 @@ export async function editColleague(_previous: TeamState, formData: FormData): P
     !(await allow('client-invite', contact.id, { limit: 3, windowMinutes: 60 })) ||
     !(await allow('colleague-invite', actor.clientId, { limit: 10, windowMinutes: 24 * 60 }))
   ) {
-    return { status: 'done', message: 'Saved. A link went out recently, so the invitation was not sent again yet.' };
+    return { status: 'done', message: 'Saved. An invitation went out recently, so we did not send another. Use Email the invitation to try again later.' };
   }
   const person = await db.clientContact.findUnique({
     where: { id: contact.id },
@@ -134,7 +134,7 @@ export async function editColleague(_previous: TeamState, formData: FormData): P
   return {
     status: 'done',
     message: sent.ok
-      ? `Saved, and the invitation is on its way to ${email}.`
+      ? `Saved. Invitation sent to ${email}.`
       : 'Saved, but the invitation did not send. Use Email the invitation to try again.',
   };
 }
@@ -215,7 +215,7 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
 
   if (!(await allow('password-change', actor.id, { limit: 5, windowMinutes: 15 }))) {
     await refused('Too many tries');
-    return { status: 'error', message: 'Too many tries. Wait a few minutes.' };
+    return { status: 'error', message: 'Too many tries. Wait a few minutes and try again.' };
   }
 
   const me = await db.clientContact.findUnique({
@@ -224,7 +224,7 @@ export async function changePassword(_previous: TeamState, formData: FormData): 
   });
   if (!me?.passwordHash || !(await verifyPassword(current, me.passwordHash))) {
     await refused();
-    return { status: 'error', message: 'Your current password is not right.' };
+    return { status: 'error', message: 'Your current password is incorrect.' };
   }
   const problem = passwordProblem(next);
   if (problem) return { status: 'error', message: problem };
@@ -272,5 +272,5 @@ export async function emailPasswordLink(): Promise<TeamState> {
   const sent = await sendPasswordLink({ id: me.id, name: me.name, email: me.email });
   return sent.ok
     ? { status: 'sent', message: `Sent to ${me.email}. The link works for 30 minutes.` }
-    : { status: 'error', message: 'It did not send. Try again in a minute.' };
+    : { status: 'error', message: 'The email did not send. Try again in a minute.' };
 }

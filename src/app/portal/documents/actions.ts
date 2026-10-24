@@ -138,7 +138,7 @@ export async function suggestWording(
   if (body.length > MAX_WORDING) {
     return {
       status: 'error',
-      message: 'That is longer than we can take here. Ask for changes instead and tell us what should change.',
+      message: 'That is too long to send here. Use Ask for changes and tell us what should change.',
     };
   }
   if (note.length > 4000) {
@@ -179,19 +179,19 @@ export async function suggestWording(
     return {
       status: 'error',
       message:
-        'You told us you could not sign this version, so it is closed. If that has changed, ask us and we will send it again.',
+        'You declined this version, so it is closed. If you change your mind, ask us to send it again.',
     };
   }
   if (request.status === 'cancelled') {
     return {
       status: 'error',
-      message: 'We withdrew this version, so there is nothing to answer. A newer one should be waiting for you.',
+      message: 'We withdrew this version. A newer one may be waiting in your documents.',
     };
   }
   if (request.status === 'expired' || (request.expiresAt && request.expiresAt.getTime() < Date.now())) {
     return {
       status: 'error',
-      message: 'This request has run out. Tell us what you wanted to change and we will send a fresh one.',
+      message: 'The time to sign this has run out. Tell us what you wanted to change and we will send a new copy.',
     };
   }
   if (

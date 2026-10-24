@@ -7,7 +7,7 @@ import { pageMetadata } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
   title: 'Careers',
-  description: 'Ubunifu Technologies has no advertised vacancies at present. Confirmed opportunities and application instructions will be published here.',
+  description: 'Ubunifu Technologies has no open roles at the moment. Any vacancies will be posted here with details of how to apply.',
   path: '/careers',
 });
 
@@ -21,7 +21,7 @@ export default function CareersPage() {
           scene="careers"
           eyebrow="Careers"
           title="Work at Ubunifu"
-          lead="We publish confirmed vacancies and application details here."
+          lead="We post vacancies here, with details of how to apply."
         />
         <div className="container">
           <div className={styles.openSection}>

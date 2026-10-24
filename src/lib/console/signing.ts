@@ -122,20 +122,20 @@ export async function recordSignature(input: {
   if (request.status === 'cancelled') {
     return {
       status: 'error',
-      message: 'This version was withdrawn. A newer one should be waiting for you.',
+      message: 'We withdrew this version. A newer one may be waiting in your documents.',
     };
   }
   if (request.status === 'declined') {
     return {
       status: 'error',
       message:
-        'You told us you could not sign this version, so it is closed. If that has changed, ask us and we will send it again.',
+        'You declined this version, so it is closed. If you change your mind, ask us to send it again.',
     };
   }
   if (request.expiresAt && request.expiresAt.getTime() < Date.now()) {
     return {
       status: 'error',
-      message: 'This signing request has expired. Ask us to send it again.',
+      message: 'The time to sign this has run out. Ask us to send it again.',
     };
   }
   if (request.termsVersionId && !input.acceptedTerms) {
@@ -156,7 +156,7 @@ export async function recordSignature(input: {
     return {
       status: 'error',
       message:
-        'This document no longer matches what was sent to you, so it cannot be signed. Nobody has been charged and nothing has been agreed. Please tell us, and we will send a fresh copy.',
+        'This document no longer matches what was sent to you, so it cannot be signed. Nothing has been agreed and nothing has been charged. Tell us, and we will send a fresh copy.',
     };
   }
 

@@ -352,7 +352,7 @@ export default async function PortalProject({
           {project.assetRequests.length > 0 && (
             <section className={forms.card}>
               <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>What we still need from you</h2>
+                <h2 className={forms.cardTitle}>What we need from you</h2>
                 <span className={forms.cardMeta}>
                   {outstanding === 0 ? 'Nothing waiting on you' : `${outstanding} waiting on you`}
                   {onHold > 0 ? `, ${onHold} on hold` : ''}
@@ -445,8 +445,8 @@ export default async function PortalProject({
               </ul>
               <p className={styles.note}>
                 {canUpload
-                  ? 'Write your answer or attach a file on each item. They land against the right one.'
-                  : `Write your answer on each item, or email files to ${org.email}. We tick them off as they arrive.`}
+                  ? 'Write your answer or attach a file for each item.'
+                  : `Write your answer for each item, or email files to ${org.email}.`}
               </p>
             </section>
           )}
@@ -482,7 +482,7 @@ export default async function PortalProject({
           {project.updates.length > 0 && (
             <section className={forms.card}>
               <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>What we have told you</h2>
+                <h2 className={forms.cardTitle}>Updates</h2>
                 <span className={forms.cardMeta}>
                   {project.updates.length} update{project.updates.length === 1 ? '' : 's'}
                 </span>
@@ -512,7 +512,7 @@ export default async function PortalProject({
                         target="_blank"
                         rel="noreferrer noopener"
                       >
-                        Take a look
+                        Open the preview
                       </a>
                     )}
                   </li>
@@ -528,7 +528,7 @@ export default async function PortalProject({
               </div>
               {answered === 'review' && (
                 <p className={styles.notice} role="status">
-                  Thank you. We have your answer, and the next step is ours.
+                  Thank you. We have your answer.
                 </p>
               )}
               <ReviewRound review={latestReview} audience="client" />
@@ -539,7 +539,7 @@ export default async function PortalProject({
 
         <section className={forms.card}>
           <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Where the work has got to</h2>
+            <h2 className={forms.cardTitle}>Project plan</h2>
             {total > 0 && (
               <span className={forms.cardMeta}>
                 {done} of {total} done
@@ -549,7 +549,7 @@ export default async function PortalProject({
 
           {shownPhases.length === 0 ? (
             <p className={styles.note}>
-              The plan for this project is still being put together. It will appear here.
+              The plan will appear here once it is ready.
             </p>
           ) : (
             shownPhases.map((phase) => (

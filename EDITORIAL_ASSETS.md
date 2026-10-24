@@ -11,10 +11,10 @@ on the homepage:
 
 | Asset | Principle |
 | --- | --- |
-| `principle-local-v1.webp` | Understand locally |
-| `principle-shipped-v1.webp` | Ship real work |
-| `principle-ai-v1.webp` | Use AI deliberately |
-| `principle-accountable-v1.webp` | Stay accountable after launch |
+| `principle-local-v1.webp` | Local context |
+| `principle-shipped-v1.webp` | Live client work |
+| `principle-ai-v1.webp` | AI with human review |
+| `principle-accountable-v1.webp` | Support after launch |
 
 The mapping and alternative text live in
 `src/content/principle-artwork.ts`.
@@ -25,7 +25,6 @@ The current product illustrations are:
 
 | Asset | Product |
 | --- | --- |
-| `product-insight-v2.webp` | Ubunifu Insight |
 | `product-sifa-v2.webp` | Ubunifu Sifa |
 | `product-rafiki-v2.webp` | Ubunifu Rafiki |
 

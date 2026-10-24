@@ -33,7 +33,7 @@ export const faqs: ReadonlyArray<AssistantFaq> = [
   {
     question: 'Do you support a website or system after launch?',
     answer:
-      'Yes, where it is agreed. Every project defines what happens after launch: an agreed support relationship, a documented handover, or a mix of both. Hosting and ongoing support are provided where agreed.',
+      'Yes, where it is agreed. Every project sets out what happens after launch: ongoing support, a documented handover, or both. We can host it too.',
     source: 'values.tsx (Plan beyond launch); process.ts (Operate); about.tsx approach (Run and evolve)',
   },
   {
@@ -51,7 +51,7 @@ export const faqs: ReadonlyArray<AssistantFaq> = [
     question: 'Do you put AI into everything?',
     answer:
       'No. AI and automation are included only when the workflow and the value justify them, and we agree how outputs will be checked and where a person reviews them.',
-    source: 'values.tsx (Use technology deliberately); services.tsx (AI & Automation)',
+    source: 'values.tsx (Choose technology for the problem); services.tsx (AI & Automation)',
   },
   {
     question: 'How do clients pay?',

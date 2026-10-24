@@ -71,7 +71,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
 
     if (!form.subject) {
       setStatus('error');
-      setErrorMsg('Please choose a subject for your message.');
+      setErrorMsg('Please choose a subject.');
       subjectRef.current?.focus();
       return;
     }
@@ -162,8 +162,8 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 acknowledgement email and the chat also read, so a sender is
                 promised the same thing here, in writing and in the chat. */}
             <p className={styles.text}>
-              We read everything that comes in. {replyPromise} For a quick question,
-              the chat answers straight away and passes anything bigger to us.
+              {replyPromise} For a quick question, use the chat, which can also
+              pass a message on to us.
             </p>
 
             {/* Values come from content/site.ts, which is the single source of
@@ -286,7 +286,7 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
             </div>
 
             <div className={styles.field}>
-              <label id="subject-label" htmlFor="subject" className={styles.label}>What can we help with?</label>
+              <label id="subject-label" htmlFor="subject" className={styles.label}>Subject</label>
               <ContactSubjectSelect
                 value={form.subject}
                 options={contactSubjects}
@@ -351,9 +351,9 @@ export const Contact: React.FC<{ hideIntro?: boolean }> = ({ hideIntro = false }
                 )}
               </button>
               <p className={styles.privacyNote}>
-                Please do not send passwords or sensitive records. By submitting,
-                you agree that we may use this information to respond to your enquiry.{' '}
-                <Link href="/privacy">Privacy details</Link>
+                Please do not include passwords or sensitive records. By sending this
+                form, you agree that we may use these details to reply to your enquiry.{' '}
+                <Link href="/privacy">Privacy notice</Link>
               </p>
             </div>
           </motion.form>

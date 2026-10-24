@@ -41,7 +41,7 @@ export async function confirmUpload(
     where: { id: assetRequestId, project: { clientId: actor.clientId, deletedAt: null } },
     select: { id: true, title: true, project: { select: { id: true, slug: true } } },
   });
-  if (!assetRequest) return { status: 'error', message: 'That is not something we asked you for.' };
+  if (!assetRequest) return { status: 'error', message: 'We could not find that item in your projects.' };
 
   try {
     // Audited inside, by whichever of this and the store's webhook creates
@@ -54,7 +54,7 @@ export async function confirmUpload(
     });
   } catch (error) {
     if (error instanceof Error && error.message === 'upload-too-large') {
-      return { status: 'error', message: 'That file is larger than we can take here.' };
+      return { status: 'error', message: 'That file is too large to send here.' };
     }
     console.error('[uploads] could not record', error);
     // The row may be there even so: a step after it (the checklist or the
@@ -75,11 +75,11 @@ export async function confirmUpload(
     // item, did the upload really not arrive.
     const reason = error instanceof Error ? error.message : '';
     if (reason === 'upload-missing' || reason === 'upload-not-ours') {
-      return { status: 'error', message: 'That did not arrive. Try it again?' };
+      return { status: 'error', message: 'That file did not arrive. Try sending it again.' };
     }
     return {
       status: 'error',
-      message: 'We could not check that one. Refresh the page before sending it again.',
+      message: 'We could not confirm that file arrived. Refresh the page to check before sending it again.',
     };
   }
 
@@ -100,7 +100,7 @@ export async function removeMyFile(_previous: UploadState, formData: FormData): 
     actor: { type: 'client_contact', id: actor.id },
     clientId: actor.clientId,
   });
-  if (!removed) return { status: 'error', message: 'That file is already gone.' };
+  if (!removed) return { status: 'error', message: 'That file has already been removed.' };
 
   revalidatePath(`/portal/projects/${removed.slug}`);
   revalidatePath(`/admin/projects/${removed.slug}`);
@@ -126,7 +126,7 @@ export async function assignMyItem(
     },
     select: { id: true, title: true, assigneeId: true, project: { select: { slug: true } } },
   });
-  if (!item) return { status: 'error', message: 'That item is not on your projects.' };
+  if (!item) return { status: 'error', message: 'We could not find that item in your projects.' };
 
   const contactId = String(formData.get('assigneeId') ?? '');
   const contact = contactId
@@ -169,13 +169,13 @@ export async function answerRequest(_previous: AnswerState, formData: FormData):
     },
     select: { id: true, title: true, status: true, project: { select: { slug: true } } },
   });
-  if (!item) return { status: 'error', message: 'That item is not on your projects.' };
+  if (!item) return { status: 'error', message: 'We could not find that item in your projects.' };
   if (item.status === 'waived') return { status: 'error', message: 'We no longer need this one.' };
 
   const response = String(formData.get('response') ?? '').trim();
   if (!response) return { status: 'error', message: 'Write your answer first.' };
   if (response.length > 8000) {
-    return { status: 'error', message: 'That is longer than this box takes. Attach it as a file instead.' };
+    return { status: 'error', message: 'That is too long for this box. Attach it as a file instead.' };
   }
 
   await db.assetRequest.update({

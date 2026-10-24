@@ -73,15 +73,15 @@ export default async function PortalDocuments() {
           {waiting > 0
             ? `${waiting} ${waiting === 1 ? 'document is' : 'documents are'} waiting for your signature.`
             : actor.isPrimary
-              ? 'Nothing is waiting on you. Everything you have signed stays here.'
-              : `${main?.name ?? 'Your main contact'} signs for ${actor.clientName}. Everything signed stays here.`}
+              ? 'Nothing is waiting for your signature.'
+              : `${main?.name ?? 'Your main contact'} signs documents for ${actor.clientName}.`}
         </p>
       </div>
 
       <div className={table.frame}>
         <div className={table.toolbar}>
           <div className={table.toolbarText}>
-            <h2 className={table.title}>Everything we have sent you</h2>
+            <h2 className={table.title}>All documents</h2>
             <span className={table.count}>
               {documents.length} {documents.length === 1 ? 'document' : 'documents'}
             </span>
@@ -96,7 +96,7 @@ export default async function PortalDocuments() {
                 <th className={table.th} scope="col">Kind</th>
                 <th className={table.th} scope="col">Project</th>
                 <th className={table.th} scope="col">Sent</th>
-                <th className={table.th} scope="col">State</th>
+                <th className={table.th} scope="col">Status</th>
                 <th className={`${table.th} ${table.actionsHead}`} scope="col">
                   <span className={table.muted}>Actions</span>
                 </th>
@@ -108,7 +108,7 @@ export default async function PortalDocuments() {
                   <td className={table.emptyCell} colSpan={7}>
                     <p className={table.emptyTitle}>Nothing sent to you yet.</p>
                     <p className={table.emptyHint}>
-                      Proposals and agreements will appear here when they are ready.
+                      Proposals and agreements we send you will appear here.
                     </p>
                   </td>
                 </tr>
@@ -135,7 +135,7 @@ export default async function PortalDocuments() {
                         {request ? (
                           formatShortDate(request.sentAt)
                         ) : (
-                          <span className={table.muted}>Taken back</span>
+                          <span className={table.muted}>Being revised</span>
                         )}
                       </td>
                       <td className={table.td}>

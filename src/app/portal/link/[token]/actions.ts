@@ -17,7 +17,7 @@ import type { AnswerState } from '../../projects/[slug]/review-actions';
  * out, or belongs to someone whose access was turned off does nothing.
  */
 
-const GONE = 'This link has run out or was replaced. Ask Ubunifu for a new one.';
+const GONE = 'This link has expired or been replaced. Ask Ubunifu for a new one.';
 
 export async function signWithLink(_previous: SignState, formData: FormData): Promise<SignState> {
   const link = await readSharedLink(formText(formData, 'token'));

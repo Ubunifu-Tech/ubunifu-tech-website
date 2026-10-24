@@ -29,7 +29,7 @@ export default async function ActivatePage({
         <p className={auth.lead}>
           {actor.email
             ? `Choose a password for the ${actor.clientName} portal.`
-            : `Add your details for the ${actor.clientName} portal. We will email you a link to confirm your address, then you choose a password.`}
+            : `Add your details for the ${actor.clientName} portal. We will email you a link to confirm your address, and then you can choose a password.`}
         </p>
         {/* A confirmed address someone else took in the meantime. */}
         {!actor.email && query.email === 'taken' && (

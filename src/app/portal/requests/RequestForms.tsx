@@ -79,7 +79,7 @@ export function RaiseRequestForm({
 
         <div className={`${forms.field} ${forms.wide}`}>
           <label className={forms.label} htmlFor="req-subject">
-            In a few words
+            Subject
           </label>
           <input
             id="req-subject"
@@ -97,7 +97,7 @@ export function RaiseRequestForm({
 
         <div className={`${forms.field} ${forms.wide}`}>
           <label className={forms.label} htmlFor="req-body">
-            Tell us what is happening
+            Details
           </label>
           <textarea
             id="req-body"
@@ -108,24 +108,17 @@ export function RaiseRequestForm({
             minLength={10}
             maxLength={8000}
             required
-            placeholder="What you expected, what happened instead, and when you first noticed. If it is a change you want, describe it as you would say it out loud."
+            placeholder="For a problem, what happened and when. For a change, what you would like."
             disabled={pending}
           />
-          <p className={forms.hint}>
-            There is no wrong way to write this. Detail helps, but a sentence is fine. We will ask
-            if we need more.
-          </p>
         </div>
       </div>
 
       <div className={forms.actions}>
         <button type="submit" className={forms.button} disabled={pending}>
-          {pending ? 'Sending…' : 'Send it to us'}
+          {pending ? 'Sending…' : 'Send request'}
         </button>
-        <p className={forms.payoff}>
-          Saved the moment you send it, and you can follow it here. We will reply in the same
-          place.
-        </p>
+        <p className={forms.payoff}>We will reply here.</p>
       </div>
 
       {state.message && (
@@ -151,7 +144,7 @@ export function ReplyForm({ ticketId, closed }: { ticketId: string; closed: bool
   if (closed) {
     return (
       <p className={forms.hint}>
-        This one is closed. If it comes back, raise a new request and we will pick it up.
+        This request is closed. If you need more help, raise a new request.
       </p>
     );
   }
@@ -161,7 +154,7 @@ export function ReplyForm({ ticketId, closed }: { ticketId: string; closed: bool
       <input type="hidden" name="ticketId" value={ticketId} />
       <div className={forms.field}>
         <label className={forms.label} htmlFor="reply-body">
-          Add to this
+          Reply
         </label>
         <textarea
           id="reply-body"

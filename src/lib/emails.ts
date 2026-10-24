@@ -9,7 +9,6 @@ const SITE = 'https://ubunifutech.com';
 const EMAIL = 'info@ubunifutech.com';
 const PHONE_TEL = '+255748548816';
 const PHONE_DISPLAY = '+255 748 548 816';
-const INSIGHT = 'https://insight.ubunifutech.com';
 const SIFA = 'https://sifa.ubunifutech.com';
 const LOGO = `${SITE}/brand/png/ubunifu-lockup-1600.png`;
 
@@ -206,7 +205,7 @@ export function notificationEmail(input: {
           )
         : button(reply, `Reply to ${name}`)
     }</div>
-    <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">Or just reply to this email. It goes straight to ${name}.</p>`;
+    <p style="margin:18px 0 0;color:#6D6975;font-size:12px;">You can also reply to this email. Your reply goes to ${name}.</p>`;
 
   return shell(
     input.followUp
@@ -233,15 +232,15 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
   // it acknowledges receipt itself; it does not report that a message was
   // passed to somebody else.
   const body = `
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1D1B22;">Thanks for reaching out.</h1>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#1D1B22;">We have your message</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      We have your message${about}. We read everything that comes in. ${escapeHtml(replyPromise)} If it is easier to talk, say so in a reply and we will suggest a time.
+      Thank you for writing to us${about}. ${escapeHtml(replyPromise)} If you would rather talk, say so in your reply and we will suggest a time.
     </p>
     <p style="margin:0 0 26px;color:#6D6975;font-size:13px;line-height:1.6;">
       If you did not write to us, you can ignore this email.
     </p>
-    <p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, our live products are open to try:</p>
-    ${buttonRow(button(INSIGHT, 'Try Ubunifu Insight'), buttonGhost(SIFA, 'Try Ubunifu Sifa'))}`;
+    <p style="margin:0 0 14px;color:#4A4753;font-size:15px;line-height:1.7;">While you wait, you can try Ubunifu Sifa, our product for shops, restaurants and distributors.</p>
+    ${buttonGhost(SIFA, 'Try Ubunifu Sifa')}`;
 
   return shell(`We have your message. ${replyPromise}`, body);
 }
@@ -257,9 +256,9 @@ export function acknowledgementEmail(input: { topic?: string } = {}): string {
  */
 function signInNote(minutesOrDays: string): string {
   return `<p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
-    This link works once and expires in ${minutesOrDays}. The link is just for you,
-    so please do not forward this email. If you did not request it, you can
-    ignore this email. Nothing has changed on your account.
+    This link works once and expires in ${minutesOrDays}. It is for you only, so
+    please do not forward this email. If you did not ask for it, you can
+    ignore this email. Nothing on your account has changed.
   </p>`;
 }
 
@@ -292,17 +291,17 @@ export function staffInviteEmail(input: { name: string; invitedBy: string; url: 
   const by = escapeHtml(input.invitedBy);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">You are on the team</h1>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">You have been added to the console</h1>
     <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. ${by} added you to the Ubunifu console, where we run clients,
+      Hello ${name}. ${by} added you to the Ubunifu console, where we manage clients,
       projects, documents and invoices. Use the button to sign in for the first time.
     </p>
     ${button(input.url, 'Open the console')}
     <p style="margin:22px 0 0;color:#6D6975;font-size:13px;line-height:1.6;">
-      After today, sign in any time with your email address and we will send you a fresh link.
+      After this, sign in with your email address and we will email you a new link each time.
     </p>
     ${linkNote(
-      'This link works once and lasts 14 days. The link is just for you, so please do not forward this email.',
+      'This link works once and lasts 14 days. It is for you only, so please do not forward this email.',
     )}`;
 
   return shell(`${input.invitedBy} added you to the Ubunifu console.`, body);
@@ -320,9 +319,9 @@ export function taskAssignedEmail(input: {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">A task for you</h1>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">You have a new task</h1>
     <p style="margin:0 0 20px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. ${escapeHtml(input.by)} gave you this on <strong style="color:#1D1B22;">${escapeHtml(input.project)}</strong>.
+      Hello ${name}. ${escapeHtml(input.by)} gave you a task on <strong style="color:#1D1B22;">${escapeHtml(input.project)}</strong>.
     </p>
     ${facts([
       ['Task', escapeHtml(input.task)],
@@ -344,7 +343,7 @@ export function projectOwnerEmail(input: {
   const name = escapeHtml(input.name.split(' ')[0] ?? input.name);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">A project for you to lead</h1>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">You are now a project owner</h1>
     <p style="margin:0 0 20px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. ${escapeHtml(input.by)} made you the owner of <strong style="color:#1D1B22;">${escapeHtml(input.project)}</strong> for ${escapeHtml(input.client)}.
     </p>
@@ -368,15 +367,15 @@ export function colleagueInviteEmail(input: {
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Join ${org} on the Ubunifu portal</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. ${by} invited you to the portal where ${org} follows its work with
-      Ubunifu Technologies: project progress, what we need from you, documents to sign,
+      Ubunifu Technologies: project progress, what we need from you, documents to sign
       and invoices.
     </p>
     <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Follow the link to choose a password and finish setting up your account.
+      Use the button to choose a password and set up your account.
     </p>
     ${button(input.url, 'Set up your account')}
     ${linkNote(
-      'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email.',
+      'This link lasts 14 days, and you can use it again until your account is set up. It is for you only, so please do not forward this email.',
     )}`;
 
   return shell(`${input.invitedBy} invited you to the ${input.clientName} portal.`, body);
@@ -407,25 +406,25 @@ export function clientInviteEmail(input: {
       Hello ${name}. ${
         input.reason === 'reset' ? 'You asked to choose a password' : 'You asked for a sign-in link'
       }, but your account for <strong style="color:#1D1B22;">${org}</strong> is not set up yet.
-      Use the button to finish setting up${
-        input.reason === 'reset' ? ', and choose your password as part of it' : ''
+      Use the button to finish setting it up${
+        input.reason === 'reset' ? ' and choose your password' : ''
       }.
     </p>`
     : `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Your project portal is ready</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. We have set up a portal for <strong style="color:#1D1B22;">${org}</strong>.
-      It is where you will find progress updates, anything we need from you,
+      In it you will find progress updates, what we need from you,
       documents to review and sign, and your invoices and receipts.
     </p>
     <p style="${text}">
-      Follow the link to choose a password and finish setting up your account.
+      Use the button to choose a password and set up your account.
     </p>`;
 
   const body = `${opening}
     ${button(input.url, 'Set up your account')}
     ${linkNote(
-      'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email.',
+      'This link lasts 14 days, and you can use it again until your account is set up. It is for you only, so please do not forward this email.',
     )}`;
 
   return shell(
@@ -453,12 +452,12 @@ export function setupEmailConfirmEmail(input: {
   const body = `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Confirm your email</h1>
     <p style="margin:0 0 24px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. Use the button to confirm this is your address and finish setting
-      up the ${org} portal. You choose a password next.
+      Hello ${name}. Use the button to confirm this is your email address and carry on
+      setting up the ${org} portal. You will choose a password next.
     </p>
     ${button(input.url, 'Confirm my email')}
     ${linkNote(
-      'This link lasts 14 days. You can come back to it until your account is set up. The link is just for you, so please do not forward this email. If you did not ask for it, you can ignore this email.',
+      'This link lasts 14 days, and you can use it again until your account is set up. It is for you only, so please do not forward this email. If you did not ask for it, you can ignore this email.',
     )}`;
 
   return shell(`Confirm your email for the ${input.clientName} portal.`, body);
@@ -580,8 +579,8 @@ export function invoiceEmail(input: {
   const next = settled
     ? 'Open it in your portal to see what it covered and the receipts for it.'
     : input.showsHowToPay
-      ? 'Open it in your portal to see what it covers and how to pay. We will send a receipt as soon as the payment reaches us.'
-      : 'Open it in your portal to see what it covers, and reply to this email for our payment details. We will send a receipt as soon as the payment reaches us.';
+      ? 'Open it in your portal to see what it covers and how to pay. We will send a receipt when the payment reaches us.'
+      : 'Open it in your portal to see what it covers, and reply to this email for our payment details. We will send a receipt when the payment reaches us.';
 
   const body = `
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Invoice ${escapeHtml(input.number)}</h1>
@@ -593,7 +592,7 @@ export function invoiceEmail(input: {
     </p>
     ${button(input.url, 'View the invoice')}
     ${linkNote(
-      'This button works once and lasts 30 days. After that, sign in to your portal and the invoice is there. The link is just for you, so please do not forward this email.',
+      'This button works once and lasts 30 days. It is for you only, so please do not forward this email. After that, you will find the invoice in your portal when you sign in.',
     )}`;
 
   return shell(`Invoice ${input.number} for ${input.total}.`, body);
@@ -613,14 +612,14 @@ export function receiptEmail(input: {
   const issued = formatDate(input.issuedAt);
 
   const body = `
-    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Thank you, payment received</h1>
+    <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Payment received</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. We have recorded <strong style="color:#1D1B22;">${escapeHtml(input.amount)}</strong>
+      Hello ${name}. Thank you for your payment. We have recorded <strong style="color:#1D1B22;">${escapeHtml(input.amount)}</strong>
       against invoice <strong style="color:#1D1B22;">${escapeHtml(input.invoiceNumber)}</strong>.
     </p>
     <p style="margin:0 0 8px;color:#4A4753;font-size:15px;line-height:1.7;">
       This is receipt <strong style="color:#1D1B22;">${escapeHtml(input.number)}</strong>, issued ${escapeHtml(issued)}.
-      Keep it for your records. It is also in your portal, ready to print or save as a PDF.
+      It is also in your portal, where you can print it or save it as a PDF.
     </p>
     <div style="margin-top:24px;">${button(input.url, 'View the receipt')}</div>`;
 
@@ -650,8 +649,8 @@ export function refundEmail(input: {
       } for invoice ${strong(input.invoiceNumber)}.
     </p>
     <p style="margin:0 0 8px;color:#4A4753;font-size:15px;line-height:1.7;">
-      This is refund note ${strong(input.number)}. Keep it for your records. It is also in your
-      portal, ready to print or save as a PDF.
+      This is refund note ${strong(input.number)}. It is also in your portal, where you can
+      print it or save it as a PDF.
     </p>
     <div style="margin-top:24px;">${button(input.url, 'View the refund note')}</div>`;
 
@@ -696,11 +695,11 @@ export function projectUpdateEmail(input: {
     ${paragraphs}
     ${
       input.previewUrl
-        ? buttonRow(button(input.previewUrl, 'Take a look'), buttonGhost(input.url, 'Open your portal'))
+        ? buttonRow(button(input.previewUrl, 'Open the preview'), buttonGhost(input.url, 'Open your portal'))
         : button(input.url, 'Open your portal')
     }
     <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
-      Every update is kept in your portal, so you can always go back to one.
+      You can find every update in your portal.
     </p>`;
 
   return shell(`${input.projectName}: ${input.title}`, body);
@@ -738,8 +737,8 @@ export function reviewRequestEmail(input: {
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.projectName)} · round ${input.round}</p>
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">Ready for your review: ${escapeHtml(input.title)}</h1>
     <p style="margin:0 0 16px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. Please take a look, then approve it or tell us what to change
-      from your portal.
+      Hello ${name}. Please look through it, then approve it or tell us what to change
+      in your portal.
     </p>
     ${input.note ? paragraphsOf(input.note) : ''}
     <div style="margin-top:8px;">${buttonRow(
@@ -784,8 +783,8 @@ export function itemsNeededEmail(input: {
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
       Hello ${name}. To keep the work moving, we need the following. ${
         input.takesFiles
-          ? 'You can write an answer or attach files against each one in your portal.'
-          : 'You can write an answer against each one in your portal, and reply to this email with any files.'
+          ? 'In your portal you can write an answer or attach files for each one.'
+          : 'In your portal you can write an answer for each one. Reply to this email with any files.'
       }
     </p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #ECE9E4;margin-bottom:24px;">${rows}</table>
@@ -879,22 +878,22 @@ export function documentToSignEmail(input: {
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
     <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-0.02em;color:#1D1B22;">${escapeHtml(input.documentTitle)}</h1>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Hello ${name}. This is ready for you to read and sign on behalf of
+      Hello ${name}. Please read and sign this on behalf of
       <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>.
     </p>
     <p style="margin:0 0 18px;color:#4A4753;font-size:15px;line-height:1.7;">
-      Signing takes a moment: read it through, type your initials, and confirm.
+      To sign, open it with the button below, type your initials and confirm.
       ${
         input.termsTitle
-          ? `You will also be accepting our <strong style="color:#1D1B22;">${escapeHtml(input.termsTitle)}</strong>, which is shown in full on the same page.`
+          ? `By signing, you also accept our <strong style="color:#1D1B22;">${escapeHtml(input.termsTitle)}</strong>, shown in full on the same page.`
           : ''
       }
       If anything is wrong, choose <strong style="color:#1D1B22;">Ask for changes</strong>
-      on the same page rather than signing. We would much rather fix it first.
+      there instead of signing.
     </p>
     ${button(input.url, 'Read and sign')}
     ${linkNote(
-      'This button works once and lasts 14 days. After that, sign in to your portal and the document will be waiting for you there. The link is just for you, so please do not forward this email.',
+      'This button works once and lasts 14 days. It is for you only, so please do not forward this email. After that, you will find the document in your portal when you sign in.',
     )}`;
 
   return shell(`${input.documentTitle} is ready for your signature.`, body);
@@ -1122,7 +1121,7 @@ export function documentSignedEmail(input: {
   // Without an account the button also sets one up, so it is a credential.
   const forwardNote = input.inPortal
     ? ''
-    : linkNote('The link is just for you, so please do not forward this email.');
+    : linkNote('The link is for you only, so please do not forward this email.');
 
   const body = `
     <p style="margin:0 0 6px;color:#8B8793;font-size:13px;line-height:1.5;">${escapeHtml(input.kind)} · ${escapeHtml(input.reference)}</p>
@@ -1131,8 +1130,8 @@ export function documentSignedEmail(input: {
       Thank you, ${name}. You signed this on behalf of
       <strong style="color:#1D1B22;">${escapeHtml(input.clientName)}</strong>. ${
         input.inPortal
-          ? 'The signed copy stays in your portal, where you can read it or save it as a PDF at any time.'
-          : 'Use the button within 14 days to open the signed copy and set up your account. The copy then stays in your portal, where you can save it as a PDF at any time. If the button has stopped working, reply to this email and we will send you the copy.'
+          ? 'The signed copy is in your portal, where you can read it or save it as a PDF.'
+          : 'Use the button within 14 days to open the signed copy and set up your account. The copy will then be in your portal, where you can save it as a PDF. If the button has stopped working, reply to this email and we will send you the copy.'
       }
     </p>
     ${facts([
@@ -1142,8 +1141,8 @@ export function documentSignedEmail(input: {
     ])}
     ${button(input.url, 'Open your signed copy')}${forwardNote}
     <p style="margin:24px 0 0;color:#8B8793;font-size:13px;line-height:1.7;">
-      Keep this email with your records. If a question about the document ever
-      comes up, quote the fingerprint above.
+      Keep this email. If there is ever a question about the document, quote the
+      fingerprint above.
     </p>`;
   // The fingerprint is a short form of the SHA-256 of exactly what was signed.
   // Any change to the text would give a different one, which is why quoting it

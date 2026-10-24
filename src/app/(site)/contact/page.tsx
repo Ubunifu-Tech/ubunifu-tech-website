@@ -19,8 +19,8 @@ export default function ContactPage() {
           scene="contact"
           hideVisualOnPhone
           eyebrow="Contact"
-          title="Tell us about your project."
-          lead="Ask about our services, get help with a product, or discuss a project with our team."
+          title="Contact us"
+          lead="Ask about a project or our services, or get help with one of our products."
         />
         <Contact hideIntro />
       </main>

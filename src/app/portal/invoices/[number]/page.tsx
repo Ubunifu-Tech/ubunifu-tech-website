@@ -91,7 +91,7 @@ export default async function PortalInvoice({
       {state.owing && (
         <section className={`${forms.card} ${sheet.noPrint}`}>
           <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Paid already?</h2>
+            <h2 className={forms.cardTitle}>If you have already paid</h2>
           </div>
           <p className={styles.note}>
             Tell us when and how you paid, and we will send your receipt.

@@ -14,16 +14,16 @@ export type PageScene =
   | 'privacy';
 
 const descriptions: Record<PageScene, string> = {
-  services: 'Six connected capabilities resolving into one shared technology system.',
-  work: 'Two completed systems connected to a shared operational route.',
-  products: 'Three related software products assembled on one shared platform.',
-  about: 'A connected technology workbench built from several working parts.',
-  industries: 'Several sector nodes connected by one common technology route.',
-  contact: 'A request travelling between two connected endpoints.',
-  journal: 'Loose working notes resolving into one organised stack.',
-  careers: 'A sequence of steps leading toward an open place in the system.',
-  brand: 'Two interlocking forms representing the orange and violet identity.',
-  privacy: 'A protected message travelling through a controlled route.',
+  services: 'Six panels joined by lines to one central block.',
+  work: 'Two stacks joined by a single line.',
+  products: 'Product shapes standing on a shared line.',
+  about: 'A stack and a block on a shared base, joined by one line.',
+  industries: 'Six shapes joined to one horizontal line.',
+  contact: 'Two boxes joined by two lines.',
+  journal: 'Loose sheets gathered into one stack.',
+  careers: 'A stepped line leading to an open box.',
+  brand: 'An orange block and a violet block, overlapping.',
+  privacy: 'An envelope with a padlock, set on a line.',
 };
 
 function Stack({

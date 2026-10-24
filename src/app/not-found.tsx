@@ -31,10 +31,9 @@ export default function NotFound() {
 
         <div className={`container ${styles.inner}`}>
           <p className={styles.code}>404</p>
-          <h1 className={styles.title}>This page wandered off.</h1>
+          <h1 className={styles.title}>We could not find that page.</h1>
           <p className={styles.lead}>
-            The link may be broken, or the page may have moved. Here are a few
-            good places to pick things back up.
+            The link may be broken, or the page may have moved.
           </p>
           <div className={styles.actions}>
             <Link href="/" className={styles.btnPrimary}>

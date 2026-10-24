@@ -67,7 +67,7 @@ export function UploadBox({
     // Only the first letter lowered: PDFs, Word, Excel and CSV keep theirs.
     const kinds = ALLOWED_LABEL.charAt(0).toLowerCase() + ALLOWED_LABEL.slice(1);
     const wrongKind = (name: string) =>
-      `${name} is not a kind of file we can take here. We take ${kinds}. You can also email it to ${email}.`;
+      `We cannot take ${name} here. We accept ${kinds}, or you can email it to ${email}.`;
     const sendable = files.filter((file) => {
       if (!ALLOWED_CONTENT_TYPES.includes(uploadTypeOf(file))) {
         problems.push(wrongKind(file.name));
@@ -140,8 +140,8 @@ export function UploadBox({
     ? `Sending ${stage.index} of ${stage.count}: ${stage.name}`
     : stage.kind === 'done' && stage.sent > 0
       ? stage.sent === 1
-        ? 'Sent. We have it.'
-        : `${stage.sent} files sent. We have them.`
+        ? 'File sent.'
+        : `${stage.sent} files sent.`
       : '';
 
   return (

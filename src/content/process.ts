@@ -20,7 +20,7 @@ export type ProcessStage = {
 export const processStages: ReadonlyArray<ProcessStage> = [
   {
     title: 'Understand',
-    description: 'We discuss what you need, how your team works, and the constraints to account for.',
+    description: 'We talk through what you need, how your team works, and any constraints.',
     output: 'a shared brief and priorities',
   },
   {
@@ -31,7 +31,7 @@ export const processStages: ReadonlyArray<ProcessStage> = [
   {
     title: 'Build',
     description: 'We build in stages, test the system, and review working versions with your team.',
-    output: 'usable deliverables, reviewed together',
+    output: 'finished work your team has reviewed',
   },
   {
     title: 'Operate',

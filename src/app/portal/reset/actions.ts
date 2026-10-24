@@ -42,7 +42,7 @@ export async function resetPassword(
   const expired: ResetState = {
     status: 'error',
     expired: true,
-    message: 'This link has expired or was already used.',
+    message: 'This link has expired or has already been used.',
   };
 
   const claim = token ? await consumeMagicToken(token, 'password_reset') : null;

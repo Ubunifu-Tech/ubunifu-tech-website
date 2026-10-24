@@ -84,9 +84,8 @@ export default function BrandKit() {
             </div>
           </div>
           <p className={styles.note}>
-            The original orange U and violet T interlock as one engineered glyph. Its angled
-            crown introduces forward motion. Ubunifu uses accessible orange and Technologies
-            uses violet, keeping both brand colours present in the full company name.
+            The mark joins an orange U and a violet T into one shape with an angled top. In
+            the wordmark, Ubunifu is set in accessible orange and Technologies in violet.
           </p>
           <div className={styles.assetLinks}>
             <a className={styles.download} href="/brand/ubunifu-mark.svg" download>Primary mark · SVG</a>
@@ -113,9 +112,9 @@ export default function BrandKit() {
           <h2 className={styles.h2}>Signature path</h2>
           <div className={styles.gradientBlock} />
           <p className={styles.note}>
-            <code>#FF6B2C → #6D3FE8</code>, orange begins the path, purple resolves it.
-            The gradient belongs only in large paths and atmospheres. The master mark keeps the
-            orange U and violet T as two crisp solids, supported by dark navy.
+            <code>#FF6B2C → #6D3FE8</code> runs from orange to purple. Use it only for large
+            paths and background washes. The master mark keeps the orange U and violet T as two
+            solid colours, alongside dark navy.
           </p>
         </section>
 
@@ -170,7 +169,7 @@ export default function BrandKit() {
           <p className={styles.note}>
             Three sizes throughout: display for page titles, heading for sections,
             and body for text, labels, and controls. Display and heading sizes adapt
-            to the viewport; body text remains 1rem. Spacing creates the hierarchy.
+            to the viewport; body text stays at 1rem. Use spacing to show hierarchy.
           </p>
         </section>
 
@@ -180,8 +179,8 @@ export default function BrandKit() {
             <div>
               <p className={styles.ruleHead}>Voice</p>
               <p className={styles.ruleText}>
-                Confident, warm, specific, like a person who knows the subject. Not corporate.
-                Avoid value-words (innovative, world-class, seamless).
+                Plain, warm and specific, like a careful person who knows the subject. Avoid
+                sales words such as innovative, world-class and seamless.
               </p>
             </div>
             <div>

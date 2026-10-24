@@ -159,7 +159,7 @@ export default async function PortalHome() {
         </h1>
         <p className={styles.lead}>
           {needs.length === 0
-            ? 'Nothing is waiting on you. We will let you know when there is something to look at.'
+            ? 'Nothing is waiting on you.'
             : `${needs.length} ${needs.length === 1 ? 'thing needs' : 'things need'} you.`}
         </p>
       </div>
@@ -167,7 +167,7 @@ export default async function PortalHome() {
       {needs.length > 0 && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Needs you</h2>
+            <h2 className={forms.cardTitle}>Waiting on you</h2>
           </div>
           <ul className={styles.needsList}>
             {needs.map((need) => {
@@ -212,8 +212,8 @@ export default async function PortalHome() {
 
       {projects.length === 0 ? (
         <div className={styles.empty}>
-          Your first project will appear here once it is set up. Questions in the meantime? Ask in
-          Help, in the bottom corner of the screen.
+          Your first project will appear here once it is set up. If you have questions, use Help in the
+          bottom corner of the screen.
         </div>
       ) : (
         <ul className={styles.projects}>

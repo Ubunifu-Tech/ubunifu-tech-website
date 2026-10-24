@@ -77,7 +77,7 @@ export function consoleDocumentState(
     latest.expiresAt &&
     latest.expiresAt.getTime() <= now.getTime()
   ) {
-    return { label: 'Time to sign ran out', tone: 'warn' };
+    return { label: 'Time to sign has run out', tone: 'warn' };
   }
   return { label: DOCUMENT_STATUS_LABEL[status] ?? status, tone: CONSOLE_TONE[status] ?? 'quiet' };
 }
@@ -137,13 +137,13 @@ export function portalDocumentState(
     return { label: who ? `${who} declined this` : 'Declined', tone: 'bad', waiting: false };
   }
   if (request.expiresAt && request.expiresAt.getTime() < now.getTime()) {
-    return { label: 'Time to sign ran out', tone: 'warn', waiting: false };
+    return { label: 'Time to sign has run out', tone: 'warn', waiting: false };
   }
   if (request.respondedAt) {
     return { label: who ? `${who} asked for changes` : 'Changes asked for', tone: 'live', waiting: false };
   }
   if (!viewer.signs) {
-    return { label: `With ${viewer.signerName ?? 'your main contact'} to sign`, tone: 'live', waiting: false };
+    return { label: `Waiting for ${viewer.signerName ?? 'your main contact'} to sign`, tone: 'live', waiting: false };
   }
   return { label: PORTAL_DOCUMENT_STATUS_LABEL[status] ?? 'Waiting for your signature', tone: 'warn', waiting: true };
 }

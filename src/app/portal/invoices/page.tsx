@@ -72,7 +72,7 @@ export default async function PortalInvoices() {
         </h1>
         <p className={styles.lead}>
           {owedByCurrency.size === 0
-            ? 'Nothing outstanding. Everything we have invoiced has been received.'
+            ? 'Nothing outstanding.'
             : `${[...owedByCurrency].map(([currency, owed]) => formatMoney(owed, currency)).join(' and ')} outstanding.`}
         </p>
       </div>
@@ -80,7 +80,7 @@ export default async function PortalInvoices() {
       <div className={table.frame}>
         <div className={table.toolbar}>
           <div className={table.toolbarText}>
-            <h2 className={table.title}>Everything we have invoiced</h2>
+            <h2 className={table.title}>All invoices</h2>
             <span className={table.count}>
               {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'}
             </span>
@@ -104,7 +104,7 @@ export default async function PortalInvoices() {
                   Due
                 </th>
                 <th className={table.th} scope="col">
-                  State
+                  Status
                 </th>
                 <th className={`${table.th} ${table.numericHead}`} scope="col">
                   Total
@@ -123,7 +123,7 @@ export default async function PortalInvoices() {
                   <td className={table.emptyCell} colSpan={8}>
                     <p className={table.emptyTitle}>Nothing invoiced yet.</p>
                     <p className={table.emptyHint}>
-                      Anything we send you will appear here, along with a receipt once it is paid.
+                      Invoices we send you will appear here, each with its receipt once paid.
                     </p>
                   </td>
                 </tr>

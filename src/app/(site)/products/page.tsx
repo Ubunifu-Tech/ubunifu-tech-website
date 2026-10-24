@@ -7,7 +7,7 @@ import { pageMetadata } from '@/lib/metadata';
 export const metadata = pageMetadata({
   title: 'Products',
   description:
-    'Ubunifu products: Insight for working with documents and data, Sifa for business operations, and Rafiki for embeddable website tools.',
+    'Ubunifu Sifa is software for running a shop, restaurant or distributor. We are also developing Ubunifu Rafiki, tools you can add to an existing website.',
   path: '/products',
 });
 
@@ -19,8 +19,8 @@ export default function ProductsPage() {
         <PageHeader
           scene="products"
           eyebrow="Our products"
-          title="Software we build and operate ourselves."
-          lead="Work with your documents, manage daily business operations, or add useful tools to a website. Explore each product and its current availability below."
+          title="Software we build and run"
+          lead="Sifa is live, and Rafiki is in development."
         />
 
         <Products hideHeader />

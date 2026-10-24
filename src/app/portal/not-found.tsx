@@ -22,7 +22,7 @@ export default function PortalNotFound() {
           We could not <span className={styles.headingAccent}>find that</span>
         </h1>
         <p className={styles.lead}>
-          The link may be old, or it may point at something that is not part of your account.
+          The link may be old, or it may be for something that is not part of your account.
         </p>
       </div>
       <Link href="/portal" className={forms.button}>

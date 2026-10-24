@@ -16,15 +16,11 @@ export type SitePage = {
 export const sitePages: ReadonlyArray<SitePage> = [
   { path: '/', title: 'Home', what: 'What Ubunifu does, how we work, our services, products and recent work.' },
   { path: '/build', title: 'Services', what: 'Every service and what it includes, and the four stages of a project.' },
-  { path: '/work', title: 'Our Work', what: 'Client projects, each with a case study.' },
+  { path: '/work', title: 'Our work', what: 'Client projects, each with a case study.' },
   { path: '/products', title: 'Products', what: 'Our own software products, with links to open them.' },
   { path: '/industries', title: 'Industries', what: 'The sectors we work in and what we offer each.' },
   { path: '/about', title: 'About', what: 'Vision, mission, our story, how we work, our values and the team.' },
-  {
-    path: '/blog',
-    title: 'Insights',
-    what: 'Our journal of articles. Not the same thing as the Ubunifu Insight product.',
-  },
+  { path: '/blog', title: 'Insights', what: 'Our journal of articles.' },
   { path: '/careers', title: 'Careers', what: 'Open roles, and how to send a general introduction.' },
   { path: '/contact', title: 'Contact', what: 'The contact form, our email address and phone number.' },
   { path: '/privacy', title: 'Privacy', what: 'What this website, the contact form and the chat collect, and how it is used.' },

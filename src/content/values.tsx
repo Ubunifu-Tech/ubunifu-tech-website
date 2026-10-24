@@ -12,22 +12,22 @@ export type Value = {
 export const values: ReadonlyArray<Value> = [
   {
     icon: Globe,
-    title: 'Start from Tanzanian realities',
-    body: 'We build around the workflows, connectivity, languages, and payment realities that exist here.',
+    title: 'Start from local conditions',
+    body: 'We design around how people in Tanzania work, the languages they use, their internet connections and how they pay.',
   },
   {
     icon: Wrench,
     title: 'Plan beyond launch',
-    body: 'Every engagement defines what happens next: an agreed support relationship, a documented handover, or a mix of both.',
+    body: 'For every project we agree what happens after launch: ongoing support, a documented handover, or both.',
   },
   {
     icon: Zap,
-    title: 'Use technology deliberately',
-    body: 'Every technical choice has to solve a real part of the problem. AI and automation are included only when the workflow and value justify them.',
+    title: 'Choose technology for the problem',
+    body: 'Each technical choice has to solve part of the problem. We use AI and automation only when the work and the benefit justify them.',
   },
   {
     icon: Users,
     title: 'Review the work together',
-    body: 'Your team reviews working versions throughout the project, so we can address questions and make changes before launch.',
+    body: 'Your team sees working versions during the project, so questions and changes are dealt with before launch.',
   },
 ];

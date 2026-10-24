@@ -10,14 +10,14 @@ Last refreshed: 5 September 2026.
 
 - [x] Two connected engines are represented throughout: consulting services and Ubunifu software products.
 - [x] Primary navigation is **Services · Work · Products · Insights · About**, with a **Start a project** contact action.
-- [x] `/build` owns consulting capabilities; `/products` owns Insight, Sifa, and Rafiki; `/work` contains named client evidence rather than the product catalogue.
+- [x] `/build` owns consulting capabilities; `/products` owns Sifa and Rafiki; `/work` contains named client evidence rather than the product catalogue.
 - [x] Tourism and hospitality is the only proven sector. Other industry pages describe potential capability fits with appropriate caveats.
 
 ### Homepage and public proof
 
 - [x] Homepage sequence: full-width consulting hero, two engagement paths, scannable capabilities, named client work, attributed testimonial, product family, delivery method, latest Journal articles, and closing contact band.
 - [x] Safari King Africa and Usambara Destination have dedicated client case studies with conceptual workflow art, documented functionality, and direct links to the live work.
-- [x] Insight and Sifa are presented as available products; Rafiki is clearly marked as in development.
+- [x] Sifa is presented as an available product; Rafiki is clearly marked as in development. Insight was withdrawn in October 2026.
 - [x] Product availability is kept separate from customer-count, adoption, revenue, conversion, and performance claims.
 
 ### Brand, content, and platform
@@ -33,7 +33,7 @@ Last refreshed: 5 September 2026.
 
 ### 1. Verify and strengthen evidence
 
-- [ ] Recheck volatile product copy against the current Insight and Sifa interfaces before each release.
+- [ ] Recheck volatile product copy against the current Sifa interface before each release.
 - [ ] Replace broad case-study outcome language with measured results only when analytics or operational records support it and the client approves publication.
 - [ ] Add client testimonials only with clear attribution and retained source approval.
 - [ ] Add approved client evidence only when it is sanitised, meaningfully demonstrates a workflow, and is stronger than the live-site link already provided.

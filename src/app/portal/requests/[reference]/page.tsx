@@ -114,7 +114,7 @@ export default async function PortalRequest({
 
       <section className={forms.card}>
         <div className={forms.cardHeader}>
-          <h2 className={forms.cardTitle}>The conversation</h2>
+          <h2 className={forms.cardTitle}>Messages</h2>
           <span className={forms.cardMeta}>
             {ticket.messages.length} {ticket.messages.length === 1 ? 'message' : 'messages'}
           </span>

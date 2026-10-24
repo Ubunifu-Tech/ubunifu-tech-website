@@ -187,7 +187,7 @@ export function ContactSubjectSelect({
         onClick={() => open ? closeMenu() : showMenu()}
         onKeyDown={handleKeyDown}
       >
-        <span>{value || 'Select an enquiry type'}</span>
+        <span>{value || 'Choose a subject'}</span>
         <ChevronDown size={18} aria-hidden="true" className={styles.chevron} />
       </button>
       <ul

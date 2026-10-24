@@ -306,7 +306,7 @@ export async function POST(req: NextRequest) {
     if (await allow('acknowledgement', 'site', ACKNOWLEDGEMENTS_PER_DAY)) {
       await sendConsoleEmail({
         to: email,
-        subject: 'Thanks for reaching out | Ubunifu Technologies',
+        subject: 'Your message to Ubunifu Technologies',
         // The subject is one of the form's own choices, checked above.
         html: acknowledgementEmail({ topic: subject }),
         template: 'contact_acknowledgement',

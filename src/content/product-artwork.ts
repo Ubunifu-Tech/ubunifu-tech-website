@@ -7,10 +7,6 @@ type ProductArtwork = {
 
 /** Editorial concepts only; live capabilities and availability stay in products.tsx. */
 export const productArtwork: Record<ProductId, ProductArtwork> = {
-  insight: {
-    src: '/editorial/product-insight-v2.webp',
-    alt: 'A professional reviews answers connected back to several source documents.',
-  },
   sifa: {
     src: '/editorial/product-sifa-v2.webp',
     alt: 'A small business team connects sales, stock, customers, and account records.',

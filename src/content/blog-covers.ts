@@ -28,15 +28,15 @@ export type BlogCover = { image: string; alt: string };
 export const blogCovers: readonly BlogCover[] = [
   {
     image: '/editorial/tourism-systems.webp',
-    alt: 'A connected journey moving through planning stages into one working tourism system.',
+    alt: 'A route through planning stages to one working tourism system.',
   },
   {
     image: '/editorial/swahili-learning.webp',
-    alt: 'A learning exchange connecting a question, a lesson, and a reviewed answer.',
+    alt: 'A question, a lesson and a reviewed answer, connected in sequence.',
   },
   {
     image: '/editorial/credit-ledger.webp',
-    alt: 'A sale and partial payments remaining connected to one visible credit ledger.',
+    alt: 'A sale and its part payments recorded in one credit ledger.',
   },
   {
     image: '/editorial/build-or-buy.webp',
@@ -44,11 +44,11 @@ export const blogCovers: readonly BlogCover[] = [
   },
   {
     image: '/editorial/software-tanzania-learning.webp',
-    alt: 'Working notes and repeated revisions resolving into one assembled software product.',
+    alt: 'Notes and revisions coming together into one software product.',
   },
   {
     image: '/editorial/usage-based-pricing.webp',
-    alt: 'Measured units of work connecting directly to an itemised usage record.',
+    alt: 'Measured units of work linked to an itemised usage record.',
   },
 ] as const;
 

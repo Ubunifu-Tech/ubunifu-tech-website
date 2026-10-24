@@ -30,26 +30,26 @@ type Group = {
 
 const GROUPS: ReadonlyArray<Group> = [
   {
-    title: 'Build and experience',
-    note: 'What people actually use',
+    title: 'Websites and brand',
+    note: 'What people see and use',
     hue: 'brand',
     keys: ['web', 'branding'],
   },
   {
-    title: 'Data and intelligence',
-    note: 'What decisions run on',
+    title: 'Data and AI',
+    note: 'Reports, dashboards and assistants',
     hue: 'primary',
     keys: ['data', 'ai'],
   },
   {
-    title: 'Keep it running',
-    note: 'What holds it together',
+    title: 'Keeping things running',
+    note: 'Your site, domain and email',
     hue: 'accent',
     keys: ['hosting'],
   },
   {
-    title: 'Direction',
-    note: 'Where it goes next',
+    title: 'Advice',
+    note: 'What to change, and in what order',
     hue: 'neutral',
     keys: ['strategy'],
   },
@@ -61,18 +61,18 @@ export function CapabilityMap() {
       <div className="container">
         <ScrollReveal className={styles.intro}>
           <h2 id="capability-map-title" className={styles.heading}>
-            Where does each capability <span className={styles.headingAccent}>fit?</span>
+            How the services <span className={styles.headingAccent}>fit together</span>
           </h2>
           <p className={styles.lead}>
-            Each one serves a different layer of how an organisation runs. Start where you
-            need help; most projects end up combining more than one.
+            Each service covers a different part of how an organisation runs. A project can
+            combine more than one.
           </p>
         </ScrollReveal>
 
         <div className={styles.banner}>
-          <p className={styles.bannerLabel}>What it all supports</p>
+          <p className={styles.bannerLabel}>What they support</p>
           <p className={styles.bannerText}>
-            The websites, records, and day-to-day operations your organisation depends on.
+            Your website, your records and the daily running of your organisation.
           </p>
         </div>
 

@@ -49,13 +49,13 @@ export async function raiseRequest(
     return { status: 'error', message: 'Choose what kind of request this is.' };
   }
   if (subject.length < 4 || subject.length > 160) {
-    return { status: 'error', message: 'Give it a short subject so we can find it again.' };
+    return { status: 'error', message: 'Add a short subject.' };
   }
   if (body.length < 10 || body.length > 8000) {
-    return { status: 'error', message: 'Tell us a little more than that.' };
+    return { status: 'error', message: 'Tell us a little more.' };
   }
   if (!(await allow('ticket-raise', actor.clientId, { limit: 20, windowMinutes: 24 * 60 }))) {
-    return { status: 'error', message: 'That is a lot of requests for one day. Add to an open one instead.' };
+    return { status: 'error', message: 'You have raised a lot of requests today. Reply to an open request instead.' };
   }
 
   // A project id from the form is checked against this client's own projects,
@@ -99,7 +99,7 @@ export async function replyToRequest(
   }
   // Every reply emails the team, so one account cannot bury the inbox.
   if (!(await allow('ticket-reply', actor.clientId, { limit: 60, windowMinutes: 60 }))) {
-    return { status: 'error', message: 'That is a lot of replies in one go. Give it a little while.' };
+    return { status: 'error', message: 'Too many replies in the last hour. Try again later.' };
   }
 
   const ticket = await db.ticket.findFirst({
@@ -118,7 +118,7 @@ export async function replyToRequest(
   if (ticket.status === 'closed') {
     return {
       status: 'error',
-      message: 'This one is closed. Raise a new request and we will pick it up.',
+      message: 'This request is closed. Raise a new request instead.',
     };
   }
 

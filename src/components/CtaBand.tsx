@@ -20,11 +20,11 @@ export const CtaBand: React.FC = () => {
         <AmbientShader placement="panelTall" character={CTA_SHADER} />
         <div className={`container ${styles.content}`}>
           <div className={styles.statement}>
-            <h2 className={styles.heading}>Have a project in mind?</h2>
+            <h2 className={styles.heading}>Talk to us about your project</h2>
           </div>
           <div className={styles.details}>
             <p className={styles.text}>
-              Tell us what you need. We can discuss the scope, timing, and budget.
+              We can discuss the scope, timing and budget with you.
             </p>
             <div className={styles.actions}>
               <Link href={site.urls.contact} className={styles.btn}>

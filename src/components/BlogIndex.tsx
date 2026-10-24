@@ -121,7 +121,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
     <>
       <div className={styles.filterBar}>
         <fieldset className={styles.filters}>
-          <legend className={styles.filterLegend}>Filter insights by topic</legend>
+          <legend className={styles.filterLegend}>Filter articles by topic</legend>
           {available.map((filter) => (
             <button
               key={filter}
@@ -159,7 +159,7 @@ export function BlogIndex({ posts }: { posts: PostMeta[] }) {
       </motion.div>
 
       {filtered.length === 0 ? (
-        <p className={styles.empty}>No posts under “{active}” yet. Check back soon.</p>
+        <p className={styles.empty}>No articles under “{active}” yet.</p>
       ) : null}
     </>
   );

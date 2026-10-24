@@ -494,6 +494,8 @@ No border, no frame, no vignette.
 
 ### 11. Ubunifu Insight
 
+Insight was withdrawn in October 2026 and this image is no longer used. The prompt is kept for the record.
+
 **Save as:** `public/editorial/product-insight-v1.webp`
 
 ```

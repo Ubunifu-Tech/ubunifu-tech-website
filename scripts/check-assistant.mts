@@ -909,14 +909,18 @@ if (!hasKey) {
       ...need(has(r.text, 'TZS', 'Tanzanian shillings'), 'does not mention shillings'),
       ...need(linksTo(r.text, 'https://sifa.ubunifutech.com'), 'does not link Sifa'),
     ] },
-    { id: 'P2', turns: ['Does Insight work in Swahili?'], judge: true, expect: (r) => need(/tutor/i.test(r.text), 'does not mention the Education Tutor') },
+    // Insight was withdrawn in October 2026; the chat must not offer it.
+    { id: 'P2', turns: ['Can I still use Ubunifu Insight?'], expect: (r) => [
+      ...never(/insight\.ubunifutech\.com/i.test(r.text), 'links the withdrawn Insight site'),
+      ...never(/insight (is (live|available)|works|teaches|lets|helps)\b/i.test(r.text), 'describes Insight as a current product'),
+    ] },
     { id: 'P3', turns: ['When does Rafiki launch?'], expect: (r) => [
       ...need(/soon|development|not (yet )?(launched|live|available)/i.test(r.text), 'does not say it is coming'),
       ...never(/\b(January|February|March|April|May|June|July|August|September|October|November|December|20\d\d)\b/.test(r.text), 'gives a date'),
     ] },
-    { id: 'P4', turns: ['How much do Insight credits cost?'], expect: (r) => [
+    { id: 'P4', turns: ['How much does Sifa cost?'], expect: (r) => [
       ...never(MONEY.test(r.text), 'gives a price'),
-      ...need(/insight\.ubunifutech\.com|team/i.test(r.text), 'does not point to the Insight site or the team'),
+      ...need(/sifa\.ubunifutech\.com|team/i.test(r.text), 'does not point to the Sifa site or the team'),
     ] },
     { id: 'P5', turns: ['I cannot log in to Sifa'], expect: (r) => [
       ...need(/can(not|'t|’t) see|no access|do(n't|n’t| not) have access/i.test(r.text), 'does not say it cannot see accounts'),
@@ -925,8 +929,8 @@ if (!hasKey) {
     ] },
     { id: 'P6', turns: ['Which of your products fits a small shop?'], expect: (r) => need(has(r.text, 'Sifa') && linksTo(r.text, 'https://sifa.ubunifutech.com'), 'does not name and link Sifa') },
     { id: 'P7', turns: ['Where can I open your products?'], expect: (r) => need(
-      linksTo(r.text, 'https://insight.ubunifutech.com') && linksTo(r.text, 'https://sifa.ubunifutech.com'),
-      'does not link both live products by name',
+      linksTo(r.text, 'https://sifa.ubunifutech.com'),
+      'does not link the live product by name',
     ) },
 
     // S: scope and declines.
@@ -1013,7 +1017,7 @@ if (!hasKey) {
       ...need((r.text.match(/^\s*- /gm)?.length ?? 0) >= 5, 'is not a list'),
       ...need(services.every((service) => r.text.includes(service.title) || linksTo(r.text, `/build#${service.key}`)), 'leaves a service out'),
     ] },
-    { id: 'F2', turns: ['Compare Insight and Sifa in a table'], long: true, expect: (r) => never(r.text.includes('|'), 'drew a table') },
+    { id: 'F2', turns: ['Compare Sifa and Rafiki in a table'], long: true, expect: (r) => never(r.text.includes('|'), 'drew a table') },
     { id: 'F3', turns: ['Give me the link to your products page'], expect: (r) => need(r.text.includes('](/products)'), 'does not link /products') },
   ];
 

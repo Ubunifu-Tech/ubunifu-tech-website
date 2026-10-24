@@ -17,7 +17,7 @@ import { pageMetadata } from '@/lib/metadata';
 
 export const metadata = pageMetadata({
   title: 'Services',
-  description: 'Web development, hosting, domain management, professional email, data analytics, intelligent automation, branding, and digital strategy for businesses and organisations across Tanzania.',
+  description: 'Websites and custom platforms, hosting, domains and email, branding, data analytics, AI and automation, and technology strategy for businesses and organisations in Tanzania.',
   path: '/build',
 });
 
@@ -48,10 +48,10 @@ export default function BuildPage() {
             <div className={styles.processLeadGrid}>
               <ScrollReveal className={styles.processIntro}>
                 <h2 className={styles.sectionHeading}>
-                  What happens <span className={styles.headingAccent}>after you say yes</span>?
+                  What happens <span className={styles.headingAccent}>once you go ahead</span>
                 </h2>
                 <p className={styles.processLead}>
-                  Four stages, each ending in something you can hold us to.
+                  The work runs in four stages, and each one ends with something you can hold us to.
                 </p>
               </ScrollReveal>
 
@@ -68,12 +68,9 @@ export default function BuildPage() {
                 <div key={item.title} className={styles.processCard}>
                   <h3 className={styles.processTitle}>{item.title}</h3>
                   <p className={styles.processDescription}>{item.description}</p>
-                  {/* The stage's deliverable. Previously styled via a
-                      `.processOutput span` rule that matched nothing, because
-                      the markup here has never had a span — so the rule and the
-                      accent the design intended were invisible. */}
+                  {/* The stage's deliverable. */}
                   <p className={styles.processOutput}>
-                    You get <strong>{item.output}</strong>.
+                    You get {item.output}.
                   </p>
                 </div>
               ))}

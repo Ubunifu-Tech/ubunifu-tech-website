@@ -270,7 +270,7 @@ export async function askForFreshCopy(input: {
   await alertTeam({
     owner: request.document.project.owner,
     need: 'documents',
-    subject: `[${request.document.reference}] Asked to send it again`,
+    subject: `[${request.document.reference}] Fresh copy requested`,
     html: documentFreshCopyEmail({
       reference: request.document.reference,
       title: request.document.title,

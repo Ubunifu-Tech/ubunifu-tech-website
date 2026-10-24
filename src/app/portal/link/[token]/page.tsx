@@ -50,8 +50,8 @@ export default async function SharedLinkPage({
         <span className={styles.brandText}>Ubunifu Technologies</span>
       </div>
       {!link ? (
-        <Notice title="This link has run out">
-          This link has run out or was replaced by a newer one. Ask whoever sent it to you for a new
+        <Notice title="This link no longer works">
+          It has expired or been replaced by a newer one. Ask whoever sent it to you for a new
           link{orCall(org)}.
         </Notice>
       ) : link.thing === 'SignatureRequest' ? (
@@ -66,7 +66,7 @@ export default async function SharedLinkPage({
         <ReviewThroughLink link={link} token={token} org={org} />
       )}
       <p className={`${styles.note} ${styles.after} ${sheet.noPrint}`}>
-        Questions? Email {org.email}
+        If you have questions, email {org.email}
         {org.phone ? ` or call ${org.phone}` : ''}.
       </p>
     </main>
@@ -142,8 +142,7 @@ async function SignThroughLink({
   if (!request || request.status === 'cancelled') {
     return (
       <Notice title="Nothing to sign here">
-        This version was withdrawn, so there is nothing to sign here. Ask whoever sent it to you for
-        a new link{orCall(org)}.
+        This version was withdrawn. Ask whoever sent it to you for a new link{orCall(org)}.
       </Notice>
     );
   }
@@ -173,7 +172,7 @@ async function SignThroughLink({
           </span>
         ) : (
           <span className={`${forms.badge} ${forms.badgeLive}`}>
-            With {main?.name ?? 'your main contact'} to sign
+            Waiting for {main?.name ?? 'your main contact'} to sign
           </span>
         )}
         <PrintButton />
@@ -181,7 +180,7 @@ async function SignThroughLink({
 
       {expired && !signature && !declined && (
         <div className={`${styles.notice} ${sheet.noPrint}`} role="status">
-          <p>The time to sign this ran out.</p>
+          <p>The time to sign this has run out.</p>
           <AskAgain requestId={request.id} ask={askAgainWithLink} hidden={{ token }} />
         </div>
       )}
@@ -231,7 +230,7 @@ async function SignThroughLink({
           {signs ? (
             <section className={forms.card}>
               <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>Sign it</h2>
+                <h2 className={forms.cardTitle}>Sign this document</h2>
               </div>
               <SignForm
                 requestId={request.id}
@@ -252,7 +251,7 @@ async function SignThroughLink({
             <section className={forms.card}>
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>
-                  With {main?.name ?? 'your main contact'} to sign
+                  Waiting for {main?.name ?? 'your main contact'} to sign
                 </h2>
               </div>
               <p className={styles.note}>
@@ -261,7 +260,7 @@ async function SignThroughLink({
                   : `Your main contact signs for ${link.contact.clientName}.`}
                 {request.respondedAt
                   ? ''
-                  : ' If something should change first, you can ask for changes below.'}
+                  : ' If something should change first, ask for changes below.'}
               </p>
             </section>
           )}
@@ -269,7 +268,7 @@ async function SignThroughLink({
             <section className={forms.card}>
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>
-                  {signs ? 'Not ready to sign?' : 'Something to change?'}
+                  {signs ? 'Ask for changes or decline' : 'Ask for changes'}
                 </h2>
                 <span className={forms.cardMeta}>
                   {signs ? 'Neither of these signs anything' : 'This does not sign anything'}
@@ -321,8 +320,7 @@ async function ReviewThroughLink({
   if (!review) {
     return (
       <Notice title="This round is no longer open">
-        There is nothing to answer here now. Ask whoever sent it to you for a new link
-        {orCall(org)}.
+        Ask whoever sent it to you for a new link{orCall(org)}.
       </Notice>
     );
   }
@@ -341,12 +339,11 @@ async function ReviewThroughLink({
     });
     return later ? (
       <Notice title="This round was replaced">
-        This round was replaced by a newer version. Ask whoever sent it to you for a new link
-        {orCall(org)}.
+        There is a newer version. Ask whoever sent it to you for a new link{orCall(org)}.
       </Notice>
     ) : (
-      <Notice title="This round was taken back">
-        We took this round back, so there is nothing to answer here for now.
+      <Notice title="This round was withdrawn">
+        There is nothing to answer here for now.
       </Notice>
     );
   }

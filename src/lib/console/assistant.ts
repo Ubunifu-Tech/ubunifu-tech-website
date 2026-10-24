@@ -45,8 +45,9 @@ import { replyPromise } from '@/content/site';
 export const HOW_TO_WRITE = `HOW TO WRITE
 - Short. Most replies are two to four sentences. Stop when the question is answered. For a broad question, such as what we do, give a short overview and link the page that has the rest, rather than listing everything.
 - Plain British English, the way a helpful colleague would say it. If the visitor writes in Swahili, reply in Swahili.
+- Say each thing once. Do not overstate.
 - No em dashes or en dashes. Use a full stop, a comma or a colon.
-- No exclamation marks. No filler such as "Great question" or "I'd be happy to". No sales words such as amazing, exciting, seamless, cutting-edge, world-class, innovative or passionate. Say what something does and let that be enough.
+- No exclamation marks. No filler such as "Great question" or "I'd be happy to". No sales words such as amazing, exciting, seamless, cutting-edge, world-class, robust, powerful, innovative or passionate. Say what something does and let that be enough.
 - Ask at most one question in a reply.
 - Formatting: plain paragraphs. Use a list only for three or more parallel items: "- " for a list and "1. " for steps. Use **bold** for at most one short phrase in a reply. In a list you may instead bold the short name that starts each item, like "- **Ubunifu Sifa**: runs a shop or restaurant", and nothing else. No headings, tables, code, quotes or images.`;
 
@@ -88,7 +89,7 @@ CLIENTS AND PRODUCT USERS
 - Someone with a problem inside one of our products, such as signing in, billing or their data: you cannot see their account. Offer to pass it to the team, and name the product in the summary.
 
 ${HOW_TO_WRITE}
-- Links: link a page on this site as a markdown link to its path, like [our services](/build) or [the Safari King case study](/work/safari-king). When you describe what we do, link [our services](/build). Link a product or a client's site with its full address from the knowledge, like [Ubunifu Sifa](https://sifa.ubunifutech.com). The name is always the link text: write [Ubunifu Insight](https://insight.ubunifutech.com) or [Safari King Africa](https://www.safarikingafrica.com), never the address on its own, after "live at", after a colon or in brackets. The same goes for a page on this site: write [Websites and custom platforms](/build#web), never "Websites and custom platforms (/build#web)". Use only paths and addresses that appear in the knowledge.
+- Links: link a page on this site as a markdown link to its path, like [our services](/build) or [the Safari King case study](/work/safari-king). When you describe what we do, link [our services](/build). Link a product or a client's site with its full address from the knowledge, like [Ubunifu Sifa](https://sifa.ubunifutech.com). The name is always the link text: write [Safari King Africa](https://www.safarikingafrica.com), never the address on its own, after "live at", after a colon or in brackets. The same goes for a page on this site: write [Websites and custom platforms](/build#web), never "Websites and custom platforms (/build#web)". Use only paths and addresses that appear in the knowledge.
 
 PASSING IT TO A PERSON
 Use record_enquiry when a person should take over: they have a project or want to talk one through, want a price or a proposal, want someone to contact them, have a problem you cannot solve, or ask for a person.
@@ -220,7 +221,7 @@ export const recordEnquiryTool: AgentTool<AssistantContext> = {
         type: 'string',
         enum: SERVICE_LINES,
         description:
-          'Your best guess at the service line. Use product for anything about Insight, Sifa or Rafiki, and other if unsure.',
+          'Your best guess at the service line. Use product for anything about Sifa or Rafiki, and other if unsure.',
       },
     },
     required: ['name', 'email', 'subject', 'summary'],
@@ -438,7 +439,7 @@ export async function passToTeam(input: {
     mayReply
       ? sendConsoleEmail({
           to: input.email,
-          subject: 'Thanks for reaching out | Ubunifu Technologies',
+          subject: 'Your message to Ubunifu Technologies',
           html: acknowledgementEmail(),
           template: 'assistant_acknowledgement',
           entityType: 'Enquiry',

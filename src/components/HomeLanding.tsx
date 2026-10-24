@@ -50,17 +50,17 @@ const CTA_SHADER: ShaderCharacter = {
 const ENGAGEMENT_PATHS = [
   {
     key: 'consulting' as const,
-    title: 'Something built for how you work',
-    body: 'Bring us the workflow, decision, or system that needs to work better. We shape the approach, build the answer, and agree what happens after launch.',
+    title: 'Custom work',
+    body: 'Tell us about the process or system that needs to work better. We scope it with you, build it, and agree the support after launch.',
     bestWhenLead: 'Best when the work is',
     bestWhenEmphasis: 'specific to how your organisation runs',
     href: '/build',
-    linkLabel: 'Explore our services',
+    linkLabel: 'See our services',
   },
   {
     key: 'products' as const,
-    title: 'Something that already runs',
-    body: 'Some problems are common enough that we have already built the software and now operate it ourselves. You use what exists, with hosting and maintenance handled.',
+    title: 'Ready-made software',
+    body: 'We have built software for some common needs. You use it as it is, and we look after hosting and maintenance.',
     bestWhenLead: 'Best when the workflow is',
     bestWhenEmphasis: 'one many businesses already share',
     href: '/products',
@@ -93,13 +93,12 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
         <div className={styles.heroInner}>
           <div className={styles.heroCopy}>
             <h1 id="home-hero-title" className={styles.heroTitle}>
-              Build the system your organisation{' '}
-              <span>actually needs.</span>
+              Consulting and software for{' '}
+              <span>Tanzanian organisations.</span>
             </h1>
             <p className={styles.heroLead}>
-              We help Tanzanian organisations make technology decisions, then advise,
-              design, build, host, and support the result. We also build and operate
-              software products of our own.
+              We advise on technology, and we build, host and support the systems
+              our clients use. We also run software products of our own.
             </p>
             <div className={styles.heroActions}>
               <Link href="/contact" className={styles.primaryButton}>
@@ -122,8 +121,7 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
       <section className={styles.principles} aria-labelledby="home-principles-title">
         <div className={styles.sectionInner}>
           <h2 id="home-principles-title" className={styles.statement}>
-            We understand locally, ship real work,{' '}
-            <span>use AI deliberately</span>, and stay accountable after launch.
+            How we <span>work</span>
           </h2>
 
           <div className={styles.principlesLayout}>
@@ -144,9 +142,6 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
                 />
               </div>
               <figcaption className={styles.principleStageMeta}>
-                <span aria-hidden="true">
-                  {String(activePillarIndex + 1).padStart(2, '0')} / {String(pillars.length).padStart(2, '0')}
-                </span>
                 <span className={styles.principleProgress} aria-hidden="true">
                   {pillars.map((pillar, index) => (
                     <span
@@ -159,7 +154,7 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
             </figure>
 
             <ul className={styles.principleList}>
-              {pillars.map((pillar, index) => (
+              {pillars.map((pillar) => (
                 <li
                   key={pillar.key}
                   className={`${styles.principleItem} ${activePillarKey === pillar.key ? styles.principleItemActive : ''}`}
@@ -174,9 +169,6 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
                     onClick={() => setActivePillarKey(pillar.key)}
                     onFocus={() => setActivePillarKey(pillar.key)}
                   >
-                    <span className={styles.principleNumber} aria-hidden="true">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
                     <span className={styles.principleCopy}>
                       <span className={styles.principleTitle}>{pillar.title}</span>
                       <span className={styles.principleProof}>{pillar.proof}</span>
@@ -220,7 +212,7 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
             <div className={styles.capabilityStage}>
               <CapabilityOrbitGraphic activeKey={activeKey} />
               <div className={styles.capabilityReadout} aria-live="polite">
-                <h3>{activeService ? activeService.title : 'Six capabilities, one team'}</h3>
+                <h3>{activeService ? activeService.title : 'Six services'}</h3>
                 {activeService ? (
                   <ul>
                     {activeService.items.slice(0, 5).map((item) => (
@@ -234,7 +226,7 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
             </div>
 
             <ul className={styles.capabilityList} onMouseLeave={() => setActiveKey(null)}>
-              {services.map((service, index) => (
+              {services.map((service) => (
                 <li key={service.key}>
                   <Link
                     href={`/build#${service.key}`}
@@ -243,9 +235,6 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
                     onFocus={() => setActiveKey(service.key)}
                     onBlur={() => setActiveKey(null)}
                   >
-                    <span className={styles.capabilityIndex} aria-hidden="true">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
                     <span className={styles.capabilityName}>{service.title}</span>
                     <span className={styles.capabilitySummary}>{service.summary}</span>
                     <ArrowRight aria-hidden="true" size={20} strokeWidth={1.7} />
@@ -261,12 +250,10 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
         <div className={styles.sectionInner}>
           <div className={styles.engagementHead}>
             <h2 id="home-engagement-title">
-              Do you need something built, or{' '}
-              <span>something that already runs</span>?
+              Two ways to <span>work with us</span>
             </h2>
             <p>
-              Both are things we do. The right one depends on how particular the
-              problem is to you.
+              We can build something for you, or you can use software we already run.
             </p>
           </div>
 
@@ -280,7 +267,7 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
                   <h3>{path.title}</h3>
                   <p>{path.body}</p>
                   <p className={styles.bestWhen}>
-                    {path.bestWhenLead} <strong>{path.bestWhenEmphasis}</strong>.
+                    {path.bestWhenLead} {path.bestWhenEmphasis}.
                   </p>
                   <Link href={path.href}>
                     {path.linkLabel}
@@ -385,10 +372,10 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
             <h2 id="home-products-title">
               Our <span>products</span>
             </h2>
-            <p>Software we build, operate, and continue to improve.</p>
+            <p>Software we build and run ourselves.</p>
           </div>
 
-          <div className={styles.productGrid}>
+          <div className={styles.productGrid} data-count={liveProducts.length}>
             {liveProducts.map((product) => (
               <a
                 key={product.id}
@@ -434,7 +421,7 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
           ))}
 
           <Link href="/products" className={styles.sectionLink}>
-            Explore all products
+            See all products
             <ArrowRight aria-hidden="true" size={18} strokeWidth={1.8} />
           </Link>
         </div>
@@ -493,9 +480,9 @@ export function HomeLanding({ posts }: { posts: HomeInsight[] }) {
         <AmbientShader placement="panelTall" character={CTA_SHADER} />
         <div className={styles.closingWash} aria-hidden="true" />
         <div className={`${styles.sectionInner} ${styles.closingInner}`}>
-          <h2 id="home-closing-title">Have a project in mind?</h2>
+          <h2 id="home-closing-title">Talk to us about your project</h2>
           <div>
-            <p>Tell us what you need. We can discuss the scope, timing, and budget.</p>
+            <p>We can discuss the scope, timing and budget with you.</p>
             <Link href={site.urls.contact} className={styles.primaryButton}>
               {cta.primary}
               <ArrowRight aria-hidden="true" size={19} strokeWidth={1.8} />

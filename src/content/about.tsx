@@ -12,10 +12,10 @@ import {
 } from 'lucide-react';
 
 export const vision =
-  'To be a leading force for digital innovation in Tanzania, helping organisations of every size adopt technology, make sense of their data, and raise the quality of how they work.';
+  'To help organisations of every size in Tanzania put technology and their own data to good use.';
 
 export const mission =
-  'To partner with Tanzanian organisations across every sector and deliver digital solutions that are technically strong, locally relevant, and practical to run, so technology becomes an advantage rather than an obstacle.';
+  'To work with organisations across Tanzania, in any sector, and build systems that suit local conditions and are practical to run.';
 
 export const visionMission = {
   vision: { icon: Eye as LucideIcon, label: 'Our vision', body: vision },
@@ -23,8 +23,8 @@ export const visionMission = {
 };
 
 export const story: ReadonlyArray<string> = [
-  'Our client work includes websites, booking systems, and business software. We help teams organise their information, reduce manual tasks, and manage the systems they use.',
-  'Alongside client projects, we develop and operate our own products, including Ubunifu Insight and Ubunifu Sifa. That work gives us day-to-day experience of maintaining software after launch.',
+  'Our client work includes websites, booking systems and business software. We help teams organise their information, cut down manual work and look after the systems they use.',
+  'We also build and run our own products. Ubunifu Sifa is live, and Ubunifu Rafiki is in development. Running Sifa means we maintain live software day to day.',
 ];
 
 export type Objective = {
@@ -42,7 +42,7 @@ export const objectives: ReadonlyArray<Objective> = [
   {
     icon: MapPin,
     title: 'Understand the local context',
-    body: 'Account for the languages, connectivity, payment methods, and working practices of the people using the system.',
+    body: 'Plan for the languages, connection quality, payment methods and working habits of the people who will use the system.',
   },
   {
     icon: Cpu,
@@ -52,7 +52,7 @@ export const objectives: ReadonlyArray<Objective> = [
   {
     icon: HeartHandshake,
     title: 'Build for the long term',
-    body: 'Document the system, agree who owns it, and plan for maintenance. Ongoing support is included where agreed in the project scope.',
+    body: 'Document the system, agree who owns it and plan for maintenance. We provide ongoing support where the project scope includes it.',
   },
 ];
 
@@ -64,18 +64,18 @@ export type ApproachStep = {
 export const approach: ReadonlyArray<ApproachStep> = [
   {
     title: 'Listen first',
-    body: 'We start from your workflows, market, constraints, and the people who will use or run the result.',
+    body: 'We start with how you work, your market and constraints, and the people who will use or run the system.',
   },
   {
     title: 'Scope honestly',
-    body: 'We make the timeline, deliverables, pricing, dependencies, and open decisions explicit before delivery begins.',
+    body: 'Before work starts, we write down the timeline, deliverables, price, dependencies and any decisions still open.',
   },
   {
     title: 'Build iteratively',
-    body: 'Working software, shipped in reviewable steps, with you involved throughout. Early feedback reduces late surprises.',
+    body: 'We deliver working software in steps you can review, so you can give feedback early.',
   },
   {
     title: 'Run and evolve',
-    body: 'Where ongoing support is agreed, we maintain, monitor, and improve the system as needs change.',
+    body: 'Where ongoing support is agreed, we maintain and monitor the system and update it as your needs change.',
   },
 ];

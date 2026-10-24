@@ -12,15 +12,15 @@ export type StoryVisualKind =
 const storyVisuals: Record<string, { kind: StoryVisualKind; description: string }> = {
   '/editorial/tourism-systems.webp': {
     kind: 'journey',
-    description: 'A connected journey moving through planning stages into one working tourism system.',
+    description: 'A route through planning stages to one working tourism system.',
   },
   '/editorial/swahili-learning.webp': {
     kind: 'learning',
-    description: 'A learning exchange connecting a question, a lesson, and a reviewed answer.',
+    description: 'A question, a lesson and a reviewed answer, connected in sequence.',
   },
   '/editorial/credit-ledger.webp': {
     kind: 'ledger',
-    description: 'A sale and partial payments remaining connected to one visible credit ledger.',
+    description: 'A sale and its part payments recorded in one credit ledger.',
   },
   '/editorial/build-or-buy.webp': {
     kind: 'decision',
@@ -28,11 +28,11 @@ const storyVisuals: Record<string, { kind: StoryVisualKind; description: string 
   },
   '/editorial/software-tanzania-learning.webp': {
     kind: 'workshop',
-    description: 'Working notes and repeated revisions resolving into one assembled software product.',
+    description: 'Notes and revisions coming together into one software product.',
   },
   '/editorial/usage-based-pricing.webp': {
     kind: 'pricing',
-    description: 'Measured units of work connecting directly to an itemised usage record.',
+    description: 'Measured units of work linked to an itemised usage record.',
   },
 };
 

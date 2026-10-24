@@ -15,7 +15,7 @@ import styles from './About.module.css';
 export const metadata = pageMetadata({
   title: 'About',
   description:
-    'Ubunifu Technologies is a Tanzanian technology consultancy. We build digital systems for clients and operate software products of our own.',
+    'Ubunifu Technologies is a technology consultancy in Tanzania. We build software for clients and run products of our own.',
   path: '/about',
 });
 
@@ -34,8 +34,8 @@ export default function AboutPage() {
         <PageHeader
           scene="about"
           eyebrow="About Ubunifu"
-          title="Technology, made in Tanzania."
-          lead="We’re a small technology team. You work directly with the people designing and building your project."
+          title="A technology consultancy in Tanzania"
+          lead="We are a small team, so you work directly with the people who design and build your project."
         />
 
         <section className={`section ${styles.storySection}`}>
@@ -67,7 +67,7 @@ export default function AboutPage() {
           <div className="container">
             <ScrollReveal>
               <h2 id="about-vm-title" className={styles.sectionHeading}>
-                Where we are <span className={styles.headingAccent}>going</span>
+                Vision and <span className={styles.headingAccent}>mission</span>
               </h2>
             </ScrollReveal>
             <div className={styles.vmGrid}>
@@ -88,10 +88,10 @@ export default function AboutPage() {
           <div className="container">
             <ScrollReveal>
               <h2 id="about-objectives-title" className={styles.sectionHeading}>
-                What we <span className={styles.headingAccent}>hold ourselves to</span>
+                Our <span className={styles.headingAccent}>commitments</span>
               </h2>
               <p className={styles.sectionLead}>
-                Four commitments that shape how we scope a project, build it, and hand it over.
+                These shape how we scope a project, build it and hand it over.
               </p>
             </ScrollReveal>
             <div className={styles.objGrid}>
@@ -136,8 +136,8 @@ export default function AboutPage() {
         </section>
 
         <About
-          heading="How we work"
-          intro="We agree the scope, explain the decisions, and keep you involved as the project develops."
+          heading="Our values"
+          intro="The principles we apply to every project."
         />
 
         <Team />

@@ -7,7 +7,7 @@ type ServiceVisual = { kind: SystemDiagramKind; description: string };
 const media: Partial<Record<ServiceKey, ServiceVisual>> = {
   web: {
     kind: 'web',
-    description: 'A desktop website adapts to a mobile screen.',
+    description: 'Layers of a website stacked on one foundation.',
   },
   hosting: {
     kind: 'hosting',
@@ -15,19 +15,19 @@ const media: Partial<Record<ServiceKey, ServiceVisual>> = {
   },
   branding: {
     kind: 'branding',
-    description: 'Identity elements resolve into one consistent set of brand surfaces.',
+    description: 'Brand elements combined into one consistent set of materials.',
   },
   data: {
     kind: 'data',
-    description: 'Source records feed a business reporting chart.',
+    description: 'Separate records feed one reporting chart.',
   },
   ai: {
     kind: 'ai',
-    description: 'Source documents pass through an AI assistant, with a person reviewing its output.',
+    description: 'Documents pass through an AI assistant, and a person reviews the result.',
   },
   strategy: {
     kind: 'strategy',
-    description: 'Several candidate routes across a planning sheet, with one chosen route arriving at a destination.',
+    description: 'Several possible routes on a planning sheet, with one chosen route reaching its destination.',
   },
 };
 

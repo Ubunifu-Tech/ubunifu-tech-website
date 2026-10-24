@@ -32,8 +32,8 @@ export const Products: React.FC<{ hideHeader?: boolean }> = ({
               Software <span className={styles.headingAccent}>products</span>
             </h2>
             <p className={styles.subheading}>
-              Two live products for defined workflows, plus consulting when the
-              problem needs a system shaped around your organisation.
+              Sifa is live and Rafiki is in development. If neither fits, we can
+              build a system around how your organisation works.
             </p>
           </motion.div>
         )}
@@ -79,7 +79,7 @@ export const Products: React.FC<{ hideHeader?: boolean }> = ({
                   </div>
                   <h3 className={styles.name}>{product.name}</h3>
                   {/* Only print an address that actually answers. rafiki.ubunifutech.com
-                      does not resolve yet, and showing it undercuts the two that do. */}
+                      does not resolve yet, and showing it undercuts the one that does. */}
                   {product.status !== 'soon' && (
                     <p className={styles.domain}>{product.domain}</p>
                   )}

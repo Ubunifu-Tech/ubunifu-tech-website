@@ -121,7 +121,7 @@ async function confirmEmail(
   // another to see which are taken, and so the form cannot send a stream of
   // emails.
   if (!(await allow('portal-activate', actor.id, { limit: 5, windowMinutes: 15 }))) {
-    return { status: 'error', message: 'Too many tries. Wait a few minutes.' };
+    return { status: 'error', message: 'Too many tries. Wait a few minutes and try again.' };
   }
   // One portal account per address, so signing in is never ambiguous.
   // Removed contacts do not count: they can no longer sign in. One answer

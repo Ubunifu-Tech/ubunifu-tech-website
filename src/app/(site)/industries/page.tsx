@@ -15,7 +15,7 @@ import { pageMetadata } from '@/lib/metadata';
 export const metadata = pageMetadata({
   title: 'Industries',
   description:
-    'Proven tourism work from Ubunifu Technologies, plus potential workflow use cases for organisations in other Tanzanian sectors.',
+    'Ubunifu Technologies’ client work in tourism, and examples of projects we can take on in other sectors in Tanzania.',
   path: '/industries',
 });
 
@@ -32,7 +32,7 @@ export default function IndustriesPage() {
           scene="industries"
           eyebrow="Industries"
           title="Tourism and other industries"
-          lead="Explore our work for Tanzanian tourism businesses and examples of projects we can discuss in other sectors."
+          lead="The client work on this site is in tourism."
         />
 
         {/* Rendered through the shared Spotlight row rather than a bespoke
@@ -61,8 +61,8 @@ export default function IndustriesPage() {
                   Other <span className={styles.headingAccent}>industries</span>
                 </h2>
                 <p className={styles.sub}>
-                  Outside tourism, these are examples of projects we can discuss,
-                  not a list of past clients.
+                  These are examples of projects we can discuss outside tourism. None of
+                  them is past client work.
                 </p>
               </ScrollReveal>
 
@@ -100,11 +100,10 @@ export default function IndustriesPage() {
 
             <ScrollReveal>
               <p className={styles.note}>
-                Don&apos;t see your sector?{' '}
+                If your sector is not listed, we can still talk about your project.{' '}
                 <Link href="/contact" className={styles.noteLink}>
                   {cta.primary}
                 </Link>
-                .
               </p>
             </ScrollReveal>
           </div>

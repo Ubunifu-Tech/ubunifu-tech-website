@@ -55,9 +55,9 @@ export const projects: ReadonlyArray<Project> = [
   {
     slug: 'safari-king',
     title: 'Safari King Africa',
-    category: 'Booking platform + operations system',
+    category: 'Booking platform and operations system',
     description:
-      'A public booking experience and custom operations platform for a private-guided safari operator, bringing enquiries, customer records, content, and assisted drafting into one system.',
+      'A public booking site and a custom operations platform for a private-guided safari operator. Enquiries, customer records, content and assisted drafting are handled in one system.',
     domain: 'safarikingafrica.com',
     link: 'https://www.safarikingafrica.com/',
     artwork: {
@@ -69,34 +69,34 @@ export const projects: ReadonlyArray<Project> = [
       'Custom admin CRM',
       'Assisted content workflows',
       'Itinerary & content generation',
-      '2FA + audit logging',
+      '2FA and audit logging',
       'Newsletter & email automation',
     ],
     highlights: [
       {
-        title: 'An assistant for recurring content work',
-        body: 'The admin assistant supports day-by-day itinerary, article, metadata, booking-reply and newsletter drafts. The team stays in control of reviewing, editing and sending the final work.',
+        title: 'An assistant for content drafts',
+        body: 'An assistant in the admin drafts day-by-day itineraries, articles, metadata, booking replies and newsletters. The team reviews, edits and sends the final version.',
       },
       {
-        title: 'Bookings, end to end',
-        body: 'A multi-step inquiry flow captures trip basics, safari preferences and guest details. The team proposes an itinerary and shares it with the customer through a secure tokenised link, with no account required on the traveller’s side.',
+        title: 'Booking enquiries and itineraries',
+        body: 'A multi-step enquiry form collects trip basics, safari preferences and guest details. The team proposes an itinerary and sends it to the customer as a secure, tokenised link. The traveller does not need an account.',
       },
       {
         title: 'Customer records',
-        body: 'Customer records carry full timelines, internal notes and booking history. Contact inquiries have status tracking and assisted replies, helping the team keep each enquiry visible and move it forward deliberately.',
+        body: 'Each customer record has a full timeline, internal notes and booking history. Contact enquiries have a status and assisted replies, so the team can see where each one stands.',
       },
       {
         title: 'Admin access and audit logs',
-        body: 'Two-factor (OTP) admin authentication, administrative audit logging, soft deletes for recoverable data, and a whitelist-based admin model provide practical safeguards without open sign-up.',
+        body: 'Admins sign in with two-factor authentication (OTP), and their actions are logged. Deleted records can be recovered. Only people on an approved list can be admins, so there is no open sign-up.',
       },
       {
-        title: 'Content and search built in',
-        body: 'A rich-text article editor, dynamic sitemap, Schema.org structured data, and maintained redirects give the team a practical publishing workflow while protecting established URLs.',
+        title: 'Content and search',
+        body: 'The team publishes with a rich-text article editor. The site has a dynamic sitemap and Schema.org structured data, and redirects keep established URLs working.',
       },
     ],
     overview: [
-      'Safari King Africa is a private-guided safari operator in Tanzania. We built a connected public website and operating platform rather than treating the project as a brochure site.',
-      'The public site organises parks, safari circuits, treks and coastal destinations. Behind it sits a custom admin platform for bookings, customer records, content management, email workflows and assisted drafting.',
+      'Safari King Africa is a private-guided safari operator in Tanzania. We built the public website and the operations platform behind it as one connected system.',
+      'The public site covers parks, safari circuits, treks and coastal destinations. The custom admin platform handles bookings, customer records, content management, email workflows and assisted drafting.',
     ],
     tech: [
       'Next.js 16',
@@ -113,9 +113,9 @@ export const projects: ReadonlyArray<Project> = [
     ],
     sectionHeading: 'How the system works',
     sectionStandfirst:
-      'Two sides of one system. A public site that structures a first enquiry, and an admin platform where that enquiry becomes a customer record, a proposed itinerary and a reply, a loop that returns to the traveller as a shareable link.',
+      'The public site collects a first enquiry. In the admin platform, that enquiry becomes a customer record, a proposed itinerary and a reply, which goes back to the traveller as a shareable link.',
     pullQuote:
-      'We built a connected public website and operating platform rather than treating the project as a brochure site.',
+      'We built the public website and the operations platform behind it as one connected system.',
     furtherReading: [
       {
         href: '/blog/safari-king-website-operating-system',
@@ -126,9 +126,9 @@ export const projects: ReadonlyArray<Project> = [
   {
     slug: 'usambara-destination',
     title: 'Usambara Destination',
-    category: 'Eco-tourism site + enquiry engine',
+    category: 'Eco-tourism website and enquiry flow',
     description:
-      'An accessible eco-tourism site for an operator in the Usambara Mountains, built on Node and Express with a working enquiry flow and search fundamentals.',
+      'An accessible eco-tourism website for an operator in the Usambara Mountains. It runs on Node and Express and includes an enquiry flow and basic search engine optimisation.',
     domain: 'usambaradestination.com',
     link: 'https://www.usambaradestination.com/',
     artwork: {
@@ -137,7 +137,7 @@ export const projects: ReadonlyArray<Project> = [
     },
     capabilities: [
       'Multi-page marketing site',
-      'Enquiry form + email workflow',
+      'Enquiry form and email workflow',
       'Schema.org structured data',
       'Keyboard and screen-reader support',
       'Filterable photo gallery',
@@ -150,24 +150,24 @@ export const projects: ReadonlyArray<Project> = [
       },
       {
         title: 'Trip enquiries',
-        body: 'The contact form captures trip context (dates, party size and interests) and triggers a two-email flow: a structured notification to the operator and a confirmation to the visitor. Browser draft saving reduces the risk of losing a half-finished enquiry.',
+        body: 'The contact form asks for dates, party size and interests. Each enquiry sends two emails: a structured notification to the operator and a confirmation to the visitor. The browser saves a draft, so a half-finished enquiry is less likely to be lost.',
       },
       {
         title: 'Search and sharing',
-        body: 'TravelAgency, FAQ, ContactPage, Blog and ImageGallery structured data; a sitemap and robots.txt; canonical URLs; OpenGraph and Twitter cards; and lazy-loaded imagery throughout.',
+        body: 'The site has TravelAgency, FAQ, ContactPage, Blog and ImageGallery structured data, a sitemap and robots.txt, canonical URLs, and OpenGraph and Twitter cards. Images load lazily throughout.',
       },
       {
-        title: 'Accessibility built into the interface',
-        body: 'Skip links, semantic HTML, labelled controls, keyboard navigation and reduced-motion support make the core journey more usable across different input methods and preferences.',
+        title: 'Accessibility',
+        body: 'The main pages have skip links, semantic HTML, labelled controls, keyboard navigation and reduced-motion support. These make them easier to use with a keyboard or screen reader, and for visitors who prefer less motion.',
       },
       {
-        title: 'Built to browse',
-        body: 'Destination guides, articles and a filterable gallery give visitors several ways to understand the offer before starting an enquiry.',
+        title: 'Guides, articles and gallery',
+        body: 'Destination guides, articles and a filterable gallery let visitors learn about the tours before they send an enquiry.',
       },
     ],
     overview: [
       'Usambara Destination Eco Tours runs wildlife safaris, mountain treks, cultural tours and community programmes from the Usambara Mountains in northern Tanzania.',
-      'We built the website to help someone move from curiosity to a structured trip enquiry. That meant responsive pages, search foundations, accessible interaction patterns, and a form that gives the team useful context for a personal reply.',
+      'We built the website so a visitor can read about the tours and then send a detailed trip enquiry. It has responsive pages, basic search engine optimisation, accessible controls, and a form that gives the team what it needs for a personal reply.',
     ],
     tech: [
       'Node.js',
@@ -179,9 +179,9 @@ export const projects: ReadonlyArray<Project> = [
     ],
     sectionHeading: 'How the site works',
     sectionStandfirst:
-      'One path, built so it stays usable with a mouse, a keyboard or a screen reader, and one enquiry that splits in two on the way out, a brief for the operator and a confirmation for the visitor.',
+      'How visitors find their way around the site, and what happens when they send an enquiry.',
     pullQuote:
-      'We built the website to help someone move from curiosity to a structured trip enquiry.',
+      'We built the website so a visitor can read about the tours and then send a detailed trip enquiry.',
   },
 ];
 

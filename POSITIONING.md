@@ -28,18 +28,18 @@ Neither side is secondary. Consulting keeps the studio close to real workflows; 
 
 ## Vision
 
-To be a leading force for digital innovation in Tanzania, helping organisations adopt useful technology, make sense of their data, and improve how they work.
+To help organisations of every size in Tanzania put technology and their own data to good use.
 
 ## Mission
 
-To partner with Tanzanian organisations and deliver digital systems that are technically strong, locally relevant, and practical to operate, while turning repeatable lessons into accessible software products.
+To work with organisations across Tanzania, in any sector, and build systems that suit local conditions and are practical to run.
 
 ## Evidence and claim boundaries
 
 ### Proven
 
 - **Named client work:** Safari King Africa and Usambara Destination have published case studies on `/work`. Describe only the functionality documented there.
-- **Product capability:** Ubunifu Insight and Ubunifu Sifa are available at their published domains. Product descriptions must match current interfaces and verified behavior; conceptual artwork must never be treated as interface evidence.
+- **Product capability:** Ubunifu Sifa is available at its published domain. Ubunifu Insight was withdrawn in October 2026 and is not mentioned on the site. Product descriptions must match current interfaces and verified behavior; conceptual artwork must never be treated as interface evidence.
 - **Team capability:** The team’s documented disciplines cover data, software, AI, systems, hosting, support, brand, and design.
 
 ### Capability, not proof of sector experience
@@ -100,7 +100,7 @@ The six service pillars can stand alone or combine around one outcome.
 
 ### 6. Digital Strategy & Consulting
 
-- Transformation roadmaps and maturity assessment
+- Technology roadmaps and reviews of current systems
 - System and workflow design
 - Skills workshops and capacity building
 - Ongoing support, maintenance, and advisory
@@ -109,7 +109,6 @@ The six service pillars can stand alone or combine around one outcome.
 
 Products are a first-class part of the studio, not a consulting package renamed as software.
 
-- **Ubunifu Insight** — available at `insight.ubunifutech.com`. Document AI for cited question answering, structured extraction, template-based generation, and specialised multilingual agents, including a Swahili-language education tutor.
 - **Ubunifu Sifa** — available at `sifa.ubunifutech.com`. Sales, inventory, supplier, customer, and credit-ledger workflows with TZS-native records and credit-aging views.
 - **Ubunifu Rafiki** — coming soon. Planned embeddable tools for contact, booking, and publishing workflows. Describe it as planned until it is released and verified.
 
@@ -177,7 +176,7 @@ Public pricing is not promised. Quotes should state scope, deliverables, assumpt
 - **Website:** `https://ubunifutech.com`
 - **Email:** `info@ubunifutech.com`
 - **Phone / WhatsApp:** `+255 748 548 816`
-- **Products:** `insight.ubunifutech.com` · `sifa.ubunifutech.com` · Rafiki (coming soon)
+- **Products:** `sifa.ubunifutech.com` · Rafiki (coming soon)
 
 ## Document ownership
 

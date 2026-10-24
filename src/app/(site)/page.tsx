@@ -15,9 +15,9 @@ import { pageMetadata } from '@/lib/metadata';
 export const revalidate = 300;
 
 export const metadata = pageMetadata({
-  title: 'Consulting + products, built in Tanzania',
+  title: 'Technology consulting and software in Tanzania',
   description:
-    'Ubunifu Technologies is a Tanzanian technology consultancy that also builds and operates products across web, data, AI, brand, hosting, and software.',
+    'Ubunifu Technologies is a technology consultancy in Tanzania. We build and support websites and software for clients, and run software products of our own.',
   path: '/',
 });
 

@@ -32,7 +32,6 @@ export const PUBLIC_ORIGIN = 'https://ubunifutech.com';
 export const EXTERNAL_HOSTS: ReadonlyArray<string> = [
   'ubunifutech.com',
   'www.ubunifutech.com',
-  'insight.ubunifutech.com',
   'sifa.ubunifutech.com',
   'safarikingafrica.com',
   'www.safarikingafrica.com',

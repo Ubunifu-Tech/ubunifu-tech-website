@@ -142,8 +142,8 @@ export default async function PortalDocument({
             </span>
           </div>
           <p className={styles.note}>
-            We took this back to make changes. The new version will be here for you to read and
-            sign when it is ready.
+            We are making changes to this document. The new version will appear here for you to
+            sign.
           </p>
           {last?.respondedAt && last.responseNote && (
             <p className={styles.note}>
@@ -232,7 +232,7 @@ export default async function PortalDocument({
               {suggestedBy} suggested new wording on {formatDate(suggestion.createdAt)}.{' '}
               {suggestion.status === 'used'
                 ? 'We are making it into a new version for you to sign.'
-                : 'It is with us, and we will send you a new version to sign.'}
+                : 'We will send you a new version to sign.'}
             </p>
             {suggestion.note && (
               <p>
@@ -261,7 +261,7 @@ export default async function PortalDocument({
 
         {expired && !signature && !declined && (
           <div className={styles.notice} role="status">
-            <p>The time to sign this ran out.</p>
+            <p>The time to sign this has run out.</p>
             <AskAgain requestId={request.id} />
           </div>
         )}
@@ -291,11 +291,11 @@ export default async function PortalDocument({
       {canSign && !actor.isPrimary && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>With {signerName} to sign</h2>
+            <h2 className={forms.cardTitle}>Waiting for {signerName} to sign</h2>
           </div>
           <p className={styles.note}>
             {signerName} signs for {actor.clientName} as your main contact.
-            {suggestion ? '' : ' If something should change first, you can ask for changes below.'}
+            {suggestion ? '' : ' If something should change first, ask for changes below.'}
           </p>
         </section>
       )}
@@ -303,7 +303,7 @@ export default async function PortalDocument({
       {canSign && actor.isPrimary && (
         <section className={forms.card}>
           <div className={forms.cardHeader}>
-            <h2 className={forms.cardTitle}>Sign it</h2>
+            <h2 className={forms.cardTitle}>Sign this document</h2>
           </div>
           <SignForm
             requestId={request.id}
@@ -327,7 +327,11 @@ export default async function PortalDocument({
         <section className={forms.card}>
           <div className={forms.cardHeader}>
             <h2 className={forms.cardTitle}>
-              {actor.isPrimary ? 'Not ready to sign?' : 'Something to change?'}
+              {request.respondedAt
+                ? 'Your own wording'
+                : actor.isPrimary
+                  ? 'Ask for changes or decline'
+                  : 'Ask for changes'}
             </h2>
             <span className={forms.cardMeta}>
               {request.respondedAt ? 'This does not sign anything' : 'None of these signs anything'}

@@ -6,7 +6,7 @@ const html = readFileSync(requireBuild('products.html'), 'utf8');
 const rows = new Map([...html.matchAll(/<article\b[^>]*data-product="([^"]+)"[^>]*>([\s\S]*?)<\/article>/g)].map((match) => [match[1], match[2]]));
 const failures = [];
 
-for (const id of ['insight', 'sifa', 'rafiki']) {
+for (const id of ['sifa', 'rafiki']) {
   const row = rows.get(id);
   if (!row) {
     failures.push(`Missing ${id} product row`);
@@ -36,5 +36,5 @@ if (failures.length) {
   console.error(failures.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log('Product artwork check passed: 3 distinct lazy-loaded images, descriptions, budgets, live links and Rafiki availability.');
+  console.log('Product artwork check passed: 2 distinct lazy-loaded images, descriptions, budgets, the live Sifa link and Rafiki availability.');
 }

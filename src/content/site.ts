@@ -77,7 +77,6 @@ export const footerColumns: ReadonlyArray<{
   {
     title: 'Products',
     links: [
-      { label: 'Ubunifu Insight', href: 'https://insight.ubunifutech.com', external: true },
       { label: 'Ubunifu Sifa', href: 'https://sifa.ubunifutech.com', external: true },
       { label: 'Ubunifu Rafiki', href: '#', soon: true },
       { label: 'All products', href: '/products' },
@@ -99,7 +98,7 @@ export const footerColumns: ReadonlyArray<{
     links: [
       { label: 'All services', href: '/build' },
       { label: 'Industries', href: '/industries' },
-      { label: 'Our Work', href: '/work' },
+      { label: 'Our work', href: '/work' },
       { label: 'About', href: '/about' },
       { label: 'Insights', href: '/blog' },
       { label: 'Careers', href: '/careers' },

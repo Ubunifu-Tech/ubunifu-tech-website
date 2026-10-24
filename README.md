@@ -22,7 +22,6 @@ Websites & Custom Platforms · Hosting, Domains & Email · Brand Identity & Desi
 Data & Business Intelligence · AI & Automation · Technology Strategy & Advisory.
 
 **Products** (`/products`) — software built and operated by Ubunifu:
-- **Ubunifu Insight** — *available* · document AI with cited answers, extraction, templates, and multilingual agents (`insight.ubunifutech.com`)
 - **Ubunifu Sifa** — *available* · sales, inventory, supplier, customer, and credit-ledger workflows in TZS (`sifa.ubunifutech.com`)
 - **Ubunifu Rafiki** — *coming soon* · embeddable widgets (forms, booking, blog)
 

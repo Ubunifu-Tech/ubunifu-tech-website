@@ -202,6 +202,8 @@ function ourProducts(): string[] {
       const address = product.url ? `Address: ${product.url}` : 'No address yet.';
       return `- ${product.name} (${STATUS_WORDS[product.status]}): ${sentence(product.tagline)} ${product.description} ${features}: ${product.features.join(', ')}. ${address}`;
     }),
+    // Older journal articles still describe it, so the chat has to know.
+    'Ubunifu Insight, a document product, was withdrawn in October 2026. It is no longer offered and has no address. Older journal articles describe it as it was then.',
   ];
 }
 
@@ -266,7 +268,7 @@ function privacySection(): string[] {
 
 function journal({ posts, journalUnavailable }: KnowledgeInput): string[] {
   if (journalUnavailable) return ['The journal could not be read just now. The articles are at /blog.'];
-  const intro = 'Insights (/blog) is our journal. It is not the Ubunifu Insight product.';
+  const intro = 'Insights (/blog) is our journal.';
   if (posts.length === 0) return [intro, 'No articles are published yet.'];
 
   const lines = [`${intro} Newest first:`];

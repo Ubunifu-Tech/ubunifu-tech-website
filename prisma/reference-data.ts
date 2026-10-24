@@ -378,7 +378,7 @@ export async function loadTerms(db: PrismaClient, { effectiveFrom }: { effective
 }
 
 /** The products we build and sell ourselves, as the site describes them. */
-const PRODUCTS = ['Insight', 'Sifa', 'Rafiki'];
+const PRODUCTS = ['Sifa', 'Rafiki'];
 
 /**
  * Adds the products, only when there are none at all. Once they exist they

@@ -16,11 +16,9 @@ export const metadata: Metadata = {
     default: 'Ubunifu Technologies · Technology consulting and products',
     template: '%s | Ubunifu Technologies',
   },
-  description: 'Ubunifu Technologies is a Tanzanian technology consultancy that also builds and operates products. We work across strategy, brand, software, data, AI, hosting, and support.',
+  description: 'Ubunifu Technologies is a technology consultancy in Tanzania. We advise on technology and work on websites, software, data, AI, branding and hosting for clients, and we run software products of our own.',
   keywords: [
     'software Africa',
-    'AI platform Tanzania',
-    'Ubunifu Insight',
     'Ubunifu Sifa',
     'web development Tanzania',
     'web hosting Tanzania',
@@ -44,7 +42,7 @@ export const metadata: Metadata = {
     url: 'https://ubunifutech.com',
     siteName: 'Ubunifu Technologies',
     title: 'Ubunifu Technologies · Technology consulting and products',
-    description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
+    description: 'A technology consultancy in Tanzania that advises on, builds and supports systems for clients and runs software products of its own.',
     images: [
       {
         url: '/og.jpg',
@@ -58,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Ubunifu Technologies · Technology consulting and products',
-    description: 'A Tanzanian technology consultancy that advises on, designs, builds, hosts, and supports client systems, and operates products of its own.',
+    description: 'A technology consultancy in Tanzania that advises on, builds and supports systems for clients and runs software products of its own.',
     images: ['/og.jpg'],
   },
   robots: {
@@ -83,7 +81,7 @@ export default function SiteLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Ubunifu Technologies',
-    description: 'A Tanzanian technology consultancy that also builds and operates products, working across brand, software, data, and AI.',
+    description: 'A technology consultancy in Tanzania that advises on technology, works on websites, software, data, AI, branding and hosting, and runs software products of its own.',
     url: 'https://ubunifutech.com',
     logo: 'https://ubunifutech.com/logo-v2.png',
     contactPoint: {
@@ -104,15 +102,6 @@ export default function SiteLayout({
       jobTitle: 'Data & AI Builder',
     },
     makesOffer: [
-      {
-        '@type': 'Offer',
-        itemOffered: {
-          '@type': 'SoftwareApplication',
-          name: 'Ubunifu Insight',
-          applicationCategory: 'BusinessApplication',
-          url: 'https://insight.ubunifutech.com',
-        },
-      },
       {
         '@type': 'Offer',
         itemOffered: {

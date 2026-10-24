@@ -42,7 +42,7 @@ export function SignForm({
   sign = signDocument,
   hidden = {},
   viaLink = false,
-  wrongHint = 'If anything is wrong, do not sign it. Ask for changes below. We would much rather fix it.',
+  wrongHint = 'If anything is wrong, do not sign it. Ask for changes below.',
 }: {
   requestId: string;
   termsTitle: string | null;
@@ -97,8 +97,8 @@ export function SignForm({
         />
         <p className={forms.hint}>
           {viaLink
-            ? 'Typed by you and recorded against your name and the time. That is what makes it a signature.'
-            : 'Typed by you, recorded against your name, your email and the time. That is what makes it a signature.'}
+            ? 'Your initials are recorded with your name and the time as your signature.'
+            : 'Your initials are recorded with your name, your email and the time as your signature.'}
         </p>
       </div>
 
@@ -133,7 +133,7 @@ export function SignForm({
               {termsVersion ? `, version ${termsVersion}` : ''}
             </span>
             <span className={forms.hint}>
-              Shown in full below. The exact version you accept is recorded, so it cannot change
+              Shown in full below. We record the version you accept, and it will not change
               afterwards.
             </span>
           </span>
@@ -169,15 +169,15 @@ const WORDING: Record<
   changes: {
     open: 'Ask for changes',
     title: 'What should change?',
-    hint: 'We will read it, make the changes and send you a new version to sign. This one stays here in the meantime, so you can still sign it if we talk it through.',
-    submit: 'Send it to us',
+    hint: 'We will send you a new version to sign. You can still sign this one in the meantime.',
+    submit: 'Send',
     working: 'Sending…',
   },
   decline: {
     open: 'I cannot sign this',
-    title: 'Why not?',
-    hint: 'This closes the request. Nothing is signed, nothing is charged, and we will come back to you. A new version would arrive as a fresh request.',
-    submit: 'Decline it',
+    title: 'Your reason',
+    hint: 'This closes the request without signing, and nothing is charged. We will get back to you.',
+    submit: 'Decline',
     working: 'Recording…',
   },
 };
@@ -366,14 +366,13 @@ function SuggestWording({
         minHeight="tall"
         disabled={pending}
         onMarkdownChange={() => setTouched(true)}
-        hint="Change the text so it reads the way you want. Leave the rest as it is."
+        hint="Edit only the parts you want to change."
       />
 
       <TextAreaField
         name="note"
         label="A note for us"
         optional
-        hint="Anything that helps us understand the change."
         rows={3}
         maxLength={4000}
         disabled={pending}
@@ -436,7 +435,7 @@ export function AskAgain({
         <button type="submit" className={forms.button} disabled={pending}>
           {pending ? 'Sending…' : 'Ask us to send it again'}
         </button>
-        <p className={forms.payoff}>Nothing is lost. We will send you a fresh copy to sign.</p>
+        <p className={forms.payoff}>We will send you a new copy to sign.</p>
       </div>
       {state.status === 'error' && (
         <p className={forms.error} role="alert">

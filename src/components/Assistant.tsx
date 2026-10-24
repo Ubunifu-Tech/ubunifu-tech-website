@@ -86,17 +86,17 @@ const COPY: Record<
   site: {
     endpoint: '/api/assistant',
     title: 'Chat with Ubunifu',
-    subtitle: 'An assistant answers. A person follows up.',
+    subtitle: 'An AI assistant that can pass messages to the team.',
     launcher: 'Chat with us',
     opener:
-      'Hello. Ask me anything about what we do, or tell me what you are working on and I will pass it to the team.',
-    placeholder: 'Ask us anything…',
+      'Hello. Ask me about our services and products, or tell me what you are working on and I will pass it to the team.',
+    placeholder: 'Ask a question…',
     starters: ['What do you do?', 'Tell me about your products', 'I have a project in mind'],
   },
   portal: {
     endpoint: '/api/portal/assistant',
     title: 'Help',
-    subtitle: 'Knows your projects. The team is one tap away.',
+    subtitle: 'An AI assistant that can see your projects.',
     launcher: 'Help',
     opener:
       'Hello. Ask me about your projects, documents or invoices, or tell me what you need and I will pass it to the team.',

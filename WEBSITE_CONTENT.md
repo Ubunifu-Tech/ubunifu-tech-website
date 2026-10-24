@@ -33,7 +33,7 @@ Typography uses three shared sizes only: display, heading, and 1rem body. Poppin
 | `/build` | Six consulting service capabilities and delivery process | `src/app/build/page.tsx` |
 | `/work` | Named client work and testimonial | `src/app/work/page.tsx` |
 | `/work/[slug]` | Full client case study | `src/app/work/[slug]/page.tsx` |
-| `/products` | Insight, Sifa, and Rafiki product family | `src/app/products/page.tsx` |
+| `/products` | Sifa and Rafiki | `src/app/products/page.tsx` |
 | `/blog` | “The journal” index | `src/app/blog/page.tsx` |
 | `/blog/[slug]` | Markdown journal article | `src/app/blog/[slug]/page.tsx` |
 | `/about` | Studio story, principles, and team | `src/app/about/page.tsx` |
@@ -54,7 +54,7 @@ The homepage tells one story: Ubunifu can build a specific system with a client 
 2. **CapabilitiesIndex** — all six consulting disciplines in one open, linked register.
 3. **WorkPreview** — Safari King Africa and Usambara Destination, with native icon diagrams of the delivered operations and enquiry systems.
 4. **Testimonial** — sourced from `src/content/testimonials.tsx`, reinforcing the client work before products are introduced.
-5. **ProductsProof** — a text-led register of Insight, Sifa, and Rafiki, with status stated once per product.
+5. **ProductsProof** — a text-led register of Sifa and Rafiki, with status stated once per product.
 6. **Insights** — the three newest journal posts; the visual lead avoids repeating a cover already used in selected work.
 7. **CtaBand** — one closing contact action.
 
@@ -90,11 +90,10 @@ Each record supplies the Work narrative, `/work/[slug]` case study, visual ident
 
 | Product | Code status | Current presentation |
 |---|---|---|
-| Ubunifu Insight | `live` | Document AI; links to `insight.ubunifutech.com` |
 | Ubunifu Sifa | `live` | Business operations and credit-ledger workflows; links to `sifa.ubunifutech.com` |
 | Ubunifu Rafiki | `soon` | Embeddable website tools; shown as in development |
 
-Custom consulting belongs under `/build`; it is not a fourth product. Product availability is not evidence of customer counts or usage. The product page pairs its editorial hero with open image-and-text rows: source documents for Insight, stock and sales records for Sifa, and website modules for Rafiki. `src/content/product-artwork.ts` maps the individual illustrations by stable product ID. Names, features, live links and Rafiki’s in-development status remain in HTML. The homepage product preview stays text-led, and the ambiguous 3D product-family illustration remains unused. Exact prompts and saved paths are in [PRODUCT_ARTWORK.md](PRODUCT_ARTWORK.md).
+Custom consulting belongs under `/build`; it is not a third product. Product availability is not evidence of customer counts or usage. The product page pairs its editorial hero with open image-and-text rows: stock and sales records for Sifa, and website modules for Rafiki. `src/content/product-artwork.ts` maps the individual illustrations by stable product ID. Names, features, live links and Rafiki’s in-development status remain in HTML. The homepage product preview stays text-led, and the ambiguous 3D product-family illustration remains unused. Exact prompts and saved paths are in [PRODUCT_ARTWORK.md](PRODUCT_ARTWORK.md).
 
 ### Industries (`/industries`)
 

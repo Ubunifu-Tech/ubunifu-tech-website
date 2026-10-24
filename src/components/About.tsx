@@ -13,8 +13,8 @@ type AboutProps = {
 
 export const About: React.FC<AboutProps> = ({
   hideHeader = false,
-  heading = 'What we stand for',
-  intro = 'A few principles that shape every project we take on.',
+  heading = 'Our values',
+  intro = 'The principles we apply to each project.',
 }) => {
   return (
     <section id="about" className={`section ${styles.about}`}>

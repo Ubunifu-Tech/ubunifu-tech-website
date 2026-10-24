@@ -1,5 +1,7 @@
 import 'server-only';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { attachDatabasePool } from '@vercel/functions';
+import { Pool } from 'pg';
 import { PrismaClient } from '@/generated/prisma/client';
 import { databaseTarget } from './db-connection';
 
@@ -33,23 +35,36 @@ function createClient(): PrismaClient {
     );
   }
 
+  const pool = new Pool({
+    // The URL with its SSL settings turned into an explicit TLS config:
+    // see db-connection.ts for why sslmode cannot be left to the driver.
+    ...databaseTarget(connectionString),
+    /**
+     * Vercel runs each function in its own container, so every warm instance
+     * holds its own pool. Railway's Postgres has a finite connection limit,
+     * and a handful of instances with the pg default of 10 each will exhaust
+     * it, so the pool stays small. An empty value means 5 too: Number('') is
+     * 0, which pg would read as its own default of 10.
+     */
+    max: Number(process.env.DATABASE_POOL_MAX) || 5,
+    /**
+     * A connection is kept for a minute after its last query. Opening one is a
+     * TCP and TLS handshake with the database, which added about half a second
+     * to a click whenever staff paused for more than the old ten seconds.
+     * attachDatabasePool keeps the instance alive until idle connections are
+     * closed, so none is left open when Vercel suspends it.
+     */
+    idleTimeoutMillis: 60_000,
+    connectionTimeoutMillis: 10_000,
+    // A script ends when its work is done rather than a minute later.
+    allowExitOnIdle: true,
+  });
+  attachDatabasePool(pool);
+
   return new PrismaClient({
-    adapter: new PrismaPg({
-      // The URL with its SSL settings turned into an explicit TLS config:
-      // see db-connection.ts for why sslmode cannot be left to the driver.
-      ...databaseTarget(connectionString),
-      /**
-       * Vercel runs each function in its own container, so every warm instance
-       * holds its own pool. Railway's Postgres has a finite connection limit,
-       * and a handful of instances with the pg default of 10 each will exhaust
-       * it. Small pool, short idle timeout: reconnecting is cheaper than being
-       * refused. An empty value means 5 too: Number('') is 0, which pg
-       * would read as its own default of 10.
-       */
-      max: Number(process.env.DATABASE_POOL_MAX) || 5,
-      idleTimeoutMillis: 10_000,
-      connectionTimeoutMillis: 10_000,
-    }),
+    // The adapter bundles a newer copy of pg's type declarations than the
+    // app's; the pg it runs on is the same one this pool comes from.
+    adapter: new PrismaPg(pool as unknown as ConstructorParameters<typeof PrismaPg>[0]),
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
   });
 }

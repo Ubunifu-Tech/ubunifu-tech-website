@@ -80,7 +80,12 @@ async function assertAdminHost(): Promise<void> {
   }
 }
 
-export async function getStaffActor(): Promise<StaffActor | null> {
+/**
+ * The signed-in staff member, or null. Looked up once per request: the layout,
+ * the page and anything they render all ask, and each lookup is two trips to
+ * the database.
+ */
+export const getStaffActor = cache(async function getStaffActor(): Promise<StaffActor | null> {
   const session = await readSession('admin');
   if (!session || session.actorType !== 'staff') return null;
 
@@ -105,7 +110,7 @@ export async function getStaffActor(): Promise<StaffActor | null> {
     title: staff.title,
     permissions: permissionsForRole(staff.role, await rolePermissions()),
   };
-}
+});
 
 /**
  * The signed-in staff member, or null, for an action whose form holds long
@@ -207,7 +212,8 @@ export async function getPendingContact(): Promise<{
   };
 }
 
-export async function getClientActor(): Promise<ClientActor | null> {
+/** The signed-in client contact, or null, looked up once per request. */
+export const getClientActor = cache(async function getClientActor(): Promise<ClientActor | null> {
   const session = await readSession('portal');
   if (!session || session.actorType !== 'client_contact') return null;
 
@@ -242,7 +248,7 @@ export async function getClientActor(): Promise<ClientActor | null> {
     isActivated: contact.activatedAt !== null,
     isPrimary: contact.isPrimary,
   };
-}
+});
 
 /**
  * The signed-in client, or null, for an action whose form holds typing.

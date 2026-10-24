@@ -10,6 +10,7 @@ import { ProfileMenu, type ProfileLink } from '@/components/console/ProfileMenu'
 import { ROLE_LABEL } from '@/lib/console/people';
 import { MobileNav } from './MobileNav';
 import { SearchBox } from './SearchBox';
+import { NavigationProgress } from './NavigationProgress';
 import { NewMenu } from './NewMenu';
 import styles from './Admin.module.css';
 
@@ -61,6 +62,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className={styles.shell}>
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       {/* One band across the top: where you are, and who you are signed in as. */}
       <header className={styles.band}>
         <div className={styles.bandStart}>

@@ -4,11 +4,8 @@ import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import {
-  EngagementType,
-  ProjectStatus,
-  ServiceLine,
-} from '@/generated/prisma/client';
+import { EngagementType, ServiceLine } from '@/generated/prisma/client';
+import { OPENING_STATUSES, openingStatus } from '@/lib/console/transitions';
 import { can, recordAudit, staffForAction } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
@@ -64,22 +61,6 @@ export type NewClientState = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Statuses a project can be created in.
- *
- * Deliberately short. Everything past a signed contract is reached by moving
- * the project through its state machine, where each transition is recorded and
- * the money-dependent ones are checked. Letting the create form drop a project
- * straight into `launched` would leave a project with no history of how it got
- * there, which is the one thing the status events exist to prevent.
- */
-const OPENING_STATUSES: ProjectStatus[] = [
-  ProjectStatus.lead,
-  ProjectStatus.proposal_draft,
-  ProjectStatus.proposal_sent,
-  ProjectStatus.proposal_accepted,
-];
-
-/**
  * Creates a client by hand, with an optional first project and invitation.
  *
  * The staff check runs here rather than being inherited from the page: a
@@ -106,8 +87,8 @@ export async function createClient(
     startProject: formData.get('startProject') === 'on',
     projectName: formText(formData, 'projectName'),
     serviceLine: formText(formData, 'serviceLine'),
-    engagementType: formText(formData, 'engagementType'),
-    status: formText(formData, 'status'),
+    engagementType: formText(formData, 'engagementType') || 'fixed_price_project',
+    status: openingStatus(formData),
     templateId: formText(formData, 'templateId'),
     startDate: formText(formData, 'startDate'),
     targetDate: formText(formData, 'targetDate'),
@@ -293,6 +274,7 @@ export async function createClient(
   });
 
   // ── Invitation ────────────────────────────────────────────────────────
+  let inviteFailed = false;
   if (values.sendInvite && email) {
     const { token } = await issueMagicToken({
       purpose: 'invite',
@@ -324,14 +306,15 @@ export async function createClient(
       entityId: created.contactId,
       summary: sent.ok ? `Sent to ${email}` : `Could not send to ${email}: ${sent.error}`,
     });
+    inviteFailed = !sent.ok;
   }
 
-  revalidatePath('/admin/clients');
-  revalidatePath('/admin/enquiries');
+  revalidatePath('/admin', 'layout');
   // Two different paths on purpose. The cache is keyed by the internal route,
-  // /admin/clients, but the browser is on admin.ubunifutech.com/clients — the
-  // /admin prefix only exists after the rewrite. A redirect written with the
-  // prefix would 404 on the public host. It opens the new client, where the
-  // next step (their project, a proposal) starts.
-  redirect(`/clients/${created.clientSlug}`);
+  // /admin/clients, but the browser is on admin.ubunifutech.com/clients: the
+  // /admin prefix only exists after the rewrite, so a redirect written with it
+  // would 404 on the public host. It opens the project when one was made, and
+  // the client page when the invitation needs sending again, which is done there.
+  if (inviteFailed) redirect(`/clients/${created.clientSlug}?invite=failed`);
+  redirect(created.projectSlug ? `/projects/${created.projectSlug}` : `/clients/${created.clientSlug}`);
 }

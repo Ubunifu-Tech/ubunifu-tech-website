@@ -79,17 +79,10 @@ export default async function NewClientPage({
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <Link href={usable ? '/enquiries' : '/clients'} className={styles.backLink}>
-            ← {usable ? 'Enquiries' : 'Clients'}
+          <Link href={usable ? `/enquiries/${usable.id}` : '/clients'} className={styles.backLink}>
+            ← {usable ? usable.name : 'Clients'}
           </Link>
-          <h1 className={styles.heading}>
-            {usable ? 'Onboard' : 'New'} <span className={styles.headingAccent}>client</span>
-          </h1>
-          <p className={styles.lead}>
-            {usable
-              ? `From ${usable.name}'s enquiry. Add their organisation if they have one.`
-              : 'For work that came in by phone or in person rather than through the website.'}
-          </p>
+          <h1 className={styles.heading}>New client</h1>
         </div>
       </div>
 
@@ -104,8 +97,8 @@ export default async function NewClientPage({
           />
         </div>
 
-        <aside className={styles.splitAside}>
-          {usable ? (
+        {usable && (
+          <aside className={styles.splitAside}>
             <section className={forms.card}>
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>What they wrote</h2>
@@ -117,20 +110,8 @@ export default async function NewClientPage({
               <p className={styles.asideSubject}>{usable.subject}</p>
               <p className={styles.asideMessage}>{usable.message}</p>
             </section>
-          ) : (
-            <section className={forms.card}>
-              <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>What this creates</h2>
-              </div>
-              <ul className={styles.asideList}>
-                <li>The client, with their billing currency.</li>
-                <li>The person you deal with, who can sign in to the portal.</li>
-                <li>Their first project, with a plan to start from, if you want one now.</li>
-                <li>An invitation email, only if you choose to send it.</li>
-              </ul>
-            </section>
-          )}
-        </aside>
+          </aside>
+        )}
       </div>
     </main>
   );

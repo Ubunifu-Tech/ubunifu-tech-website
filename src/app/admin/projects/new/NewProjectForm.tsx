@@ -4,23 +4,17 @@ import { useActionState, useState } from 'react';
 import { createProject, type NewProjectState } from './actions';
 import type { TemplateOption } from '../../clients/new/NewClientForm';
 import {
+  CheckField,
   DateField,
   SelectField,
   TextAreaField,
   TextField,
 } from '@/components/console/Fields';
-import { ENGAGEMENTS, SERVICE_LINES } from '@/lib/console/project-status';
+import { SERVICE_LINES } from '@/lib/console/project-status';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewProjectState = { status: 'idle' };
-
-const STATUSES = [
-  { value: 'lead', label: 'Lead' },
-  { value: 'proposal_draft', label: 'Writing the proposal' },
-  { value: 'proposal_sent', label: 'Proposal sent' },
-  { value: 'proposal_accepted', label: 'Proposal accepted' },
-];
 
 export function NewProjectForm({
   clientId,
@@ -54,9 +48,7 @@ export function NewProjectForm({
 
       <div className={forms.card}>
         <fieldset className={forms.section}>
-          <legend className={`${forms.sectionTitle} ${forms.hueAccent}`}>
-            New work for {clientName}
-          </legend>
+          <legend className={forms.sectionTitle}>For {clientName}</legend>
           <div className={forms.grid}>
             <TextField
               name="name"
@@ -67,7 +59,6 @@ export function NewProjectForm({
               maxLength={160}
               invalid={invalid('name')}
               disabled={pending}
-              hint="A reference is assigned automatically."
             />
 
             <SelectField
@@ -81,20 +72,6 @@ export function NewProjectForm({
               {SERVICE_LINES.map((line) => (
                 <option key={line.value} value={line.value}>
                   {line.label}
-                </option>
-              ))}
-            </SelectField>
-
-            <SelectField
-              name="engagementType"
-              label="How it is billed"
-              defaultValue="fixed_price_project"
-              invalid={invalid('engagementType')}
-              disabled={pending}
-            >
-              {ENGAGEMENTS.map((engagement) => (
-                <option key={engagement.value} value={engagement.value}>
-                  {engagement.label}
                 </option>
               ))}
             </SelectField>
@@ -120,26 +97,10 @@ export function NewProjectForm({
               defaultValue={currency}
               invalid={invalid('currency')}
               disabled={pending}
-              hint="Fees and invoices on this project are charged in it."
             >
               {CURRENCIES.map((code) => (
                 <option key={code} value={code}>
                   {currencyLabel(code)}
-                </option>
-              ))}
-            </SelectField>
-
-            <SelectField
-              name="status"
-              label="Where it stands"
-              defaultValue="lead"
-              invalid={invalid('status')}
-              disabled={pending}
-              hint="A lead is somebody you have spoken to with nothing sent yet. Later stages are reached by moving the project on, so the change is recorded."
-            >
-              {STATUSES.map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
                 </option>
               ))}
             </SelectField>
@@ -151,11 +112,7 @@ export function NewProjectForm({
               defaultValue={usable.find((template) => template.isDefault)?.id ?? ''}
               invalid={invalid('templateId')}
               disabled={pending}
-              hint={
-                usable.length === 0
-                  ? 'There is no ready-made plan for this kind of work. It starts empty, and you add the phases on the Plan tab.'
-                  : 'Phases, deliverables, what you need from them, and the fee lines to be priced.'
-              }
+              hint={usable.length === 0 ? 'No ready-made plan for this kind of work yet.' : undefined}
             >
               <option value="">Start empty</option>
               {usable.map((template) => (
@@ -183,18 +140,23 @@ export function NewProjectForm({
               wide
               maxLength={2000}
               disabled={pending}
-              hint="A sentence or two. This one the client does see."
+              hint="The client sees this."
+            />
+
+            <CheckField
+              name="started"
+              label="Work has already started"
+              hint="It opens In progress instead of as a deal."
+              wide
+              disabled={pending}
             />
           </div>
         </fieldset>
 
         <div className={forms.actions}>
           <button type="submit" className={forms.button} disabled={pending}>
-            {pending ? 'Creating…' : 'Start the project'}
+            {pending ? 'Creating…' : 'Create project'}
           </button>
-          <p className={forms.payoff}>
-            Opens the new project, ready to plan and price.
-          </p>
         </div>
 
         {state.message && (

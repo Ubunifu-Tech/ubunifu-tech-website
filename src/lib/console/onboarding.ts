@@ -111,6 +111,7 @@ export type NewClientResult = {
   clientSlug: string;
   contactId: string;
   projectId: string | null;
+  projectSlug: string | null;
   reference: string | null;
 };
 
@@ -172,7 +173,7 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
 
     if (!input.project || !projectSlug || !reference) {
       await closeEnquiry(null);
-      return { clientId: client.id, clientSlug, contactId, projectId: null, reference: null };
+      return { clientId: client.id, clientSlug, contactId, projectId: null, projectSlug: null, reference: null };
     }
 
     const start = input.project.startDate ?? new Date();
@@ -214,7 +215,7 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
 
     await closeEnquiry(project.id);
 
-    return { clientId: client.id, clientSlug, contactId, projectId: project.id, reference };
+    return { clientId: client.id, clientSlug, contactId, projectId: project.id, projectSlug, reference };
   });
 }
 

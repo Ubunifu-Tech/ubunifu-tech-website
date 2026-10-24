@@ -73,6 +73,26 @@ export type Transition = {
 const START: Transition = { to: 'in_progress', label: 'Start the work', tone: 'primary' };
 
 /**
+ * The statuses a project can be created in: a lead, or with the work already
+ * started when it was agreed outside the app. Everything later is reached by
+ * moving the project, where each move is recorded and checked. The proposal
+ * stages stay accepted for forms that were open when this list changed.
+ */
+export const OPENING_STATUSES: ProjectStatus[] = [
+  'lead',
+  'in_progress',
+  'proposal_draft',
+  'proposal_sent',
+  'proposal_accepted',
+];
+
+/** What a create form asked for: started work, or a lead. */
+export function openingStatus(formData: FormData): string {
+  if (formData.get('started') === 'on') return 'in_progress';
+  return String(formData.get('status') ?? '').trim() || 'lead';
+}
+
+/**
  * Starting the work is the agreement. Proposals and agreements sent from
  * Documents still move a deal along by themselves (advanceForDocument), but
  * work agreed on the phone or in a meeting is never made to look like

@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { can, requirePermission } from '@/lib/console/auth';
-import { ChevronRight } from 'lucide-react';
-import { Steps } from '@/components/console/Steps';
+import { ClientPicker } from '@/components/console/ClientPicker';
 import { NewProjectForm } from './NewProjectForm';
 import { STAGE_LABEL, STAGE_OF } from '@/lib/console/stages';
 import forms from '@/styles/forms.module.css';
@@ -12,8 +11,8 @@ import styles from '../../Admin.module.css';
 export const metadata = { title: 'New project' };
 
 /**
- * More work for a client. Without ?client= it starts by asking who it is for,
- * with a way to add someone new; with it, it goes straight to the project.
+ * More work for a client. Without ?client= it asks who it is for, with a way
+ * to add someone new; with it, it is the project form.
  */
 export default async function NewProjectPage({
   searchParams,
@@ -22,7 +21,7 @@ export default async function NewProjectPage({
 }) {
   const staff = await requirePermission('projects');
   const { client: slug, enquiry: enquiryId } = await searchParams;
-  if (!slug) return <ChooseClient mayAddClients={can(staff, 'clients')} />;
+  if (!slug) return <ChooseClient mayAddClients={can(staff, 'clients')} enquiryId={enquiryId} />;
 
   const [client, templates, team] = await Promise.all([
     db.client.findFirst({
@@ -67,20 +66,9 @@ export default async function NewProjectPage({
           <Link href={`/clients/${client.slug}`} className={styles.backLink}>
             ← {client.name}
           </Link>
-          <h1 className={styles.heading}>
-            New <span className={styles.headingAccent}>project</span>
-          </h1>
-          <p className={styles.lead}>For {client.name}.</p>
+          <h1 className={styles.heading}>New project</h1>
         </div>
       </div>
-      <Steps
-        steps={[
-          { key: 'client', label: 'Client' },
-          { key: 'project', label: 'Project' },
-        ]}
-        current={1}
-        hrefFor={() => '/projects/new'}
-      />
       <div className={styles.split}>
         <div className={styles.splitMain}>
           <NewProjectForm
@@ -136,18 +124,18 @@ export default async function NewProjectPage({
   );
 }
 
-/** The first step: who the project is for. */
-async function ChooseClient({ mayAddClients }: { mayAddClients: boolean }) {
+/** Who the project is for, before the form. */
+async function ChooseClient({ mayAddClients, enquiryId }: { mayAddClients: boolean; enquiryId?: string }) {
   const clients = await db.client.findMany({
     where: { deletedAt: null },
     orderBy: { name: 'asc' },
     select: {
-      id: true,
       name: true,
       slug: true,
       _count: { select: { projects: { where: { deletedAt: null } } } },
     },
   });
+  const carry = enquiryId ? `&enquiry=${encodeURIComponent(enquiryId)}` : '';
 
   return (
     <main className={styles.page}>
@@ -157,63 +145,31 @@ async function ChooseClient({ mayAddClients }: { mayAddClients: boolean }) {
             ← Projects
           </Link>
           <h1 className={styles.heading}>New project</h1>
-          <p className={styles.lead}>Who is it for?</p>
+          <p className={styles.lead}>Choose the client.</p>
         </div>
+        {mayAddClients && (
+          <div className={styles.headActions}>
+            <Link href={`/clients/new${enquiryId ? `?enquiry=${encodeURIComponent(enquiryId)}` : ''}`} className={`${forms.button} ${forms.quiet}`}>
+              New client
+            </Link>
+          </div>
+        )}
       </div>
 
-      <Steps
-        steps={[
-          { key: 'client', label: 'Client' },
-          { key: 'project', label: 'Project' },
-        ]}
-        current={0}
-      />
-
-      <div className={styles.split}>
-        <section className={`${forms.card} ${styles.splitMain}`}>
-          <ul className={styles.glance}>
-            {clients.map((client) => (
-              <li key={client.id}>
-                <Link href={`/projects/new?client=${client.slug}`}>
-                  <span className={styles.taskText}>
-                    {client.name}
-                    <span className={styles.taskMeta}>
-                      {client._count.projects === 0
-                        ? 'No projects yet'
-                        : `${client._count.projects} ${client._count.projects === 1 ? 'project' : 'projects'}`}
-                    </span>
-                  </span>
-                  <ChevronRight size={16} strokeWidth={1.8} aria-hidden="true" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <aside className={styles.splitAside}>
-          <section className={forms.card}>
-            <div className={forms.cardHeader}>
-              <h2 className={forms.cardTitle}>Someone new</h2>
-            </div>
-            {mayAddClients ? (
-              <>
-                <p className={styles.note}>
-                  Add them as a client first. Their first project can be set up in the same form.
-                </p>
-                <div className={forms.actions}>
-                  <Link href="/clients/new" className={forms.button}>
-                    Add a client
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p className={styles.note}>
-                Someone who can add clients needs to add them first. Then start the project here.
-              </p>
-            )}
-          </section>
-        </aside>
-      </div>
+      <section className={forms.card}>
+        <ClientPicker
+          clients={clients.map((client) => ({
+            name: client.name,
+            slug: client.slug,
+            meta:
+              client._count.projects === 0
+                ? 'No projects yet'
+                : `${client._count.projects} ${client._count.projects === 1 ? 'project' : 'projects'}`,
+          }))}
+          href={`/projects/new?client=:client${carry}`}
+          autoFocus
+        />
+      </section>
     </main>
   );
 }

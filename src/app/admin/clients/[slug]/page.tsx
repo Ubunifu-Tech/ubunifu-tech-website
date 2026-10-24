@@ -55,9 +55,9 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ restored?: string; kept?: string; main?: string }>;
+  searchParams: Promise<{ restored?: string; kept?: string; main?: string; invite?: string }>;
 }) {
-  const { restored, kept, main } = await searchParams;
+  const { restored, kept, main, invite } = await searchParams;
   const leftOut = Number(kept) > 0 ? Number(kept) : 0;
   const staff = await requireStaff();
   const mayManage = can(staff, 'clients');
@@ -296,6 +296,15 @@ export default async function ClientPage({
             {leftOut > 0 &&
               main === '1' &&
               (leftOut === 1 ? ' They were the main contact.' : ' One of them was the main contact.')}
+          </Callout>
+        </>
+      )}
+
+      {invite === 'failed' && (
+        <>
+          <ForgetParams names={['invite']} />
+          <Callout kind="bad">
+            The portal invitation did not send. Send it again from their menu under People.
           </Callout>
         </>
       )}

@@ -4,7 +4,8 @@ import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { EngagementType, ProjectStatus, ServiceLine } from '@/generated/prisma/client';
+import { EngagementType, ServiceLine } from '@/generated/prisma/client';
+import { OPENING_STATUSES, openingStatus } from '@/lib/console/transitions';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
@@ -16,14 +17,6 @@ export type NewProjectState = {
   message?: string;
   field?: string;
 };
-
-/** The same short list the onboarding form uses, and for the same reason. */
-const OPENING_STATUSES: ProjectStatus[] = [
-  ProjectStatus.lead,
-  ProjectStatus.proposal_draft,
-  ProjectStatus.proposal_sent,
-  ProjectStatus.proposal_accepted,
-];
 
 /**
  * Starts another project for a client already on the books.
@@ -64,12 +57,12 @@ export async function createProject(
     return fail('Choose a service line.', 'serviceLine');
   }
 
-  const engagementType = formText(formData, 'engagementType');
+  const engagementType = formText(formData, 'engagementType') || 'fixed_price_project';
   if (!isOneOf(Object.values(EngagementType), engagementType)) {
     return fail('Choose how this work is billed.', 'engagementType');
   }
 
-  const status = formText(formData, 'status');
+  const status = openingStatus(formData);
   if (!isOneOf(OPENING_STATUSES, status)) {
     return fail('Choose where this project stands today.', 'status');
   }

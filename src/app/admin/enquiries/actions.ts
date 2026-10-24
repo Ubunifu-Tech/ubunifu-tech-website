@@ -73,41 +73,71 @@ export async function setEnquiryStatus(
     summary: `${enquiry.status} → ${next}`,
   });
 
-  revalidatePath('/admin/enquiries');
+  // The enquiry, the list, and the counts on Home and in the menu.
+  revalidatePath('/admin', 'layout');
   return { status: 'done' };
 }
 
-export async function saveEnquiryNote(
+/**
+ * The team's note on an enquiry and what kind of work it is, saved together.
+ * The kind is what the new client or project form starts from.
+ */
+export async function saveEnquiryDetails(
   _previous: TriageState,
   formData: FormData,
 ): Promise<TriageState> {
   const staff = await requireStaff();
   if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
 
-  const id = String(formData.get('id') ?? '');
+  const id = formText(formData, 'id');
   const note = formText(formData, 'internalNote');
+  const serviceLine = formText(formData, 'serviceLine');
 
   if (note.length > 2000) {
     return { status: 'error', message: 'That note is too long.' };
   }
+  if (serviceLine && !(Object.values(ServiceLine) as string[]).includes(serviceLine)) {
+    return { status: 'error', message: 'Choose what the work is.' };
+  }
 
-  const enquiry = await db.enquiry.findFirst({ where: { id, ...liveEnquiry }, select: { id: true } });
+  const enquiry = await db.enquiry.findFirst({
+    where: { id, ...liveEnquiry },
+    select: { id: true, internalNote: true, serviceLine: true },
+  });
   if (!enquiry) return { status: 'error', message: 'That enquiry no longer exists.' };
+
+  const nextNote = note || null;
+  const nextLine = (serviceLine || null) as ServiceLine | null;
+  if (nextNote === enquiry.internalNote && nextLine === enquiry.serviceLine) {
+    return { status: 'done', message: 'Saved.' };
+  }
 
   await db.enquiry.update({
     where: { id },
-    data: { internalNote: note || null },
+    data: { internalNote: nextNote, serviceLine: nextLine },
   });
 
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: 'enquiry.note_saved',
-    entityType: 'Enquiry',
-    entityId: id,
-  });
+  if (nextNote !== enquiry.internalNote) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'enquiry.note_saved',
+      entityType: 'Enquiry',
+      entityId: id,
+    });
+  }
+  if (nextLine !== enquiry.serviceLine) {
+    await recordAudit({
+      actorType: 'staff',
+      actorId: staff.id,
+      action: 'enquiry.service_line_set',
+      entityType: 'Enquiry',
+      entityId: id,
+      summary: nextLine ?? 'not decided',
+    });
+  }
 
-  revalidatePath('/admin/enquiries');
+  revalidatePath('/admin/enquiries', 'layout');
   return { status: 'done', message: 'Saved.' };
 }
 
@@ -187,7 +217,7 @@ export async function reopenEnquiry(
     entityId: enquiry.id,
     summary: enquiry.client ? `Was ${enquiry.client.name}, since removed` : undefined,
   });
-  revalidatePath('/admin/enquiries');
+  revalidatePath('/admin', 'layout');
   return { status: 'done', message: 'Open again.' };
 }
 
@@ -216,38 +246,4 @@ export async function restoreEnquiry(
   });
   revalidatePath('/admin', 'layout');
   return { status: 'done', message: 'Brought back.' };
-}
-
-/** What the enquiry is about, which the new client or project form starts from. */
-export async function setEnquiryServiceLine(
-  _previous: TriageState,
-  formData: FormData,
-): Promise<TriageState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'enquiries')) return { status: 'error', message: NO_PERMISSION };
-
-  const serviceLine = formText(formData, 'serviceLine');
-  if (!(Object.values(ServiceLine) as string[]).includes(serviceLine)) {
-    return { status: 'error', message: 'Choose what the work is.' };
-  }
-  const enquiry = await db.enquiry.findFirst({
-    where: { id: formText(formData, 'id'), ...liveEnquiry },
-    select: { id: true },
-  });
-  if (!enquiry) return { status: 'error', message: 'That enquiry no longer exists.' };
-
-  await db.enquiry.update({
-    where: { id: enquiry.id },
-    data: { serviceLine: serviceLine as ServiceLine },
-  });
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: 'enquiry.service_line_set',
-    entityType: 'Enquiry',
-    entityId: enquiry.id,
-    summary: serviceLine,
-  });
-  revalidatePath('/admin/enquiries');
-  return { status: 'done', message: 'Saved.' };
 }

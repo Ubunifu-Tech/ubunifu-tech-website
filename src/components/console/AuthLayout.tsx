@@ -5,10 +5,20 @@ import { BrandMark } from '@/components/BrandMark';
 import auth from '@/styles/auth.module.css';
 
 /**
+ * The illustration beside the form: the team working through a plan with a
+ * client on the portal, and the team building and shipping a site on the
+ * console. Both are the public site's own artwork.
+ */
+const ART: Record<string, string> = {
+  Portal: '/editorial/principle-local-v1.webp',
+  Console: '/editorial/principle-shipped-v1.webp',
+};
+
+/**
  * Sign-in and account setup, for both the console and the portal: the mark and
- * the one thing the person came to do on one side, and on a wide screen the
- * Usambara illustration from the public site on the other, so the page is
- * recognisably ours before anything on it is read.
+ * the one thing the person came to do on one side, and on a wide screen one of
+ * the site's illustrations on the other, so the page is recognisably ours
+ * before anything on it is read.
  */
 export function AuthLayout({
   role,
@@ -31,17 +41,18 @@ export function AuthLayout({
         </Link>
         <div className={auth.body}>{children}</div>
       </div>
-      <figure className={auth.art}>
-        <Image
-          src="/editorial/usambara-landscape-v3.webp"
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 64rem) 55vw, 1px"
-          className={auth.artImage}
-        />
-        <figcaption className={auth.artCaption}>Usambara Mountains, Tanga</figcaption>
-      </figure>
+      <div className={auth.art} aria-hidden="true">
+        <div className={auth.artFrame}>
+          <Image
+            src={ART[role] ?? ART.Portal!}
+            alt=""
+            fill
+            priority
+            sizes="(min-width: 64rem) 45vw, 1px"
+            className={auth.artImage}
+          />
+        </div>
+      </div>
     </main>
   );
 }

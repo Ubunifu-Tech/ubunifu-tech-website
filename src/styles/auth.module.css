@@ -211,30 +211,28 @@
 
 /* ── The illustration ───────────────────────────── */
 
+/* The site's artwork is drawn on white. On a pale violet panel it is
+   multiplied in, so the white takes the panel's colour instead of showing
+   as a box. */
 .art {
   display: none;
   position: relative;
   margin: var(--space-3);
   overflow: hidden;
   border-radius: calc(var(--app-radius-card) + 6px);
-  background: var(--app-bg);
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+
+.artFrame {
+  position: absolute;
+  inset: 12% 8%;
 }
 
 .artImage {
-  object-fit: cover;
-  object-position: 22% 70%;
-}
-
-.artCaption {
-  position: absolute;
-  bottom: var(--space-5);
-  left: var(--space-5);
-  padding: var(--space-1) var(--space-3);
-  border-radius: 999px;
-  background: rgba(20, 14, 48, 0.55);
-  color: #fff;
-  font-size: var(--font-size-caption);
-  line-height: 1.5;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  /* The drawings' paper is a shade off white; lifted, it vanishes into the panel. */
+  filter: brightness(1.04);
 }
 
 @media (min-width: 40rem) {

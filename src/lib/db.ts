@@ -40,13 +40,13 @@ function createClient(): PrismaClient {
     // see db-connection.ts for why sslmode cannot be left to the driver.
     ...databaseTarget(connectionString),
     /**
-     * Vercel runs each function in its own container, so every warm instance
-     * holds its own pool. Railway's Postgres has a finite connection limit,
-     * and a handful of instances with the pg default of 10 each will exhaust
-     * it, so the pool stays small. An empty value means 5 too: Number('') is
-     * 0, which pg would read as its own default of 10.
+     * Each warm Vercel instance holds its own pool, against Railway's finite
+     * connection limit. Fluid compute keeps the instance count low, and a
+     * console page sends more than five queries at once, which a pool of five
+     * made wait in line: ten took about a fifth off each page. An empty value
+     * means 10 too, since Number('') is 0.
      */
-    max: Number(process.env.DATABASE_POOL_MAX) || 5,
+    max: Number(process.env.DATABASE_POOL_MAX) || 10,
     /**
      * A connection is kept for a minute after its last query. Opening one is a
      * TCP and TLS handshake with the database, which added about half a second

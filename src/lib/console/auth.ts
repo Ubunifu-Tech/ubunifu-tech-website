@@ -83,16 +83,20 @@ async function assertAdminHost(): Promise<void> {
 /**
  * The signed-in staff member, or null. Looked up once per request: the layout,
  * the page and anything they render all ask, and each lookup is two trips to
- * the database.
+ * the database, the session and then the person with their role's permissions.
  */
 export const getStaffActor = cache(async function getStaffActor(): Promise<StaffActor | null> {
   const session = await readSession('admin');
   if (!session || session.actorType !== 'staff') return null;
 
-  const staff = await db.staffUser.findUnique({
-    where: { id: session.actorId },
-    select: { id: true, email: true, name: true, role: true, title: true, isActive: true },
-  });
+  // Together rather than one after the other: each is a trip to the database.
+  const [staff, roles] = await Promise.all([
+    db.staffUser.findUnique({
+      where: { id: session.actorId },
+      select: { id: true, email: true, name: true, role: true, title: true, isActive: true },
+    }),
+    rolePermissions(),
+  ]);
 
   if (!staff || !staff.isActive) return null;
 
@@ -108,7 +112,7 @@ export const getStaffActor = cache(async function getStaffActor(): Promise<Staff
     name: staff.name,
     role: staff.role,
     title: staff.title,
-    permissions: permissionsForRole(staff.role, await rolePermissions()),
+    permissions: permissionsForRole(staff.role, roles),
   };
 });
 

@@ -895,7 +895,7 @@ if (!hasKey) {
       ...need(/invit/i.test(r.text), 'does not say access is by invitation'),
     ] },
     { id: 'K10', turns: ['What happens to what I type here?'], expect: (r) => need(linksTo(r.text, '/privacy'), 'does not link /privacy') },
-    { id: 'K11', turns: ['Have you written anything about pricing?'], expect: (r) => need(linksTo(r.text, '/blog/why-pay-as-you-go-pricing'), 'does not link the pricing article') },
+    { id: 'K11', turns: ['Have you written anything about selling on credit?'], expect: (r) => need(linksTo(r.text, '/blog/software-that-understands-credit'), 'does not link the credit article') },
     { id: 'K12', turns: ['What is your phone number?'], expect: (r) => need(r.text.replace(/\D/g, '').includes('255748548816'), 'does not give the phone number') },
     { id: 'K13', turns: ['Do you support websites after launch?'], expect: (r) => need(/support|handover/i.test(r.text) && /agree/i.test(r.text), 'does not say support is agreed or handed over') },
     { id: 'K14', turns: ['Do you integrate M-Pesa?'], expect: (r) => [

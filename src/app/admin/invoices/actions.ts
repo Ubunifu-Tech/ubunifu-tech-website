@@ -15,6 +15,7 @@ import { invoiceEmail, receiptEmail, refundEmail } from '@/lib/emails';
 import {
   billableLines,
   type Billable,
+  issuedEditFacts,
   nextInvoiceNumber,
   nextReceiptNumber,
   nextRefundNumber,
@@ -36,6 +37,7 @@ import {
   todayInput,
 } from '@/lib/console/money';
 import { balanceDueDay, chosenBalanceDay } from '@/lib/console/balance-due';
+import { checkIssuedEdit, issuedInvoiceEdit } from '@/lib/console/invoice-edits';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
 
@@ -1632,6 +1634,97 @@ export async function saveDraftInvoice(
     summary: `${invoice.number}: due ${dueAt ? toDateInputValue(dueAt) : 'on receipt'}`,
   });
   revalidatePath(`/admin/invoices/${invoice.number}`);
+  return { status: 'done', message: 'Saved.' };
+}
+
+/**
+ * The due date, and the notes while nobody at the client could have read them,
+ * of an invoice that was issued but not emailed: most often one a payment
+ * issued. invoice-edits.ts holds the rule; this reads the facts it needs again
+ * here, because what the page showed may have changed since.
+ */
+export async function correctIssuedInvoice(
+  _previous: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
+
+  const invoice = numbers(await db.invoice.findFirst({
+    where: { id: formText(formData, 'invoiceId'), ...liveInvoice },
+    select: {
+      id: true,
+      number: true,
+      clientId: true,
+      status: true,
+      dueAt: true,
+      notes: true,
+      issuedAt: true,
+      totalMinor: true,
+      paidMinor: true,
+    },
+  }));
+  if (!invoice) return { status: 'error', message: 'That invoice no longer exists.' };
+
+  const facts = await issuedEditFacts(invoice);
+  const edit = issuedInvoiceEdit({
+    status: invoice.status,
+    outstandingMinor: invoice.totalMinor - invoice.paidMinor,
+    ...facts,
+  });
+
+  const rawDue = formText(formData, 'dueAt');
+  const dueAt = rawDue ? parseDateInput(rawDue) : null;
+  if (rawDue && !dueAt) return { status: 'error', message: 'That due date does not look right.' };
+  const currentDue = invoice.dueAt ? toDateInputValue(invoice.dueAt) : null;
+  const nextDue = dueAt ? toDateInputValue(dueAt) : null;
+  // Notes are only on the form while they can change.
+  const notes = formData.has('notes') ? formText(formData, 'notes').slice(0, 2000) || null : invoice.notes;
+  const checked = checkIssuedEdit({
+    edit,
+    today: todayInput(),
+    currentDue,
+    nextDue,
+    notesChanged: notes !== invoice.notes,
+  });
+  if ('error' in checked) return { status: 'error', message: checked.error };
+  if (nextDue === currentDue && notes === invoice.notes) return { status: 'done', message: 'Nothing changed.' };
+
+  const saved = await db.$transaction(async (tx) => {
+    // Conditional on what was read, so two people correcting it at once, or a
+    // payment or void landing meanwhile, cannot be written over.
+    const updated = await tx.invoice.updateMany({
+      where: {
+        id: invoice.id,
+        status: invoice.status,
+        dueAt: invoice.dueAt,
+        notes: invoice.notes,
+        paidMinor: invoice.paidMinor,
+      },
+      data: { dueAt, notes },
+    });
+    if (updated.count !== 1) return false;
+    // A date moved past today is no longer overdue, and one moved back may be.
+    await recomputeInvoice(tx, invoice.id);
+    return true;
+  });
+  if (!saved) return { status: 'error', message: 'It changed a moment ago. Reload and try again.' };
+
+  const changed = [
+    nextDue !== currentDue ? `due ${invoice.dueAt ? formatShortDate(invoice.dueAt) : 'on receipt'} → ${formatShortDate(dueAt)}` : null,
+    notes !== invoice.notes ? 'notes changed' : null,
+  ].filter(Boolean);
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'invoice.corrected',
+    entityType: 'Invoice',
+    entityId: invoice.id,
+    summary: `${invoice.number}: ${changed.join(', ')}`,
+    metadata: { from: currentDue, to: nextDue, notesChanged: notes !== invoice.notes, seenInPortal: facts.seenInPortal },
+  });
+
+  revalidatePath('/admin', 'layout');
   return { status: 'done', message: 'Saved.' };
 }
 

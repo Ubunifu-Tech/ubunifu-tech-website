@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { Callout } from '@/components/console/Callout';
 import { activityFor } from '@/lib/console/activity';
+import { issuedEditFacts } from '@/lib/console/billing';
+import { issuedInvoiceEdit } from '@/lib/console/invoice-edits';
 import { INVOICE_STATUS_LABEL, invoiceStanding, PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import {
   formatMoney,
@@ -16,6 +18,7 @@ import {
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import {
   DraftInvoiceDetails,
+  IssuedInvoiceDetails,
   PaymentMenu,
   RefundMenu,
   SendDraft,
@@ -53,6 +56,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
     select: {
       id: true,
       number: true,
+      clientId: true,
       status: true,
       currency: true,
       subtotalMinor: true,
@@ -124,6 +128,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
     }),
   ]);
   const outstanding = Math.max(0, invoice.totalMinor - invoice.paidMinor);
+  // Whether an issued invoice's due date can still be corrected, and how far.
+  const issuedEdit =
+    invoice.status === 'draft' || invoice.status === 'void' || outstanding === 0
+      ? null
+      : issuedInvoiceEdit({
+          status: invoice.status,
+          outstandingMinor: outstanding,
+          ...(await issuedEditFacts(invoice)),
+        });
   // Everything paid went back, most often because the work is not going
   // ahead: the invoice then wants voiding rather than reading as settled.
   const refundedInFull = invoice.paidMinor > 0 && invoice.refundedMinor >= invoice.paidMinor;
@@ -581,6 +594,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                     invoiceId={invoice.id}
                     dueAt={invoice.dueAt ? toDateInputValue(invoice.dueAt) : ''}
                     notes={invoice.notes ?? ''}
+                  />
+                )}
+                {!removedAt && issuedEdit && issuedEdit.kind !== 'locked' && (
+                  <IssuedInvoiceDetails
+                    invoiceId={invoice.id}
+                    dueAt={invoice.dueAt ? toDateInputValue(invoice.dueAt) : ''}
+                    notes={invoice.notes ?? ''}
+                    today={todayInput()}
+                    laterOnly={issuedEdit.kind === 'later' ? issuedEdit.reason : null}
                   />
                 )}
                 {!removedAt && invoice.status !== 'draft' && invoice.status !== 'void' && (

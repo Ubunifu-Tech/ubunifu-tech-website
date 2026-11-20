@@ -136,6 +136,7 @@ const ACTION_LABELS = {
   'asset.removed': 'File taken off a client item',
   'invoice.created': 'Invoice created',
   'invoice.draft_saved': 'Draft invoice changed',
+  'invoice.corrected': 'Invoice corrected',
   'invoice.sent': 'Invoice sent',
   'invoice.send_failed': 'Invoice email failed to send',
   'invoice.voided': 'Invoice voided',

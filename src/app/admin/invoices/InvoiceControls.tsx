@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import {
+  correctIssuedInvoice,
   emailReceipt,
   cancelRefund,
   emailRefund,
@@ -487,6 +488,71 @@ export function DraftInvoiceDetails({
           className={`${forms.button} ${forms.quiet}`}
           onClick={() => setOpen(false)}
         >
+          Done
+        </button>
+      </div>
+      <Result state={state} />
+    </form>
+  );
+}
+
+/**
+ * The due date of an issued invoice the client has not been emailed, and its
+ * notes while nobody there could have read them. When someone at the client may
+ * have seen it in the portal, only a later date is offered.
+ */
+export function IssuedInvoiceDetails({
+  invoiceId,
+  dueAt,
+  notes,
+  today,
+  laterOnly,
+}: {
+  invoiceId: string;
+  /** As a date input value, or empty for due on receipt. */
+  dueAt: string;
+  notes: string;
+  today: string;
+  /** Why it can only be given more time, when that is the case. */
+  laterOnly: string | null;
+}) {
+  const [state, action, pending] = useActionState(correctIssuedInvoice, INITIAL);
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setOpen(true)}>
+        {laterOnly ? 'Give more time' : 'Change the due date or notes'}
+      </button>
+    );
+  }
+
+  return (
+    <form action={action} className={forms.form}>
+      <input type="hidden" name="invoiceId" value={invoiceId} />
+      <DateField
+        name="dueAt"
+        label="Due"
+        defaultValue={dueAt}
+        min={laterOnly && dueAt > today ? dueAt : today}
+        hint={laterOnly ?? undefined}
+      />
+      {!laterOnly && (
+        <TextAreaField
+          name="notes"
+          label="Notes"
+          optional
+          rows={3}
+          maxLength={2000}
+          defaultValue={notes}
+          hint="Printed on the invoice."
+        />
+      )}
+      <div className={forms.actions}>
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Saving…' : 'Save'}
+        </button>
+        <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setOpen(false)}>
           Done
         </button>
       </div>

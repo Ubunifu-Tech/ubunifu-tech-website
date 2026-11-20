@@ -302,3 +302,36 @@ export async function billableLines(
 
   return billable;
 }
+
+/**
+ * What decides whether an issued invoice can still be corrected: whether it
+ * was emailed, and whether anyone at the client has signed in to the portal,
+ * where every issued invoice is listed, since it was issued. See
+ * invoice-edits.ts for the rule itself.
+ */
+export async function issuedEditFacts(invoice: {
+  id: string;
+  clientId: string;
+  issuedAt: Date | null;
+}): Promise<{ emailed: boolean; seenInPortal: boolean }> {
+  const [emailed, contacts] = await Promise.all([
+    db.emailLog.count({ where: { entityId: invoice.id, template: 'invoice_sent', status: 'sent' } }),
+    db.clientContact.findMany({ where: { clientId: invoice.clientId }, select: { id: true } }),
+  ]);
+  // No issue date means it cannot be told when it appeared, so it counts as seen.
+  const since = invoice.issuedAt;
+  const seen =
+    since === null
+      ? 1
+      : contacts.length === 0
+        ? 0
+        : await db.session.count({
+            where: {
+              actorType: 'client_contact',
+              audience: 'portal',
+              actorId: { in: contacts.map((contact) => contact.id) },
+              OR: [{ createdAt: { gte: since } }, { lastUsedAt: { gte: since } }],
+            },
+          });
+  return { emailed: emailed > 0, seenInPortal: seen > 0 };
+}

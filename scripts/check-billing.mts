@@ -6,9 +6,15 @@
  * and overdue, from that hosting date. The rule now lives in one place,
  * balance-due.ts, shared by the form and the action; these are its cases.
  *
+ * An issued invoice's due date: one issued by a payment and never emailed could
+ * only be fixed by reversing the receipt and voiding it. Now it can be
+ * corrected until the client could have seen it, and only given more time
+ * after that; an emailed invoice still stands. The rule is invoice-edits.ts.
+ *
  * Run with: npm run check:billing
  */
 const { addDays, balanceDueDay, chosenBalanceDay } = await import('../src/lib/console/balance-due');
+const { checkIssuedEdit, issuedInvoiceEdit } = await import('../src/lib/console/invoice-edits');
 
 const failures: string[] = [];
 const expect = (name: string, actual: unknown, wanted: unknown) => {
@@ -90,10 +96,75 @@ expect('a day that is not a date is refused', chosenBalanceDay('next week', toda
   error: 'Enter the date the balance is due.',
 });
 
+// ── Correcting an issued invoice ────────────────────────────────────────────
+
+const owing = { status: 'part_paid', outstandingMinor: 200_000_00 };
+expect(
+  'issued by a payment, never emailed, nobody signed in since: free to correct',
+  issuedInvoiceEdit({ ...owing, emailed: false, seenInPortal: false }).kind,
+  'free',
+);
+expect(
+  'never emailed but someone signed in since: only more time',
+  issuedInvoiceEdit({ ...owing, emailed: false, seenInPortal: true }).kind,
+  'later',
+);
+expect(
+  'emailed: it stands',
+  issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: false }).kind,
+  'locked',
+);
+expect(
+  'emailed and seen: it stands',
+  issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: true }).kind,
+  'locked',
+);
+expect(
+  'nothing owed: nothing to change',
+  issuedInvoiceEdit({ status: 'paid', outstandingMinor: 0, emailed: false, seenInPortal: false }).kind,
+  'locked',
+);
+expect(
+  'a draft is changed with the draft form, not this one',
+  issuedInvoiceEdit({ status: 'draft', outstandingMinor: 100, emailed: false, seenInPortal: false }).kind,
+  'locked',
+);
+expect(
+  'a void invoice stays as it is',
+  issuedInvoiceEdit({ status: 'void', outstandingMinor: 100, emailed: false, seenInPortal: false }).kind,
+  'locked',
+);
+expect(
+  'an overdue one is still correctable',
+  issuedInvoiceEdit({ status: 'overdue', outstandingMinor: 100, emailed: false, seenInPortal: false }).kind,
+  'free',
+);
+
+const free = issuedInvoiceEdit({ ...owing, emailed: false, seenInPortal: false });
+const later = issuedInvoiceEdit({ ...owing, emailed: false, seenInPortal: true });
+const locked = issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: false });
+const edit = (over: Partial<Parameters<typeof checkIssuedEdit>[0]>) =>
+  'error' in checkIssuedEdit({ edit: free, today, currentDue: '2026-11-20', nextDue: onTerms, notesChanged: false, ...over })
+    ? 'refused'
+    : 'allowed';
+
+expect('free: the wrong hosting date moved to the terms', edit({}), 'allowed');
+expect('free: moved earlier, still after today', edit({ currentDue: '2026-12-20', nextDue: '2026-12-01' }), 'allowed');
+expect('free: notes changed', edit({ notesChanged: true }), 'allowed');
+expect('free: not before today', edit({ nextDue: '2026-11-18' }), 'refused');
+expect('free: an overdue date kept while only the notes change', edit({ currentDue: '2026-11-10', nextDue: '2026-11-10', notesChanged: true }), 'allowed');
+expect('free: a due date is needed', edit({ nextDue: null }), 'refused');
+expect('later: more time', edit({ edit: later, nextDue: '2026-12-20' }), 'allowed');
+expect('later: the same day', edit({ edit: later, nextDue: '2026-11-20' }), 'allowed');
+expect('later: never earlier than it was', edit({ edit: later, currentDue: '2026-12-20', nextDue: '2026-12-10' }), 'refused');
+expect('later: notes stay as the client may have read them', edit({ edit: later, nextDue: '2026-12-20', notesChanged: true }), 'refused');
+expect('later: from due on receipt to a date', edit({ edit: later, currentDue: null, nextDue: '2026-12-20' }), 'allowed');
+expect('locked: nothing changes', edit({ edit: locked }), 'refused');
+
 if (failures.length > 0) {
   console.error(`Billing check failed:\n${failures.map((failure) => `  ${failure}`).join('\n')}`);
   process.exit(1);
 }
 console.log(
-  'Billing check passed: a part payment is due on the terms unless every fee is a renewal, and a chosen day is checked.',
+  'Billing check passed: a part payment is due on the terms unless every fee is a renewal, a chosen day is checked, and an issued invoice is correctable only until the client could have seen it.',
 );

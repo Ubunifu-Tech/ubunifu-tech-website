@@ -15,7 +15,7 @@ export type ClientChoice = {
   id: string;
   name: string;
   slug: string;
-  contact: { name: string; emailable: boolean } | null;
+  contact: { name: string; emailable: boolean; portalReady: boolean } | null;
   projects: { id: string; name: string; currency: string }[];
 };
 
@@ -85,7 +85,8 @@ export function RecordPaymentForm({
   const [receivedAt, setReceivedAt] = useState(today);
   const [method, setMethod] = useState(defaultMethod);
   const [reference, setReference] = useState('');
-  const [emailIt, setEmailIt] = useState(true);
+  // Off until someone ticks it: nothing goes to a client by default.
+  const [emailIt, setEmailIt] = useState(false);
   // The balance's due day once staff pick one; until then it follows the fees.
   const [dueTyped, setDueTyped] = useState<string | null>(null);
 
@@ -368,6 +369,11 @@ export function RecordPaymentForm({
             <CheckField
               name="emailReceipt"
               label={`Email the receipt to ${contact.name}`}
+              hint={
+                contact.portalReady
+                  ? undefined
+                  : `${contact.name} has not set up the portal yet, so its View the receipt button will not open for them.`
+              }
               checked={emailIt}
               onChange={(event) => setEmailIt(event.target.checked)}
               disabled={pending}

@@ -201,7 +201,8 @@ export function NewClientForm({
               name="sendInvite"
               label="Email them a portal invitation now"
               hint="You can send it later from their client page."
-              defaultChecked={sent ? sent.sendInvite : true}
+              // Off until someone ticks it: nothing goes to a client by default.
+              defaultChecked={sent ? sent.sendInvite : false}
               wide
               disabled={pending}
             />

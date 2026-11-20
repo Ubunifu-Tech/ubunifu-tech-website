@@ -35,7 +35,7 @@ export default async function RecordPaymentPage({
         contacts: {
           where: { deletedAt: null, isPrimary: true },
           take: 1,
-          select: { name: true, email: true, canSignIn: true },
+          select: { name: true, email: true, canSignIn: true, activatedAt: true },
         },
         projects: {
           where: { deletedAt: null },
@@ -76,7 +76,11 @@ export default async function RecordPaymentPage({
       name: client.name,
       slug: client.slug,
       contact: contact
-        ? { name: contact.name, emailable: Boolean(contact.email && contact.canSignIn) }
+        ? {
+            name: contact.name,
+            emailable: Boolean(contact.email && contact.canSignIn),
+            portalReady: contact.activatedAt !== null,
+          }
         : null,
       projects: client.projects.map((project) => ({ id: project.id, name: project.name, currency: project.currency })),
     };

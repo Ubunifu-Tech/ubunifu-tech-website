@@ -20,7 +20,7 @@ export type NewProjectValues = {
   startDate: string;
   targetDate: string;
   summary: string;
-  started: boolean;
+  status: string;
 };
 
 export type NewProjectState = {
@@ -53,7 +53,7 @@ export async function createProject(
     startDate: formText(formData, 'startDate'),
     targetDate: formText(formData, 'targetDate'),
     summary: formText(formData, 'summary'),
-    started: formData.get('started') === 'on',
+    status: openingStatus(formData),
   };
   const fail = (message: string, field?: string): NewProjectState => ({
     status: 'error',

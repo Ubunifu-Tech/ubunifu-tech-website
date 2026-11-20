@@ -4,13 +4,12 @@ import { useActionState, useState } from 'react';
 import { createProject, type NewProjectState } from './actions';
 import type { TemplateOption } from '../../clients/new/NewClientForm';
 import {
-  CheckField,
   DateField,
   SelectField,
   TextAreaField,
   TextField,
 } from '@/components/console/Fields';
-import { SERVICE_LINES } from '@/lib/console/project-status';
+import { OPENING_CHOICES, SERVICE_LINES } from '@/lib/console/project-status';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
 import { PlanFees } from '@/components/console/PlanFees';
 import forms from '@/styles/forms.module.css';
@@ -164,15 +163,20 @@ export function NewProjectForm({
               hint="The client sees this."
             />
 
-            <CheckField
-              key={sent ? `started-${sent.started}` : 'started'}
-              name="started"
-              defaultChecked={sent ? sent.started : false}
-              label="Work has already started"
-              hint="It opens In progress instead of as a deal."
-              wide
+            <SelectField
+              name="status"
+              label="Where it stands"
+              defaultValue={sent ? sent.status : 'lead'}
+              invalid={invalid('status')}
               disabled={pending}
-            />
+              hint="Mark it live or complete from the project once it is created."
+            >
+              {OPENING_CHOICES.map((choice) => (
+                <option key={choice.value} value={choice.value}>
+                  {choice.label}
+                </option>
+              ))}
+            </SelectField>
           </div>
         </fieldset>
 

@@ -123,6 +123,18 @@ export const SERVICE_LINES = [
   { value: 'other', label: 'Something else' },
 ];
 
+/**
+ * Where a new project can start, as the create forms offer it. Anything later,
+ * live, handed over or complete, is reached by moving it once it exists, so
+ * the move records its date and asks about the money. OPENING_STATUSES in
+ * transitions.ts is the list the server accepts.
+ */
+export const OPENING_CHOICES: { value: ProjectStatus; label: string }[] = [
+  { value: 'lead', label: 'Deal' },
+  { value: 'in_progress', label: STAFF_LABEL.in_progress },
+  { value: 'client_review', label: STAFF_LABEL.client_review },
+];
+
 /** How a project is billed, as the project forms offer it. */
 export const ENGAGEMENTS = [
   { value: 'fixed_price_project', label: 'Fixed price project' },

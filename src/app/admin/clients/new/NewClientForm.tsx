@@ -9,7 +9,7 @@ import {
   TextAreaField,
   TextField,
 } from '@/components/console/Fields';
-import { SERVICE_LINES } from '@/lib/console/project-status';
+import { OPENING_CHOICES, SERVICE_LINES } from '@/lib/console/project-status';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
 import { PlanFees } from '@/components/console/PlanFees';
 import type { PlanFee } from '@/lib/console/plan-fees';
@@ -320,15 +320,20 @@ export function NewClientForm({
                     disabled={pending}
                     hint="The client sees this."
                   />
-                  <CheckField
-                    key={sent ? `started-${sent.status === 'in_progress'}` : 'started'}
-                    name="started"
-                    label="Work has already started"
-                    hint="It opens In progress instead of as a deal."
-                    defaultChecked={sent ? sent.status === 'in_progress' : false}
-                    wide
+                  <SelectField
+                    name="status"
+                    label="Where it stands"
+                    defaultValue={was('status', 'lead')}
+                    invalid={invalid('status')}
                     disabled={pending}
-                  />
+                    hint="Mark it live or complete from the project once it is created."
+                  >
+                    {OPENING_CHOICES.map((choice) => (
+                      <option key={choice.value} value={choice.value}>
+                        {choice.label}
+                      </option>
+                    ))}
+                  </SelectField>
                 </>
               )}
             </div>

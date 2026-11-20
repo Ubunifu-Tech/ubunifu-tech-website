@@ -22,7 +22,10 @@ requireFromHere.cache[serverOnly]!.loaded = true;
 requireFromHere.cache[serverOnly]!.exports = {};
 
 const { ProjectStatus } = await import('../src/generated/prisma/client');
-const { advanceForReview, guardsFor, transitionsFor } = await import('../src/lib/console/transitions');
+const { OPENING_STATUSES, advanceForReview, guardsFor, openingStatus, transitionsFor } = await import(
+  '../src/lib/console/transitions'
+);
+const { OPENING_CHOICES } = await import('../src/lib/console/project-status');
 const { primaryMove, STAGE_OF } = await import('../src/lib/console/stages');
 const { db } = await import('../src/lib/db');
 
@@ -68,6 +71,34 @@ const facts = {
   outstandingAssetRequests: 0,
   latestReview: null,
 };
+
+// Where a new project can start. The forms offer a deal, the work, or the
+// work with the client to review; the server accepts what they offer and
+// nothing that says the work was delivered, because those moves record dates
+// and ask about the money.
+for (const choice of OPENING_CHOICES) {
+  if (!OPENING_STATUSES.includes(choice.value)) failures.push(`the create forms offer ${choice.value}, which is refused`);
+}
+for (const status of ['launch_ready', 'launched', 'handover', 'closed', 'on_hold', 'cancelled'] as Status[]) {
+  if (OPENING_STATUSES.includes(status)) failures.push(`a project can be created as ${status}`);
+}
+{
+  const posted = (entries: [string, string][]) => {
+    const data = new FormData();
+    for (const [key, value] of entries) data.append(key, value);
+    return openingStatus(data);
+  };
+  const cases: [string, [string, string][], string][] = [
+    ['nothing chosen is a deal', [], 'lead'],
+    ['the choice is read', [['status', 'client_review']], 'client_review'],
+    ['the old tick box still starts the work', [['started', 'on']], 'in_progress'],
+    ['an unknown choice is passed on to be refused', [['status', 'closed']], 'closed'],
+  ];
+  for (const [name, entries, wanted] of cases) {
+    const got = posted(entries);
+    if (got !== wanted) failures.push(`${name}: got ${got}, wanted ${wanted}`);
+  }
+}
 
 // Money warns and never blocks.
 for (const to of ['in_progress', 'launched', 'handover', 'closed'] as Status[]) {
@@ -125,4 +156,4 @@ if (failures.length > 0) {
   console.error(`\nTransitions check failed:\n${failures.map((failure) => `  ${failure}`).join('\n')}\n`);
   process.exit(1);
 }
-console.log('Transitions check passed: every deal starts in one press, the next move is always on offer, money never blocks, delivered work stays delivered, and reviews still move the project.');
+console.log('Transitions check passed: a project starts as a deal, the work or with the client to review, every deal starts in one press, the next move is always on offer, money never blocks, delivered work stays delivered, and reviews still move the project.');

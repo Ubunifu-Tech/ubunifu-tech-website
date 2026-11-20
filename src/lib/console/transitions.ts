@@ -73,20 +73,26 @@ export type Transition = {
 const START: Transition = { to: 'in_progress', label: 'Start the work', tone: 'primary' };
 
 /**
- * The statuses a project can be created in: a lead, or with the work already
- * started when it was agreed outside the app. Everything later is reached by
- * moving the project, where each move is recorded and checked. The proposal
- * stages stay accepted for forms that were open when this list changed.
+ * The statuses a project can be created in: a lead, with the work already
+ * started when it was agreed outside the app, or with the client to review
+ * when the work was done before it was entered here. Live, handed over and
+ * complete are reached by moving the project, where each move records its
+ * date and is checked. The proposal stages stay accepted for forms that were
+ * open when this list changed.
  */
 export const OPENING_STATUSES: ProjectStatus[] = [
   'lead',
   'in_progress',
+  'client_review',
   'proposal_draft',
   'proposal_sent',
   'proposal_accepted',
 ];
 
-/** What a create form asked for: started work, or a lead. */
+/**
+ * What a create form asked for. `started` is the tick box the forms had before
+ * they offered a choice, still read for a form that was open across a deploy.
+ */
 export function openingStatus(formData: FormData): string {
   if (formData.get('started') === 'on') return 'in_progress';
   return String(formData.get('status') ?? '').trim() || 'lead';

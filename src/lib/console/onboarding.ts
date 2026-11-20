@@ -73,6 +73,13 @@ function addDays(from: Date, days: number): Date {
   return date;
 }
 
+/**
+ * The plan's fees as the create form left them: which to add, by their position
+ * in the plan, and a price for any that was given one there. Absent, every fee
+ * in the plan is added at the plan's own price, as before the form asked.
+ */
+export type ChosenFees = { position: number; amountMinor: number | null }[];
+
 export type NewClientInput = {
   client: {
     name: string;
@@ -95,6 +102,7 @@ export type NewClientInput = {
     engagementType: Prisma.ProjectCreateInput['engagementType'];
     status: ProjectStatus;
     templateId?: string | null;
+    fees?: ChosenFees;
     summary?: string | null;
     startDate?: Date | null;
     targetDate?: Date | null;
@@ -210,6 +218,7 @@ export async function createClientRecord(input: NewClientInput): Promise<NewClie
         templateId: input.project.templateId,
         start,
         currency: input.client.currency,
+        fees: input.project.fees,
       });
     }
 
@@ -226,6 +235,7 @@ export type NewProjectInput = {
   engagementType: Prisma.ProjectCreateInput['engagementType'];
   status: ProjectStatus;
   templateId?: string | null;
+  fees?: ChosenFees;
   summary?: string | null;
   startDate?: Date | null;
   targetDate?: Date | null;
@@ -295,6 +305,7 @@ export async function createProjectForClient(
         templateId: input.templateId,
         start,
         currency,
+        fees: input.fees,
       });
     }
 
@@ -316,6 +327,7 @@ export async function applyTemplate(
     templateId: string;
     start: Date;
     currency: string;
+    fees?: ChosenFees;
   },
 ): Promise<void> {
   const template = await tx.projectTemplate.findUnique({
@@ -391,6 +403,8 @@ export async function applyTemplate(
   }
 
   for (const line of template.lineItems) {
+    const chosen = options.fees ? options.fees.find((fee) => fee.position === line.position) : { amountMinor: null };
+    if (!chosen) continue;
     const intervalMonths = intervalFor(line.billingKind);
     await tx.lineItem.create({
       data: {
@@ -400,7 +414,7 @@ export async function applyTemplate(
         billingKind: line.billingKind,
         // The template's currency is a suggestion; the project's own currency
         // wins, because one project cannot be invoiced in two of them.
-        amountMinor: line.amountMinor,
+        amountMinor: chosen.amountMinor ?? line.amountMinor,
         currency: options.currency,
         terms: line.terms,
         position: line.position,

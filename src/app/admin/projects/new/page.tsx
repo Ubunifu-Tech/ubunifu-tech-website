@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
+import { numbers } from '@/lib/console/money';
 import { can, requirePermission } from '@/lib/console/auth';
 import { ClientPicker } from '@/components/console/ClientPicker';
 import { NewProjectForm } from './NewProjectForm';
@@ -39,10 +40,22 @@ export default async function NewProjectPage({
         },
       },
     }),
-    db.projectTemplate.findMany({
-      orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
-      select: { id: true, name: true, serviceLine: true, isDefault: true },
-    }),
+    db.projectTemplate
+      .findMany({
+        orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
+        select: {
+          id: true,
+          name: true,
+          serviceLine: true,
+          isDefault: true,
+          // Offered on the form, to keep, drop or price before the project exists.
+          lineItems: {
+            orderBy: { position: 'asc' },
+            select: { position: true, label: true, billingKind: true, amountMinor: true },
+          },
+        },
+      })
+      .then((rows) => numbers(rows).map(({ lineItems, ...template }) => ({ ...template, fees: lineItems }))),
     db.staffUser.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },

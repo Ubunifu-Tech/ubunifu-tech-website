@@ -11,6 +11,8 @@ import {
 } from '@/components/console/Fields';
 import { SERVICE_LINES } from '@/lib/console/project-status';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
+import { PlanFees } from '@/components/console/PlanFees';
+import type { PlanFee } from '@/lib/console/plan-fees';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewClientState = { status: 'idle' };
@@ -20,6 +22,8 @@ export type TemplateOption = {
   name: string;
   serviceLine: string;
   isDefault: boolean;
+  /** Its fees, offered on the form to keep, drop or price. */
+  fees: PlanFee[];
 };
 
 /** What an enquiry already told us, when this form was opened from one. */
@@ -56,6 +60,9 @@ export function NewClientForm({
   const [state, action, pending] = useActionState(createClient, INITIAL);
   const [startProject, setStartProject] = useState(canStartProject);
   const [serviceLine, setServiceLine] = useState(prefill?.serviceLine ?? 'web');
+  // Held, because the plan's fees are priced in it and follow the plan chosen.
+  const [currency, setCurrency] = useState('USD');
+  const [planPicked, setPlanPicked] = useState<string | null>(null);
 
   // React resets the form once the action returns, so after a refusal every
   // uncontrolled field falls back to its default. Pointing the defaults at
@@ -66,6 +73,8 @@ export function NewClientForm({
     if (state.values) {
       setStartProject(state.values.startProject);
       if (state.values.serviceLine) setServiceLine(state.values.serviceLine);
+      if (state.values.currency) setCurrency(state.values.currency);
+      setPlanPicked(state.values.templateId);
     }
   }
   const sent = state.values;
@@ -73,8 +82,10 @@ export function NewClientForm({
     sent ? String(sent[name] ?? '') : fallback;
   const invalid = (name: string) => (state.field === name ? true : undefined);
 
-  // Only the plans written for the chosen service line.
+  // Only the plans written for the chosen service line, its default first.
   const usable = templates.filter((template) => template.serviceLine === serviceLine);
+  const templateId = planPicked ?? usable.find((template) => template.isDefault)?.id ?? '';
+  const plan = templates.find((template) => template.id === templateId);
 
   return (
     <form action={action} className={forms.form}>
@@ -130,7 +141,8 @@ export function NewClientForm({
             <SelectField
               name="currency"
               label="Billing currency"
-              defaultValue={was('currency', 'USD')}
+              value={currency}
+              onChange={setCurrency}
               invalid={invalid('currency')}
               disabled={pending}
             >
@@ -239,7 +251,10 @@ export function NewClientForm({
                     name="serviceLine"
                     label="Service line"
                     value={serviceLine}
-                    onChange={setServiceLine}
+                    onChange={(next) => {
+                      setServiceLine(next);
+                      setPlanPicked(null);
+                    }}
                     invalid={invalid('serviceLine')}
                     disabled={pending}
                   >
@@ -266,8 +281,8 @@ export function NewClientForm({
                   <SelectField
                     name="templateId"
                     label="Plan"
-                    key={serviceLine}
-                    defaultValue={sent ? sent.templateId : (usable.find((t) => t.isDefault)?.id ?? '')}
+                    value={templateId}
+                    onChange={setPlanPicked}
                     invalid={invalid('templateId')}
                     disabled={pending}
                     hint={usable.length === 0 ? 'No ready-made plan for this kind of work yet.' : undefined}
@@ -279,6 +294,7 @@ export function NewClientForm({
                       </option>
                     ))}
                   </SelectField>
+                  {plan && <PlanFees key={plan.id} fees={plan.fees} currency={currency} disabled={pending} />}
                   <DateField
                     name="startDate"
                     label="Start date"

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { can, requirePermission } from '@/lib/console/auth';
 import { liveEnquiry } from '@/lib/console/live';
-import { formatDate } from '@/lib/console/money';
+import { formatDate, numbers } from '@/lib/console/money';
 import { NewClientForm, type Prefill } from './NewClientForm';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -33,10 +33,22 @@ export default async function NewClientPage({
   const { enquiry: enquiryId } = await searchParams;
 
   const [templates, team, enquiry] = await Promise.all([
-    db.projectTemplate.findMany({
-      orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
-      select: { id: true, name: true, serviceLine: true, isDefault: true },
-    }),
+    db.projectTemplate
+      .findMany({
+        orderBy: [{ serviceLine: 'asc' }, { name: 'asc' }],
+        select: {
+          id: true,
+          name: true,
+          serviceLine: true,
+          isDefault: true,
+          // Offered on the form, to keep, drop or price before the project exists.
+          lineItems: {
+            orderBy: { position: 'asc' },
+            select: { position: true, label: true, billingKind: true, amountMinor: true },
+          },
+        },
+      })
+      .then((rows) => numbers(rows).map(({ lineItems, ...template }) => ({ ...template, fees: lineItems }))),
     db.staffUser.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },

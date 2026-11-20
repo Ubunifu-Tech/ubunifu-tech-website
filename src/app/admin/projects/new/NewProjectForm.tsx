@@ -12,6 +12,7 @@ import {
 } from '@/components/console/Fields';
 import { SERVICE_LINES } from '@/lib/console/project-status';
 import { CURRENCIES, currencyLabel } from '@/lib/console/currencies';
+import { PlanFees } from '@/components/console/PlanFees';
 import forms from '@/styles/forms.module.css';
 
 const INITIAL: NewProjectState = { status: 'idle' };
@@ -38,8 +39,15 @@ export function NewProjectForm({
 }) {
   const [state, action, pending] = useActionState(createProject, INITIAL);
   const [serviceLine, setServiceLine] = useState(from?.serviceLine ?? 'web');
+  // Held, because the plan's fees are priced in it and follow the plan chosen.
+  const [billedIn, setBilledIn] = useState(currency);
+  const [planPicked, setPlanPicked] = useState<string | null>(null);
   const invalid = (name: string) => (state.field === name ? true : undefined);
+  // After a refusal the form is cleared, so what was posted becomes its defaults.
+  const sent = state.values;
   const usable = templates.filter((template) => template.serviceLine === serviceLine);
+  const templateId = planPicked ?? usable.find((template) => template.isDefault)?.id ?? '';
+  const plan = templates.find((template) => template.id === templateId);
 
   return (
     <form action={action} className={forms.form}>
@@ -53,7 +61,7 @@ export function NewProjectForm({
             <TextField
               name="name"
               label="Project name"
-              defaultValue={from?.name}
+              defaultValue={sent ? sent.name : from?.name}
               wide
               required
               maxLength={160}
@@ -65,7 +73,10 @@ export function NewProjectForm({
               name="serviceLine"
               label="Service line"
               value={serviceLine}
-              onChange={setServiceLine}
+              onChange={(next) => {
+                setServiceLine(next);
+                setPlanPicked(null);
+              }}
               invalid={invalid('serviceLine')}
               disabled={pending}
             >
@@ -79,7 +90,7 @@ export function NewProjectForm({
             <SelectField
               name="ownerId"
               label="Lead"
-              defaultValue={me}
+              defaultValue={sent ? sent.ownerId : me}
               invalid={invalid('ownerId')}
               disabled={pending}
             >
@@ -94,7 +105,8 @@ export function NewProjectForm({
             <SelectField
               name="currency"
               label="Currency"
-              defaultValue={currency}
+              value={billedIn}
+              onChange={setBilledIn}
               invalid={invalid('currency')}
               disabled={pending}
             >
@@ -108,8 +120,8 @@ export function NewProjectForm({
             <SelectField
               name="templateId"
               label="Plan"
-              key={serviceLine}
-              defaultValue={usable.find((template) => template.isDefault)?.id ?? ''}
+              value={templateId}
+              onChange={setPlanPicked}
               invalid={invalid('templateId')}
               disabled={pending}
               hint={usable.length === 0 ? 'No ready-made plan for this kind of work yet.' : undefined}
@@ -122,12 +134,21 @@ export function NewProjectForm({
               ))}
             </SelectField>
 
-            <DateField name="startDate" label="Start date" optional disabled={pending} />
+            {plan && <PlanFees key={plan.id} fees={plan.fees} currency={billedIn} disabled={pending} />}
+
+            <DateField
+              name="startDate"
+              label="Start date"
+              optional
+              defaultValue={sent?.startDate}
+              disabled={pending}
+            />
 
             <DateField
               name="targetDate"
               label="Target date"
               optional
+              defaultValue={sent?.targetDate}
               invalid={invalid('targetDate')}
               disabled={pending}
             />
@@ -135,7 +156,7 @@ export function NewProjectForm({
             <TextAreaField
               name="summary"
               label="What the work is"
-              defaultValue={from?.summary}
+              defaultValue={sent ? sent.summary : from?.summary}
               optional
               wide
               maxLength={2000}
@@ -144,7 +165,9 @@ export function NewProjectForm({
             />
 
             <CheckField
+              key={sent ? `started-${sent.started}` : 'started'}
               name="started"
+              defaultChecked={sent ? sent.started : false}
               label="Work has already started"
               hint="It opens In progress instead of as a deal."
               wide

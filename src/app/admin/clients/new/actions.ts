@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { EngagementType, ServiceLine } from '@/generated/prisma/client';
 import { OPENING_STATUSES, openingStatus } from '@/lib/console/transitions';
+import { readChosenFees } from '@/lib/console/plan-fees';
 import { can, recordAudit, staffForAction } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
 import { issueMagicToken } from '@/lib/console/magic-link';
@@ -208,12 +209,17 @@ export async function createClient(
       return fail('The target date is before the start date.', 'targetDate');
     }
 
+    // The plan's fees as the form left them, priced in the client's currency.
+    const chosenFees = readChosenFees(formData, currency);
+    if ('error' in chosenFees) return fail(chosenFees.error);
+
     project = {
       name: projectName,
       serviceLine,
       engagementType,
       status,
       templateId: templateId || null,
+      fees: chosenFees.fees,
       summary: values.summary || null,
       startDate,
       targetDate,

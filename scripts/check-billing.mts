@@ -11,10 +11,31 @@
  * corrected until the client could have seen it, and only given more time
  * after that; an emailed invoice still stands. The rule is invoice-edits.ts.
  *
+ * A plan's fees: they were all added, unpriced, to every new project. The create
+ * forms now list them to keep, drop or price, and only the ticked ones are
+ * added. The database cases run inside a transaction that is always rolled back.
+ *
  * Run with: npm run check:billing
  */
+process.loadEnvFile('.env');
+
+/**
+ * `server-only` throws on import outside Next; an empty module stands in for
+ * it so the server code under test can be loaded here, as in the other checks.
+ */
+import { createRequire } from 'node:module';
+
+const requireFromHere = createRequire(import.meta.url);
+const serverOnly = requireFromHere.resolve('server-only');
+requireFromHere.cache[serverOnly] = new (requireFromHere('node:module').Module)(serverOnly);
+requireFromHere.cache[serverOnly]!.filename = serverOnly;
+requireFromHere.cache[serverOnly]!.loaded = true;
+requireFromHere.cache[serverOnly]!.exports = {};
+
 const { addDays, balanceDueDay, chosenBalanceDay } = await import('../src/lib/console/balance-due');
 const { checkIssuedEdit, issuedInvoiceEdit } = await import('../src/lib/console/invoice-edits');
+const { readChosenFees } = await import('../src/lib/console/plan-fees');
+const { parseMoney } = await import('../src/lib/console/money');
 
 const failures: string[] = [];
 const expect = (name: string, actual: unknown, wanted: unknown) => {
@@ -161,10 +182,102 @@ expect('later: notes stay as the client may have read them', edit({ edit: later,
 expect('later: from due on receipt to a date', edit({ edit: later, currentDue: null, nextDue: '2026-12-20' }), 'allowed');
 expect('locked: nothing changes', edit({ edit: locked }), 'refused');
 
+// ── A plan's fees, as the create form left them ─────────────────────────────
+
+const form = (entries: [string, string][]) => {
+  const data = new FormData();
+  for (const [key, value] of entries) data.append(key, value);
+  return data;
+};
+
+expect('a form without the fee list adds every fee, as before', readChosenFees(form([]), 'TZS'), { fees: undefined });
+expect(
+  'ticked fees are added, priced or not; an unticked one is not',
+  readChosenFees(
+    form([
+      ['planFees', 'on'],
+      ['fee', '0'],
+      ['feeAmount:0', '250,000'],
+      ['fee', '3'],
+      ['feeAmount:3', ''],
+    ]),
+    'TZS',
+  ),
+  { fees: [{ position: 0, amountMinor: parseMoney('250,000', 'TZS') }, { position: 3, amountMinor: null }] },
+);
+expect('nothing ticked adds no fees', readChosenFees(form([['planFees', 'on']]), 'TZS'), { fees: [] });
+expect(
+  'a price that is not an amount is refused',
+  'error' in readChosenFees(form([['planFees', 'on'], ['fee', '1'], ['feeAmount:1', 'two hundred']]), 'TZS'),
+  true,
+);
+
+{
+  const url = new URL(process.env.DATABASE_URL!);
+  if (!['localhost', '127.0.0.1'].includes(url.hostname)) throw new Error('The database cases only run against a local database.');
+  const { PrismaPg } = await import('@prisma/adapter-pg');
+  const { databaseTarget } = await import('../src/lib/db-connection');
+  const { PrismaClient } = await import('../src/generated/prisma/client');
+  const { applyTemplate } = await import('../src/lib/console/onboarding');
+  const db = new PrismaClient({ adapter: new PrismaPg(databaseTarget(process.env.DATABASE_URL!)) });
+  class RolledBack extends Error {}
+
+  const template = await db.projectTemplate.findFirst({
+    where: { lineItems: { some: {} } },
+    select: { id: true, lineItems: { orderBy: { position: 'asc' }, select: { position: true, label: true } } },
+  });
+  const client = await db.client.findFirst({ where: { deletedAt: null }, select: { id: true } });
+  if (!template || !client || template.lineItems.length < 2) {
+    failures.push('The database cases need a plan with at least two fees and a client.');
+  } else {
+    const run = async (fees: { position: number; amountMinor: number | null }[] | undefined) => {
+      let added: { label: string; amountMinor: bigint }[] = [];
+      await db
+        .$transaction(async (tx) => {
+          // A fresh project, gone again with the rollback.
+          const project = await tx.project.create({
+            data: { clientId: client.id, name: 'Fee list check', slug: 'fee-list-check', reference: 'CHK-0000-001', serviceLine: 'web', currency: 'TZS' },
+            select: { id: true },
+          });
+          await applyTemplate(tx, { projectId: project.id, templateId: template.id, start: new Date(), currency: 'TZS', fees });
+          added = await tx.lineItem.findMany({
+            where: { projectId: project.id },
+            orderBy: { position: 'asc' },
+            select: { label: true, amountMinor: true },
+          });
+          throw new RolledBack();
+        })
+        .catch((error) => {
+          if (!(error instanceof RolledBack)) throw error;
+        });
+      return added.map((line) => [line.label, Number(line.amountMinor)]);
+    };
+
+    const [first, , last] = [template.lineItems[0]!, template.lineItems[1], template.lineItems.at(-1)!];
+    expect(
+      'only the ticked fees are added to the project, with the price given',
+      await run([
+        { position: first.position, amountMinor: 25_000_000 },
+        { position: last.position, amountMinor: null },
+      ]),
+      [
+        [first.label, 25_000_000],
+        [last.label, 0],
+      ],
+    );
+    expect(
+      'without the fee list every fee is added',
+      (await run(undefined)).map(([label]) => label),
+      template.lineItems.map((line) => line.label),
+    );
+  }
+  await db.$disconnect();
+}
+
 if (failures.length > 0) {
   console.error(`Billing check failed:\n${failures.map((failure) => `  ${failure}`).join('\n')}`);
   process.exit(1);
 }
 console.log(
-  'Billing check passed: a part payment is due on the terms unless every fee is a renewal, a chosen day is checked, and an issued invoice is correctable only until the client could have seen it.',
+  'Billing check passed: a part payment is due on the terms unless every fee is a renewal, a chosen day is checked, an issued invoice is correctable only until the client could have seen it, and only the plan fees ticked on the create form are added.',
 );

@@ -6,16 +6,28 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { EngagementType, ServiceLine } from '@/generated/prisma/client';
 import { OPENING_STATUSES, openingStatus } from '@/lib/console/transitions';
+import { readChosenFees } from '@/lib/console/plan-fees';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
 import { parseDateInput } from '@/lib/console/money';
 import { formText, isOneOf } from '@/lib/console/form';
 import { isCurrency } from '@/lib/console/currencies';
 
+/** What was typed, sent back with a refusal so the form can put it back. */
+export type NewProjectValues = {
+  name: string;
+  ownerId: string;
+  startDate: string;
+  targetDate: string;
+  summary: string;
+  started: boolean;
+};
+
 export type NewProjectState = {
   status: 'idle' | 'error';
   message?: string;
   field?: string;
+  values?: NewProjectValues;
 };
 
 /**
@@ -34,10 +46,20 @@ export async function createProject(
   const staff = await requireStaff();
   if (!can(staff, 'projects')) return { status: 'error', message: NO_PERMISSION };
 
+  // React clears the form once the action returns, refused or not.
+  const values: NewProjectValues = {
+    name: formText(formData, 'name'),
+    ownerId: formText(formData, 'ownerId'),
+    startDate: formText(formData, 'startDate'),
+    targetDate: formText(formData, 'targetDate'),
+    summary: formText(formData, 'summary'),
+    started: formData.get('started') === 'on',
+  };
   const fail = (message: string, field?: string): NewProjectState => ({
     status: 'error',
     message,
     field,
+    values,
   });
 
   const clientId = formText(formData, 'clientId');
@@ -86,6 +108,10 @@ export async function createProject(
     return fail('Choose a currency.', 'currency');
   }
 
+  // The plan's fees as the form left them, priced in this project's currency.
+  const chosenFees = readChosenFees(formData, currency);
+  if ('error' in chosenFees) return fail(chosenFees.error);
+
   const startDate = parseDateInput(formText(formData, 'startDate'));
   const targetDate = parseDateInput(formText(formData, 'targetDate'));
   if (startDate && targetDate && targetDate < startDate) {
@@ -111,6 +137,7 @@ export async function createProject(
       engagementType,
       status,
       templateId: templateId || null,
+      fees: chosenFees.fees,
       summary: formText(formData, 'summary') || null,
       startDate,
       targetDate,

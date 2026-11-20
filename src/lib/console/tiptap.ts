@@ -55,9 +55,24 @@ function inlineToMarkdown(nodes: JSONContent[] | undefined): string {
     .join('');
 }
 
-/** Lists are flat here, matching the renderer, so an item is its first block. */
-function listItemToMarkdown(item: JSONContent): string {
-  return (item.content ?? []).map((block) => inlineToMarkdown(block.content)).join(' ');
+/**
+ * A list item's text, then the items of any list nested inside it as items of
+ * their own. The renderer's lists are flat, and the editor keeps them flat
+ * (editor-extensions.ts); this is the net under that, so a nested item that
+ * reaches here becomes a line of its own instead of disappearing on save.
+ */
+function listItemTexts(item: JSONContent): string[] {
+  const own: string[] = [];
+  const nested: string[] = [];
+  for (const block of item.content ?? []) {
+    if (block.type === 'bulletList' || block.type === 'orderedList') {
+      for (const child of block.content ?? []) nested.push(...listItemTexts(child));
+    } else {
+      own.push(inlineToMarkdown(block.content));
+    }
+  }
+  const text = own.join(' ');
+  return text === '' && nested.length > 0 ? nested : [text, ...nested];
 }
 
 function tableToMarkdown(node: JSONContent): string {
@@ -97,10 +112,14 @@ function blockToMarkdown(node: JSONContent): string {
     case 'paragraph':
       return inlineToMarkdown(node.content);
     case 'bulletList':
-      return (node.content ?? []).map((item) => `- ${listItemToMarkdown(item)}`).join('\n');
+      return (node.content ?? [])
+        .flatMap(listItemTexts)
+        .map((text) => `- ${text}`)
+        .join('\n');
     case 'orderedList':
       return (node.content ?? [])
-        .map((item, index) => `${index + 1}. ${listItemToMarkdown(item)}`)
+        .flatMap(listItemTexts)
+        .map((text, index) => `${index + 1}. ${text}`)
         .join('\n');
     case 'blockquote':
       return (node.content ?? [])

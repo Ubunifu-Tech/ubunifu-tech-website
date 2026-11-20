@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { getOrg } from './org';
 import { carriesFees, feeProblems, feeSchedule, hasFeesToken, projectFees, projectFeesLater, withFees } from './fees';
 import { numbers } from './money';
+import { toConfirmCount } from './to-confirm';
 
 /**
  * Whether a document can go to the client, and what it will say when it does.
@@ -97,7 +98,7 @@ export async function prepareDocument(document: {
     fix: { step: 'write', text: 'Write it' },
   });
 
-  const markers = (final.match(/\[TO CONFIRM/g) ?? []).length;
+  const markers = toConfirmCount(final);
   checks.push({
     ok: markers === 0,
     label: 'Nothing is left to confirm',

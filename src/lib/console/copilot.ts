@@ -8,6 +8,7 @@ import { getOrg } from './org';
 import { liveDocument } from './live';
 import { authorText } from './document-ready';
 import { AGENT_MODEL, type AgentFailure, type AgentTool } from './agent';
+import { toConfirmCount } from './to-confirm';
 
 /**
  * The drafting copilot's context and its one tool.
@@ -392,7 +393,7 @@ export const saveDraftTool: AgentTool<CopilotContext> = {
       throw error;
     }
 
-    const markers = (markdown.match(/\[TO CONFIRM/g) ?? []).length;
+    const markers = toConfirmCount(markdown);
 
     return {
       result:

@@ -33,7 +33,9 @@ import {
   parseDateInput,
   parseMoney,
   toDateInputValue,
+  todayInput,
 } from '@/lib/console/money';
+import { balanceDueDay, chosenBalanceDay } from '@/lib/console/balance-due';
 import { formText } from '@/lib/console/form';
 import { liveInvoice, livePayment } from '@/lib/console/live';
 
@@ -606,13 +608,23 @@ async function payFees(
   }
 
   // Paid in full, it was due the day it was paid. Paid in part, the rest is
-  // due when the fees say, or on the usual payment terms, not overdue at once.
-  const onTerms = await dueOnTerms();
-  const feesDue = lines
-    .map((line) => line.dueAt)
-    .filter((due): due is Date => due !== null && !isPastDay(due, new Date()))
-    .sort((a, b) => b.getTime() - a.getTime())[0];
-  const dueAt = read.amountMinor < totalMinor ? (feesDue ?? onTerms) : read.receivedAt;
+  // due on the day the form showed: the one staff chose there, or the one
+  // balanceDueDay works out, which the form showed as its suggestion.
+  let dueAt = read.receivedAt;
+  if (read.amountMinor < totalMinor) {
+    const today = todayInput();
+    const chosen = chosenBalanceDay(String(formData.get('balanceDueAt') ?? ''), today);
+    if ('error' in chosen) return { error: chosen.error };
+    const { paymentTermsDays } = await getOrg();
+    const day =
+      chosen.day ??
+      balanceDueDay({
+        today,
+        termsDays: paymentTermsDays,
+        feeDays: lines.map((line) => (line.dueAt ? toDateInputValue(line.dueAt) : null)),
+      });
+    dueAt = parseDateInput(day)!;
+  }
 
   let result: { invoice: { id: string; number: string }; receipt: { id: string; number: string } };
   try {

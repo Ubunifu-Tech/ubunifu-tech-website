@@ -3,7 +3,8 @@
 import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { recordPaymentFor, type RecordPaymentState } from '../../invoices/actions';
-import { formatMoney, moneyInput, parseMoney } from '@/lib/console/money';
+import { formatDate, formatMoney, moneyInput, parseDateInput, parseMoney } from '@/lib/console/money';
+import { balanceDueDay } from '@/lib/console/balance-due';
 import { PAYMENT_METHODS } from '@/lib/console/billing-labels';
 import { CheckField, DateField, SelectField, TextField } from '@/components/console/Fields';
 import forms from '@/styles/forms.module.css';
@@ -38,6 +39,8 @@ export type FeeChoice = {
   amountMinor: number;
   amount: string;
   currency: string;
+  /** The fee's own due day, for a renewal period; null for a fee without one. */
+  due: string | null;
 };
 
 const INITIAL: RecordPaymentState = { status: 'idle' };
@@ -49,6 +52,7 @@ export function RecordPaymentForm({
   mayAddFee,
   vatBps,
   today,
+  termsDays,
   defaultMethod,
   initialClientId,
   initialTarget,
@@ -60,6 +64,8 @@ export function RecordPaymentForm({
   /** VAT added on top, in basis points; 0 when none is charged. */
   vatBps: number;
   today: string;
+  /** Payment terms in days, from billing settings. */
+  termsDays: number;
   defaultMethod: string;
   initialClientId?: string;
   initialTarget?: string;
@@ -80,6 +86,8 @@ export function RecordPaymentForm({
   const [method, setMethod] = useState(defaultMethod);
   const [reference, setReference] = useState('');
   const [emailIt, setEmailIt] = useState(true);
+  // The balance's due day once staff pick one; until then it follows the fees.
+  const [dueTyped, setDueTyped] = useState<string | null>(null);
 
   const client = clients.find((row) => row.id === clientId);
   const clientInvoices = invoices.filter((invoice) => invoice.clientId === clientId);
@@ -100,9 +108,16 @@ export function RecordPaymentForm({
   const amount = typed ?? (expected > 0 ? moneyInput(expected, currency) : '');
   const amountMinor = parseMoney(amount, currency);
 
+  // Part of the ticked fees: the rest becomes owed on the new invoice, due on
+  // the day the server will write, worked out by the same rule.
+  const leftMinor = kind === 'fees' && amountMinor !== null && amountMinor > 0 ? feesTotal - amountMinor : 0;
+  const suggestedDue = balanceDueDay({ today, termsDays, feeDays: picked.map((fee) => fee.due) });
+  const balanceDue = dueTyped ?? suggestedDue;
+
   const choose = (next: string) => {
     setTarget(next);
     setTyped(null);
+    setDueTyped(null);
     if (next.startsWith('fees:')) {
       const here = fees.filter((fee) => fee.projectId === next.slice(5));
       setChosenFees(here.length === 1 ? [here[0]!.key] : []);
@@ -242,6 +257,7 @@ export function RecordPaymentForm({
                       checked={chosenFees.includes(fee.key)}
                       onChange={() => {
                         setTyped(null);
+                        setDueTyped(null);
                         setChosenFees((current) =>
                           current.includes(fee.key) ? current.filter((key) => key !== fee.key) : [...current, fee.key],
                         );
@@ -308,6 +324,19 @@ export function RecordPaymentForm({
                     : undefined
               }
             />
+            {leftMinor > 0 && (
+              <DateField
+                // Drawn afresh when the suggestion changes, until staff choose a day.
+                key={dueTyped === null ? `due-${suggestedDue}` : 'due-chosen'}
+                name="balanceDueAt"
+                label="Balance due on"
+                defaultValue={balanceDue}
+                min={today}
+                onChange={setDueTyped}
+                disabled={pending}
+                hint={`The remaining ${formatMoney(leftMinor, currency)} will be due on ${formatDate(parseDateInput(balanceDue))}.`}
+              />
+            )}
             <DateField
               name="receivedAt"
               label="Received on"

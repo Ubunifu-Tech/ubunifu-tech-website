@@ -5,7 +5,7 @@ import { billableLines } from '@/lib/console/billing';
 import { getOrg } from '@/lib/console/org';
 import { liveInvoice } from '@/lib/console/live';
 import { periodLabel } from '@/lib/console/renewals';
-import { formatMoney, numbers, todayInput } from '@/lib/console/money';
+import { formatMoney, numbers, toDateInputValue, todayInput } from '@/lib/console/money';
 import { RecordPaymentForm, type ClientChoice, type FeeChoice, type InvoiceChoice } from './RecordPaymentForm';
 import styles from '../../Admin.module.css';
 
@@ -117,6 +117,7 @@ export default async function RecordPaymentPage({
             amountMinor: line.amountMinor,
             amount: formatMoney(line.amountMinor, line.currency),
             currency: line.currency,
+            due: line.dueAt ? toDateInputValue(line.dueAt) : null,
           })),
       ),
     )
@@ -166,6 +167,7 @@ export default async function RecordPaymentPage({
         mayAddFee={can(staff, 'fees')}
         vatBps={org.chargesVat && org.vatRateBps > 0 ? org.vatRateBps : 0}
         today={todayInput()}
+        termsDays={org.paymentTermsDays}
         defaultMethod={lastPayment?.method ?? 'mobile_money'}
         initialClientId={clientId}
         initialTarget={target}

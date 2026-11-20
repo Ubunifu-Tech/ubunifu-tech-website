@@ -18,9 +18,10 @@ import styles from './Admin.module.css';
  * The console shell.
  *
  * Reached only as admin.ubunifutech.com/* — proxy.ts rewrites that host into
- * /admin/* and 404s these paths everywhere else. The marketing layout is not
- * used here on purpose: no navbar, no footer, no ambient shader, and none of
- * the public site's client-side weight on a screen staff keep open all day.
+ * /admin/* and sends these paths there from every other host. The marketing
+ * layout is not used here on purpose: no navbar, no footer, no ambient
+ * shader, and none of the public site's client-side weight on a screen staff
+ * keep open all day.
  *
  * The sidebar is drawn from getStaffActor rather than requireStaff, because the
  * sign-in page lives under this layout too and must render for someone who has

@@ -15,8 +15,10 @@ import { NextResponse, type NextRequest } from 'next/server';
  *   admin host  → /admin/* only. The marketing site is not served there, so a
  *                 stray link cannot walk someone from the console into public
  *                 pages on a host that has the staff cookie.
- *   other hosts → everything except /admin/*, which 404s. Not 403: a wrong host
- *                 learns nothing about whether the console exists.
+ *   other hosts → everything except /admin/*. A visit to /admin/* is sent on
+ *                 to the same page on the admin host, which is public anyway
+ *                 and where staff sign in; anything but a GET or HEAD there
+ *                 still 404s, so a form post never follows it across.
  *
  * The rewrite means the console is reached as admin.ubunifutech.com/projects
  * rather than /admin/projects, so no admin URL exists on the public origin at
@@ -39,6 +41,25 @@ function isAdminHost(hostHeader: string | null): boolean {
     return DEV_ADMIN_HOSTS.includes(hostname);
   }
   return false;
+}
+
+/**
+ * The same console page on the admin host, for someone who typed the old
+ * address on the public site. Built like consoleEnv.adminOrigin, which the
+ * proxy cannot import. The path is set on the URL rather than parsed into it,
+ * so /admin//elsewhere.example stays on the admin host.
+ */
+function onConsoleHost(pathname: string, search: string): URL | null {
+  const scheme = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  let url: URL;
+  try {
+    url = new URL(process.env.CONSOLE_ADMIN_ORIGIN || `${scheme}://${ADMIN_HOST}`);
+  } catch {
+    return null;
+  }
+  url.pathname = pathname.slice('/admin'.length) || '/';
+  url.search = search;
+  return url;
 }
 
 function harden(response: NextResponse, onAdminHost: boolean): NextResponse {
@@ -86,8 +107,11 @@ export function proxy(request: NextRequest) {
     return harden(NextResponse.rewrite(url, { request: { headers } }), true);
   }
 
-  // Public hosts: the console does not exist here.
+  // Public hosts: the console is not served here, but a visit is sent on to
+  // it. Temporary, so browsers do not hold on to it if the host ever moves.
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    const there = request.method === 'GET' || request.method === 'HEAD' ? onConsoleHost(pathname, search) : null;
+    if (there) return harden(NextResponse.redirect(there, 307), false);
     return harden(new NextResponse(null, { status: 404 }), false);
   }
 

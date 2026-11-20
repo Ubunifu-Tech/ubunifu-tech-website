@@ -10,9 +10,10 @@ import { MAX_MEDIA_BYTES, MEDIA_CONTENT_TYPES, recordMediaAsset } from '@/lib/co
  * the store.
  *
  * On the CONSOLE host only, reached as admin.ubunifutech.com/media/upload: the
- * public host 404s everything under /admin, and on the public host
- * /media/upload is just an image name that does not parse. So no visitor can
- * ask for a token at all, and a staff session is checked here as well.
+ * public host serves nothing under /admin and 404s a POST there, and on the
+ * public host /media/upload is just an image name that does not parse. So no
+ * visitor can ask for a token at all, and a staff session is checked here as
+ * well.
  *
  * Not under /api, because the console host serves no /api — see src/proxy.ts.
  */

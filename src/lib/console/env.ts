@@ -27,7 +27,7 @@ function optional(name: string, fallback: string): string {
  * fallback.
  */
 export const consoleEnv = {
-  /** Host that serves the staff console. Admin routes 404 on any other host. */
+  /** Host that serves the staff console. Any other host sends /admin here. */
   get adminHost(): string {
     return optional('CONSOLE_ADMIN_HOST', 'admin.ubunifutech.com');
   },

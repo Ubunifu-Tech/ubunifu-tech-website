@@ -265,6 +265,15 @@
   padding-top: var(--space-5);
 }
 
+/* With the assistant open on a wide screen the page makes room for it, so
+   nothing it is asked about is hidden behind it. Narrower than this it lies
+   over the page instead. */
+@media (min-width: 80rem) {
+  .shell:has([data-assistant-dock='open']) .work {
+    margin-right: 25rem;
+  }
+}
+
 /* Phone only: the button that opens the navigation. */
 .menuButton {
   display: none;

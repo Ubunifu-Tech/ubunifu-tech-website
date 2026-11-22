@@ -1420,6 +1420,9 @@ enum ConversationKind {
   site_visitor
   /// A signed-in client asking for help in the portal.
   portal_client
+  /// A member of staff and the console assistant, looking things up and
+  /// laying out changes for them to confirm.
+  console_staff
 }
 
 enum ConversationStatus {
@@ -1484,10 +1487,51 @@ model Conversation {
   lastMessageAt DateTime?
 
   messages ConversationMessage[]
+  plans    AssistantPlan[]
 
   @@index([kind, status])
   @@index([visitorKey])
   @@index([documentId])
+}
+
+enum AssistantPlanStatus {
+  /// Laid out and waiting for the person who asked to confirm it.
+  pending
+  /// Being carried out. Set in the same statement that checks it was pending,
+  /// so a double click cannot carry it out twice.
+  running
+  /// Every step was carried out.
+  done
+  /// A step was refused or failed; the steps before it stand, the rest did not run.
+  stopped
+  /// The person chose not to go ahead.
+  discarded
+  /// Replaced by a later plan in the same chat.
+  superseded
+}
+
+/// A set of changes the console assistant laid out for a member of staff.
+/// The assistant can only write one of these: nothing in it is carried out
+/// until the person it was written for confirms it, and each step is then
+/// checked again against their permissions and the records as they stand.
+model AssistantPlan {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  /// Who asked. Only they can confirm or discard it.
+  staffId        String
+  status         AssistantPlanStatus @default(pending)
+  /// One line saying what the plan is for.
+  summary        String
+  /// The steps as the assistant wrote them: [{ action, input }].
+  steps          Json
+  /// What each step came to once carried out, in step order.
+  results        Json?
+
+  createdAt DateTime  @default(now())
+  decidedAt DateTime?
+
+  @@index([conversationId, status])
 }
 
 model ConversationMessage {

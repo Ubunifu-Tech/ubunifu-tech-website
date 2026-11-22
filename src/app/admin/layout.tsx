@@ -12,6 +12,7 @@ import { MobileNav } from './MobileNav';
 import { SearchBox } from './SearchBox';
 import { NavigationProgress } from './NavigationProgress';
 import { NewMenu } from './NewMenu';
+import { AssistantDock } from './AssistantDock';
 import styles from './Admin.module.css';
 
 /**
@@ -81,6 +82,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Suspense fallback={null}>
             <SearchBox />
           </Suspense>
+          <AssistantDock />
           <NewMenu
             payment={staff.permissions.includes('invoices')}
             project={staff.permissions.includes('projects')}

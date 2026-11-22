@@ -18,7 +18,7 @@ import { site } from '@/content/site';
  * portfolio and team; check:assistant compares the two so they cannot drift.
  */
 
-export type ChatVariant = 'site' | 'portal' | 'console';
+export type ChatVariant = 'site' | 'portal' | 'console' | 'staff';
 
 export type ChatLink = {
   /** internal opens in place, external in a new tab, mail is mailto: or tel:. */
@@ -59,6 +59,13 @@ function escapeRegExp(text: string): string {
 const MAILTO = new RegExp(`^mailto:${escapeRegExp(site.contact.email)}(?:\\?subject=[^&#\\s]*)?$`, 'i');
 const TEL = `tel:${site.contact.phoneTel}`;
 
+/**
+ * A page in the console a record lives on, or one of its lists. Anything else
+ * the console assistant writes as a path stays plain text.
+ */
+const CONSOLE_PATH =
+  /^\/(?:clients|projects|documents|invoices|receipts|refunds|requests|enquiries|payments|renewals|finance|settings|activity)(?:\/[A-Za-z0-9_-]+){0,3}$/;
+
 /** The path if it is one a visitor can be sent to, otherwise null. */
 function sitePath(path: string): string | null {
   if (!PATH.test(path)) return null;
@@ -78,6 +85,11 @@ function sitePath(path: string): string | null {
 export function classifyHref(href: string | null | undefined, variant: ChatVariant): ChatLink | null {
   const value = (href ?? '').trim();
   if (!value) return null;
+
+  // The console assistant links console pages, for the person working in it.
+  if (variant === 'staff' && value.startsWith('/')) {
+    return CONSOLE_PATH.test(value) ? { kind: 'internal', href: value } : null;
+  }
 
   if (value.startsWith('/')) {
     const path = sitePath(value);

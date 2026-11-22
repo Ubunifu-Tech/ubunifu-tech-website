@@ -3,23 +3,23 @@
 import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { BillingKind, LineItemStatus } from '@/generated/prisma/client';
 import { can, requireStaff, recordAudit, staffForAction } from '@/lib/console/auth';
-import { addMonths, dropOffSchedulePeriods } from '@/lib/console/renewals';
+import { dropOffSchedulePeriods } from '@/lib/console/renewals';
 import {
   formatMoney,
   formatShortDate,
-  MONEY_CAP_MINOR,
-  moneyCapText,
   numbers,
-  overMoneyCap,
-  parseDateInput,
-  parseMoney,
   toDateInputValue,
-  todayInput,
 } from '@/lib/console/money';
 import { formText } from '@/lib/console/form';
 import { BILLING, isRecurring } from '@/lib/console/fee-labels';
+import {
+  checkFee,
+  createFee,
+  duplicateFeeMessage,
+  feeNameTaken,
+  type CheckedFee,
+} from '@/lib/console/services/fees';
 
 export type FeeState = {
   status: 'idle' | 'done' | 'error';
@@ -30,145 +30,26 @@ export type FeeState = {
   signedOut?: boolean;
 };
 
-type Parsed = {
-  label: string;
-  description: string | null;
-  billingKind: BillingKind;
-  amountMinor: number;
-  quantity: number;
-  terms: string | null;
-  nextDueAt: Date | null;
-  status: LineItemStatus | undefined;
-};
-
-/** Reads and checks a fee from the form. Shared by add and edit. */
+/** Reads a fee from the form and checks it with the shared rules. */
 function parse(
   formData: FormData,
   currency: string,
-): { ok: true; fee: Parsed } | { ok: false; error: FeeState } {
-  const label = formText(formData, 'label');
-  if (label.length < 2 || label.length > 160) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'Give the fee a name.',
-        field: 'label',
-      },
-    };
-  }
-
-  const kindRaw = formText(formData, 'billingKind');
-  if (!(Object.values(BillingKind) as string[]).includes(kindRaw)) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'Choose how it is billed.',
-        field: 'billingKind',
-      },
-    };
-  }
-  const billingKind = kindRaw as BillingKind;
-
-  const amountRaw = formText(formData, 'amount');
-  const amountMinor = amountRaw === '' ? 0 : parseMoney(amountRaw, currency);
-  if (amountMinor === null && overMoneyCap(amountRaw, currency)) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: `Amounts above ${moneyCapText(currency)} cannot be entered. Split it into two fees.`,
-        field: 'amount',
-      },
-    };
-  }
-  if (amountMinor === null || amountMinor < 0) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'Enter the price as a number, like 1500 or 1500.00.',
-        field: 'amount',
-      },
-    };
-  }
-
-  const quantity = Number(formText(formData, 'quantity') || '1');
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10_000) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'Quantity should be a whole number, 1 or more.',
-        field: 'quantity',
-      },
-    };
-  }
-  if (amountMinor * quantity > MONEY_CAP_MINOR) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: `Together these come to more than ${moneyCapText(currency)}. Split it into two fees.`,
-        field: 'quantity',
-      },
-    };
-  }
-
-  const dueRaw = formText(formData, 'nextDueAt');
-  // A monthly or yearly fee is invoiced from its date, so it needs one.
-  if (isRecurring(billingKind) && !dueRaw) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'Choose when the first payment is due.',
-        field: 'nextDueAt',
-      },
-    };
-  }
-  const nextDueAt = isRecurring(billingKind) && dueRaw ? parseDateInput(dueRaw) : null;
-  if (isRecurring(billingKind) && dueRaw && !nextDueAt) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'That date could not be read.',
-        field: 'nextDueAt',
-      },
-    };
-  }
-  // A mistyped year would lay out years of periods to catch up on.
-  if (nextDueAt && nextDueAt < addMonths(parseDateInput(todayInput())!, -60)) {
-    return {
-      ok: false,
-      error: {
-        status: 'error',
-        message: 'That date is more than five years ago. Enter the next payment date instead.',
-        field: 'nextDueAt',
-      },
-    };
-  }
-
-  const statusRaw = formText(formData, 'status');
-  const status = (Object.values(LineItemStatus) as string[]).includes(statusRaw)
-    ? (statusRaw as LineItemStatus)
-    : undefined;
-
-  return {
-    ok: true,
-    fee: {
-      label,
-      description: formText(formData, 'description').slice(0, 500) || null,
-      billingKind,
-      amountMinor,
-      quantity,
-      terms: formText(formData, 'terms').slice(0, 500) || null,
-      nextDueAt,
-      status,
+): { ok: true; fee: CheckedFee } | { ok: false; error: FeeState } {
+  const checked = checkFee(
+    {
+      label: formText(formData, 'label'),
+      description: formText(formData, 'description'),
+      billingKind: formText(formData, 'billingKind'),
+      amount: formText(formData, 'amount'),
+      quantity: formText(formData, 'quantity'),
+      terms: formText(formData, 'terms'),
+      nextDueAt: formText(formData, 'nextDueAt'),
+      status: formText(formData, 'status'),
     },
-  };
+    currency,
+  );
+  if (checked.ok) return checked;
+  return { ok: false, error: { status: 'error', message: checked.message, field: checked.field } };
 }
 
 function revalidate(slug: string) {
@@ -188,7 +69,6 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
       id: true,
       slug: true,
       currency: true,
-      _count: { select: { lineItems: true } },
     },
   }));
   if (!project) return { status: 'error', message: 'That project no longer exists.' };
@@ -197,37 +77,11 @@ export async function addFee(_previous: FeeState, formData: FormData): Promise<F
   if (!read.ok) return read.error;
   const parsed = read.fee;
 
-  const created = numbers(await db.lineItem.create({
-    data: {
-      projectId: project.id,
-      label: parsed.label,
-      description: parsed.description,
-      billingKind: parsed.billingKind,
-      amountMinor: parsed.amountMinor,
-      quantity: parsed.quantity,
-      terms: parsed.terms,
-      currency: project.currency,
-      position: project._count.lineItems,
-      status: parsed.status ?? 'planned',
-      ...(isRecurring(parsed.billingKind)
-        ? {
-            nextDueAt: parsed.nextDueAt,
-            dueDay: parsed.nextDueAt?.getUTCDate() ?? null,
-            intervalMonths: parsed.billingKind === 'recurring_monthly' ? 1 : 12,
-          }
-        : {}),
-    },
-    select: { id: true },
-  }));
+  if (await feeNameTaken(project.id, parsed.label)) {
+    return { status: 'error', message: duplicateFeeMessage(parsed.label), field: 'label' };
+  }
 
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: 'line_item.created',
-    entityType: 'LineItem',
-    entityId: created.id,
-    summary: `${parsed.label}: ${formatMoney(parsed.amountMinor * parsed.quantity, project.currency)} ${BILLING[parsed.billingKind].label.toLowerCase()}`,
-  });
+  await createFee({ project, fee: parsed, staffId: staff.id });
 
   revalidate(project.slug);
   return { status: 'done', message: `${parsed.label} added.` };
@@ -253,7 +107,7 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
       nextDueAt: true,
       dueDay: true,
       _count: { select: { invoiceLines: true } },
-      project: { select: { slug: true, deletedAt: true } },
+      project: { select: { id: true, slug: true, deletedAt: true } },
       // The latest period already invoiced or skipped, if any.
       renewals: {
         where: { status: { not: 'pending' } },
@@ -270,6 +124,12 @@ export async function updateFee(_previous: FeeState, formData: FormData): Promis
   if (!read.ok) return read.error;
   const parsed = read.fee;
   const handled = line.renewals;
+
+  // Only a changed name is checked, so a project that already has two fees
+  // with one name can still have their other details saved.
+  if (parsed.label !== line.label && (await feeNameTaken(line.project.id, parsed.label, line.id))) {
+    return { status: 'error', message: duplicateFeeMessage(parsed.label), field: 'label' };
+  }
 
   // Once a period is invoiced or skipped, a fee's billing type is part of what
   // the client was sent, and switching it would leave periods of the wrong length.

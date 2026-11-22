@@ -259,6 +259,26 @@ const knowledge = knowledgeText({ posts });
   for (const file of ['src/components/Assistant.tsx', 'src/components/ChatMarkdown.tsx']) {
     for (const text of componentCopy(file)) problems.push(...copyProblems(file, text));
   }
+  // The console assistant: its instructions, every action and lookup the
+  // model reads, every refusal a person is shown, and its window.
+  for (const file of [
+    'src/lib/console/staff-agent/prompt.ts',
+    'src/lib/console/staff-agent/turn.ts',
+    'src/lib/console/staff-agent/plan.ts',
+    'src/lib/console/staff-agent/lookups.ts',
+    'src/lib/console/staff-agent/actions/clients.ts',
+    'src/lib/console/staff-agent/actions/projects.ts',
+    'src/lib/console/staff-agent/actions/fees.ts',
+    'src/lib/console/staff-agent/actions/documents.ts',
+    'src/lib/console/services/clients.ts',
+    'src/lib/console/services/projects.ts',
+    'src/lib/console/services/fees.ts',
+    'src/lib/console/services/documents.ts',
+    'src/app/admin/assistant/route.ts',
+    'src/app/admin/AssistantDock.tsx',
+  ]) {
+    for (const text of componentCopy(file)) problems.push(...copyProblems(file, text, { hype: false }));
+  }
   for (const faq of faqs) problems.push(...copyProblems(`FAQ "${faq.question}"`, `${faq.question} ${faq.answer}`));
   for (const guide of Object.values(productGuides)) {
     if (!guide) continue;
@@ -292,10 +312,19 @@ const knowledge = knowledgeText({ posts });
 // A6 Renderer: what a reply may link, and how bare paths become links.
 {
   const problems: string[] = [];
-  const expectKind = (href: string, variant: 'site' | 'portal' | 'console', want: string | null) => {
+  const expectKind = (href: string, variant: 'site' | 'portal' | 'console' | 'staff', want: string | null) => {
     const got = classifyHref(href, variant)?.kind ?? null;
     if (got !== want) problems.push(`classifyHref(${JSON.stringify(href)}, ${variant}) is ${got}, expected ${want}`);
   };
+  // The console assistant links console pages and nothing else by path.
+  expectKind('/clients/usambara-destination', 'staff', 'internal');
+  expectKind('/documents/AGR-2026-001', 'staff', 'internal');
+  expectKind('/settings/team', 'staff', 'internal');
+  expectKind('/sign-out', 'staff', null);
+  expectKind('/clients/a?next=//evil.example', 'staff', null);
+  expectKind('//evil.example/clients', 'staff', null);
+  expectKind('https://evil.example', 'staff', null);
+  expectKind('javascript:alert(1)', 'staff', null);
   expectKind('/build', 'site', 'internal');
   expectKind('/build#data', 'site', 'internal');
   expectKind('/work/safari-king', 'site', 'internal');

@@ -7,6 +7,7 @@ import { HANDED_BACK, LIMIT_COPY, PORTAL_FAILURE_COPY } from '@/lib/console/assi
 import { hashToken } from '@/lib/console/crypto';
 import { allow } from '@/lib/console/rate-limit';
 import { siteKnowledge } from '@/lib/console/site-knowledge';
+import { readJsonBody, sameOrigin } from '@/lib/console/request-guards';
 import {
   PORTAL_SYSTEM,
   handOff,
@@ -28,6 +29,7 @@ export const maxDuration = 60;
 
 const MAX_MESSAGES_PER_HOUR = 40;
 const MAX_MESSAGE_LENGTH = 2000;
+const MAX_BODY_BYTES = 24_000;
 
 /** One sentence, and whether the window opens its "send it to the team" form under it. */
 function refused(copy: { text: string; fallback: boolean }, status: number, extra?: object) {
@@ -57,20 +59,16 @@ export async function POST(request: NextRequest) {
 }
 
 async function handle(request: NextRequest) {
+  // Checked before the session is read: another site's page cannot post here
+  // as a signed-in client.
+  if (!sameOrigin(request)) return new NextResponse(null, { status: 403 });
+
   const actor = await actorOrNull();
   if (!actor) return NextResponse.json(SIGNED_OUT, { status: 401 });
 
-  const mediaType = request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase();
-  if (mediaType !== 'application/json') {
-    return NextResponse.json({ error: 'Expected a JSON request.' }, { status: 415 });
-  }
-
-  let payload: { message?: unknown; page?: unknown; handoff?: unknown; hadThread?: unknown };
-  try {
-    payload = (await request.json()) as typeof payload;
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
-  }
+  const body = await readJsonBody(request, MAX_BODY_BYTES);
+  if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
+  const payload: { message?: unknown; page?: unknown; handoff?: unknown; hadThread?: unknown } = body.value;
 
   // "Talk to a person": a request with the chat attached, no model involved.
   if (payload.handoff !== undefined) {

@@ -44,6 +44,7 @@ export const MAX_MESSAGES: Record<ConversationKind, number> = {
   site_visitor: 60,
   portal_client: 60,
   document_draft: 400,
+  console_staff: 300,
 };
 
 /** How many of the latest rows are replayed to the model each turn. */
@@ -51,6 +52,7 @@ const HISTORY: Record<ConversationKind, number> = {
   site_visitor: 60,
   portal_client: 60,
   document_draft: 80,
+  console_staff: 60,
 };
 
 /** Below this much of the whole-turn deadline, another call is not started. */
@@ -181,6 +183,7 @@ function toApiMessages(stored: StoredMessage[]): Anthropic.MessageParam[] {
 export function replayable(kind: ConversationKind, newestFirst: StoredMessage[]): StoredMessage[] {
   const rows = [...newestFirst].reverse();
   while (rows.length > 0 && rows[0]!.role !== 'user') rows.shift();
+  if (kind === 'console_staff') return rows.map(withoutDraftedBodies);
   if (kind !== 'document_draft') return rows;
   return rows.map((row) =>
     row.role === 'assistant' && row.toolName === 'save_draft' && row.toolInput
@@ -194,6 +197,29 @@ export function replayable(kind: ConversationKind, newestFirst: StoredMessage[])
         }
       : row,
   );
+}
+
+/**
+ * A plan that drafted a document carried the whole text in its tool call. The
+ * draft is on the document's own page by the time it matters again, so the
+ * thread keeps a pointer rather than paying for the text on every later turn.
+ */
+function withoutDraftedBodies(row: StoredMessage): StoredMessage {
+  if (row.role !== 'assistant' || row.toolName !== 'propose_plan' || !row.toolInput) return row;
+  const input = row.toolInput as { steps?: unknown };
+  if (!Array.isArray(input.steps)) return row;
+  return {
+    ...row,
+    toolInput: {
+      ...(row.toolInput as Record<string, Prisma.JsonValue>),
+      steps: input.steps.map((step) => {
+        const fields = (step ?? {}) as Record<string, Prisma.JsonValue>;
+        return typeof fields.body_markdown === 'string' && fields.body_markdown.length > 400
+          ? { ...fields, body_markdown: '[The draft you wrote. It is on the document page if confirmed.]' }
+          : fields;
+      }),
+    },
+  };
 }
 
 /** The request for one call, apart from the thread. Pure, so it can be checked without the API. */
@@ -612,6 +638,7 @@ const WHICH: Record<ConversationKind, string> = {
   site_visitor: 'The website assistant',
   portal_client: 'The portal assistant',
   document_draft: 'The drafting assistant',
+  console_staff: 'The console assistant',
 };
 
 /** A policy decline: recorded for staff, with the category the API gave. */

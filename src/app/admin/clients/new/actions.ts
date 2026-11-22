@@ -3,9 +3,7 @@
 import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { db } from '@/lib/db';
-import { EngagementType, ServiceLine } from '@/generated/prisma/client';
-import { OPENING_STATUSES, openingStatus } from '@/lib/console/transitions';
+import { openingStatus } from '@/lib/console/transitions';
 import { readChosenFees } from '@/lib/console/plan-fees';
 import { can, recordAudit, staffForAction } from '@/lib/console/auth';
 import { consoleEnv } from '@/lib/console/env';
@@ -13,9 +11,9 @@ import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { clientInviteEmail } from '@/lib/emails';
 import { createClientRecord } from '@/lib/console/onboarding';
-import { parseDateInput } from '@/lib/console/money';
-import { formText, isOneOf } from '@/lib/console/form';
-import { CURRENCIES } from '@/lib/console/currencies';
+import { formText } from '@/lib/console/form';
+import { checkNewClient } from '@/lib/console/services/clients';
+import { checkNewProject } from '@/lib/console/services/projects';
 
 /**
  * Everything the form posted, handed back on failure.
@@ -58,8 +56,6 @@ export type NewClientState = {
   /** The session ended before the post arrived; the values come back to refill the form. */
   signedOut?: boolean;
 };
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Creates a client by hand, with an optional first project and invitation.
@@ -108,152 +104,44 @@ export async function createClient(
     values,
   });
 
-  // ── The organisation ──────────────────────────────────────────────────
-  // Someone working on their own is their own client: with no organisation
-  // name, the contact's name is used.
-  const name = values.name || values.contactName;
-  if (name.length < 2 || name.length > 160) {
-    return fail('Add the organisation’s name, or the name of the person.', 'name');
-  }
-
-  const country = values.country.toUpperCase();
-  if (!/^[A-Z]{2}$/.test(country)) {
-    return fail('Country should be a two-letter code, such as TZ.', 'country');
-  }
-
-  const currency = values.currency.toUpperCase();
-  if (!isOneOf(CURRENCIES, currency)) {
-    return fail('Choose a currency.', 'currency');
-  }
-
-  const { website } = values;
-  if (website) {
-    try {
-      const parsed = new URL(website);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('scheme');
-    } catch {
-      return fail('The website should be a full address, starting with https://', 'website');
-    }
-  }
-
-  // ── The person ────────────────────────────────────────────────────────
-  const { contactName } = values;
-  if (contactName.length < 2 || contactName.length > 120) {
-    return fail('Enter the name of the person you deal with.', 'contactName');
-  }
-
-  // Optional: somebody reached on WhatsApp may not have given one yet. They
-  // add it themselves from the setup link shared from their client page.
-  const email = values.contactEmail.toLowerCase() || null;
-  if (email && !EMAIL_PATTERN.test(email)) {
-    return fail('That email address does not look right. Leave it empty if you do not have it yet.', 'contactEmail');
-  }
-  // One address signs in to one account, so it cannot already be someone's
-  // at another client.
-  if (email) {
-    const taken = await db.clientContact.findFirst({
-      where: { email, deletedAt: null },
-      select: { client: { select: { name: true } } },
-    });
-    if (taken) {
-      return fail(`That email is already in use at ${taken.client.name}.`, 'contactEmail');
-    }
-  }
+  const checkedClient = await checkNewClient(values);
+  if (!checkedClient.ok) return fail(checkedClient.message, checkedClient.field);
+  const { client, contact } = checkedClient.value;
+  const { name, currency } = client;
+  const { email } = contact;
+  const contactName = contact.name;
 
   // ── The first project, if there is one yet ────────────────────────────
-  const { startProject } = values;
   let project: Parameters<typeof createClientRecord>[0]['project'];
 
-  if (startProject && !can(staff, 'projects')) {
+  if (values.startProject && !can(staff, 'projects')) {
     return fail('Someone who runs projects needs to start the project. Turn the project off to add the client.');
   }
 
-  if (startProject) {
-    const { projectName } = values;
-    if (projectName.length < 2 || projectName.length > 160) {
-      return fail('Give the project a name, or turn the project section off.', 'projectName');
-    }
-
-    const { serviceLine } = values;
-    if (!isOneOf(Object.values(ServiceLine), serviceLine)) {
-      return fail('Choose a service line.', 'serviceLine');
-    }
-
-    const { engagementType } = values;
-    if (!isOneOf(Object.values(EngagementType), engagementType)) {
-      return fail('Choose how this work is billed.', 'engagementType');
-    }
-
-    const { status } = values;
-    if (!isOneOf(OPENING_STATUSES, status)) {
-      return fail('Choose where this project stands today.', 'status');
-    }
-
-    const { templateId } = values;
-    if (templateId) {
-      const template = await db.projectTemplate.findUnique({
-        where: { id: templateId },
-        select: { serviceLine: true },
-      });
-      if (!template) {
-        return fail('That plan no longer exists. Pick another.', 'templateId');
-      }
-      if (template.serviceLine !== serviceLine) {
-        return fail('That plan belongs to a different service line.', 'templateId');
-      }
-    }
-
-    const startDate = parseDateInput(values.startDate);
-    const targetDate = parseDateInput(values.targetDate);
-    if (startDate && targetDate && targetDate < startDate) {
-      return fail('The target date is before the start date.', 'targetDate');
+  if (values.startProject) {
+    const checkedProject = await checkNewProject({ ...values, name: values.projectName });
+    if (!checkedProject.ok) {
+      // The same rules as the New project form, said for this one: here the
+      // project is a section that can be turned off, and its name has its own field.
+      return checkedProject.field === 'name'
+        ? fail('Give the project a name, or turn the project section off.', 'projectName')
+        : fail(checkedProject.message, checkedProject.field);
     }
 
     // The plan's fees as the form left them, priced in the client's currency.
     const chosenFees = readChosenFees(formData, currency);
     if ('error' in chosenFees) return fail(chosenFees.error);
 
-    project = {
-      name: projectName,
-      serviceLine,
-      engagementType,
-      status,
-      templateId: templateId || null,
-      fees: chosenFees.fees,
-      summary: values.summary || null,
-      startDate,
-      targetDate,
-    };
-  }
-
-  // Who leads the first project: someone on the team who can sign in, or nobody yet.
-  const ownerChoice = formText(formData, 'ownerId');
-  const owner = ownerChoice
-    ? await db.staffUser.findFirst({ where: { id: ownerChoice, isActive: true }, select: { id: true } })
-    : null;
-  if (project && ownerChoice && !owner) {
-    return fail('Choose someone on the team to lead it.', 'ownerId');
+    project = { ...checkedProject.value, fees: chosenFees.fees };
   }
 
   // ── Create ────────────────────────────────────────────────────────────
   let created;
   try {
     created = await createClientRecord({
-      client: {
-        name,
-        legalName: values.legalName || null,
-        country,
-        currency,
-        website: website || null,
-        notes: values.notes || null,
-      },
-      contact: {
-        name: contactName,
-        email,
-        role: values.contactRole || null,
-        phone: values.contactPhone || null,
-      },
-      project: project ? { ...project, ownerId: owner?.id ?? null } : undefined,
+      client,
+      contact,
+      project,
       enquiryId: formText(formData, 'enquiryId') || null,
       staffId: staff.id,
     });

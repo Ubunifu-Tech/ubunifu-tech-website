@@ -4,13 +4,12 @@ import { NO_PERMISSION } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { EngagementType, ServiceLine } from '@/generated/prisma/client';
-import { OPENING_STATUSES, openingStatus } from '@/lib/console/transitions';
+import { openingStatus } from '@/lib/console/transitions';
 import { readChosenFees } from '@/lib/console/plan-fees';
 import { can, requireStaff, recordAudit } from '@/lib/console/auth';
 import { createProjectForClient } from '@/lib/console/onboarding';
-import { parseDateInput } from '@/lib/console/money';
-import { formText, isOneOf } from '@/lib/console/form';
+import { formText } from '@/lib/console/form';
+import { checkNewProject } from '@/lib/console/services/projects';
 import { isCurrency } from '@/lib/console/currencies';
 
 /** What was typed, sent back with a refusal so the form can put it back. */
@@ -69,37 +68,15 @@ export async function createProject(
   });
   if (!client) return fail('That client no longer exists.');
 
-  const name = formText(formData, 'name');
-  if (name.length < 2 || name.length > 160) {
-    return fail('Give the project a name.', 'name');
-  }
-
-  const serviceLine = formText(formData, 'serviceLine');
-  if (!isOneOf(Object.values(ServiceLine), serviceLine)) {
-    return fail('Choose a service line.', 'serviceLine');
-  }
-
-  const engagementType = formText(formData, 'engagementType') || 'fixed_price_project';
-  if (!isOneOf(Object.values(EngagementType), engagementType)) {
-    return fail('Choose how this work is billed.', 'engagementType');
-  }
-
-  const status = openingStatus(formData);
-  if (!isOneOf(OPENING_STATUSES, status)) {
-    return fail('Choose where this project stands today.', 'status');
-  }
-
-  const templateId = formText(formData, 'templateId');
-  if (templateId) {
-    const template = await db.projectTemplate.findUnique({
-      where: { id: templateId },
-      select: { serviceLine: true },
-    });
-    if (!template) return fail('That plan no longer exists. Pick another.', 'templateId');
-    if (template.serviceLine !== serviceLine) {
-      return fail('That plan belongs to a different service line.', 'templateId');
-    }
-  }
+  const checked = await checkNewProject({
+    ...values,
+    serviceLine: formText(formData, 'serviceLine'),
+    engagementType: formText(formData, 'engagementType'),
+    templateId: formText(formData, 'templateId'),
+  });
+  if (!checked.ok) return fail(checked.message, checked.field);
+  const project = checked.value;
+  const { name } = project;
 
   // Absent only from a form posted without the field; the client's own
   // currency is what the field would have defaulted to.
@@ -112,38 +89,14 @@ export async function createProject(
   const chosenFees = readChosenFees(formData, currency);
   if ('error' in chosenFees) return fail(chosenFees.error);
 
-  const startDate = parseDateInput(formText(formData, 'startDate'));
-  const targetDate = parseDateInput(formText(formData, 'targetDate'));
-  if (startDate && targetDate && targetDate < startDate) {
-    return fail('The target date is before the start date.', 'targetDate');
-  }
-
-  // Someone on the team who can still sign in, or nobody yet.
-  const ownerChoice = formText(formData, 'ownerId');
-  const owner = ownerChoice
-    ? await db.staffUser.findFirst({
-        where: { id: ownerChoice, isActive: true },
-        select: { id: true },
-      })
-    : null;
-  if (ownerChoice && !owner) return fail('Choose someone on the team to lead it.', 'ownerId');
-
   let created;
   try {
     created = await createProjectForClient({
       clientId: client.id,
-      name,
-      serviceLine,
-      engagementType,
-      status,
-      templateId: templateId || null,
+      ...project,
       fees: chosenFees.fees,
-      summary: formText(formData, 'summary') || null,
-      startDate,
-      targetDate,
       currency,
       staffId: staff.id,
-      ownerId: owner?.id ?? null,
     });
   } catch (error) {
     // Two people creating a project in the same moment can collide on a

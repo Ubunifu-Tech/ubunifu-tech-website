@@ -112,6 +112,37 @@ for `/api/contact` in the
 [Vercel WAF](https://vercel.com/docs/vercel-firewall/vercel-waf) is an optional
 extra layer.
 
+### The console assistant
+
+Staff open it from the Assistant button in the console's top band. It can look
+records up and lay out changes; it cannot change anything itself.
+
+- **Lookups** (`src/lib/console/staff-agent/lookups.ts`) run as the person
+  asking and show what their role shows them on the matching page.
+- **Actions** (`src/lib/console/staff-agent/actions/`) are the whole list of
+  what it can ask to have changed: add a client, send a portal invitation,
+  start a project, add or rename a fee, and draft a document. Sending a
+  document or an invoice, recording a payment and removing anything are not on
+  the list and stay with a person.
+- **Plans** (`src/lib/console/staff-agent/plan.ts`): the model calls one tool,
+  `propose_plan`. Each step is checked with the same rules as the console's
+  forms, and the review table is written from the checked values, not from the
+  model's words. Nothing runs until the person who asked presses Confirm, and
+  every step is then checked again against their role and the records as they
+  stand. A plan is stored in `AssistantPlan` and its outcome in Activity.
+
+To add an action, write a `PlanAction` (its fields, a `check` and a `run`) and
+add it to `PLAN_ACTIONS` in `actions/index.ts`. The tool schema, the review
+table and the permission check all read from that list.
+
+The rules the forms and the assistant share live in
+`src/lib/console/services/` (clients, projects, fees, documents). A form action
+reads the form and calls the service; an assistant action reads the tool input
+and calls the same service. Put a new rule in the service, never in one caller.
+
+All three chat endpoints (website, portal, console) refuse a POST from another
+origin and read the body with a size limit (`src/lib/console/request-guards.ts`).
+
 ### Available scripts
 
 | Command | Purpose |

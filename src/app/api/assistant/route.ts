@@ -20,6 +20,7 @@ import {
   requestIp,
 } from '@/lib/console/rate-limit';
 import { siteKnowledge } from '@/lib/console/site-knowledge';
+import { readJsonBody, sameOrigin } from '@/lib/console/request-guards';
 import { formatDate, parseDateInput, todayInput } from '@/lib/console/money';
 
 /**
@@ -47,6 +48,8 @@ const MAX_MESSAGES_PER_HOUR = 30;
 const MAX_MESSAGES_PER_IP_PER_HOUR = 90;
 
 const MAX_MESSAGE_LENGTH = 2000;
+/** A message, or the Talk to a person form with its 5,000 characters of detail, and room to spare. */
+const MAX_BODY_BYTES = 24_000;
 
 /**
  * A refusal says one sentence. `fallback` opens the window's message form
@@ -106,17 +109,12 @@ export async function POST(request: NextRequest) {
 }
 
 async function handle(request: NextRequest) {
-  const mediaType = request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase();
-  if (mediaType !== 'application/json') {
-    return NextResponse.json({ error: 'Expected a JSON request.' }, { status: 415 });
-  }
+  // Another site's page cannot post here from its visitors' browsers.
+  if (!sameOrigin(request)) return new NextResponse(null, { status: 403 });
 
-  let payload: { message?: unknown; page?: unknown; handoff?: unknown; hadThread?: unknown };
-  try {
-    payload = (await request.json()) as typeof payload;
-  } catch {
-    return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
-  }
+  const body = await readJsonBody(request, MAX_BODY_BYTES);
+  if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
+  const payload: { message?: unknown; page?: unknown; handoff?: unknown; hadThread?: unknown } = body.value;
 
   if (payload.handoff !== undefined) return handoff(request, payload.handoff);
 
@@ -307,12 +305,16 @@ async function history() {
       })
     : null;
 
-  return NextResponse.json({
-    // The resolver lets go of a thread whose enquiry was settled or removed,
-    // so an enquiry here is one the team is still working.
-    sent: Boolean(conversation?.enquiryId),
-    messages: (conversation?.messages ?? [])
-      .filter((entry) => entry.content.trim().length > 0)
-      .map((entry) => ({ id: entry.id, role: entry.role, content: entry.content })),
-  });
+  return NextResponse.json(
+    {
+      // The resolver lets go of a thread whose enquiry was settled or removed,
+      // so an enquiry here is one the team is still working.
+      sent: Boolean(conversation?.enquiryId),
+      messages: (conversation?.messages ?? [])
+        .filter((entry) => entry.content.trim().length > 0)
+        .map((entry) => ({ id: entry.id, role: entry.role, content: entry.content })),
+    },
+    // One visitor's thread, chosen by their cookie: never for a shared cache.
+    { headers: { 'Cache-Control': 'private, no-store' } },
+  );
 }

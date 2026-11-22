@@ -203,6 +203,7 @@ const ACTION_LABELS = {
   'settings.billing_saved': 'Billing details changed',
   'assistant.failed': 'Assistant could not answer',
   'assistant.declined': 'Assistant declined a question',
+  'assistant.plan_confirmed': 'Assistant plan carried out',
   'assistant.site_cap_reached': 'Website chat paused for now',
   'acknowledgement.cap_reached': 'Confirmation emails paused for the day',
   'team_notice.cap_reached': 'Team email alerts paused for the day',

@@ -15,7 +15,6 @@ import {
   DOCUMENT_KIND_LABEL,
   currentTerms,
   hashDocument,
-  nextDocumentReference,
 } from '@/lib/console/documents';
 import { runTurn } from '@/lib/console/agent';
 import {
@@ -28,11 +27,12 @@ import {
 import { formText, formTextExact } from '@/lib/console/form';
 import { liveDocument } from '@/lib/console/live';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
-import { isUniqueConflict, retryOnConflict } from '@/lib/console/conflict';
+import { isUniqueConflict } from '@/lib/console/conflict';
 import { sourceFromSuggestion } from '@/lib/console/suggestions';
 import { allow } from '@/lib/console/rate-limit';
 import { issueSharedLink } from '@/lib/console/shared-links';
 import { whatsappLink } from '@/lib/console/whatsapp';
+import { checkNewDocument, createDraftDocument } from '@/lib/console/services/documents';
 
 export type DocumentState = {
   status: 'idle' | 'done' | 'error';
@@ -52,53 +52,23 @@ export async function createDocument(
   const staff = await requireStaff();
   if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
 
-  const projectId = String(formData.get('projectId') ?? '');
-  const kindRaw = String(formData.get('kind') ?? '');
-  const title = String(formData.get('title') ?? '').trim();
-
-  if (!Object.values(DocumentKind).includes(kindRaw as DocumentKind)) {
-    return { status: 'error', message: 'Choose what kind of document this is.' };
-  }
-  if (title.length < 3 || title.length > 200) {
-    return { status: 'error', message: 'Give the document a title.' };
-  }
+  const checked = checkNewDocument({
+    kind: String(formData.get('kind') ?? ''),
+    title: String(formData.get('title') ?? ''),
+  });
+  if (!checked.ok) return { status: 'error', message: checked.message };
 
   const project = await db.project.findFirst({
-    where: { id: projectId, deletedAt: null },
+    where: { id: String(formData.get('projectId') ?? ''), deletedAt: null },
     select: { id: true, slug: true, name: true },
   });
   if (!project) return { status: 'error', message: 'That project no longer exists.' };
 
-  const kind = kindRaw as DocumentKind;
-
-  const document = await retryOnConflict(() => db.$transaction(async (tx) => {
-    const reference = await nextDocumentReference(tx, kind);
-    return tx.document.create({
-      data: {
-        projectId: project.id,
-        kind,
-        title,
-        reference,
-        versions: {
-          create: {
-            version: 1,
-            bodyMarkdown: '',
-            changeNote: 'Created',
-            createdById: staff.id,
-          },
-        },
-      },
-      select: { id: true, reference: true },
-    });
-  }));
-
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: 'document.created',
-    entityType: 'Document',
-    entityId: document.id,
-    summary: `${document.reference}: ${title}`,
+  const document = await createDraftDocument({
+    projectId: project.id,
+    kind: checked.value.kind,
+    title: checked.value.title,
+    staffId: staff.id,
   });
 
   revalidatePath(`/admin/projects/${project.slug}`);

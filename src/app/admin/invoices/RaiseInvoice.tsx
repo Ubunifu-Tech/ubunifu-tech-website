@@ -1,10 +1,10 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { createInvoice, type BillingState } from '../../invoices/actions';
+import { createInvoice, type BillingState } from './actions';
 import { formatMoney, moneyInput, parseMoney } from '@/lib/console/money';
 import { DateField } from '@/components/console/Fields';
-import styles from '../../Admin.module.css';
+import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 

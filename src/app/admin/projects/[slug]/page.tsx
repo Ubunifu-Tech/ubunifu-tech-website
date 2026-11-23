@@ -42,7 +42,8 @@ import { Callout } from '@/components/console/Callout';
 import { TaskRow } from './TaskRow';
 import { OwnerCard } from './OwnerCard';
 import { AssetRequestRow } from './AssetRequestRow';
-import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
+import { RaiseInvoice } from '../../invoices/RaiseInvoice';
+import { linesToRaise } from '../../invoices/raise-lines';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import {
@@ -342,22 +343,7 @@ export default async function ProjectPage({
       : null,
   ]);
 
-  // A usage fee is offered with no price too: its amount is typed each time.
-  const toBill: BillableLine[] = billable
-    .filter((item) => item.amountMinor > 0 || item.usage)
-    .map((item) => ({
-      key: item.key,
-      label: item.label,
-      terms: item.terms,
-      amount: formatMoney(item.amountMinor, item.currency),
-      amountMinor: item.amountMinor,
-      currency: item.currency,
-      // A renewal says which period it covers; a one-off says when it is due.
-      period:
-        item.periodStart && item.periodEnd ? periodLabel(item.periodStart, item.periodEnd) : null,
-      due: item.dueAt ? formatShortDate(item.dueAt) : null,
-      usage: item.usage,
-    }));
+  const toBill = linesToRaise(billable);
 
   // The payment terms in billing settings, unless somebody changes it on the form.
   const defaultDue = daysFromToday(org.paymentTermsDays);

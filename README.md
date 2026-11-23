@@ -195,6 +195,11 @@ origin and read the body with a size limit (`src/lib/console/request-guards.ts`)
 - **New**, at the top of every page, starts a client, a project, a proposal or
   agreement (`/documents/new`: choose the project, then the kind), an invoice
   (`/invoices/new`: every project with something to invoice now) and a payment.
+- **An invoice is raised where you are.** A client's page has an Invoices
+  section with Raise an invoice, which says how much can be invoiced now.
+  `/invoices/new?client=` or `?project=` is the form itself (tick the fees, set
+  the due date, raise the draft) when there is one project to bill, and a list
+  to choose from otherwise. The Invoices list has the same button.
 - **Lists open on what is still open.** Projects and Invoices open on an Open
   view, so a new deal or a draft invoice is in front of you.
 - **A fee is one form.** Name, how it is billed, price, and the first payment

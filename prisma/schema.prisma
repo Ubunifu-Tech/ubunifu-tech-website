@@ -743,7 +743,7 @@ enum OverdueNoticeChannel {
 /// A record that the client was told an invoice is overdue: when, how, and
 /// who recorded it. The console does not send the notice; a person gives it
 /// and writes it down here. Hosting cannot be paused for an unpaid invoice
-/// until one of these exists for it, dated after the invoice fell due.
+/// until one of these, dated after the invoice fell due, is seven days old.
 model OverdueNotice {
   id           String               @id @default(cuid())
   invoiceId    String

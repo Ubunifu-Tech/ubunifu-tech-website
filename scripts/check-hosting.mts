@@ -3,9 +3,9 @@
  * says to Vercel.
  *
  * Pausing takes a site offline, so the rule is checked here case by case: no
- * link, already paused, nothing overdue, overdue with no notice, a notice from
- * before the invoice fell due, a due date moved later after a notice, a paid
- * or void invoice. Then the three Vercel calls, against a stand-in for fetch:
+ * link, already paused, nothing overdue, overdue with no notice, a notice
+ * given less than seven days ago, a notice from before the invoice fell due,
+ * a due date moved later after a notice, a paid or void invoice. Then the three Vercel calls, against a stand-in for fetch:
  * the address and token each sends, and how each failure is read. Nothing
  * here touches Vercel or the database.
  *
@@ -25,7 +25,7 @@ requireFromHere.cache[serverOnly]!.filename = serverOnly;
 requireFromHere.cache[serverOnly]!.loaded = true;
 requireFromHere.cache[serverOnly]!.exports = {};
 
-const { isOverdue, noticeDayProblem, pauseStanding, standingNotice, VERCEL_PROJECT_ID } = await import(
+const { isOverdue, NOTICE_DAYS, noticeDayProblem, pauseAllowedFrom, pauseStanding, standingNotice, VERCEL_PROJECT_ID } = await import(
   '../src/lib/console/hosting-rules'
 );
 const { findVercelProject, setVercelPaused, vercelConfigured } = await import('../src/lib/console/hosting');
@@ -107,13 +107,42 @@ expect(
   false,
 );
 
-// Two overdue invoices: the one with a notice is the one named.
+// The wait after a notice. Today is the 23rd, so a notice on the 16th is
+// exactly seven days old and one on the 17th is a day short.
+expect('wait: seven days is the wait', NOTICE_DAYS, 7);
+expect('wait: a notice seven days ago allows a pause', standing([invoice({ notices: [{ givenAt: day('2026-11-16') }] })]).allowed, true);
+const sixDays = standing([invoice({ notices: [{ givenAt: day('2026-11-17') }] })]);
+expect('wait: a notice six days ago does not', sixDays.allowed, false);
+expect(
+  'wait: the refusal says which day the wait ends',
+  !sixDays.allowed && sixDays.reason.includes('17 Nov 2026') && sixDays.reason.includes('24 Nov 2026'),
+  true,
+);
+expect('wait: a notice given today does not', standing([invoice({ notices: [{ givenAt: now }] })]).allowed, false);
+expect('wait: the first day allowed', pauseAllowedFrom(day('2026-11-17')).toISOString(), day('2026-11-24').toISOString());
+// A reminder sent later must not start the wait again.
+const reminded = standing([invoice({ notices: [{ givenAt: day('2026-11-12') }, { givenAt: day('2026-11-22') }] })]);
+expect('wait: a later reminder does not restart it', reminded.allowed, true);
+expect('wait: the first notice is the one named', reminded.allowed && reminded.notice.givenAt.toISOString(), day('2026-11-12').toISOString());
+// A notice from before the due date does not start the wait; the one after it does.
+expect(
+  'wait: counted from the first notice after the due date',
+  standing([invoice({ notices: [{ givenAt: day('2026-11-01') }, { givenAt: day('2026-11-20') }] })]).allowed,
+  false,
+);
+
+// Two overdue invoices: the one whose notice is old enough is the one named.
 const two = standing([
-  invoice({ number: 'INV-2026-003', dueAt: day('2026-10-01') }),
-  invoice({ number: 'INV-2026-007', notices: [{ givenAt: day('2026-11-15') }, { givenAt: day('2026-11-20') }] }),
+  invoice({ number: 'INV-2026-003', dueAt: day('2026-10-01'), notices: [{ givenAt: day('2026-11-21') }] }),
+  invoice({ number: 'INV-2026-007', notices: [{ givenAt: day('2026-11-15') }] }),
 ]);
-expect('pause: names the invoice that has the notice', two.allowed && two.invoice.number, 'INV-2026-007');
-expect('pause: and its latest notice', two.allowed && two.notice.givenAt.toISOString(), day('2026-11-20').toISOString());
+expect('pause: names the invoice whose wait is over', two.allowed && two.invoice.number, 'INV-2026-007');
+// Neither wait is over: the refusal is about the one that ends first.
+const neither = standing([
+  invoice({ number: 'INV-2026-003', dueAt: day('2026-10-01'), notices: [{ givenAt: day('2026-11-21') }] }),
+  invoice({ number: 'INV-2026-007', notices: [{ givenAt: day('2026-11-19') }] }),
+]);
+expect('pause: with two waits running, names the one that ends first', !neither.allowed && neither.reason.includes('INV-2026-007') && neither.reason.includes('26 Nov 2026'), true);
 expect('notice: none standing without a due date', standingNotice(invoice({ dueAt: null, notices: [{ givenAt: now }] })), null);
 
 expect('notice day: the day after due is fine', noticeDayProblem(invoice(), day('2026-11-11'), now), null);
@@ -248,5 +277,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Hosting check passed: ${count} cases. A pause needs a link, an overdue invoice and a notice given after it fell due, and Vercel is told only to find, pause or resume.`,
+  `Hosting check passed: ${count} cases. A pause needs a link, an overdue invoice and a notice given after it fell due and at least ${NOTICE_DAYS} days ago, and Vercel is told only to find, pause or resume.`,
 );

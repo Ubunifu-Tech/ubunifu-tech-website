@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { Callout } from '@/components/console/Callout';
 import { HostingPaused } from '@/components/console/HostingPaused';
-import { isOverdue, noticeChannelLabel } from '@/lib/console/hosting-rules';
+import { isOverdue, NOTICE_DAYS, noticeChannelLabel } from '@/lib/console/hosting-rules';
 import { activityFor } from '@/lib/console/activity';
 import { issuedEditFacts } from '@/lib/console/billing';
 import { issuedInvoiceEdit } from '@/lib/console/invoice-edits';
@@ -612,7 +612,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                         <p className={table.emptyTitle}>No notice recorded yet.</p>
                         <p className={table.emptyHint}>
                           Tell the client the invoice is overdue, then record it here. Hosting can
-                          only be paused once a notice is on record.
+                          only be paused {NOTICE_DAYS} days after a notice was given.
                         </p>
                       </td>
                     </tr>

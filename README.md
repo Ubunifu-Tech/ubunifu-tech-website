@@ -165,7 +165,9 @@ unpaid invoice and resume it.
   records when and how the client was told. The console sends nothing; it keeps
   the record (`OverdueNotice`).
 - **Pause** is offered only when an invoice on the project is overdue today and
-  has a notice dated after it fell due. It asks twice, then calls Vercel.
+  the client was given notice, after it fell due, at least 7 days ago
+  (`NOTICE_DAYS`). The first notice starts the count; a later reminder does not
+  restart it. It asks twice, then calls Vercel.
 - **Resume** is always there for an owner while a site is paused. Once a payment
   is recorded after the pause, the invoice and the receipt offer it too. A
   payment never resumes anything by itself: a person presses the button.

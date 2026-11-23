@@ -219,7 +219,7 @@ export default async function TicketPage({
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>What has happened</h2>
             </div>
-            <ActivityFeed items={activity} now={now} />
+            <ActivityFeed items={activity} now={now} first={6} />
           </section>
         </div>
       </div>

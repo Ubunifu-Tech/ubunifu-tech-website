@@ -523,3 +523,18 @@
 .late .sub {
   color: var(--danger);
 }
+
+/* A column a phone can do without, where what matters in the row would
+   otherwise sit off the edge of the screen. */
+@media (max-width: 40rem) {
+  .deskOnly {
+    display: none;
+  }
+}
+
+/* And what stands in for it there, under the name it belongs to. */
+@media (min-width: 40.0625rem) {
+  .phoneOnly {
+    display: none;
+  }
+}

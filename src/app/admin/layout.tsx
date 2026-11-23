@@ -1,11 +1,13 @@
 import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { unstable_rethrow } from 'next/navigation';
 import { BrandMark } from '@/components/BrandMark';
 import { getStaffActor } from '@/lib/console/auth';
 import { navCounts } from '@/lib/console/counts';
 import { ConsoleNav } from './ConsoleNav';
+import { NAV_COOKIE } from './nav-cookie';
 import { ProfileMenu, type ProfileLink } from '@/components/console/ProfileMenu';
 import { ROLE_LABEL } from '@/lib/console/people';
 import { MobileNav } from './MobileNav';
@@ -58,12 +60,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     requests: 0,
   }));
 
+  // Whoever narrowed the sidebar to its icons gets it that way on every page.
+  const rail = (await cookies()).get(NAV_COOKIE)?.value === 'rail';
+
   const links: ProfileLink[] = [
     { href: '/profile', label: 'Your profile', icon: 'profile' },
   ];
 
   return (
-    <div className={styles.shell}>
+    <div id="console-shell" className={styles.shell} data-nav={rail ? 'rail' : undefined}>
       <Suspense fallback={null}>
         <NavigationProgress />
       </Suspense>
@@ -101,7 +106,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       <div className={styles.sidebar}>
-        <ConsoleNav counts={counts} permissions={staff.permissions} />
+        <ConsoleNav counts={counts} permissions={staff.permissions} rail={rail} />
       </div>
 
       <div className={styles.work}>{children}</div>

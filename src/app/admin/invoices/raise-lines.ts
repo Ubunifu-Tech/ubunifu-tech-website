@@ -23,5 +23,7 @@ export function linesToRaise(billable: Billable[]): BillableLine[] {
         item.periodStart && item.periodEnd ? periodLabel(item.periodStart, item.periodEnd) : null,
       due: item.dueAt ? formatShortDate(item.dueAt) : null,
       usage: item.usage,
+      // One-off fees only: a period of a monthly or yearly fee is billed whole.
+      split: !item.usage && !item.renewalEventId,
     }));
 }

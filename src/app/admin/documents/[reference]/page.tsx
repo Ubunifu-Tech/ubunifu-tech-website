@@ -309,7 +309,7 @@ export default async function DocumentPage({
       <div className={forms.cardHeader}>
         <h2 className={forms.cardTitle}>Activity</h2>
       </div>
-      <ActivityFeed items={activity} now={now} />
+      <ActivityFeed items={activity} now={now} first={6} />
     </section>
   );
 

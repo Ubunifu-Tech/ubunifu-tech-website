@@ -21,7 +21,6 @@ import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Figures } from '@/components/console/Figures';
 import { billableLines } from '@/lib/console/billing';
 import { getOrg } from '@/lib/console/org';
-import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import {
@@ -609,25 +608,35 @@ export default async function ProjectPage({
               <span>{SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}</span>
             </p>
           </div>
-          {mayRun && (
-            <StageActions
-              projectId={project.id}
-              projectSlug={project.slug}
-              status={project.status}
-              primary={primaryTransition ? toMove(primaryTransition) : null}
-              complete={completeTransition ? toMove(completeTransition) : null}
-              others={otherTransitions.map(toMove)}
-              link={stageLink}
-              canOpen={{
-                fees: mayFees,
-                billing: mayMoney,
-                documents: mayDocs,
-                updates: mayRun,
-                overview: mayRun,
-                review: mayRun && REVIEWABLE.includes(project.status),
-              }}
-            />
-          )}
+          <div className={styles.headActions}>
+            {mayMoney && toBill.length > 0 && (
+              <Link
+                href={`/invoices/new?project=${project.slug}`}
+                className={`${forms.button} ${forms.quiet}`}
+              >
+                Raise an invoice
+              </Link>
+            )}
+            {mayRun && (
+              <StageActions
+                projectId={project.id}
+                projectSlug={project.slug}
+                status={project.status}
+                primary={primaryTransition ? toMove(primaryTransition) : null}
+                complete={completeTransition ? toMove(completeTransition) : null}
+                others={otherTransitions.map(toMove)}
+                link={stageLink}
+                canOpen={{
+                  fees: mayFees,
+                  billing: mayMoney,
+                  documents: mayDocs,
+                  updates: mayRun,
+                  overview: mayRun,
+                  review: mayRun && REVIEWABLE.includes(project.status),
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -1257,7 +1266,7 @@ export default async function ProjectPage({
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Everything that happened</h2>
             </div>
-            <ActivityFeed items={recent} now={now} />
+            <ActivityFeed items={recent} now={now} first={15} />
           </section>
           <section className={forms.card}>
             <div className={forms.cardHeader}>

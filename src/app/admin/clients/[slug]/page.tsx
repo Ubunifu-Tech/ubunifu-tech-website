@@ -743,7 +743,7 @@ export default async function ClientPage({
               <h2 className={forms.cardTitle}>Everything that has happened</h2>
               <span className={forms.cardMeta}>Actions and emails, newest first</span>
             </div>
-            <ActivityFeed items={activity} now={now} />
+            <ActivityFeed items={activity} now={now} first={6} />
           </section>
 
           <section className={forms.card}>

@@ -275,6 +275,81 @@
   line-height: 1.5;
 }
 
+/* The button at the foot of the sidebar that narrows it to its icons. It sits
+   at the bottom of the column, out of the way of the pages above it. */
+.navToggle {
+  width: 100%;
+  margin-top: auto;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar .nav {
+  flex: 1;
+}
+
+/* Narrowed: the same navigation as a rail of icons, with the page taking the
+   room. Desk widths only; a phone has the drawer instead. */
+@media (min-width: 60.0625rem) {
+  .shell,
+  .band {
+    transition: grid-template-columns var(--transition-base, 160ms ease);
+  }
+
+  .shell[data-nav='rail'] {
+    --sidebar-width: 4.25rem;
+  }
+
+  .shell[data-nav='rail'] .bandStart {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .shell[data-nav='rail'] .brand {
+    padding: var(--space-1);
+  }
+
+  .shell[data-nav='rail'] .brandText,
+  .shell[data-nav='rail'] .sidebar .navText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .shell[data-nav='rail'] .sidebar .navLink {
+    position: relative;
+    justify-content: center;
+    padding: 0.6875rem 0;
+  }
+
+  /* A count becomes a dot on the icon: something is waiting, open it to see. */
+  .shell[data-nav='rail'] .sidebar .navCount {
+    position: absolute;
+    top: 0.375rem;
+    right: 0.75rem;
+    min-width: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .band {
+    transition: none;
+  }
+}
+
 /* The work area: a quiet bar with the account menu, then the page. */
 .work {
   display: flex;
@@ -387,11 +462,15 @@
 
 /* ── Page ──────────────────────────────────────── */
 
+/* The page takes the width it is given. A desk of tables is read across, so
+   a wide screen shows more of each row rather than wider margins; the cap is
+   only for a screen so wide that a row could no longer be followed. Forms and
+   prose keep their own narrower measure inside it. */
 .page {
   width: 100%;
-  max-width: 88rem;
+  max-width: 128rem;
   margin: 0 auto;
-  padding: var(--space-3) clamp(1.25rem, 3vw, 2.5rem) var(--space-9);
+  padding: var(--space-3) clamp(1rem, 2.2vw, 2.5rem) var(--space-9);
   flex: 1;
 }
 
@@ -737,6 +816,38 @@
   font-size: var(--font-size-caption);
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+/* A form opened among a row of buttons takes the row to itself, so the
+   buttons beside it move below instead of floating next to its fields. */
+.ownRow {
+  flex: 1 1 100%;
+}
+
+/* A long record shows its newest lines; the earlier ones open in a box that
+   scrolls, so a busy client's page stays the same length. */
+.timelineMore {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.timelineMore > summary {
+  width: fit-content;
+  color: var(--accent-deep);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.timelineMore > summary:hover {
+  text-decoration: underline;
+}
+
+.timelineScroll {
+  max-height: 24rem;
+  margin-top: var(--space-4);
+  padding-right: var(--space-3);
+  overflow-y: auto;
 }
 
 /* ── Tabs ──────────────────────────────────────── */

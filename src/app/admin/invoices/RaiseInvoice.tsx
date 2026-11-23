@@ -1,10 +1,10 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { createInvoice, type BillingState } from '../../invoices/actions';
+import { createInvoice, type BillingState } from './actions';
 import { formatMoney, moneyInput, parseMoney } from '@/lib/console/money';
 import { DateField } from '@/components/console/Fields';
-import styles from '../../Admin.module.css';
+import styles from '../Admin.module.css';
 import forms from '@/styles/forms.module.css';
 import table from '@/styles/table.module.css';
 
@@ -22,6 +22,8 @@ export type BillableLine = {
   due: string | null;
   /** Billed by usage: this time's amount is typed in. */
   usage: boolean;
+  /** A one-off fee: part of it can be invoiced now and the rest later. */
+  split: boolean;
 };
 
 /**
@@ -50,12 +52,13 @@ export function RaiseInvoice({
   const [chosen, setChosen] = useState<string[]>(() =>
     lines.filter((line) => !line.usage || line.amountMinor > 0).map((line) => line.key),
   );
-  // This time's amount for each usage line, kept in state so a refused
-  // submission does not wipe it.
+  // The amount for each line that takes one: this time's amount for usage,
+  // and what is left of a one-off fee, which can be lowered to invoice a part
+  // of it now. Kept in state so a refused submission does not wipe it.
   const [typed, setTyped] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       lines
-        .filter((line) => line.usage)
+        .filter((line) => line.usage || line.split)
         .map((line) => [line.key, line.amountMinor > 0 ? moneyInput(line.amountMinor, line.currency) : '']),
     ),
   );
@@ -77,9 +80,16 @@ export function RaiseInvoice({
   const picked = lines.filter((line) => chosen.includes(line.key));
   const currencies = [...new Set(picked.map((line) => line.currency))];
   const amountOf = (line: BillableLine) =>
-    line.usage ? (parseMoney(typed[line.key] ?? '', line.currency) ?? 0) : line.amountMinor;
+    line.usage || line.split
+      ? (parseMoney(typed[line.key] ?? '', line.currency) ?? 0)
+      : line.amountMinor;
   const total = picked.reduce((sum, line) => sum + amountOf(line), 0);
   const mixed = currencies.length > 1;
+  // A part cannot be more than what is left of the fee, or nothing at all.
+  const wrong = picked.some(
+    (line) => line.split && (amountOf(line) <= 0 || amountOf(line) > line.amountMinor),
+  );
+  const canSplit = lines.some((line) => line.split);
 
   return (
     <form action={action} className={forms.form}>
@@ -91,8 +101,8 @@ export function RaiseInvoice({
             <tr>
               <th className={table.th} scope="col">Bill</th>
               <th className={table.th} scope="col">Item</th>
-              <th className={table.th} scope="col">Period or terms</th>
-              <th className={table.th} scope="col">Due</th>
+              <th className={`${table.th} ${table.deskOnly}`} scope="col">Period or terms</th>
+              <th className={`${table.th} ${table.deskOnly}`} scope="col">Due</th>
               <th className={`${table.th} ${table.numericHead}`} scope="col">Amount</th>
             </tr>
           </thead>
@@ -111,11 +121,14 @@ export function RaiseInvoice({
                     disabled={pending}
                   />
                 </td>
-                <td className={`${table.td} ${table.primary}`}>{line.label}</td>
-                <td className={table.td}>
+                <td className={`${table.td} ${table.primary}`}>
+                  {line.label}
+                  {line.period && <span className={`${table.sub} ${table.phoneOnly}`}>{line.period}</span>}
+                </td>
+                <td className={`${table.td} ${table.deskOnly}`}>
                   {line.period ?? line.terms ?? <span className={table.muted}>None</span>}
                 </td>
-                <td className={`${table.td} ${table.nowrap}`}>
+                <td className={`${table.td} ${table.nowrap} ${table.deskOnly}`}>
                   {line.due ?? <span className={table.muted}>On agreement</span>}
                 </td>
                 <td className={`${table.td} ${table.numeric}`}>
@@ -134,6 +147,30 @@ export function RaiseInvoice({
                       aria-label={`This time's amount for ${line.label}, in ${line.currency}`}
                       disabled={pending}
                     />
+                  ) : line.split ? (
+                    <>
+                      <input
+                        name={`amount:${line.key}`}
+                        className={`${forms.control} ${forms.number}`}
+                        inputMode="decimal"
+                        value={typed[line.key] ?? ''}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setTyped((current) => ({ ...current, [line.key]: value }));
+                        }}
+                        aria-label={`Amount to invoice now for ${line.label}, in ${line.currency}. ${line.amount} is left.`}
+                        disabled={pending || !chosen.includes(line.key)}
+                      />
+                      {chosen.includes(line.key) && amountOf(line) > line.amountMinor ? (
+                        <span className={`${table.sub} ${forms.error}`}>Only {line.amount} is left</span>
+                      ) : chosen.includes(line.key) && amountOf(line) > 0 && amountOf(line) < line.amountMinor ? (
+                        <span className={table.sub}>
+                          {formatMoney(line.amountMinor - amountOf(line), line.currency)} stays for a later invoice
+                        </span>
+                      ) : (
+                        <span className={table.sub}>of {line.amount} left</span>
+                      )}
+                    </>
                   ) : (
                     line.amount
                   )}
@@ -168,6 +205,13 @@ export function RaiseInvoice({
         </div>
       </div>
 
+      {canSplit && (
+        <p className={styles.note}>
+          To invoice a first part now and the rest later, lower the amount. What you leave stays
+          ready to invoice.
+        </p>
+      )}
+
       {mixed && (
         <p className={forms.error} role="alert">
           Those lines are in {currencies.join(' and ')}. An invoice has one currency, so untick one
@@ -179,7 +223,7 @@ export function RaiseInvoice({
         <button
           type="submit"
           className={forms.button}
-          disabled={pending || picked.length === 0 || mixed}
+          disabled={pending || picked.length === 0 || mixed || wrong}
         >
           {pending ? 'Raising…' : 'Raise the invoice'}
         </button>

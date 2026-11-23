@@ -191,6 +191,12 @@ export type Billable = {
   dueAt: Date | null;
   /** Billed by usage: the amount is typed each time it is invoiced. */
   usage: boolean;
+  /**
+   * The whole price of a one-off fee, when this line is what is left of it.
+   * A one-off fee can go on an invoice in parts: a first part now, the rest
+   * later. Absent on a renewal period and on usage, which are never split.
+   */
+  fullMinor?: number;
 };
 
 export async function billableLines(
@@ -297,6 +303,7 @@ export async function billableLines(
       periodEnd: null,
       dueAt: null,
       usage: false,
+      fullMinor: line.amountMinor * line.quantity,
     });
   }
 

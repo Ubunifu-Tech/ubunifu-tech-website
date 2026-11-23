@@ -27,6 +27,7 @@ export function PaymentsTable({
   allHref,
   recordHref,
   showProject = false,
+  quiet = false,
 }: {
   rows: PaymentRow[];
   total: number;
@@ -34,6 +35,8 @@ export function PaymentsTable({
   /** Where Record a payment opens, with this record already chosen. */
   recordHref: string;
   showProject?: boolean;
+  /** Set where another action on the page leads, so this one steps back. */
+  quiet?: boolean;
 }) {
   const columns = showProject ? 7 : 6;
 
@@ -50,7 +53,7 @@ export function PaymentsTable({
               All {total}
             </Link>
           )}
-          <Link href={recordHref} className={forms.button}>
+          <Link href={recordHref} className={quiet ? `${forms.button} ${forms.quiet}` : forms.button}>
             Record a payment
           </Link>
         </div>

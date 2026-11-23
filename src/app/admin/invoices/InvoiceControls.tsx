@@ -439,14 +439,17 @@ export function DraftInvoiceDetails({
   invoiceId,
   dueAt,
   notes,
+  startOpen = false,
 }: {
   invoiceId: string;
   /** As a date input value, or empty for due on receipt. */
   dueAt: string;
   notes: string;
+  /** Opened already, when the Due figure at the top of the page sent them here. */
+  startOpen?: boolean;
 }) {
   const [state, action, pending] = useActionState(saveDraftInvoice, INITIAL);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
 
   if (!open) {
     return (
@@ -461,7 +464,7 @@ export function DraftInvoiceDetails({
   }
 
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} className={`${forms.form} ${styles.ownRow}`}>
       <input type="hidden" name="invoiceId" value={invoiceId} />
       <DateField
         name="dueAt"
@@ -507,6 +510,7 @@ export function IssuedInvoiceDetails({
   notes,
   today,
   laterOnly,
+  startOpen = false,
 }: {
   invoiceId: string;
   /** As a date input value, or empty for due on receipt. */
@@ -515,9 +519,10 @@ export function IssuedInvoiceDetails({
   today: string;
   /** Why it can only be given more time, when that is the case. */
   laterOnly: string | null;
+  startOpen?: boolean;
 }) {
   const [state, action, pending] = useActionState(correctIssuedInvoice, INITIAL);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
 
   if (!open) {
     return (
@@ -528,7 +533,7 @@ export function IssuedInvoiceDetails({
   }
 
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} className={`${forms.form} ${styles.ownRow}`}>
       <input type="hidden" name="invoiceId" value={invoiceId} />
       <DateField
         name="dueAt"

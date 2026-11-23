@@ -16,14 +16,29 @@ const TONE_CLASS: Record<string, string> = {
  * "the client says they never got the link" is answered by scrolling rather
  * than by opening a provider's dashboard.
  */
-export function ActivityFeed({ items, now }: { items: ActivityItem[]; now: Date }) {
+export function ActivityFeed({
+  items,
+  now,
+  first,
+}: {
+  items: ActivityItem[];
+  now: Date;
+  /**
+   * How many of the newest lines to show outright. The earlier ones wait
+   * behind "Show earlier", in a box that scrolls. Left out, every line shows.
+   */
+  first?: number;
+}) {
   if (items.length === 0) {
     return <p className={styles.note}>Nothing recorded yet.</p>;
   }
 
-  return (
+  // One or two left over are shown rather than hidden behind a button.
+  const cut = first !== undefined && items.length > first + 2 ? first : items.length;
+  const earlier = items.slice(cut);
+  const list = (rows: ActivityItem[]) => (
     <ul className={styles.timeline}>
-      {items.map((item) => (
+      {rows.map((item) => (
         <li key={item.id} className={`${styles.event} ${TONE_CLASS[item.tone]}`}>
           <p className={styles.eventText}>{item.text}</p>
           <p className={styles.eventMeta}>
@@ -33,5 +48,17 @@ export function ActivityFeed({ items, now }: { items: ActivityItem[]; now: Date 
         </li>
       ))}
     </ul>
+  );
+
+  return (
+    <>
+      {list(items.slice(0, cut))}
+      {earlier.length > 0 && (
+        <details className={styles.timelineMore}>
+          <summary>Show {earlier.length} earlier</summary>
+          <div className={styles.timelineScroll}>{list(earlier)}</div>
+        </details>
+      )}
+    </>
   );
 }

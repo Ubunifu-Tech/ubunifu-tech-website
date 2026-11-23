@@ -21,7 +21,6 @@ import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Figures } from '@/components/console/Figures';
 import { billableLines } from '@/lib/console/billing';
 import { getOrg } from '@/lib/console/org';
-import { periodLabel } from '@/lib/console/renewals';
 import { fileSize } from '@/lib/console/uploads';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import {
@@ -42,7 +41,8 @@ import { Callout } from '@/components/console/Callout';
 import { TaskRow } from './TaskRow';
 import { OwnerCard } from './OwnerCard';
 import { AssetRequestRow } from './AssetRequestRow';
-import { RaiseInvoice, type BillableLine } from './RaiseInvoice';
+import { RaiseInvoice } from '../../invoices/RaiseInvoice';
+import { linesToRaise } from '../../invoices/raise-lines';
 import { UpdateComposer, type UpdateRow } from './UpdateComposer';
 import { NewDocument } from './NewDocument';
 import {
@@ -342,22 +342,7 @@ export default async function ProjectPage({
       : null,
   ]);
 
-  // A usage fee is offered with no price too: its amount is typed each time.
-  const toBill: BillableLine[] = billable
-    .filter((item) => item.amountMinor > 0 || item.usage)
-    .map((item) => ({
-      key: item.key,
-      label: item.label,
-      terms: item.terms,
-      amount: formatMoney(item.amountMinor, item.currency),
-      amountMinor: item.amountMinor,
-      currency: item.currency,
-      // A renewal says which period it covers; a one-off says when it is due.
-      period:
-        item.periodStart && item.periodEnd ? periodLabel(item.periodStart, item.periodEnd) : null,
-      due: item.dueAt ? formatShortDate(item.dueAt) : null,
-      usage: item.usage,
-    }));
+  const toBill = linesToRaise(billable);
 
   // The payment terms in billing settings, unless somebody changes it on the form.
   const defaultDue = daysFromToday(org.paymentTermsDays);
@@ -623,25 +608,35 @@ export default async function ProjectPage({
               <span>{SERVICE_LABEL[project.serviceLine] ?? project.serviceLine}</span>
             </p>
           </div>
-          {mayRun && (
-            <StageActions
-              projectId={project.id}
-              projectSlug={project.slug}
-              status={project.status}
-              primary={primaryTransition ? toMove(primaryTransition) : null}
-              complete={completeTransition ? toMove(completeTransition) : null}
-              others={otherTransitions.map(toMove)}
-              link={stageLink}
-              canOpen={{
-                fees: mayFees,
-                billing: mayMoney,
-                documents: mayDocs,
-                updates: mayRun,
-                overview: mayRun,
-                review: mayRun && REVIEWABLE.includes(project.status),
-              }}
-            />
-          )}
+          <div className={styles.headActions}>
+            {mayMoney && toBill.length > 0 && (
+              <Link
+                href={`/invoices/new?project=${project.slug}`}
+                className={`${forms.button} ${forms.quiet}`}
+              >
+                Raise an invoice
+              </Link>
+            )}
+            {mayRun && (
+              <StageActions
+                projectId={project.id}
+                projectSlug={project.slug}
+                status={project.status}
+                primary={primaryTransition ? toMove(primaryTransition) : null}
+                complete={completeTransition ? toMove(completeTransition) : null}
+                others={otherTransitions.map(toMove)}
+                link={stageLink}
+                canOpen={{
+                  fees: mayFees,
+                  billing: mayMoney,
+                  documents: mayDocs,
+                  updates: mayRun,
+                  overview: mayRun,
+                  review: mayRun && REVIEWABLE.includes(project.status),
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -1271,7 +1266,7 @@ export default async function ProjectPage({
             <div className={forms.cardHeader}>
               <h2 className={forms.cardTitle}>Everything that happened</h2>
             </div>
-            <ActivityFeed items={recent} now={now} />
+            <ActivityFeed items={recent} now={now} first={15} />
           </section>
           <section className={forms.card}>
             <div className={forms.cardHeader}>

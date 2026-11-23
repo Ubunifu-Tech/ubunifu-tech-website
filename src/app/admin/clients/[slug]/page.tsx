@@ -27,6 +27,8 @@ import { Figures } from '@/components/console/Figures';
 import { SetupLink } from './SetupLink';
 import { RemoveClient } from './RemoveClient';
 import { PaymentsTable } from '@/components/console/PaymentsTable';
+import { InvoicesTable } from '@/components/console/InvoicesTable';
+import { billableLines } from '@/lib/console/billing';
 import { STAGE_LABEL, STAGE_OF } from '@/lib/console/stages';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -146,7 +148,12 @@ export default async function ClientPage({
     reversedAt: null,
     invoice: { clientId: client.id, OR: [{ projectId: null }, { project: { deletedAt: null } }] },
   };
-  const [activity, removal, removedProjects, removedPeople, payments] = await Promise.all([
+  // Not those on a removed project: they are out of sight everywhere else.
+  const invoicesHere = {
+    clientId: client.id,
+    OR: [{ projectId: null }, { project: { deletedAt: null } }],
+  };
+  const [activity, removal, removedProjects, removedPeople, payments, invoices] = await Promise.all([
     activityForClient(staff, client.id),
     mayManage
       ? clientRemovalCounts(client.id).then(({ owing, ...counts }) => ({
@@ -192,7 +199,48 @@ export default async function ClientPage({
           db.payment.count({ where: paymentsHere }),
         ])
       : null,
+    seesMoney
+      ? Promise.all([
+          db.invoice
+            .findMany({
+              where: invoicesHere,
+              orderBy: { createdAt: 'desc' },
+              take: 8,
+              select: {
+                id: true,
+                number: true,
+                status: true,
+                issuedAt: true,
+                dueAt: true,
+                totalMinor: true,
+                paidMinor: true,
+                refundedMinor: true,
+                currency: true,
+                project: { select: { name: true, slug: true } },
+              },
+            })
+            .then(numbers),
+          db.invoice.count({ where: invoicesHere }),
+          // What could go on an invoice today, across their open projects.
+          Promise.all(
+            client.projects
+              .filter((project) => !['closed', 'cancelled'].includes(project.status))
+              .map((project) => billableLines(project.id)),
+          ),
+        ])
+      : null,
   ]);
+
+  // Per currency and never added across them. A usage fee has no amount until
+  // it is typed on the invoice, so it is not in this figure.
+  const readyByCurrency = new Map<string, number>();
+  for (const line of invoices?.[2].flat() ?? []) {
+    if (line.usage || line.amountMinor <= 0) continue;
+    readyByCurrency.set(line.currency, (readyByCurrency.get(line.currency) ?? 0) + line.amountMinor);
+  }
+  const ready = [...readyByCurrency]
+    .map(([currency, amount]) => formatMoney(amount, currency))
+    .join(' + ');
 
   // Removed people whose address now belongs to someone at another client
   // can only come back under a new one.
@@ -503,6 +551,17 @@ export default async function ClientPage({
           </div>
         )}
 
+        {invoices && (
+          <InvoicesTable
+            rows={invoices[0]}
+            total={invoices[1]}
+            allHref={`/invoices?show=all&q=${encodeURIComponent(client.name)}`}
+            raiseHref={`/invoices/new?client=${client.slug}`}
+            ready={ready}
+            now={new Date()}
+          />
+        )}
+
         {payments && (
           <PaymentsTable
             rows={payments[0]}
@@ -510,6 +569,7 @@ export default async function ClientPage({
             allHref={`/payments?client=${client.slug}`}
             recordHref={`/payments/new?client=${client.slug}`}
             showProject
+            quiet
           />
         )}
 
@@ -683,7 +743,7 @@ export default async function ClientPage({
               <h2 className={forms.cardTitle}>Everything that has happened</h2>
               <span className={forms.cardMeta}>Actions and emails, newest first</span>
             </div>
-            <ActivityFeed items={activity} now={now} />
+            <ActivityFeed items={activity} now={now} first={6} />
           </section>
 
           <section className={forms.card}>

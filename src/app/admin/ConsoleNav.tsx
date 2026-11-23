@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -13,10 +13,13 @@ import {
   LifeBuoy,
   MessageSquareText,
   Newspaper,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   Wallet,
 } from 'lucide-react';
 import type { Permission } from '@/lib/console/permissions';
+import { NAV_COOKIE } from './nav-cookie';
 import styles from './Admin.module.css';
 
 /**
@@ -99,11 +102,31 @@ function items(permissions: readonly Permission[]): { main: Item[]; record: Item
 export function ConsoleNav({
   counts,
   permissions,
+  rail,
 }: {
   counts: NavCounts;
   permissions: readonly Permission[];
+  /**
+   * Set in the sidebar, where the navigation can be narrowed to its icons:
+   * whether it starts that way. Left out in the phone drawer, which is always
+   * full width and has no such button.
+   */
+  rail?: boolean;
 }) {
   const pathname = usePathname();
+  const [narrow, setNarrow] = useState(rail === true);
+  const toggle = () => {
+    const next = !narrow;
+    setNarrow(next);
+    // The shell is drawn by the layout on the server, from the same cookie,
+    // so the next full load matches what is on screen now.
+    const shell = document.getElementById('console-shell');
+    if (shell) {
+      if (next) shell.dataset.nav = 'rail';
+      else delete shell.dataset.nav;
+    }
+    document.cookie = `${NAV_COOKIE}=${next ? 'rail' : 'wide'}; path=/; max-age=31536000; samesite=lax`;
+  };
   const allowed = (item: Item) => !item.need || item.need.some((need) => permissions.includes(need));
   const { main, record } = items(permissions);
   const groups = [main.filter(allowed), record.filter(allowed)];
@@ -132,6 +155,8 @@ export function ConsoleNav({
                 href={item.href}
                 className={styles.navLink}
                 aria-current={current ? 'page' : undefined}
+                // Icons alone need their name on hover; the label still reads aloud.
+                title={narrow ? item.label : undefined}
               >
                 <Icon size={17} strokeWidth={1.8} className={styles.navIcon} aria-hidden="true" />
                 <span className={styles.navText}>{item.label}</span>
@@ -141,6 +166,22 @@ export function ConsoleNav({
           })}
         </div>
       ))}
+      {rail !== undefined && (
+        <button
+          type="button"
+          className={`${styles.navLink} ${styles.navToggle}`}
+          onClick={toggle}
+          aria-expanded={!narrow}
+          title={narrow ? 'Show the menu names' : undefined}
+        >
+          {narrow ? (
+            <PanelLeftOpen size={17} strokeWidth={1.8} className={styles.navIcon} aria-hidden="true" />
+          ) : (
+            <PanelLeftClose size={17} strokeWidth={1.8} className={styles.navIcon} aria-hidden="true" />
+          )}
+          <span className={styles.navText}>{narrow ? 'Show the menu names' : 'Collapse the menu'}</span>
+        </button>
+      )}
     </nav>
   );
 }

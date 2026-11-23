@@ -195,6 +195,26 @@ origin and read the body with a size limit (`src/lib/console/request-guards.ts`)
 - **New**, at the top of every page, starts a client, a project, a proposal or
   agreement (`/documents/new`: choose the project, then the kind), an invoice
   (`/invoices/new`: every project with something to invoice now) and a payment.
+- **An invoice is raised where you are.** A client's page has an Invoices
+  section with Raise an invoice, which says how much can be invoiced now.
+  `/invoices/new?client=` or `?project=` is the form itself (tick the fees, set
+  the due date, raise the draft) when there is one project to bill, and a list
+  to choose from otherwise. The Invoices list and a project's header have the
+  same button.
+- **Part of a fee now, the rest later.** On the form a one-off fee's amount can
+  be lowered, for a starter payment before launch and the balance after. What
+  is left stays ready to invoice, and each invoice line says whether it is
+  part of the fee or its balance (`pickBillables` and `invoiceForBillables` in
+  `src/lib/console/services/invoices.ts`). A period of a monthly or yearly fee
+  is never split. Copilot still drafts invoices at the full amount left.
+- **The due date** is a figure at the top of an invoice, and pressing it opens
+  the date. A draft's date is free; an issued invoice the client has seen can
+  only be given more time, part paid or not (`invoice-edits.ts`).
+- **The sidebar narrows to its icons** from the button at its foot, remembered
+  in the `console-nav` cookie so the page arrives at the right width. Pages
+  use the width they are given, up to 128rem.
+- **A record's activity shows its newest lines.** Earlier ones open under Show
+  earlier, in a box that scrolls, so a busy client's page keeps its length.
 - **Lists open on what is still open.** Projects and Invoices open on an Open
   view, so a new deal or a draft invoice is in front of you.
 - **A fee is one form.** Name, how it is billed, price, and the first payment

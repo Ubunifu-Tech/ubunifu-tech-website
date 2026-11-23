@@ -47,9 +47,17 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
   return { title: number };
 }
 
-export default async function InvoicePage({ params }: { params: Promise<{ number: string }> }) {
+export default async function InvoicePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ number: string }>;
+  searchParams: Promise<{ edit?: string }>;
+}) {
   const staff = await requirePermission('invoices');
   const { number } = await params;
+  // The Due figure opens the form for the date, further down the page.
+  const editDue = (await searchParams).edit === 'due';
   const now = new Date();
 
   const invoice = numbers(await db.invoice.findUnique({
@@ -280,6 +288,30 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                   ? `Past due since ${formatShortDate(invoice.dueAt)}`
                   : 'Still to come in',
             tone: outstanding > 0 && pastDue ? 'bad' : undefined,
+          },
+          // When it is due, and the way to move that date, in plain sight.
+          {
+            label: 'Due',
+            value: invoice.dueAt ? formatShortDate(invoice.dueAt) : 'On receipt',
+            note:
+              invoice.status === 'void'
+                ? 'Voided'
+                : outstanding === 0 && invoice.status !== 'draft'
+                  ? 'Nothing left to pay'
+                  : removedAt
+                    ? 'Kept for the record'
+                    : invoice.status === 'draft' || issuedEdit?.kind === 'free'
+                      ? 'Change the date'
+                      : issuedEdit?.kind === 'later'
+                        ? invoice.paidMinor > 0
+                          ? 'Give more time for the balance'
+                          : 'Give more time'
+                        : undefined,
+            href:
+              !removedAt &&
+              (invoice.status === 'draft' || (issuedEdit && issuedEdit.kind !== 'locked'))
+                ? `/invoices/${invoice.number}?edit=due#due`
+                : undefined,
           },
         ]}
       />
@@ -673,7 +705,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               </section>
             )}
 
-            <section className={forms.card}>
+            <section id="due" className={forms.card}>
               <div className={forms.cardHeader}>
                 <h2 className={forms.cardTitle}>The invoice itself</h2>
               </div>
@@ -681,6 +713,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               <div className={forms.actions}>
                 {!removedAt && invoice.status === 'draft' && (
                   <DraftInvoiceDetails
+                    key={editDue ? 'open' : 'closed'}
+                    startOpen={editDue}
                     invoiceId={invoice.id}
                     dueAt={invoice.dueAt ? toDateInputValue(invoice.dueAt) : ''}
                     notes={invoice.notes ?? ''}
@@ -688,6 +722,8 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                 )}
                 {!removedAt && issuedEdit && issuedEdit.kind !== 'locked' && (
                   <IssuedInvoiceDetails
+                    key={editDue ? 'open' : 'closed'}
+                    startOpen={editDue}
                     invoiceId={invoice.id}
                     dueAt={invoice.dueAt ? toDateInputValue(invoice.dueAt) : ''}
                     notes={invoice.notes ?? ''}
@@ -722,7 +758,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
               <h2 className={forms.cardTitle}>What has happened</h2>
               <span className={forms.cardMeta}>Including every email we tried to send</span>
             </div>
-            <ActivityFeed items={activity} now={now} />
+            <ActivityFeed items={activity} now={now} first={6} />
           </section>
         </div>
       </div>

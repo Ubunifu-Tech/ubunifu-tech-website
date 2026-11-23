@@ -172,6 +172,11 @@ export default async function InvoicesPage({
         <div className={styles.headText}>
           <h1 className={styles.heading}>Invoices</h1>
         </div>
+        <div className={styles.headActions}>
+          <Link href="/invoices/new" className={forms.button}>
+            Raise an invoice
+          </Link>
+        </div>
       </div>
 
       <Figures
@@ -261,7 +266,7 @@ export default async function InvoicesPage({
                     <p className={table.emptyHint}>
                       {query
                         ? 'Try another view, or search for something else.'
-                        : 'Raise one from New, at the top of the page.'}
+                        : 'Raise one with Raise an invoice, above.'}
                     </p>
                   </td>
                 </tr>

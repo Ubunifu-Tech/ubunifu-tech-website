@@ -10,7 +10,7 @@ export function SettingsTabs({
   current,
   staff,
 }: {
-  current: 'team' | 'billing' | 'documents' | 'products';
+  current: 'team' | 'billing' | 'documents' | 'products' | 'copilot';
   staff: StaffActor;
 }) {
   const tabs = [
@@ -24,6 +24,8 @@ export function SettingsTabs({
     ...(can(staff, 'finance')
       ? [{ key: 'products', label: 'Products', href: '/settings/products' }]
       : []),
+    // Everyone can read what the agents are told; owners change it.
+    { key: 'copilot', label: 'Copilot', href: '/settings/copilot' },
   ];
   return <Tabs tabs={tabs} current={current} />;
 }

@@ -202,7 +202,7 @@ export async function proposePlan(input: {
 
   for (const [index, step] of steps.entries()) {
     const action = planAction(step.action)!;
-    if (!can(input.staff, action.permission)) {
+    if (action.permission && !can(input.staff, action.permission)) {
       problems.push(
         `Step ${index + 1} (${action.label}): this person's role does not allow it. Tell them so, and that an owner can change roles on the Team page.`,
       );
@@ -243,6 +243,15 @@ export async function proposePlan(input: {
       select: { id: true },
     }),
   ]);
+
+  await recordAudit({
+    actorType: 'staff',
+    actorId: input.staff.id,
+    action: 'assistant.plan_proposed',
+    entityType: 'AssistantPlan',
+    entityId: plan.id,
+    summary: `${summary}: ${stored.length} step${stored.length === 1 ? '' : 's'}, waiting to be confirmed`,
+  });
 
   return {
     ok: true,
@@ -289,7 +298,7 @@ export async function confirmPlan(staff: StaffActor, planId: string): Promise<De
       if (!action) throw new StepRefused('This action is no longer available.');
       // Roles are read on every request, so a permission taken away since the
       // plan was laid out is honoured here.
-      if (!can(staff, action.permission)) throw new StepRefused('Your role does not allow this.');
+      if (action.permission && !can(staff, action.permission)) throw new StepRefused('Your role does not allow this.');
       const checked = await action.check(step.input, env);
       if (!checked.ok) throw new StepRefused(checked.message);
       // What was pinned when the person was shown the plan must still hold.
@@ -341,6 +350,14 @@ export async function discardPlan(staff: StaffActor, planId: string): Promise<De
   const plan = await db.assistantPlan.findUniqueOrThrow({
     where: { id: planId },
     select: { id: true, summary: true, steps: true },
+  });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'assistant.plan_discarded',
+    entityType: 'AssistantPlan',
+    entityId: plan.id,
+    summary: `${plan.summary}: nothing was changed`,
   });
   return {
     ok: true,

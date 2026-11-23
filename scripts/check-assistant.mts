@@ -279,6 +279,16 @@ const knowledge = knowledgeText({ posts });
     'src/lib/console/staff-agent/actions/fees.ts',
     'src/lib/console/staff-agent/actions/documents.ts',
     'src/lib/console/staff-agent/actions/invoices.ts',
+    'src/lib/console/staff-agent/actions/notes.ts',
+    'src/lib/console/staff-agent/cards.ts',
+    'src/lib/console/staff-agent/memory.ts',
+    'src/lib/console/staff-agent/history.ts',
+    'src/app/admin/copilot/parts.tsx',
+    'src/app/admin/copilot/page.tsx',
+    'src/app/admin/copilot/[id]/page.tsx',
+    'src/app/admin/copilot/CarryOn.tsx',
+    'src/app/admin/settings/copilot/page.tsx',
+    'src/app/admin/settings/copilot/CopilotForms.tsx',
     'src/lib/console/services/clients.ts',
     'src/lib/console/services/projects.ts',
     'src/lib/console/services/fees.ts',
@@ -688,7 +698,11 @@ async function withRetry<T>(call: () => Promise<T>): Promise<T> {
 
 /** Every reply, whatever it says: plain, human, safely linked. */
 function replyProblems(text: string, variant: ChatVariant | 'staff', long: boolean): string[] {
-  const problems = copyProblems('reply', text).map((problem) => problem.replace('reply: ', ''));
+  // Staff chat is between colleagues and may use dashes. What the public and
+  // clients read may not, and that is every other surface.
+  const problems = copyProblems('reply', text)
+    .filter((problem) => variant !== 'staff' || !problem.includes('dash'))
+    .map((problem) => problem.replace('reply: ', ''));
   if (/^\s{0,3}#/m.test(text)) problems.push('has a heading');
   if (/\|\s*-{3}/.test(text)) problems.push('has a table');
   if (text.includes('```')) problems.push('has a code block');
@@ -1260,7 +1274,10 @@ async function consoleCases(): Promise<void> {
       expect: (o) => [
         ...need(o.tools.includes('get_project'), 'answered without reading the project'),
         ...never(o.steps !== null, 'laid out a plan for a question'),
-        ...(billable[0] ? need(has(o.text, billable[0].label), `does not name ${billable[0].label}, which is billable`) : []),
+        // Named in words, or put in front of them as the table of what is billable.
+        ...(billable[0]
+          ? need(has(o.text, billable[0].label) || o.tools.includes('show'), `neither names ${billable[0].label}, which is billable, nor shows the table`)
+          : []),
       ],
     },
     {

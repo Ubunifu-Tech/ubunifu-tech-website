@@ -1,5 +1,6 @@
 'use server';
 
+import { houseInstructions } from '@/lib/console/staff-agent/memory';
 import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -327,6 +328,7 @@ export async function askCopilot(
     conversationId,
     kind: 'document_draft',
     system: COPILOT_SYSTEM,
+    house: await houseInstructions('document_draft'),
     brief: brief ?? undefined,
     note: documentNote(latest),
     userMessage: message,

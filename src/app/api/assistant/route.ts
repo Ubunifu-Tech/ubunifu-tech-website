@@ -1,3 +1,4 @@
+import { houseInstructions } from '@/lib/console/staff-agent/memory';
 import { NextResponse, type NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
@@ -183,6 +184,7 @@ async function handle(request: NextRequest) {
     kind: 'site_visitor',
     system: ASSISTANT_SYSTEM,
     shared: await siteKnowledge(),
+    house: await houseInstructions('site_visitor'),
     note: `${page ? `The visitor is on ${page}. ` : ''}Today in Tanzania is ${today}.`,
     userMessage: message,
     tools: [recordEnquiryTool],

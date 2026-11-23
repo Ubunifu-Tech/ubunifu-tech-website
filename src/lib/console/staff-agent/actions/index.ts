@@ -4,6 +4,7 @@ import { createProject } from './projects';
 import { addFee, renameFee } from './fees';
 import { createDocument } from './documents';
 import { createInvoice } from './invoices';
+import { remember } from './notes';
 import type { PlanAction } from './types';
 
 /**
@@ -22,6 +23,7 @@ export const PLAN_ACTIONS = [
   renameFee,
   createDocument,
   createInvoice,
+  remember,
 ] as unknown as PlanAction<unknown>[];
 
 export function planAction(name: unknown): PlanAction<unknown> | undefined {

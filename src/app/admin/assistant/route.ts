@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { db } from '@/lib/db';
 import { staffForAction, type StaffActor } from '@/lib/console/auth';
 import { allow } from '@/lib/console/rate-limit';
 import { readJsonBody, sameOrigin } from '@/lib/console/request-guards';
-import { confirmPlan, discardPlan, plansOf } from '@/lib/console/staff-agent/plan';
+import { threadItems } from '@/lib/console/staff-agent/history';
+import { confirmPlan, discardPlan } from '@/lib/console/staff-agent/plan';
 import {
   closeConsoleConversation,
   consoleConversation,
+  resumeConsoleConversation,
   runConsoleTurn,
 } from '@/lib/console/staff-agent/turn';
 
@@ -56,14 +57,27 @@ async function handle(request: NextRequest) {
 
   const body = await readJsonBody(request, MAX_BODY_BYTES);
   if (!body.ok) return NextResponse.json({ error: body.error }, { status: body.status });
-  const payload: { message?: unknown; page?: unknown; confirm?: unknown; discard?: unknown; reset?: unknown } =
-    body.value;
+  const payload: {
+    message?: unknown;
+    page?: unknown;
+    confirm?: unknown;
+    discard?: unknown;
+    reset?: unknown;
+    resume?: unknown;
+  } = body.value;
 
   if (typeof payload.confirm === 'string') return decided(await confirmPlan(staff, payload.confirm));
   if (typeof payload.discard === 'string') return decided(await discardPlan(staff, payload.discard));
   if (payload.reset === true) {
     await closeConsoleConversation(staff);
     return NextResponse.json({ reset: true });
+  }
+  // Carrying on an earlier chat: it becomes the open one, and the panel reads it back.
+  if (typeof payload.resume === 'string') {
+    if (!(await resumeConsoleConversation(staff, payload.resume))) {
+      return NextResponse.json({ error: 'That chat is not one of yours.' }, { status: 404 });
+    }
+    return NextResponse.json({ resumed: true });
   }
 
   const message = typeof payload.message === 'string' ? payload.message.trim() : '';
@@ -77,7 +91,7 @@ async function handle(request: NextRequest) {
 
   const turn = await runConsoleTurn({ staff, message, page: payload.page });
   if (!turn.ok) return NextResponse.json({ error: turn.message, full: turn.full ?? false }, { status: 502 });
-  return NextResponse.json({ reply: turn.reply, plan: turn.plan });
+  return NextResponse.json({ reply: turn.reply, plan: turn.plan, cards: turn.cards, read: turn.read });
 }
 
 function decided(decision: Awaited<ReturnType<typeof confirmPlan>>) {
@@ -91,7 +105,7 @@ export async function GET() {
     const staff = await staffForAction();
     if (!staff) return NextResponse.json(SIGNED_OUT, { status: 401 });
     return NextResponse.json(
-      { items: await thread(staff) },
+      { items: await openThread(staff) },
       { headers: { 'Cache-Control': 'private, no-store' } },
     );
   } catch (error) {
@@ -100,39 +114,7 @@ export async function GET() {
   }
 }
 
-async function thread(staff: StaffActor) {
+async function openThread(staff: StaffActor) {
   const conversationId = await consoleConversation(staff, false);
-  if (!conversationId) return [];
-  const [messages, plans] = await Promise.all([
-    db.conversationMessage.findMany({
-      where: { conversationId, role: { in: ['user', 'assistant'] } },
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      select: { id: true, role: true, content: true, createdAt: true },
-    }),
-    plansOf(conversationId),
-  ]);
-  const said = messages
-    .filter((message) => message.content.trim().length > 0)
-    .map((message) => ({
-      type: 'message' as const,
-      at: message.createdAt.getTime(),
-      id: message.id,
-      role: message.role,
-      content: message.content,
-    }));
-  // A plan is stored a moment before the reply that introduces it. It is
-  // shown after that reply, as it was when it first appeared.
-  const replyAfter = (at: number) =>
-    said.find((message) => message.role === 'assistant' && message.at >= at)?.at ?? at;
-  return [
-    ...said,
-    // A plan nobody acted on, replaced by a later one, is noise on a reload.
-    ...plans
-      .filter((plan) => plan.status !== 'superseded')
-      .map(({ createdAt, ...plan }) => ({
-        type: 'plan' as const,
-        at: replyAfter(createdAt.getTime()) + 0.5,
-        plan,
-      })),
-  ].sort((a, b) => a.at - b.at);
+  return conversationId ? threadItems(conversationId) : [];
 }

@@ -1,3 +1,4 @@
+import { houseInstructions } from '@/lib/console/staff-agent/memory';
 import { NextResponse, type NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { getClientActor, type ClientActor } from '@/lib/console/auth';
@@ -137,6 +138,7 @@ async function handle(request: NextRequest) {
     system: PORTAL_SYSTEM,
     // What the website knows about Ubunifu, shared and cached; then their account.
     shared: await siteKnowledge(),
+    house: await houseInstructions('portal_client'),
     brief: await portalBrief(actor),
     note: page ? `They are looking at ${page}.` : undefined,
     userMessage: message,

@@ -82,7 +82,8 @@ export type PlanAction<Value = never> = {
   label: string;
   /** For the model: what it does and when to use it. */
   description: string;
-  permission: Permission;
+  /** What the person's role must allow. Null when anyone on the team may, and the action checks the rest. */
+  permission: Permission | null;
   properties: Record<string, Record<string, unknown>>;
   required: string[];
   check: (input: Record<string, unknown>, env: PlanEnv) => Promise<Checked<Value>>;

@@ -3,43 +3,41 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowUp, MessageSquareText, SquarePen, X } from 'lucide-react';
-import { ChatMarkdown } from '@/components/ChatMarkdown';
+import { ArrowUp, History, MessageSquareText, SquarePen, X } from 'lucide-react';
+import { COPILOT } from '@/lib/console/staff-agent/identity';
+import { PlanTable, Reply, type Card, type Item, type Plan, type ReadRef } from './copilot/parts';
 import styles from './AssistantDock.module.css';
 
 /**
- * The console assistant: a chat that stays beside the page while staff move
- * around the console.
+ * Ubunifu Copilot, beside the page: a chat that stays with staff while they
+ * move around the console and knows which record they are looking at.
  *
- * It can look records up and lay out changes. A change arrives as a plan, a
- * table of steps written by the server from what it checked, and nothing in
- * it happens until Confirm is pressed. This window only shows what the server
- * sends and posts what was typed or pressed: every rule is enforced there.
+ * It reads records, shows them as cards and lays out changes. A change
+ * arrives as a plan, a table of steps written by the server from what it
+ * checked, and nothing in it happens until Confirm is pressed. This window
+ * only shows what the server sends and posts what was typed or pressed:
+ * every rule is enforced there. Past chats are on the Copilot page.
  */
 
-type StepView = { action: string; label: string; subject: string; details: string[]; sends?: string };
-type StepOutcome =
-  | { state: 'done'; summary: string; href?: string }
-  | { state: 'failed'; message: string }
-  | { state: 'not_run' };
-type Plan = {
-  id: string;
-  status: 'pending' | 'running' | 'done' | 'stopped' | 'discarded' | 'superseded';
-  summary: string;
-  steps: StepView[];
-  outcomes: StepOutcome[] | null;
-};
-type Item =
-  | { type: 'message'; id: string; role: 'user' | 'assistant'; content: string }
-  | { type: 'plan'; plan: Plan }
-  | { type: 'notice'; id: string; text: string; signIn?: boolean };
+/** What the page they are on is about, said in the composer so they know what "this" means. */
+function lookingAt(pathname: string): string | null {
+  const match = /^\/(projects|clients|documents|invoices)\/([A-Za-z0-9_-]+)$/.exec(pathname);
+  if (!match || match[2] === 'new') return null;
+  const [, kind, ref] = match;
+  if (kind === 'documents' || kind === 'invoices') return ref!.toUpperCase();
+  return `this ${kind === 'projects' ? 'project' : 'client'}`;
+}
 
 const OPEN_KEY = 'ubu-console-assistant-open';
-const STARTERS = [
-  'Add a new client and start their first project',
-  'What can be invoiced on a project right now?',
-  'Draft a service agreement for a project',
-];
+/** Offered in an empty chat: one for wherever they are, then the common jobs. */
+function starters(context: string | null): string[] {
+  return [
+    ...(context ? [`Summarise ${context} and what it needs next`] : []),
+    'Add a new client and start their first project',
+    'What can be invoiced right now?',
+    'Draft a service agreement for a project',
+  ].slice(0, 3);
+}
 
 async function post(body: object): Promise<{ status: number; data: Record<string, unknown> }> {
   const response = await fetch('/assistant', {
@@ -100,6 +98,18 @@ export function AssistantDock() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  // "Carry on" from a past chat lands here with the panel asked for: the chat
+  // was made the open one, so it is read back afresh.
+  useEffect(() => {
+    const onResume = () => {
+      setItems([]);
+      setLoaded(false);
+      show(true);
+    };
+    window.addEventListener('copilot:resume', onResume);
+    return () => window.removeEventListener('copilot:resume', onResume);
+  }, [show]);
+
   useEffect(() => {
     const thread = threadRef.current;
     if (thread) thread.scrollTop = thread.scrollHeight;
@@ -132,7 +142,14 @@ export function AssistantDock() {
       const plan = (data.plan as Plan | null) ?? null;
       setItems((current) => [
         ...current.filter((item) => !(plan && item.type === 'plan' && item.plan.status === 'pending')),
-        { type: 'message', id: `a${Date.now()}`, role: 'assistant', content: String(data.reply ?? '') },
+        {
+          type: 'message',
+          id: `a${Date.now()}`,
+          role: 'assistant',
+          content: String(data.reply ?? ''),
+          cards: (data.cards as Card[] | undefined) ?? [],
+          read: (data.read as ReadRef[] | undefined) ?? [],
+        },
         ...(plan ? [{ type: 'plan' as const, plan }] : []),
       ]);
     } catch {
@@ -176,6 +193,7 @@ export function AssistantDock() {
   }
 
   const empty = loaded && items.length === 0;
+  const context = lookingAt(pathname);
 
   return (
     <>
@@ -188,27 +206,31 @@ export function AssistantDock() {
         onClick={() => show(!open)}
       >
         <MessageSquareText size={16} aria-hidden />
-        <span>Assistant</span>
+        <span>{COPILOT.short}</span>
       </button>
 
       <aside
         id="console-assistant"
         className={styles.dock}
         data-assistant-dock={open ? 'open' : 'closed'}
-        aria-label="Assistant"
+        aria-label={COPILOT.name}
         hidden={!open}
         onKeyDown={(event) => {
           if (event.key === 'Escape') show(false);
         }}
       >
         <header className={styles.head}>
-          <h2 className={styles.title}>Assistant</h2>
+          <h2 className={styles.title}>{COPILOT.short}</h2>
           <div className={styles.headActions}>
+            <Link href="/copilot" className={styles.iconButton}>
+              <History size={16} aria-hidden />
+              <span>History</span>
+            </Link>
             <button type="button" className={styles.iconButton} onClick={startAgain} disabled={Boolean(busy) || items.length === 0}>
               <SquarePen size={16} aria-hidden />
               <span>New chat</span>
             </button>
-            <button type="button" className={styles.iconButton} onClick={() => show(false)} aria-label="Close the assistant">
+            <button type="button" className={styles.iconButton} onClick={() => show(false)} aria-label={`Close ${COPILOT.short}`}>
               <X size={18} aria-hidden />
             </button>
           </div>
@@ -218,11 +240,11 @@ export function AssistantDock() {
           {empty && (
             <div className={styles.empty}>
               <p className={styles.emptyLead}>
-                Ask about a client or a project, or say what needs setting up. Changes are laid out for you to confirm
-                first.
+                Ask about anything in the console, or say what needs setting up. {COPILOT.short} reads and prepares;
+                nothing changes until you confirm it.
               </p>
               <ul className={styles.starters}>
-                {STARTERS.map((starter) => (
+                {starters(context).map((starter) => (
                   <li key={starter}>
                     <button
                       type="button"
@@ -270,9 +292,7 @@ export function AssistantDock() {
                 {item.content}
               </p>
             ) : (
-              <div key={item.id} className={styles.reply}>
-                <ChatMarkdown text={item.content} variant="staff" />
-              </div>
+              <Reply key={item.id} content={item.content} cards={item.cards} read={item.read} />
             );
           })}
 
@@ -292,15 +312,21 @@ export function AssistantDock() {
           }}
         >
           <label className="srOnly" htmlFor="console-assistant-input">
-            Message the assistant
+            Message {COPILOT.short}
           </label>
+          {context && (
+            <p className={styles.context}>
+              <span className={styles.contextDot} aria-hidden />
+              Looking at {context}
+            </p>
+          )}
           <textarea
             id="console-assistant-input"
             ref={inputRef}
             className={styles.input}
             rows={2}
             maxLength={6000}
-            placeholder="Ask, or say what to set up"
+            placeholder={context ? 'Ask about it, or say what to do' : 'Ask, or say what to set up'}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
@@ -316,109 +342,5 @@ export function AssistantDock() {
         </form>
       </aside>
     </>
-  );
-}
-
-const PLAN_STATE: Record<Plan['status'], string> = {
-  pending: 'Waiting for you',
-  running: 'In progress',
-  done: 'Done',
-  stopped: 'Stopped part way',
-  discarded: 'Discarded',
-  superseded: 'Replaced',
-};
-
-function PlanTable({
-  plan,
-  busy,
-  onConfirm,
-  onDiscard,
-  onChange,
-}: {
-  plan: Plan;
-  busy: boolean;
-  onConfirm: () => void;
-  onDiscard: () => void;
-  onChange: () => void;
-}) {
-  const pending = plan.status === 'pending';
-  const sends = plan.steps.filter((step) => step.sends);
-
-  return (
-    <section className={styles.plan} data-status={plan.status} aria-label={plan.summary}>
-      <header className={styles.planHead}>
-        <h3 className={styles.planTitle}>{plan.summary}</h3>
-        <span className={styles.planState} data-status={plan.status}>
-          {PLAN_STATE[plan.status]}
-        </span>
-      </header>
-
-      <table className={styles.steps}>
-        <thead>
-          <tr>
-            <th scope="col" className={styles.num}>
-              <span className="srOnly">Step</span>
-            </th>
-            <th scope="col">Step</th>
-            <th scope="col">Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {plan.steps.map((step, index) => {
-            const outcome = plan.outcomes?.[index];
-            return (
-              <tr key={index} data-outcome={outcome?.state}>
-                <td className={styles.num}>{index + 1}</td>
-                <th scope="row">
-                  <span className={styles.stepLabel}>{step.label}</span>
-                  <span className={styles.stepSubject}>{step.subject}</span>
-                </th>
-                <td>
-                  <ul className={styles.details}>
-                    {step.details.map((detail, at) => (
-                      <li key={at}>{detail}</li>
-                    ))}
-                    {step.sends && pending && <li className={styles.sends}>{step.sends}</li>}
-                  </ul>
-                  {outcome?.state === 'done' && (
-                    <p className={styles.done}>
-                      {outcome.summary}
-                      {outcome.href && (
-                        <>
-                          {'. '}
-                          <Link href={outcome.href}>Open</Link>
-                        </>
-                      )}
-                    </p>
-                  )}
-                  {outcome?.state === 'failed' && <p className={styles.failed}>{outcome.message}</p>}
-                  {outcome?.state === 'not_run' && <p className={styles.skipped}>Not carried out</p>}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {pending && (
-        <footer className={styles.planFoot}>
-          <p className={styles.planNote}>
-            Nothing changes until you confirm.
-            {sends.length > 0 && ` ${sends.length === 1 ? 'One step sends' : `${sends.length} steps send`} an email.`}
-          </p>
-          <div className={styles.planActions}>
-            <button type="button" className={styles.quiet} onClick={onDiscard} disabled={busy}>
-              Discard
-            </button>
-            <button type="button" className={styles.quiet} onClick={onChange} disabled={busy}>
-              Change
-            </button>
-            <button type="button" className={styles.confirm} onClick={onConfirm} disabled={busy}>
-              Confirm
-            </button>
-          </div>
-        </footer>
-      )}
-    </section>
   );
 }

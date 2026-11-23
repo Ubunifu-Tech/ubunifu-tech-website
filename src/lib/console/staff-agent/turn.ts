@@ -5,7 +5,9 @@ import { runTurn, type AgentFailure, type AgentTool } from '@/lib/console/agent'
 import type { StaffActor } from '@/lib/console/auth';
 import { hashToken } from '@/lib/console/crypto';
 import { PLAN_ACTIONS } from './actions';
-import { LOOKUPS, type StaffContext } from './lookups';
+import { recordOnPage, type Card, type ReadRef } from './cards';
+import { LOOKUPS, pageRecord, type StaffContext } from './lookups';
+import { houseInstructions, notesBrief } from './memory';
 import { MAX_STEPS, planNote, proposePlan, type PlanView } from './plan';
 import { CONSOLE_SYSTEM, consoleBrief, consolePage, todayLine } from './prompt';
 
@@ -102,8 +104,45 @@ export async function closeConsoleConversation(staff: StaffActor): Promise<void>
 }
 
 export type ConsoleTurn =
-  | { ok: true; reply: string; plan: PlanView | null }
+  | {
+      ok: true;
+      reply: string;
+      plan: PlanView | null;
+      /** What it showed this turn, each written from its record. */
+      cards: Card[];
+      /** The records it read to answer, for the person to see what it went on. */
+      read: ReadRef[];
+    }
   | { ok: false; message: string; full?: boolean };
+
+/** What the tools of one turn left for the window: cards shown and records read, once each. */
+export function shownAndRead(used: { name: string; meta: unknown }[]): { cards: Card[]; read: ReadRef[] } {
+  const cards: Card[] = [];
+  const read = new Map<string, ReadRef>();
+  for (const tool of used) {
+    const meta = (tool.meta ?? {}) as { card?: Card; read?: ReadRef };
+    if (meta.card) cards.push(meta.card);
+    if (meta.read) read.set(meta.read.href, meta.read);
+  }
+  return { cards, read: [...read.values()] };
+}
+
+/**
+ * Brings one of the person's earlier chats back as the open one. The chat
+ * that was open is closed, and a plan still waiting in it goes with it, as
+ * when a new chat is started.
+ */
+export async function resumeConsoleConversation(staff: StaffActor, conversationId: string): Promise<boolean> {
+  const chat = await db.conversation.findFirst({
+    where: { id: conversationId, kind: 'console_staff', actorType: 'staff', actorId: staff.id },
+    select: { id: true, status: true },
+  });
+  if (!chat) return false;
+  if (chat.status === 'open') return true;
+  await closeConsoleConversation(staff);
+  await db.conversation.update({ where: { id: chat.id }, data: { status: 'open' } });
+  return true;
+}
 
 const FAILURE: Record<AgentFailure, string> = {
   declined: 'The assistant declined that request.',
@@ -129,15 +168,31 @@ export async function runConsoleTurn(input: {
   const { staff } = input;
   const conversationId = input.conversationId ?? (await consoleConversation(staff, true))!;
   const page = consolePage(input.page);
+  // The record on their screen, so "this" needs no lookup and no question.
+  const onPage = await pageRecord(staff, recordOnPage(page)).catch(() => null);
+  const [brief, notes, house] = await Promise.all([
+    consoleBrief(staff),
+    notesBrief(staff),
+    houseInstructions('console_staff'),
+  ]);
+  // A chat is named after what it began with, so it can be found again.
+  await db.conversation.updateMany({
+    where: { id: conversationId, messageCount: 0 },
+    data: { title: input.message.replace(/\s+/g, ' ').trim().slice(0, 90) },
+  });
 
   const result = await runTurn<StaffContext>({
     conversationId,
     kind: 'console_staff',
     system: CONSOLE_SYSTEM,
-    brief: await consoleBrief(staff),
+    house,
+    brief: notes ? `${brief}\n\n${notes}` : brief,
     // After the cached blocks and never stored: the date, the page they are
-    // on, and where the last plan stands now that buttons may have been pressed.
-    note: `${todayLine()}${page ? ` They are looking at ${page}.` : ''}\n\n${await planNote(conversationId)}`,
+    // on with its record, and where the last plan stands now that buttons may
+    // have been pressed.
+    note: `${todayLine()}${page ? ` They are looking at ${page}.` : ''}${
+      onPage ? `\n\nTHE RECORD ON THEIR SCREEN (${onPage.label})\n${onPage.text}` : ''
+    }\n\n${await planNote(conversationId)}`,
     userMessage: input.message,
     authorId: staff.id,
     tools: CONSOLE_TOOLS,
@@ -174,6 +229,7 @@ export async function runConsoleTurn(input: {
   return {
     ok: true,
     reply: result.reply,
+    ...shownAndRead(result.used),
     plan: plan
       ? {
           id: plan.id,

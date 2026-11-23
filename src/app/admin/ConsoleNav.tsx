@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   FileText,
   LifeBuoy,
+  MessageSquareText,
   Newspaper,
   Settings,
   Wallet,
@@ -43,6 +44,7 @@ const ICONS = {
   documents: FileText,
   requests: LifeBuoy,
   posts: Newspaper,
+  copilot: MessageSquareText,
   activity: Activity,
   settings: Settings,
 } as const;
@@ -87,6 +89,7 @@ function items(permissions: readonly Permission[]): { main: Item[]; record: Item
       { href: '/posts', label: 'Journal', icon: 'posts', need: ['journal'] },
     ],
     record: [
+      { href: '/copilot', label: 'Copilot', icon: 'copilot' },
       { href: '/activity', label: 'Activity', icon: 'activity' },
       { href: '/settings/team', label: 'Settings', icon: 'settings', also: ['/settings'] },
     ],

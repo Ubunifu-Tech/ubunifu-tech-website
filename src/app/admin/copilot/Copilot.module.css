@@ -1,0 +1,25 @@
+/* A chat read back on its own page: the same column the panel shows, at a
+   width that is comfortable to read. */
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 44rem;
+}
+
+.transcript > * {
+  flex: none;
+}
+
+/* What a plan made, one line each, inside its row of the table. */
+.outcomes {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.outcomes li[data-failed] {
+  color: var(--tone-red-fg);
+}

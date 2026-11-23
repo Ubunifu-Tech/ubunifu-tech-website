@@ -1531,6 +1531,7 @@ model Conversation {
   plans    AssistantPlan[]
 
   @@index([kind, status])
+  @@index([kind, actorId, lastMessageAt])
   @@index([visitorKey])
   @@index([documentId])
 }
@@ -1573,6 +1574,42 @@ model AssistantPlan {
   decidedAt DateTime?
 
   @@index([conversationId, status])
+}
+
+/// House instructions for one of the agents, written by an owner in Settings.
+/// They are added after the rules built into the code, which they can add to
+/// and never replace: what an agent may change, and that a person confirms
+/// it, is not something a setting can switch off.
+model AgentInstruction {
+  /// Which agent: the console's Copilot, document drafting, the website chat
+  /// or the portal's Help.
+  kind        ConversationKind @id
+  text        String
+  updatedById String?
+  updatedAt   DateTime         @updatedAt
+}
+
+enum AgentMemorySource {
+  /// Typed by a person in Settings.
+  settings
+  /// Kept from a chat, after the person in it confirmed.
+  chat
+}
+
+/// Something Copilot is asked to keep in mind from one chat to the next: how
+/// the team works, or how one person likes things done. Every note is listed
+/// in Settings, where it can be removed; nothing is remembered out of sight.
+model AgentMemory {
+  id          String            @id @default(cuid())
+  /// Null for a note the whole team shares; a staff id for one person's own.
+  staffId     String?
+  text        String
+  source      AgentMemorySource @default(settings)
+  createdById String?
+  createdAt   DateTime          @default(now())
+  removedAt   DateTime?
+
+  @@index([staffId, removedAt])
 }
 
 model ConversationMessage {

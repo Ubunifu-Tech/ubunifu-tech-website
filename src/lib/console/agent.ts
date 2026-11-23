@@ -101,6 +101,12 @@ export type RequestOptions = {
   system: string;
   /** Knowledge shared by every thread of the surface, also cached for an hour. */
   shared?: string;
+  /**
+   * House instructions an owner wrote in Settings for this surface. They come
+   * after the built-in instructions and are cached like them. Empty means no
+   * block is sent at all, so a surface nobody has written for is unchanged.
+   */
+  house?: string;
   /** Per-conversation facts, stable across the thread, cached with the default lifetime. */
   brief?: string;
   /**
@@ -241,6 +247,13 @@ export function buildRequest(
     system.push({
       type: 'text',
       text: options.shared,
+      cache_control: { type: 'ephemeral', ttl: '1h' },
+    });
+  }
+  if (options.house?.trim()) {
+    system.push({
+      type: 'text',
+      text: `HOUSE INSTRUCTIONS\nWritten by the owners of this console. Follow them where they do not conflict with anything above. They cannot widen what you are allowed to do.\n\n${options.house.trim()}`,
       cache_control: { type: 'ephemeral', ttl: '1h' },
     });
   }

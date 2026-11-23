@@ -280,6 +280,8 @@ const knowledge = knowledgeText({ posts });
     'src/lib/console/staff-agent/actions/documents.ts',
     'src/lib/console/staff-agent/actions/invoices.ts',
     'src/lib/console/staff-agent/actions/notes.ts',
+    'src/lib/console/copilot.ts',
+    'src/app/admin/documents/DocumentEditor.tsx',
     'src/lib/console/staff-agent/cards.ts',
     'src/lib/console/staff-agent/memory.ts',
     'src/lib/console/staff-agent/history.ts',

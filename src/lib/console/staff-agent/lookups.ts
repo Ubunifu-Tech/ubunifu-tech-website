@@ -13,6 +13,8 @@ import { billableName } from '@/lib/console/services/invoices';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import { DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { toConfirmCount } from '@/lib/console/to-confirm';
+import { copilotBrief } from '@/lib/console/copilot';
+import { houseInstructions } from './memory';
 import { composeView, report, REPORTS, showRecord, VIEWS, type ReadRef, type Report, type View } from './cards';
 
 /**
@@ -420,6 +422,34 @@ export const show: AgentTool<StaffContext> = {
   },
 };
 
+/** Everything a document should be written from: the project's facts, its fees, and how this business likes them written. */
+export const draftingBrief: AgentTool<StaffContext> = {
+  name: 'drafting_brief',
+  description:
+    'Before you write or revise a proposal or agreement, get what it must be written from: the project, its plan, dates and fees, what the client was asked for, the sections that are added to every document of this kind (which you must not write yourself), and any house instructions for documents. Call it once for the document you are about to change.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      document: { type: 'string', description: 'Its reference, such as AGR-2026-003.' },
+    },
+    required: ['document'],
+  },
+  run: async (input, { staff }) => {
+    if (!can(staff, 'documents')) {
+      return { result: "This person's role does not include documents.", done: false };
+    }
+    const reference = wanted(input, 'document').replace(/^\/documents\//, '').toUpperCase();
+    const document = await db.document.findFirst({ where: { reference, ...liveDocument }, select: { id: true } });
+    if (!document) return { result: `There is no document "${reference}". Search with find_records.`, done: false };
+    const [brief, house] = await Promise.all([copilotBrief(document.id), houseInstructions('document_draft')]);
+    return {
+      result: `${brief ?? 'The project could not be read.'}${
+        house ? `\n\nHOUSE INSTRUCTIONS FOR DOCUMENTS\nFrom the owners. Follow them where they do not conflict with your rules.\n${house}` : ''
+      }`,
+    };
+  },
+};
+
 /** A list across the whole console, shown as a table and read out for Copilot to reason on. */
 export const listWork: AgentTool<StaffContext> = {
   name: 'list_work',
@@ -493,7 +523,7 @@ export const composeViewTool: AgentTool<StaffContext> = {
   },
 };
 
-export const LOOKUPS = [findRecords, getClient, getProject, getDocument, getInvoice, listWork, show, composeViewTool];
+export const LOOKUPS = [findRecords, getClient, getProject, getDocument, getInvoice, draftingBrief, listWork, show, composeViewTool];
 
 /**
  * The record on the page the person is looking at, read out the same way a

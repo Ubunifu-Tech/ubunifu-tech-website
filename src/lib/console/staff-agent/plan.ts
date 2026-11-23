@@ -11,6 +11,7 @@ import {
   type PlanEnv,
   type Produced,
   type ProjectFacts,
+  type StepDiff,
 } from './actions';
 
 /**
@@ -32,6 +33,7 @@ export type StepView = {
   subject: string;
   details: string[];
   sends?: string;
+  diff?: StepDiff;
 };
 
 export type StepOutcome =
@@ -222,6 +224,7 @@ export async function proposePlan(input: {
         subject: checked.subject,
         details: checked.details,
         ...(checked.sends ? { sends: checked.sends } : {}),
+        ...(checked.diff ? { diff: checked.diff } : {}),
       },
       ...(checked.pin !== undefined ? { pin: checked.pin } : {}),
     });

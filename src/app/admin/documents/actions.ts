@@ -1,6 +1,5 @@
 'use server';
 
-import { houseInstructions } from '@/lib/console/staff-agent/memory';
 import { NO_PERMISSION, STAFF_SIGNED_OUT } from '@/lib/console/permissions';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -17,14 +16,6 @@ import {
   currentTerms,
   hashDocument,
 } from '@/lib/console/documents';
-import { runTurn } from '@/lib/console/agent';
-import {
-  COPILOT_SYSTEM,
-  copilotBrief,
-  copilotFailure,
-  documentNote,
-  saveDraftTool,
-} from '@/lib/console/copilot';
 import { formText, formTextExact } from '@/lib/console/form';
 import { liveDocument } from '@/lib/console/live';
 import { authorText, prepareDocument } from '@/lib/console/document-ready';
@@ -246,173 +237,6 @@ export async function saveVersion(
   revalidatePath(`/admin/documents/${document.reference}`);
   if (next) redirect(next);
   return { status: 'done', message: `Saved as version ${version}.` };
-}
-
-/**
- * One turn of the drafting conversation.
- *
- * Not a one-shot any more. The thread lives in the database, so a staff member
- * can say "make the payment two stages" and be understood, come back tomorrow
- * and carry on, and read afterwards exactly what was asked for and what the
- * model did about it. The system prompt and the project brief are cached, so
- * every turn after the first pays for the new message rather than the whole
- * context again. The document as it stands goes with every turn, uncached, so
- * a revision keeps what somebody changed by hand since the last one.
- */
-export async function askCopilot(
-  _previous: DocumentState,
-  formData: FormData,
-): Promise<DocumentState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
-
-  const documentId = String(formData.get('documentId') ?? '');
-  const message = formText(formData, 'message');
-
-  if (message.length < 2 || message.length > 4000) {
-    return { status: 'error', message: 'Say what you would like.' };
-  }
-
-  const document = await db.document.findUnique({
-    where: { id: documentId, ...liveDocument },
-    select: {
-      id: true,
-      reference: true,
-      status: true,
-      versions: {
-        orderBy: { version: 'desc' },
-        take: 1,
-        select: { version: true, bodyMarkdown: true, sourceMarkdown: true },
-      },
-    },
-  });
-  if (!document) return { status: 'error', message: 'That document no longer exists.' };
-  if (document.status === 'signed') {
-    return {
-      status: 'error',
-      message: 'This has been signed, so it cannot be redrafted. Start a change order instead.',
-    };
-  }
-  // Each turn can write a long document, so drafting is paced per person.
-  if (!(await allow('copilot', staff.id, { limit: 30, windowMinutes: 60 }))) {
-    return { status: 'error', message: 'That is a lot of drafting for one hour. Try again later.' };
-  }
-  const latest = document.versions[0] ?? null;
-
-  // One open thread per document, created on first use and again after
-  // somebody starts afresh.
-  const existing = await db.conversation.findFirst({
-    where: { documentId: document.id, kind: 'document_draft', status: 'open' },
-    orderBy: { createdAt: 'desc' },
-    select: { id: true },
-  });
-
-  const conversationId =
-    existing?.id ??
-    (
-      await db.conversation.create({
-        data: {
-          kind: 'document_draft',
-          documentId: document.id,
-          actorType: 'staff',
-          actorId: staff.id,
-          title: `Drafting ${document.reference}`,
-        },
-        select: { id: true },
-      })
-    ).id;
-
-  const brief = await copilotBrief(document.id);
-
-  const result = await runTurn({
-    conversationId,
-    kind: 'document_draft',
-    system: COPILOT_SYSTEM,
-    house: await houseInstructions('document_draft'),
-    brief: brief ?? undefined,
-    note: documentNote(latest),
-    userMessage: message,
-    authorId: staff.id,
-    tools: [saveDraftTool],
-    context: { documentId: document.id, staffId: staff.id },
-    maxTokens: 32000,
-    // Inside the page's 300-second limit, with room to record the outcome.
-    timeoutMs: 240_000,
-    deadlineMs: 270_000,
-  });
-
-  // A turn can save a version and then fail on the reply that follows, so
-  // what was saved is read back rather than assumed from the failure.
-  const saved = result.ok
-    ? null
-    : await db.documentVersion.findFirst({
-        where: {
-          documentId: document.id,
-          version: { gt: latest?.version ?? 0 },
-          aiAssisted: true,
-          createdById: staff.id,
-        },
-        orderBy: { version: 'desc' },
-        select: { version: true },
-      });
-
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: result.ok ? 'document.copilot_turn' : 'document.copilot_failed',
-    entityType: 'Document',
-    entityId: document.id,
-    summary: result.ok
-      ? `${document.reference}: ${result.used.length > 0 ? 'wrote a version' : 'answered'}`
-      : `${document.reference}: ${result.cause.replace(/_/g, ' ')}${
-          saved ? `, after saving version ${saved.version}` : ''
-        }`,
-  });
-
-  revalidatePath(`/admin/documents/${document.reference}`);
-
-  if (!result.ok) {
-    return { status: 'error', message: copilotFailure(result.cause, saved?.version ?? null) };
-  }
-  return { status: 'done', message: result.reply };
-}
-
-/**
- * Closes the document's drafting thread, so the next request starts a new
- * one. For a thread that is full, or has wandered: the versions it wrote stay
- * as they are, and the closed thread stays on the record.
- */
-export async function startFreshCopilotThread(
-  _previous: DocumentState,
-  formData: FormData,
-): Promise<DocumentState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
-
-  const document = await db.document.findUnique({
-    where: { id: formText(formData, 'documentId'), ...liveDocument },
-    select: { id: true, reference: true },
-  });
-  if (!document) return { status: 'error', message: 'That document no longer exists.' };
-
-  const closed = await db.conversation.updateMany({
-    where: { documentId: document.id, kind: 'document_draft', status: 'open' },
-    data: { status: 'closed' },
-  });
-
-  if (closed.count > 0) {
-    await recordAudit({
-      actorType: 'staff',
-      actorId: staff.id,
-      action: 'document.copilot_reset',
-      entityType: 'Document',
-      entityId: document.id,
-      summary: document.reference,
-    });
-  }
-
-  revalidatePath(`/admin/documents/${document.reference}`);
-  return { status: 'done', message: 'Started a fresh thread. The document is unchanged.' };
 }
 
 /** A document checked and ready to go to be signed, with its fees filled in. */

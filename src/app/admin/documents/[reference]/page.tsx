@@ -16,7 +16,7 @@ import { authorText, prepareDocument, type DocumentStep } from '@/lib/console/do
 import { renderParagraphDiff } from '@/lib/console/diff';
 import { sourceFromSuggestion } from '@/lib/console/suggestions';
 import { editableFees, feeSchedule, projectFees, projectFeesLater } from '@/lib/console/fees';
-import { formatDate, formatRelative, formatShortDate, numbers } from '@/lib/console/money';
+import { formatDate, formatShortDate, numbers } from '@/lib/console/money';
 import { getOrg } from '@/lib/console/org';
 import { ActivityFeed } from '@/components/console/ActivityFeed';
 import { Callout } from '@/components/console/Callout';
@@ -28,7 +28,6 @@ import {
   DiscardDraft,
   ResendSignatureLink,
   SendForSignature,
-  type CopilotTurn,
   WithdrawDocument,
   WriteStep,
 } from '../DocumentEditor';
@@ -47,12 +46,6 @@ const STEP_LABEL: Record<DocumentStep, string> = {
   review: 'Review',
   send: 'Send',
 };
-
-// The drafting copilot (askCopilot in ../actions.ts: maxTokens 32000,
-// adaptive thinking, up to four rounds, a 270-second whole-turn deadline)
-// runs as a server action inside this page's function, and this is the only
-// page that renders it.
-export const maxDuration = 300;
 
 // Display only: the short fingerprint breaks after its ellipsis, never
 // inside either half.
@@ -639,55 +632,6 @@ export default async function DocumentPage({
   }
 
   if (step === 'write') {
-    // The open drafting thread, if one has been started. Tool turns are folded
-    // into the assistant turn they belong to, so it reads as a conversation.
-    const conversation = numbers(await db.conversation.findFirst({
-      where: { documentId: document.id, kind: 'document_draft', status: 'open' },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        messages: {
-          where: { role: { in: ['user', 'assistant'] } },
-          orderBy: { createdAt: 'asc' },
-          select: {
-            id: true,
-            role: true,
-            content: true,
-            toolName: true,
-            authorId: true,
-            createdAt: true,
-          },
-        },
-      },
-    }));
-
-    // The thread is shared by everyone who drafts, so each request says who
-    // made it.
-    const messages = conversation?.messages ?? [];
-    const authorIds = [
-      ...new Set(messages.flatMap((message) => (message.authorId ? [message.authorId] : []))),
-    ];
-    const authors = new Map(
-      (
-        numbers(await db.staffUser.findMany({
-          where: { id: { in: authorIds } },
-          select: { id: true, name: true },
-        }))
-      ).map((author) => [author.id, author.name]),
-    );
-    const authorOf = (id: string | null) =>
-      id === staff.id ? 'You' : ((id && authors.get(id)) ?? 'Staff');
-
-    const turns: CopilotTurn[] = messages
-      .filter((message) => message.content.trim().length > 0 || message.toolName)
-      .map((message) => ({
-        id: message.id,
-        role: message.role,
-        author: message.role === 'user' ? authorOf(message.authorId) : 'Assistant',
-        content: message.content.trim() || 'Wrote a new version.',
-        toolName: message.toolName,
-        when: formatRelative(message.createdAt, now),
-      }));
-
     body = (
       <div className={page.split}>
         <WriteStep
@@ -696,7 +640,7 @@ export default async function DocumentPage({
           version={latest?.version ?? 1}
           body={source}
           withFees={prepared.withFeeTable}
-          turns={turns}
+          reference={document.reference}
         />
       </div>
     );

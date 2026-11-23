@@ -709,3 +709,72 @@
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
 }
+
+/* ── What a rewrite would change ─────────────────── */
+
+.diff {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--app-radius-card);
+  background: var(--surface);
+}
+
+.diffHead {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.diffBody {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.diffPart {
+  display: block;
+  margin: 0;
+  padding: 0.375rem 0.625rem;
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.diffPart[data-op='added'] {
+  border-left-color: var(--tone-green-dot);
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
+}
+
+.diffPart[data-op='removed'] {
+  border-left-color: var(--tone-red-dot);
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
+  text-decoration: line-through;
+}
+
+.diffGap {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  text-align: center;
+}
+
+.diffInline {
+  margin-top: var(--space-2);
+}
+
+.diffInline summary {
+  color: var(--accent-deep);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+}
+
+.diffInline[open] summary {
+  margin-bottom: var(--space-2);
+}

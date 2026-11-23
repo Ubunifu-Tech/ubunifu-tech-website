@@ -123,9 +123,11 @@ export async function runConsoleTurn(input: {
   staff: StaffActor;
   message: string;
   page: unknown;
+  /** Only for the check script: a thread of its own, so a person's open chat is never touched. */
+  conversationId?: string;
 }): Promise<ConsoleTurn> {
   const { staff } = input;
-  const conversationId = (await consoleConversation(staff, true))!;
+  const conversationId = input.conversationId ?? (await consoleConversation(staff, true))!;
   const page = consolePage(input.page);
 
   const result = await runTurn<StaffContext>({

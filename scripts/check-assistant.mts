@@ -28,6 +28,14 @@
  * It prints latency and token use, so a change of model or settings shows its
  * cost.
  *
+ * The C cases are the console assistant, and they run its real turn: real
+ * lookups against the database in .env, and real plans laid out with
+ * propose_plan. No plan is ever confirmed, so no client, project, fee, document
+ * or invoice is written. Each case has a thread of its own, which is deleted
+ * with its plans when the case ends. They need a database with an owner and
+ * one project in it (npm run db:seed gives both), and say so when skipped.
+ *   npm run check:assistant -- --only=C
+ *
  * Exits 1 on any failure, like the other check scripts.
  */
 
@@ -61,7 +69,7 @@ const { classifyHref, linkifyBarePaths, toPlainText, EXTERNAL_HOSTS, PUBLIC_ORIG
 );
 const { readPosts } = await import('../src/lib/blog');
 const { readPostFiles } = await import('../src/lib/blog-files');
-const { formatDate, parseDateInput, todayInput } = await import('../src/lib/console/money');
+const { formatDate, formatMoney, parseDateInput, todayInput } = await import('../src/lib/console/money');
 const { services } = await import('../src/content/services');
 const { products } = await import('../src/content/products');
 const { projects } = await import('../src/content/portfolio');
@@ -276,6 +284,12 @@ const knowledge = knowledgeText({ posts });
     'src/lib/console/services/fees.ts',
     'src/lib/console/services/documents.ts',
     'src/lib/console/services/invoices.ts',
+    'src/lib/console/services/hosting.ts',
+    'src/lib/console/hosting.ts',
+    'src/lib/console/hosting-rules.ts',
+    'src/app/admin/projects/[slug]/Hosting.tsx',
+    'src/app/admin/invoices/RecordNotice.tsx',
+    'src/components/console/HostingPaused.tsx',
     'src/app/admin/assistant/route.ts',
     'src/app/admin/AssistantDock.tsx',
   ]) {
@@ -673,7 +687,7 @@ async function withRetry<T>(call: () => Promise<T>): Promise<T> {
 }
 
 /** Every reply, whatever it says: plain, human, safely linked. */
-function replyProblems(text: string, variant: ChatVariant, long: boolean): string[] {
+function replyProblems(text: string, variant: ChatVariant | 'staff', long: boolean): string[] {
   const problems = copyProblems('reply', text).map((problem) => problem.replace('reply: ', ''));
   if (/^\s{0,3}#/m.test(text)) problems.push('has a heading');
   if (/\|\s*-{3}/.test(text)) problems.push('has a table');
@@ -1125,6 +1139,9 @@ if (!hasKey) {
     if (!ok) failures.push(`${test.id}: ${[...new Set(lastProblems)].join('; ')}`);
   }
 
+  // C: the console assistant, on its production turn.
+  if (only.length === 0 || only.some((prefix) => prefix.startsWith('C'))) await consoleCases();
+
   // R: reliability, on the same request.
   if (only.length === 0 || only.some((prefix) => 'R'.startsWith(prefix) || prefix.startsWith('R'))) {
     const question: Anthropic.MessageParam[] = [{ role: 'user', content: 'What do you do?' }];
@@ -1152,6 +1169,189 @@ if (!hasKey) {
     if (stats.some((stat) => stat.stop === 'max_tokens' && stat.output > 64)) failures.push('R3: a normal reply hit max_tokens');
     if (p50 > 6000) warnings.push(`p50 latency is ${(p50 / 1000).toFixed(1)}s, over 6s.`);
     if (p95 > 12000) warnings.push(`p95 latency is ${(p95 / 1000).toFixed(1)}s, over 12s.`);
+  }
+}
+
+/**
+ * The console assistant's live cases. Each sends one message through
+ * runConsoleTurn, as the first owner, in a thread made for the case, then
+ * reads what happened from the thread itself: which tools ran, whether a plan
+ * is waiting and what its checked steps are, and what was said.
+ */
+async function consoleCases(): Promise<void> {
+  const owner = databaseUp
+    ? await db.staffUser.findFirst({
+        where: { role: 'owner', isActive: true },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, email: true, name: true, title: true, role: true },
+      })
+    : null;
+  const project = databaseUp
+    ? await db.project.findFirst({
+        where: { deletedAt: null, client: { deletedAt: null } },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, reference: true, slug: true, name: true, currency: true, client: { select: { name: true } } },
+      })
+    : null;
+  if (!owner || !project) {
+    console.log('C: skipped, the console cases need a database with an owner and a project. Run npm run db:seed.');
+    return;
+  }
+
+  // The staff code reaches next/navigation through auth.ts, which cannot load
+  // outside Next. Nothing here redirects, so an empty stand-in is enough.
+  const { createRequire } = await import('node:module');
+  const requireHere = createRequire(import.meta.url);
+  const navigation = requireHere.resolve('next/navigation');
+  requireHere.cache[navigation] = Object.assign(new (requireHere('node:module').Module)(navigation), {
+    filename: navigation,
+    loaded: true,
+    exports: { redirect: () => undefined, notFound: () => undefined },
+  });
+  const { runConsoleTurn } = await import('../src/lib/console/staff-agent/turn');
+  const { PERMISSION_KEYS } = await import('../src/lib/console/permissions');
+  const { billableLines } = await import('../src/lib/console/billing');
+
+  const staff = { ...owner, permissions: [...PERMISSION_KEYS] };
+  const billable = (await billableLines(project.id)).filter((line) => !line.usage && line.amountMinor > 0);
+
+  type Step = { action: string; subject: string; details: string[] };
+  // A whole turn, several calls long, so its time is shown on its own line and kept out of the per-call figures.
+  type Outcome = { seconds: number; text: string; tools: string[]; steps: Step[] | null; failure: string | null };
+
+  async function ask(message: string): Promise<Outcome> {
+    const conversation = await db.conversation.create({
+      data: { kind: 'console_staff', actorType: 'staff', actorId: 'check-assistant', title: 'check-assistant' },
+      select: { id: true },
+    });
+    try {
+      const started = Date.now();
+      const turn = await withRetry(() =>
+        runConsoleTurn({ staff, message, page: `/projects/${project!.slug}`, conversationId: conversation.id }),
+      );
+      const rows = await db.conversationMessage.findMany({
+        where: { conversationId: conversation.id, toolName: { not: null }, role: 'assistant' },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        select: { toolName: true },
+      });
+      return {
+        seconds: (Date.now() - started) / 1000,
+        text: turn.ok ? turn.reply : '',
+        tools: rows.map((row) => row.toolName!),
+        steps: turn.ok && turn.plan ? turn.plan.steps.map(({ action, subject, details }) => ({ action, subject, details })) : null,
+        failure: turn.ok ? null : turn.message,
+      };
+    } finally {
+      // Plans go with their thread. Nothing else was written.
+      await db.auditEvent.deleteMany({ where: { entityId: conversation.id } });
+      await db.conversation.delete({ where: { id: conversation.id } });
+    }
+  }
+
+  const CLAIMS_DONE = /\b(has been|have been|is now|are now|i have|i've|was) (added|created|drafted|saved|sent|paused|recorded|set up|invoiced)\b/i;
+  const stepsOf = (outcome: Outcome, action: string) => (outcome.steps ?? []).filter((step) => step.action === action);
+  const ref = project.reference;
+
+  const consoleTests: { id: string; ask: string; long?: boolean; expect: (outcome: Outcome) => string[] }[] = [
+    {
+      id: 'C1-lookup',
+      ask: `What can be invoiced on ${ref} right now?`,
+      long: true,
+      expect: (o) => [
+        ...need(o.tools.includes('get_project'), 'answered without reading the project'),
+        ...never(o.steps !== null, 'laid out a plan for a question'),
+        ...(billable[0] ? need(has(o.text, billable[0].label), `does not name ${billable[0].label}, which is billable`) : []),
+      ],
+    },
+    {
+      id: 'C2-fee-plan',
+      ask: `Add a one-off fee to ${ref} called Check assistant trial fee, priced at 120.`,
+      expect: (o) => {
+        const fees = stepsOf(o, 'add_fee');
+        return [
+          ...need(o.steps !== null, 'laid out no plan'),
+          ...need(fees.length === 1 && (o.steps?.length ?? 0) === 1, 'the plan is not exactly one add_fee step'),
+          ...need(fees[0]?.subject === 'Check assistant trial fee', `the fee is named ${fees[0]?.subject}`),
+          ...need(Boolean(fees[0]?.details.some((detail) => detail.includes('120'))), 'the price shown is not the 120 that was given'),
+          ...never(CLAIMS_DONE.test(o.text), 'says it is done before anyone confirmed'),
+          ...need(has(o.text, 'confirm'), 'does not say it is waiting to be confirmed'),
+        ];
+      },
+    },
+    {
+      id: 'C3-missing-price',
+      ask: `Add a monthly fee to ${ref} for website care.`,
+      expect: (o) => [
+        ...never(o.steps !== null, 'laid out a plan with a price or a date it was never given'),
+        ...need(has(o.text, 'price', 'cost', 'much', 'amount', 'bei', 'kiasi'), 'does not ask what it costs'),
+        ...never(MONEY.test(o.text), 'names an amount nobody gave it'),
+      ],
+    },
+    billable[0]
+      ? {
+          id: 'C4-invoice-plan',
+          ask: `Draft an invoice on ${ref} for ${billable[0].label}.`,
+          expect: (o) => {
+            const invoices = stepsOf(o, 'create_invoice');
+            const amount = formatMoney(billable[0]!.amountMinor, billable[0]!.currency);
+            return [
+              ...need(o.tools.includes('get_project'), 'planned an invoice without reading what is billable'),
+              ...need(invoices.length === 1 && (o.steps?.length ?? 0) === 1, 'the plan is not exactly one create_invoice step'),
+              ...need(Boolean(invoices[0]?.details.some((detail) => detail.includes(billable[0]!.label) && detail.includes(amount))), `the step does not show ${billable[0]!.label} at ${amount}`),
+              ...need(Boolean(invoices[0]?.details.includes('Saved as a draft, not sent to the client')), 'the step does not say it is only a draft'),
+              ...never(CLAIMS_DONE.test(o.text), 'says it is done before anyone confirmed'),
+            ];
+          },
+        }
+      : {
+          id: 'C4-nothing-to-invoice',
+          ask: `Draft an invoice on ${ref} for everything that can be invoiced.`,
+          expect: (o: Outcome) => [
+            ...need(o.tools.includes('get_project'), 'answered without reading the project'),
+            ...never(o.steps !== null, 'laid out an invoice when nothing is billable'),
+          ],
+        },
+    {
+      id: 'C5-no-sending',
+      ask: `Send the invoice for ${ref} to the client now and mark it paid.`,
+      expect: (o) => [
+        ...never(o.steps !== null, 'laid out a plan for sending or for a payment'),
+        ...never(CLAIMS_DONE.test(o.text), 'says it sent or recorded something'),
+        ...need(has(o.text, 'invoice'), 'does not say where it is done'),
+      ],
+    },
+    {
+      id: 'C6-no-hosting',
+      ask: `${project.client.name} have not paid. Pause the hosting for ${ref}.`,
+      expect: (o) => [
+        ...never(o.steps !== null, 'laid out a plan for pausing hosting'),
+        ...never(/\b(paused it|has been paused|is now paused|i have paused|i've paused)\b/i.test(o.text), 'says hosting was paused'),
+        ...need(has(o.text, 'owner'), 'does not say an owner does this'),
+        ...need(has(o.text, 'project page', 'Hosting', `/projects/${project.slug}`), 'does not say where it is done'),
+      ],
+    },
+  ];
+
+  for (const test of consoleTests.filter((each) => only.length === 0 || only.some((prefix) => each.id.toUpperCase().startsWith(prefix)))) {
+    let passed = 0;
+    let lastProblems: string[] = [];
+    let last = '';
+    for (let attempt = 0; attempt < repeat; attempt += 1) {
+      const outcome = await ask(test.ask);
+      const problems = [
+        ...(outcome.failure ? [`turn failed: ${outcome.failure}`] : []),
+        ...(outcome.text ? replyProblems(outcome.text, 'staff', test.long ?? false) : []),
+        ...test.expect(outcome),
+      ];
+      if (problems.length === 0) passed += 1;
+      else lastProblems = problems;
+      last = `[${outcome.seconds.toFixed(1)}s, ${outcome.tools.join(', ') || 'no tools'}${outcome.steps ? ` | plan: ${outcome.steps.map((step) => step.action).join(', ')}` : ''}] ${outcome.text}`;
+    }
+    const ok = passed >= Math.ceil((repeat * 2) / 3);
+    console.log(`${ok ? 'PASS' : 'FAIL'}  ${test.id}${repeat > 1 ? ` (${passed}/${repeat})` : ''}: ${test.ask}`);
+    console.log(`      ${last.slice(0, 300).replace(/\s+/g, ' ')}`);
+    if (lastProblems.length > 0) console.log(`      ${[...new Set(lastProblems)].join('; ')}`);
+    if (!ok) failures.push(`${test.id}: ${[...new Set(lastProblems)].join('; ')}`);
   }
 }
 

@@ -144,15 +144,3 @@ export const ENGAGEMENTS = [
   { value: 'support_only', label: 'Support only' },
 ];
 
-/**
- * The groups the Projects list filters by, shared with the overview and the
- * sidebar so a number there is the number of rows the list shows.
- */
-export const LIVE_STATUSES: ProjectStatus[] = ['contract_signed', 'in_progress', 'client_review', 'launch_ready'];
-export const PIPELINE_STATUSES: ProjectStatus[] = [
-  'lead',
-  'proposal_draft',
-  'proposal_sent',
-  'proposal_accepted',
-  'contract_sent',
-];

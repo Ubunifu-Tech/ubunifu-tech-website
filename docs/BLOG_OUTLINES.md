@@ -1,18 +1,18 @@
 # Ubunifu Journal — Editorial Roadmap
 
-The Journal supports both sides of Ubunifu: practical consulting lessons and the decisions behind the products. Published articles live in [`_posts/`](_posts/) and are the source of truth; this document is only a planning aid.
+The Journal supports both sides of Ubunifu: practical consulting lessons and the decisions behind the products. Published articles live in [`_posts/`](../_posts/) and are the source of truth; this document is only a planning aid.
 
 ## Published topics
 
 These subjects are already covered and should be extended only when there is a genuinely new angle or new evidence:
 
-- **Building software in Tanzania and Africa** — [`building-software-for-africa.md`](_posts/building-software-for-africa.md)
-- **Usage-based pricing for Insight** — [`why-pay-as-you-go-pricing.md`](_posts/why-pay-as-you-go-pricing.md)
-- **Builder versus custom software decisions** — [`website-builder-or-custom-build.md`](_posts/website-builder-or-custom-build.md)
-- **Safari King as a connected website and operations platform** — [`safari-king-website-operating-system.md`](_posts/safari-king-website-operating-system.md)
-- **Professional tourism websites and enquiry design** — [`what-professional-means-tourism-website.md`](_posts/what-professional-means-tourism-website.md)
-- **Swahili-language AI interaction design** — [`why-our-ai-answers-in-swahili.md`](_posts/why-our-ai-answers-in-swahili.md)
-- **Credit-ledger workflows in Sifa** — [`software-that-understands-credit.md`](_posts/software-that-understands-credit.md)
+- **Building software in Tanzania and Africa** — [`building-software-for-africa.md`](../_posts/building-software-for-africa.md)
+- **Usage-based pricing for Insight** — [`why-pay-as-you-go-pricing.md`](../_posts/why-pay-as-you-go-pricing.md)
+- **Builder versus custom software decisions** — [`website-builder-or-custom-build.md`](../_posts/website-builder-or-custom-build.md)
+- **Safari King as a connected website and operations platform** — [`safari-king-website-operating-system.md`](../_posts/safari-king-website-operating-system.md)
+- **Professional tourism websites and enquiry design** — [`what-professional-means-tourism-website.md`](../_posts/what-professional-means-tourism-website.md)
+- **Swahili-language AI interaction design** — [`why-our-ai-answers-in-swahili.md`](../_posts/why-our-ai-answers-in-swahili.md)
+- **Credit-ledger workflows in Sifa** — [`software-that-understands-credit.md`](../_posts/software-that-understands-credit.md)
 
 ## Optional future articles
 

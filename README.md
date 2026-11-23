@@ -13,7 +13,7 @@ systems for Tanzanian organisations. Alongside client work, the studio builds so
 products around repeatable local workflows. Consulting keeps the team close to specific
 problems; product work turns those lessons into reusable tools.
 
-For the full positioning, voice, and messaging, see [`POSITIONING.md`](POSITIONING.md).
+For the full positioning, voice, and messaging, see [`POSITIONING.md`](docs/POSITIONING.md).
 
 ### What we offer
 
@@ -324,11 +324,7 @@ ubunifu-tech-website/
 │   ├── content/             # Editable page data — no JSX logic (see below)
 │   └── lib/                 # Blog, email, metadata, and social-image helpers
 ├── .env.example             # Safe server-environment template
-├── BRANDING.md              # Ligature mark, palette, type, and editorial image system
-├── POSITIONING.md           # Company model, offers, claim boundaries, voice
-├── WEBSITE_CONTENT.md       # "Site as built" reference / page map
-├── PROJECT_ROADMAP.md       # Development roadmap
-├── SITE_IMPROVEMENTS.md     # Changelog
+├── docs/                    # Positioning, brand, content map, roadmap, changelog, artwork notes
 ├── next.config.ts           # Next.js configuration and security headers
 └── README.md                # This file
 ```
@@ -352,7 +348,7 @@ device for large paths, headlines, and atmospheres. The company tagline remains 
 never part of the navigation or logo lockup.
 
 Design tokens are the single source of truth — every color, font, and spacing value lives in
-[`src/app/globals.css`](src/app/globals.css). See [`BRANDING.md`](BRANDING.md) for the full
+[`src/app/globals.css`](src/app/globals.css). See [`BRANDING.md`](docs/BRANDING.md) for the full
 system, [`public/brand/`](public/brand/) for canonical SVG assets, and
 [`/brand`](https://ubunifutech.com/brand) for the shareable brand kit and downloads.
 `public/logo-v2.png` is the social avatar. `public/og.jpg` is the social preview, a 1200 × 630 crop of `public/og.png`, which remains campaign media rather than a canonical logo master.
@@ -363,11 +359,11 @@ system, [`public/brand/`](public/brand/) for canonical SVG assets, and
 
 | Doc | Owns |
 |---|---|
-| [`POSITIONING.md`](POSITIONING.md) | Company model, services, products, sectors, claim boundaries, and voice |
-| [`BRANDING.md`](BRANDING.md) | Ubunifu Ligature, palette and contrast, typography, editorial imagery, and asset paths |
-| [`WEBSITE_CONTENT.md`](WEBSITE_CONTENT.md) | "Site as built" — page map, where each piece of content lives |
-| [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md) | Development roadmap (phases + status) |
-| [`SITE_IMPROVEMENTS.md`](SITE_IMPROVEMENTS.md) | Running changelog of site work |
+| [`POSITIONING.md`](docs/POSITIONING.md) | Company model, services, products, sectors, claim boundaries, and voice |
+| [`BRANDING.md`](docs/BRANDING.md) | Ubunifu Ligature, palette and contrast, typography, editorial imagery, and asset paths |
+| [`WEBSITE_CONTENT.md`](docs/WEBSITE_CONTENT.md) | "Site as built" — page map, where each piece of content lives |
+| [`PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md) | Development roadmap (phases + status) |
+| [`SITE_IMPROVEMENTS.md`](docs/SITE_IMPROVEMENTS.md) | Running changelog of site work |
 
 ---
 

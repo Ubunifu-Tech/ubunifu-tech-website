@@ -190,7 +190,7 @@ export function AmbientShader({
           swirl={(character?.swirl ?? 0.3) + Math.min(Math.hypot(pointer.x, pointer.y), 1) * 0.18}
           distortion={character?.distortion ?? 0.85}
           speed={character?.speed ?? 0.1}
-          /* Matches the film grain specified in IMAGE_PROMPTS.md, so the shader
+          /* Matches the film grain specified in docs/IMAGE_PROMPTS.md, so the shader
              and the illustrations share a surface. */
           grainOverlay={0.04}
           /* 0.36MP is well under a 1440x780 hero at 1x. The field is entirely

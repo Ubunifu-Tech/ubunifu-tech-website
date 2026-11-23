@@ -1,6 +1,6 @@
 # Ubunifu Technologies — Brand System
 
-This is the concise source of truth for Ubunifu’s visual identity. Keep it aligned with the implemented tokens in [`src/app/globals.css`](src/app/globals.css), the logo component in [`src/components/BrandMark.tsx`](src/components/BrandMark.tsx), and the live brand kit at [`/brand`](https://ubunifutech.com/brand).
+This is the concise source of truth for Ubunifu’s visual identity. Keep it aligned with the implemented tokens in [`src/app/globals.css`](../src/app/globals.css), the logo component in [`src/components/BrandMark.tsx`](../src/components/BrandMark.tsx), and the live brand kit at [`/brand`](https://ubunifutech.com/brand).
 
 Last updated: 8 September 2026.
 
@@ -30,20 +30,20 @@ The orange-to-violet gradient is a separate signature device for large paths, pr
 
 ### Canonical assets
 
-Downloadable vector masters live in [`public/brand/`](public/brand/):
+Downloadable vector masters live in [`public/brand/`](../public/brand/):
 
 | Asset | Use |
 |---|---|
-| [`ubunifu-mark.svg`](public/brand/ubunifu-mark.svg) | Default orange-and-violet Ligature on light backgrounds |
-| [`ubunifu-lockup.svg`](public/brand/ubunifu-lockup.svg) | Full-color “Ubunifu Technologies” horizontal lockup on light backgrounds |
-| [`ubunifu-mark-inverse.svg`](public/brand/ubunifu-mark-inverse.svg) | Orange-and-violet Ligature prepared for dark backgrounds |
-| [`ubunifu-mark-navy.svg`](public/brand/ubunifu-mark-navy.svg) | Single-color mark where a restrained treatment is needed |
-| [`ubunifu-mark-white.svg`](public/brand/ubunifu-mark-white.svg) | Single-colour white mark for purple or image fields |
-| [`ubunifu-lockup-white.svg`](public/brand/ubunifu-lockup-white.svg) | Full-color Ligature with a white wordmark on dark backgrounds |
+| [`ubunifu-mark.svg`](../public/brand/ubunifu-mark.svg) | Default orange-and-violet Ligature on light backgrounds |
+| [`ubunifu-lockup.svg`](../public/brand/ubunifu-lockup.svg) | Full-color “Ubunifu Technologies” horizontal lockup on light backgrounds |
+| [`ubunifu-mark-inverse.svg`](../public/brand/ubunifu-mark-inverse.svg) | Orange-and-violet Ligature prepared for dark backgrounds |
+| [`ubunifu-mark-navy.svg`](../public/brand/ubunifu-mark-navy.svg) | Single-color mark where a restrained treatment is needed |
+| [`ubunifu-mark-white.svg`](../public/brand/ubunifu-mark-white.svg) | Single-colour white mark for purple or image fields |
+| [`ubunifu-lockup-white.svg`](../public/brand/ubunifu-lockup-white.svg) | Full-color Ligature with a white wordmark on dark backgrounds |
 
 Raster delivery assets:
 
-- [`public/logo-v2.png`](public/logo-v2.png) — 512 × 512 navy avatar tile with the orange-and-violet Ligature
+- [`public/logo-v2.png`](../public/logo-v2.png) — 512 × 512 navy avatar tile with the orange-and-violet Ligature
 
 The [`/brand`](https://ubunifutech.com/brand) page is the shareable reference and download surface. The six SVG files are the canonical logo masters; raster artwork is derived delivery media. Social-preview artwork is a separate campaign asset and must use the same master geometry when it is next deliberately refreshed.
 
@@ -94,7 +94,7 @@ The interactive aliases deliberately use `--cta: var(--brand-deep)` and `--cta-h
 
 ## Typography
 
-Fonts are loaded through `next/font` in [`src/app/layout.tsx`](src/app/layout.tsx).
+Fonts are loaded through `next/font` in [`src/app/layout.tsx`](../src/app/layout.tsx).
 
 | Role | Family | Weights | Guidance |
 |---|---|---|---|
@@ -133,7 +133,7 @@ Editorial imagery explains the subject beside it. Choose a recognisable scene, o
 
 - Standard editorial source canvas: **16:9 or 3:2 landscape**, chosen for the placement.
 - Keep the focal idea inside a centered safe area so the image can crop to 4:3 and square without losing meaning.
-- Store editorial concepts in [`public/editorial/`](public/editorial/). Prefer WebP at runtime when a paired WebP exists; retain PNG only when it is the required source or delivery format.
+- Store editorial concepts in [`public/editorial/`](../public/editorial/). Prefer WebP at runtime when a paired WebP exists; retain PNG only when it is the required source or delivery format.
 - Keep product names, statuses, client domains, capabilities, and destination links in accessible HTML rather than baking them into imagery.
 - Products use individual wordless editorial illustrations in open image-and-text rows: stock and sales records for Sifa and website modules for Rafiki. These are explanatory paper metaphors, not screenshots. Keep the homepage preview text-led rather than repeating the full collection. Exact prompts and asset paths are in [PRODUCT_ARTWORK.md](PRODUCT_ARTWORK.md).
 - Client project visuals are text-free SVG relationship diagrams, not generated landscape scenes. Safari King shows an operations hub; Usambara shows enquiry-to-email branching. `EditorialVisual` selects the project, and `SystemDiagram` supplies the shared vector system across previews, work pages, and related article views. Descriptions remain available to screen readers; visible project names and explanations stay outside the artwork. The legacy rasters remain only for existing social metadata and recoverability.

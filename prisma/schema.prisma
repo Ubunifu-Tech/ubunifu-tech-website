@@ -63,7 +63,6 @@ model StaffUser {
   payments         Payment[]         @relation("PaymentRecordedBy")
   reversedPayments Payment[]         @relation("PaymentReversedBy")
   refundsRecorded  Refund[]          @relation("RefundRecordedBy")
-  timeEntries      TimeEntry[]       @ignore
   posts            Post[]
   mediaAssets      MediaAsset[]
   assignedTasks    Deliverable[]     @relation("DeliverableAssignee")
@@ -353,7 +352,6 @@ model Project {
   brandKit        BrandKit?
   managedServices ManagedService[]
   statusEvents    ProjectStatusEvent[]
-  timeEntries     TimeEntry[]          @ignore
   enquiries       Enquiry[]
   costs           Cost[]
   regularCosts    RegularCost[]
@@ -1211,27 +1209,6 @@ model EmailLog {
   @@index([toAddress])
   @@index([entityType, entityId])
   @@index([entityId])
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Effort
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Not billed by the hour today, but knowing what a fixed-price job actually
-/// cost is the only way to price the next one honestly.
-model TimeEntry {
-  id        String    @id @default(cuid())
-  projectId String
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  staffId   String
-  staff     StaffUser @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  minutes   Int
-  note      String?
-  workedOn  DateTime
-  createdAt DateTime  @default(now())
-
-  @@index([projectId, workedOn])
-  @@ignore
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

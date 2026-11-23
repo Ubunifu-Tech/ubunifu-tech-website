@@ -1,5 +1,5 @@
 // "Why we exist" / values cards on the About page. Icons are lucide-react.
-// Aligned with the agency positioning in POSITIONING.md.
+// Aligned with the agency positioning in docs/POSITIONING.md.
 
 import { Globe, Wrench, Zap, Users, type LucideIcon } from 'lucide-react';
 

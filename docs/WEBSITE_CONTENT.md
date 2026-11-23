@@ -11,7 +11,7 @@ Last refreshed: 8 September 2026.
 - **Location:** Arusha, Tanzania
 - **Contact:** `info@ubunifutech.com` · `+255 748 548 816`
 
-Company details, primary navigation, footer columns, and product/service URLs are centralized in [`src/content/site.ts`](src/content/site.ts). The Footer component owns its Privacy and Brand-kit legal links.
+Company details, primary navigation, footer columns, and product/service URLs are centralized in [`src/content/site.ts`](../src/content/site.ts). The Footer component owns its Privacy and Brand-kit legal links.
 
 ## Navigation and shared chrome
 
@@ -21,7 +21,7 @@ The full **Ubunifu Technologies** lockup links home. Its original Ubunifu Ligatu
 
 “Start a project” links to `/contact` as the desktop and mobile CTA. The positioning line “Consulting + products, built in Tanzania.” is supporting copy and never appears inside the navigation or logo lockup. The footer adds product links, all service anchors, Industries, Careers, Contact, Privacy, and the Brand kit.
 
-[`src/app/layout.tsx`](src/app/layout.tsx) renders the skip link, Navbar, page content, Footer, and WhatsApp button. Lenis smooth scrolling is disabled for reduced-motion users. Most marketing pages render their own closing `CtaBand`; Contact, Careers, Privacy, Brand, and the 404 do not.
+[`src/app/layout.tsx`](../src/app/layout.tsx) renders the skip link, Navbar, page content, Footer, and WhatsApp button. Lenis smooth scrolling is disabled for reduced-motion users. Most marketing pages render their own closing `CtaBand`; Contact, Careers, Privacy, Brand, and the 404 do not.
 
 Typography uses three shared sizes only: display, heading, and 1rem body. Poppins headings use medium 500; Inter body text, labels, and controls use regular 400. Tracking is normal outside the original logo, which preserves its established weights. Labels and captions have no extra microtext tiers. The navigation switches to its scrollable mobile layout at 1050px. See `BRANDING.md`; `npm run check:typography` prevents drift.
 
@@ -44,7 +44,7 @@ Typography uses three shared sizes only: display, heading, and 1rem body. Poppin
 | `/brand` | Ubunifu Ligature kit, palette, type, rules, and downloads | `src/app/brand/page.tsx` |
 | `/api/contact` | Validated contact-form email endpoint | `src/app/api/contact/route.ts` |
 
-[`src/app/sitemap.ts`](src/app/sitemap.ts) publishes static routes plus every case study and journal article. [`src/app/not-found.tsx`](src/app/not-found.tsx) owns the branded 404. Shared page metadata uses [`src/lib/metadata.ts`](src/lib/metadata.ts) and `/og.jpg`; case studies have generated route-level cards, while journal articles use their own cover images for social metadata.
+[`src/app/sitemap.ts`](../src/app/sitemap.ts) publishes static routes plus every case study and journal article. [`src/app/not-found.tsx`](../src/app/not-found.tsx) owns the branded 404. Shared page metadata uses [`src/lib/metadata.ts`](../src/lib/metadata.ts) and `/og.jpg`; case studies have generated route-level cards, while journal articles use their own cover images for social metadata.
 
 ## Homepage narrative
 
@@ -58,13 +58,13 @@ The homepage tells one story: Ubunifu can build a specific system with a client 
 6. **Insights** — the three newest journal posts; the visual lead avoids repeating a cover already used in selected work.
 7. **CtaBand** — one closing contact action.
 
-The exact order lives in [`src/app/page.tsx`](src/app/page.tsx). `EngagementPaths` is mounted on the homepage, between the capabilities index and the work preview. `ProblemStrip` no longer exists; its copy now lives in `pillars.tsx` and renders as `WhyUbunifu`. The detailed delivery process lives on Services.
+The exact order lives in [`src/app/(site)/page.tsx`](<../src/app/(site)/page.tsx>). `EngagementPaths` is mounted on the homepage, between the capabilities index and the work preview. `ProblemStrip` no longer exists; its copy now lives in `pillars.tsx` and renders as `WhyUbunifu`. The detailed delivery process lives on Services.
 
 ## Consulting, work, products, and sectors
 
 ### Services (`/build`)
 
-Six service records in [`src/content/services.tsx`](src/content/services.tsx):
+Six service records in [`src/content/services.tsx`](../src/content/services.tsx):
 
 1. Websites & Custom Platforms
 2. Hosting, Domains & Email
@@ -77,7 +77,7 @@ The page opens with “Technology for your business.” over its dedicated edito
 
 ### Work (`/work`)
 
-[`src/content/portfolio.tsx`](src/content/portfolio.tsx) owns the two named client projects:
+[`src/content/portfolio.tsx`](../src/content/portfolio.tsx) owns the two named client projects:
 
 - **Safari King Africa** — booking platform + operations system
 - **Usambara Destination** — eco-tourism site + enquiry engine
@@ -86,7 +86,7 @@ Each record supplies the Work narrative, `/work/[slug]` case study, visual ident
 
 ### Products (`/products`)
 
-[`src/content/products.tsx`](src/content/products.tsx) is the status and copy authority:
+[`src/content/products.tsx`](../src/content/products.tsx) is the status and copy authority:
 
 | Product | Code status | Current presentation |
 |---|---|---|
@@ -97,23 +97,23 @@ Custom consulting belongs under `/build`; it is not a third product. Product ava
 
 ### Industries (`/industries`)
 
-[`src/content/sectors.tsx`](src/content/sectors.tsx) carries a `proven` flag plus summaries and possible offerings. Tourism & Hospitality is the only proven sector and opens as cinematic named evidence. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture, Education, and Government follow in an open ledger as potential workflow fits, with specialist and regulatory caveats where needed.
+[`src/content/sectors.tsx`](../src/content/sectors.tsx) carries a `proven` flag plus summaries and possible offerings. Tourism & Hospitality is the only proven sector and opens as cinematic named evidence. SMEs/Retail, Finance, NGOs, Healthcare, Agriculture, Education, and Government follow in an open ledger as potential workflow fits, with specialist and regulatory caveats where needed.
 
 ## About and careers
 
-[`src/content/about.tsx`](src/content/about.tsx) owns the studio story. [`src/content/values.tsx`](src/content/values.tsx) owns operating principles, and [`src/content/team.tsx`](src/content/team.tsx) owns team bios and links. `/about` uses those sources without generic hero/story images or a second delivery-process section. About, Work, Products, Industries, Careers, and Contact use compact mastheads so their primary content appears sooner.
+[`src/content/about.tsx`](../src/content/about.tsx) owns the studio story. [`src/content/values.tsx`](../src/content/values.tsx) owns operating principles, and [`src/content/team.tsx`](../src/content/team.tsx) owns team bios and links. `/about` uses those sources without generic hero/story images or a second delivery-process section. About, Work, Products, Industries, Careers, and Contact use compact mastheads so their primary content appears sooner.
 
 `/careers` currently advertises no jobs, internships, or contracts. The speculative capability-area listing is removed. Informal introductions link to `/privacy` for data-handling guidance; there is no unrelated project-sales CTA.
 
 ## Journal and cover images
 
-Journal articles live in the `Post` table and are written in the console at `/posts`. [`src/lib/blog.ts`](src/lib/blog.ts) reads them; publishing revalidates `/blog`, the home page, the post itself and the sitemap, so nothing needs a deploy. The index derives its published count and post order at render time; do not hard-code either in documentation.
+Journal articles live in the `Post` table and are written in the console at `/posts`. [`src/lib/blog.ts`](../src/lib/blog.ts) reads them; publishing revalidates `/blog`, the home page, the post itself and the sitemap, so nothing needs a deploy. The index derives its published count and post order at render time; do not hard-code either in documentation.
 
-The Markdown files in [`_posts/`](_posts/) are the fallback for a build with no `DATABASE_URL` — a preview of a marketing change with no database attached — and they are parsed by [`src/lib/blog-files.ts`](src/lib/blog-files.ts). When a database is configured, a failure to read it fails the page rather than quietly serving the files, because republishing a post that was taken down is worse than a page that stops. `npm run check:blog-parity` asserts the two sources still say the same thing; [`scripts/import-posts.mts`](scripts/import-posts.mts) is what moved the files into the table.
+The Markdown files in [`_posts/`](../_posts/) are the fallback for a build with no `DATABASE_URL` — a preview of a marketing change with no database attached — and they are parsed by [`src/lib/blog-files.ts`](../src/lib/blog-files.ts). When a database is configured, a failure to read it fails the page rather than quietly serving the files, because republishing a post that was taken down is worse than a page that stops. `npm run check:blog-parity` asserts the two sources still say the same thing; [`scripts/import-posts.mts`](../scripts/import-posts.mts) is what moved the files into the table.
 
 **Images and covers.** Pictures for a post are uploaded from the console — the cover field's upload button, and the editor's Image button for pictures inside the body. They are stored privately in Vercel Blob and served from our own domain at `/media/<id>.<ext>`, so link previews read `ubunifutech.com` and `next/image` needs no remote-host configuration. `/media` can only ever read the `MediaAsset` table, never a client's files. Covers must be still images (JPG, PNG, WebP, AVIF); GIFs can go inside a post. A post saved with a `/media/…` cover is checked against the table so a mistyped or removed image is refused rather than shown broken.
 
-A post with no cover gets one of the six standing wordless compositions, chosen by hashing its slug ([`src/content/blog-covers.ts`](src/content/blog-covers.ts)) — distinct from its neighbours and fixed for the life of the post.
+A post with no cover gets one of the six standing wordless compositions, chosen by hashing its slug ([`src/content/blog-covers.ts`](../src/content/blog-covers.ts)) — distinct from its neighbours and fixed for the life of the post.
 
 Standard frontmatter (`coverImage` and `coverAlt` are an optional pair):
 
@@ -138,13 +138,13 @@ Rules enforced by `src/lib/blog-files.ts` on the files, and by the console forms
 - duplicate or empty tags are rejected;
 - posts sort by newest date, then slug; reading time is estimated from Markdown at roughly 200 words per minute.
 
-If no cover pair is supplied, the fallback is `/editorial/build-or-buy.webp` with its default alt text. The resolved cover appears in the Journal grid, article hero, Open Graph/Twitter metadata, and `BlogPosting` JSON-LD. Store journal concepts in [`public/editorial/`](public/editorial/); use 16:9 or 3:2 sources with crop-safe compositions. The seven current articles have distinct cover paths. See [`EDITORIAL_ASSETS.md`](EDITORIAL_ASSETS.md) for new asset roles, provenance, and exact generation prompts.
+If no cover pair is supplied, the fallback is `/editorial/build-or-buy.webp` with its default alt text. The resolved cover appears in the Journal grid, article hero, Open Graph/Twitter metadata, and `BlogPosting` JSON-LD. Store journal concepts in [`public/editorial/`](../public/editorial/); use 16:9 or 3:2 sources with crop-safe compositions. The seven current articles have distinct cover paths. See [`EDITORIAL_ASSETS.md`](EDITORIAL_ASSETS.md) for new asset roles, provenance, and exact generation prompts.
 
 ## Brand kit and assets
 
 `/brand` is a public footer route and sitemap entry, not a primary-navigation item. It previews the orange-and-violet Ubunifu Ligature with its dark-navy foundation, full “Ubunifu Technologies” one-line lockup, primary and reversed treatments, canonical color roles, typography, voice, and basic usage rules.
 
-Canonical downloads live in [`public/brand/`](public/brand/):
+Canonical downloads live in [`public/brand/`](../public/brand/):
 
 - `ubunifu-mark.svg`
 - `ubunifu-lockup.svg`
@@ -169,7 +169,7 @@ The `/contact` form collects name, email, enquiry type, and a 20–5,000 charact
 - sends the team notification first, then attempts an acknowledgement to the sender; acknowledgement errors and exceptions are logged without failing the successful team notification;
 - returns `503` with the direct email address when Resend is not configured.
 
-The form warns against sending passwords or sensitive records and links to `/privacy`. The privacy page explains contact and careers data, limited anti-abuse information, Resend delivery, retention, external services, and correction/deletion requests. Email templates live in [`src/lib/emails.ts`](src/lib/emails.ts); environment setup lives in [`.env.example`](.env.example) and [`README.md`](README.md).
+The form warns against sending passwords or sensitive records and links to `/privacy`. The privacy page explains contact and careers data, limited anti-abuse information, Resend delivery, retention, external services, and correction/deletion requests. Email templates live in [`src/lib/emails.ts`](../src/lib/emails.ts); environment setup lives in [`.env.example`](../.env.example) and [`README.md`](../README.md).
 
 ## Source map
 

@@ -70,6 +70,7 @@ model StaffUser {
   reviewsAsked     ProjectReview[]
   costsRecorded    Cost[]            @relation("CostRecordedBy")
   incomeRecorded   Income[]          @relation("IncomeRecordedBy")
+  overdueNotices   OverdueNotice[]   @relation("OverdueNoticeRecordedBy")
 
   @@index([isActive])
 }
@@ -358,6 +359,17 @@ model Project {
   /// Sifa subscription, say. Its money counts towards the product.
   productId       String?
   product         Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  /// The Vercel project this site is served from (prj_...), linked by an
+  /// owner so its hosting can be paused when an invoice stays unpaid. Null
+  /// when we do not host it on Vercel.
+  vercelProjectId   String?
+  /// That project's name on Vercel when it was linked, so a person can tell
+  /// which site the id is.
+  vercelProjectName String?
+  /// When its hosting was paused from the console. Null while the site is
+  /// serving.
+  hostingPausedAt   DateTime?
 
   @@index([clientId])
   @@index([status])
@@ -711,12 +723,41 @@ model Invoice {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  lines    InvoiceLine[]
-  payments Payment[]
-  renewals RenewalEvent[]
+  lines          InvoiceLine[]
+  payments       Payment[]
+  renewals       RenewalEvent[]
+  overdueNotices OverdueNotice[]
 
   @@index([clientId, status])
   @@index([projectId])
+}
+
+enum OverdueNoticeChannel {
+  email
+  whatsapp
+  phone
+  in_person
+  letter
+}
+
+/// A record that the client was told an invoice is overdue: when, how, and
+/// who recorded it. The console does not send the notice; a person gives it
+/// and writes it down here. Hosting cannot be paused for an unpaid invoice
+/// until one of these exists for it, dated after the invoice fell due.
+model OverdueNotice {
+  id           String               @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  /// The day the client was told, stored at noon UTC like a typed date.
+  givenAt      DateTime
+  channel      OverdueNoticeChannel
+  /// Who was told and what was said, in the recorder's words.
+  note         String?
+  recordedById String?
+  recordedBy   StaffUser?           @relation("OverdueNoticeRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime             @default(now())
+
+  @@index([invoiceId])
 }
 
 model InvoiceLine {
@@ -1515,9 +1556,9 @@ enum AssistantPlanStatus {
 /// until the person it was written for confirms it, and each step is then
 /// checked again against their permissions and the records as they stand.
 model AssistantPlan {
-  id             String       @id @default(cuid())
+  id             String              @id @default(cuid())
   conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   /// Who asked. Only they can confirm or discard it.
   staffId        String
   status         AssistantPlanStatus @default(pending)

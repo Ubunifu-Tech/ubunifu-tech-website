@@ -1476,3 +1476,23 @@
     animation: none;
   }
 }
+
+/* A form that belongs to a table, inside its frame and under its rows. */
+.frameForm {
+  padding: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+/* The Hosting section: a few short blocks, evenly spaced under the title. */
+.hosting {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.hosting .dates {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.hosting dd {
+  overflow-wrap: anywhere;
+}

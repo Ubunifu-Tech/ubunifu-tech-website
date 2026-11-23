@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/console/auth';
 import { Callout } from '@/components/console/Callout';
+import { HostingPaused } from '@/components/console/HostingPaused';
+import { isOverdue, noticeChannelLabel } from '@/lib/console/hosting-rules';
 import { activityFor } from '@/lib/console/activity';
 import { issuedEditFacts } from '@/lib/console/billing';
 import { issuedInvoiceEdit } from '@/lib/console/invoice-edits';
@@ -25,6 +27,7 @@ import {
   SendInvoiceButton,
   VoidInvoiceForm,
 } from '../InvoiceControls';
+import { RecordNotice } from '../RecordNotice';
 import { Figures } from '@/components/console/Figures';
 import styles from '../../Admin.module.css';
 import forms from '@/styles/forms.module.css';
@@ -70,7 +73,17 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
       paidAt: true,
       voidedAt: true,
       client: { select: { name: true, slug: true, legalName: true, deletedAt: true } },
-      project: { select: { name: true, slug: true, reference: true, deletedAt: true } },
+      project: { select: { id: true, name: true, slug: true, reference: true, deletedAt: true } },
+      overdueNotices: {
+        orderBy: [{ givenAt: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          id: true,
+          givenAt: true,
+          channel: true,
+          note: true,
+          recordedBy: { select: { name: true } },
+        },
+      },
       lines: {
         orderBy: { position: 'asc' },
         select: {
@@ -146,6 +159,11 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
     invoice.status !== 'draft' &&
     invoice.status !== 'void' &&
     isPastDay(invoice.dueAt, new Date());
+  // Owed and past its due date today: when a notice to the client can be recorded.
+  const overdueNow = isOverdue(invoice, now);
+  const dayAfterDue = invoice.dueAt
+    ? toDateInputValue(new Date(invoice.dueAt.getTime() + 86_400_000))
+    : todayInput();
   const methodLabel = (value: string) =>
     PAYMENT_METHODS.find((method) => method.value === value)?.label ?? value;
   const refunds = invoice.payments
@@ -217,6 +235,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
           {formatShortDate(removedAt)}. This invoice is kept for the record. To work on it, bring{' '}
           {invoice.client.deletedAt ? 'the client' : 'the project'} back first.
         </Callout>
+      )}
+
+      {!removedAt && invoice.project && (
+        <HostingPaused projectId={invoice.project.id} owner={staff.role === 'owner'} />
       )}
 
       <Figures
@@ -552,6 +574,74 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {(overdueNow || invoice.overdueNotices.length > 0) && (
+          <div id="overdue-notices" className={table.frame}>
+            <div className={table.toolbar}>
+              <div className={table.toolbarText}>
+                <h2 className={table.title}>Overdue notices</h2>
+                <span className={table.count}>
+                  Each time the client was told this invoice is late
+                </span>
+              </div>
+            </div>
+            <div className={table.scroll}>
+              <table className={`${table.table} ${table.compact}`}>
+                <thead>
+                  <tr>
+                    <th className={table.th} scope="col">
+                      Given
+                    </th>
+                    <th className={table.th} scope="col">
+                      How
+                    </th>
+                    <th className={table.th} scope="col">
+                      Note
+                    </th>
+                    <th className={table.th} scope="col">
+                      Recorded by
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.overdueNotices.length === 0 ? (
+                    <tr>
+                      <td className={table.emptyCell} colSpan={4}>
+                        <p className={table.emptyTitle}>No notice recorded yet.</p>
+                        <p className={table.emptyHint}>
+                          Tell the client the invoice is overdue, then record it here. Hosting can
+                          only be paused once a notice is on record.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    invoice.overdueNotices.map((notice) => (
+                      <tr key={notice.id} className={table.tr}>
+                        <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
+                          {formatShortDate(notice.givenAt)}
+                        </td>
+                        <td className={`${table.td} ${table.nowrap}`}>
+                          {noticeChannelLabel(notice.channel)}
+                        </td>
+                        <td className={table.td}>
+                          {notice.note ?? <span className={table.muted}>None</span>}
+                        </td>
+                        <td className={`${table.td} ${table.nowrap}`}>
+                          {notice.recordedBy?.name ?? <span className={table.muted}>Unknown</span>}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {!removedAt && overdueNow && (
+              <div className={styles.frameForm}>
+                <RecordNotice invoiceId={invoice.id} today={todayInput()} firstDay={dayAfterDue} />
+              </div>
+            )}
           </div>
         )}
 

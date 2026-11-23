@@ -39,6 +39,8 @@ WHERE THINGS ARE
 - Send a proposal or agreement: the document's page, Send step.
 - Edit a fee's price or date, or remove a fee: the project page, Fees.
 - Invite another person at a client, or turn portal access on or off: the client's page.
+- Record that a client was told an invoice is overdue: the invoice's page, Overdue notices.
+- Pause or resume a client's hosting: the project page, Hosting. Only an owner can, by pressing the button there, and a pause needs an overdue invoice with a recorded notice. You cannot do either, and you never plan it.
 - Team and roles: Settings, Team. Company details on invoices: Settings, Billing.
 
 RULES

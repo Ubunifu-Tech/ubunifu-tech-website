@@ -20,6 +20,7 @@ const REQUIRED = ['DATABASE_URL', 'CONSOLE_SESSION_SECRET', 'RESEND_API_KEY'];
 const OPTIONAL = {
   ANTHROPIC_API_KEY: 'the chat and the drafting assistant are switched off',
   BLOB_READ_WRITE_TOKEN: 'file uploads are switched off',
+  VERCEL_ACCESS_TOKEN: 'hosting cannot be paused or resumed from the console',
 };
 
 const isEmpty = (name) => !(process.env[name] ?? '').trim();

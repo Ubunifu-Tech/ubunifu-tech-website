@@ -153,6 +153,9 @@ export const getProject: AgentTool<StaffContext> = {
           summary: true,
           startDate: true,
           targetDate: true,
+          vercelProjectId: true,
+          vercelProjectName: true,
+          hostingPausedAt: true,
           owner: { select: { name: true } },
           client: { select: { name: true, slug: true } },
           lineItems: {
@@ -227,6 +230,13 @@ export const getProject: AgentTool<StaffContext> = {
 For ${project.client.name} (page /clients/${project.client.slug}). Page: /projects/${project.slug}
 Stage: ${STAFF_LABEL[project.status]}. Currency: ${project.currency}. Led by ${project.owner?.name ?? 'nobody yet'}.
 Starts ${project.startDate ? formatDate(project.startDate) : 'not set'}, target ${project.targetDate ? formatDate(project.targetDate) : 'not set'}.
+Hosting: ${
+        !project.vercelProjectId
+          ? 'no Vercel project linked'
+          : `${project.vercelProjectName ?? project.vercelProjectId} on Vercel, ${
+              project.hostingPausedAt ? `paused since ${formatDate(project.hostingPausedAt)}` : 'serving'
+            }`
+      }.
 ${project.summary ? `About: ${project.summary}\n` : ''}
 FEES
 ${fees}

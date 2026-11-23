@@ -135,6 +135,10 @@ records up and lay out changes; it cannot change anything itself.
   the step is refused, not carried out with different numbers. A plan is stored
   in `AssistantPlan` and its outcome in Activity.
 
+`npm run check:assistant -- --only=C` runs the assistant's live cases with the
+key in `.env`: real lookups and real plans against the local database, none of
+them confirmed, each in a thread that is deleted when its case ends.
+
 To add an action, write a `PlanAction` (its fields, a `check` and a `run`) and
 add it to `PLAN_ACTIONS` in `actions/index.ts`. The tool schema, the review
 table and the permission check all read from that list.
@@ -148,6 +152,31 @@ one caller.
 All three chat endpoints (website, portal, console) refuse a POST from another
 origin and read the body with a size limit (`src/lib/console/request-guards.ts`).
 
+### Hosting links
+
+A console project can be linked to the Vercel project that serves the client's
+site, on the project page under Hosting. Owners can then pause that site for an
+unpaid invoice and resume it.
+
+- **Link**: an owner enters the Vercel project id (or its name). With
+  `VERCEL_ACCESS_TOKEN` set it is looked up on Vercel first. The project this
+  console itself runs on is refused.
+- **Overdue notice**: on an overdue invoice's page, anyone who handles invoices
+  records when and how the client was told. The console sends nothing; it keeps
+  the record (`OverdueNotice`).
+- **Pause** is offered only when an invoice on the project is overdue today and
+  has a notice dated after it fell due. It asks twice, then calls Vercel.
+- **Resume** is always there for an owner while a site is paused. Once a payment
+  is recorded after the pause, the invoice and the receipt offer it too. A
+  payment never resumes anything by itself: a person presses the button.
+- Linking, pausing, resuming and each failed attempt are in Activity.
+
+The rule is `src/lib/console/hosting-rules.ts`, the Vercel calls are
+`src/lib/console/hosting.ts`, and both are covered by `npm run check:hosting`.
+The checks and writes are in `src/lib/console/services/hosting.ts`. The console
+assistant has no action for any of this, and the check fails if one is added.
+Railway is not linked: the console has no control over anything hosted there.
+
 ### Available scripts
 
 | Command | Purpose |
@@ -157,7 +186,7 @@ origin and read the body with a size limit (`src/lib/console/request-guards.ts`)
 | `npm start` | Serve an existing production build. |
 | `npm run lint` | Run ESLint across the repository. |
 | `npm run typecheck` | Run TypeScript without emitting files. |
-| `npm run check` | Runs lint, typecheck, `check:typography`, `check:editor`, `check:diff`, `check:dates` and `check:css`. None of them needs a database. |
+| `npm run check` | Runs lint, typecheck, `check:typography`, `check:editor`, `check:diff`, `check:dates`, `check:css` and `check:hosting`. None of them needs a database. |
 | `npm run check:signatures`, `check:renewals`, `check:blog-parity`, `check:links`, `check:assistant` | The checks that need the database in `.env`. `check:links` also needs the dev server on port 3001, and `check:assistant` needs `ANTHROPIC_API_KEY`. |
 | `npm run db:migrate` | Create and apply migrations on the local database. |
 | `npm run db:seed` | Load an owner, plan templates, standard terms, products and one sample client into the local database. |

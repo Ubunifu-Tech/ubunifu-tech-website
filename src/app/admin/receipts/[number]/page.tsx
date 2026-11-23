@@ -1,3 +1,4 @@
+import { HostingPaused } from '@/components/console/HostingPaused';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ number: s
  * which is the only way the two can never disagree.
  */
 export default async function ReceiptPage({ params }: { params: Promise<{ number: string }> }) {
-  await requirePermission('invoices');
+  const staff = await requirePermission('invoices');
   const { number } = await params;
   const org = await getOrg();
 
@@ -64,7 +65,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
               client: {
                 select: { name: true, legalName: true, slug: true, country: true, deletedAt: true },
               },
-              project: { select: { name: true, reference: true, slug: true, deletedAt: true } },
+              project: { select: { id: true, name: true, reference: true, slug: true, deletedAt: true } },
             },
           },
         },
@@ -114,6 +115,13 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
           <PrintButton />
         </div>
       </div>
+
+      {/* A payment is the usual reason to bring a paused site back. */}
+      {invoice.project && !invoice.project.deletedAt && !invoice.client.deletedAt && (
+        <div className={sheet.noPrint}>
+          <HostingPaused projectId={invoice.project.id} owner={staff.role === 'owner'} onlyAfterPayment />
+        </div>
+      )}
 
       <ReceiptSheet
         receipt={receipt}

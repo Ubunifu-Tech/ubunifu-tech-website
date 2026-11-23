@@ -26,6 +26,9 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 const FILTERS = [
+  // First, and where the list opens: every invoice still to be dealt with. A
+  // new invoice is a draft, so a list that opened on what is owed hid it.
+  { key: 'open', label: 'Open' },
   { key: 'owing', label: 'Owed to us' },
   { key: 'draft', label: 'Drafts' },
   { key: 'paid', label: 'Settled' },
@@ -40,8 +43,10 @@ function filterToWhere(key: string): Prisma.InvoiceWhereInput {
       return { status: 'paid' };
     case 'all':
       return {};
-    default:
+    case 'owing':
       return { status: { in: ['sent', 'part_paid', 'overdue'] } };
+    default:
+      return { status: { in: ['draft', 'sent', 'part_paid', 'overdue'] } };
   }
 }
 
@@ -63,7 +68,7 @@ export default async function InvoicesPage({
 }) {
   const staff = await requirePermission('invoices');
   const { show, q, page } = await searchParams;
-  const active = FILTERS.some((f) => f.key === show) ? show! : 'owing';
+  const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const query = searchText(q);
   const today = new Date();
   // Months begin at 00:00 in Tanzania, not on the server's clock.
@@ -204,7 +209,7 @@ export default async function InvoicesPage({
           path="/invoices"
           views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
           current={active}
-          defaultView="owing"
+          defaultView="open"
           query={query}
           searchLabel="Search invoices"
         />
@@ -249,7 +254,7 @@ export default async function InvoicesPage({
                     <p className={table.emptyTitle}>
                       {query
                         ? `No invoices match “${query}” here.`
-                        : active === 'owing'
+                        : active === 'open' || active === 'owing'
                           ? 'Nothing outstanding.'
                           : 'No invoices here.'}
                     </p>

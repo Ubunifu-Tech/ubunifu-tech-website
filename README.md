@@ -112,10 +112,32 @@ for `/api/contact` in the
 [Vercel WAF](https://vercel.com/docs/vercel-firewall/vercel-waf) is an optional
 extra layer.
 
-### The console assistant
+### Ubunifu Copilot
 
-Staff open it from the Assistant button in the console's top band. It can look
-records up and lay out changes; it cannot change anything itself.
+The console's agent. Staff open it from the Copilot button in the top band; it
+stays beside the page as they move around. It can read records, show them and
+lay out changes; it cannot change anything itself. Its name is one constant,
+`src/lib/console/staff-agent/identity.ts`.
+
+- **It knows the page.** When the page is one record (a project, client,
+  document or invoice) that record is read and given to it each turn, so
+  "this" needs no lookup.
+- **It answers with the record.** The `show` tool puts a record in front of
+  the person as a card, or a project's fees, invoices, documents or billable
+  lines as a table (`staff-agent/cards.ts`). The catalogue is fixed and every
+  value is read from the database: the model only says which record. A card
+  carries a button to the next step a person takes, such as the Send step.
+- **Everything is on record.** Chats are kept when a new one is started. The
+  Copilot page (`/copilot`) lists a person's chats and plans, with what each
+  plan made; a past chat can be carried on. An owner can read everyone's and
+  sees what every agent used this month. Plans laid out, confirmed and
+  discarded are in Activity.
+- **It can be told how to work.** Settings, Copilot holds house instructions
+  for each of the four agents (Copilot, document drafting, the website chat,
+  the portal's Help) and the notes Copilot keeps in mind. Both live in the
+  database (`AgentInstruction`, `AgentMemory`). Instructions are sent after
+  the built-in rules and cannot widen them. A note from a chat is a plan step
+  (`remember`), so it is saved only when a person confirms.
 
 - **Lookups** (`src/lib/console/staff-agent/lookups.ts`) run as the person
   asking and show what their role shows them on the matching page.

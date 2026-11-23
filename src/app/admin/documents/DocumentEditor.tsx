@@ -1,5 +1,6 @@
 'use client';
 
+import { COPILOT } from '@/lib/console/staff-agent/identity';
 import { useActionState, useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import {
@@ -288,7 +289,7 @@ export function WriteStep({
 
       <section className={forms.card}>
         <div className={forms.cardHeader}>
-          <h2 className={forms.cardTitle}>Assistant</h2>
+          <h2 className={forms.cardTitle}>{COPILOT.short}</h2>
         </div>
         <Copilot
           documentId={documentId}

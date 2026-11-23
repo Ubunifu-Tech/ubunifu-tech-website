@@ -358,6 +358,10 @@ export default async function Home() {
                 <tr>
                   <td className={table.emptyCell} colSpan={6}>
                     <p className={table.emptyTitle}>Nothing needs you right now.</p>
+                    <p className={table.emptyHint}>
+                      Start something from New at the top of the page, or open Copilot and say what
+                      you want set up.
+                    </p>
                   </td>
                 </tr>
               ) : (

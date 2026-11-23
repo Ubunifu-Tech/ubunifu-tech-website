@@ -1,5 +1,5 @@
 // Sectors we serve. Presented as focus areas / capability, NOT as a claim of
-// existing clients in each (see POSITIONING.md). `summary` and `offerings` give the
+// existing clients in each (see docs/POSITIONING.md). `summary` and `offerings` give the
 // per-sector depth used on the /industries page.
 
 export type Sector = {

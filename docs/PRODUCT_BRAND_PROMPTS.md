@@ -2,8 +2,8 @@
 
 Ready-to-paste prompts for bringing each **Ubunifu Technologies product** under the company
 brand (the orange-and-violet Ligature identity, anchored by ink navy, defined in this repo's
-[`src/app/globals.css`](src/app/globals.css), [`BRANDING.md`](BRANDING.md), the live `/brand`
-page, and the canonical masters in [`public/brand/`](public/brand/)).
+[`src/app/globals.css`](../src/app/globals.css), [`BRANDING.md`](BRANDING.md), the live `/brand`
+page, and the canonical masters in [`public/brand/`](../public/brand/)).
 
 Each prompt below is **self-contained** — open the target product in its own session, paste the
 whole block, and the agent has everything it needs. The last one is a **reusable template** for
@@ -47,7 +47,7 @@ UPPERCASE labels. **No serif anywhere.**
 **Logo:** the canonical **Ubunifu Ligature**: an open-stroke orange U (`#FF6B2C`) and violet T
 (`#6D3FE8`) interlocked as one glyph. The horizontal lockup spells **“Ubunifu Technologies”**
 at one readable size on one baseline.
-Use the supplied masters in [`public/brand/`](public/brand/): `ubunifu-mark.svg`,
+Use the supplied masters in [`public/brand/`](../public/brand/): `ubunifu-mark.svg`,
 `ubunifu-lockup.svg`, `ubunifu-mark-inverse.svg`, `ubunifu-mark-navy.svg`, `ubunifu-mark-white.svg`, and
 `ubunifu-lockup-white.svg`. Do not redraw, gradient-fill, recolor, box in, or substitute another
 mark for the Ligature. The tagline **"Consulting + products, built in Tanzania."** is supporting
@@ -577,8 +577,8 @@ Report, quoting real file paths + values:
 ## Maintaining these prompts
 
 The canonical brand source is this repo: [`BRANDING.md`](BRANDING.md), the supplied vector
-masters in [`public/brand/`](public/brand/), the live `/brand` page, and the implemented tokens in
-[`src/app/globals.css`](src/app/globals.css). If the brand changes there, update the hex values,
+masters in [`public/brand/`](../public/brand/), the live `/brand` page, and the implemented tokens in
+[`src/app/globals.css`](../src/app/globals.css). If the brand changes there, update the hex values,
 type, Ligature rules, asset list, full-name lockup, and tagline guidance in every prompt above
 to match. Each prompt is deliberately self-contained (the brand spec is repeated in every block)
 so it can be pasted

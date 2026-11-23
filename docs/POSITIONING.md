@@ -1,6 +1,6 @@
 # Ubunifu Technologies — Positioning & Company Profile
 
-This is the authority for who Ubunifu is, what it offers, and which claims it can make. Site copy should trace back here. Use [`BRANDING.md`](BRANDING.md) for the visual system and [`src/content/site.ts`](src/content/site.ts) for company contact details.
+This is the authority for who Ubunifu is, what it offers, and which claims it can make. Site copy should trace back here. Use [`BRANDING.md`](BRANDING.md) for the visual system and [`src/content/site.ts`](../src/content/site.ts) for company contact details.
 
 Last updated: 23 August 2026.
 
@@ -184,11 +184,11 @@ Public pricing is not promised. Quotes should state scope, deliverables, assumpt
 |---|---|
 | [`POSITIONING.md`](POSITIONING.md) | Company position, claims, offers, sectors, process, and voice |
 | [`BRANDING.md`](BRANDING.md) | Logo, color, typography, editorial imagery, and visual rules |
-| [`src/content/site.ts`](src/content/site.ts) | Current company details, navigation, and footer links |
-| [`src/content/services.tsx`](src/content/services.tsx) | Service-page titles, summaries, and lists |
-| [`src/content/products.tsx`](src/content/products.tsx) | Current product status, descriptions, capabilities, and links |
-| [`src/content/sectors.tsx`](src/content/sectors.tsx) | Proven flags, sector summaries, and claim boundaries |
-| [`src/content/portfolio.tsx`](src/content/portfolio.tsx) | Named client case-study evidence |
+| [`src/content/site.ts`](../src/content/site.ts) | Current company details, navigation, and footer links |
+| [`src/content/services.tsx`](../src/content/services.tsx) | Service-page titles, summaries, and lists |
+| [`src/content/products.tsx`](../src/content/products.tsx) | Current product status, descriptions, capabilities, and links |
+| [`src/content/sectors.tsx`](../src/content/sectors.tsx) | Proven flags, sector summaries, and claim boundaries |
+| [`src/content/portfolio.tsx`](../src/content/portfolio.tsx) | Named client case-study evidence |
 
 When the position changes, update this file first, then reconcile the relevant content source. When a product or client fact changes, update its content source and then revise this document if the strategic statement also changed.
 

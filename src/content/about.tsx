@@ -1,5 +1,5 @@
 // Narrative content for the About page (vision, mission, objectives, the
-// story, and how we work). Grounded in POSITIONING.md — no invented claims.
+// story, and how we work). Grounded in docs/POSITIONING.md — no invented claims.
 
 import {
   Eye,

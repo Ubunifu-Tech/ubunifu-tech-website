@@ -1,6 +1,6 @@
 // The six service pillars. Source of truth for the Services page and the
 // homepage services section. Keep descriptions specific and grounded (see
-// POSITIONING.md).
+// docs/POSITIONING.md).
 
 export type ServiceKey = 'web' | 'hosting' | 'branding' | 'data' | 'ai' | 'strategy';
 

@@ -13,7 +13,7 @@ import { billableName } from '@/lib/console/services/invoices';
 import { INVOICE_STATUS_LABEL, invoiceStanding } from '@/lib/console/billing-labels';
 import { DOCUMENT_STATUS_LABEL } from '@/lib/console/documents';
 import { toConfirmCount } from '@/lib/console/to-confirm';
-import { showRecord, VIEWS, type ReadRef, type View } from './cards';
+import { composeView, report, REPORTS, showRecord, VIEWS, type ReadRef, type Report, type View } from './cards';
 
 /**
  * What the console assistant can read. Each lookup runs as the person asking
@@ -420,7 +420,80 @@ export const show: AgentTool<StaffContext> = {
   },
 };
 
-export const LOOKUPS = [findRecords, getClient, getProject, getDocument, getInvoice, show];
+/** A list across the whole console, shown as a table and read out for Copilot to reason on. */
+export const listWork: AgentTool<StaffContext> = {
+  name: 'list_work',
+  description:
+    'Get a list across every client, shown to the person as a table and given to you as text. invoices_owing: every invoice not yet settled, drafts included, with what is unpaid and when it is due. open_projects: every project not finished, with its stage, lead and target date. documents_in_play: every proposal and agreement not yet signed. Use it for questions about the whole business, such as what is overdue, who owes what, or what is waiting on a client.',
+  inputSchema: {
+    type: 'object',
+    properties: { list: { type: 'string', enum: [...REPORTS] } },
+    required: ['list'],
+  },
+  run: async (input, { staff }) => {
+    const which = wanted(input, 'list');
+    if (!(REPORTS as readonly string[]).includes(which)) return { result: `The lists are: ${REPORTS.join(', ')}.`, done: false };
+    const made = await report(staff, which as Report);
+    if ('refused' in made) return { result: made.refused, done: false };
+    return { result: `Shown to the person as a table. The rows:\n${made.text}`, meta: { card: made.card } };
+  },
+};
+
+/** A view put together for one question, from a fixed set of blocks. */
+export const composeViewTool: AgentTool<StaffContext> = {
+  name: 'compose_view',
+  description:
+    'Put together a view of your own beside the conversation, when a single record card or one table does not answer the question: a comparison, a summary across several records, a briefing before a call, a breakdown you worked out from what you read. A view has a title and up to eight blocks. text: a short paragraph or list in markdown. stats: up to six figures, each a label and a value. table: columns and rows you fill in. record: a reference, which is shown as that record\'s own card. Every figure you put in a text, stats or table block must come from a lookup in this chat, copied exactly. Read the records first. Keep it to what answers the question.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', description: 'What the view shows, such as "Usambara Destination before Thursday\'s call".' },
+      blocks: {
+        type: 'array',
+        items: {
+          anyOf: [
+            { type: 'object', properties: { type: { type: 'string', enum: ['text'] }, text: { type: 'string' } }, required: ['type', 'text'] },
+            {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['stats'] },
+                items: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { label: { type: 'string' }, value: { type: 'string' }, note: { type: 'string' } },
+                    required: ['label', 'value'],
+                  },
+                },
+              },
+              required: ['type', 'items'],
+            },
+            {
+              type: 'object',
+              properties: {
+                type: { type: 'string', enum: ['table'] },
+                title: { type: 'string' },
+                columns: { type: 'array', items: { type: 'string' } },
+                rows: { type: 'array', items: { type: 'array', items: { type: 'string' } } },
+                numeric: { type: 'boolean', description: 'True when the last column is an amount or a count.' },
+              },
+              required: ['type', 'columns', 'rows'],
+            },
+            { type: 'object', properties: { type: { type: 'string', enum: ['record'] }, record: { type: 'string' } }, required: ['type', 'record'] },
+          ],
+        },
+      },
+    },
+    required: ['title', 'blocks'],
+  },
+  run: async (input, { staff }) => {
+    const made = await composeView(staff, (input ?? {}) as { title?: unknown; blocks?: unknown });
+    if ('refused' in made) return { result: made.refused, done: false };
+    return { result: `${made.said} The person can see it beside the conversation. Say one sentence about it; do not repeat it.`, meta: { card: made.card } };
+  },
+};
+
+export const LOOKUPS = [findRecords, getClient, getProject, getDocument, getInvoice, listWork, show, composeViewTool];
 
 /**
  * The record on the page the person is looking at, read out the same way a

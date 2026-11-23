@@ -33,7 +33,7 @@ export default async function CopilotSettingsPage() {
           </p>
         </div>
         <div className={styles.headActions}>
-          <Link href="/copilot" className={`${forms.button} ${forms.quiet}`}>
+          <Link href="/copilot?view=chats" className={`${forms.button} ${forms.quiet}`}>
             Chats, plans and usage
           </Link>
         </div>

@@ -8,6 +8,7 @@ import { BILLING, FEE_STATUS_LABEL } from '@/lib/console/fee-labels';
 import { liveDocument, liveInvoice } from '@/lib/console/live';
 import { formatMoney, formatShortDate, numbers } from '@/lib/console/money';
 import { STAFF_LABEL } from '@/lib/console/project-status';
+import { statusesIn } from '@/lib/console/stages';
 import { billableName } from '@/lib/console/services/invoices';
 
 /**
@@ -44,7 +45,24 @@ export type Card =
       numeric?: boolean;
       note?: string;
       href?: string;
+    }
+  | {
+      /**
+       * A view Copilot put together for one question: a title and a few
+       * blocks from a fixed set. Records in it are filled in here, from the
+       * records. Its own text, figures and rows are Copilot's, and the view
+       * says so, with the records it read listed beside it to check against.
+       */
+      kind: 'view';
+      title: string;
+      blocks: ViewBlock[];
     };
+
+export type ViewBlock =
+  | { type: 'text'; text: string }
+  | { type: 'stats'; items: { label: string; value: string; note?: string }[] }
+  | { type: 'table'; title?: string; columns: string[]; rows: string[][]; numeric?: boolean }
+  | { type: 'record'; card: Extract<Card, { kind: 'record' }> };
 
 /** A record Copilot read, shown under its reply so the person can see what it went on. */
 export type ReadRef = { type: string; label: string; href: string };
@@ -109,7 +127,8 @@ async function clientCard(id: string): Promise<Shown> {
     },
   });
   const contact = client.contacts[0];
-  const open = client.projects.filter((project) => !['complete', 'cancelled'].includes(project.status)).length;
+  const finished: string[] = [...statusesIn('delivered'), 'closed', 'cancelled'];
+  const open = client.projects.filter((project) => !finished.includes(project.status)).length;
   return {
     said: `Shown as a card: ${client.name}.`,
     card: {
@@ -378,5 +397,133 @@ async function invoiceCard(staff: StaffActor, number: string): Promise<Shown> {
             ? [{ label: 'Record a payment', href: `/payments/new?invoice=${invoice.number}` }]
             : [],
     },
+  };
+}
+
+const cell = (value: unknown, max = 160) =>
+  (typeof value === 'number' ? String(value) : typeof value === 'string' ? value : '').replace(/\s+/g, ' ').trim().slice(0, max);
+
+/**
+ * A view as Copilot asked for it, checked and cut to size. Anything that is
+ * not one of the known blocks is dropped, not guessed at, and a record block
+ * is replaced by the record's own card, read as the person asking.
+ */
+export async function composeView(
+  staff: StaffActor,
+  input: { title?: unknown; blocks?: unknown },
+): Promise<{ card: Extract<Card, { kind: 'view' }>; said: string } | { refused: string }> {
+  const title = cell(input.title, 90);
+  if (title.length < 3) return { refused: 'Give the view a short title saying what it shows.' };
+  if (!Array.isArray(input.blocks) || input.blocks.length === 0) return { refused: 'A view needs at least one block.' };
+  if (input.blocks.length > 8) return { refused: 'A view holds at most eight blocks. Show less, or make two views.' };
+
+  const blocks: ViewBlock[] = [];
+  for (const [index, raw] of input.blocks.entries()) {
+    const block = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    const where = `Block ${index + 1}`;
+    if (block.type === 'text') {
+      const text = typeof block.text === 'string' ? block.text.trim().slice(0, 1500) : '';
+      if (!text) return { refused: `${where}: a text block needs its text.` };
+      blocks.push({ type: 'text', text });
+    } else if (block.type === 'stats') {
+      const items = (Array.isArray(block.items) ? block.items : [])
+        .slice(0, 6)
+        .map((item) => (item && typeof item === 'object' ? (item as Record<string, unknown>) : {}))
+        .map((item) => ({ label: cell(item.label, 40), value: cell(item.value, 40), ...(cell(item.note, 80) ? { note: cell(item.note, 80) } : {}) }))
+        .filter((item) => item.label && item.value);
+      if (items.length === 0) return { refused: `${where}: a stats block needs items, each with a label and a value.` };
+      blocks.push({ type: 'stats', items });
+    } else if (block.type === 'table') {
+      const columns = (Array.isArray(block.columns) ? block.columns : []).slice(0, 6).map((column) => cell(column, 40)).filter(Boolean);
+      const rows = (Array.isArray(block.rows) ? block.rows : [])
+        .slice(0, 40)
+        .filter((row): row is unknown[] => Array.isArray(row))
+        .map((row) => columns.map((_, at) => cell(row[at])));
+      if (columns.length < 2 || rows.length === 0) return { refused: `${where}: a table needs at least two columns and one row.` };
+      blocks.push({ type: 'table', ...(cell(block.title, 80) ? { title: cell(block.title, 80) } : {}), columns, rows, numeric: block.numeric === true });
+    } else if (block.type === 'record') {
+      const shown = await showRecord(staff, cell(block.record, 200), 'summary');
+      if ('refused' in shown) return { refused: `${where}: ${shown.refused}` };
+      if (shown.card.kind !== 'record') return { refused: `${where}: that is not one record.` };
+      blocks.push({ type: 'record', card: shown.card });
+    } else {
+      return { refused: `${where}: the blocks are text, stats, table and record.` };
+    }
+  }
+  return {
+    card: { kind: 'view', title, blocks },
+    said: `Shown as a view: "${title}", ${blocks.length} block${blocks.length === 1 ? '' : 's'}.`,
+  };
+}
+
+export const REPORTS = ['invoices_owing', 'open_projects', 'documents_in_play'] as const;
+export type Report = (typeof REPORTS)[number];
+
+/**
+ * A list across the whole console, as a table: what is owed, what is being
+ * worked on, which documents are not yet signed. Read as the person asking,
+ * and given back both as rows for them and as text for Copilot to reason on.
+ */
+export async function report(staff: StaffActor, which: Report): Promise<{ card: Card; text: string } | { refused: string }> {
+  const now = new Date();
+  if (which === 'invoices_owing') {
+    if (!can(staff, 'invoices')) return { refused: "This person's role does not include invoices." };
+    const invoices = numbers(
+      await db.invoice.findMany({
+        where: { ...liveInvoice, status: { in: ['draft', 'sent', 'part_paid', 'overdue'] } },
+        orderBy: [{ dueAt: 'asc' }, { createdAt: 'asc' }],
+        take: 40,
+        select: { number: true, status: true, currency: true, totalMinor: true, paidMinor: true, dueAt: true, client: { select: { name: true } } },
+      }),
+    );
+    const rows = invoices.map((invoice) => [
+      invoice.number,
+      invoice.client.name,
+      INVOICE_STATUS_LABEL[invoiceStanding(invoice, now)] ?? invoice.status,
+      invoice.dueAt ? formatShortDate(invoice.dueAt) : 'On receipt',
+      formatMoney(Math.max(0, invoice.totalMinor - invoice.paidMinor), invoice.currency),
+    ]);
+    return {
+      card: { kind: 'table', title: 'Invoices not yet settled', columns: ['Number', 'Client', 'State', 'Due', 'Unpaid'], rows, numeric: true, note: 'Every invoice is settled.', href: '/invoices' },
+      text: rows.map((row) => `- ${row.join(', ')}`).join('\n') || 'Every invoice is settled.',
+    };
+  }
+  if (which === 'open_projects') {
+    const projects = await db.project.findMany({
+      where: { deletedAt: null, status: { notIn: [...statusesIn('delivered'), 'closed', 'cancelled'] } },
+      orderBy: [{ targetDate: 'asc' }, { createdAt: 'asc' }],
+      take: 40,
+      select: { reference: true, name: true, status: true, targetDate: true, client: { select: { name: true } }, owner: { select: { name: true } } },
+    });
+    const rows = projects.map((project) => [
+      project.reference,
+      project.name,
+      project.client.name,
+      STAFF_LABEL[project.status],
+      project.owner?.name ?? 'Nobody yet',
+      project.targetDate ? formatShortDate(project.targetDate) : 'Not set',
+    ]);
+    return {
+      card: { kind: 'table', title: 'Open projects', columns: ['Ref', 'Project', 'Client', 'Stage', 'Led by', 'Target'], rows, note: 'No open projects.', href: '/projects' },
+      text: rows.map((row) => `- ${row.join(', ')}`).join('\n') || 'No open projects.',
+    };
+  }
+  if (!can(staff, 'documents')) return { refused: "This person's role does not include documents." };
+  const documents = await db.document.findMany({
+    where: { ...liveDocument, status: { notIn: ['signed', 'declined'] } },
+    orderBy: { updatedAt: 'desc' },
+    take: 40,
+    select: { reference: true, title: true, kind: true, status: true, updatedAt: true, project: { select: { client: { select: { name: true } } } } },
+  });
+  const rows = documents.map((document) => [
+    document.reference,
+    document.title,
+    document.project.client.name,
+    DOCUMENT_STATUS_LABEL[document.status] ?? document.status,
+    formatShortDate(document.updatedAt),
+  ]);
+  return {
+    card: { kind: 'table', title: 'Documents not yet signed', columns: ['Number', 'Document', 'Client', 'State', 'Last touched'], rows, note: 'Nothing is waiting.', href: '/documents' },
+    text: rows.map((row) => `- ${row.join(', ')}`).join('\n') || 'Nothing is waiting.',
   };
 }

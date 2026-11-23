@@ -1511,11 +1511,24 @@ export async function correctIssuedInvoice(
     entityType: 'Invoice',
     entityId: invoice.id,
     summary: `${invoice.number}: ${changed.join(', ')}`,
-    metadata: { from: currentDue, to: nextDue, notesChanged: notes !== invoice.notes, seenInPortal: facts.seenInPortal },
+    metadata: {
+      from: currentDue,
+      to: nextDue,
+      notesChanged: notes !== invoice.notes,
+      seenInPortal: facts.seenInPortal,
+      emailed: facts.emailed,
+    },
   });
 
   revalidatePath('/admin', 'layout');
-  return { status: 'done', message: 'Saved.' };
+  return {
+    status: 'done',
+    // The email they hold still shows the old date.
+    message:
+      facts.emailed && nextDue !== currentDue
+        ? 'Saved. Send it again, so the client has the new date.'
+        : 'Saved.',
+  };
 }
 
 /**

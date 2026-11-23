@@ -221,33 +221,6 @@ export function stageAfterDocument(
 }
 
 /**
- * The furthest stage a project's documents put it at, when that is ahead of
- * where the project says it is: for projects whose documents went out before
- * sending and signing moved them on. Null when it is up to date.
- */
-export function documentStage(
-  status: ProjectStatus,
-  documents: { reference: string; kind: DocumentKind; status: string }[],
-): { reference: string; kind: DocumentKind; milestone: DocumentMilestone; to: ProjectStatus } | null {
-  let best: { reference: string; kind: DocumentKind; milestone: DocumentMilestone; to: ProjectStatus } | null =
-    null;
-  for (const document of documents) {
-    const milestone: DocumentMilestone | null =
-      document.status === 'signed'
-        ? 'signed'
-        : document.status === 'sent' || document.status === 'viewed'
-          ? 'sent'
-          : null;
-    if (!milestone) continue;
-    const to = stageAfterDocument(status, document.kind, milestone);
-    if (to && (!best || DEAL.indexOf(to) > DEAL.indexOf(best.to))) {
-      best = { reference: document.reference, kind: document.kind, milestone, to };
-    }
-  }
-  return best;
-}
-
-/**
  * Moves the project on for a document, inside the caller's transaction, and
  * records why. Returns the move, or null when there was nothing to move.
  */

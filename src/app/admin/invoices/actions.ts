@@ -353,11 +353,6 @@ async function writePayment(
   });
 }
 
-export type EarlyPaymentState = BillingState & {
-  receipt?: { id: string; number: string };
-  invoiceNumber?: string;
-};
-
 type Recorded = {
   invoice: { id: string; number: string };
   receipt: { id: string; number: string };
@@ -498,32 +493,6 @@ async function clientSlugOf(clientId: string): Promise<string> {
   return client.slug;
 }
 
-export async function recordEarlyPayment(
-  _previous: EarlyPaymentState,
-  formData: FormData,
-): Promise<EarlyPaymentState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
-
-  const paid = await payFees(
-    staff,
-    String(formData.get('projectId') ?? ''),
-    formData.getAll('billables').map(String).filter(Boolean),
-    formData,
-  );
-  if ('error' in paid) return { status: 'error', message: paid.error };
-
-  return {
-    status: 'done',
-    message:
-      paid.left > 0
-        ? `${paid.amount} recorded on ${paid.invoice.number}, with ${formatMoney(paid.left, paid.currency)} still owed on it. Receipt ${paid.receipt.number} is ready.`
-        : `${paid.amount} recorded on ${paid.invoice.number}, paid in full. Receipt ${paid.receipt.number} is ready.`,
-    receipt: paid.receipt,
-    invoiceNumber: paid.invoice.number,
-  };
-}
-
 /**
  * Records a payment that arrived by bank transfer, mobile money or cash, and
  * issues the receipt for it.
@@ -657,41 +626,6 @@ async function payInvoice(
     wasDraft: receipt.wasDraft,
     project: invoice.project,
     clientSlug: invoice.client.slug,
-  };
-}
-
-export async function recordPayment(
-  _previous: BillingState,
-  formData: FormData,
-): Promise<BillingState> {
-  const staff = await requireStaff();
-  if (!can(staff, 'invoices')) return { status: 'error', message: NO_PERMISSION };
-  const emailIt = formData.get('emailReceipt') === 'on';
-
-  const paid = await payInvoice(staff, String(formData.get('invoiceId') ?? ''), formData);
-  if ('error' in paid) return { status: 'error', message: paid.error };
-
-  // The payment stands whatever happens to the email: it is already
-  // committed, and the receipt can be sent again from its row.
-  const delivered = emailIt
-    ? await deliverReceipt(staff, paid.receipt.id).catch((error: unknown) => {
-        console.error('[invoices] receipt email after a payment failed', error);
-        return { sent: false as const, message: 'The email did not go. Email it from its row.' };
-      })
-    : null;
-  const opening = paid.wasDraft
-    ? `Recorded. The invoice is issued and receipt ${paid.receipt.number}`
-    : `Recorded. Receipt ${paid.receipt.number}`;
-
-  return {
-    status: 'done',
-    message: !delivered
-      ? paid.wasDraft
-        ? `${opening} is ready.`
-        : `${opening} issued.`
-      : delivered.sent
-        ? `${opening} sent to ${delivered.to}.`
-        : `${opening} is ready. ${delivered.message}`,
   };
 }
 

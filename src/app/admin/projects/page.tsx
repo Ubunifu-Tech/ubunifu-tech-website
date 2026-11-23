@@ -19,6 +19,9 @@ export const metadata = { title: 'Projects' };
  * used, so an old bookmark still opens the same slice.
  */
 const FILTERS = [
+  // First, and where the list opens: every project still being worked on or
+  // won, whatever its stage, so one started a minute ago is in front of you.
+  { key: 'open', label: 'Open' },
   { key: 'live', label: 'In progress' },
   { key: 'pipeline', label: 'Deals' },
   { key: 'waiting', label: 'Waiting on someone' },
@@ -36,8 +39,10 @@ function filterToWhere(key: string): Prisma.ProjectWhereInput {
       return { status: { in: [...statusesIn('delivered'), 'closed', 'cancelled'] } };
     case 'all':
       return {};
-    default:
+    case 'live':
       return { status: { in: statusesIn('in_progress') } };
+    default:
+      return { status: { notIn: [...statusesIn('delivered'), 'closed', 'cancelled'] } };
   }
 }
 
@@ -73,7 +78,7 @@ export default async function ProjectsPage({
   const seesValue = can(staff, 'fees') || can(staff, 'invoices');
   // ?view=board and ?view=list are what old links carry; there is only the list now.
   const { show, q, page } = await searchParams;
-  const active = FILTERS.some((f) => f.key === show) ? show! : 'live';
+  const active = FILTERS.some((f) => f.key === show) ? show! : 'open';
   const query = searchText(q);
 
   const now = new Date();
@@ -125,7 +130,7 @@ export default async function ProjectsPage({
           path="/projects"
           views={FILTERS.map((filter, index) => ({ ...filter, count: viewCounts[index] ?? 0 }))}
           current={active}
-          defaultView="live"
+          defaultView="open"
           query={query}
           searchLabel="Search projects"
         />
@@ -153,15 +158,17 @@ export default async function ProjectsPage({
                     <p className={table.emptyTitle}>
                       {query
                         ? `No projects match “${query}” here.`
-                        : active === 'live'
-                          ? 'Nothing in flight.'
+                        : active === 'open'
+                          ? 'No open projects.'
                           : 'Nothing here.'}
                     </p>
                     <p className={table.emptyHint}>
                       {query
                         ? 'Try another view, or search for something else.'
-                        : active === 'live'
-                          ? 'Everything is either still in the pipeline or already finished.'
+                        : active === 'open'
+                          ? canRun
+                            ? 'Start one from New, at the top of the page, or ask Copilot to set one up.'
+                            : 'Finished projects are under Finished.'
                           : 'Try another view.'}
                     </p>
                   </td>

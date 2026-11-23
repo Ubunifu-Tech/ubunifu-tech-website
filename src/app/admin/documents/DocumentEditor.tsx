@@ -1,17 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { COPILOT } from '@/lib/console/staff-agent/identity';
 import { useActionState, useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
 import {
-  askCopilot,
   discardDocument,
   saveDetails,
   saveVersion,
   resendSignatureLink,
   sendForSignature,
   setSuggestionAside,
-  startFreshCopilotThread,
   startFromSuggestion,
   withdrawDocument,
   type DocumentState,
@@ -44,157 +42,6 @@ function Result({ state }: { state: DocumentState }) {
         </>
       )}
     </p>
-  );
-}
-
-export type CopilotTurn = {
-  id: string;
-  role: string;
-  /** 'You', a colleague's name, 'Staff' for older rows, or 'Assistant'. */
-  author: string;
-  content: string;
-  toolName: string | null;
-  when: string;
-};
-
-/**
- * Asking and starting afresh share one outcome, so the line under Send is
- * always about the last thing pressed.
- */
-function copilotAction(previous: DocumentState, formData: FormData): Promise<DocumentState> {
-  return formData.get('intent') === 'fresh'
-    ? startFreshCopilotThread(previous, formData)
-    : askCopilot(previous, formData);
-}
-
-/**
- * The copilot, as a conversation.
- *
- * A thread rather than a button, because drafting is back-and-forth: "draft
- * it", then "make the payment two stages", then "that clause is too long". The
- * thread is stored, so it survives a reload and can be read afterwards — what
- * was asked for, and what the model did about it.
- *
- * It can write a version and nothing else. It never sends.
- */
-export function Copilot({
-  documentId,
-  turns,
-  empty,
-  blocked,
-  onDraftingChange,
-}: {
-  documentId: string;
-  turns: CopilotTurn[];
-  /** The document has nothing written in it yet. */
-  empty: boolean;
-  /** The editor holds changes that are not saved yet. */
-  blocked: boolean;
-  onDraftingChange: (drafting: boolean) => void;
-}) {
-  const [state, action, pending] = useActionState(copilotAction, INITIAL);
-  const [draft, setDraft] = useState('');
-  const [intent, setIntent] = useState<'ask' | 'fresh'>('ask');
-  const drafting = pending && intent === 'ask';
-
-  useEffect(() => {
-    onDraftingChange(drafting);
-  }, [drafting, onDraftingChange]);
-
-  return (
-    <>
-      {turns.length > 0 && (
-        <ul className={styles.thread}>
-          {turns.map((turn) => (
-            <li
-              key={turn.id}
-              className={`${styles.message} ${turn.role === 'user' ? '' : styles.fromUs}`}
-            >
-              <p className={styles.messageWho}>
-                {turn.author} · {turn.when}
-                {turn.toolName === 'save_draft' && ' · wrote a version'}
-              </p>
-              <p className={styles.messageBody}>{turn.content}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {turns.length > 0 && (
-        <form
-          action={action}
-          onSubmit={() => setIntent('fresh')}
-          className={`${forms.actions} ${forms.actionsBare}`}
-        >
-          <input type="hidden" name="documentId" value={documentId} />
-          <input type="hidden" name="intent" value="fresh" />
-          <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
-            {pending && intent === 'fresh' ? 'Starting…' : 'Start a fresh thread'}
-          </button>
-          <p className={forms.payoff}>The document stays as it is.</p>
-        </form>
-      )}
-
-      {turns.length === 0 && empty && (
-        <form action={action} onSubmit={() => setIntent('ask')} className={forms.actions}>
-          <input type="hidden" name="documentId" value={documentId} />
-          <input
-            type="hidden"
-            name="message"
-            value="Write the first draft of this document from what you know about the project, in the usual shape for its kind. Mark anything you do not know as TO CONFIRM."
-          />
-          <button type="submit" className={forms.button} disabled={pending || blocked}>
-            <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-            {drafting ? 'Writing…' : 'Write the first draft'}
-          </button>
-          <p className={forms.payoff}>Or say what you want below.</p>
-        </form>
-      )}
-
-      <form action={action} onSubmit={() => setIntent('ask')} className={forms.form}>
-        <input type="hidden" name="documentId" value={documentId} />
-        <div className={forms.field}>
-          <label className={forms.label} htmlFor="copilot-message">
-            {turns.length === 0 ? 'Ask for a draft' : 'What next?'}
-          </label>
-          <textarea
-            id="copilot-message"
-            name="message"
-            className={`${forms.control} ${forms.textarea}`}
-            maxLength={4000}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={
-              turns.length === 0
-                ? 'Draft the agreement. Two-stage payment, and they want the domain in their own name.'
-                : 'Shorten the scope section, and add a line about the review rounds.'
-            }
-            disabled={pending}
-          />
-          <p className={forms.hint}>
-            It knows the project&rsquo;s plan, fees, dates, what we need from them, their enquiry
-            and the other documents on the project.
-          </p>
-        </div>
-
-        <div className={forms.actions}>
-          <button
-            type="submit"
-            className={`${forms.button} ${forms.quiet}`}
-            disabled={pending || blocked || draft.trim().length < 2}
-          >
-            <Sparkles size={15} strokeWidth={1.8} aria-hidden="true" />
-            {drafting ? 'Thinking…' : 'Send'}
-          </button>
-          <p className={forms.payoff}>
-            {blocked
-              ? 'Save your edits first, then ask.'
-              : 'It saves a new version for you to check. It never sends.'}
-          </p>
-        </div>
-        <Result state={state} />
-      </form>
-    </>
   );
 }
 
@@ -244,6 +91,7 @@ export function DetailsForm({
   );
 }
 
+
 /**
  * The Write step: the document beside the assistant.
  *
@@ -257,17 +105,19 @@ export function WriteStep({
   version,
   body,
   withFees,
-  turns,
+  reference,
 }: {
   documentId: string;
   versionId: string | undefined;
   version: number;
   body: string;
   withFees: boolean;
-  turns: CopilotTurn[];
+  reference: string;
 }) {
   const [unsaved, setUnsaved] = useState(false);
-  const [drafting, setDrafting] = useState(false);
+  const empty = body.trim().length === 0;
+  const about = `/copilot?about=${encodeURIComponent(`/documents/${reference}`)}`;
+  const firstDraft = `${about}&ask=${encodeURIComponent(`Write the first draft of ${reference} from the project.`)}`;
 
   return (
     <>
@@ -277,12 +127,12 @@ export function WriteStep({
           <span className={forms.cardMeta}>Version {version}</span>
         </div>
         <VersionEditor
-          // A new version from the assistant replaces what is in the editor.
+          // A new version, from Copilot or anyone else, replaces what is in the editor.
           key={versionId}
           documentId={documentId}
           body={body}
           withFees={withFees}
-          locked={drafting}
+          locked={false}
           onUnsavedChange={setUnsaved}
         />
       </section>
@@ -291,13 +141,32 @@ export function WriteStep({
         <div className={forms.cardHeader}>
           <h2 className={forms.cardTitle}>{COPILOT.short}</h2>
         </div>
-        <Copilot
-          documentId={documentId}
-          turns={turns}
-          empty={body.trim().length === 0}
-          blocked={unsaved}
-          onDraftingChange={setDrafting}
-        />
+        <p className={styles.note}>
+          {empty
+            ? `${COPILOT.short} can write the first draft from the project: its plan, dates, fees and what the client was asked for.`
+            : `Ask ${COPILOT.short} to shorten, expand or reword it.`}{' '}
+          It shows you what would change before anything is saved, and it never sends.
+        </p>
+        {unsaved ? (
+          <p className={forms.hint}>Save your edits first, so it works from them.</p>
+        ) : (
+          <div className={`${forms.actions} ${forms.actionsBare}`}>
+            {empty ? (
+              <Link href={firstDraft} className={forms.button}>
+                Write the first draft
+              </Link>
+            ) : (
+              <Link href={about} className={forms.button}>
+                Ask for changes
+              </Link>
+            )}
+            {empty && (
+              <Link href={about} className={`${forms.button} ${forms.quiet}`}>
+                Say what you want instead
+              </Link>
+            )}
+          </div>
+        )}
       </section>
     </>
   );

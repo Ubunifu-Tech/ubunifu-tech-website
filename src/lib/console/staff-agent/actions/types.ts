@@ -59,6 +59,11 @@ export type Checked<Value> =
       /** Set when carrying the step out emails somebody outside the team. */
       sends?: string;
       /**
+       * For a step that rewrites text: what would change, block by block, so
+       * the person reads the changes and not a description of them.
+       */
+      diff?: StepDiff;
+      /**
        * The facts the person is agreeing to that must not have moved by the
        * time they confirm, as one string: amounts and dates, mostly. Kept with
        * the plan and compared when it is carried out. A step whose pin has
@@ -88,6 +93,14 @@ export type PlanAction<Value = never> = {
   required: string[];
   check: (input: Record<string, unknown>, env: PlanEnv) => Promise<Checked<Value>>;
   run: (value: Value, env: PlanEnv) => Promise<Ran>;
+};
+
+/** What a rewrite changes: the blocks taken out, the blocks put in, and a little of what is around them. */
+export type StepDiff = {
+  title: string;
+  added: number;
+  removed: number;
+  parts: { op: 'same' | 'removed' | 'added' | 'gap'; text: string }[];
 };
 
 /** What the model sent for a field, as trimmed text. Numbers are accepted for amounts. */

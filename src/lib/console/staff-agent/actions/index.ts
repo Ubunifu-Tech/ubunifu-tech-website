@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient, inviteContact } from './clients';
 import { createProject } from './projects';
 import { addFee, renameFee } from './fees';
-import { createDocument } from './documents';
+import { createDocument, reviseDocument } from './documents';
 import { createInvoice } from './invoices';
 import { remember } from './notes';
 import type { PlanAction } from './types';
@@ -22,6 +22,7 @@ export const PLAN_ACTIONS = [
   addFee,
   renameFee,
   createDocument,
+  reviseDocument,
   createInvoice,
   remember,
 ] as unknown as PlanAction<unknown>[];
@@ -31,4 +32,4 @@ export function planAction(name: unknown): PlanAction<unknown> | undefined {
 }
 
 export { StepRefused } from './clients';
-export type { Checked, ClientFacts, PlanAction, PlanEnv, Produced, ProjectFacts, Ran } from './types';
+export type { Checked, ClientFacts, PlanAction, PlanEnv, Produced, ProjectFacts, Ran, StepDiff } from './types';

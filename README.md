@@ -135,6 +135,14 @@ Its name is one constant, `src/lib/console/staff-agent/identity.ts`.
   record answers, such as a briefing before a call. Record blocks are filled
   in from the records. The text, figures and rows are the model's own, so the
   view says so and lists the records it read to check against.
+- **It drafts documents.** `revise_document` writes or rewrites a proposal or
+  agreement as a new version. It is a plan step: the person is shown what
+  changes, block by block, beside the conversation, and it is saved only on
+  Confirm. If someone edits the document in between, the step refuses. How
+  documents are written (voice, layout, the shape of each kind, what an agent
+  may never write) is `DRAFTING_RULES` in `src/lib/console/copilot.ts`, and
+  `drafting_brief` gives it the project's facts. The Write step of a document
+  opens Copilot on it. There is no separate drafting assistant.
 - **Everything is on record.** Chats are kept when a new one is started. The
   Copilot page (`/copilot`) lists a person's chats and plans, with what each
   plan made; a past chat can be carried on. An owner can read everyone's and

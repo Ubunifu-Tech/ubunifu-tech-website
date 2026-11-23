@@ -14,7 +14,13 @@ export type { Card, ReadRef };
  * cards it showed, and its plans. These only draw what the server sent.
  */
 
-export type StepView = { action: string; label: string; subject: string; details: string[]; sends?: string };
+export type StepDiff = {
+  title: string;
+  added: number;
+  removed: number;
+  parts: { op: 'same' | 'removed' | 'added' | 'gap'; text: string }[];
+};
+export type StepView = { action: string; label: string; subject: string; details: string[]; sends?: string; diff?: StepDiff };
 export type StepOutcome =
   | { state: 'done'; summary: string; href?: string }
   | { state: 'failed'; message: string }
@@ -185,6 +191,48 @@ export function CardView({ card }: { card: Card }) {
   );
 }
 
+/**
+ * What a rewrite would change, block by block: what comes out struck through,
+ * what goes in marked, and a little of the unchanged text around each so the
+ * change can be placed. Text is shown as written, never as markup.
+ */
+export function DiffView({ diff }: { diff: StepDiff }) {
+  return (
+    <section className={styles.diff} aria-label={diff.title}>
+      <header className={styles.diffHead}>
+        <h3 className={styles.viewTitle}>{diff.title}</h3>
+        <p className={styles.viewBy}>
+          {diff.added} {diff.added === 1 ? 'block' : 'blocks'} added, {diff.removed} taken out. Nothing is saved
+          until you confirm the plan.
+        </p>
+      </header>
+      <div className={styles.diffBody}>
+        {diff.parts.map((part, index) =>
+          part.op === 'gap' ? (
+            <p key={index} className={styles.diffGap}>
+              Unchanged text
+            </p>
+          ) : part.op === 'removed' ? (
+            <del key={index} className={styles.diffPart} data-op="removed">
+              <span className="srOnly">Taken out: </span>
+              {part.text}
+            </del>
+          ) : part.op === 'added' ? (
+            <ins key={index} className={styles.diffPart} data-op="added">
+              <span className="srOnly">Added: </span>
+              {part.text}
+            </ins>
+          ) : (
+            <p key={index} className={styles.diffPart} data-op="same">
+              {part.text}
+            </p>
+          ),
+        )}
+      </div>
+    </section>
+  );
+}
+
 /** The records a reply went on, so it can be checked against them. */
 export function ReadChips({ read }: { read: ReadRef[] }) {
   if (read.length === 0) return null;
@@ -277,6 +325,12 @@ export function PlanTable({
                     ))}
                     {step.sends && pending && <li className={styles.sends}>{step.sends}</li>}
                   </ul>
+                  {step.diff && (
+                    <details className={styles.diffInline}>
+                      <summary>See the changes</summary>
+                      <DiffView diff={step.diff} />
+                    </details>
+                  )}
                   {outcome?.state === 'done' && (
                     <p className={styles.done}>
                       {outcome.summary}

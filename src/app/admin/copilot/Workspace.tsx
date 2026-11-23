@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowUp, PanelRight, SquarePen, X } from 'lucide-react';
 import { ChatMarkdown } from '@/components/ChatMarkdown';
 import { COPILOT } from '@/lib/console/staff-agent/identity';
-import { CardView, PlanTable, ReadChips, cardLabel, type Card, type Item, type Plan, type ReadRef } from './parts';
+import { CardView, DiffView, PlanTable, ReadChips, cardLabel, type Card, type Item, type Plan, type ReadRef } from './parts';
 import thread from './Thread.module.css';
 import styles from './Copilot.module.css';
 
@@ -46,11 +46,22 @@ function starters(about: string | null): string[] {
 
 type Message = Extract<Item, { type: 'message' }>;
 
-export function Workspace({ chats, owner, about }: { chats: ChatLink[]; owner: boolean; about: About | null }) {
+export function Workspace({
+  chats,
+  owner,
+  about,
+  ask,
+}: {
+  chats: ChatLink[];
+  owner: boolean;
+  about: About | null;
+  /** What to put in the box to begin with, when a page sent them here with a job in mind. */
+  ask?: string;
+}) {
   const router = useRouter();
   const [loaded, setLoaded] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(ask ?? '');
   const [busy, setBusy] = useState<'turn' | 'plan' | 'switch' | null>(null);
   // Which reply's cards are open beside the conversation. Null follows the latest.
   const [focus, setFocus] = useState<string | null>(null);
@@ -179,10 +190,15 @@ export function Workspace({ chats, owner, about }: { chats: ChatLink[]; owner: b
   // Beside the conversation: what the chosen reply showed, or before anything
   // has been shown, the record they came from.
   const onCanvas: Card[] = focused?.cards ?? (context?.card ? [context.card] : []);
+  // A plan that is waiting and would rewrite something: its changes are what
+  // the person needs in front of them before they confirm.
+  const waiting = [...items].reverse().find((item): item is Extract<Item, { type: 'plan' }> => item.type === 'plan' && item.plan.status === 'pending');
+  const diffs = focus === null ? (waiting?.plan.steps.flatMap((step) => (step.diff ? [step.diff] : [])) ?? []) : [];
+  const beside = diffs.length > 0 || onCanvas.length > 0;
   const empty = loaded && items.length === 0;
 
   return (
-    <main className={styles.workspace} data-canvas={onCanvas.length > 0 ? '' : undefined}>
+    <main className={styles.workspace} data-canvas={beside ? '' : undefined}>
       <nav className={styles.rail} aria-label="Your chats">
         <button type="button" className={styles.newChat} onClick={() => switchTo({ reset: true })} disabled={busy !== null || empty}>
           <SquarePen size={16} aria-hidden />
@@ -362,13 +378,24 @@ export function Workspace({ chats, owner, about }: { chats: ChatLink[]; owner: b
         </form>
       </section>
 
-      {onCanvas.length > 0 && (
+      {beside && (
         <aside className={styles.canvas} aria-label="What Copilot is showing">
-          <p className={styles.canvasLabel}>{focused ? 'Shown' : 'Where you came from'}</p>
-          {onCanvas.map((card, index) => (
-            <CardView key={index} card={card} />
-          ))}
-          {focused && <ReadChips read={focused.read ?? []} />}
+          {diffs.length > 0 ? (
+            <>
+              <p className={styles.canvasLabel}>Waiting for you to confirm</p>
+              {diffs.map((diff, index) => (
+                <DiffView key={index} diff={diff} />
+              ))}
+            </>
+          ) : (
+            <>
+              <p className={styles.canvasLabel}>{focused ? 'Shown' : 'Where you came from'}</p>
+              {onCanvas.map((card, index) => (
+                <CardView key={index} card={card} />
+              ))}
+              {focused && <ReadChips read={focused.read ?? []} />}
+            </>
+          )}
         </aside>
       )}
     </main>

@@ -33,10 +33,10 @@ const number = (value: number) => value.toLocaleString('en-GB');
 export default async function CopilotPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; who?: string; about?: string }>;
+  searchParams: Promise<{ view?: string; who?: string; about?: string; ask?: string }>;
 }) {
   const staff = await requireStaff();
-  const { view, who, about } = await searchParams;
+  const { view, who, about, ask } = await searchParams;
   const owner = staff.role === 'owner';
 
   // With no view asked for, this is Copilot itself, full screen.
@@ -67,6 +67,7 @@ export default async function CopilotPage({
         }))}
         owner={owner}
         about={from}
+        ask={typeof ask === 'string' ? ask.slice(0, 400) : undefined}
       />
     );
   }

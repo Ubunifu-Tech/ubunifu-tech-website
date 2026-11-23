@@ -76,10 +76,20 @@ export default async function DocumentsPage({
     ),
   );
   // Opens on the ones waiting for us, when there are any, as the badge that
-  // brought them here counts; otherwise on what is with the client.
+  // brought them here counts; otherwise on what is with the client. With
+  // nothing there either, it opens on the drafts: a document written yesterday
+  // and not yet sent must not be behind a page that says there is nothing.
   const countOf = (key: (typeof FILTERS)[number]['key']) =>
     viewCounts[FILTERS.findIndex((f) => f.key === key)] ?? 0;
-  const firstView = countOf('back') > 0 ? 'back' : countOf('ranout') > 0 ? 'ranout' : 'open';
+  const firstView =
+    countOf('back') > 0
+      ? 'back'
+      : countOf('ranout') > 0
+        ? 'ranout'
+        : countOf('open') === 0 && countOf('drafts') > 0
+          ? 'drafts'
+          : 'open';
+  const drafts = countOf('drafts');
   const active = FILTERS.some((f) => f.key === show) ? show! : firstView;
   const total = viewCounts[FILTERS.findIndex((f) => f.key === active)] ?? 0;
   const shown = pageWindow(pageNumber(page), total);
@@ -162,7 +172,9 @@ export default async function DocumentsPage({
                     <p className={table.emptyHint}>
                       {query
                         ? 'Try another view, or search for something else.'
-                        : 'Start one from a project’s Documents tab.'}
+                        : active === 'open' && drafts > 0
+                          ? `${drafts === 1 ? 'One draft has' : `${drafts} drafts have`} not been sent yet. ${drafts === 1 ? 'It is' : 'They are'} under Drafts.`
+                          : 'Start one from a project’s Documents tab.'}
                     </p>
                   </td>
                 </tr>

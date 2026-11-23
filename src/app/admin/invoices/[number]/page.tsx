@@ -678,6 +678,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ number
                 <h2 className={forms.cardTitle}>The invoice itself</h2>
               </div>
               {invoice.notes && <p className={styles.quote}>{invoice.notes}</p>}
+              {/* Said, not left as a missing button: why the date cannot be changed here. */}
+              {!removedAt && issuedEdit?.kind === 'locked' && (
+                <p className={styles.note}>The due date cannot be changed. {issuedEdit.reason}</p>
+              )}
               <div className={forms.actions}>
                 {!removedAt && invoice.status === 'draft' && (
                   <DraftInvoiceDetails

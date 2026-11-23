@@ -13,21 +13,24 @@ import { issueMagicToken } from '@/lib/console/magic-link';
 import { sendConsoleEmail } from '@/lib/console/mailer';
 import { invoiceEmail, receiptEmail, refundEmail } from '@/lib/emails';
 import {
-  billableLines,
-  type Billable,
   issuedEditFacts,
-  nextInvoiceNumber,
   nextReceiptNumber,
   nextRefundNumber,
   recomputeInvoice,
 } from '@/lib/console/billing';
-import { markRenewalInvoiced, periodLabel, RenewalAlreadyBilled } from '@/lib/console/renewals';
+import { RenewalAlreadyBilled } from '@/lib/console/renewals';
 import {
-  daysFromToday,
+  AlreadyBilled,
+  BILLED_MEANWHILE,
+  createDraftInvoice,
+  dueOnTerms,
+  invoiceForBillables,
+  pickBillables,
+} from '@/lib/console/services/invoices';
+import {
   formatMoney,
   formatShortDate,
   isPastDay,
-  MONEY_CAP_MINOR,
   moneyCapText,
   numbers,
   overMoneyCap,
@@ -71,9 +74,6 @@ function contactProblem(
 
 export type BillingState = { status: 'idle' | 'done' | 'error'; message?: string };
 
-/** Thrown inside the transaction when a fee was invoiced by someone else first. */
-class AlreadyBilled extends Error {}
-
 /** Thrown inside the transaction when a payment would take the invoice past paid. */
 class Overpaid extends Error {}
 
@@ -93,190 +93,6 @@ async function refuseIfVoid(tx: Prisma.TransactionClient, invoiceId: string): Pr
 
 /** Thrown inside the transaction when the project or its client was removed meanwhile. */
 class Gone extends Error {}
-
-/**
- * Writes an invoice for fee lines, inside the caller's transaction.
- *
- * Shared by raising an invoice and by taking a payment that came before one,
- * so both guard against billing a fee twice the same way.
- */
-async function invoiceForBillables(
-  tx: Prisma.TransactionClient,
-  input: {
-    project: { id: string; clientId: string };
-    lines: Billable[];
-    currency: string;
-    notes: string;
-    dueAt: Date | null;
-    taxMinor: number;
-    /** Set when the invoice is issued as it is made, rather than drafted. */
-    issuedAt?: Date;
-  },
-): Promise<{ id: string; number: string }> {
-  const { project, lines, notes, dueAt, taxMinor } = input;
-  /**
-   * Two people invoicing the same fee at the same moment must not both
-   * succeed. The fee rows are locked for the length of this transaction and
-   * what is still unbilled is read again under the lock: the second invoice
-   * waits, sees the first, and stops. Renewal periods are guarded the same
-   * way by markRenewalInvoiced below.
-   */
-  // A usage fee is billed again each time, so there is nothing to use up.
-  const oneOff = lines.filter((line) => !line.renewalEventId && line.billingKind !== 'usage');
-  if (oneOff.length > 0) {
-    const ids = oneOff.map((line) => line.lineItemId);
-    await tx.$queryRaw`SELECT id FROM "LineItem" WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
-    const current = numbers(await tx.lineItem.findMany({
-      where: { id: { in: ids } },
-      select: {
-        id: true,
-        amountMinor: true,
-        quantity: true,
-        invoiceLines: {
-          where: { invoice: { status: { not: 'void' } } },
-          select: { amountMinor: true, quantity: true },
-        },
-      },
-    }));
-    for (const line of oneOff) {
-      const fee = current.find((row) => row.id === line.lineItemId);
-      const billed = (fee?.invoiceLines ?? []).reduce((t, l) => t + l.amountMinor * l.quantity, 0);
-      const left = fee ? fee.amountMinor * fee.quantity - billed : 0;
-      if (line.amountMinor > left) throw new AlreadyBilled();
-    }
-  }
-
-  const number = await nextInvoiceNumber(tx);
-  const created = numbers(await tx.invoice.create({
-    data: {
-      number,
-      clientId: project.clientId,
-      projectId: project.id,
-      currency: input.currency,
-      notes: notes || null,
-      dueAt,
-      taxMinor,
-      ...(input.issuedAt ? { status: 'sent' as const, issuedAt: input.issuedAt } : {}),
-      lines: {
-        create: lines.map((line, index) => ({
-          lineItemId: line.lineItemId,
-          label: line.label,
-          // A renewal says which period it covers, because "Hosting" on its
-          // own tells a client nothing about which year they are paying for.
-          description:
-            line.periodStart && line.periodEnd
-              ? `${periodLabel(line.periodStart, line.periodEnd)}${line.terms ? ` · ${line.terms}` : ''}`
-              : line.terms,
-          amountMinor: line.amountMinor,
-          quantity: 1,
-          position: index,
-        })),
-      },
-    },
-    select: { id: true, number: true },
-  }));
-
-  // Marks each period invoiced and moves its line on to the next one. Throws
-  // if a period was billed between the read above and here, which rolls the
-  // whole invoice back rather than charging for it twice.
-  for (const line of lines) {
-    if (line.renewalEventId) {
-      await markRenewalInvoiced(tx, line.renewalEventId, created.id);
-    }
-  }
-
-  return created;
-}
-
-/**
- * The fee lines a form chose, checked against what is billable now, with the
- * VAT that goes on top. Re-derived from the database rather than trusted from
- * the form: what was billable when the page rendered may have been invoiced by
- * somebody else since, and a renewal period is exactly the thing two people
- * can bill at once.
- */
-async function pickBillables(projectId: string, chosen: string[], typed?: FormData) {
-  const project = numbers(await db.project.findFirst({
-    where: { id: projectId, deletedAt: null },
-    select: { id: true, slug: true, currency: true, clientId: true, name: true },
-  }));
-  if (!project) return { error: 'That project no longer exists.' } as const;
-
-  const billable = await billableLines(project.id);
-  const found = billable.filter((item) => chosen.includes(item.key));
-
-  if (found.length !== chosen.length) {
-    return {
-      error:
-        'One of those can no longer be billed. It may have been invoiced already. Reload and try again.',
-    } as const;
-  }
-
-  // A usage fee carries the amount typed for it this time, not its price.
-  const lines: Billable[] = [];
-  for (const line of found) {
-    if (!line.usage || !typed) {
-      lines.push(line);
-      continue;
-    }
-    const raw = String(typed.get(`amount:${line.key}`) ?? '').trim();
-    const amountMinor = parseMoney(raw, line.currency);
-    if (amountMinor === null && overMoneyCap(raw, line.currency)) {
-      return {
-        error: `Amounts above ${moneyCapText(line.currency)} cannot be entered. Raise ${line.label} as two invoices.`,
-      } as const;
-    }
-    if (!amountMinor || amountMinor <= 0) {
-      return { error: `Enter this time's amount for ${line.label}.` } as const;
-    }
-    lines.push({ ...line, amountMinor });
-  }
-
-  if (lines.some((line) => line.amountMinor === 0)) {
-    return {
-      error: 'One of those lines has no price. An invoice cannot carry a blank amount.',
-    } as const;
-  }
-
-  const currencies = [...new Set(lines.map((line) => line.currency))];
-  if (currencies.length > 1) {
-    return {
-      error: `Those lines are in ${currencies.join(' and ')}. One invoice can only be in one currency.`,
-    } as const;
-  }
-
-  // VAT is added on top of the fees when the company charges it, at the rate
-  // in the billing details at the moment the invoice is raised.
-  const org = await getOrg();
-  const subtotal = lines.reduce((total, line) => total + line.amountMinor, 0);
-  const taxMinor =
-    org.chargesVat && org.vatRateBps > 0 ? Math.round((subtotal * org.vatRateBps) / 10_000) : 0;
-  if (
-    lines.some((line) => line.amountMinor > MONEY_CAP_MINOR) ||
-    subtotal + taxMinor > MONEY_CAP_MINOR
-  ) {
-    return {
-      error: `One invoice cannot be more than ${moneyCapText(currencies[0]!)}. Untick some lines and raise a second invoice.`,
-    } as const;
-  }
-
-  return {
-    project,
-    lines,
-    currency: currencies[0]!,
-    taxMinor,
-    totalMinor: subtotal + taxMinor,
-  } as const;
-}
-
-/**
- * Due after the payment terms set in billing settings: calendar days from
- * today in Tanzania, stored at noon UTC like a typed date.
- */
-async function dueOnTerms(): Promise<Date> {
-  const { paymentTermsDays } = await getOrg();
-  return daysFromToday(paymentTermsDays);
-}
 
 /**
  * Raises an invoice from a project's fee lines.
@@ -299,47 +115,21 @@ export async function createInvoice(
     return { status: 'error', message: 'Pick at least one fee line to invoice.' };
   }
 
-  const picked = await pickBillables(projectId, chosen, formData);
+  // A usage fee carries the amount typed beside it on the form.
+  const picked = await pickBillables(projectId, chosen, (key) =>
+    String(formData.get(`amount:${key}`) ?? ''),
+  );
   if ('error' in picked) return { status: 'error', message: picked.error };
-  const { project, lines, currency, taxMinor } = picked;
+  const { project } = picked;
 
-  const dueAt = parseDateInput(String(formData.get('dueAt') ?? '').trim());
-  const notes = formText(formData, 'notes');
-
-  let invoice: { id: string; number: string };
-  try {
-    invoice = await retryOnConflict(() =>
-      db.$transaction(async (tx) => {
-        const created = await invoiceForBillables(tx, {
-          project,
-          lines,
-          currency,
-          notes,
-          dueAt,
-          taxMinor,
-        });
-        await recomputeInvoice(tx, created.id);
-        return created;
-      }),
-    );
-  } catch (error) {
-    if (error instanceof AlreadyBilled || error instanceof RenewalAlreadyBilled) {
-      return {
-        status: 'error',
-        message: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.',
-      };
-    }
-    throw error;
-  }
-
-  await recordAudit({
-    actorType: 'staff',
-    actorId: staff.id,
-    action: 'invoice.created',
-    entityType: 'Invoice',
-    entityId: invoice.id,
-    summary: `${invoice.number} for ${project.name}`,
+  const created = await createDraftInvoice({
+    picked,
+    notes: formText(formData, 'notes'),
+    dueAt: parseDateInput(String(formData.get('dueAt') ?? '').trim()),
+    staffId: staff.id,
   });
+  if (!created.ok) return { status: 'error', message: created.message };
+  const { invoice } = created;
 
   revalidatePath('/admin/invoices');
   revalidatePath(`/admin/projects/${project.slug}`);
@@ -598,7 +388,7 @@ async function payFees(
   }
 
   const picked = await pickBillables(projectId, chosen);
-  if ('error' in picked) return { error: picked.error! };
+  if ('error' in picked) return { error: picked.error };
   const { project, lines, currency, taxMinor, totalMinor } = picked;
 
   const read = readPayment(formData, currency);
@@ -656,7 +446,7 @@ async function payFees(
     );
   } catch (error) {
     if (error instanceof AlreadyBilled || error instanceof RenewalAlreadyBilled) {
-      return { error: 'Someone invoiced one of those fees a moment ago. Reload to see what is left.' };
+      return { error: BILLED_MEANWHILE };
     }
     if (error instanceof Gone) return { error: 'That project was removed a moment ago.' };
     throw error;

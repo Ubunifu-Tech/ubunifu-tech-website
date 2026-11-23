@@ -261,7 +261,7 @@ export default async function InvoicesPage({
                     <p className={table.emptyHint}>
                       {query
                         ? 'Try another view, or search for something else.'
-                        : 'Raise one from a project’s Fees tab.'}
+                        : 'Raise one from New, at the top of the page.'}
                     </p>
                   </td>
                 </tr>

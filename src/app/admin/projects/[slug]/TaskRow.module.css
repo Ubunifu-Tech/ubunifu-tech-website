@@ -50,3 +50,25 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   }
 }
+
+/* A plan is read far more often than it is changed. Each task has a date, a
+   person and two tools, and with all of them drawn as controls a phase of
+   five tasks was twenty boxes. Where a pointer can hover, a row at rest
+   shows its date and its person as plain text and keeps its tools out of
+   sight; the row under the pointer, or holding the keyboard focus, shows
+   them as the controls they are. On a touch screen nothing is hidden. */
+@media (hover: hover) {
+  .row:not(:hover):not(:focus-within) form :is(button, [role='combobox']) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .row:not(:hover):not(:focus-within) form :is(button, [role='combobox']) svg {
+    opacity: 0;
+  }
+
+  .editable:not(:hover):not(:focus-within) > :last-child {
+    opacity: 0;
+  }
+}

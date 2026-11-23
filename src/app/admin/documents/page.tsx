@@ -174,7 +174,7 @@ export default async function DocumentsPage({
                         ? 'Try another view, or search for something else.'
                         : active === 'open' && drafts > 0
                           ? `${drafts === 1 ? 'One draft has' : `${drafts} drafts have`} not been sent yet. ${drafts === 1 ? 'It is' : 'They are'} under Drafts.`
-                          : 'Start one from a project’s Documents tab.'}
+                          : 'Start one from New, at the top of the page.'}
                     </p>
                   </td>
                 </tr>

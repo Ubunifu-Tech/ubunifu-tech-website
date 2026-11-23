@@ -13,19 +13,23 @@ export function NewMenu({
   project,
   client,
   post,
+  document,
 }: {
   payment: boolean;
   project: boolean;
   client: boolean;
   post: boolean;
+  document: boolean;
 }) {
-  if (!payment && !project && !client && !post) return null;
+  if (!payment && !project && !client && !post && !document) return null;
   return (
     <RowMenu label="New" text="New" triggerClassName={styles.newTrigger}>
       <MenuList>
-        {payment && <MenuLink href="/payments/new">Record a payment</MenuLink>}
-        {project && <MenuLink href="/projects/new">Start a project</MenuLink>}
         {client && <MenuLink href="/clients/new">Add a client</MenuLink>}
+        {project && <MenuLink href="/projects/new">Start a project</MenuLink>}
+        {document && <MenuLink href="/documents/new">Write a proposal or agreement</MenuLink>}
+        {payment && <MenuLink href="/invoices/new">Raise an invoice</MenuLink>}
+        {payment && <MenuLink href="/payments/new">Record a payment</MenuLink>}
         {post && (
           <form action={startPost}>
             <MenuItem type="submit">Write a post</MenuItem>

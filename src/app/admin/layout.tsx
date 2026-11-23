@@ -88,6 +88,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             project={staff.permissions.includes('projects')}
             client={staff.permissions.includes('clients')}
             post={staff.permissions.includes('journal')}
+            document={staff.permissions.includes('documents')}
           />
           <ProfileMenu
             name={staff.name}

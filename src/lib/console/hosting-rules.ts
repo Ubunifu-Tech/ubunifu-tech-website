@@ -1,4 +1,4 @@
-import { businessDay, formatShortDate, isPastDay } from './money';
+import { businessDay, daysBetween, formatShortDate, isPastDay } from './money';
 
 /**
  * When a client's hosting may be paused, as plain rules with no database and
@@ -6,10 +6,17 @@ import { businessDay, formatShortDate, isPastDay } from './money';
  * answer.
  *
  * Pausing takes a client's site off the internet. It is allowed only for an
- * invoice that is overdue today and that the client has been told about: a
- * recorded overdue notice, dated after the invoice fell due. A person presses
- * the button, and only an owner can.
+ * invoice that is overdue today and that the client was told about at least
+ * NOTICE_DAYS ago: a recorded overdue notice, dated after the invoice fell
+ * due. A person presses the button, and only an owner can.
  */
+
+/**
+ * How long the client has to pay or answer after being told, before their
+ * hosting can be paused. Counted in days on Tanzania's calendar from the day
+ * the notice was given: a notice given on the 1st allows a pause on the 8th.
+ */
+export const NOTICE_DAYS = 7;
 
 /** A Vercel project id as Vercel writes it: prj_ and letters or digits. */
 export const VERCEL_PROJECT_ID = /^prj_[A-Za-z0-9]{6,60}$/;
@@ -44,9 +51,10 @@ export function isOverdue(invoice: Omit<HostingInvoice, 'number' | 'notices'>, n
 }
 
 /**
- * The notice that counts for an invoice: the latest one given after it fell
+ * The notice that counts for an invoice: the first one given after it fell
  * due. A notice from before the due date, or from before the date was moved
- * later, told the client about a debt that was not yet late.
+ * later, told the client about a debt that was not yet late. The first counts
+ * and not the latest, so a reminder sent later does not start the wait again.
  */
 export function standingNotice(invoice: HostingInvoice): { givenAt: Date } | null {
   if (!invoice.dueAt) return null;
@@ -54,8 +62,13 @@ export function standingNotice(invoice: HostingInvoice): { givenAt: Date } | nul
   return (
     invoice.notices
       .filter((notice) => businessDay(notice.givenAt) > due)
-      .sort((a, b) => b.givenAt.getTime() - a.givenAt.getTime())[0] ?? null
+      .sort((a, b) => a.givenAt.getTime() - b.givenAt.getTime())[0] ?? null
   );
+}
+
+/** The first day a pause is allowed after a notice given on this day. */
+export function pauseAllowedFrom(givenAt: Date): Date {
+  return new Date(givenAt.getTime() + NOTICE_DAYS * 86_400_000);
 }
 
 export type PauseStanding =
@@ -64,7 +77,9 @@ export type PauseStanding =
 
 /**
  * Whether hosting can be paused now, and for which invoice. Among overdue
- * invoices with a notice, the one that has been overdue longest is named.
+ * invoices whose notice is old enough, the one overdue longest is named. When
+ * a notice is on record but the wait is not over, the refusal says which day
+ * it ends.
  */
 export function pauseStanding(input: {
   linked: boolean;
@@ -82,17 +97,31 @@ export function pauseStanding(input: {
   if (overdue.length === 0) {
     return { allowed: false, reason: 'No invoice on this project is overdue, so there is nothing to pause for.' };
   }
-  for (const invoice of overdue) {
+
+  const told = overdue.flatMap((invoice) => {
     const notice = standingNotice(invoice);
-    if (notice) return { allowed: true, invoice, notice };
+    return notice ? [{ invoice, notice }] : [];
+  });
+  const ready = told.find(({ notice }) => daysBetween(notice.givenAt, input.now) >= NOTICE_DAYS);
+  if (ready) return { allowed: true, ...ready };
+
+  // Told, but not long enough ago: the one whose wait ends first.
+  const soonest = [...told].sort((a, b) => a.notice.givenAt.getTime() - b.notice.givenAt.getTime())[0];
+  if (soonest) {
+    return {
+      allowed: false,
+      reason: `The client was given notice about ${soonest.invoice.number} on ${formatShortDate(soonest.notice.givenAt)}. Hosting can be paused from ${formatShortDate(pauseAllowedFrom(soonest.notice.givenAt))}, ${NOTICE_DAYS} days after the notice, if it is still unpaid.`,
+    };
   }
+
   const numbers = overdue.map((invoice) => invoice.number);
+  const then = `Tell the client, then record the notice on the invoice's page. Hosting can be paused ${NOTICE_DAYS} days after that.`;
   return {
     allowed: false,
     reason:
       numbers.length === 1
-        ? `${numbers[0]} is overdue, but no overdue notice is recorded for it. Tell the client, then record the notice on the invoice's page.`
-        : `${numbers.join(', ')} are overdue, but no overdue notice is recorded for any of them. Tell the client, then record the notice on the invoice's page.`,
+        ? `${numbers[0]} is overdue, but no overdue notice is recorded for it. ${then}`
+        : `${numbers.join(', ')} are overdue, but no overdue notice is recorded for any of them. ${then}`,
   };
 }
 

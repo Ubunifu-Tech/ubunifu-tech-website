@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { Callout } from '@/components/console/Callout';
 import { TextField } from '@/components/console/Fields';
+import { NOTICE_DAYS } from '@/lib/console/hosting-rules';
 import {
   pauseProjectHosting,
   resumeProjectHosting,
@@ -118,7 +119,7 @@ export function Hosting({ projectId, owner, configured, link, pausedOn, pause, p
           <div className={styles.hosting}>
             <p className={styles.note}>
               Link the Vercel project that serves this site. Its hosting can then be paused here if an
-              invoice stays unpaid after the client has been told.
+              invoice stays unpaid {NOTICE_DAYS} days after the client has been told.
             </p>
             {linkForm}
           </div>

@@ -28,8 +28,8 @@ import { formatShortDate, numbers, parseDateInput } from '@/lib/console/money';
  * Pausing takes a client's site offline, so every rule about it is here and
  * is checked on the server each time, whatever a page showed: only an owner,
  * only for an invoice that is overdue today, and only once an overdue notice
- * to the client is on record. The console assistant has no action for any of
- * this. A person presses the button.
+ * to the client has been on record for NOTICE_DAYS. The console assistant has
+ * no action for any of this. A person presses the button.
  */
 
 export type HostingResult = { ok: true; message: string } | { ok: false; message: string };
@@ -198,7 +198,8 @@ export async function linkHosting(input: {
 
 /**
  * Pauses the linked Vercel project. Refused unless an owner asks, an invoice
- * on the project is overdue today, and an overdue notice is on record for it.
+ * on the project is overdue today, and the client was given an overdue notice
+ * for it at least NOTICE_DAYS ago.
  */
 export async function pauseHosting(input: { staff: StaffActor; projectId: string }): Promise<HostingResult> {
   if (!isOwner(input.staff)) return { ok: false, message: OWNERS_ONLY };

@@ -370,15 +370,6 @@ export default async function ProjectPage({
   const emailable = project.client.contacts.flatMap((person) =>
     person.canSignIn && person.email ? [person.email.toLowerCase()] : [],
   );
-  // What the client has actually been told. A draft or a taken-down update
-  // is not news to them.
-  const lastSent = project.updates
-    .filter((update) => update.status === 'published' && update.publishedAt)
-    .reduce<Date | null>(
-      (latest, update) => (!latest || update.publishedAt! > latest ? update.publishedAt : latest),
-      null,
-    );
-  const drafts = project.updates.filter((update) => update.status === 'draft').length;
   const updates: UpdateRow[] = project.updates.map((update) => {
     const reached = reachedBy.get(update.id) ?? new Set<string>();
     return {
@@ -854,56 +845,6 @@ export default async function ProjectPage({
               )}
             </section>
 
-            <section className={forms.card}>
-              <div className={forms.cardHeader}>
-                <h2 className={forms.cardTitle}>At a glance</h2>
-              </div>
-              <ul className={styles.glance}>
-                <li>
-                  <Link href={href('plan')}>
-                    {totalDeliverables === 0
-                      ? 'No plan yet'
-                      : totalDeliverables - doneDeliverables === 0
-                        ? 'All tasks done'
-                        : `${totalDeliverables - doneDeliverables} tasks still to do`}
-                  </Link>
-                </li>
-                {(mayFees || mayMoney) && (
-                  <li>
-                    <Link href={href('fees')}>
-                      {fees.length === 0
-                        ? 'No fees set yet'
-                        : unpriced > 0
-                          ? `${unpriced} ${unpriced === 1 ? 'fee needs' : 'fees need'} a price`
-                          : agreedParts.length > 0
-                            ? `${agreed.length} ${agreed.length === 1 ? 'fee' : 'fees'} agreed: ${agreedParts.join(' and ')}`
-                            : `${fees.length} ${fees.length === 1 ? 'fee' : 'fees'}, none charged for now`}
-                    </Link>
-                  </li>
-                )}
-                {mayDocs && (
-                  <li>
-                    <Link href={href('documents')}>
-                      {project.documents.length === 0
-                        ? 'No proposal or agreement yet'
-                        : `${project.documents.length} ${project.documents.length === 1 ? 'document' : 'documents'}`}
-                    </Link>
-                  </li>
-                )}
-                <li>
-                  <Link href={href('updates')}>
-                    {lastSent
-                      ? `Last update sent ${formatRelative(lastSent, now)}`
-                      : drafts === 1
-                        ? 'A draft update has not been sent yet'
-                        : drafts > 1
-                          ? `${drafts} draft updates have not been sent yet`
-                          : 'No updates sent to the client yet'}
-                  </Link>
-                </li>
-              </ul>
-            </section>
-
             <ProjectDetailsCard
               editable={mayRun}
               details={{
@@ -1195,7 +1136,7 @@ export default async function ProjectPage({
 
           {mayMoney && (
             <>
-              <section className={forms.card}>
+              <section id="raise-invoice" className={forms.card}>
                 <div className={forms.cardHeader}>
                   <h2 className={forms.cardTitle}>Raise an invoice</h2>
                   <span className={forms.cardMeta}>From fees not yet invoiced</span>

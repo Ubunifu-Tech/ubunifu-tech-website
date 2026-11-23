@@ -190,6 +190,20 @@ one caller.
 All three chat endpoints (website, portal, console) refuse a POST from another
 origin and read the body with a size limit (`src/lib/console/request-guards.ts`).
 
+### Starting things, fees and who signs
+
+- **New**, at the top of every page, starts a client, a project, a proposal or
+  agreement (`/documents/new`: choose the project, then the kind), an invoice
+  (`/invoices/new`: every project with something to invoice now) and a payment.
+- **Lists open on what is still open.** Projects and Invoices open on an Open
+  view, so a new deal or a draft invoice is in front of you.
+- **A fee is one form.** Name, how it is billed, price, and the first payment
+  date for a monthly or yearly fee; quantity, payment terms, a description and
+  a status are under More. A fee with no price is priced in its own row.
+- **Who signs** a document is chosen on its Send step when the client has more
+  than one person. It is their main contact unless somebody else is picked
+  (`Document.signerId`), and only someone with portal access can sign.
+
 ### Hosting links
 
 A console project can be linked to the Vercel project that serves the client's

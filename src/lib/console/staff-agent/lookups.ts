@@ -9,6 +9,7 @@ import { liveDocument, liveInvoice } from '@/lib/console/live';
 import { formatDate, formatMoney, numbers } from '@/lib/console/money';
 import { STAFF_LABEL } from '@/lib/console/project-status';
 import { searchConsole } from '@/lib/console/search';
+import { billableName } from '@/lib/console/services/invoices';
 
 /**
  * What the console assistant can read. Each lookup runs as the person asking
@@ -121,7 +122,7 @@ ${projects.join('\n') || '- None yet.'}`,
 export const getProject: AgentTool<StaffContext> = {
   name: 'get_project',
   description:
-    'Read one project: where it stands, its fees (numbered), what can be invoiced now, its documents and its invoices. Shows only what the person\'s role shows them.',
+    'Read one project: where it stands, its fees (numbered), what can be invoiced now (numbered), its documents and its invoices. Shows only what the person\'s role shows them.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -193,8 +194,12 @@ export const getProject: AgentTool<StaffContext> = {
       billable =
         lines
           .map(
-            (line) =>
-              `- ${line.label}: ${formatMoney(line.amountMinor, line.currency)}${line.dueAt ? `, due ${formatDate(line.dueAt)}` : ''}`,
+            (line, index) =>
+              `${index + 1}. ${billableName(line)}: ${
+                line.usage
+                  ? "charged by usage, this time's amount comes from the person"
+                  : formatMoney(line.amountMinor, line.currency)
+              }${line.dueAt ? `, due ${formatDate(line.dueAt)}` : ''}`,
           )
           .join('\n') || 'Nothing to invoice right now. A yearly or monthly fee appears here close to its date.';
       invoices =
@@ -226,7 +231,7 @@ ${project.summary ? `About: ${project.summary}\n` : ''}
 FEES
 ${fees}
 
-CAN BE INVOICED NOW (raised from the project page, Money section)
+CAN BE INVOICED NOW (numbered for create_invoice; by hand it is the project page, Money section)
 ${billable}
 
 DOCUMENTS

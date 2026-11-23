@@ -58,6 +58,13 @@ export type Checked<Value> =
       produces?: Produced;
       /** Set when carrying the step out emails somebody outside the team. */
       sends?: string;
+      /**
+       * The facts the person is agreeing to that must not have moved by the
+       * time they confirm, as one string: amounts and dates, mostly. Kept with
+       * the plan and compared when it is carried out. A step whose pin has
+       * changed is refused, so nobody confirms one figure and gets another.
+       */
+      pin?: string;
     }
   | { ok: false; message: string };
 

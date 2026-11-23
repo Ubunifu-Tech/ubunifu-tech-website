@@ -121,24 +121,29 @@ records up and lay out changes; it cannot change anything itself.
   asking and show what their role shows them on the matching page.
 - **Actions** (`src/lib/console/staff-agent/actions/`) are the whole list of
   what it can ask to have changed: add a client, send a portal invitation,
-  start a project, add or rename a fee, and draft a document. Sending a
-  document or an invoice, recording a payment and removing anything are not on
-  the list and stay with a person.
+  start a project, add or rename a fee, draft a document, and draft an invoice
+  from fees that can be billed now. Sending a document or an invoice, recording
+  a payment, pausing or resuming hosting and removing anything are not on the
+  list and stay with a person.
 - **Plans** (`src/lib/console/staff-agent/plan.ts`): the model calls one tool,
   `propose_plan`. Each step is checked with the same rules as the console's
   forms, and the review table is written from the checked values, not from the
   model's words. Nothing runs until the person who asked presses Confirm, and
   every step is then checked again against their role and the records as they
-  stand. A plan is stored in `AssistantPlan` and its outcome in Activity.
+  stand. A step can also pin the figures the person was shown (an invoice pins
+  its lines, total and due date): if they have moved by the time of Confirm,
+  the step is refused, not carried out with different numbers. A plan is stored
+  in `AssistantPlan` and its outcome in Activity.
 
 To add an action, write a `PlanAction` (its fields, a `check` and a `run`) and
 add it to `PLAN_ACTIONS` in `actions/index.ts`. The tool schema, the review
 table and the permission check all read from that list.
 
 The rules the forms and the assistant share live in
-`src/lib/console/services/` (clients, projects, fees, documents). A form action
-reads the form and calls the service; an assistant action reads the tool input
-and calls the same service. Put a new rule in the service, never in one caller.
+`src/lib/console/services/` (clients, projects, fees, documents, invoices). A
+form action reads the form and calls the service; an assistant action reads the
+tool input and calls the same service. Put a new rule in the service, never in
+one caller.
 
 All three chat endpoints (website, portal, console) refuse a POST from another
 origin and read the body with a size limit (`src/lib/console/request-guards.ts`).

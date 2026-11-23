@@ -570,9 +570,11 @@
   padding: var(--space-3);
 }
 
+/* A step down from body size so it can carry the medium weight: body-size
+   text is regular everywhere, and a name in a card still has to lead. */
 .cardName {
   color: var(--text-primary);
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-medium);
   line-height: 1.35;
   text-decoration: none;

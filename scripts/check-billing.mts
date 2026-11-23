@@ -9,7 +9,8 @@
  * An issued invoice's due date: one issued by a payment and never emailed could
  * only be fixed by reversing the receipt and voiding it. Now it can be
  * corrected until the client could have seen it, and only given more time
- * after that; an emailed invoice still stands. The rule is invoice-edits.ts.
+ * after that. An emailed invoice can be given more time too, and nothing
+ * else about it changes. The rule is invoice-edits.ts.
  *
  * A plan's fees: they were all added, unpriced, to every new project. The create
  * forms now list them to keep, drop or price, and only the ticked ones are
@@ -131,13 +132,23 @@ expect(
   'later',
 );
 expect(
-  'emailed: it stands',
+  'emailed: only more time',
   issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: false }).kind,
-  'locked',
+  'later',
 );
 expect(
-  'emailed and seen: it stands',
+  'emailed and seen: only more time',
   issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: true }).kind,
+  'later',
+);
+expect(
+  'emailed and overdue: still only more time',
+  issuedInvoiceEdit({ status: 'overdue', outstandingMinor: 100, emailed: true, seenInPortal: true }).kind,
+  'later',
+);
+expect(
+  'emailed and paid: nothing to change',
+  issuedInvoiceEdit({ status: 'paid', outstandingMinor: 0, emailed: true, seenInPortal: true }).kind,
   'locked',
 );
 expect(
@@ -163,7 +174,8 @@ expect(
 
 const free = issuedInvoiceEdit({ ...owing, emailed: false, seenInPortal: false });
 const later = issuedInvoiceEdit({ ...owing, emailed: false, seenInPortal: true });
-const locked = issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: false });
+const emailed = issuedInvoiceEdit({ ...owing, emailed: true, seenInPortal: false });
+const locked = issuedInvoiceEdit({ status: 'paid', outstandingMinor: 0, emailed: true, seenInPortal: false });
 const edit = (over: Partial<Parameters<typeof checkIssuedEdit>[0]>) =>
   'error' in checkIssuedEdit({ edit: free, today, currentDue: '2026-11-20', nextDue: onTerms, notesChanged: false, ...over })
     ? 'refused'
@@ -180,6 +192,11 @@ expect('later: the same day', edit({ edit: later, nextDue: '2026-11-20' }), 'all
 expect('later: never earlier than it was', edit({ edit: later, currentDue: '2026-12-20', nextDue: '2026-12-10' }), 'refused');
 expect('later: notes stay as the client may have read them', edit({ edit: later, nextDue: '2026-12-20', notesChanged: true }), 'refused');
 expect('later: from due on receipt to a date', edit({ edit: later, currentDue: null, nextDue: '2026-12-20' }), 'allowed');
+expect('emailed: more time', edit({ edit: emailed, nextDue: '2026-12-20' }), 'allowed');
+expect('emailed: an overdue one given a date from today on', edit({ edit: emailed, currentDue: '2026-11-10', nextDue: '2026-12-01' }), 'allowed');
+expect('emailed: never earlier than it was', edit({ edit: emailed, currentDue: '2026-12-20', nextDue: '2026-12-10' }), 'refused');
+expect('emailed: not to a day already past', edit({ edit: emailed, currentDue: '2026-11-10', nextDue: '2026-11-15' }), 'refused');
+expect('emailed: notes stay as they were sent', edit({ edit: emailed, nextDue: '2026-12-20', notesChanged: true }), 'refused');
 expect('locked: nothing changes', edit({ edit: locked }), 'refused');
 
 // ── A plan's fees, as the create form left them ─────────────────────────────

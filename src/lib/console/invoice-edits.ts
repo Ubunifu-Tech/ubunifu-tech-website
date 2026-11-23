@@ -1,13 +1,19 @@
 /**
  * What can still change on an invoice that has been issued.
  *
- * What a client was sent stands: an emailed invoice is never edited, only
- * voided and raised again. An invoice issued by a payment and never emailed is
- * a different thing, a draft in all but name, and fixing its due date should
- * not take a reversed receipt and a void. The portal is the line between the
- * two: everyone at the client who can sign in sees every issued invoice there,
- * so once one of them has signed in since it was issued, they may have seen it,
- * and it can only be given more time. Days are "YYYY-MM-DD", compared as text.
+ * What a client was sent stands, with one exception: they can always be given
+ * more time. An invoice that was emailed, or that someone at the client may
+ * have seen in the portal, keeps its lines and notes, and its due date can
+ * only move later. Moving it earlier, or changing anything else, would make
+ * what they hold wrong in a way that costs them; for that it is voided and
+ * raised again.
+ *
+ * An invoice issued by a payment and never emailed is a different thing, a
+ * draft in all but name, and fixing its due date should not take a reversed
+ * receipt and a void. The portal is the line between the two: everyone at the
+ * client who can sign in sees every issued invoice there, so once one of them
+ * has signed in since it was issued, they may have seen it. Days are
+ * "YYYY-MM-DD", compared as text.
  */
 export type IssuedEdit =
   | { kind: 'free' }
@@ -35,8 +41,8 @@ export function issuedInvoiceEdit({
   }
   if (emailed) {
     return {
-      kind: 'locked',
-      reason: 'It was emailed to the client, so it stays as they have it. Void it and raise another to change it.',
+      kind: 'later',
+      reason: 'It was emailed to the client, so it can only be given more time.',
     };
   }
   if (seenInPortal) {

@@ -11,8 +11,6 @@ import {
 } from '@/app/admin/projects/[slug]/fee-actions';
 import { BILLING, BILLING_OPTIONS, FEE_STATUS_LABEL, isRecurring } from '@/lib/console/fee-labels';
 import { formatMoney, formatShortDate, moneyInput } from '@/lib/console/money';
-import { Steps } from './Steps';
-import { ChoiceCards } from './ChoiceCards';
 import { DatePicker } from './DatePicker';
 import { Select } from './Select';
 import forms from '@/styles/forms.module.css';
@@ -32,28 +30,14 @@ export type FeeRow = {
 
 const IDLE: FeeState = { status: 'idle' };
 
-const STEPS = [
-  { key: 'what', label: 'What it is' },
-  { key: 'billing', label: 'How it is billed' },
-  { key: 'price', label: 'Price' },
-];
-
 /** What a person types for a price; an unpriced fee is an empty box. */
 function toInput(minor: number, currency: string): string {
   return minor === 0 ? '' : moneyInput(minor, currency);
 }
 
-const FIELD_STEP: Record<NonNullable<FeeState['field']>, number> = {
-  label: 0,
-  billingKind: 1,
-  amount: 2,
-  quantity: 2,
-  nextDueAt: 2,
-};
-
 /**
- * The project's fees: see them, add one step by step, change or remove any
- * of them at any time. What is set here is exactly what the contract's fee
+ * The project's fees: see them, add one on a single form, price one where it
+ * stands, change or remove any of them at any time. What is set here is exactly what the contract's fee
  * schedule will say, because the schedule is generated from these.
  */
 export function FeeEditor({
@@ -115,15 +99,19 @@ export function FeeEditor({
                     {fee.status !== 'planned' && fee.status !== 'active' ? ` · ${FEE_STATUS_LABEL[fee.status]}` : ''}
                   </span>
                 </div>
-                <span
-                  className={`${styles.amount} ${fee.amountMinor === 0 && fee.billingKind !== 'usage' ? styles.unpriced : ''}`}
-                >
-                  {fee.amountMinor === 0
-                    ? fee.billingKind === 'usage'
-                      ? 'Billed as used'
-                      : 'No price yet'
-                    : `${fee.quantity > 1 ? `${fee.quantity} × ` : ''}${formatMoney(fee.amountMinor, currency)}${BILLING[fee.billingKind].per}`}
-                </span>
+                {!readOnly && fee.amountMinor === 0 && fee.billingKind !== 'usage' && (!isRecurring(fee.billingKind) || fee.nextDueAt) ? (
+                  <PriceHere fee={fee} currency={currency} />
+                ) : (
+                  <span
+                    className={`${styles.amount} ${fee.amountMinor === 0 && fee.billingKind !== 'usage' ? styles.unpriced : ''}`}
+                  >
+                    {fee.amountMinor === 0
+                      ? fee.billingKind === 'usage'
+                        ? 'Billed as used'
+                        : 'No price yet'
+                      : `${fee.quantity > 1 ? `${fee.quantity} × ` : ''}${formatMoney(fee.amountMinor, currency)}${BILLING[fee.billingKind].per}`}
+                  </span>
+                )}
                 {readOnly ? null : removing === fee.id ? (
                   <form action={removeAction} className={styles.confirmRemove}>
                     <input type="hidden" name="lineItemId" value={fee.id} />
@@ -209,7 +197,53 @@ export function FeeEditor({
   );
 }
 
-/** Adding or changing one fee, a step at a time. */
+/**
+ * A price for a fee that has none, typed in its own row. A plan brings its
+ * fees unpriced, and opening each one to set a single number was most of the
+ * work of pricing a project.
+ */
+function PriceHere({ fee, currency }: { fee: FeeRow; currency: string }) {
+  const [state, action, pending] = useActionState(updateFee, IDLE);
+  const [amount, setAmount] = useState('');
+  return (
+    <form action={action} className={styles.priceHere}>
+      <input type="hidden" name="lineItemId" value={fee.id} />
+      <input type="hidden" name="label" value={fee.label} />
+      <input type="hidden" name="description" value={fee.description ?? ''} />
+      <input type="hidden" name="billingKind" value={fee.billingKind} />
+      <input type="hidden" name="quantity" value={fee.quantity} />
+      <input type="hidden" name="terms" value={fee.terms ?? ''} />
+      <input type="hidden" name="nextDueAt" value={isRecurring(fee.billingKind) ? fee.nextDueAt : ''} />
+      <input type="hidden" name="status" value={fee.status} />
+      <span className={forms.affixWrap}>
+        <input
+          name="amount"
+          className={`${forms.control} ${forms.number}`}
+          inputMode="decimal"
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+          placeholder="Price"
+          aria-label={`Price for ${fee.label}, in ${currency}${BILLING[fee.billingKind].per}`}
+          aria-invalid={state.status === 'error' || undefined}
+          disabled={pending}
+        />
+        <span className={forms.affix} aria-hidden="true">
+          {currency}
+        </span>
+      </span>
+      <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending || amount.trim() === ''}>
+        {pending ? 'Saving…' : 'Set'}
+      </button>
+      {state.status === 'error' && (
+        <p className={forms.error} role="alert">
+          {state.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/** Adding or changing one fee, on one form. What is rarely needed is under More. */
 function FeeForm({
   projectId,
   currency,
@@ -221,18 +255,6 @@ function FeeForm({
   fee?: FeeRow;
   onDone: () => void;
 }) {
-  const [step, setStep] = useState(0);
-  const [state, action, pending] = useActionState(
-    async (previous: FeeState, formData: FormData) => {
-      const result = await (fee ? updateFee : addFee)(previous, formData);
-      if (result.status === 'done') onDone();
-      // A problem with one field opens the step that field is on.
-      if (result.status === 'error' && result.field) setStep(FIELD_STEP[result.field]);
-      return result;
-    },
-    IDLE,
-  );
-
   const [label, setLabel] = useState(fee?.label ?? '');
   const [description, setDescription] = useState(fee?.description ?? '');
   const [billingKind, setBillingKind] = useState<BillingKind>(fee?.billingKind ?? 'one_off');
@@ -241,101 +263,107 @@ function FeeForm({
   const [terms, setTerms] = useState(fee?.terms ?? '');
   const [nextDueAt, setNextDueAt] = useState(fee?.nextDueAt ?? '');
   const [status, setStatus] = useState<string>(fee?.status ?? 'planned');
-  const [problem, setProblem] = useState<string | null>(null);
-
-  const shown = step;
-
-  function next() {
-    if (shown === 0 && label.trim().length < 2) {
-      setProblem('Give the fee a name.');
-      return;
-    }
-    setProblem(null);
-    setStep(shown + 1);
-  }
+  // Open already when there is something in it to see.
+  const [more, setMore] = useState(
+    Boolean(fee && (fee.description || fee.terms || fee.quantity > 1 || (fee.status !== 'planned' && fee.status !== 'active'))),
+  );
+  const [state, action, pending] = useActionState(
+    async (previous: FeeState, formData: FormData) => {
+      const result = await (fee ? updateFee : addFee)(previous, formData);
+      if (result.status === 'done') onDone();
+      // A problem with a field under More opens it.
+      if (result.status === 'error' && result.field === 'quantity') setMore(true);
+      return result;
+    },
+    IDLE,
+  );
+  const wrong = (field: NonNullable<FeeState['field']>) =>
+    (state.status === 'error' && state.field === field) || undefined;
 
   return (
     <form action={action} className={styles.form}>
       <input type="hidden" name={fee ? 'lineItemId' : 'projectId'} value={fee ? fee.id : projectId} />
-      {/* Every field posts, whichever step is on screen. */}
-      <input type="hidden" name="label" value={label} />
+      {/* Kept in state, so what is under More posts whether or not it is open. */}
+      <input type="hidden" name="billingKind" value={billingKind} />
       <input type="hidden" name="description" value={description} />
-      <input type="hidden" name="amount" value={amount} />
       <input type="hidden" name="quantity" value={quantity} />
       <input type="hidden" name="terms" value={terms} />
       <input type="hidden" name="nextDueAt" value={isRecurring(billingKind) ? nextDueAt : ''} />
       <input type="hidden" name="status" value={status} />
 
       <p className={styles.formTitle}>{fee ? `Edit ${fee.label}` : 'Add a fee'}</p>
-      <Steps steps={STEPS} current={shown} onSelect={setStep} reachable={fee ? STEPS.length - 1 : Math.max(shown, label ? 2 : 0)} />
 
-      {shown === 0 && (
-        <div className={forms.grid}>
-          <div className={`${forms.field} ${forms.wide}`}>
-            <label className={forms.label} htmlFor="fee-label">
-              Name
-            </label>
-            <input
-              id="fee-label"
-              className={forms.control}
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              maxLength={160}
-              placeholder="Website design and build"
-              autoFocus
-            />
-          </div>
-          <div className={`${forms.field} ${forms.wide}`}>
-            <label className={forms.label} htmlFor="fee-description">
-              Description <span className={forms.optional}>(optional)</span>
-            </label>
-            <input
-              id="fee-description"
-              className={forms.control}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              maxLength={500}
-              placeholder="Six pages, booking form, two languages"
-            />
-          </div>
+      <div className={forms.grid}>
+        <div className={`${forms.field} ${forms.wide}`}>
+          <label className={forms.label} htmlFor="fee-label">
+            Name
+          </label>
+          <input
+            id="fee-label"
+            name="label"
+            className={forms.control}
+            value={label}
+            onChange={(event) => setLabel(event.target.value)}
+            maxLength={160}
+            placeholder="Website design and build"
+            aria-invalid={wrong('label')}
+            required
+            autoFocus
+          />
         </div>
-      )}
-
-      {shown === 1 && (
-        <ChoiceCards
-          name="billingKind"
-          legend="How is it billed?"
-          choices={BILLING_OPTIONS}
-          value={billingKind}
-          onChange={(value) => setBillingKind(value as BillingKind)}
-        />
-      )}
-      {shown !== 1 && <input type="hidden" name="billingKind" value={billingKind} />}
-
-      {shown === 2 && (
-        <div className={forms.grid}>
-          <div className={forms.field}>
-            <label className={forms.label} htmlFor="fee-amount">
-              Price{BILLING[billingKind].per ? ` (${BILLING[billingKind].per.trim()})` : ''}
-            </label>
-            <span className={forms.affixWrap}>
-              <input
-                id="fee-amount"
-                className={`${forms.control} ${forms.number}`}
-                inputMode="decimal"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                placeholder="0.00"
-                autoFocus
-              />
-              <span className={forms.affix} aria-hidden="true">
-                {currency}
-              </span>
+        <div className={forms.field}>
+          <span className={forms.label} id="fee-billing-label">
+            How it is billed
+          </span>
+          <Select
+            aria-labelledby="fee-billing-label"
+            value={billingKind}
+            onValueChange={(value) => setBillingKind(value as BillingKind)}
+            options={BILLING_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+          />
+          <p className={forms.hint}>{BILLING[billingKind].description}</p>
+        </div>
+        <div className={forms.field}>
+          <label className={forms.label} htmlFor="fee-amount">
+            Price{BILLING[billingKind].per ? ` (${BILLING[billingKind].per.trim()})` : ''}
+          </label>
+          <span className={forms.affixWrap}>
+            <input
+              id="fee-amount"
+              name="amount"
+              className={`${forms.control} ${forms.number}`}
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="0.00"
+              aria-invalid={wrong('amount')}
+            />
+            <span className={forms.affix} aria-hidden="true">
+              {currency}
             </span>
-            {billingKind === 'usage' && (
-              <p className={forms.hint}>Leave it empty to enter the amount each time you invoice.</p>
-            )}
+          </span>
+          <p className={forms.hint}>
+            {billingKind === 'usage'
+              ? 'Leave it empty to enter the amount each time you invoice.'
+              : 'Leave it empty to price it later.'}
+          </p>
+        </div>
+        {isRecurring(billingKind) && (
+          <div className={forms.field}>
+            <span className={forms.label} id="fee-due-label">
+              {fee ? 'Next payment due' : 'First payment due'}
+            </span>
+            <DatePicker aria-labelledby="fee-due-label" value={nextDueAt} onChange={setNextDueAt} invalid={wrong('nextDueAt')} />
           </div>
+        )}
+      </div>
+
+      {!more ? (
+        <button type="button" className={styles.more} onClick={() => setMore(true)} aria-expanded="false">
+          More: quantity, payment terms, a description, or a fee not charged yet
+        </button>
+      ) : (
+        <div className={forms.grid}>
           <div className={forms.field}>
             <label className={forms.label} htmlFor="fee-quantity">
               Quantity
@@ -346,27 +374,7 @@ function FeeForm({
               inputMode="numeric"
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
-            />
-          </div>
-          {isRecurring(billingKind) && (
-            <div className={forms.field}>
-              <span className={forms.label} id="fee-due-label">
-                {fee ? 'Next payment due' : 'First payment due'}
-              </span>
-              <DatePicker aria-labelledby="fee-due-label" value={nextDueAt} onChange={setNextDueAt} />
-            </div>
-          )}
-          <div className={`${forms.field} ${isRecurring(billingKind) ? '' : forms.wide}`}>
-            <label className={forms.label} htmlFor="fee-terms">
-              Payment terms <span className={forms.optional}>(optional)</span>
-            </label>
-            <input
-              id="fee-terms"
-              className={forms.control}
-              value={terms}
-              onChange={(event) => setTerms(event.target.value)}
-              maxLength={500}
-              placeholder="50% at the start, 50% on handover"
+              aria-invalid={wrong('quantity')}
             />
           </div>
           {/* On a new fee too: a line agreed now but charged later (email
@@ -385,13 +393,39 @@ function FeeForm({
               }))}
             />
           </div>
+          <div className={`${forms.field} ${forms.wide}`}>
+            <label className={forms.label} htmlFor="fee-terms">
+              Payment terms <span className={forms.optional}>(optional)</span>
+            </label>
+            <input
+              id="fee-terms"
+              className={forms.control}
+              value={terms}
+              onChange={(event) => setTerms(event.target.value)}
+              maxLength={500}
+              placeholder="50% at the start, 50% on handover"
+            />
+          </div>
+          <div className={`${forms.field} ${forms.wide}`}>
+            <label className={forms.label} htmlFor="fee-description">
+              Description <span className={forms.optional}>(optional)</span>
+            </label>
+            <input
+              id="fee-description"
+              className={forms.control}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              maxLength={500}
+              placeholder="Six pages, booking form, two languages"
+            />
+          </div>
         </div>
       )}
 
-      {(problem || state.status === 'error') && (
+      {state.status === 'error' && (
         <p className={forms.error} role="alert">
-          {problem ?? state.message}
-          {!problem && state.signedOut && (
+          {state.message}
+          {state.signedOut && (
             <>
               {' '}
               <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
@@ -403,26 +437,9 @@ function FeeForm({
       )}
 
       <div className={styles.formActions}>
-        {shown > 0 && (
-          <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setStep(shown - 1)}>
-            Back
-          </button>
-        )}
-        {shown < STEPS.length - 1 && (
-          <button
-            type="button"
-            className={fee ? `${forms.button} ${forms.quiet}` : forms.button}
-            onClick={next}
-          >
-            Next
-          </button>
-        )}
-        {/* An edit is usually one change, so it can be saved from any step. */}
-        {(fee || shown === STEPS.length - 1) && (
-          <button type="submit" className={forms.button} disabled={pending}>
-            {pending ? 'Saving…' : fee ? 'Save fee' : 'Add fee'}
-          </button>
-        )}
+        <button type="submit" className={forms.button} disabled={pending}>
+          {pending ? 'Saving…' : fee ? 'Save fee' : 'Add fee'}
+        </button>
         <button type="button" className={styles.cancel} onClick={onDone}>
           Cancel
         </button>

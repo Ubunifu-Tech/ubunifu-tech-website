@@ -222,3 +222,39 @@
     grid-column: 1 / -1;
   }
 }
+
+/* A price typed in the row of a fee that has none. */
+.priceHere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.priceHere input {
+  width: 7.5rem;
+}
+
+.priceHere p {
+  flex: 1 0 100%;
+  margin: 0;
+  text-align: right;
+}
+
+/* What is rarely needed on a fee, one press away. */
+.more {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-deep);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  text-align: left;
+  cursor: pointer;
+}
+
+.more:hover {
+  text-decoration: underline;
+}

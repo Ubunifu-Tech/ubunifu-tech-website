@@ -10,6 +10,25 @@
 /* The console is a two-column application: a sidebar that never moves and a
    scrolling work area. Staff keep this open all day, so navigation is always
    visible and never costs a click to reach. */
+/* The console's own colours, for every page under it and for anything it
+   opens over the page (menus, dialogs, Copilot). The public site and the
+   client portal keep the warm brand palette; here orange is the logo and the
+   things that need attention, and the working colour is the brand's violet:
+   calm on a screen people look at all day, and clearly not a warning.
+
+   Contrast on white: buttons 8.3:1, links 9.6:1, focus rings and the active
+   item 5.3:1. */
+:global(html):has(.shell) {
+  --cta: #4F2DC8;
+  --accent: #6D3FE8;
+  --accent-deep: #4527AC;
+  --accent-dim: #F1ECFE;
+  --accent-border: rgba(109, 63, 232, 0.35);
+  --brand-deep: #4527AC;
+  --brand-border: rgba(109, 63, 232, 0.24);
+  --app-bg: #F6F6FA;
+}
+
 .shell {
   --band-height: 3.75rem;
   --sidebar-width: 15.5rem;

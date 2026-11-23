@@ -5,6 +5,7 @@ import { COPILOT } from '@/lib/console/staff-agent/identity';
 import { useActionState, useEffect, useState } from 'react';
 import {
   discardDocument,
+  chooseSigner,
   saveDetails,
   saveVersion,
   resendSignatureLink,
@@ -285,6 +286,45 @@ export function SendForSignature({
               : 'Send for signature'}
       </button>
       <Result state={state} />
+    </form>
+  );
+}
+
+/**
+ * Who at the client is asked to sign. It saves as it is changed, like the
+ * other one-field choices in the console.
+ */
+export function ChooseSigner({
+  documentId,
+  chosen,
+  people,
+}: {
+  documentId: string;
+  chosen: string;
+  people: { id: string; label: string; disabled: boolean }[];
+}) {
+  const [state, action] = useActionState(chooseSigner, INITIAL);
+  return (
+    <form action={action} className={forms.field}>
+      <input type="hidden" name="documentId" value={documentId} />
+      <span className={forms.label} id="signer-label">
+        Who signs for the client
+      </span>
+      <Select
+        name="signerId"
+        aria-labelledby="signer-label"
+        defaultValue={chosen}
+        placeholder="Choose who signs"
+        autoSubmit
+        options={people.map((person) => ({ value: person.id, label: person.label, disabled: person.disabled }))}
+      />
+      {state.message ? (
+        <p className={state.status === 'error' ? forms.error : forms.hint} role="status" aria-live="polite">
+          {state.message}
+        </p>
+      ) : (
+        <p className={forms.hint}>Only someone with portal access can sign. Their main contact unless you choose another.</p>
+      )}
     </form>
   );
 }

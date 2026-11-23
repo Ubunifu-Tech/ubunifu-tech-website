@@ -88,6 +88,7 @@ const ACTION_LABELS = {
   'line_item.removed': 'Fee removed',
   'document.details_saved': 'Document details changed',
   'document.withdrawn': 'Document withdrawn',
+  'document.signer_chosen': 'Signer chosen',
   'document.discarded': 'Draft document discarded',
   'document.send_failed': 'Document email failed to send',
   'document.copilot_turn': 'Assistant used',

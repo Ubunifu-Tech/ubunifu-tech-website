@@ -239,6 +239,58 @@ export async function saveVersion(
   return { status: 'done', message: `Saved as version ${version}.` };
 }
 
+/**
+ * Chooses who at the client is asked to sign. Their main contact unless
+ * somebody else is picked; only people who can open the portal can sign, and
+ * not while a copy is already out with someone.
+ */
+export async function chooseSigner(_previous: DocumentState, formData: FormData): Promise<DocumentState> {
+  const staff = await requireStaff();
+  if (!can(staff, 'documents')) return { status: 'error', message: NO_PERMISSION };
+
+  const document = await db.document.findUnique({
+    where: { id: formText(formData, 'documentId'), ...liveDocument },
+    select: {
+      id: true,
+      reference: true,
+      status: true,
+      signerId: true,
+      project: { select: { clientId: true } },
+      signatureRequests: { where: { status: { in: ['sent', 'viewed'] } }, take: 1, select: { id: true } },
+    },
+  });
+  if (!document) return { status: 'error', message: 'That document no longer exists.' };
+  if (document.status === 'signed') return { status: 'error', message: 'This has already been signed.' };
+  if (document.signatureRequests.length > 0) {
+    return { status: 'error', message: 'It is with them to sign now. Withdraw it first, then choose who signs.' };
+  }
+
+  const contact = await db.clientContact.findFirst({
+    where: { id: formText(formData, 'signerId'), clientId: document.project.clientId, deletedAt: null },
+    select: { id: true, name: true, canSignIn: true, isPrimary: true },
+  });
+  if (!contact) return { status: 'error', message: 'Choose one of the people at this client.' };
+  if (!contact.canSignIn) {
+    return { status: 'error', message: `${contact.name}'s portal access is off, so they cannot sign. Turn it on from the client page first.` };
+  }
+  // Their main contact is the default, so choosing them clears the choice
+  // and the document follows whoever the main contact is later.
+  const signerId = contact.isPrimary ? null : contact.id;
+  if (signerId === document.signerId) return { status: 'done' };
+
+  await db.document.update({ where: { id: document.id }, data: { signerId } });
+  await recordAudit({
+    actorType: 'staff',
+    actorId: staff.id,
+    action: 'document.signer_chosen',
+    entityType: 'Document',
+    entityId: document.id,
+    summary: `${document.reference}: ${contact.name} will sign`,
+  });
+  revalidatePath(`/admin/documents/${document.reference}`);
+  return { status: 'done', message: `${contact.name} will sign.` };
+}
+
 /** A document checked and ready to go to be signed, with its fees filled in. */
 type ReadyDocument = {
   document: {
@@ -277,6 +329,7 @@ async function readyToSend(
       title: true,
       kind: true,
       status: true,
+      signerId: true,
       versions: {
         orderBy: { version: 'desc' },
         take: 1,
@@ -305,6 +358,7 @@ async function readyToSend(
   const prepared = await prepareDocument({
     kind: document.kind,
     source: authorText(latest),
+    signerId: document.signerId,
     project: {
       id: document.project.id,
       currency: document.project.currency,
@@ -707,6 +761,7 @@ export async function resendSignatureLink(
       reference: true,
       title: true,
       kind: true,
+      signerId: true,
       project: {
         select: {
           slug: true,
@@ -714,8 +769,8 @@ export async function resendSignatureLink(
             select: {
               name: true,
               contacts: {
-                where: { deletedAt: null, isPrimary: true, canSignIn: true },
-                select: { id: true, name: true, email: true },
+                where: { deletedAt: null, canSignIn: true },
+                select: { id: true, name: true, email: true, isPrimary: true },
               },
             },
           },
@@ -735,11 +790,13 @@ export async function resendSignatureLink(
     return { status: 'error', message: 'The time to sign has run out. Send it again instead.' };
   }
 
-  const signer = document.project.client.contacts[0];
+  const contacts = document.project.client.contacts;
+  const signer =
+    contacts.find((contact) => contact.id === document.signerId) ?? contacts.find((contact) => contact.isPrimary);
   if (!signer?.email) {
     return {
       status: 'error',
-      message: 'Their main contact has no email or no portal access, so there is nobody to send it to.',
+      message: 'Whoever is to sign has no email or no portal access, so there is nobody to send it to.',
     };
   }
   if (!(await allow('signature-resend', document.id, { limit: 5, windowMinutes: 60 }))) {

@@ -24,6 +24,7 @@ import { DocumentBadge } from '@/components/console/DocumentBadge';
 import { FeeEditor } from '@/components/console/FeeEditor';
 import { Steps } from '@/components/console/Steps';
 import {
+  ChooseSigner,
   DetailsForm,
   DiscardDraft,
   ResendSignatureLink,
@@ -86,6 +87,7 @@ export default async function DocumentPage({
     select: {
       id: true,
       reference: true,
+      signerId: true,
       title: true,
       kind: true,
       status: true,
@@ -98,7 +100,20 @@ export default async function DocumentPage({
           reference: true,
           currency: true,
           deletedAt: true,
-          client: { select: { id: true, name: true, slug: true, deletedAt: true } },
+          client: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              deletedAt: true,
+              // Who could be asked to sign, their main contact first.
+              contacts: {
+                where: { deletedAt: null },
+                orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+                select: { id: true, name: true, role: true, isPrimary: true, canSignIn: true },
+              },
+            },
+          },
         },
       },
       versions: {
@@ -423,6 +438,7 @@ export default async function DocumentPage({
     prepareDocument({
       kind: document.kind,
       source,
+      signerId: document.signerId,
       project: {
         id: document.project.id,
         currency: document.project.currency,
@@ -786,6 +802,21 @@ export default async function DocumentPage({
                 A link shared by hand is the same request, or a new one
                 exactly as sending makes it, for someone who does not use
                 email: all that differs is how the link reaches them. */}
+            {/* Who signs can be changed until it is with them. With one
+                person at the client there is nothing to choose. */}
+            {!open && document.project.client.contacts.length > 1 && (
+              <ChooseSigner
+                documentId={document.id}
+                chosen={prepared.signer?.id ?? ''}
+                people={document.project.client.contacts.map((contact) => ({
+                  id: contact.id,
+                  label: `${contact.name}${contact.role ? `, ${contact.role}` : ''}${
+                    contact.isPrimary ? ' (main contact)' : ''
+                  }${contact.canSignIn ? '' : ' · no portal access'}`,
+                  disabled: !contact.canSignIn,
+                }))}
+              />
+            )}
             {(() => {
               const maySend = !open || changedSince || expired;
               const mayShare =

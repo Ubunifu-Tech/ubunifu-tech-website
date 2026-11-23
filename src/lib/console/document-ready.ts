@@ -63,6 +63,8 @@ export async function prepareDocument(document: {
   kind: DocumentKind;
   source: string;
   project: { id: string; currency: string; clientSlug: string; clientId: string };
+  /** Who was chosen to sign, when it is not to be their main contact. */
+  signerId?: string | null;
 }): Promise<Prepared> {
   const { kind, source, project } = document;
   const withFeeTable = carriesFees(kind) || hasFeesToken(source);
@@ -70,15 +72,23 @@ export async function prepareDocument(document: {
   const [lines, later, primary, org, standard] = await Promise.all([
     withFeeTable ? projectFees(project.id) : Promise.resolve([]),
     withFeeTable ? projectFeesLater(project.id) : Promise.resolve([]),
-    db.clientContact.findFirst({
-      where: { clientId: project.clientId, deletedAt: null, isPrimary: true },
-      select: { id: true, name: true, email: true, canSignIn: true },
-    }).then(numbers),
+    // Whoever was chosen to sign, while they are still at this client;
+    // otherwise their main contact.
+    db.clientContact
+      .findMany({
+        where: {
+          clientId: project.clientId,
+          deletedAt: null,
+          OR: [{ isPrimary: true }, ...(document.signerId ? [{ id: document.signerId }] : [])],
+        },
+        select: { id: true, name: true, email: true, canSignIn: true, isPrimary: true },
+      })
+      .then((found) => found.find((contact) => contact.id === document.signerId) ?? found.find((contact) => contact.isPrimary) ?? null),
     getOrg(),
     db.documentDefault.findUnique({ where: { kind }, select: { bodyMarkdown: true } }).then(numbers),
   ]);
   const vatBps = org.chargesVat ? org.vatRateBps : 0;
-  // Their main contact signs, and only while they can open the portal.
+  // They sign only while they can open the portal.
   const signer = primary?.canSignIn
     ? { id: primary.id, name: primary.name, email: primary.email }
     : null;

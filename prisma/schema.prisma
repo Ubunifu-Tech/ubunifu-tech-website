@@ -140,6 +140,8 @@ model ClientContact {
   assignedRequests    AssetRequest[]       @relation("AssetRequestAssignee")
   reviewAnswers       ProjectReview[]
 
+  documentsToSign Document[] @relation("DocumentSigner")
+
   @@unique([clientId, email])
   @@index([email])
 }
@@ -928,6 +930,10 @@ model Document {
   title     String
   status    DocumentStatus @default(draft)
   reference String         @unique
+  /// Who at the client is asked to sign it, when that is not their main
+  /// contact. Null means the main contact, whoever that is when it is sent.
+  signerId  String?
+  signer    ClientContact? @relation("DocumentSigner", fields: [signerId], references: [id], onDelete: SetNull)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 

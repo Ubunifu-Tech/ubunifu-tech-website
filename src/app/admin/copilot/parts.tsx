@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { ArrowUpRight, Briefcase, Building2, FileText, Receipt } from 'lucide-react';
 import { ChatMarkdown } from '@/components/ChatMarkdown';
-import styles from '../AssistantDock.module.css';
+import type { Card, ReadRef, ViewBlock } from '@/lib/console/staff-agent/cards';
+import styles from './Thread.module.css';
+
+export type { Card, ReadRef };
 
 /**
  * What a Copilot thread is made of, drawn the same way in the panel beside a
@@ -23,20 +26,6 @@ export type Plan = {
   steps: StepView[];
   outcomes: StepOutcome[] | null;
 };
-export type Tone = 'good' | 'warn' | 'bad' | 'live' | 'neutral';
-export type Card =
-  | {
-      kind: 'record';
-      type: 'Client' | 'Project' | 'Document' | 'Invoice';
-      title: string;
-      subtitle?: string;
-      badge?: { label: string; tone: Tone };
-      facts: { label: string; value: string }[];
-      href: string;
-      actions: { label: string; href: string }[];
-    }
-  | { kind: 'table'; title: string; columns: string[]; rows: string[][]; numeric?: boolean; note?: string; href?: string };
-export type ReadRef = { type: string; label: string; href: string };
 export type Item =
   | { type: 'message'; id: string; role: 'user' | 'assistant'; content: string; cards?: Card[]; read?: ReadRef[] }
   | { type: 'plan'; plan: Plan }
@@ -44,8 +33,93 @@ export type Item =
 
 const TYPE_ICON = { Client: Building2, Project: Briefcase, Document: FileText, Invoice: Receipt } as const;
 
-/** A record or a few rows, as the server read them. */
+/** What a card is called where it is only named: in the thread, when it is open beside it. */
+export function cardLabel(card: Card): string {
+  return card.kind === 'record' ? `${card.type}: ${card.title}` : card.title;
+}
+
+function Rows({ columns, rows, numeric }: { columns: string[]; rows: string[][]; numeric?: boolean }) {
+  return (
+    <div className={styles.cardScroll}>
+      <table className={styles.cardTable}>
+        <thead>
+          <tr>
+            {columns.map((column, index) => (
+              <th key={column + index} scope="col" data-numeric={numeric && index === columns.length - 1 ? '' : undefined}>
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, at) => (
+            <tr key={at}>
+              {row.map((cell, index) =>
+                index === 0 ? (
+                  <th key={index} scope="row">
+                    {cell}
+                  </th>
+                ) : (
+                  <td key={index} data-numeric={numeric && index === row.length - 1 ? '' : undefined}>
+                    {cell}
+                  </td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Block({ block }: { block: ViewBlock }) {
+  if (block.type === 'text') {
+    return (
+      <div className={styles.viewText}>
+        <ChatMarkdown text={block.text} variant="staff" />
+      </div>
+    );
+  }
+  if (block.type === 'stats') {
+    return (
+      <dl className={styles.viewStats}>
+        {block.items.map((item) => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
+            {item.note && <dd className={styles.viewStatNote}>{item.note}</dd>}
+          </div>
+        ))}
+      </dl>
+    );
+  }
+  if (block.type === 'table') {
+    return (
+      <div className={styles.viewTable}>
+        {block.title && <h4 className={styles.viewBlockTitle}>{block.title}</h4>}
+        <Rows columns={block.columns} rows={block.rows} numeric={block.numeric} />
+      </div>
+    );
+  }
+  return <CardView card={block.card} />;
+}
+
+/** A record, a few rows, or a view Copilot put together, from a fixed set of parts. */
 export function CardView({ card }: { card: Card }) {
+  if (card.kind === 'view') {
+    return (
+      <section className={styles.view} aria-label={card.title}>
+        <header className={styles.viewHead}>
+          <h3 className={styles.viewTitle}>{card.title}</h3>
+          <p className={styles.viewBy}>Put together by Copilot from what it read. Check figures against the records.</p>
+        </header>
+        {card.blocks.map((block, index) => (
+          <Block key={index} block={block} />
+        ))}
+      </section>
+    );
+  }
   if (card.kind === 'table') {
     return (
       <section className={styles.card} aria-label={card.title}>
@@ -61,36 +135,7 @@ export function CardView({ card }: { card: Card }) {
         {card.rows.length === 0 ? (
           <p className={styles.cardNote}>{card.note ?? 'Nothing to show.'}</p>
         ) : (
-          <div className={styles.cardScroll}>
-            <table className={styles.cardTable}>
-              <thead>
-                <tr>
-                  {card.columns.map((column, index) => (
-                    <th key={column} scope="col" data-numeric={card.numeric && index === card.columns.length - 1 ? '' : undefined}>
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {card.rows.map((row, at) => (
-                  <tr key={at}>
-                    {row.map((cell, index) =>
-                      index === 0 ? (
-                        <th key={index} scope="row">
-                          {cell}
-                        </th>
-                      ) : (
-                        <td key={index} data-numeric={card.numeric && index === row.length - 1 ? '' : undefined}>
-                          {cell}
-                        </td>
-                      ),
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Rows columns={card.columns} rows={card.rows} numeric={card.numeric} />
         )}
       </section>
     );

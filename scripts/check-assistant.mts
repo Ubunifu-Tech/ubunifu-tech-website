@@ -301,7 +301,8 @@ const knowledge = knowledgeText({ posts });
     'src/app/admin/invoices/RecordNotice.tsx',
     'src/components/console/HostingPaused.tsx',
     'src/app/admin/assistant/route.ts',
-    'src/app/admin/AssistantDock.tsx',
+    'src/app/admin/CopilotLink.tsx',
+    'src/app/admin/copilot/Workspace.tsx',
   ]) {
     for (const text of componentCopy(file)) problems.push(...copyProblems(file, text, { hype: false }));
   }

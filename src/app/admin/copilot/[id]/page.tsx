@@ -3,11 +3,10 @@ import { notFound } from 'next/navigation';
 import { requireStaff } from '@/lib/console/auth';
 import { formatShortDate, formatTime } from '@/lib/console/money';
 import { chatFor } from '@/lib/console/staff-agent/history';
-import { COPILOT } from '@/lib/console/staff-agent/identity';
 import { CarryOn } from '../CarryOn';
 import { PlanTable, Reply } from '../parts';
 import styles from '../../Admin.module.css';
-import dock from '../../AssistantDock.module.css';
+import dock from '../Thread.module.css';
 import page from '../Copilot.module.css';
 
 export const metadata = { title: 'Copilot chat' };
@@ -28,8 +27,8 @@ export default async function CopilotChatPage({ params }: { params: Promise<{ id
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <Link href="/copilot" className={styles.backLink}>
-            ← {COPILOT.short}
+          <Link href="/copilot?view=chats" className={styles.backLink}>
+            ← Chats
           </Link>
           <h1 className={styles.heading}>{chat.title}</h1>
           <p className={styles.facts}>

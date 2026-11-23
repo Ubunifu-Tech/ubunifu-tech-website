@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { requireStaff } from '@/lib/console/auth';
 import { formatRelative, formatShortDate } from '@/lib/console/money';
+import { recordOnPage, showRecord } from '@/lib/console/staff-agent/cards';
 import { chatsFor, runsFor, usageSince } from '@/lib/console/staff-agent/history';
+import { consolePage } from '@/lib/console/staff-agent/prompt';
+import { Workspace, type About } from './Workspace';
 import { COPILOT } from '@/lib/console/staff-agent/identity';
 import { Tabs } from '@/components/console/Tabs';
 import styles from '../Admin.module.css';
@@ -30,20 +33,52 @@ const number = (value: number) => value.toLocaleString('en-GB');
 export default async function CopilotPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; who?: string }>;
+  searchParams: Promise<{ view?: string; who?: string; about?: string }>;
 }) {
   const staff = await requireStaff();
-  const { view, who } = await searchParams;
+  const { view, who, about } = await searchParams;
   const owner = staff.role === 'owner';
+
+  // With no view asked for, this is Copilot itself, full screen.
+  if (view !== 'chats' && view !== 'plans' && view !== 'usage') {
+    const mine = await chatsFor(staff, { take: 40 });
+    const clock = new Date();
+    // The record they came from, when they came from one: named in the box
+    // they type in, and open beside the conversation until something else is.
+    const path = consolePage(about);
+    const on = recordOnPage(path);
+    let from: About | null = null;
+    if (path && on) {
+      const shown = await showRecord(staff, on.ref, 'summary').catch(() => null);
+      const card = shown && 'card' in shown ? shown.card : null;
+      from = {
+        path,
+        label: card?.kind === 'record' ? (on.type === 'document' || on.type === 'invoice' ? on.ref.toUpperCase() : card.title) : on.ref,
+        card,
+      };
+    }
+    return (
+      <Workspace
+        chats={mine.rows.map((chat) => ({
+          id: chat.id,
+          title: chat.title,
+          when: formatRelative(chat.lastAt, clock),
+          open: chat.open,
+        }))}
+        owner={owner}
+        about={from}
+      />
+    );
+  }
+
   const current = view === 'plans' ? 'plans' : view === 'usage' && owner ? 'usage' : 'chats';
   const everyone = owner && who === 'everyone';
   const now = new Date();
   const href = (key: string, all = everyone) => {
     const params = new URLSearchParams();
-    if (key !== 'chats') params.set('view', key);
+    params.set('view', key);
     if (all && key !== 'usage') params.set('who', 'everyone');
-    const query = params.toString();
-    return query ? `/copilot?${query}` : '/copilot';
+    return `/copilot?${params.toString()}`;
   };
 
   const [chats, runs] = await Promise.all([
@@ -57,7 +92,10 @@ export default async function CopilotPage({
     <main className={styles.page}>
       <div className={styles.pageHead}>
         <div className={styles.headText}>
-          <h1 className={styles.heading}>{COPILOT.name}</h1>
+          <Link href="/copilot" className={styles.backLink}>
+            ← {COPILOT.short}
+          </Link>
+          <h1 className={styles.heading}>{COPILOT.short}’s record</h1>
           <p className={styles.lead}>
             Everything it was asked, every plan it laid out and what came of each.
             {owner ? ' As an owner you can read everyone’s.' : ' Owners can read these too.'}
@@ -66,6 +104,9 @@ export default async function CopilotPage({
         <div className={styles.headActions}>
           <Link href="/settings/copilot" className={`${forms.button} ${forms.quiet}`}>
             Instructions and notes
+          </Link>
+          <Link href="/copilot" className={forms.button}>
+            Open {COPILOT.short}
           </Link>
         </div>
       </div>
@@ -111,7 +152,7 @@ export default async function CopilotPage({
                     <td className={table.emptyCell} colSpan={everyone ? 5 : 4}>
                       <p className={table.emptyTitle}>No chats yet.</p>
                       <p className={table.emptyHint}>
-                        Open {COPILOT.short} from the top of any page and ask it something. Every chat is kept here.
+                        Open {COPILOT.short} and ask it something. Every chat is kept here.
                       </p>
                     </td>
                   </tr>
@@ -122,7 +163,7 @@ export default async function CopilotPage({
                         <Link href={`/copilot/${chat.id}`} className={table.link}>
                           {chat.title}
                         </Link>
-                        {chat.open && chat.mine && <span className={table.sub}>Open in the panel now</span>}
+                        {chat.open && chat.mine && <span className={table.sub}>The one open now</span>}
                       </td>
                       {everyone && <td className={`${table.td} ${table.nowrap}`}>{chat.mine ? 'You' : chat.by}</td>}
                       <td className={`${table.td} ${table.nowrap}`}>{formatRelative(chat.lastAt, now)}</td>

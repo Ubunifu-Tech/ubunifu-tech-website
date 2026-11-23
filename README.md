@@ -114,19 +114,27 @@ extra layer.
 
 ### Ubunifu Copilot
 
-The console's agent. Staff open it from the Copilot button in the top band; it
-stays beside the page as they move around. It can read records, show them and
-lay out changes; it cannot change anything itself. Its name is one constant,
-`src/lib/console/staff-agent/identity.ts`.
+The console's agent, and a screen of its own (`/copilot`): the person's chats
+down the side, the conversation in the middle, and what it is showing open
+beside it. The Copilot button in the top band opens it from anywhere. It can
+read records, show them and lay out changes; it cannot change anything itself.
+Its name is one constant, `src/lib/console/staff-agent/identity.ts`.
 
-- **It knows the page.** When the page is one record (a project, client,
-  document or invoice) that record is read and given to it each turn, so
-  "this" needs no lookup.
-- **It answers with the record.** The `show` tool puts a record in front of
-  the person as a card, or a project's fees, invoices, documents or billable
-  lines as a table (`staff-agent/cards.ts`). The catalogue is fixed and every
-  value is read from the database: the model only says which record. A card
-  carries a button to the next step a person takes, such as the Send step.
+- **It knows where you came from.** Opened from a record's own page (a
+  project, client, document or invoice), it carries that record along: the
+  record is read and given to it each turn, so "this" needs no lookup, and it
+  is open beside the conversation until something else is shown.
+- **It answers with the record.** The `show` tool opens a record as a card, or
+  a project's fees, invoices, documents or billable lines as a table
+  (`staff-agent/cards.ts`). `list_work` gives a table across every client:
+  unsettled invoices, open projects, unsigned documents. Every value in these
+  is read from the database: the model only says which. A card carries a
+  button to the next step a person takes, such as the Send step.
+- **It can put a view together.** `compose_view` builds a view from a fixed
+  set of blocks (text, figures, a table, record cards) for a question no one
+  record answers, such as a briefing before a call. Record blocks are filled
+  in from the records. The text, figures and rows are the model's own, so the
+  view says so and lists the records it read to check against.
 - **Everything is on record.** Chats are kept when a new one is started. The
   Copilot page (`/copilot`) lists a person's chats and plans, with what each
   plan made; a past chat can be carried on. An owner can read everyone's and

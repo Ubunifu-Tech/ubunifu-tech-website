@@ -270,10 +270,12 @@ const knowledge = knowledgeText({ posts });
     'src/lib/console/staff-agent/actions/projects.ts',
     'src/lib/console/staff-agent/actions/fees.ts',
     'src/lib/console/staff-agent/actions/documents.ts',
+    'src/lib/console/staff-agent/actions/invoices.ts',
     'src/lib/console/services/clients.ts',
     'src/lib/console/services/projects.ts',
     'src/lib/console/services/fees.ts',
     'src/lib/console/services/documents.ts',
+    'src/lib/console/services/invoices.ts',
     'src/app/admin/assistant/route.ts',
     'src/app/admin/AssistantDock.tsx',
   ]) {

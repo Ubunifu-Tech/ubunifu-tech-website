@@ -39,7 +39,15 @@ export type StepOutcome =
   | { state: 'failed'; message: string }
   | { state: 'not_run' };
 
-type StoredStep = { action: string; input: Record<string, unknown>; view: StepView };
+type StoredStep = {
+  action: string;
+  input: Record<string, unknown>;
+  view: StepView;
+  /** What the step pinned when it was laid out. See Checked.pin. */
+  pin?: string;
+};
+
+const MOVED = 'This is no longer what the plan showed. Ask again to see it as it stands now.';
 
 export type PlanView = {
   id: string;
@@ -215,6 +223,7 @@ export async function proposePlan(input: {
         details: checked.details,
         ...(checked.sends ? { sends: checked.sends } : {}),
       },
+      ...(checked.pin !== undefined ? { pin: checked.pin } : {}),
     });
   }
   if (problems.length > 0) return { ok: false, problems };
@@ -283,6 +292,8 @@ export async function confirmPlan(staff: StaffActor, planId: string): Promise<De
       if (!can(staff, action.permission)) throw new StepRefused('Your role does not allow this.');
       const checked = await action.check(step.input, env);
       if (!checked.ok) throw new StepRefused(checked.message);
+      // What was pinned when the person was shown the plan must still hold.
+      if (step.pin !== undefined && checked.pin !== step.pin) throw new StepRefused(MOVED);
       const ran = await action.run(checked.value as never, env);
       if (ran.produces) produced.set(index + 1, ran.produces);
       outcomes.push({ state: 'done', summary: ran.summary, ...(ran.href ? { href: ran.href } : {}) });

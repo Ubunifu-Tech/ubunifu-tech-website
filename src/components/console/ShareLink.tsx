@@ -25,18 +25,21 @@ export function ShareLink({
   hidden,
   label,
   intro,
+  inRow = false,
 }: {
   action: (previous: ShareLinkState, formData: FormData) => Promise<ShareLinkState>;
   hidden: Record<string, string>;
   /** The button, like "Share a link to sign". */
   label: string;
-  /** One line on what the person can do with it. */
-  intro: string;
+  /** One line on what the person can do with it. Left out when the page says it. */
+  intro?: string;
+  /** Sits in a row of actions: only the button, until the link is made. */
+  inRow?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, INITIAL);
 
   if (state.status === 'done' && state.url) {
-    return (
+    const link = (
       <LinkToSend
         url={state.url}
         whatsapp={state.whatsapp}
@@ -49,6 +52,25 @@ export function ShareLink({
         }
       />
     );
+    return inRow ? <div data-wide="">{link}</div> : link;
+  }
+
+  if (inRow) {
+    return (
+      <form action={formAction} className={styles.rowAction} data-wide={state.status === 'error' ? '' : undefined}>
+        {Object.entries(hidden).map(([name, value]) => (
+          <input key={name} type="hidden" name={name} value={value} />
+        ))}
+        <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
+          {pending ? 'Making the link…' : label}
+        </button>
+        {state.status === 'error' && (
+          <p className={forms.error} role="status">
+            {state.message}
+          </p>
+        )}
+      </form>
+    );
   }
 
   return (
@@ -56,7 +78,7 @@ export function ShareLink({
       {Object.entries(hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      <p className={styles.setupHint}>{intro}</p>
+      {intro && <p className={styles.setupHint}>{intro}</p>}
       <div className={forms.actions}>
         <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
           {pending ? 'Making the link…' : label}

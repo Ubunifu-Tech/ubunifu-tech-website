@@ -1496,3 +1496,37 @@
 .hosting dd {
   overflow-wrap: anywhere;
 }
+
+
+/* Several things that can be done next, side by side: one row of buttons,
+   not a stack of them with a rule between each. An action that has opened
+   up (a link that was made, a question before withdrawing) takes the row. */
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.actionRow + .note {
+  margin-top: var(--space-3);
+}
+
+.actionRow > [data-wide] {
+  flex: 1 0 100%;
+}
+
+.actionRow > [data-end]:not([data-wide]) {
+  margin-left: auto;
+}
+
+.rowAction {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}

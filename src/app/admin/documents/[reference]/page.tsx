@@ -835,32 +835,54 @@ export default async function DocumentPage({
                 new link and time to sign.
               </Callout>
             )}
-            {open && !expired && <ResendSignatureLink documentId={document.id} />}
-            {open && <WithdrawDocument documentId={document.id} />}
-            {/* Once it is with them, sending again only makes sense when what
-                would go now differs from what they have, or their time to sign
-                ran out; otherwise the choice is to wait or withdraw. */}
-            {(!open || changedSince || expired) && (
-              <SendForSignature
-                documentId={document.id}
-                alreadySent={Boolean(live)}
-                again={expired && !changedSince}
-                ready={prepared.ready}
-                signer={prepared.signer?.name ?? null}
-              />
-            )}
-            {/* The same request, or a new one exactly as sending makes it,
-                for someone who does not use email: all that differs is how
-                the link reaches them. */}
-            {prepared.signer &&
-              prepared.checks.every((check) => check.ok || check.key === 'signer-email') && (
-                <ShareLink
-                  action={shareSigningLink}
-                  hidden={{ documentId: document.id }}
-                  label="Share a link to sign"
-                  intro={`For ${prepared.signer.name} to read and sign on their phone, with no email or account.`}
-                />
-              )}
+            {/* What can be done next, in one row. Once it is with them,
+                sending again only makes sense when what would go now differs
+                from what they have, or their time to sign ran out; otherwise
+                the choice is to wait, send the link another way, or withdraw.
+                A link shared by hand is the same request, or a new one
+                exactly as sending makes it, for someone who does not use
+                email: all that differs is how the link reaches them. */}
+            {(() => {
+              const maySend = !open || changedSince || expired;
+              const mayShare =
+                prepared.signer !== null &&
+                prepared.checks.every((check) => check.ok || check.key === 'signer-email');
+              return (
+                <>
+                  <div className={styles.actionRow}>
+                    {maySend && (
+                      <SendForSignature
+                        documentId={document.id}
+                        alreadySent={Boolean(live)}
+                        again={expired && !changedSince}
+                        ready={prepared.ready}
+                      />
+                    )}
+                    {open && !expired && <ResendSignatureLink documentId={document.id} />}
+                    {mayShare && (
+                      <ShareLink
+                        action={shareSigningLink}
+                        hidden={{ documentId: document.id }}
+                        label="Share a link to sign"
+                        inRow
+                      />
+                    )}
+                    {open && <WithdrawDocument documentId={document.id} />}
+                  </div>
+                  {prepared.signer && (maySend ? prepared.ready : mayShare) && (
+                    <p className={styles.note}>
+                      {maySend && prepared.ready
+                        ? `Sending emails ${prepared.signer.name} a link to read and sign it.${
+                            live && !(expired && !changedSince) ? ' The copy they have now is withdrawn.' : ''
+                          } `
+                        : ''}
+                      {mayShare &&
+                        `A shared link lets ${prepared.signer.name} read and sign on their phone, with no email or account.`}
+                    </p>
+                  )}
+                </>
+              );
+            })()}
             {stepNav}
           </section>
           {versions}

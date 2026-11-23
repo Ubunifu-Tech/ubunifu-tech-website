@@ -1222,6 +1222,14 @@ async function consoleCases(): Promise<void> {
     loaded: true,
     exports: { redirect: () => undefined, notFound: () => undefined },
   });
+  // Laying out a plan is written to Activity, which reads the request's
+  // headers for an address. There is no request here, so there are none.
+  const headers = requireHere.resolve('next/headers');
+  requireHere.cache[headers] = Object.assign(new (requireHere('node:module').Module)(headers), {
+    filename: headers,
+    loaded: true,
+    exports: { headers: async () => ({ get: () => null }), cookies: async () => ({ get: () => undefined }) },
+  });
   const { runConsoleTurn } = await import('../src/lib/console/staff-agent/turn');
   const { PERMISSION_KEYS } = await import('../src/lib/console/permissions');
   const { billableLines } = await import('../src/lib/console/billing');
@@ -1256,8 +1264,10 @@ async function consoleCases(): Promise<void> {
         failure: turn.ok ? null : turn.message,
       };
     } finally {
-      // Plans go with their thread. Nothing else was written.
-      await db.auditEvent.deleteMany({ where: { entityId: conversation.id } });
+      // Plans go with their thread, and the Activity lines about them go too.
+      // Nothing else was written.
+      const laidOut = await db.assistantPlan.findMany({ where: { conversationId: conversation.id }, select: { id: true } });
+      await db.auditEvent.deleteMany({ where: { entityId: { in: [conversation.id, ...laidOut.map((plan) => plan.id)] } } });
       await db.conversation.delete({ where: { id: conversation.id } });
     }
   }

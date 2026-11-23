@@ -393,37 +393,27 @@ export function SendForSignature({
   alreadySent,
   again = false,
   ready,
-  signer,
 }: {
   documentId: string;
   alreadySent: boolean;
   /** The same version again, because the time to sign the last one ran out. */
   again?: boolean;
   ready: boolean;
-  signer: string | null;
 }) {
   const [state, action, pending] = useActionState(sendForSignature, INITIAL);
 
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} className={styles.rowAction} data-wide={state.message ? '' : undefined}>
       <input type="hidden" name="documentId" value={documentId} />
-      {signer && ready && (
-        <p className={styles.note}>
-          {signer} gets an email with a link to read and sign it.
-          {alreadySent && !again && ' The copy they have now is withdrawn.'}
-        </p>
-      )}
-      <div className={forms.actions}>
-        <button type="submit" className={forms.button} disabled={pending || !ready}>
-          {pending
-            ? 'Sending…'
-            : again
-              ? 'Send it again'
-              : alreadySent
-                ? 'Send the new version'
-                : 'Send for signature'}
-        </button>
-      </div>
+      <button type="submit" className={forms.button} disabled={pending || !ready}>
+        {pending
+          ? 'Sending…'
+          : again
+            ? 'Send it again'
+            : alreadySent
+              ? 'Send the new version'
+              : 'Send for signature'}
+      </button>
       <Result state={state} />
     </form>
   );
@@ -433,7 +423,7 @@ export function SendForSignature({
 export function ResendSignatureLink({ documentId }: { documentId: string }) {
   const [state, action, pending] = useActionState(resendSignatureLink, INITIAL);
   return (
-    <form action={action} className={forms.actions}>
+    <form action={action} className={styles.rowAction} data-wide={state.message ? '' : undefined}>
       <input type="hidden" name="documentId" value={documentId} />
       <button type="submit" className={`${forms.button} ${forms.quiet}`} disabled={pending}>
         {pending ? 'Sending…' : 'Email the link again'}
@@ -450,7 +440,7 @@ export function WithdrawDocument({ documentId }: { documentId: string }) {
 
   if (!confirming) {
     return (
-      <div className={forms.actions}>
+      <div className={styles.rowAction} data-end="" data-wide={state.message ? '' : undefined}>
         <button type="button" className={`${forms.button} ${forms.quiet}`} onClick={() => setConfirming(true)}>
           Withdraw it
         </button>
@@ -459,10 +449,10 @@ export function WithdrawDocument({ documentId }: { documentId: string }) {
     );
   }
   return (
-    <form action={action} className={forms.form}>
+    <form action={action} className={styles.rowAction} data-wide="">
       <input type="hidden" name="documentId" value={documentId} />
       <p className={styles.note}>They will no longer be able to sign it. You can change it and send it again.</p>
-      <div className={forms.actions}>
+      <div className={`${forms.actions} ${forms.actionsBare}`}>
         <button type="submit" className={`${forms.button} ${forms.danger}`} disabled={pending}>
           {pending ? 'Withdrawing…' : 'Withdraw'}
         </button>

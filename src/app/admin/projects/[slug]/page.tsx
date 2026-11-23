@@ -61,6 +61,9 @@ import { EarlierRounds, ReviewRound } from '@/components/console/ReviewRound';
 import { REVIEWABLE } from '@/lib/console/reviews';
 import { emailedAddresses } from '@/lib/console/updates';
 import { RemoveProject } from './RemoveProject';
+import { Hosting } from './Hosting';
+import { hostingFacts } from '@/lib/console/services/hosting';
+import { vercelConfigured } from '@/lib/console/hosting';
 import { ProjectDocuments } from '../../documents/ProjectDocuments';
 import { currencyLabel } from '@/lib/console/currencies';
 import styles from '../../Admin.module.css';
@@ -603,6 +606,9 @@ export default async function ProjectPage({
       .map((contact) => contact.id),
   );
 
+  // Where the site is hosted and whether it can be paused, for the overview.
+  const hosting = tab === 'overview' ? await hostingFacts(project.id, now) : null;
+
   const href = (key: Tab) =>
     key === 'overview' ? `/projects/${project.slug}` : `/projects/${project.slug}?tab=${key}`;
   const percent =
@@ -1037,6 +1043,42 @@ export default async function ProjectPage({
                 </div>
               </dl>
             </section>
+
+            {hosting && (
+              <Hosting
+                projectId={project.id}
+                owner={staff.role === 'owner'}
+                configured={vercelConfigured()}
+                link={
+                  hosting.project.vercelProjectId
+                    ? { id: hosting.project.vercelProjectId, name: hosting.project.vercelProjectName }
+                    : null
+                }
+                pausedOn={
+                  hosting.project.hostingPausedAt
+                    ? formatShortDate(hosting.project.hostingPausedAt)
+                    : null
+                }
+                pause={
+                  hosting.standing.allowed
+                    ? {
+                        allowed: true,
+                        invoiceNumber: hosting.standing.invoice.number,
+                        dueOn: formatShortDate(hosting.standing.invoice.dueAt),
+                        noticeOn: formatShortDate(hosting.standing.notice.givenAt),
+                      }
+                    : { allowed: false, reason: hosting.standing.reason }
+                }
+                paidSince={
+                  hosting.paidSince
+                    ? {
+                        on: formatShortDate(hosting.paidSince.receivedAt),
+                        invoiceNumber: hosting.paidSince.invoiceNumber,
+                      }
+                    : null
+                }
+              />
+            )}
 
             <section className={forms.card}>
               <div className={forms.cardHeader}>

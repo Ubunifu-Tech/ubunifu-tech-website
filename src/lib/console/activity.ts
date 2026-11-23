@@ -221,6 +221,13 @@ const ACTION_LABELS = {
   'staff.sign_in.throttled': 'Too many sign-in links requested',
   'ticket.triaged': 'Request sorted',
   'ticket.note_added': 'Internal note added',
+  'invoice.overdue_notice_recorded': 'Overdue notice recorded',
+  'project.hosting_linked': 'Hosting linked',
+  'project.hosting_unlinked': 'Hosting link removed',
+  'project.hosting_paused': 'Hosting paused',
+  'project.hosting_pause_failed': 'Hosting pause failed',
+  'project.hosting_resumed': 'Hosting resumed',
+  'project.hosting_resume_failed': 'Hosting resume failed',
 } satisfies Record<string, string>;
 
 /** Every action recordAudit accepts: an action without a label fails to compile. */
@@ -264,6 +271,8 @@ function auditTone(action: string): ActivityTone {
     return 'bad';
   }
   if (action.includes('hash_mismatch')) return 'bad';
+  if (action.endsWith('hosting_paused')) return 'bad';
+  if (action.endsWith('hosting_resumed')) return 'good';
   if (action.endsWith('.signed') || action.endsWith('.published') || action.endsWith('.uploaded')) {
     return 'good';
   }

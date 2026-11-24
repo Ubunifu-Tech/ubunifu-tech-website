@@ -284,6 +284,12 @@ Every push to `main` deploys to production.
   a default. The previous deployment keeps serving while the new one builds, so
   a drop or rename waits for a later deploy, once no live code reads it.
 - Take a manual backup in Railway before pushing a commit that has a migration.
+- The functions run in Frankfurt (`regions` in `vercel.json`), because the
+  Railway database is in Amsterdam. A console page makes its queries one group
+  after another, each a round trip to the database, so the distance between
+  the two is paid many times per page. From Washington, where Vercel puts
+  functions by default, pages took about three times as long. If the database
+  ever moves, move this with it.
 - To roll back, use Vercel's Instant Rollback. Once a migration has shipped,
   never `git revert` or Redeploy an old commit: the rebuild's schema check sees
   the database is ahead of that code and stops the deploy.

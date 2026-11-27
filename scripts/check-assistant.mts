@@ -183,7 +183,13 @@ const knowledge = knowledgeText({ posts });
     else ok = pagePaths.includes(base);
     if (ok && hash) ok = base === '/build' && services.some((service) => service.key === hash);
     if (!ok) problems.push(`path ${path} is not a real page`);
-    else if (classifyHref(path, 'site')?.kind !== 'internal') problems.push(`path ${path} would not render as a link`);
+    else {
+      // A page of the website opens in place. The portal is on a host of its
+      // own, so a link to it is a full address there.
+      const link = classifyHref(path, 'site');
+      const want = first === 'portal' ? 'external' : 'internal';
+      if (link?.kind !== want) problems.push(`path ${path} would not render as a link`);
+    }
   }
 
   const hostsInPack = [...knowledge.matchAll(/https:\/\/[^\s)<>]+/g)].map((match) => {
@@ -360,8 +366,25 @@ const knowledge = knowledgeText({ posts });
   expectKind('/build', 'site', 'internal');
   expectKind('/build#data', 'site', 'internal');
   expectKind('/work/safari-king', 'site', 'internal');
-  expectKind('/portal/invoices/INV-1', 'site', 'internal');
+  // The portal is on a host of its own. On the website a portal page is a full
+  // address there; inside the portal it opens in place, without the /portal the
+  // model writes, and a page of the website is a full address on the website.
+  expectKind('/portal/invoices/INV-1', 'site', 'external');
   expectKind('/portal/invoices/INV-1', 'portal', 'internal');
+  expectKind('/build', 'portal', 'external');
+  for (const [href, variant, want] of [
+    ['/portal/invoices/INV-1', 'site', 'https://portal.ubunifutech.com/invoices/INV-1'],
+    ['/portal', 'site', 'https://portal.ubunifutech.com/'],
+    ['https://ubunifutech.com/portal/requests', 'site', 'https://portal.ubunifutech.com/requests'],
+    ['/portal/invoices/INV-1', 'portal', '/invoices/INV-1'],
+    ['/portal', 'portal', '/'],
+    ['/portal/projects/a-site#review', 'portal', '/projects/a-site#review'],
+    ['/build#data', 'portal', 'https://ubunifutech.com/build#data'],
+    ['/build', 'site', '/build'],
+  ] as const) {
+    const got = classifyHref(href, variant)?.href ?? null;
+    if (got !== want) problems.push(`classifyHref(${JSON.stringify(href)}, ${variant}) goes to ${got}, expected ${want}`);
+  }
   expectKind('/etc/passwd', 'site', null);
   expectKind('javascript:alert(1)', 'site', null);
   expectKind(' JavaScript:alert(1)', 'site', null);

@@ -63,7 +63,7 @@ export default async function PortalInvoice({
       }))
     : null;
   // Straight to a request with the invoice already named in it.
-  const tellUs = `/portal/requests?${new URLSearchParams({
+  const tellUs = `/requests?${new URLSearchParams({
     kind: 'question',
     subject: `Paid ${invoice.number}`,
     ...(project ? { project: project.id } : {}),
@@ -72,7 +72,7 @@ export default async function PortalInvoice({
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
-        <Link href="/portal/invoices" className={styles.backLink}>
+        <Link href="/invoices" className={styles.backLink}>
           ← Invoices
         </Link>
         <PrintButton />
@@ -85,8 +85,8 @@ export default async function PortalInvoice({
       <InvoiceSheet
         invoice={toSheet(invoice)}
         org={org}
-        receiptHref={(receipt) => `/portal/receipts/${receipt}`}
-        refundHref={(refund) => `/portal/refunds/${refund}`}
+        receiptHref={(receipt) => `/receipts/${receipt}`}
+        refundHref={(refund) => `/refunds/${refund}`}
       />
       {state.owing && (
         <section className={`${forms.card} ${sheet.noPrint}`}>

@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { db } from '@/lib/db';
 import { recordAudit } from '@/lib/console/auth';
 import { notePasswordChanged } from '@/lib/console/contacts';
@@ -98,5 +98,5 @@ export async function resetPassword(
   });
   if (contact) await notePasswordChanged(contact);
 
-  redirect('/portal');
+  toPortal('/portal');
 }

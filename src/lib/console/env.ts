@@ -45,6 +45,23 @@ export const consoleEnv = {
     return `${scheme}://${consoleEnv.adminHost}`;
   },
 
+  /** Host that serves the client portal. Any other host sends /portal here. */
+  get portalHost(): string {
+    return optional('CONSOLE_PORTAL_HOST', 'portal.ubunifutech.com');
+  },
+
+  /**
+   * Origin of the client portal, used for every link to it in outgoing email.
+   * A portal page's address is this plus its path without the /portal the app
+   * files it under: see src/lib/portal-path.ts.
+   */
+  get portalOrigin(): string {
+    const explicit = process.env.CONSOLE_PORTAL_ORIGIN;
+    if (explicit) return explicit.replace(/\/+$/, '');
+    const scheme = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    return `${scheme}://${consoleEnv.portalHost}`;
+  },
+
   /** HMAC key for session and magic-link tokens. No fallback on purpose. */
   get sessionSecret(): string {
     return required('CONSOLE_SESSION_SECRET');

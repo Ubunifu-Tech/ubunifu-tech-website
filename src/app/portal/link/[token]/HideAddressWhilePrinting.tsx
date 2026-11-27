@@ -13,7 +13,7 @@ import { useEffect } from 'react';
 export function HideAddressWhilePrinting() {
   useEffect(() => {
     const original = window.location.href;
-    const hide = () => window.history.replaceState(window.history.state, '', '/portal');
+    const hide = () => window.history.replaceState(window.history.state, '', '/');
     const restore = () => window.history.replaceState(window.history.state, '', original);
     window.addEventListener('beforeprint', hide);
     window.addEventListener('afterprint', restore);

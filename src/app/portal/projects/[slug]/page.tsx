@@ -206,7 +206,7 @@ export default async function PortalProject({
   const papers = [
     ...documents.map((document) => ({
       key: document.id,
-      href: `/portal/documents/${document.reference}`,
+      href: `/documents/${document.reference}`,
       title: document.title,
       detail: `${DOCUMENT_KIND_LABEL[document.kind]} · ${document.reference}`,
       state: portalDocumentState(document.status, document.signatureRequests[0], viewer, now),
@@ -216,7 +216,7 @@ export default async function PortalProject({
       const state = portalInvoiceState(invoice, now);
       return {
         key: invoice.id,
-        href: `/portal/invoices/${invoice.number}`,
+        href: `/invoices/${invoice.number}`,
         title: `Invoice ${invoice.number}`,
         detail: state.owing
           ? `${formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)} to pay${
@@ -278,7 +278,7 @@ export default async function PortalProject({
   return (
     <main className={styles.page}>
       <div className={styles.pageHead}>
-        <Link href="/portal" className={styles.backLink}>
+        <Link href="/" className={styles.backLink}>
           ← Your projects
         </Link>
         <h1 className={styles.heading}>{project.name}</h1>
@@ -410,7 +410,7 @@ export default async function PortalProject({
                         <ul className={styles.fileList}>
                           {request.uploads.map((file) => (
                             <li key={file.id} className={styles.fileRow}>
-                              <a href={`/portal/files/${file.id}`}>{file.filename}</a>
+                              <a href={`/files/${file.id}`}>{file.filename}</a>
                               <span className={styles.fileMeta}>
                                 {fileSize(file.sizeBytes)} · sent {formatDate(file.createdAt)}
                               </span>

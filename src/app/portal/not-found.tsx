@@ -25,7 +25,7 @@ export default function PortalNotFound() {
           The link may be old, or it may be for something that is not part of your account.
         </p>
       </div>
-      <Link href="/portal" className={forms.button}>
+      <Link href="/" className={forms.button}>
         Back to your projects
       </Link>
     </main>

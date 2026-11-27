@@ -182,7 +182,7 @@ export async function createClient(
       html: clientInviteEmail({
         name: contactName,
         clientName: name,
-        url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+        url: `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`,
       }),
       template: 'client_invite',
       entityType: 'ClientContact',

@@ -529,7 +529,7 @@ export async function emailItemList(_previous: PlanState, formData: FormData): P
         name: contact.name,
         projectName: project.name,
         items,
-        url: `${consoleEnv.publicOrigin}/portal/projects/${project.slug}`,
+        url: `${consoleEnv.portalOrigin}/projects/${project.slug}`,
         takesFiles: uploadsConfigured(),
       }),
       template: 'items_needed',

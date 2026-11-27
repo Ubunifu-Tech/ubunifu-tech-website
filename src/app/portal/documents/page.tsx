@@ -120,7 +120,7 @@ export default async function PortalDocuments() {
                     <tr key={document.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary}`}>
                         <Link
-                          href={`/portal/documents/${document.reference}`}
+                          href={`/documents/${document.reference}`}
                           className={table.link}
                         >
                           {document.title}
@@ -146,7 +146,7 @@ export default async function PortalDocuments() {
                       <td className={`${table.td} ${table.actions}`}>
                         <span className={table.actionGroup}>
                           <Link
-                            href={`/portal/documents/${document.reference}`}
+                            href={`/documents/${document.reference}`}
                             className={table.action}
                           >
                             {state.waiting ? 'Read and sign' : 'View'}

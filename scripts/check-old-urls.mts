@@ -24,8 +24,9 @@ const { db } = await import('../src/lib/db');
 const { generateToken, hashToken } = await import('../src/lib/console/crypto');
 
 const BASE = new URL(process.env.CHECK_BASE ?? 'http://localhost:3001');
-const PUBLIC = BASE.origin;
 const ADMIN = `${BASE.protocol}//admin.${BASE.hostname}${BASE.port ? `:${BASE.port}` : ''}`;
+// The portal's own host, where its pages have no /portal in front.
+const PORTAL = `${BASE.protocol}//portal.${BASE.hostname}${BASE.port ? `:${BASE.port}` : ''}`;
 const BASELINE = new URL('../.claude/reviews/old-urls-baseline.json', import.meta.url);
 const recording = process.argv.includes('--baseline');
 
@@ -174,13 +175,13 @@ if (contact) {
     db.refund.findFirst({ where: { payment: { invoice: mine } }, select: { number: true } }),
     db.ticket.findFirst({ where: mine, select: { reference: true } }),
   ]);
-  portalUrls.push('/portal', '/portal/invoices', '/portal/requests', '/portal/profile', '/portal/team');
-  if (theirProject) portalUrls.push(`/portal/projects/${theirProject.slug}`);
-  if (theirDocument) portalUrls.push(`/portal/documents/${theirDocument.reference}`);
-  if (theirInvoice) portalUrls.push(`/portal/invoices/${theirInvoice.number}`);
-  if (theirReceipt) portalUrls.push(`/portal/receipts/${theirReceipt.number}`);
-  if (theirRefund) portalUrls.push(`/portal/refunds/${theirRefund.number}`);
-  if (theirTicket) portalUrls.push(`/portal/requests/${theirTicket.reference}`);
+  portalUrls.push('/', '/invoices', '/requests', '/profile', '/team');
+  if (theirProject) portalUrls.push(`/projects/${theirProject.slug}`);
+  if (theirDocument) portalUrls.push(`/documents/${theirDocument.reference}`);
+  if (theirInvoice) portalUrls.push(`/invoices/${theirInvoice.number}`);
+  if (theirReceipt) portalUrls.push(`/receipts/${theirReceipt.number}`);
+  if (theirRefund) portalUrls.push(`/refunds/${theirRefund.number}`);
+  if (theirTicket) portalUrls.push(`/requests/${theirTicket.reference}`);
 }
 
 // ── Visiting them ────────────────────────────────────────────────────────────
@@ -219,7 +220,7 @@ if (owner) {
 }
 if (contact) {
   const cookie = await signIn('client_contact', contact.id, 'portal');
-  for (const path of portalUrls) visits.push(await visit(PUBLIC, path, cookie));
+  for (const path of portalUrls) visits.push(await visit(PORTAL, path, cookie));
 } else {
   console.log('Portal: skipped, no client with a portal account in this database.');
 }

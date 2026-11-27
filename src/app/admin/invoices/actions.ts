@@ -215,7 +215,7 @@ export async function sendInvoice(
           ? formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)
           : null,
       dueAt,
-      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      url: `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`,
       showsHowToPay: await getOrg().then((org) =>
         Boolean(org.bankAccountNumber || org.mobileMoneyNumber),
       ),
@@ -895,7 +895,7 @@ async function deliverReceipt(
       // The plain address, not a one-time sign-in: a receipt is kept and
       // opened again, and forwarded to whoever keeps the books, and neither
       // should hand them a session in the client's portal.
-      url: `${consoleEnv.publicOrigin}/portal/receipts/${encodeURIComponent(receipt.number)}`,
+      url: `${consoleEnv.portalOrigin}/receipts/${encodeURIComponent(receipt.number)}`,
     }),
     template: 'receipt_sent',
     entityType: 'Receipt',
@@ -1117,7 +1117,7 @@ export async function emailRefund(
       invoiceNumber: refund.payment.invoice.number,
       amount: formatMoney(refund.amountMinor, refund.currency),
       refundedAt: refund.refundedAt,
-      url: `${consoleEnv.publicOrigin}/portal/refunds/${encodeURIComponent(refund.number)}`,
+      url: `${consoleEnv.portalOrigin}/refunds/${encodeURIComponent(refund.number)}`,
     }),
     template: 'refund_sent',
     entityType: 'Refund',

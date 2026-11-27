@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { getPendingContact, recordAudit } from '@/lib/console/auth';
@@ -159,5 +159,5 @@ async function confirmEmail(
  */
 function intoThePortal(path: string): never {
   revalidatePath('/portal', 'layout');
-  redirect(path);
+  toPortal(path);
 }

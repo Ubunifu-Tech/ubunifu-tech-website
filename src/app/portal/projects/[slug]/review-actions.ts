@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { db } from '@/lib/db';
 import { CLIENT_SIGNED_OUT, clientForAction } from '@/lib/console/auth';
 import { formText } from '@/lib/console/form';
@@ -41,5 +41,5 @@ export async function answerReview(
     where: { id: reviewId, project: { clientId: actor.clientId } },
     select: { project: { select: { slug: true } } },
   });
-  redirect(review ? `/portal/projects/${review.project.slug}?answered=review#review` : '/portal');
+  toPortal(review ? `/portal/projects/${review.project.slug}?answered=review#review` : '/portal');
 }

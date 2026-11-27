@@ -102,7 +102,7 @@ export default async function PortalHome() {
   const needs: Need[] = [
     ...invoices.map((invoice) => ({
       key: `invoice-${invoice.number}`,
-      href: `/portal/invoices/${invoice.number}`,
+      href: `/invoices/${invoice.number}`,
       icon: Receipt,
       title: `Pay ${invoice.number}`,
       detail: `${formatMoney(invoice.totalMinor - invoice.paidMinor, invoice.currency)}${
@@ -115,7 +115,7 @@ export default async function PortalHome() {
         ? [
             {
               key: `review-${project.id}`,
-              href: `/portal/projects/${project.slug}#review`,
+              href: `/projects/${project.slug}#review`,
               icon: Eye,
               title: `Review round ${project.reviews[0].round} of ${project.name}`,
               detail: project.reviews[0].title,
@@ -126,7 +126,7 @@ export default async function PortalHome() {
     // Signing is the main contact's to do, so only they are asked to.
     ...(actor.isPrimary ? documents : []).map((document) => ({
       key: `document-${document.reference}`,
-      href: `/portal/documents/${document.reference}`,
+      href: `/documents/${document.reference}`,
       icon: FileSignature,
       title: `Read and sign ${document.title}`,
       detail: document.reference,
@@ -135,14 +135,14 @@ export default async function PortalHome() {
       .filter((project) => project.assetRequests.length > 0)
       .map((project) => ({
         key: `items-${project.id}`,
-        href: `/portal/projects/${project.slug}`,
+        href: `/projects/${project.slug}`,
         icon: Upload,
         title: `Send ${project.assetRequests.length} ${project.assetRequests.length === 1 ? 'item' : 'items'} for ${project.name}`,
         detail: 'Upload them on the project page',
       })),
     ...tickets.map((ticket) => ({
       key: `ticket-${ticket.reference}`,
-      href: `/portal/requests/${ticket.reference}`,
+      href: `/requests/${ticket.reference}`,
       icon: MessageSquare,
       title: `Reply about ${ticket.subject}`,
       detail: ticket.reference,
@@ -226,7 +226,7 @@ export default async function PortalHome() {
             });
             return (
               <li key={project.id}>
-                <Link href={`/portal/projects/${project.slug}`} className={styles.project}>
+                <Link href={`/projects/${project.slug}`} className={styles.project}>
                   <span className={styles.projectTop}>
                     <span className={`${forms.badge} ${TONE_CLASS[stage.tone]}`}>
                       {stage.label}

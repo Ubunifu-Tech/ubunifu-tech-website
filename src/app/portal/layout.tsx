@@ -90,7 +90,7 @@ export default async function PortalLayout({ children }: { children: React.React
     <div className={styles.shell}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <Link href="/portal" className={styles.brand}>
+          <Link href="/" className={styles.brand}>
             <BrandMark className={styles.brandMark} title="Ubunifu Technologies" />
             <span className={styles.brandText}>
               Ubunifu <span className={styles.org}>{actor.clientName}</span>
@@ -103,10 +103,10 @@ export default async function PortalLayout({ children }: { children: React.React
               email={actor.email}
               detail={actor.clientName}
               links={[
-                { href: '/portal/profile', label: 'Your profile', icon: 'profile' },
-                { href: '/portal/team', label: 'Your team', icon: 'team' },
+                { href: '/profile', label: 'Your profile', icon: 'profile' },
+                { href: '/team', label: 'Your team', icon: 'team' },
               ]}
-              signOutAction="/portal/sign-out"
+              signOutAction="/sign-out"
             />
           </div>
         </div>

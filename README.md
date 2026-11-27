@@ -71,8 +71,9 @@ npx tsx scripts/import-posts.mts   # copies the blog posts in _posts/ into the d
 npm run dev -- --port 3001
 ```
 
-The site is then on http://localhost:3001 and the staff console on
-http://admin.localhost:3001. Keep the variables in `.env`: Prisma, the migration
+The site is then on http://localhost:3001, the staff console on
+http://admin.localhost:3001 and the client portal on
+http://portal.localhost:3001. Keep the variables in `.env`: Prisma, the migration
 script and every check script read only that file.
 
 The site renders without email credentials. Without `RESEND_API_KEY` a
@@ -223,6 +224,30 @@ origin and read the body with a size limit (`src/lib/console/request-guards.ts`)
 - **Who signs** a document is chosen on its Send step when the client has more
   than one person. It is their main contact unless somebody else is picked
   (`Document.signerId`), and only someone with portal access can sign.
+
+### Where the portal lives
+
+The client portal is at `portal.ubunifutech.com`, on a host of its own, like
+the console at `admin.ubunifutech.com`. On a laptop it is
+`http://portal.localhost:3001`, which needs no `/etc/hosts` entry.
+
+- **Two spellings of one page.** In the code a portal page is under `/portal`:
+  that is where its files are, what a sign-in link remembers and what the help
+  chat is told to link. In the browser the same page has no `/portal` in front.
+  `src/proxy.ts` turns the address into the path on the way in.
+  `portalHref()` in `src/lib/portal-path.ts` turns the path into the address
+  wherever a link is drawn, and `toPortal()` does it for a redirect.
+- **Old links keep working.** Every email sent before the move points at
+  `ubunifutech.com/portal/...`, one-time sign-in links among them. The public
+  host sends those to the same page on the portal host with the query string
+  untouched. A form post is not sent across.
+- **Email links** are built from `consoleEnv.portalOrigin`
+  (`CONSOLE_PORTAL_ORIGIN`, or `https://` plus `CONSOLE_PORTAL_HOST`).
+- **The portal host serves only the portal.** A link to a page of the website,
+  followed there, goes to the website. `/api/portal/*` is served; no other API.
+- **The domain must exist before this code is live.** The host needs adding to
+  the Vercel project and a CNAME at the DNS provider. Without it, every portal
+  link redirects to an address that does not answer.
 
 ### Hosting links
 

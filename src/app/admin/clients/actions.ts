@@ -252,7 +252,7 @@ export async function createSetupLink(
     actorType: 'client_contact',
     actorId: contact.id,
   });
-  const url = `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`;
+  const url = `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`;
 
   await recordAudit({
     actorType: 'staff',

@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { getClientActor, getPendingContact } from '@/lib/console/auth';
 import { AuthLayout } from '@/components/console/AuthLayout';
 import { ReachUs } from '@/components/console/ReachUs';
@@ -36,12 +36,12 @@ export default async function PortalSignIn({
 
   const actor = await getClientActor();
   if (actor) {
-    redirect(actor.isActivated ? (next ?? '/portal') : '/portal/activate');
+    toPortal(actor.isActivated ? (next ?? '/portal') : '/portal/activate');
   }
   // Somebody part way through setting up from a shared link may have no email
   // yet, so this form is no use to them; their session can still finish it.
   const pending = await getPendingContact();
-  if (pending && !pending.isActivated) redirect('/portal/activate');
+  if (pending && !pending.isActivated) toPortal('/portal/activate');
 
   // An old link that pointed somewhere still takes them there once signed in,
   // and so does a session that ended while they were on a page.

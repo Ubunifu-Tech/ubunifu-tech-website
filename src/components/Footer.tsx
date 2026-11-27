@@ -46,6 +46,15 @@ export const Footer: React.FC = () => {
                     </a>
                   );
                 }
+                // The portal is on a host of its own, so this is a plain
+                // link the browser follows there, not a page of this site.
+                if (link.href === '/portal') {
+                  return (
+                    <a key={link.label} href={link.href} className={styles.colLink}>
+                      {link.label}
+                    </a>
+                  );
+                }
                 return (
                   <Link key={link.label} href={link.href} className={styles.colLink}>
                     {link.label}

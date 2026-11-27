@@ -340,7 +340,7 @@ export async function sendPasswordLink(contact: { id: string; name: string; emai
     subject: 'Choose a new password for your Ubunifu portal',
     html: passwordResetEmail({
       name: contact.name,
-      url: `${consoleEnv.publicOrigin}/portal/reset?token=${encodeURIComponent(token)}`,
+      url: `${consoleEnv.portalOrigin}/reset?token=${encodeURIComponent(token)}`,
     }),
     template: 'password_reset',
     entityType: 'ClientContact',
@@ -387,7 +387,7 @@ export async function sendSetupLinkAgain(contact: {
     html: clientInviteEmail({
       name: contact.name,
       clientName: contact.clientName,
-      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      url: `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`,
       reason: contact.reason,
     }),
     // Still an invitation, so a failed one can be sent again from the
@@ -445,7 +445,7 @@ export async function sendSetupEmailConfirmation(input: {
     html: setupEmailConfirmEmail({
       name: input.name,
       clientName: input.clientName,
-      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      url: `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`,
     }),
     template: 'setup_email_confirm',
     entityType: 'ClientContact',
@@ -549,7 +549,7 @@ export async function invitePerson(input: {
     actorType: 'client_contact',
     actorId: contact.id,
   });
-  const url = `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`;
+  const url = `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`;
 
   const fromColleague = by.type === 'client_contact';
   // Someone already set up gets a sign-in link, in the email that says so:

@@ -1,6 +1,7 @@
 'use server';
 
-import { redirect, unstable_rethrow } from 'next/navigation';
+import { unstable_rethrow } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { after } from 'next/server';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
@@ -131,7 +132,7 @@ async function passwordSignIn(
     entityId: contact.id,
   });
 
-  redirect(safePortalPath(formData.get('next')) ?? '/portal');
+  toPortal(safePortalPath(formData.get('next')) ?? '/portal');
 }
 
 /**
@@ -244,7 +245,7 @@ async function deliverPortalLink(email: string, next: string | null): Promise<vo
     subject: 'Sign in to your Ubunifu portal',
     html: clientSignInEmail({
       name: contact.name,
-      url: `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(token)}`,
+      url: `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(token)}`,
     }),
     template: 'client_sign_in',
     entityType: 'ClientContact',

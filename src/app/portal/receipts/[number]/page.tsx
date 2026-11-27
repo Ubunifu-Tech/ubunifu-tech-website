@@ -78,7 +78,7 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
-        <Link href="/portal/invoices" className={styles.backLink}>
+        <Link href="/invoices" className={styles.backLink}>
           ← Invoices
         </Link>
         <PrintButton />
@@ -87,8 +87,8 @@ export default async function PortalReceipt({ params }: { params: Promise<{ numb
       <ReceiptSheet
         receipt={receipt}
         org={org}
-        invoiceHref={`/portal/invoices/${invoice.number}`}
-        refundHref={(number) => `/portal/refunds/${number}`}
+        invoiceHref={`/invoices/${invoice.number}`}
+        refundHref={(number) => `/refunds/${number}`}
       />
     </main>
   );

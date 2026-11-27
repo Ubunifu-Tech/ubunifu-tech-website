@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { AuthLayout } from '@/components/console/AuthLayout';
 import { checkMagicToken } from '@/lib/console/magic-link';
 import { ResetForm } from './ResetForm';
@@ -21,11 +21,11 @@ export default async function ResetPassword({
 }) {
   const { token: raw } = await searchParams;
   const token = typeof raw === 'string' ? raw : '';
-  if (!token) redirect('/portal/sign-in?error=missing');
+  if (!token) toPortal('/portal/sign-in?error=missing');
 
   const claim = await checkMagicToken(token, ['password_reset']);
   if (!claim || claim.actorType !== 'client_contact') {
-    redirect('/portal/sign-in?error=reset-expired');
+    toPortal('/portal/sign-in?error=reset-expired');
   }
 
   return (

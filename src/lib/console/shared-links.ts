@@ -41,7 +41,7 @@ export async function issueSharedLink(input: {
     entityType: input.thing,
     entityId: input.thingId,
   });
-  return `${consoleEnv.publicOrigin}/portal/link/${encodeURIComponent(token)}`;
+  return `${consoleEnv.portalOrigin}/link/${encodeURIComponent(token)}`;
 }
 
 export type SharedLink = {

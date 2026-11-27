@@ -16,7 +16,7 @@ export function ResetForm({ token }: { token: string }) {
         <p className={forms.error} role="status">
           {state.message}
         </p>
-        <Link href="/portal/sign-in?error=reset-expired" className={forms.button}>
+        <Link href="/sign-in?error=reset-expired" className={forms.button}>
           Get a new link
         </Link>
       </div>

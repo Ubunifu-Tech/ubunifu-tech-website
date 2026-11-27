@@ -271,9 +271,9 @@ export async function recordSignature(input: {
   });
   const inPortal = Boolean(account?.activatedAt);
   const copyUrl = inPortal
-    ? `${consoleEnv.publicOrigin}/portal/documents/${request.document.reference}`
+    ? `${consoleEnv.portalOrigin}/documents/${request.document.reference}`
     : signer.email
-      ? `${consoleEnv.publicOrigin}/portal/sign-in/verify?token=${encodeURIComponent(
+      ? `${consoleEnv.portalOrigin}/sign-in/verify?token=${encodeURIComponent(
           (
             await issueMagicToken({
               purpose: 'document_access',

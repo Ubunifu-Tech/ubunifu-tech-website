@@ -148,7 +148,7 @@ export async function askForReview(
         title,
         note: note || null,
         previewUrl: previewUrl || null,
-        url: `${consoleEnv.publicOrigin}/portal/projects/${project.slug}#review`,
+        url: `${consoleEnv.portalOrigin}/projects/${project.slug}#review`,
       }),
       template: 'review_request',
       entityType: 'Project',

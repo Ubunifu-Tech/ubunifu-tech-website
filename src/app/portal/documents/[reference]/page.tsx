@@ -129,7 +129,7 @@ export default async function PortalDocument({
     return (
       <main className={styles.page}>
         <div className={sheet.toolbar}>
-          <Link href="/portal/documents" className={styles.backLink}>
+          <Link href="/documents" className={styles.backLink}>
             ← Documents
           </Link>
           <span className={`${forms.badge} ${forms.badgeLive}`}>Being revised</span>
@@ -209,7 +209,7 @@ export default async function PortalDocument({
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
-        <Link href="/portal/documents" className={styles.backLink}>
+        <Link href="/documents" className={styles.backLink}>
           ← Documents
         </Link>
         <PrintButton />

@@ -137,14 +137,14 @@ export default async function PortalInvoices() {
                   return (
                     <tr key={invoice.id} className={table.tr}>
                       <td className={`${table.td} ${table.primary} ${table.nowrap}`}>
-                        <Link href={`/portal/invoices/${invoice.number}`} className={table.link}>
+                        <Link href={`/invoices/${invoice.number}`} className={table.link}>
                           {invoice.number}
                         </Link>
                       </td>
                       <td className={`${table.td} ${table.name}`}>
                         {invoice.project ? (
                           <Link
-                            href={`/portal/projects/${invoice.project.slug}`}
+                            href={`/projects/${invoice.project.slug}`}
                             className={table.link}
                           >
                             {invoice.project.name}
@@ -178,12 +178,12 @@ export default async function PortalInvoices() {
                         {receipts.length === 0 ? (
                           <span className={table.muted}>None yet</span>
                         ) : receipts.length === 1 ? (
-                          <Link href={`/portal/receipts/${receipts[0]}`} className={table.link}>
+                          <Link href={`/receipts/${receipts[0]}`} className={table.link}>
                             {receipts[0]}
                           </Link>
                         ) : (
                           // The invoice lists each of its receipts.
-                          <Link href={`/portal/invoices/${invoice.number}`} className={table.link}>
+                          <Link href={`/invoices/${invoice.number}`} className={table.link}>
                             {receipts.length} receipts
                           </Link>
                         )}

@@ -61,7 +61,7 @@ export default async function PortalRefund({ params }: { params: Promise<{ numbe
   return (
     <main className={styles.page}>
       <div className={sheet.toolbar}>
-        <Link href="/portal/invoices" className={styles.backLink}>
+        <Link href="/invoices" className={styles.backLink}>
           ← Invoices
         </Link>
         <PrintButton />

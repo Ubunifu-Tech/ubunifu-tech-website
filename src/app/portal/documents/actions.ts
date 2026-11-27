@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { db } from '@/lib/db';
 import { CLIENT_SIGNED_OUT, clientForAction, requireClient, recordAudit } from '@/lib/console/auth';
 import { renderMarkdown } from '@/lib/console/documents';
@@ -46,7 +46,7 @@ export async function signDocument(
   if (result.status !== 'done') return result;
   // Back to the document with the thank-you in the address, so it is still
   // there after a reload rather than living only in the form's state.
-  redirect(`/portal/documents/${encodeURIComponent(result.reference)}?signed=${result.copy}`);
+  toPortal(`/portal/documents/${encodeURIComponent(result.reference)}?signed=${result.copy}`);
 }
 
 /**
@@ -81,7 +81,7 @@ export async function respondToDocument(
     },
     select: { document: { select: { reference: true } } },
   });
-  redirect(request ? `/portal/documents/${encodeURIComponent(request.document.reference)}` : '/portal/documents');
+  toPortal(request ? `/portal/documents/${encodeURIComponent(request.document.reference)}` : '/portal/documents');
 }
 
 /** The time to sign ran out: asking us to send it again. */
@@ -359,5 +359,5 @@ export async function suggestWording(
 
   // Back to the top of the document, where it now says their wording is
   // with us, rather than leaving them at a form that is no longer there.
-  redirect(`/portal/documents/${encodeURIComponent(request.document.reference)}`);
+  toPortal(`/portal/documents/${encodeURIComponent(request.document.reference)}`);
 }

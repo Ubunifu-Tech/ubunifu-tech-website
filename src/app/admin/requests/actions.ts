@@ -111,7 +111,7 @@ export async function replyToTicket(
       subject: ticket.subject,
       body,
       status: CLIENT_TICKET_STATUS[nextStatus ?? ticket.status] ?? ticket.status,
-      url: `${consoleEnv.publicOrigin}/portal/requests/${ticket.reference}`,
+      url: `${consoleEnv.portalOrigin}/requests/${ticket.reference}`,
     }),
     template: 'ticket_reply_to_client',
     entityType: 'Ticket',

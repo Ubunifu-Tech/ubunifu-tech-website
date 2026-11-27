@@ -88,7 +88,7 @@ export default async function PortalRequest({
   return (
     <main className={`${styles.page} ${styles.medium}`}>
       <div className={styles.pageHead}>
-        <Link href="/portal/requests" className={styles.backLink}>
+        <Link href="/requests" className={styles.backLink}>
           ← Your requests
         </Link>
         <h1 className={styles.heading}>{ticket.subject}</h1>
@@ -99,7 +99,7 @@ export default async function PortalRequest({
             <>
               {' '}
               ·{' '}
-              <Link href={`/portal/projects/${ticket.project.slug}`} className={forms.link}>
+              <Link href={`/projects/${ticket.project.slug}`} className={forms.link}>
                 {ticket.project.name}
               </Link>
             </>

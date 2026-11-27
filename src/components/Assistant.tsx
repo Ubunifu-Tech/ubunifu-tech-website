@@ -4,6 +4,7 @@ import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 
 import Link from 'next/link';
 import { ArrowLeft, Maximize2, MessageCircle, Minimize2, Send, UserRound, X } from 'lucide-react';
 import { toPlainText } from '@/lib/chat-links';
+import { portalHref, portalPath } from '@/lib/portal-path';
 import { replyPromise } from '@/content/site';
 import styles from './Assistant.module.css';
 
@@ -253,7 +254,7 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
               ? {
                   kind: 'portal',
                   reference: data.reference ?? null,
-                  url: data.reference ? `/portal/requests/${data.reference}` : null,
+                  url: data.reference ? `/requests/${data.reference}` : null,
                 }
               : // What was confirmed at the time is not known now, so no email is claimed.
                 { kind: 'site', outcome: 'created', acknowledged: false },
@@ -361,7 +362,8 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
           signal: controller.signal,
           body: JSON.stringify({
             message,
-            page: window.location.pathname,
+            // The portal's pages are told to the server in the app's own spelling.
+            page: variant === 'portal' ? portalPath(window.location.pathname) : window.location.pathname,
             // The window was showing an earlier thread, so a fresh start can be said.
             hadThread: turns.length > 0,
           }),
@@ -430,7 +432,7 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
         setBusy(false);
       }
     },
-    [draft, busy, copy.endpoint, turns.length, openForm, onHandedOff],
+    [draft, busy, copy.endpoint, turns.length, openForm, onHandedOff, variant],
   );
 
   const shown =
@@ -584,7 +586,7 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
                 {handedOff.kind === 'portal' && (
                   <>
                     {' '}
-                    <Link href={handedOff.url ?? '/portal/requests'}>
+                    <Link href={portalHref(handedOff.url ?? '/portal/requests')}>
                       {handedOff.url ? 'Open the request' : 'Open Requests'}
                     </Link>
                   </>
@@ -659,7 +661,7 @@ export function Assistant({ variant = 'site' }: { variant?: Variant }) {
 
 /** The portal's sign-in page, returning to where they were. */
 function signInHref(): string {
-  return `/portal/sign-in?next=${encodeURIComponent(window.location.pathname)}`;
+  return `/sign-in?next=${encodeURIComponent(portalPath(window.location.pathname))}`;
 }
 
 /** Focuses a form's heading when it opens, so the form is announced and Tab starts there. */
@@ -909,7 +911,7 @@ function RequestForm({
       </label>
       {problem && (
         <p className={styles.error} role="alert">
-          {problem} You can also <Link href="/portal/requests">raise a request</Link> yourself.
+          {problem} You can also <Link href="/requests">raise a request</Link> yourself.
         </p>
       )}
       <button type="submit" className={styles.submit} disabled={busy}>

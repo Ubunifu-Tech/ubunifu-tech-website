@@ -121,7 +121,7 @@ export default async function PortalRequests({
                 tickets.map((ticket) => (
                   <tr key={ticket.id} className={table.tr}>
                     <td className={`${table.td} ${table.primary}`}>
-                      <Link href={`/portal/requests/${ticket.reference}`} className={table.link}>
+                      <Link href={`/requests/${ticket.reference}`} className={table.link}>
                         {ticket.subject}
                       </Link>
                     </td>
@@ -143,7 +143,7 @@ export default async function PortalRequests({
                     <td className={`${table.td} ${table.actions}`}>
                       <span className={table.actionGroup}>
                         <Link
-                          href={`/portal/requests/${ticket.reference}`}
+                          href={`/requests/${ticket.reference}`}
                           className={table.action}
                         >
                           Open

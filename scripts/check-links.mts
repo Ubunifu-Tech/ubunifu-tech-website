@@ -24,6 +24,8 @@ const { generateToken, hashToken } = await import('../src/lib/console/crypto');
 const BASE = new URL(process.env.CHECK_BASE ?? 'http://localhost:3001');
 const PUBLIC = BASE.origin;
 const ADMIN = `${BASE.protocol}//admin.${BASE.hostname}${BASE.port ? `:${BASE.port}` : ''}`;
+// The portal has a host of its own too, and its pages have no /portal in front there.
+const PORTAL = `${BASE.protocol}//portal.${BASE.hostname}${BASE.port ? `:${BASE.port}` : ''}`;
 const MAX_PAGES = Number(process.env.CHECK_MAX_PAGES ?? 600);
 
 /** Pages whose text means something went wrong, whatever the status said. */
@@ -38,7 +40,6 @@ const BROKEN_TEXT = [
 const SKIP = [
   /\/sign-out(\?|$)/,
   /\/sign-in\/verify/,
-  /\/portal\/sign-in\/verify/,
   /^\/_next\//,
   /\/api\//,
 ];
@@ -136,7 +137,7 @@ if (owner) {
 
 if (client) {
   const cookie = await signIn('client_contact', client.id, 'portal');
-  broken.push(...(await crawl(PUBLIC, ['/portal'], cookie, 'Portal')));
+  broken.push(...(await crawl(PORTAL, ['/'], cookie, 'Portal')));
 } else {
   console.log('Portal: skipped, no client with a portal account in this database.');
 }

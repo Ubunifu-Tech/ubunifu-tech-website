@@ -8,7 +8,7 @@ export function SignInAgain() {
   return (
     <>
       {' '}
-      <a href="/portal/sign-in" target="_blank" rel="noopener" className={forms.link}>
+      <a href="/sign-in" target="_blank" rel="noopener" className={forms.link}>
         Sign in
       </a>
     </>

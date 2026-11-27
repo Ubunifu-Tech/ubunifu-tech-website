@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { formText } from '@/lib/console/form';
 import { markSignatureRequestViewed } from '@/lib/console/documents';
 import { recordReviewAnswer } from '@/lib/console/review-answers';
@@ -34,7 +34,7 @@ export async function signWithLink(_previous: SignState, formData: FormData): Pr
   revalidatePath('/portal/link', 'layout');
   if (result.status !== 'done') return result;
   // As in the portal: the thank-you rides in the address and survives a reload.
-  redirect(`/portal/link/${encodeURIComponent(formText(formData, 'token'))}?signed=${result.copy}`);
+  toPortal(`/portal/link/${encodeURIComponent(formText(formData, 'token'))}?signed=${result.copy}`);
 }
 
 /** Asking for changes, or declining, through the link. */

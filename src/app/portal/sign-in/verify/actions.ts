@@ -1,6 +1,6 @@
 'use server';
 
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { checkMagicToken, consumeMagicToken } from '@/lib/console/magic-link';
@@ -34,17 +34,17 @@ import { claimConfirmedEmail } from '@/lib/console/contacts';
  */
 export async function continueWithLink(formData: FormData): Promise<void> {
   if (!(await allow('portal-continue', requestIp(await headers()), { limit: 20, windowMinutes: 15 }))) {
-    redirect('/portal/sign-in?error=busy');
+    toPortal('/portal/sign-in?error=busy');
   }
   const token = String(formData.get('token') ?? '');
-  if (!token) redirect('/portal/sign-in?error=missing');
+  if (!token) toPortal('/portal/sign-in?error=missing');
 
   const seen = await checkMagicToken(token, CLIENT_LINKS);
-  if (!seen || seen.actorType !== 'client_contact') redirect(await afterDeadLink(token));
+  if (!seen || seen.actorType !== 'client_contact') toPortal(await afterDeadLink(token));
   const pendingSetup =
     (await db.clientContact.count({ where: { id: seen.actorId, activatedAt: null } })) > 0;
   const claim = pendingSetup ? seen : await consumeMagicToken(token, CLIENT_LINKS);
-  if (!claim || claim.actorType !== 'client_contact') redirect(await afterDeadLink(token));
+  if (!claim || claim.actorType !== 'client_contact') toPortal(await afterDeadLink(token));
 
   const contact = await db.clientContact.findUnique({
     where: { id: claim.actorId },
@@ -69,7 +69,7 @@ export async function continueWithLink(formData: FormData): Promise<void> {
       entityId: claim.actorId,
       summary: 'Contact removed or portal access revoked',
     });
-    redirect('/portal/sign-in?error=expired');
+    toPortal('/portal/sign-in?error=expired');
   }
 
   // An invitation or setup link is for setting up. Once the account has a
@@ -83,7 +83,7 @@ export async function continueWithLink(formData: FormData): Promise<void> {
       entityId: contact.id,
       summary: 'An old setup link was used after the account was set up',
     });
-    redirect('/portal/sign-in?error=set-up');
+    toPortal('/portal/sign-in?error=set-up');
   }
 
   // A link sent to confirm an address typed at setup: opening it from that
@@ -125,16 +125,16 @@ export async function continueWithLink(formData: FormData): Promise<void> {
     entityId: contact.id,
   });
 
-  if (emailTaken) redirect('/portal/activate?email=taken');
+  if (emailTaken) toPortal('/portal/activate?email=taken');
 
   // Someone who has not set a password finishes that first, whatever the link
   // was for, and then lands where it pointed.
   const landing = await landingFor(claim, contact.clientId);
-  redirect(
+  toPortal(
     contact.activatedAt
       ? landing
       : landing === '/portal'
-        ? '/portal/activate'
+        ? '/activate'
         : `/portal/activate?next=${encodeURIComponent(landing)}`,
   );
 }

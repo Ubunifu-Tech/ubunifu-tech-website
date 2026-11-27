@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { getPendingContact } from '@/lib/console/auth';
 import { SETUP_EMAIL_NOT_USABLE } from '@/lib/console/contacts';
 import { safePortalPath } from '@/lib/console/return-path';
@@ -19,8 +19,8 @@ export default async function ActivatePage({
   const next = safePortalPath(query.next);
   const actor = await getPendingContact();
   // Reached only with a session from an invitation or a shared setup link.
-  if (!actor) redirect('/portal/sign-in');
-  if (actor.isActivated) redirect(next ?? '/portal');
+  if (!actor) toPortal('/portal/sign-in');
+  if (actor.isActivated) toPortal(next ?? '/portal');
 
   return (
     <AuthLayout role="Portal">

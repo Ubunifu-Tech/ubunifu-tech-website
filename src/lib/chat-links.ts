@@ -1,5 +1,6 @@
 import { dynamicPrefixes, sitePages } from '@/content/site-pages';
 import { site } from '@/content/site';
+import { portalHref } from '@/lib/portal-path';
 
 /**
  * Which links an assistant reply may contain, and where each one goes.
@@ -26,8 +27,11 @@ export type ChatLink = {
   href: string;
 };
 
-/** Where the public site lives, for links shown inside the console. */
+/** Where the public site lives, for links shown inside the console and the portal. */
 export const PUBLIC_ORIGIN = 'https://ubunifutech.com';
+
+/** Where the client portal lives, for links to it shown on the public site. */
+export const PORTAL_ORIGIN = 'https://portal.ubunifutech.com';
 
 export const EXTERNAL_HOSTS: ReadonlyArray<string> = [
   'ubunifutech.com',
@@ -94,6 +98,16 @@ export function classifyHref(href: string | null | undefined, variant: ChatVaria
   if (value.startsWith('/')) {
     const path = sitePath(value);
     if (!path) return null;
+    const inPortal = path === '/portal' || path.startsWith('/portal/') || path.startsWith('/portal#');
+    // The portal has a host of its own. Inside it, a portal page opens in
+    // place at its address there, and a page of the website is a full address
+    // on the website. Everywhere else it is the other way round.
+    if (variant === 'portal') {
+      return inPortal
+        ? { kind: 'internal', href: portalHref(path) }
+        : { kind: 'external', href: `${PUBLIC_ORIGIN}${path}` };
+    }
+    if (inPortal) return { kind: 'external', href: `${PORTAL_ORIGIN}${portalHref(path)}` };
     return variant === 'console'
       ? { kind: 'external', href: `${PUBLIC_ORIGIN}${path}` }
       : { kind: 'internal', href: path };
@@ -110,10 +124,10 @@ export function classifyHref(href: string | null | undefined, variant: ChatVaria
   if (url.protocol !== 'https:' || url.username || url.password || url.port) return null;
   if (!EXTERNAL_HOSTS.includes(url.hostname)) return null;
 
-  // Our own page written out in full opens in place, like its path would.
+  // Our own page written out in full is treated as its path would be.
   if (variant !== 'console' && OWN_HOSTS.includes(url.hostname) && !url.search) {
     const path = sitePath(`${url.pathname.replace(/(.)\/$/, '$1')}${url.hash}`);
-    if (path) return { kind: 'internal', href: path };
+    if (path) return classifyHref(path, variant);
   }
   return { kind: 'external', href: url.href };
 }

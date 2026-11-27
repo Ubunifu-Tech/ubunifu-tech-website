@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { toPortal } from '@/lib/console/portal-go';
 import { AuthLayout } from '@/components/console/AuthLayout';
 import { ContinueButton } from '@/components/console/ContinueButton';
 import { CLIENT_LINKS, afterDeadLink } from '@/lib/console/client-links';
@@ -27,10 +27,10 @@ export default async function VerifyLink({
 }) {
   const { token: raw } = await searchParams;
   const token = typeof raw === 'string' ? raw : '';
-  if (!token) redirect('/portal/sign-in?error=missing');
+  if (!token) toPortal('/portal/sign-in?error=missing');
 
   const claim = await checkMagicToken(token, CLIENT_LINKS);
-  if (!claim || claim.actorType !== 'client_contact') redirect(await afterDeadLink(token));
+  if (!claim || claim.actorType !== 'client_contact') toPortal(await afterDeadLink(token));
   // Someone else already signed in here is told before they are signed out.
   // A preview fetch carries no cookie, so this never reaches a chat's card.
   const current = await getPendingContact();

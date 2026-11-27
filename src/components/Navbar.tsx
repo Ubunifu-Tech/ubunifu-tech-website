@@ -131,9 +131,10 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className={styles.actions}>
-            <Link href="/portal" className={styles.login}>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the portal is on a host of its own, so the browser follows this there */}
+            <a href="/portal" className={styles.login}>
               {cta.portal}
-            </Link>
+            </a>
             <Link href="/contact" className={styles.cta}>
               {cta.primary}
               <ArrowRight aria-hidden="true" size={17} strokeWidth={1.9} />
@@ -189,9 +190,10 @@ export const Navbar: React.FC = () => {
             {cta.primary}
             <ArrowRight aria-hidden="true" size={19} strokeWidth={1.9} />
           </Link>
-          <Link href="/portal" className={styles.mobileLogin} onClick={closeMobileMenu}>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the portal is on a host of its own, so the browser follows this there */}
+          <a href="/portal" className={styles.mobileLogin} onClick={closeMobileMenu}>
             {cta.portal}
-          </Link>
+          </a>
         </div>
       </div>
     </nav>
